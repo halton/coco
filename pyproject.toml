@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "reachy-mini>=1.4.0",
+    "sounddevice>=0.5.5",
 ]
 
 [tool.uv]
