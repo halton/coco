@@ -1,0 +1,61 @@
+# CLAUDE.md
+
+你正在 Coco / 可可（基于 Reachy Mini 的学习伴侣机器人）仓库中工作。优先保证可靠完成、跨会话连续性和显式验证，而不是表面上的速度。
+
+## 固定工作循环
+
+每轮会话开始时：
+
+1. 运行 `pwd`（Windows: `Get-Location`），确认在 repo 根目录（含 `pyproject.toml` 与 `feature_list.json`）
+2. 读取 `claude-progress.md`
+3. 读取 `feature_list.json`
+4. 用 `git log --oneline -5` 查看最近提交
+5. 运行 `./init.sh`（Windows: `.\init.ps1`）
+6. 检查 smoke 是否通过；动 robot 子系统前用 `./init.sh --daemon` 验 mockup-sim daemon 通
+
+然后只选择一个未完成功能（`feature_list.json` 中 priority 最低数字的 `not_started`），围绕它工作，直到它被验证通过，或者被明确记录为 `blocked`。
+
+## 规则
+
+- 同一时间只能有一个 active feature（`in_progress`）
+- 没有可运行证据时，不要声称完成
+- 不要通过重写功能清单来隐藏未完成工作
+- 不要为了"看起来完成"而删除或削弱测试
+- 以仓库内文件作为唯一事实来源
+- 中文沟通；遵守 `~/.claude/memory/git-conventions.md`（commit 前用户确认）
+
+## Git 工作流
+
+- 每个 in_progress feature 在 `feat/<feature-id>` 分支上做；passing 后 merge 回 main
+- main 永远保持 `./init.sh` 通过的状态
+- 例外：harness 加固、文档、依赖升级等基础设施改动可直接在 main 做（短促、低风险）
+
+## 依赖升级策略
+
+- 不主动升核心 SDK（`reachy-mini` 等）；必须升级时单独立 feature
+- 升级后跑全量 smoke + 当前 in_progress 的 verification，把"已知通过组合"记到 `claude-progress.md` 的环境基线
+
+## 子系统边界
+
+- **audio**：sounddevice 直连本机麦克，不走 reachy-mini daemon 的 audio backend。跨平台。测试 wav 直喂
+- **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收是 milestone gate
+- 两路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
+
+## 必需文件
+
+- `feature_list.json` — 唯一事实来源
+- `claude-progress.md` — 进度日志
+- `init.sh` — 启动与验证入口
+- `session-handoff.md` — 会话交接（按需）
+
+## 完成门槛
+
+只有在要求的验证成功且 evidence 被记录后，功能状态才可以切换到 `passing`。
+
+## 结束前
+
+1. 更新进度日志（追加 Session 条目）
+2. 更新功能状态与 evidence
+3. 记录仍然损坏或未验证的内容
+4. 在仓库可安全恢复后提交（先获用户确认）
+5. 给下一轮会话留下干净的重启路径（`./init.sh` 必须可用）

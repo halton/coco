@@ -1,0 +1,114 @@
+{
+  "project": "coco-reachy-mini",
+  "last_updated": "2026-05-08",
+  "rules": {
+    "single_active_feature": true,
+    "passing_requires_evidence": true,
+    "do_not_skip_verification": true
+  },
+  "status_legend": {
+    "not_started": "功能还没开始做。",
+    "in_progress": "这个功能是当前唯一正在进行的任务。",
+    "blocked": "因为已记录的阻塞问题，当前无法继续推进。",
+    "passing": "要求的验证已经通过，并且证据已经记录。"
+  },
+  "milestone": "phase-1-mvp 桌面学习搭子（场景 1）",
+  "features": [
+    {
+      "id": "audio-001",
+      "priority": 1,
+      "area": "audio",
+      "title": "麦克风采集（mac 直连）",
+      "user_visible_behavior": "运行 spike_audio.py 后，对着麦克说话能看到 RMS 显著高于环境底噪（>0.01）。",
+      "status": "passing",
+      "verification": [
+        "运行 ./init.sh 的 smoke test，看到 audio ok 与非零 rms。",
+        "运行 .venv/bin/python -u spike_audio.py，按 Enter 后说话 3 秒。",
+        "确认输出的某些时序段 rms 显著高于安静段。"
+      ],
+      "evidence": [
+        "research/spike-audio-attempt.md",
+        "spike_audio.py（已验通）",
+        "commit 4999f03 — spike audio path"
+      ],
+      "notes": "决策：audio 与 robot 解耦，不走 reachy-mini daemon 的 audio backend。"
+    },
+    {
+      "id": "robot-001",
+      "priority": 2,
+      "area": "robot",
+      "title": "mockup-sim daemon 通路验证",
+      "user_visible_behavior": "启动 mockup-sim daemon 后，Python 客户端能通过 ReachyMini(spawn_daemon=False) 连上并读取 robot 状态。",
+      "status": "not_started",
+      "verification": [
+        "关闭 Reachy Mini Control.app（避免端口冲突）。",
+        "运行 RUN_SMOKE_DAEMON=1 ./init.sh，看到 'Zenoh 通'。",
+        "或手动跑 .venv/bin/python -m reachy_mini.daemon.app.main --mockup-sim --deactivate-audio，再用 ReachyMini 客户端连。"
+      ],
+      "evidence": [],
+      "notes": "spike 期已部分验证（commit 4999f03 上下文），但未固化为可重复的 smoke。"
+    },
+    {
+      "id": "robot-002",
+      "priority": 3,
+      "area": "robot",
+      "title": "头部姿态基础动作（look_left / look_right / nod）",
+      "user_visible_behavior": "调用 API 让 mockup-sim 中的头部按指定 yaw/pitch 移动，且能用三个语义化动作（左看、右看、点头）封装。",
+      "status": "not_started",
+      "verification": [
+        "依赖 robot-001 通过。",
+        "实现 cocoa/robot.py（或类似）暴露 look_left/look_right/nod。",
+        "在 mockup-sim 下调用三个动作，读取 robot 状态确认 head joint 目标值变化。",
+        "记录调用前后的 joint 状态到 evidence。"
+      ],
+      "evidence": [],
+      "notes": ""
+    },
+    {
+      "id": "audio-002",
+      "priority": 4,
+      "area": "audio",
+      "title": "ASR 接入（wav 文件 + 实时麦克）",
+      "user_visible_behavior": "给定一段 wav，能拿到中文转写文本；用麦克实时录一段也能拿到转写。",
+      "status": "not_started",
+      "verification": [
+        "选定 ASR 方案（whisper.cpp / faster-whisper / 云端），记录到 evidence。",
+        "从 tests/fixtures/audio/ 取一段已知中文 wav 测试，转写文本与人工标注一致或近似（CER < 0.2）。",
+        "实时麦克录 5 秒说固定句子，能拿到合理转写。"
+      ],
+      "evidence": [],
+      "notes": "测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。"
+    },
+    {
+      "id": "companion-001",
+      "priority": 5,
+      "area": "companion",
+      "title": "陪伴动作循环（idle 微动）",
+      "user_visible_behavior": "Coco 在 idle 状态下间歇性做小幅头部动作（呼吸感、偶尔环顾），不显得僵硬。",
+      "status": "not_started",
+      "verification": [
+        "依赖 robot-002 通过。",
+        "实现 idle loop，定义动作幅度与周期。",
+        "在 mockup-sim 下跑 60 秒，记录 head joint 时序，确认动作分布合理（非完全静止、也不疯狂抖动）。"
+      ],
+      "evidence": [],
+      "notes": ""
+    },
+    {
+      "id": "interact-001",
+      "priority": 6,
+      "area": "interact",
+      "title": "最小语音交互闭环（push-to-talk → 转写 → 简单回应动作）",
+      "user_visible_behavior": "按下某个键开始录音，松开停止；Coco 转写说话内容、并用一个动作（点头或左看）作为简单回应。",
+      "status": "not_started",
+      "verification": [
+        "依赖 audio-002 与 robot-002 通过。",
+        "实现 push-to-talk CLI（终端按 Enter 触发）。",
+        "在 mockup-sim 下完整跑通：说话 → 看到转写 → 看到 head joint 动作。",
+        "记录一次完整 session 的日志到 evidence。"
+      ],
+      "evidence": [],
+      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通。"
+    }
+  ]
+}

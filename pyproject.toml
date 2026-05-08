@@ -8,5 +8,12 @@ dependencies = [
     "sounddevice>=0.5.5",
 ]
 
+# 声明目标平台，让 uv 给三个平台各 resolve 一份兼容 wheel。
+# reachy-mini 在 sys_platform != 'linux' 时硬依赖 gstreamer-bundle，
+# 而 gstreamer-msvc-runtime 仅 Windows 有 wheel —— 不显式列出目标平台时 uv 无法 resolve。
 [tool.uv]
-required-environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]
+required-environments = [
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+]
