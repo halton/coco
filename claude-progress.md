@@ -12,6 +12,7 @@
 | 真机验收作为 milestone gate | `AGENTS.md` 子系统约定 | 真机不卡住模拟开发，但每个 milestone 必须真机过 UAT |
 | harness engineering 工作流 | `AGENTS.md` / `CLAUDE.md` | 依据 walkinglabs/learn-harness-engineering，仓库为唯一事实来源、单功能推进、evidence 才能 passing |
 | 跨平台支持（macOS / Linux / Windows） | `pyproject.toml` / `init.sh` / `init.ps1` | reachy-mini Lite SDK 三平台都有 cp313 wheel；`required-environments` 显式列出三平台 |
+| app 部署模型：路线 C 双模式 | `research/control-app-deployment-research.md` | Coco 是 ReachyMiniApp 子类；开发用 `python -m coco`，UAT/发布走 Control.app 经 HF Space。infra-001 是其他 feature 的前置 |
 
 ## 环境基线
 
@@ -26,7 +27,7 @@
 - 仓库根目录：repo 根（含 `pyproject.toml` 与 `feature_list.json`）；本机本会话路径为 `/Users/halton/work/reachhy-mini`
 - 标准启动路径：`./init.sh`（Windows: `.\init.ps1`）
 - 标准验证路径：`./init.sh` / `.\init.ps1` + 按 feature 的 `verification` 字段执行
-- 当前最高优先级未完成功能：`robot-001`（mockup-sim daemon 通路验证）
+- 当前最高优先级未完成功能：`infra-001`（ReachyMiniApp 双模式骨架）
 - 当前 blocker：无
 
 ## 会话记录
@@ -65,31 +66,53 @@
   2. 决定 `SESSION-BOOTSTRAP.md` 处置
   3. 用户 review 后提交，进入 `robot-001`
 
-### Session 003 — 2026-05-08（跨平台 + 决策导航 + 加固）
+### Session 003 — 2026-05-08（跨平台 + 决策导航）
 
-- **本轮目标**：让 harness 跨 macOS / Linux / Windows 工作；建立决策导航；补足 harness 缺失件。
+- **本轮目标**：让 harness 跨 macOS / Linux / Windows 工作；在 progress 顶部建立决策导航。
 - **已完成**：
   - 顶部新增"关键决策导航"段（6 条核心决策一表索引）
-  - `pyproject.toml`：保留 `[tool.uv] required-environments` 显式列出三平台
-    （reachy-mini 1.7 引入 gstreamer-bundle 硬依赖，不显式列出无法 resolve）
-  - 抽出 `scripts/smoke.py`（核心 smoke 逻辑唯一一份，跨平台 + 打印环境基线）
+  - `pyproject.toml` 删除 `tool.uv.required-environments` 限制
+  - 抽出 `scripts/smoke.py`（核心 smoke 逻辑唯一一份，跨平台）
   - `init.sh` 简化为 uv sync + 调用 smoke.py，新增 `--daemon` 透传
   - 新增 `init.ps1`（Windows 等价入口）
   - `AGENTS.md` / `CLAUDE.md` 路径表述去掉本机硬编码，加 Windows 用法
-  - 新增 `clean-state-checklist.md`（收尾自检 6 项 + 子系统专项）
-  - 新增 `tests/fixtures/audio/README.md`（audio-002 wav 素材规范）
-  - 新增 `docs/uat-real-robot.md`（真机验收剧本骨架）
-  - `AGENTS.md` 增加 Git 工作流、依赖升级策略、增强工具引用
-  - `CLAUDE.md` 同步增加 Git 工作流、依赖升级策略
-  - 删除 `SESSION-BOOTSTRAP.md`（信息已迁移到本文件）
-- **运行过的验证**：`./init.sh`（smoke 通过；本机 darwin/arm64）
-- **已记录证据**：（本 session 提交后填 commit hash）
+- **运行过的验证**：（待 ./init.sh 验证 smoke.py 路径仍通）
+- **已记录证据**：（本 session 提交后填）
 - **提交记录**：（待用户确认）
-- **更新过的文件或工件**：pyproject.toml、init.sh、scripts/smoke.py（新）、init.ps1（新）、AGENTS.md、CLAUDE.md、claude-progress.md、clean-state-checklist.md（新）、docs/uat-real-robot.md（新）、tests/fixtures/audio/README.md（新）；删除 SESSION-BOOTSTRAP.md
+- **更新过的文件或工件**：pyproject.toml、init.sh、scripts/smoke.py（新）、init.ps1（新）、AGENTS.md、CLAUDE.md、claude-progress.md
 - **已知风险或未解决问题**：
   - `init.ps1` 在本机（macOS）无法验证，需 Windows 机器实测
   - reachy-mini Lite SDK 跨平台 wheel 已确认存在（PyPI 查证），但真机相关功能在 Linux/Windows 行为未知
 - **下一步最佳动作**：
-  1. 用户 review 本轮变更并提交
-  2. 调研 Reachy Mini Control.app 部署模型，决定 Coco 的部署路线
-  3. 进入 `robot-001`
+  1. 在 macOS 跑 `./init.sh` 验证 smoke 通过
+  2. 评估 memex / logex / opc 是否值得集成（用户提问）
+  3. 用户 review 后提交，进入 `robot-001`
+
+### Session 004 — 2026-05-08（harness 加固 + 部署模型决策）
+
+- **本轮目标**：补 harness 缺失件；调研 Reachy Mini Control.app 部署模型，决定路线。
+- **已完成**：
+  - 新增 `clean-state-checklist.md`（收尾自检 6 项 + 子系统专项）
+  - 新增 `tests/fixtures/audio/README.md`（audio-002 wav 素材规范）
+  - 新增 `docs/uat-real-robot.md`（真机验收剧本骨架）
+  - `scripts/smoke.py` 增加环境基线打印（python / OS / 关键包版本）
+  - `AGENTS.md` 增加 Git 工作流、依赖升级策略、app 部署约定、增强工具引用
+  - `CLAUDE.md` 同步增加 Git 工作流、依赖升级策略、app 部署约定
+  - `claude-progress.md` 决策导航表增加"app 部署路线 C"一行；新增"环境基线"段
+  - 调研 `reachy_mini.apps` 框架并产出 `research/control-app-deployment-research.md`
+  - 决定走路线 C（双模式：开发 `python -m coco`；UAT/发布走 Control.app）
+  - `feature_list.json`：新增 `infra-001`（priority 0）；调整 `audio-001` 与 `interact-001` 的 verification 引入 ReachyMiniApp 框架与 Control.app 模式覆盖
+  - 修正 `pyproject.toml`：保留 `[tool.uv] required-environments` 列三平台（reachy-mini 1.7 引入 gstreamer-bundle 硬依赖，不显式列出无法 resolve）
+- **运行过的验证**：`./init.sh`（smoke 通过；本机 darwin/arm64）
+- **已记录证据**：（本 session 提交后填 commit hash）
+- **提交记录**：（待用户确认）
+- **更新过的文件或工件**：clean-state-checklist.md（新）、tests/fixtures/audio/README.md（新）、docs/uat-real-robot.md（新）、research/control-app-deployment-research.md（新）、scripts/smoke.py、AGENTS.md、CLAUDE.md、claude-progress.md、feature_list.json、pyproject.toml
+- **已知风险或未解决问题**：
+  - 路线 C 的核心假设——"在 ReachyMiniApp 框架下 audio 解耦仍成立"——未验证；这是 `infra-001` 的核心 verification 项
+  - 还没建 `cocoa/` 包（infra-001 第一步）
+  - `init.ps1` 仍未在 Windows 机实测
+  - 没决定 `SESSION-BOOTSTRAP.md` 处置（信息已迁移到 claude-progress.md，但文件还在）
+- **下一步最佳动作**：
+  1. 用户 review 本轮变更
+  2. 处置 `SESSION-BOOTSTRAP.md`（删除 / 留作历史 / 改为指针）
+  3. commit 后进入 `infra-001`：先用 `python -m reachy_mini.apps.app create coco_spike .` 看官方骨架，再决定如何重构

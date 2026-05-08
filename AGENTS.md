@@ -48,6 +48,14 @@
 - **robot 子系统**：通过 `ReachyMini` + Zenoh + mockup-sim daemon 验动作。reachy-mini Lite SDK 提供 macOS / Linux / Windows 的 cp313 wheel，开发跨平台；真机硬件相关功能（USB 音频等）可能仍受限。真机验收作为 milestone gate，不卡住模拟开发。
 - 两个子系统独立，仅在应用层汇合。详见 `research/spike-audio-attempt.md`。
 
+### app 部署模型（路线 C：双模式）
+
+- Coco 是 `ReachyMiniApp` 子类（继承自 `reachy_mini.ReachyMiniApp`），`pyproject.toml` 声明 `[project.entry-points."reachy_mini_apps"]`
+- **开发模式**：`python -m coco`（绕开 Control.app，快速迭代）
+- **UAT / 发布模式**：`reachy_mini.apps.app publish` 上 HF Space → Control.app 启动；真机验收必须走此模式
+- 在 ReachyMiniApp 框架下需保持 audio 解耦：app 类设 `request_media_backend` 为不依赖 reachy-mini media 的值，主循环里只用 sounddevice
+- 详见 `research/control-app-deployment-research.md`
+
 ## 增强工具（按需）
 
 - **memex**：开工时若任务触及过往踩过的坑（环境、依赖、SDK 行为），先 `memex-recall`；完成有方法论价值的工作后用 `memex-retro` 沉淀卡片

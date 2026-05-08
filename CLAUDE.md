@@ -41,6 +41,13 @@
 - **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收是 milestone gate
 - 两路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
 
+### app 部署模型（路线 C：双模式）
+
+- Coco 是 `ReachyMiniApp` 子类，`pyproject.toml` 声明 `[project.entry-points."reachy_mini_apps"]`
+- 开发：`python -m coco`；UAT/发布：`reachy_mini.apps.app publish` → Control.app 启动
+- 在 ReachyMiniApp 框架下保持 audio 解耦（不走 reachy-mini media 子系统）
+- 详见 `research/control-app-deployment-research.md`
+
 ## 必需文件
 
 - `feature_list.json` — 唯一事实来源

@@ -15,6 +15,24 @@
   "milestone": "phase-1-mvp 桌面学习搭子（场景 1）",
   "features": [
     {
+      "id": "infra-001",
+      "priority": 0,
+      "area": "infra",
+      "title": "ReachyMiniApp 双模式骨架",
+      "user_visible_behavior": "Coco 既可作为独立 Python app 跑（python -m coco），也可被 Control.app 通过 entry points 发现并启动；audio 解耦决策在 ReachyMiniApp 框架下仍成立。",
+      "status": "not_started",
+      "verification": [
+        "用 `python -m reachy_mini.apps.app create coco_spike .` 生成参考骨架，理解模板",
+        "把 Coco 重构为 ReachyMiniApp 子类（cocoa/ 包 + main.py 含 class Coco(ReachyMiniApp)）",
+        "pyproject.toml 加 [project.entry-points.\"reachy_mini_apps\"] coco = \"cocoa.main:Coco\"",
+        "在 run() 中只用 sounddevice 采麦克数据，不调用 reachy_mini.media；验证 wrapped_run() 启动时 ReachyMini 客户端不挂",
+        "`python -m reachy_mini.apps.app check .` 通过",
+        "`python -m cocoa.main` 能本地启动，跑 5 秒后 Ctrl+C 干净停止"
+      ],
+      "evidence": [],
+      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。"
+    },
+    {
       "id": "audio-001",
       "priority": 1,
       "area": "audio",
@@ -24,14 +42,15 @@
       "verification": [
         "运行 ./init.sh 的 smoke test，看到 audio ok 与非零 rms。",
         "运行 .venv/bin/python -u spike_audio.py，按 Enter 后说话 3 秒。",
-        "确认输出的某些时序段 rms 显著高于安静段。"
+        "确认输出的某些时序段 rms 显著高于安静段。",
+        "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 sounddevice 仍可拿到非零数据。"
       ],
       "evidence": [
         "research/spike-audio-attempt.md",
         "spike_audio.py（已验通）",
         "commit 4999f03 — spike audio path"
       ],
-      "notes": "决策：audio 与 robot 解耦，不走 reachy-mini daemon 的 audio backend。"
+      "notes": "决策：audio 与 robot 解耦，不走 reachy-mini daemon 的 audio backend。infra-001 完成后应在 ReachyMiniApp 框架下补一次验证。"
     },
     {
       "id": "robot-001",
@@ -105,10 +124,12 @@
         "依赖 audio-002 与 robot-002 通过。",
         "实现 push-to-talk CLI（终端按 Enter 触发）。",
         "在 mockup-sim 下完整跑通：说话 → 看到转写 → 看到 head joint 动作。",
-        "记录一次完整 session 的日志到 evidence。"
+        "Control.app 模式下也跑通同样流程（python -m reachy_mini.apps.app check . 通过 + 由 Control.app 启动后能完整闭环）。",
+        "记录两次完整 session（开发模式 + Control.app 模式）的日志到 evidence。"
       ],
       "evidence": [],
-      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通。"
+      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通。Control.app 模式覆盖是真机 UAT 的前置。"
     }
   ]
 }
+
