@@ -1,3 +1,16 @@
+---
+title: Coco
+emoji: 🥥
+colorFrom: red
+colorTo: blue
+sdk: static
+pinned: false
+short_description: "基于 Reachy Mini 的开源学习伴侣机器人"
+tags:
+ - reachy_mini
+ - reachy_mini_python_app
+---
+
 # Coco / 可可
 
 > 一个会陪你一起好奇、一起进步的小伙伴。

@@ -272,6 +272,22 @@ wheels = [
 ]
 
 [[package]]
+name = "coco"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "reachy-mini", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "reachy-mini", version = "1.7.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "sounddevice" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "reachy-mini", specifier = ">=1.4.0" },
+    { name = "sounddevice", specifier = ">=0.5.5" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1578,22 +1594,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/11/4f64945a4e3765d2a5f0259eba5c724e55287f68526e4f0fe6ac61196c8f/reachy_mini_rust_kinematics-1.0.3-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:f388d5dd9353ef65dcad32000c1a6c1c86587d7f04449d559476310be955b6b6", size = 595139, upload-time = "2025-12-04T11:53:08.047Z" },
     { url = "https://files.pythonhosted.org/packages/a8/80/720a3e29baee0a38ee69641f16aff58217fadea4693613795bad893e5f7e/reachy_mini_rust_kinematics-1.0.3-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:50076bc0c75a766e99e984686eaaec36e1b6fb27fba25b58f2f77262df326da9", size = 538654, upload-time = "2025-12-04T11:53:24.349Z" },
     { url = "https://files.pythonhosted.org/packages/ed/43/77df8f4446309af9c5a9d1c886d72a2a80ebb0e07169573b34feb62307ea/reachy_mini_rust_kinematics-1.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:a0757d99af12cfeb84bd039e9f4b42679b688ff0fd58b0ec89b8f6c787add55e", size = 510099, upload-time = "2025-12-04T11:53:39.303Z" },
-]
-
-[[package]]
-name = "reachy-mini-workspace"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "reachy-mini", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "reachy-mini", version = "1.7.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "sounddevice" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "reachy-mini", specifier = ">=1.4.0" },
-    { name = "sounddevice", specifier = ">=0.5.5" },
 ]
 
 [[package]]

@@ -51,6 +51,7 @@
 - 不要为了"看起来完成"而删除或削弱测试
 - 以仓库内文件作为唯一事实来源
 - 中文沟通；遵守 `~/.claude/memory/git-conventions.md`，但 commit/push 例外见下文 Git 工作流
+- Control.app daemon 处理：当 Control.app 自带的 reachy-mini daemon 占用 8000/7447 端口阻塞 `./init.sh --daemon` 或 verification 时，sub-agent 可直接 kill 该进程（`pgrep -f 'desktop-app-daemon'`），不需要再向用户确认。
 
 ## Git 工作流
 

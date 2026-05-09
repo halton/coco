@@ -32,12 +32,12 @@
         "把 `pyproject.toml` 的 `name` 从 `reachy-mini-workspace` 改为 `coco`，description 同步更新为 Coco / 可可 项目本身",
         "把 Coco 重构为 ReachyMiniApp 子类（coco/ 包 + main.py 含 class Coco(ReachyMiniApp)）",
         "pyproject.toml 加 [project.entry-points.\"reachy_mini_apps\"] coco = \"coco.main:Coco\"",
-        "在 run() 中只用 sounddevice 采麦克数据，不调用 reachy_mini.media；验证 wrapped_run() 启动时 ReachyMini 客户端不挂",
+        "在 run() 中只用 sounddevice 采麦克数据，不调用 reachy_mini.media；前置：本机已有 mockup-sim daemon 监听 zenoh 7447（由 ./init.sh --daemon 起，或真机 daemon）。步骤：python -m coco.main，5 秒后发 SIGINT；进程能进入 Coco.run() 主循环并干净退出",
         "`python -m reachy_mini.apps.app check .` 通过",
-        "`python -m coco.main` 能本地启动，跑 5 秒后 Ctrl+C 干净停止"
+        "启动后 ReachyMini 客户端连接成功（zenoh 7447），Coco.run() 主循环开始执行后能干净 SIGINT 退出（dev 与 publish 模式都依赖 daemon 在场，反映 SDK wrapped_run 强绑 Zenoh 的实际行为）"
       ],
       "evidence": [],
-      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。pyproject.toml name 改名是顺带做掉的占位清理（原值 reachy-mini-workspace 是早期未改的占位）。"
+      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。pyproject.toml name 改名是顺带做掉的占位清理（原值 reachy-mini-workspace 是早期未改的占位）。路线 C 修订：dev 模式与 publish 模式都依赖 daemon 在场（本地用 mockup-sim、真机用 robot daemon）；audio 子系统仍独立于 daemon。"
     },
     {
       "id": "audio-001",
