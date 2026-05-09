@@ -36,8 +36,58 @@
         "`python -m reachy_mini.apps.app check .` 通过",
         "启动后 ReachyMini 客户端连接成功（zenoh 7447），Coco.run() 主循环开始执行后能干净 SIGINT 退出（dev 与 publish 模式都依赖 daemon 在场，反映 SDK wrapped_run 强绑 Zenoh 的实际行为）"
       ],
-      "evidence": [],
-      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。pyproject.toml name 改名是顺带做掉的占位清理（原值 reachy-mini-workspace 是早期未改的占位）。路线 C 修订：dev 模式与 publish 模式都依赖 daemon 在场（本地用 mockup-sim、真机用 robot daemon）；audio 子系统仍独立于 daemon。"
+      "evidence": [
+        {
+          "verification": "V1: 用 reachy_mini.apps.app create 生成参考骨架，理解模板",
+          "commit": "n/a (spike)",
+          "result": "pass",
+          "evidence": "Session 008 Spike 阶段已生成并阅读模板；模板对照写入 research/control-app-deployment-research.md，并据此设计 Coco(ReachyMiniApp) 结构（见 claude-progress.md Session 008/009）",
+          "session": "Session 008-009"
+        },
+        {
+          "verification": "V2: pyproject.toml name 由 reachy-mini-workspace 改为 coco",
+          "commit": "9b261c1",
+          "result": "pass",
+          "evidence": "pyproject.toml [project] name = \"coco\"，description 同步更新为 Coco / 可可 项目本身",
+          "session": "Session 009"
+        },
+        {
+          "verification": "V3: Coco 重构为 ReachyMiniApp 子类",
+          "commit": "9b261c1",
+          "result": "pass",
+          "evidence": "coco/main.py 定义 class Coco(ReachyMiniApp)，实现 run(self, reachy_mini, stop_event)；包含 custom_app_url / request_media_backend 类属性",
+          "session": "Session 009"
+        },
+        {
+          "verification": "V4: pyproject.toml 注册 reachy_mini_apps entry point + run() 只用 sounddevice",
+          "commit": "9b261c1",
+          "result": "pass",
+          "evidence": "pyproject.toml [project.entry-points.\"reachy_mini_apps\"] coco = \"coco.main:Coco\"；coco/main.py 仅 import sounddevice / numpy，无 reachy_mini.media 引用",
+          "session": "Session 009"
+        },
+        {
+          "verification": "V5: python -m coco.main 5s + SIGINT 干净退出",
+          "commit": "75548c0 (verification 文案) + 待 commit 的 main.py finding 1+2 修复",
+          "result": "pass",
+          "evidence": "exit code 0；finding 2 修复后 SIGINT/SIGTERM 均经 signal.signal 注册的 _graceful_stop → app.stop() → stop_event.set() → wrapped_run 内 wait 返回 → run() 退出 → InputStream context 关闭；前置 mockup-sim daemon 在 7447",
+          "session": "Session 009"
+        },
+        {
+          "verification": "V6: reachy_mini.apps.app check . 全过",
+          "commit": "75548c0",
+          "result": "pass",
+          "evidence": "/tmp/coco-check.log 末尾 '✅ App \\'coco\\' passed all checks!'；安装阶段耗时 0:09:33（temp venv pip install）；entrypoint coco = coco.main:Coco 注册正确；index.html / style.css / README.md / metadata 全过",
+          "session": "Session 009"
+        },
+        {
+          "verification": "V7: ReachyMini 客户端连接 zenoh 7447 + Coco.run() 主循环启动后能干净 SIGINT",
+          "commit": "75548c0 + 待 commit main.py",
+          "result": "pass",
+          "evidence": "与 V5 同次运行印证：wrapped_run 进入后 ReachyMini 客户端经 zenoh 7447 与 mockup-sim daemon 完成握手，进入 Coco.run() 主循环，sounddevice InputStream 启动；SIGINT 触发后日志 'Received signal 2, stopping gracefully' → 'App is stopping...' → exit 0",
+          "session": "Session 009"
+        }
+      ],
+      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。pyproject.toml name 改名是顺带做掉的占位清理（原值 reachy-mini-workspace 是早期未改的占位）。路线 C 修订：dev 模式与 publish 模式都依赖 daemon 在场（本地用 mockup-sim、真机用 robot daemon）；audio 子系统仍独立于 daemon。 `request_media_backend = \"no_media\"` 是 phase-1 临时；与 robot-001 的 daemon 端 `--deactivate-audio` 豁免联动；待 robot-003 视频链路落地后两条豁免一并撤回。"
     },
     {
       "id": "audio-001",
