@@ -17,6 +17,25 @@
 | multi-role harness（4 角色 + Reviewer 必走 sub-agent） | `AGENTS.md` 角色段；`feature_list.json` rules.reviewer_required_for_passing | 4 角色 Engineer/Researcher/Reviewer/Robot UAT；按 area 自动组合；硬规则：feature `in_progress` → `passing` 前必须一次 Reviewer sub-agent fresh-context 评审；Reviewer/Researcher 不能在主 context 自审。依据 commit ac43436 fresh-context 抓到的 audio-003 edge-tts 语义滑坡 |
 | 撤回 audio-only 解耦定位 | 用户口述（2026-05-09）；`feature_list.json` robot-001 notes | 产品目标含视频检测、双向语音通话、Reachy Mini 全部零件操作，不是 audio-only。spike 期"audio 与 robot 解耦"原文保留作早期路径选择记录，但 smoke 默认 `media_backend='no_media'` 仅作**临时 workaround**（Lite SDK 缺 GStreamer），待 robot-003 视频链路落地后撤回 |
 
+## 连续开发模式（2026-05-09 起生效）
+
+用户已授权"自走完所有 feature"模式，规则如下：
+
+| 项 | 决策 |
+|---|---|
+| Commit 策略 | **B. 完全放权**：feature passing 后我自行 commit，不再每次问；用户在 PR / milestone 处看 |
+| 真机依赖门槛 | mockup-sim 通过即标 `passing`；真机 UAT 单独留 backlog（每个 milestone 末批量做） |
+| Reviewer 找出问题 | auto-fix 后重 review，最多 **20 轮**；超过则停下来等用户 |
+| "全部完成"定义 | `feature_list.json` 现有 features 全部 `passing` 即完工；真机 UAT 在 milestone backlog 单独跟 |
+| 中途发现缺失依赖 | 我自动加新 feature 继续，不停下确认（priority 紧贴当前任务后） |
+| Windows 验证 | 暂不要求；`init.ps1` 与 Windows-only verification 不阻断 passing |
+
+**执行守则**：
+- 真机 UAT 类 verification 项遇到时，写入 `backlog/real-robot-uat.md`，本 feature evidence 记 "skipped: real-robot only, tracked in backlog/real-robot-uat.md"
+- 自动新增的 feature 在 `_change_log` 注明 "auto-added during <feature-id> execution: <reason>"
+- 每个 feature 推进开始与结束都更新 `claude-progress.md` 会话记录段
+- Reviewer sub-agent 必须用 `Task` 工具 fresh-context 调起，主 context 不自审
+
 ## 环境基线
 
 记录"已知此组合下 smoke 通过"。每次依赖升级后更新。
@@ -90,6 +109,18 @@
   1. 在 macOS 跑 `./init.sh` 验证 smoke 通过
   2. 评估 memex / logex / opc 是否值得集成（用户提问）
   3. 用户 review 后提交，进入 `robot-001`
+
+### Session 005 — 2026-05-09（连续开发模式启动 / checkpoint）
+
+- **本轮目标**：进入连续开发模式前的策略对齐 + 决策落地
+- **已完成**：
+  - 顶部新增"连续开发模式"段（6 条决策：commit 放权 / mockup-sim 即 passing / Reviewer 20 轮上限 / feature 走完即完工 / 缺依赖自动加 feature / 暂不要求 Windows 验证）
+  - 守则配套（backlog/real-robot-uat.md 收集真机项；auto-added feature 在 _change_log 注明）
+- **下一步最佳动作**：
+  1. 起新 session（context 充足）
+  2. 进入 `infra-001`：第一步 `python -m reachy_mini.apps.app create coco_spike .` 拿官方骨架，临时目录生成、对照后丢弃
+  3. 按 7 条 verification 走完，Reviewer sub-agent 评审通过后切 `passing`
+  4. 自走进入 `audio-002`（infra-001 后下一个 not_started）
 
 ### Session 004 — 2026-05-08（harness 加固 + 部署模型决策）
 

@@ -1,6 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-09",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -143,8 +144,27 @@
       "notes": ""
     },
     {
-      "id": "interact-001",
+      "id": "infra-vision-source",
       "priority": 7,
+      "area": "infra",
+      "title": "CameraSource 抽象 + fixture 三档",
+      "user_visible_behavior": "Coco 视觉感知代码不直接依赖 cv2.VideoCapture；通过 COCO_CAMERA 环境变量在 sim（图片/视频 fixture）与真机（USB 摄像头）之间切换，业务代码无感知。",
+      "status": "not_started",
+      "verification": [
+        "实现 coco/perception/camera_source.py：CameraSource Protocol（read() -> (bool, np.ndarray); release()）。",
+        "实现三个具体类：ImageLoopSource（A 档：单图循环出帧）、VideoFileSource（B/C 档：mp4/合成视频按帧率播放）、UsbCameraSource（真机：cv2.VideoCapture 包装）。",
+        "实现工厂函数从 COCO_CAMERA 环境变量解析：image:<path> / video:<path> / usb:<idx>，默认 usb:0。",
+        "准备初始 fixture 集到 tests/fixtures/vision/：single_face.jpg、no_one.jpg、user_walks_away.mp4（至少这三个，可后续扩充）；fixture 来源与版权声明写入 tests/fixtures/vision/README.md。",
+        "写 spike_vision.py：分别用 image:、video:、usb: 三种源各跑 5 秒，打印每帧 shape 与帧率，确认三种源都能稳定出帧。",
+        "fixture 的 mp4 在 macOS / Linux 上都能被 OpenCV 解码（不依赖系统专有 codec）。",
+        "在 README 或 CLAUDE.md 子系统边界段补充摄像头说明与切换方式。"
+      ],
+      "evidence": [],
+      "notes": "依据 research/sim-vs-real-gaps.md 第 5 节。这是 phase-1 audio MVP 之外的前瞻性 infra：phase-1 自身不用视觉，但等 companion/interact 类 feature 引入视觉时（人脸检测、有人/无人、走近/离开），有这层抽象就能直接用 fixture 在 sim 下拿 evidence，无需逐 feature 各搭一套 mock。视觉-运动闭环（看到人 → 转头 → 视野更新）fixture 不能 sim，必须真机 UAT，这一限制写入 fixture README。"
+    },
+    {
+      "id": "interact-001",
+      "priority": 8,
       "area": "interact",
       "title": "最小语音交互闭环（push-to-talk → 中文转写 → 中文回应 + 动作）",
       "user_visible_behavior": "按下某个键开始录音，松开停止；Coco 用中文转写说话内容，并用一句中文语音 + 一个动作（点头或左看）作为简单回应。",
