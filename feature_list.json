@@ -1,6 +1,6 @@
 {
   "project": "coco-reachy-mini",
-  "last_updated": "2026-05-09",
+  "last_updated": "2026-05-10",
   "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。",
   "rules": {
     "single_active_feature": true,
@@ -26,7 +26,7 @@
       "area": "infra",
       "title": "ReachyMiniApp 双模式骨架",
       "user_visible_behavior": "Coco 既可作为独立 Python app 跑（python -m coco），也可被 Control.app 通过 entry points 发现并启动；audio 解耦决策在 ReachyMiniApp 框架下仍成立。",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "用 `python -m reachy_mini.apps.app create coco_spike .` 生成参考骨架，理解模板",
         "把 `pyproject.toml` 的 `name` 从 `reachy-mini-workspace` 改为 `coco`，description 同步更新为 Coco / 可可 项目本身",
@@ -67,9 +67,9 @@
         },
         {
           "verification": "V5: python -m coco.main 5s + SIGINT 干净退出",
-          "commit": "75548c0 (verification 文案) + 待 commit 的 main.py finding 1+2 修复",
+          "commit": "75548c0 (verification 文案) + 8c3860a (main.py finding 1+2 修复)",
           "result": "pass",
-          "evidence": "exit code 0；finding 2 修复后 SIGINT/SIGTERM 均经 signal.signal 注册的 _graceful_stop → app.stop() → stop_event.set() → wrapped_run 内 wait 返回 → run() 退出 → InputStream context 关闭；前置 mockup-sim daemon 在 7447",
+          "evidence": "exit code 0；finding 2 修复后 SIGINT/SIGTERM 均经 signal.signal 注册的 _graceful_stop → app.stop() → stop_event.set() → wrapped_run 内 wait 返回 → run() 退出 → InputStream context 关闭；前置 mockup-sim daemon 在 7447。复跑日志: /tmp/coco-run-v5.log，EXIT=0",
           "session": "Session 009"
         },
         {
@@ -81,7 +81,7 @@
         },
         {
           "verification": "V7: ReachyMini 客户端连接 zenoh 7447 + Coco.run() 主循环启动后能干净 SIGINT",
-          "commit": "75548c0 + 待 commit main.py",
+          "commit": "75548c0 + 8c3860a",
           "result": "pass",
           "evidence": "与 V5 同次运行印证：wrapped_run 进入后 ReachyMini 客户端经 zenoh 7447 与 mockup-sim daemon 完成握手，进入 Coco.run() 主循环，sounddevice InputStream 启动；SIGINT 触发后日志 'Received signal 2, stopping gracefully' → 'App is stopping...' → exit 0",
           "session": "Session 009"

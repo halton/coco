@@ -206,3 +206,30 @@
   1. 用户 review 本轮变更
   2. 处置 `SESSION-BOOTSTRAP.md`（删除 / 留作历史 / 改为指针）
   3. commit 后进入 `infra-001`：先用 `python -m reachy_mini.apps.app create coco_spike .` 看官方骨架，再决定如何重构
+
+### Session 009 — 2026-05-10（infra-001 收尾切 passing）
+
+- **本轮目标**：完成 infra-001 verification 5/6/7 + Reviewer 双轮 + 切 passing。
+- **已完成**：
+  - V5 重跑：`python -m coco.main` 5s + SIGINT，干净退出；前置 mockup-sim daemon（zenoh 7447）
+  - V6：`reachy_mini.apps.app check .` 全过（temp venv pip install ~9 分钟，entrypoint / index.html / metadata 全 pass）
+  - V7：与 V5 同次印证，wrapped_run 经 zenoh 与 daemon 握手后进入 Coco.run() 主循环，SIGINT 干净退出
+  - **Reviewer 第 1 轮（fresh-context sub-agent）**：Block，发现两条 high finding
+    - finding 1：`request_media_backend = None` 与父类类型注解 `str | None` 不严格冲突但语义弱，建议显式注解 + `"no_media"` 值
+    - finding 2：`main()` 仅 try/except KeyboardInterrupt，遗漏 SIGTERM；且未注册 signal handler，依赖 Python 默认行为风险
+  - 修复（commit `8c3860a`）：
+    - `request_media_backend: str | None = "no_media"` 显式注解 + 注释说明 phase-1 临时
+    - `main()` 装 SIGINT/SIGTERM signal handler，统一调 `app.stop()` 让 stop_event 走完整路径
+    - feature_list.json infra-001 evidence 7 条全部填齐 + notes 加 no_media 与 robot-001 `--deactivate-audio` 联动声明
+  - **Reviewer 第 2 轮（fresh-context sub-agent）**：LGTM-with-concerns，强制条件——commit 未提交改动后切 passing；非阻塞 concern：audio-002 入口 `custom_app_url` 改非 None 时需复审 signal handler 与 uvicorn 协同
+  - V5 复跑（commit 后）：`/tmp/coco-run-v5.log`，EXIT=0
+  - 切 status `in_progress` → `passing`
+- **运行过的验证**：V5 / V6 / V7 全 pass；Reviewer 二轮 LGTM
+- **已记录证据**：commit `8c3860a` (finding 修复 + evidence 填齐)；本 session 后续 commit (status passing + V5 复跑日志)
+- **更新过的文件或工件**：coco/main.py、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：
+  - `request_media_backend = "no_media"` 是 phase-1 临时；与 robot-001 daemon `--deactivate-audio` 豁免联动，待 robot-003 视频链路落地后两条豁免一并撤回
+  - audio-002 入口检查项：若 `custom_app_url` 改非 None（启动 uvicorn），需复审 signal handler 与 uvicorn 生命周期协同（Reviewer 二轮 non-blocking concern）
+- **下一步最佳动作**：
+  1. push origin main
+  2. 启动 audio-002（中文 ASR / SenseVoice-Small）
