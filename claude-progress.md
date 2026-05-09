@@ -14,6 +14,8 @@
 | 跨平台支持（macOS / Linux / Windows） | `pyproject.toml` / `init.sh` / `init.ps1` | reachy-mini Lite SDK 三平台都有 cp313 wheel；`required-environments` 显式列出三平台 |
 | app 部署模型：路线 C 双模式 | `research/control-app-deployment-research.md` | Coco 是 ReachyMiniApp 子类；开发用 `python -m coco`，UAT/发布走 Control.app 经 HF Space。infra-001 是其他 feature 的前置 |
 | 中文 ASR/TTS 本地优先选型 | `research/chinese-asr-tts-selection.md` | 统一 runtime 用 sherpa-onnx（跨平台 NEON 加速、ARM 友好）；ASR=SenseVoice-Small INT8（60MB / CER 3-5% / ~70ms）；TTS=Kokoro-82M-zh（82MB / Apache-2.0 / CPU 友好）；edge-tts 作联网兜底（不强制依赖网络） |
+| multi-role harness（4 角色 + Reviewer 必走 sub-agent） | `AGENTS.md` 角色段；`feature_list.json` rules.reviewer_required_for_passing | 4 角色 Engineer/Researcher/Reviewer/Robot UAT；按 area 自动组合；硬规则：feature `in_progress` → `passing` 前必须一次 Reviewer sub-agent fresh-context 评审；Reviewer/Researcher 不能在主 context 自审。依据 commit ac43436 fresh-context 抓到的 audio-003 edge-tts 语义滑坡 |
+| 撤回 audio-only 解耦定位 | 用户口述（2026-05-09）；`feature_list.json` robot-001 notes | 产品目标含视频检测、双向语音通话、Reachy Mini 全部零件操作，不是 audio-only。spike 期"audio 与 robot 解耦"原文保留作早期路径选择记录，但 smoke 默认 `media_backend='no_media'` 仅作**临时 workaround**（Lite SDK 缺 GStreamer），待 robot-003 视频链路落地后撤回 |
 
 ## 环境基线
 

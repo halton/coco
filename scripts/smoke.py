@@ -77,7 +77,9 @@ def smoke_daemon() -> None:
             sys.exit(f"FAIL: import reachy_mini 失败 ({e})")
 
         try:
-            mini = ReachyMini(spawn_daemon=False)
+            # 临时 workaround：no_media 绕开 Lite SDK 上 GStreamer/`gi` 缺失。
+            # 产品目标含视频/媒体，待装 GStreamer 后撤回此豁免（见 robot-001 notes）。
+            mini = ReachyMini(spawn_daemon=False, media_backend="no_media", timeout=10.0)
             print("  ok: Zenoh 通")
         except Exception as e:
             sys.exit(f"FAIL: ReachyMini 客户端连不上 ({e})。查看 {log_path}")
