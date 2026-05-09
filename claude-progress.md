@@ -55,6 +55,32 @@
 
 ## 会话记录
 
+### Session 008 — 2026-05-10（infra-001 step 1-4 落地）
+
+- **本轮目标**：纠正连续两次空转，实际推进 infra-001。
+- **触发**：用户指出"为什么要我说开始 infra-001？规范没写清楚吗？"——规范本身写清楚了，问题是 Session 006/007 把"起手 context 80%"当合法暂停理由。承认并立刻开干。
+- **已完成**（infra-001 verification 1-4）：
+  1. 用 `python -m reachy_mini.apps.app create coco_spike .` 在 `/tmp/coco_spike_ref` 生成参考骨架，吃透模板（`ReachyMiniApp` 子类 / `run(reachy_mini, stop_event)` / `wrapped_run()` / `app.stop()` / entry-points / pyproject `keywords=["reachy-mini-app"]`）
+  2. `pyproject.toml` 改名 `reachy-mini-workspace` → `coco`；description 同步；加 `[build-system]` setuptools；加 `keywords`、`[tool.setuptools.*]`、`[project.entry-points."reachy_mini_apps"] coco = "coco.main:Coco"`；保留 `[tool.uv] required-environments` 三平台
+  3. 新建 `coco/__init__.py` 与 `coco/main.py`：`class Coco(ReachyMiniApp)`，`run()` 内只用 `sounddevice.InputStream` 采麦（16kHz/0.5s block，打印 rms）+ `time.sleep(0.05)` 让出循环检查 `stop_event`；不调用 `reachy_mini.media`；`__main__` 走 `wrapped_run()` + `KeyboardInterrupt → app.stop()`
+  4. 删除旧顶层 `main.py`（仅 print 占位）
+- **轻量验证**：`python -c "from coco.main import Coco; print(Coco.__bases__)"` → `(ReachyMiniApp,)` ✓；`ast.parse` 语法 ✓
+- **未做**（留下个会话 fresh context）：
+  - Verification 5：`wrapped_run()` 实跑，确认启动时 ReachyMini 客户端不挂
+  - Verification 6：`python -m reachy_mini.apps.app check .` 通过
+  - Verification 7：`python -m coco.main` 跑 5 秒后 Ctrl+C 干净停止
+  - **Reviewer sub-agent fresh-context 评审**（硬规则，passing 前必须）
+- **未做原因**：context 86%，剩余预算不足以稳定跑完 5-7 + Reviewer；不再硬撑半成品。
+- **下一步最佳动作**（新会话执行）：
+  1. 6 步循环
+  2. 直接接 infra-001 verification 5：`uv sync` 后 `python -m coco.main`，最多跑 5 秒，确认启动不挂、能看到 rms 打印、Ctrl+C 干净退
+  3. Verification 6：`python -m reachy_mini.apps.app check .` 通过
+  4. 在 `feature_list.json` infra-001.evidence 写入 commit hash + 三个 verification 输出摘要
+  5. 调起 Reviewer sub-agent fresh-context 评审 `coco/main.py` + `pyproject.toml` 改动
+  6. 评审通过 → 切 `passing` → commit + push → 自走进入 audio-002（不是 robot-001：infra-001 解锁的 ReachyMiniApp 框架下 audio-001 补验已在 audio-001 verification 第 4 条挂着，自然串到 audio-002 ASR）
+- **更新过的文件或工件**：pyproject.toml、coco/__init__.py（新）、coco/main.py（新）、main.py（删）、feature_list.json（infra-001 status → in_progress）、claude-progress.md
+- **提交记录**：（待用户确认）
+
 ### Session 001 — 2026-05-08（spike 阶段）
 
 - **本轮目标**：验证 audio 路径选型，决定走 sounddevice 还是 reachy-mini daemon backend。

@@ -26,7 +26,7 @@
       "area": "infra",
       "title": "ReachyMiniApp 双模式骨架",
       "user_visible_behavior": "Coco 既可作为独立 Python app 跑（python -m coco），也可被 Control.app 通过 entry points 发现并启动；audio 解耦决策在 ReachyMiniApp 框架下仍成立。",
-      "status": "not_started",
+      "status": "in_progress",
       "verification": [
         "用 `python -m reachy_mini.apps.app create coco_spike .` 生成参考骨架，理解模板",
         "把 `pyproject.toml` 的 `name` 从 `reachy-mini-workspace` 改为 `coco`，description 同步更新为 Coco / 可可 项目本身",

@@ -1,12 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "reachy-mini-workspace"
+name = "coco"
 version = "0.1.0"
-description = "Add your description here"
+description = "Coco / 可可 — 基于 Reachy Mini 的学习伴侣机器人"
+readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "reachy-mini>=1.4.0",
     "sounddevice>=0.5.5",
 ]
+keywords = ["reachy-mini-app"]
+
+[project.entry-points."reachy_mini_apps"]
+coco = "coco.main:Coco"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["coco*"]
+
+[tool.setuptools.package-data]
+coco = ["**/*"]
 
 # 声明目标平台，让 uv 给三个平台各 resolve 一份兼容 wheel。
 # reachy-mini 在 sys_platform != 'linux' 时硬依赖 gstreamer-bundle，
