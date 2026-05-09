@@ -146,7 +146,7 @@
       "area": "audio",
       "title": "中文 ASR 接入（SenseVoice-Small via sherpa-onnx，wav + 实时麦克）",
       "user_visible_behavior": "给定一段中文 wav，能拿到简体中文转写文本；用麦克实时录一段（≤10 秒）也能拿到中文转写。",
-      "status": "not_started",
+      "status": "in_progress",
       "verification": [
         "选定方案：sherpa-onnx + SenseVoice-Small INT8（中文优先；备选 Paraformer-zh-small）；模型来源与版本号写入 evidence。",
         "依赖落到 pyproject.toml：`sherpa-onnx`（含 Python wheel；mac/Linux/Windows 三平台均有 ARM/x86 wheel）。",
@@ -156,7 +156,7 @@
         "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 ASR 链路仍可拿到正确中文转写。"
       ],
       "evidence": [],
-      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。本地优先（不依赖云）+ 跨平台 + Apache-2.0。测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。evidence 分两阶段记：(1) 主验阶段（独立脚本，干净 wav + 实时麦克）；(2) infra-001 通过后补验阶段（在 ReachyMiniApp.run() 内）。两阶段分别记录。"
+      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。本地优先（不依赖云）+ 跨平台 + Apache-2.0。测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。evidence 分两阶段记：(1) 主验阶段（独立脚本，干净 wav + 实时麦克）；(2) infra-001 通过后补验阶段（在 ReachyMiniApp.run() 内）。两阶段分别记录。2026-05-10 Session 009 起步：开 feat/audio-002 分支，Researcher 调研 SenseVoice-Small + sherpa-onnx 中。"
     },
     {
       "id": "audio-003",
