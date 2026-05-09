@@ -111,6 +111,20 @@
   2. 评估 memex / logex / opc 是否值得集成（用户提问）
   3. 用户 review 后提交，进入 `robot-001`
 
+### Session 006 — 2026-05-10（pre-infra-001 checkpoint）
+
+- **本轮目标**：状态对齐 + 落 checkpoint，把 infra-001 留给下一会话 full context 跑。
+- **已完成**：
+  - 6 步循环对齐：repo 根 ✓ / progress ✓ / feature_list ✓ / git log ✓ / `./init.sh` smoke 通过 ✓
+  - 环境基线复核：Python 3.13.12 / Darwin 25.4.0 arm64 / reachy-mini 1.4.0 / sounddevice 0.5.5 / numpy 2.4.4（与 2026-05-08 基线一致）
+- **运行过的验证**：`./init.sh`（smoke ok，rms=0.000897）
+- **未动**：代码 / feature 状态 / 任何 in_progress 切换
+- **下一步最佳动作**（新会话执行）：
+  1. 6 步循环
+  2. 把 `infra-001` 切 `in_progress`，按 7 条 verification 推进
+  3. 完成后调起 Reviewer sub-agent fresh-context 评审 → `passing` → commit + push
+  4. 自走进入 `audio-002`
+
 ### Session 005 — 2026-05-09（连续开发模式启动 / checkpoint）
 
 - **本轮目标**：进入连续开发模式前的策略对齐 + 决策落地
