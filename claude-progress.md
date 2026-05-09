@@ -29,6 +29,7 @@
 | "全部完成"定义 | `feature_list.json` 现有 features 全部 `passing` 即完工；真机 UAT 在 milestone backlog 单独跟 |
 | 中途发现缺失依赖 | 我自动加新 feature 继续，不停下确认（priority 紧贴当前任务后） |
 | Windows 验证 | 暂不要求；`init.ps1` 与 Windows-only verification 不阻断 passing |
+| Push 策略 | 每次 commit 成功后立即 `git push origin <branch>`，不再等用户 |
 
 **执行守则**：
 - 真机 UAT 类 verification 项遇到时，写入 `backlog/real-robot-uat.md`，本 feature evidence 记 "skipped: real-robot only, tracked in backlog/real-robot-uat.md"
