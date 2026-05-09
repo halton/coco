@@ -15,6 +15,34 @@
 
 然后只选择一个未完成功能（`feature_list.json` 中 priority 最低数字的 `not_started`），围绕它工作，直到它被验证通过，或者被明确记录为 `blocked`。
 
+## 主会话编排模式（硬规则）
+
+主会话是**编排者**，不是干活的人。目的：把主 context 压力降下来，避免一两轮就 80%+ 触发压缩。
+
+**主会话只做这几件事**：
+
+- 读用户意图、拆任务、决定派给谁
+- 把 sub-agent 返回的结构化结果综合成下一步决策
+- 决定 commit / push / feature 状态切换（`in_progress` ↔ `passing` ↔ `blocked`）
+- 跨子系统协调（audio / robot / app 之间的边界判断）
+- 与用户对话、确认门槛
+
+**所有任务一律派 sub-agent 执行，不分大小**（用 `Agent` / Task 工具，`subagent_type` 选合适角色，general-purpose 也可；中文沟通；brief 含目标 + 已知上下文摘要 + 期望返回格式；sub-agent 返回结构化摘要，主会话**不重读** sub-agent 已经读过的文件）：
+
+- 所有文件读取（即使是单个短文件、确认一个事实）
+- 所有文件编辑（即使是改一行配置 / 单个 typo）
+- 所有多文件读、跨文件综合分析
+- 所有实现编辑（代码 / 文档）
+- 所有 bash 命令执行（包括 `git status` / `git log` / `git commit` / `git push`、`./init.sh`、smoke、daemon 起停等）
+- 所有调研（SDK 行为、选型、踩坑历史）→ Researcher
+- 所有 fresh-context 评审 → Reviewer
+- 所有 `feature_list.json` / `claude-progress.md` 字段更新
+- Robot UAT 真机动作由用户执行，主会话不代办
+
+**主会话不直接调用任何执行类工具**（Read / Write / Edit / Bash / Grep / Glob 等）。需要这些动作时一律派 sub-agent。主会话只用 `Agent` / `AskUserQuestion` / `TaskCreate|Update|List` / `SendMessage` 这类编排工具。
+
+**不允许的反模式**：主会话亲自 Read / Edit / Bash 任何东西。一旦发生即视为流程违规，需在 progress 里记一笔。
+
 ## 规则
 
 - 同一时间只能有一个 active feature（`in_progress`）
@@ -22,10 +50,11 @@
 - 不要通过重写功能清单来隐藏未完成工作
 - 不要为了"看起来完成"而删除或削弱测试
 - 以仓库内文件作为唯一事实来源
-- 中文沟通；遵守 `~/.claude/memory/git-conventions.md`（commit 前用户确认）
+- 中文沟通；遵守 `~/.claude/memory/git-conventions.md`，但 commit/push 例外见下文 Git 工作流
 
 ## Git 工作流
 
+- **本项目 commit / push 例外**：本仓库的 `git commit` 与 `git push` 一律由 sub-agent 直接执行，主会话**不再向用户确认草稿**。此条**覆盖**全局 `~/.claude/memory/git-conventions.md` 中"commit 前用户确认"的默认规则。仍须遵守：Co-Authored-By 行、conventional commit 格式、push 到 `origin`（若区分 fork 与 upstream，则只 push 到 `origin`，不直推 upstream）。
 - 每个 in_progress feature 在 `feat/<feature-id>` 分支上做；passing 后 merge 回 main
 - main 永远保持 `./init.sh` 通过的状态
 - 例外：harness 加固、文档、依赖升级等基础设施改动可直接在 main 做（短促、低风险）

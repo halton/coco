@@ -26,6 +26,38 @@
 - 优先依赖仓库里的持久化文件，而不是聊天记录。
 - 中文沟通；commit 信息可英文可中文，但要遵守 `~/.claude/memory/git-conventions.md`（用户先确认才提交）。
 
+## 主会话编排模式（硬规则）
+
+主会话是**编排者**，不是干活的人。目的：把主 context 压力降下来，避免一两轮就 80%+ 触发压缩或被迫 checkpoint。该规则与下文「角色」段配套：Engineer 实现 / Researcher 调研 / Reviewer 评审 全部在 sub-agent 独立 context 跑，主会话只做综合与决策。
+
+**主会话只做这几件事**：
+
+- 读用户意图、拆任务、决定派给哪个角色 sub-agent
+- 把 sub-agent 返回的结构化结果综合成下一步决策
+- 决定 commit / push / feature 状态切换（`in_progress` ↔ `passing` ↔ `blocked`）
+- 跨子系统协调（audio / robot / app 边界判断）
+- 与用户对话、确认完成门槛
+
+**一律派 sub-agent 做的工作**（用 Task 工具 delegate，`subagent_type` 选合适角色，general-purpose 也可；中文沟通；brief 必含目标 + 已知上下文摘要 + 期望返回格式；sub-agent 返回结构化摘要，主会话**不重读** sub-agent 已经读过的文件）：
+
+- 所有多文件读、跨文件综合分析
+- 所有实现编辑（代码 / 文档大段改动）→ Engineer sub-agent
+- 所有 bash 验证 / 多步脚本（`./init.sh`、smoke、daemon 起停等）
+- 所有调研（SDK 行为、选型、踩坑历史）→ Researcher
+- 所有 fresh-context 评审 → Reviewer（本来就是硬规则，见下文）
+- Robot UAT 真机动作由用户执行，主会话不代办
+
+**例外（主会话可直接做的 trivial 单点操作）**：
+
+- 改一行配置 / 单个 typo
+- 看一个短文件确认一个事实
+- 单条 git 命令（status / log / commit / push）
+- 单次 `feature_list.json` 状态字段更新
+
+**累计阈值**：连续 3 个 trivial 操作之后，下一个不论大小一律派 sub-agent，强制刷新 context 卫生。
+
+**不允许的反模式**：主会话连读多个文件做综合、主会话 bash 跑多步验证、主会场亲自做实现编辑。这些都是 sub-agent 的活，被发现需在 `claude-progress.md` 里记一笔流程违规。
+
 ## Git 工作流
 
 - 每个 in_progress feature 在分支 `feat/<feature-id>` 上做（如 `feat/robot-001`）
