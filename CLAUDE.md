@@ -37,7 +37,7 @@
 
 ## 子系统边界
 
-- **audio**：sounddevice 直连本机麦克，不走 reachy-mini daemon 的 audio backend。跨平台。测试 wav 直喂
+- **audio**：sounddevice 直连本机麦克与扬声器（输入采麦、输出播 TTS wav），不走 reachy-mini daemon 的 audio backend / media 子系统。跨平台。测试：输入 wav 直喂 ASR，输出 TTS wav 用 sounddevice 播放。真机扬声器（USB 音频）作 milestone gate。
 - **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收是 milestone gate
 - 两路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
 

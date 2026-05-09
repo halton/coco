@@ -44,7 +44,7 @@
 
 ## 子系统约定
 
-- **audio 子系统**：直连本机麦克（sounddevice），不通过 reachy-mini daemon 的 audio backend。测试用 wav 文件直喂。跨平台。
+- **audio 子系统**：输入直连本机麦克、输出走本机默认输出设备，全部通过 sounddevice，不通过 reachy-mini daemon 的 audio backend / media 子系统。测试：输入用 wav 文件直喂 ASR；输出把 TTS 合成的 wav 用 sounddevice 播放。跨平台。真机扬声器（Reachy Mini USB 音频）作 milestone gate，不卡住开发期模拟。
 - **robot 子系统**：通过 `ReachyMini` + Zenoh + mockup-sim daemon 验动作。reachy-mini Lite SDK 提供 macOS / Linux / Windows 的 cp313 wheel，开发跨平台；真机硬件相关功能（USB 音频等）可能仍受限。真机验收作为 milestone gate，不卡住模拟开发。
 - 两个子系统独立，仅在应用层汇合。详见 `research/spike-audio-attempt.md`。
 

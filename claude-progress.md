@@ -13,6 +13,7 @@
 | harness engineering 工作流 | `AGENTS.md` / `CLAUDE.md` | 依据 walkinglabs/learn-harness-engineering，仓库为唯一事实来源、单功能推进、evidence 才能 passing |
 | 跨平台支持（macOS / Linux / Windows） | `pyproject.toml` / `init.sh` / `init.ps1` | reachy-mini Lite SDK 三平台都有 cp313 wheel；`required-environments` 显式列出三平台 |
 | app 部署模型：路线 C 双模式 | `research/control-app-deployment-research.md` | Coco 是 ReachyMiniApp 子类；开发用 `python -m coco`，UAT/发布走 Control.app 经 HF Space。infra-001 是其他 feature 的前置 |
+| 中文 ASR/TTS 本地优先选型 | `research/chinese-asr-tts-selection.md` | 统一 runtime 用 sherpa-onnx（跨平台 NEON 加速、ARM 友好）；ASR=SenseVoice-Small INT8（60MB / CER 3-5% / ~70ms）；TTS=Kokoro-82M-zh（82MB / Apache-2.0 / CPU 友好）；edge-tts 作联网兜底（不强制依赖网络） |
 
 ## 环境基线
 
@@ -109,7 +110,7 @@
 - **更新过的文件或工件**：clean-state-checklist.md（新）、tests/fixtures/audio/README.md（新）、docs/uat-real-robot.md（新）、research/control-app-deployment-research.md（新）、scripts/smoke.py、AGENTS.md、CLAUDE.md、claude-progress.md、feature_list.json、pyproject.toml
 - **已知风险或未解决问题**：
   - 路线 C 的核心假设——"在 ReachyMiniApp 框架下 audio 解耦仍成立"——未验证；这是 `infra-001` 的核心 verification 项
-  - 还没建 `cocoa/` 包（infra-001 第一步）
+  - 还没建 `coco/` 包（infra-001 第一步）
   - `init.ps1` 仍未在 Windows 机实测
   - 没决定 `SESSION-BOOTSTRAP.md` 处置（信息已迁移到 claude-progress.md，但文件还在）
 - **下一步最佳动作**：

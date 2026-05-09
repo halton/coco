@@ -23,14 +23,15 @@
       "status": "not_started",
       "verification": [
         "用 `python -m reachy_mini.apps.app create coco_spike .` 生成参考骨架，理解模板",
-        "把 Coco 重构为 ReachyMiniApp 子类（cocoa/ 包 + main.py 含 class Coco(ReachyMiniApp)）",
-        "pyproject.toml 加 [project.entry-points.\"reachy_mini_apps\"] coco = \"cocoa.main:Coco\"",
+        "把 `pyproject.toml` 的 `name` 从 `reachy-mini-workspace` 改为 `coco`，description 同步更新为 Coco / 可可 项目本身",
+        "把 Coco 重构为 ReachyMiniApp 子类（coco/ 包 + main.py 含 class Coco(ReachyMiniApp)）",
+        "pyproject.toml 加 [project.entry-points.\"reachy_mini_apps\"] coco = \"coco.main:Coco\"",
         "在 run() 中只用 sounddevice 采麦克数据，不调用 reachy_mini.media；验证 wrapped_run() 启动时 ReachyMini 客户端不挂",
         "`python -m reachy_mini.apps.app check .` 通过",
-        "`python -m cocoa.main` 能本地启动，跑 5 秒后 Ctrl+C 干净停止"
+        "`python -m coco.main` 能本地启动，跑 5 秒后 Ctrl+C 干净停止"
       ],
       "evidence": [],
-      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。"
+      "notes": "依据 research/control-app-deployment-research.md。这是其他所有 feature 的前置——动作/语音功能都将以 Coco.run() 内的子模块形式实现。pyproject.toml name 改名是顺带做掉的占位清理（原值 reachy-mini-workspace 是早期未改的占位）。"
     },
     {
       "id": "audio-001",
@@ -76,7 +77,7 @@
       "status": "not_started",
       "verification": [
         "依赖 robot-001 通过。",
-        "实现 cocoa/robot.py（或类似）暴露 look_left/look_right/nod。",
+        "实现 coco/robot.py（或类似）暴露 look_left/look_right/nod。",
         "在 mockup-sim 下调用三个动作，读取 robot 状态确认 head joint 目标值变化。",
         "记录调用前后的 joint 状态到 evidence。"
       ],
@@ -87,20 +88,43 @@
       "id": "audio-002",
       "priority": 4,
       "area": "audio",
-      "title": "ASR 接入（wav 文件 + 实时麦克）",
-      "user_visible_behavior": "给定一段 wav，能拿到中文转写文本；用麦克实时录一段也能拿到转写。",
+      "title": "中文 ASR 接入（SenseVoice-Small via sherpa-onnx，wav + 实时麦克）",
+      "user_visible_behavior": "给定一段中文 wav，能拿到简体中文转写文本；用麦克实时录一段（≤10 秒）也能拿到中文转写。",
       "status": "not_started",
       "verification": [
-        "选定 ASR 方案（whisper.cpp / faster-whisper / 云端），记录到 evidence。",
-        "从 tests/fixtures/audio/ 取一段已知中文 wav 测试，转写文本与人工标注一致或近似（CER < 0.2）。",
-        "实时麦克录 5 秒说固定句子，能拿到合理转写。"
+        "选定方案：sherpa-onnx + SenseVoice-Small INT8（中文优先；备选 Paraformer-zh-small）；模型来源与版本号写入 evidence。",
+        "依赖落到 pyproject.toml：`sherpa-onnx`（含 Python wheel；mac/Linux/Windows 三平台均有 ARM/x86 wheel）。",
+        "首次运行时下载或本地缓存模型权重，路径与大小记录到 evidence。",
+        "干净 wav 路径：从 tests/fixtures/audio/ 取一段已知中文 wav（普通话短句，参考 README）跑 ASR，强制 language=zh，转写文本与人工标注比对 CER < 0.1。",
+        "实时麦克路径：录 5 秒固定中文句子（如「今天天气真好」），强制 language=zh，转写文本与原句比对 CER < 0.15（容忍麦克 + 室内噪声）；如首次实测 < 0.1，则在 evidence 中记录并把麦克阈值收紧到 0.1。",
+        "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 ASR 链路仍可拿到正确中文转写。"
       ],
       "evidence": [],
-      "notes": "测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。"
+      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。本地优先（不依赖云）+ 跨平台 + Apache-2.0。测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。evidence 分两阶段记：(1) 主验阶段（独立脚本，干净 wav + 实时麦克）；(2) infra-001 通过后补验阶段（在 ReachyMiniApp.run() 内）。两阶段分别记录。"
+    },
+    {
+      "id": "audio-003",
+      "priority": 5,
+      "area": "audio",
+      "title": "中文 TTS 输出（Kokoro-82M-zh via sherpa-onnx，edge-tts 联网兜底）",
+      "user_visible_behavior": "给定一段中文文本，Coco 能用中文（普通话）合成语音并通过本机扬声器播放出来；离线可用，联网时可降级到云端 edge-tts 提质。",
+      "status": "not_started",
+      "verification": [
+        "选定方案：sherpa-onnx + Kokoro-82M-zh（本地、Apache-2.0）；联网兜底用 edge-tts。模型来源与版本号写入 evidence。",
+        "依赖落到 pyproject.toml：sherpa-onnx 已被 audio-002 引入；edge-tts 单独加（声明为可选依赖）。",
+        "实现 coco/tts.py（或同等位置）暴露 say(text: str, prefer: str = 'local') -> None；离线路径首选 Kokoro，联网路径可选 edge-tts。",
+        "必跑：用本地 Kokoro 对一句固定中文短句（如「你好，我是可可」）合成一次，wav 存到 tests/fixtures/audio/tts_out/local_kokoro.wav，人工耳测可懂、为普通话。",
+        "可选（联网时跑）：用 edge-tts 对同一句合成一次，wav 存到 tests/fixtures/audio/tts_out/edge_tts.wav，人工耳测可懂；离线环境跳过并在 evidence 中记录「skip: 离线」。",
+        "通过 sounddevice 播放本地合成的 wav，输出走本机默认输出设备，确认能从扬声器听到。",
+        "开发期播放走本机默认输出设备；真机扬声器（Reachy Mini USB 音频）验证延后到 UAT，不在本 feature 范围。",
+        "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 say() 不阻塞 ReachyMini 客户端心跳。"
+      ],
+      "evidence": [],
+      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。Coco 是固定角色，不需要 voice cloning，所以 Kokoro 足够。edge-tts 仅作可选增强，不作为强依赖（不联网也必须能跑）。真机扬声器为 milestone gate，与 robot 子系统真机策略一致。"
     },
     {
       "id": "companion-001",
-      "priority": 5,
+      "priority": 6,
       "area": "companion",
       "title": "陪伴动作循环（idle 微动）",
       "user_visible_behavior": "Coco 在 idle 状态下间歇性做小幅头部动作（呼吸感、偶尔环顾），不显得僵硬。",
@@ -115,21 +139,20 @@
     },
     {
       "id": "interact-001",
-      "priority": 6,
+      "priority": 7,
       "area": "interact",
-      "title": "最小语音交互闭环（push-to-talk → 转写 → 简单回应动作）",
-      "user_visible_behavior": "按下某个键开始录音，松开停止；Coco 转写说话内容、并用一个动作（点头或左看）作为简单回应。",
+      "title": "最小语音交互闭环（push-to-talk → 中文转写 → 中文回应 + 动作）",
+      "user_visible_behavior": "按下某个键开始录音，松开停止；Coco 用中文转写说话内容，并用一句中文语音 + 一个动作（点头或左看）作为简单回应。",
       "status": "not_started",
       "verification": [
-        "依赖 audio-002 与 robot-002 通过。",
+        "依赖 audio-002、audio-003 与 robot-002 通过。",
         "实现 push-to-talk CLI（终端按 Enter 触发）。",
-        "在 mockup-sim 下完整跑通：说话 → 看到转写 → 看到 head joint 动作。",
+        "在 mockup-sim 下完整跑通：说话 → 看到中文转写 → 听到 Coco 用中文回应一句话 → 看到 head joint 动作。",
         "Control.app 模式下也跑通同样流程（python -m reachy_mini.apps.app check . 通过 + 由 Control.app 启动后能完整闭环）。",
-        "记录两次完整 session（开发模式 + Control.app 模式）的日志到 evidence。"
+        "记录两次完整 session（开发模式 + Control.app 模式）的日志到 evidence，包含转写文本与 TTS 输出 wav。"
       ],
       "evidence": [],
-      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通。Control.app 模式覆盖是真机 UAT 的前置。"
+      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通——回应可以是模板（如「我听到你说：<转写>」）。Control.app 模式覆盖是真机 UAT 的前置。"
     }
   ]
 }
-
