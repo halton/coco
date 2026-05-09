@@ -48,6 +48,21 @@
 - 在 ReachyMiniApp 框架下保持 audio 解耦（不走 reachy-mini media 子系统）
 - 详见 `research/control-app-deployment-research.md`
 
+## 角色（multi-role harness）
+
+本仓库 4 角色，按 feature `area` 自动决定上场组合。详见 `AGENTS.md` 角色段。
+
+| 角色 | 视角 | 机制 |
+|---|---|---|
+| Engineer | 实现、跨平台、可维护 | 主 context（你/我） |
+| Researcher | 选型、SDK、坑、不确定性 | sub-agent（独立 context） |
+| Reviewer | 对照 verification 挑刺、抓盲点 | sub-agent（独立 context） |
+| Robot UAT | mockup-sim / 真机实际行为 | 物理动作 |
+
+触发：infra → Eng+Res；audio → Eng+Res+Rev；robot → Eng+UAT+Rev；companion/interact → 全员。
+
+**硬规则**：feature `in_progress` → `passing` 前必须一次 Reviewer sub-agent fresh-context 评审；evidence 必须含 `Reviewer (sub-agent): LGTM/findings + 摘要`。Reviewer 不能是主 context 自审。
+
 ## 必需文件
 
 - `feature_list.json` — 唯一事实来源

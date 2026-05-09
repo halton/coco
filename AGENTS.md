@@ -56,6 +56,49 @@
 - 在 ReachyMiniApp 框架下需保持 audio 解耦：app 类设 `request_media_backend` 为不依赖 reachy-mini media 的值，主循环里只用 sounddevice
 - 详见 `research/control-app-deployment-research.md`
 
+## 角色（multi-role harness）
+
+本仓库定义 4 个角色，每个 feature 按 area 自动决定上场组合。**Reviewer 与 Researcher 必须由独立 context 的 sub-agent 执行**（fresh-context 评审，避免主 context loaded 时的自审盲点）；Engineer 是主 context；Robot UAT 是物理动作（mockup-sim 或真机），动作本身就是 fresh evidence。
+
+| 角色 | 视角 | 实现机制 | 典型产物 |
+|---|---|---|---|
+| **Engineer** | 实现、跨平台兼容、可维护性 | 主 context | 代码、PR |
+| **Researcher** | 选型、SDK 行为、过往坑、技术不确定性消除 | sub-agent（独立 context） | `research/*.md` |
+| **Reviewer** | 对照 verification 字段挑刺、抓 loaded-context 盲点 | sub-agent（独立 context） | `evidence` 中的 review verdict + findings |
+| **Robot UAT** | mockup-sim 或真机的实际行为 | 物理动作（在 daemon / Control.app 上跑） | log、joint 状态、wav 录音 |
+
+### 触发规则（按 feature `area`）
+
+| area | 默认上场 |
+|---|---|
+| `infra` | Engineer + Researcher |
+| `audio` | Engineer + Researcher（选型阶段）+ Reviewer |
+| `robot` | Engineer + Robot UAT + Reviewer |
+| `companion` / `interact` | Engineer + Robot UAT + Reviewer（全员，闭环 feature） |
+
+特殊情况：feature 可在 `roles` 字段显式覆盖默认（保留扩展位，目前不强制）。
+
+### 硬规则（不破例）
+
+- 任何 feature 从 `in_progress` → `passing` 之前，**必须**经过一次 Reviewer sub-agent fresh-context 评审，evidence 中包含 `Reviewer (sub-agent): LGTM | LGTM with findings | Block + 关键 findings 摘要 + sub-agent run 链接或 transcript 摘要`
+- 文档 / harness 加固类改动也走同样规则（豁免会让仪式失去意义）
+- Reviewer 不能是主 context 自审（"换帽子"伪 fresh-context）——必须 Task tool delegate 独立 context
+
+### Reviewer 材料包（每次 delegate 时显式传入）
+
+- `feature_id`
+- 该 feature 完整 verification 字段
+- 待 review 的文件路径列表（git diff 范围）
+- evidence 候选列表
+- 上一轮 Reviewer 反馈（如果是迭代 review）
+- 用户原始诉求（防止 Reviewer 只对照 verification 而忽略 user-visible 目标）
+
+材料包不全时，Reviewer 会要求补——而不是凭推测下结论。
+
+### 为什么这样设计
+
+参见 commit `ac43436`：今天首次 Reviewer dry-run 抓到的关键盲点是 `audio-003` 的 edge-tts 在 notes 写"不联网必须能跑"，但 verification 第 4 条又要求"edge-tts 一次合成"——主 context 因为深度参与决策，loaded 状态下看不见这个语义滑坡。这是 fresh-context sub-agent 不可替代的证据。
+
 ## 增强工具（按需）
 
 - **memex**：开工时若任务触及过往踩过的坑（环境、依赖、SDK 行为），先 `memex-recall`；完成有方法论价值的工作后用 `memex-retro` 沉淀卡片
