@@ -1,0 +1,26 @@
+============================================================
+V1 — LLMClient unit tests
+============================================================
+  fallback('你好') -> '你好呀！很高兴见到你。'
+  raising-backend('天气真好') -> '嗯，外面挺好的呀。'
+  english-backend('你好') -> '你好呀！很高兴见到你。'
+  long-zh-backend('讲个长故事') -> len=20 '你好你好你好你好你好你好你好你好你好你好'
+  fallback('') -> '我没听清，可以再说一次吗？'
+V1 PASS
+============================================================
+V2 — fixture wav 闭环（LLM 注入；本环境无 backend 配置 → 实际走 fallback）
+============================================================
+  [with-llm-fn] run1 transcript='今天天气真好我们一起去公园散步' reply='嗯，外面挺好的呀。' action=look_right
+  [with-llm-fn] run2 transcript='今天天气真好我们一起去公园散步' reply='嗯，外面挺好的呀。' action=look_right
+============================================================
+V3 — 显式取消 COCO_LLM_BACKEND，闭环仍跑通（KEYWORD_ROUTES）
+============================================================
+  [fallback-only] run1 transcript='今天天气真好我们一起去公园散步' reply='嗯，外面挺好的呀。' action=look_right
+  [fallback-only] run2 transcript='今天天气真好我们一起去公园散步' reply='嗯，外面挺好的呀。' action=look_right
+============================================================
+V4 — 延迟采样 N=12（模拟 backend 延迟 50ms）
+============================================================
+  stats: {'calls': 12, 'backend_ok': 12, 'backend_fail': 0, 'fallback_used': 0, 'p50_s': 0.0571, 'p95_s': 0.0601, 'max_s': 0.0601}
+
+Summary written to /Users/halton/work/coco/evidence/interact-002/v1_summary.json
+ALL PASS
