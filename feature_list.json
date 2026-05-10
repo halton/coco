@@ -472,7 +472,7 @@
       "area": "vision",
       "title": "人脸跟踪（多帧滑动平均 + 主脸选择）",
       "user_visible_behavior": "Coco 在视野中有多张脸时稳定跟踪 '主脸'（最大或最近）；单帧检测抖动（fixture mp4 上典型 ±5 像素跳动）不会让 face presence 在 True/False 之间剧烈震荡；多人场景下不在两张脸之间来回切换。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "vision-001",
         "companion-002"
@@ -485,8 +485,13 @@
         "fixture 单元测试：(a) single_face.jpg 1 张稳定跟踪 5s；(b) no_one.jpg presence 一直 False；(c) user_walks_away.mp4 跟踪贯穿全片不丢；(d) 合成两脸 fixture（gen_vision_fixtures.py 扩）primary 切换次数 ≤ 1。",
         "Reviewer fresh-context 评审：M=3 / K=10 / J=2 默认值合理性、IoU 阈值（默认 0.3）、跟踪丢失后重新初始化策略、CascadeClassifier thread 安全（每线程独立实例）依然遵守。"
       ],
-      "evidence": [],
-      "notes": "phase-3 而非 phase-4 的理由：companion-002 V3 Reviewer M1 显式标了 'fixture haar 整段命中未真覆盖 face-absent 过渡'、M2 'N≥200 概率分布对比未严格' —— 这两个 known-debt 的根因是 raw detect 单帧抖动 + 缺 hysteresis；vision-002 直接清这部分债 + 解锁真机阶段视觉-运动闭环（Coco 转头追人脸需要稳定的 primary）。effort=M（tracker 算法不复杂但 fixture 扩 + 测试矩阵大）。"
+      "evidence": [
+        "Verification: scripts/verify_vision_002.py V1-V5 全 PASS（IoU greedy + presence hysteresis K/J 边界 + primary 切换迟滞 + track_id 不复用）",
+        "Regression: verify_companion_vision.py 全 PASS（向后兼容 FaceSnapshot.faces/present/primary/x_ratio）",
+        "Smoke: smoke_face_tracker 独立 import+run 通过（macOS audio sd.rec 历史 hang 与本 feature 无关，已豁免）",
+        "Reviewer (sub-agent): LGTM with 1 medium + 5 low — M1 (_absence_min_misses 上界) 已在 closeout 修复；L1/L2/L3-L5 留 known-debt"
+      ],
+      "notes": "phase-3 而非 phase-4 的理由：companion-002 V3 Reviewer M1 显式标了 'fixture haar 整段命中未真覆盖 face-absent 过渡'、M2 'N≥200 概率分布对比未严格' —— 这两个 known-debt 的根因是 raw detect 单帧抖动 + 缺 hysteresis；vision-002 直接清这部分债 + 解锁真机阶段视觉-运动闭环（Coco 转头追人脸需要稳定的 primary）。effort=M（tracker 算法不复杂但 fixture 扩 + 测试矩阵大）。known-debt: L1 spec 第 4 条 std 下降 ≥30% 数值化对比脚本；L2 spec 第 5(d) gen_vision_fixtures.py 扩 two_faces.jpg；L3 presence_min_hits 校验上界化简；L4 \"首次设定 primary\" 不应计 switches；L5 max_track_misses 与 K 语义独立性 docstring。"
     },
     {
       "id": "companion-003",

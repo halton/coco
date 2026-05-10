@@ -1,0 +1,113 @@
+{
+  "V1": {
+    "detect_count": 20,
+    "hit_count": 20,
+    "tracks_created": 1,
+    "tracks_dropped": 0,
+    "primary_switches": 1,
+    "tracks_now": [
+      {
+        "id": 1,
+        "hits": 20,
+        "age": 20,
+        "ps": 1.0
+      }
+    ],
+    "primary_id": 1,
+    "primary_hits": 20,
+    "present": true
+  },
+  "V2": {
+    "detect_count": 19,
+    "hit_count": 0,
+    "tracks_created": 0,
+    "tracks_now": 0,
+    "primary_id": null,
+    "present": false
+  },
+  "V3": {
+    "detect_count": 110,
+    "hit_count": 110,
+    "tracks_created": 3,
+    "tracks_dropped": 2,
+    "primary_switches_stat": 3,
+    "primary_switches_observed": [
+      {
+        "ts": 0.117,
+        "from": null,
+        "to": 1,
+        "present": true
+      },
+      {
+        "ts": 3.437,
+        "from": 1,
+        "to": 2,
+        "present": true
+      },
+      {
+        "ts": 6.733,
+        "from": 2,
+        "to": 3,
+        "present": true
+      }
+    ],
+    "switch_events": 2,
+    "tracks_now": 1,
+    "last_present": true
+  },
+  "V4": [
+    {
+      "step": "hit#1",
+      "present": false,
+      "tracks": 1,
+      "primary_id": null
+    },
+    {
+      "step": "hit#2",
+      "present": true,
+      "tracks": 1,
+      "primary_id": 1
+    },
+    {
+      "step": "miss#1",
+      "present": true,
+      "tracks": 1,
+      "primary_id": 1
+    },
+    {
+      "step": "miss#2",
+      "present": true,
+      "tracks": 1,
+      "primary_id": 1
+    },
+    {
+      "step": "miss#3",
+      "present": true,
+      "tracks": 1,
+      "primary_id": 1
+    },
+    {
+      "step": "miss#4",
+      "present": false,
+      "tracks": 1,
+      "primary_id": null
+    }
+  ],
+  "V5": {
+    "ids_after_f1": [
+      1,
+      2
+    ],
+    "ids_after_f2": [
+      1,
+      2
+    ],
+    "tracks_created": 2,
+    "iou_A_vs_B": 0.0,
+    "iou_A1_vs_A2": 0.891,
+    "frame3_a_miss": 1,
+    "frame3_b_miss": 0,
+    "frame3_a_id_unchanged": true,
+    "frame3_b_id_unchanged": true
+  }
+}
