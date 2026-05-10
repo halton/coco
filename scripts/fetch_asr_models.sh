@@ -59,9 +59,9 @@ fi
 if (( need_sense_download == 1 )); then
   if [[ -f "$SENSE_TARBALL" ]]; then
     tar_size=$(file_size "$SENSE_TARBALL")
-    # 上游 ~228MB；> 200MB 视为完整
-    if (( tar_size > 209715200 )); then
-      echo "[skip-download] tarball 已存在且 > 200MB：$SENSE_TARBALL ($tar_size B)"
+    # 上游实测 163,002,883 B (~155MB)；> 100MB 视为完整（挡住截断/HTML 错误页）
+    if (( tar_size > 104857600 )); then
+      echo "[skip-download] tarball 已存在且 > 100MB：$SENSE_TARBALL ($tar_size B)"
       need_sense_download=0
     else
       echo "[redownload] tarball 大小不足（$tar_size B），重新下载"
@@ -71,7 +71,7 @@ if (( need_sense_download == 1 )); then
 fi
 
 if (( need_sense_download == 1 )); then
-  echo "[download] SenseVoice INT8 (~228MB) → $SENSE_TARBALL"
+  echo "[download] SenseVoice INT8 (~155MB) → $SENSE_TARBALL"
   if ! curl -L --fail --progress-bar -o "$SENSE_TARBALL" "$SENSE_URL"; then
     echo "ERROR: 下载失败。手动下载地址：" >&2
     echo "  $SENSE_URL" >&2
@@ -79,8 +79,8 @@ if (( need_sense_download == 1 )); then
     exit 2
   fi
   tar_size=$(file_size "$SENSE_TARBALL")
-  if (( tar_size <= 209715200 )); then
-    echo "ERROR: 下载完成但大小 $tar_size B < 200MB，可能损坏" >&2
+  if (( tar_size <= 104857600 )); then
+    echo "ERROR: 下载完成但大小 $tar_size B < 100MB，可能损坏" >&2
     exit 3
   fi
 fi
