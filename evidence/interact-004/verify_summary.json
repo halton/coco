@@ -1,0 +1,50 @@
+{
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "failures": [],
+  "results": [
+    {
+      "name": "V1 ring buffer",
+      "passed": true,
+      "turns_after_overflow": 4
+    },
+    {
+      "name": "V2 idle reset",
+      "passed": true
+    },
+    {
+      "name": "V3 build_messages",
+      "passed": true
+    },
+    {
+      "name": "V4 env",
+      "passed": true
+    },
+    {
+      "name": "V5 llm history passthrough",
+      "passed": true,
+      "rec_calls": 2
+    },
+    {
+      "name": "V5b inner TypeError no retry",
+      "passed": true,
+      "case_a_calls": 1,
+      "case_b_calls": 1
+    },
+    {
+      "name": "V6 session basic history",
+      "passed": true,
+      "round2_history_len": 2
+    },
+    {
+      "name": "V7 session idle reset",
+      "passed": true
+    },
+    {
+      "name": "V8 history capped",
+      "passed": true,
+      "last_history_len": 4
+    }
+  ]
+}

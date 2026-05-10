@@ -607,3 +607,17 @@
 - **main HEAD 前后**：9b261c1 → merge --no-ff feat/companion-003（phase-3 第 4 个 feature 完成）。
 - **状态变化**：feature_list.json companion-003 `not_started` → `passing`（注：原 status 直接从 not_started 跳到 passing；本会话 close-out 直接接 brief 修复后 verify）。evidence 4 行 + notes 追加 known-debt 行（main.py face_tracker 实例化暂留挂载点 + env 默认 OFF 与 spec 字面"默认 ON"差异）。
 - **下一步最佳动作**：interact-004（multi-turn dialog memory，phase-3 最后 1 个 candidate）。
+
+## Session 027 — interact-004 close（2026-05-10）
+
+- **起止动作**：feat/interact-004 close-out。Reviewer fresh-context 评审 LGTM 无 L0，1 L1 必修 + 4 L2/L3 顺手记 known-debt：
+  - **L1 已修**：`coco/interact.py` `handle_audio` 中原本用 `try: llm_reply_fn(text, history=...) except TypeError: llm_reply_fn(text)` 探测 fn 是否接受 history，会把 fn 内部抛的任何 `TypeError` 误判为"签名不接受 history"导致重复调用（含副作用、计数翻倍）。修复采用首选方案：`InteractSession.__init__` 中用 `inspect.signature(llm_reply_fn)` 一次性探测是否含 `history` kwarg 或 `**kwargs`，结果缓存于 `self._llm_accepts_history`（bool）；`handle_audio` 直接按 bool 决定是否传 history，不再 try/except TypeError。inspect 失败（C 函数）时保守返回 False。新增 `_probe_accepts_history` static helper。
+  - **L2/L3 全记 known-debt 不修**（feature_list.json interact-004 notes 追加）：L2 KEYWORD_ROUTES 短回复也被 append 进 history（fallback↔LLM 切换可能干扰上下文，影响低）；L2 DialogMemory 无锁，跨线程并发理论竞态（当前 InteractSession._busy 已串行化 handle_audio）；L3 _check_idle 边界 `>` vs `>=` 选择未文档化；L3 env clamp 区间 `COCO_DIALOG_MAX_TURNS [1,16]` / `COCO_DIALOG_IDLE_S [1,3600]` 字面值未在 spec 列出（已在 dialog.py 运行 log 出现）。
+- **运行过的验证**：
+  - `scripts/verify_interact004.py` 9/9 PASS（V1 ring-buffer / V2 idle-reset / V3 build_messages / V4 env clamp / V5 LLMClient.history 透传 + Fallback 忽略 / **V5b** 新增——case A: fn 接受 history kwarg 但内部抛 `TypeError("foo")`，断言 `_llm_accepts_history is True` 且 `call_count == 1`（不重试）；case B: fn 不接受 history（旧签名），断言 `_llm_accepts_history is False` 且 `call_count == 1` 且 reply 被采用 / V6 第 1/2 轮 history / V7 跨 idle history 清零 / V8 N=2 history 上限 = 4 messages）。
+  - `scripts/smoke.py` 全段 PASS（audio 段 macOS sd.rec 超时豁免；ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/publish 全 ok）。
+  - Regression：`scripts/verify_interact005.py` all_pass=True；`scripts/verify_companion_003.py` ALL PASS（V1-V10）。
+- **main HEAD 前后**：9b261c1 → merge --no-ff feat/interact-004（phase-3 第 5 个也是最后 1 个 feature 完成）。
+- **状态变化**：feature_list.json interact-004 `not_started` → `passing`，evidence 3 行（Verification 9/9 含 V5b / Regression / Reviewer LGTM after L1 fix），notes 末尾追加 known-debt 行（L2 KEYWORD 污染 / L2 DialogMemory 无锁 / L3 边界 / L3 env clamp 字面）。
+- **下一步最佳动作**：phase-3 软件层全部完成（infra-debt-sweep / vision-002 / interact-005 / companion-003 / interact-004 全 passing）。仅剩 milestone gate（真机 UAT）涉及 robot 子系统硬件操作，依 CLAUDE.md 规则 (a) 主会话停下等用户排期；或用户决定继续 phase-4 规划。
+
