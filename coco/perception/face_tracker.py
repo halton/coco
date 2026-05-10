@@ -305,7 +305,9 @@ class FaceTracker:
             raise ValueError(f"absence_min_misses={env_K} 不合法 (>=1)")
         self._presence_window = max(presence_window, env_J, min(env_K, 60))
         self._presence_min_hits = env_J  # J
-        self._absence_min_misses = env_K  # K
+        # M1 fix: K 必须 ≤ presence_window，否则窗口永远无法累积到 K 个 miss，
+        # presence 永不衰减回 False（用户设 K>60 时尤其明显）
+        self._absence_min_misses = min(env_K, self._presence_window)  # K
 
         # IoU tracking 参数
         self._iou_threshold = float(_env_float("COCO_FACE_IOU_THRESHOLD", iou_threshold))

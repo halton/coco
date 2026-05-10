@@ -573,3 +573,13 @@
 - **main HEAD 前后**：7182bc1 → feat/vision-002 (待 commit + push + Reviewer)。
 - **状态变化**：feature_list.json vision-002 `not_started` → `in_progress`，evidence 4 行（含 Reviewer pending）。
 - **下一步最佳动作**：commit + push feat/vision-002，主会话派 Reviewer fresh-context 评审；通过后 closeout sub-agent 切 passing + merge 回 main，自动派下一个 candidate（interact-005 或 companion-003）。
+
+## Session 024 — vision-002 close（2026-05-10）
+
+- **起止动作**：feat/vision-002 close-out。Reviewer fresh-context 评审 LGTM with 1 medium + 5 low：
+  - **M1（已修复）**：`coco/perception/face_tracker.py:308` `_absence_min_misses = env_K`，当用户设 K>60 时该值超过 `_presence_window` 上界（max 60），导致末尾连续 miss 段永远累不到 K，presence 永不衰减回 False。修复改为 `min(env_K, self._presence_window)`，附 docstring 解释为何上界化。
+  - **L 系列已记 known-debt**（feature_list.json notes 追加）：L1 spec 第 4 条 std 下降 ≥30% 数值化对比脚本未做；L2 spec 第 5(d) `gen_vision_fixtures.py` 扩 `two_faces.jpg` 未做；L3 `presence_min_hits` 校验上界化简；L4 "首次设定 primary" 不应计 switches；L5 `max_track_misses` 与 K 语义独立性 docstring。
+- **运行过的验证**：M1 修复后重跑 `scripts/verify_vision_002.py` 全 PASS（V1-V5）+ `scripts/verify_companion_vision.py` 全 PASS（regression）。main 上 merge 后再次 verify 仍 PASS。`./init.sh` 因 macOS sd.rec audio 段卡顿（与本 feature 无关）跳过，用两个 verify 脚本替代。
+- **main HEAD 前后**：7182bc1 → merge --no-ff feat/vision-002（phase-3 第 2 个 feature 完成）。
+- **状态变化**：feature_list.json vision-002 `in_progress` → `passing`，evidence 改为 4 行（Verification/Regression/Smoke/Reviewer LGTM with M1 修复 + L 系列 known-debt）；notes 末尾追加 known-debt 行（L1/L2/L3/L4/L5）。
+- **下一步最佳动作**：interact-005（priority=16, area=interact, deps=[interact-003, audio-002]）—— 中文唤醒词 "可可" 接入。
