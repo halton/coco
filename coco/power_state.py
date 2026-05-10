@@ -136,7 +136,10 @@ class PowerStateMachine:
         self.stats = PowerStats()
         self._state = PowerState.ACTIVE
         self._last_interaction = self.clock()
-        self._lock = threading.Lock()
+        # RLock：用户 callback 内若再调 record_interaction（例如 wake-up 完成
+        # 后想再 bump 一次 idle 计时）不会自死锁；_transit_locked 因此可以
+        # 直接调 callback 而无须 release/reacquire dance（companion-003 L1-2）。
+        self._lock = threading.RLock()
         self._driver_thread: Optional[threading.Thread] = None
         self._driver_stop: Optional[threading.Event] = None
 
@@ -204,29 +207,20 @@ class PowerStateMachine:
             self.stats.transitions_to_active += 1
         log.info("[power] %s -> %s (%s)", prev.value, target.value, source)
 
-        # callback 在锁外调以避免回调内重入死锁
-        cb_drowsy = self.on_enter_drowsy if target == PowerState.DROWSY else None
-        cb_sleep = self.on_enter_sleep if target == PowerState.SLEEP else None
-        cb_active = self.on_enter_active if target == PowerState.ACTIVE else None
-        # 释放锁、触发回调、再重入锁更新计数
-        # 简化：用 try/finally + 临时释放；threading.Lock 不可重入但我们在
-        # 公开方法里按"call into callback 时不持锁"的契约写
-        self._lock.release()
-        try:
-            if cb_drowsy is not None:
-                self._invoke(lambda: cb_drowsy(self), label="on_enter_drowsy")
-            if cb_sleep is not None:
-                ok = self._invoke(lambda: cb_sleep(self), label="on_enter_sleep")
-                if ok:
-                    self.stats.sleep_callbacks_invoked += 1
-            if cb_active is not None:
-                ok = self._invoke(
-                    lambda: cb_active(self, prev), label="on_enter_active"
-                )
-                if ok and prev == PowerState.SLEEP:
-                    self.stats.wake_callbacks_invoked += 1
-        finally:
-            self._lock.acquire()
+        # callback 在锁内调用：RLock 允许同线程重入（L1-2 简化）。
+        # 用户回调若再调 record_interaction / current_state 等公开方法都安全。
+        if target == PowerState.DROWSY and self.on_enter_drowsy is not None:
+            self._invoke(lambda: self.on_enter_drowsy(self), label="on_enter_drowsy")  # type: ignore[misc]
+        elif target == PowerState.SLEEP and self.on_enter_sleep is not None:
+            ok = self._invoke(lambda: self.on_enter_sleep(self), label="on_enter_sleep")  # type: ignore[misc]
+            if ok:
+                self.stats.sleep_callbacks_invoked += 1
+        elif target == PowerState.ACTIVE and self.on_enter_active is not None:
+            ok = self._invoke(
+                lambda: self.on_enter_active(self, prev), label="on_enter_active"  # type: ignore[misc]
+            )
+            if ok and prev == PowerState.SLEEP:
+                self.stats.wake_callbacks_invoked += 1
 
     def _invoke(self, fn: Callable[[], None], label: str) -> bool:
         try:
@@ -277,6 +271,10 @@ class PowerStateMachine:
 
 
 def power_idle_enabled_from_env() -> bool:
+    # L1-1: COCO_POWER_IDLE_DISABLE=1/true/yes/on 强制关闭，覆盖 COCO_POWER_IDLE。
+    disable_raw = os.environ.get("COCO_POWER_IDLE_DISABLE", "0").strip().lower()
+    if disable_raw in {"1", "true", "yes", "on"}:
+        return False
     return os.environ.get("COCO_POWER_IDLE", "0").strip().lower() in {
         "1", "true", "yes", "on",
     }
@@ -301,13 +299,39 @@ def _parse_clamped_float(env_key: str, default: float, lo: float, hi: float) -> 
     return val
 
 
+def _resolve_seconds(seconds_key: str, minutes_key: str, default_s: float,
+                     lo: float, hi: float) -> float:
+    """L1-1: 优先用 ``COCO_POWER_*_MINUTES``（× 60 转秒），否则 fallback ``*_AFTER``（秒）。
+
+    两个 env 同时存在时 *_MINUTES 胜出（spec 字面命名优先）。
+    """
+    raw_min = os.environ.get(minutes_key)
+    if raw_min is not None:
+        try:
+            val = float(raw_min) * 60.0
+        except ValueError:
+            log.warning("[power] %s=%r invalid float; falling back to %s", minutes_key, raw_min, seconds_key)
+        else:
+            if val < lo or val > hi:
+                clamped = max(lo, min(hi, val))
+                log.warning(
+                    "[power] %s=%s minutes (=%ss) out of range [%s, %s]; clamped to %s",
+                    minutes_key, raw_min, val, lo, hi, clamped,
+                )
+                return clamped
+            return val
+    return _parse_clamped_float(seconds_key, default_s, lo, hi)
+
+
 def config_from_env() -> PowerConfig:
     cfg = PowerConfig()
-    cfg.drowsy_after = _parse_clamped_float(
-        "COCO_POWER_DROWSY_AFTER", cfg.drowsy_after, 5.0, 3600.0
+    cfg.drowsy_after = _resolve_seconds(
+        "COCO_POWER_DROWSY_AFTER", "COCO_POWER_DROWSY_MINUTES",
+        cfg.drowsy_after, 5.0, 3600.0,
     )
-    cfg.sleep_after = _parse_clamped_float(
-        "COCO_POWER_SLEEP_AFTER", cfg.sleep_after, 10.0, 7200.0
+    cfg.sleep_after = _resolve_seconds(
+        "COCO_POWER_SLEEP_AFTER", "COCO_POWER_SLEEP_MINUTES",
+        cfg.sleep_after, 10.0, 7200.0,
     )
     # 防御：env clamp 后可能 sleep_after <= drowsy_after，强制修正
     if cfg.sleep_after <= cfg.drowsy_after:

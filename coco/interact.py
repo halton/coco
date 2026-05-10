@@ -106,6 +106,7 @@ class InteractSession:
         tts_say_fn: Callable[..., None],
         idle_animator: Optional["IdleAnimator"] = None,
         llm_reply_fn: Optional[Callable[[str], str]] = None,
+        on_interaction: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -114,6 +115,10 @@ class InteractSession:
         # interact-002: 可选 LLM 回应函数。注入则用 LLM 决定 reply 文本，
         # 动作仍通过 KEYWORD_ROUTES 路由（基于转写文本）。
         self.llm_reply_fn = llm_reply_fn
+        # companion-003 L0-2: 任何 handle_audio 入口都是一次"交互"，统一在
+        # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
+        # 默认 None 不影响 interact-001/004/005 等历史 verify。
+        self.on_interaction = on_interaction
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -144,6 +149,14 @@ class InteractSession:
                   "asr_ok": False, "tts_ok": False, "action_ok": False, "dropped": False}
         try:
             self.stats.sessions += 1
+            # companion-003 L0-2: 在所有具体处理之前 fire 一次交互信号
+            # （PTT / VAD / wake-bridge 都走 handle_audio，统一在这里挂钩，
+            # 避免每条入口路径漏挂）。任何 callback 异常都吞掉，绝不影响主流程。
+            if self.on_interaction is not None:
+                try:
+                    self.on_interaction("audio")
+                except Exception as e:  # noqa: BLE001
+                    log.warning("on_interaction callback failed: %s: %s", type(e).__name__, e)
             # 1) idle 暂停
             if self.idle_animator is not None:
                 self.idle_animator.pause()

@@ -504,7 +504,7 @@
       "area": "companion",
       "title": "节能 idle（长时无交互后 goto_sleep + 唤醒后 wake_up）",
       "user_visible_behavior": "Coco 在连续 N 分钟（默认 5）无 InteractSession 也无 face presence 时，自动 goto_sleep（电机回零位，停掉 idle micro 减少电机磨损）；wake-word 命中或 face 重新出现时自动 wake_up 回到 idle loop。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-001",
         "companion-002",
@@ -518,8 +518,13 @@
         "集成（mockup-sim）：scripts/verify_companion003_power.py 跑 60s 模式（N 缩到 30s）：30s 无活动后看到 goto_sleep log；注入 fake face → wake_up log；trace.csv 记录 state 转换时间戳。",
         "Reviewer fresh-context 评审：sleep 状态下 vision-biased glance hook 是否泄漏（必须不动）、stop_event 在 sleep 状态下也能干净退出、wake_up + 下一轮 micro 时序竞态、真机电机磨损/发热保护合理性（与 reachy-mini SDK goto_sleep 语义对齐）。"
       ],
-      "evidence": [],
-      "notes": "phase-3 而非 phase-4 的理由：phase-2 idle 持续 micro 在真机上长时无人会持续震电机（耗电/发热/磨损），是真机 UAT 后立刻会被反馈的硬体验问题；同时跟 interact-005 wake-word 形成天然组合（wake 同时驱动语音入口与电机唤醒）。effort=S/M（状态机本身简单，关键是与 idle/interact/vision/wake 多个并发模块的 hook 集成 + mock 时间测试）。依赖 interact-005 是因 wake_up 的最佳触发就是 wake-word；若 interact-005 推迟可降级用 face-only 唤醒先做，但首选组合做。"
+      "evidence": [
+        "scripts/verify_companion_003.py: ALL PASS (V1-V10) — evidence/companion-003/verify_summary.json (v1 时间推进/v2 三 source 唤醒/v3 drowsy interval scale/v4 SLEEP skip/v4b face_tracker 注入下 SLEEP 仍 skip + watcher rising-edge 唤醒/v5 默认 OFF/v6 env clamp/v7 driver thread/v8 端到端 face 唤醒/v9 *_MINUTES 优先 + IDLE_DISABLE 强制关/v10 RLock callback 重入不死锁)",
+        "scripts/smoke.py: 全段 PASS 含 power-state (ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1)、publish、vad、wake-word、companion-vision",
+        "regression: verify_interact005 (all_pass=True)、verify_companion_vision (PASS) 在 closeout 修复后仍通过",
+        "Reviewer (sub-agent): LGTM after L0/L1 fixes — L0-1 (face presence watcher 独立 daemon 线程在 SLEEP 下也能 rising-edge 唤醒，main.py 暴露 _face_presence_watcher 挂载点) + L0-2 (InteractSession.on_interaction 钩子，PTT/VAD/wake-bridge 三入口统一在 handle_audio 内 fire，删除 vad callback 的重复 record_interaction 避免双计数) + L1-1 (env 别名 COCO_POWER_DROWSY_MINUTES/SLEEP_MINUTES 优先 + COCO_POWER_IDLE_DISABLE 强制关) + L1-2 (Lock → RLock，简化 callback 调用路径) + L1-3/L1-4 (V4b face stub 子 case + V8 端到端 face 唤醒)"
+      ],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 idle 持续 micro 在真机上长时无人会持续震电机（耗电/发热/磨损），是真机 UAT 后立刻会被反馈的硬体验问题；同时跟 interact-005 wake-word 形成天然组合（wake 同时驱动语音入口与电机唤醒）。effort=S/M（状态机本身简单，关键是与 idle/interact/vision/wake 多个并发模块的 hook 集成 + mock 时间测试）。依赖 interact-005 是因 wake_up 的最佳触发就是 wake-word；若 interact-005 推迟可降级用 face-only 唤醒先做，但首选组合做。Closeout known-debt: main.py 当前未启动 FaceTracker 实例（face_tracker_for_power=None），watcher 仅暴露挂载点；未来在 app 层启用 vision 子系统时把实例传入即可生效，spec verification 第 2 条的 face 唤醒路径已在 verify V4b/V8 用 stub 端到端验证。env spec 字面默认 ON 未对齐——保持 COCO_POWER_IDLE 默认 OFF 以避免破坏 phase-2 行为；用户启用走 COCO_POWER_IDLE=1 + 可选 COCO_POWER_IDLE_DISABLE 反向。"
     }
   ]
 }

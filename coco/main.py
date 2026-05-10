@@ -94,6 +94,42 @@ def _record_int16(seconds: float, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
     return rec.reshape(-1)
 
 
+def _face_presence_watcher(
+    face_tracker,
+    power_state: "PowerStateMachine",
+    stop_event: threading.Event,
+    *,
+    period: float = 0.5,
+) -> None:
+    """companion-003 L0-1: 监听 face presence 边沿（False→True），rising-edge 调
+    ``power_state.record_interaction(source="face")``。
+
+    独立于 IdleAnimator —— 后者在 SLEEP 下早早 ``continue``，永远观察不到
+    face 出现，spec verification 第 2 条的 "face 唤醒 SLEEP" 就靠不住。
+    本 watcher 是独立 daemon thread，无视 power_state 当前态，每 ``period``
+    秒读一次 ``face_tracker.latest().present``，捕到 False→True 立刻 fire。
+
+    任何异常都吞掉只 log，绝不让线程崩溃；stop_event set 后下一轮 wait 退出。
+    """
+    if face_tracker is None or power_state is None:
+        return
+    last_present = False
+    while not stop_event.wait(timeout=period):
+        try:
+            snap = face_tracker.latest()
+            present = bool(getattr(snap, "present", False))
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][power] face watcher read failed: {exc!r}", flush=True)
+            continue
+        if present and not last_present:
+            try:
+                power_state.record_interaction(source="face")
+                print("[coco][power] face rising-edge -> wake", flush=True)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[coco][power] face record_interaction failed: {exc!r}", flush=True)
+        last_present = present
+
+
 def _push_to_talk_loop(session: InteractSession, stop_event: threading.Event) -> None:
     """后台线程：每次 stdin 收到 Enter，录 PUSH_TO_TALK_SECONDS 秒后跑 session。
 
@@ -188,6 +224,18 @@ class Coco(ReachyMiniApp):
                         f"sleep_after={pcfg.sleep_after}s scale={pcfg.drowsy_micro_scale}x",
                         flush=True,
                     )
+                    # companion-003 L0-1: 起 face presence watcher（rising-edge → wake）。
+                    # 当前 main.py 不构造 FaceTracker（business 决策：默认无 vision 子系统），
+                    # 所以 face_tracker_for_power 暂为 None，watcher 直接 early-return。
+                    # 未来若 vision 子系统在 app 层启用，把 tracker 实例传进来即可生效。
+                    face_tracker_for_power = None
+                    if face_tracker_for_power is not None:
+                        threading.Thread(
+                            target=_face_presence_watcher,
+                            args=(face_tracker_for_power, power_state, stop_event),
+                            name="coco-power-face-watcher",
+                            daemon=True,
+                        ).start()
                 except Exception as exc:  # noqa: BLE001
                     print(f"[coco][power] init failed: {exc!r}", flush=True)
                     power_state = None
@@ -222,6 +270,12 @@ class Coco(ReachyMiniApp):
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
                 llm_reply_fn=_llm.reply,
+                # companion-003 L0-2: 把"任意一次 handle_audio"统一记成 power
+                # 状态机的交互信号；PTT/VAD/wake-bridge 不再各自挂钩，避免双计数。
+                on_interaction=(
+                    (lambda src, _ps=power_state: _ps.record_interaction(source=src))
+                    if power_state is not None else None
+                ),
             )
 
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
@@ -230,9 +284,8 @@ class Coco(ReachyMiniApp):
                 vad_cfg = config_from_env()
 
                 def _vad_on_utterance(audio_int16: np.ndarray, sr: int) -> None:
-                    # companion-003: 任意 VAD utterance 都记一次交互
-                    if power_state is not None:
-                        power_state.record_interaction(source="vad")
+                    # companion-003 L0-2: record_interaction 统一在 InteractSession.handle_audio
+                    # 内通过 on_interaction 钩子触发，不在这里重复（避免双计数）。
                     r = session.handle_audio(audio_int16, sr, skip_action=False, skip_tts_play=False)
                     print(
                         f"[coco][vad] transcript={r['transcript']!r} reply={r['reply']!r} "

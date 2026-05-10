@@ -3,8 +3,21 @@
   "v2_record_interaction_resets": true,
   "v3_drowsy_interval_scale": true,
   "v4_sleep_skips_idle_and_wake_resumes": true,
+  "v4b_face_tracker_injected_sleep_skip_and_watcher_wake": true,
   "v5_env_default_off": true,
   "v6_env_clamp": true,
   "v7_driver_thread": true,
+  "v8_face_wake_end_to_end": true,
+  "v9_env_alias_minutes_and_disable": true,
+  "v10_rlock_callback_reentry_no_deadlock": true,
+  "stats": {
+    "psm10_transitions_to_active": 1,
+    "psm10_transitions_to_drowsy": 0,
+    "psm10_transitions_to_sleep": 1,
+    "psm10_sleep_callbacks_invoked": 0,
+    "psm10_wake_callbacks_invoked": 1,
+    "psm10_callback_errors": 0,
+    "psm8_history_len": 2
+  },
   "errors": []
 }

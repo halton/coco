@@ -1,13 +1,13 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.067307949066162,
-    "stop_dt_s": 0.0009551048278808594,
+    "elapsed_s": 8.010622024536133,
+    "stop_dt_s": 0.0006957054138183594,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 39,
-      "hit_count": 39,
+      "detect_count": 40,
+      "hit_count": 40,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -15,22 +15,22 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 13,
+      "micro_count": 14,
       "glance_count": 1,
       "vision_glance_count": 1,
       "vision_biased_glance_count": 1,
-      "face_present_ticks": 14,
+      "face_present_ticks": 15,
       "error_count": 0
     },
     "robot": {
-      "goto_count": 12,
-      "antenna_count": 6
+      "goto_count": 7,
+      "antenna_count": 10
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.035622119903564,
-    "stop_dt_s": 0.0037026405334472656,
+    "elapsed_s": 8.102811813354492,
+    "stop_dt_s": 0.0004930496215820312,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -51,14 +51,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 8,
-      "antenna_count": 7
+      "goto_count": 11,
+      "antenna_count": 5
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.008920907974243,
-    "stop_dt_s": 0.0016551017761230469,
+    "elapsed_s": 12.052978992462158,
+    "stop_dt_s": 0.0020890235900878906,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -71,16 +71,16 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 20,
+      "micro_count": 18,
       "glance_count": 3,
       "vision_glance_count": 3,
       "vision_biased_glance_count": 3,
-      "face_present_ticks": 23,
+      "face_present_ticks": 21,
       "error_count": 0
     },
     "robot": {
-      "goto_count": 15,
-      "antenna_count": 15
+      "goto_count": 21,
+      "antenna_count": 7
     }
   }
 }
