@@ -130,13 +130,21 @@ class Coco(ReachyMiniApp):
             print(f"[coco][idle] start failed: {exc!r}", flush=True)
 
         # interact-001：起 InteractSession + push-to-talk stdin 后台线程
+        # interact-002：注入 LLM client（环境变量未配则自动 fallback 到 KEYWORD_ROUTES）
         ptt_thread: threading.Thread | None = None
         try:
+            from coco.llm import build_default_client as _build_llm
+            _llm = _build_llm()
+            if _llm.backend.name == "fallback":
+                print("[coco][llm] backend=fallback (未配 COCO_LLM_BACKEND，使用关键词路由)", flush=True)
+            else:
+                print(f"[coco][llm] backend={_llm.backend.name} timeout={_llm.timeout}s", flush=True)
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
+                llm_reply_fn=_llm.reply,
             )
             if not PUSH_TO_TALK_DISABLED:
                 ptt_thread = threading.Thread(

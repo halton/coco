@@ -105,11 +105,15 @@ class InteractSession:
         asr_fn: Callable[[np.ndarray, int], str],
         tts_say_fn: Callable[..., None],
         idle_animator: Optional["IdleAnimator"] = None,
+        llm_reply_fn: Optional[Callable[[str], str]] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
         self.tts_say_fn = tts_say_fn
         self.idle_animator = idle_animator
+        # interact-002: 可选 LLM 回应函数。注入则用 LLM 决定 reply 文本，
+        # 动作仍通过 KEYWORD_ROUTES 路由（基于转写文本）。
+        self.llm_reply_fn = llm_reply_fn
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -159,6 +163,15 @@ class InteractSession:
 
             # 3) 路由 reply + action
             reply, action = route_reply(transcript)
+            # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
+            # 动作仍走 KEYWORD_ROUTES（基于转写）；LLM 失败/空时已在 LLMClient 内降级。
+            if self.llm_reply_fn is not None and transcript:
+                try:
+                    llm_text = self.llm_reply_fn(transcript)
+                    if llm_text and llm_text.strip():
+                        reply = llm_text.strip()
+                except Exception as e:  # noqa: BLE001
+                    log.warning("LLM reply failed: %s: %s; using keyword route", type(e).__name__, e)
             self.stats.last_reply = reply
             self.stats.last_action = action
             self.stats.reply_ok += 1

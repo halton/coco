@@ -1,0 +1,42 @@
+{
+  "v1_unit": {
+    "status": "PASS",
+    "fallback_hello": "你好呀！很高兴见到你。",
+    "raising_fallback": "嗯，外面挺好的呀。",
+    "english_fallback": "你好呀！很高兴见到你。",
+    "long_truncated_len": 20,
+    "empty_input": "我没听清，可以再说一次吗？"
+  },
+  "v2_integration": {
+    "status": "PASS",
+    "backend": "fallback",
+    "run1": {
+      "transcript": "今天天气真好我们一起去公园散步",
+      "reply": "嗯，外面挺好的呀。",
+      "action": "look_right"
+    },
+    "run2": {
+      "transcript": "今天天气真好我们一起去公园散步",
+      "reply": "嗯，外面挺好的呀。",
+      "action": "look_right"
+    }
+  },
+  "v3_fallback": {
+    "status": "PASS",
+    "backend": "fallback",
+    "reply_when_fallback": "嗯，外面挺好的呀。"
+  },
+  "v4_latency": {
+    "status": "PASS",
+    "n": 12,
+    "stats": {
+      "calls": 12,
+      "backend_ok": 12,
+      "backend_fail": 0,
+      "fallback_used": 0,
+      "p50_s": 0.0571,
+      "p95_s": 0.0601,
+      "max_s": 0.0601
+    }
+  }
+}

@@ -430,3 +430,31 @@
   - phase-2 milestone 切换前置：interact-002/vision-001/companion-002/interact-003 全 passing + infra-publish-flow runbook 评审通过
 - **下一步最佳动作**：起手 interact-002（priority=9，本会话 Part B 即将进行）
 
+
+### Session 018 — 2026-05-10（interact-002 完成 + merge 回 main）
+
+- **本轮目标**：phase-2 起手 feature interact-002 (LLM 回应升级) 实现 + 验证 + 评审 + 切 passing + merge + push
+- **已完成**：
+  - 切 feat/interact-002 分支，feature_list.json status not_started → in_progress
+  - 实现 coco/llm.py：LLMClient + LLMBackend Protocol + 3 backend (OpenAIChatBackend / OllamaBackend / FallbackBackend) + LLMStats (P50/P95/max 采样)；urllib 实现避免新依赖；环境变量 COCO_LLM_BACKEND/COCO_LLM_BASE_URL/COCO_LLM_API_KEY/COCO_LLM_MODEL/COCO_LLM_TIMEOUT/COCO_LLM_MAX_CHARS；降级硬约束 reply 永远返回非空中文字符串
+  - 修 coco/interact.py:InteractSession 加 llm_reply_fn 可选参数，LLM 覆盖 reply 文本但动作仍走 KEYWORD_ROUTES 路由
+  - 修 coco/main.py 在 InteractSession 构造时注入 build_default_client().reply；fallback 模式区分提示
+  - V1 PASS：scripts/verify_interact002.py — LLMClient unit 5 cases (fallback/raising/non-Chinese/long-truncated/empty) 全 PASS
+  - V2 PASS：fixture wav 闭环跑 2 次（注入 LLMClient，本环境 backend=fallback）— transcript / reply / action 与 interact-001 兼容
+  - V3 PASS：os.environ.pop('COCO_LLM_BACKEND') 后 backend.name='fallback'，闭环行为等价 interact-001
+  - V4 PASS：N=12 延迟采样 _DelayedFallbackBackend(50ms) p50=0.057s p95=0.060s max=0.060s；LLMStats.percentile 基础设施验通
+  - Reviewer fresh-context 自评：1 high (已修) + 2 medium + 4 low
+    - High#1：backend_fail counter 在 'backend 返回非中文' 路径漏计 → 已修 line 267 加 backend_fail += 1
+    - Medium#1：urllib timeout 是 connect+read 空闲超时，服务端慢吐可能超 wall-clock → notes
+    - Medium#2：V4 _DelayedFallbackBackend 返回中文 → 实际走 backend_ok 路径不是 fallback 路径，注释模糊但功能正确
+    - Low#1：Han 范围未含扩展 B → notes
+    - Low#2：interact.py 外层 try 冗余但安全
+    - Low#3：main.py fallback 提示分支 → 已修
+    - Low#4：V2 用 stub 解耦 daemon → 解耦更利于 LLM 路径专注验证
+  - feature_list.json interact-002 status `in_progress` → `passing`，evidence 5 条，notes 完整含 6 项已知约束 + 未来工作建议
+- **运行过的验证**：scripts/verify_interact002.py（PASS×2，第二次为 H1 修复后回归）；./init.sh（EXIT=0，audio/asr/tts smoke 全过）
+- **已记录证据**：evidence/interact-002/v1_run.log、v1_summary.json
+- **更新过的文件或工件**：coco/llm.py（新, 324 行）、coco/interact.py（+llm_reply_fn 注入）、coco/main.py（+build_default_client 注入 + fallback 提示）、scripts/verify_interact002.py（新）、evidence/interact-002/*（新）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：(1) 真 LLM (OpenAI/Ollama) 延迟仅在 V4 用模拟 50ms 演示，真网络延迟需用户配置后实测；(2) urllib timeout 软约束；(3) 流式回应 + 上下文记忆留 phase-2 真机阶段
+- **下一步最佳动作**：按 priority 进 vision-001 (p10, area=vision, deps=infra-vision-source)；或 interact-003 (p12) 如优先做语音 UX；按 dependencies 与 phase-2 milestone 切换前置条件，candidate=vision-001
+

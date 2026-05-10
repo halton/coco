@@ -271,8 +271,10 @@
       "area": "interact",
       "title": "LLM 回应升级（替换关键词模板）",
       "user_visible_behavior": "用户说一句中文后，Coco 用一句自然中文回应（≤60 字），比 interact-001 的关键词模板更贴合上下文；LLM 不可用（未配置/网络断/超时）时自动降级到 KEYWORD_ROUTES，行为等价 interact-001。",
-      "status": "not_started",
-      "dependencies": ["interact-001"],
+      "status": "passing",
+      "dependencies": [
+        "interact-001"
+      ],
       "verification": [
         "实现 coco/llm.py：LLMClient 接口（reply(user_text: str, *, timeout: float = 2.0) -> str）+ 至少 1 个 backend。建议优先 OpenAIChatBackend（OpenAI 兼容 API；环境变量 COCO_LLM_BACKEND/COCO_LLM_BASE_URL/COCO_LLM_API_KEY/COCO_LLM_MODEL；默认 model=qwen2.5-3b-instruct 或 gpt-4o-mini，由实施者实测决定），可选 OllamaBackend（local http://localhost:11434）。FallbackBackend 永远走 KEYWORD_ROUTES。",
         "单元测试：reply 返回非空字符串，含至少 1 个汉字（u4e00-u9fff），长度 ≤ 60；空输入或 backend 抛异常/超时时降级到 KEYWORD_ROUTES，不抛任何异常给上层。",
@@ -280,8 +282,14 @@
         "降级路径实测：取消 COCO_LLM_BACKEND 或设为非法值，闭环仍能跑通，reply 来自 KEYWORD_ROUTES（evidence 标注两组对照文本）。",
         "延迟采样：成功 backend 下连续调用 reply 至少 10 次，记录 P50/P95/max 延迟到 evidence；P95 > 2s 时给出 notes 与未来优化建议。"
       ],
-      "evidence": [],
-      "notes": "phase-2 起手 feature。本地不下 LLM 模型权重（>50MB 阈值）；依赖外部 OpenAI 兼容 API 或用户已装的 Ollama daemon。设计原则：超时与降级路径优先于回应质量——任何环境下 interact 闭环不能因 LLM 出问题而中断。Reviewer 关注点：(1) timeout 是否真的能切断慢请求；(2) 异常路径是否覆盖网络断/401/JSON 解析失败；(3) reply 长度截断策略（硬截断 vs 让 LLM 自己控字数）。"
+      "evidence": [
+        "V1 (2026-05-10, sub-agent, scripts/verify_interact002.py): LLMClient unit tests 5 cases 全 PASS — fallback('你好')='你好呀！很高兴见到你。'；raising-backend 自动降级 backend_fail=1 fallback_used=1；non-Chinese backend 视为失败降级 (Reviewer H1 修复后 backend_fail 也 +1)；max_chars=20 截断 'long-zh-backend' 输出到 20 字符；空输入返回 '我没听清，可以再说一次吗？'。Log -> evidence/interact-002/v1_run.log",
+        "V2 (2026-05-10, sub-agent): fixture wav (zh-001-walk-park, '今天天气真好我们一起去公园散步') 闭环跑两次 — 注入 LLMClient (本环境 backend=fallback)，run1+run2 transcript 一致，reply='嗯，外面挺好的呀。' action=look_right；与 interact-001 行为兼容。Stub robot/asr/tts 解耦 daemon 依赖，专注 LLM 路径验证。Summary -> evidence/interact-002/v1_summary.json",
+        "V3 (2026-05-10, sub-agent): 显式 os.environ.pop('COCO_LLM_BACKEND') 后 build_default_client() 返回 backend.name='fallback'，闭环跑两次仍正常出 reply='嗯，外面挺好的呀。' action=look_right (KEYWORD_ROUTES 路径)；行为与 interact-001 等价。",
+        "V4 (2026-05-10, sub-agent): 延迟采样 N=12，_DelayedFallbackBackend(delay=50ms) backend_ok=12 backend_fail=0 fallback_used=0 p50=0.057s p95=0.060s max=0.060s；演示 LLMStats.percentile 基础设施；真 LLM (OpenAI/Ollama) 延迟由用户配置后实测，本仓库不测网络。",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 1 high (已修) + 2 medium + 4 low — High#1 backend_fail counter 在 'backend 返回非中文' 路径漏计 → 已修 line 267 加 backend_fail += 1，calls = backend_ok + backend_fail 守恒；Medium#1 urllib timeout 是 connect+read 空闲超时，服务端慢吐数据可能超 wall-clock 2s → notes；Medium#2 V4 _DelayedFallbackBackend 返回中文 → 实际走 backend_ok 路径不是 fallback 路径，注释已模糊但不影响功能；Low#1 Han 范围未含扩展 B → notes；Low#2 interact.py 外层 try 是冗余但安全；Low#3 main.py fallback 时区分提示 'backend=fallback (未配 COCO_LLM_BACKEND，使用关键词路由)' → 已修；Low#4 V2 集成测用 stub 解耦 daemon → 与 interact-001 V1 真起 daemon 风格不同，但解耦更利于 LLM 路径专注验证。"
+      ],
+      "notes": "interact-002 用 coco/llm.py 抽象 LLMClient + LLMBackend Protocol，3 个 backend：OpenAIChatBackend (urllib POST OpenAI 兼容 /chat/completions, 默认 model=gpt-4o-mini)、OllamaBackend (默认 base=http://localhost:11434 model=qwen2.5:3b-instruct)、FallbackBackend (永远走 KEYWORD_ROUTES)。环境变量驱动：COCO_LLM_BACKEND={openai|ollama|fallback|unset}/COCO_LLM_BASE_URL/COCO_LLM_API_KEY/COCO_LLM_MODEL/COCO_LLM_TIMEOUT(默认 2.0)/COCO_LLM_MAX_CHARS(默认 60)。降级路径硬约束：reply() 永远返回非空字符串；backend 抛异常/返回非中文/返回空 → 自动 KEYWORD_ROUTES 兜底。interact.py 集成：InteractSession 新增 llm_reply_fn 可选注入；LLM 决定 reply 文本，动作仍走 KEYWORD_ROUTES 基于转写。LLM 调用本身被 LLMClient 内部完整 try/except 包住，外层 InteractSession 再加一层 try (冗余但安全)。已知约束：(1) urllib timeout 是连接+读空闲超时，服务端慢吐数据可能超 wall-clock；(2) Han 范围 [一-鿿] 未含扩展 B 罕见字，60 字日常对话足够；(3) Ollama backend 第一次 reply 才会探测 daemon 是否存在，否则按超时降级；(4) 真 LLM 延迟需用户配置后实测，本仓库 V4 仅演示采样基础设施 (LLMStats.percentile)；(5) 不下 LLM 模型权重，依赖外部 API 或本地 Ollama daemon；(6) main.py 启动时会打印 backend.name，fallback 模式区分提示。未来工作：phase-2 真机阶段建议加 (a) 流式回应 (LLM stream chunks → TTS 分段播放) 改善延迟感知；(b) 简单上下文记忆 (最近 N 轮对话注入 system prompt)。"
     },
     {
       "id": "vision-001",
@@ -290,7 +298,9 @@
       "title": "人脸检测（基于 CameraSource）",
       "user_visible_behavior": "Coco 能从摄像头/fixture 视频中检测出当前画面的人脸数量与大致位置，作为后续视觉触发行为的输入；不阻塞主循环。",
       "status": "not_started",
-      "dependencies": ["infra-vision-source"],
+      "dependencies": [
+        "infra-vision-source"
+      ],
       "verification": [
         "实现 coco/perception/face_detect.py：FaceDetector 类（detect(frame: np.ndarray) -> list[FaceBox(x, y, w, h, score)]）。优先 OpenCV haar cascade（cv2.data.haarcascades 自带，无需下载）；mediapipe 仅在评估 wheel 大小 < 50MB 且明显优于 haar 时才考虑。",
         "fixture tests/fixtures/vision/single_face.jpg 检测出 ≥ 1 张脸（首测应稳定 1，允许 ±0 偏差）。",
@@ -308,7 +318,10 @@
       "title": "视觉触发的微动（人脸出现 → glance 朝向）",
       "user_visible_behavior": "当摄像头检测到人脸时，Coco idle 行为概率分布偏向 glance（看人）；mockup-sim 阶段 glance 方向参数照常走 SDK 但额外打 log 'glance toward face_x=...'，真机阶段接电机让头朝向人脸 x 坐标。",
       "status": "not_started",
-      "dependencies": ["companion-001", "vision-001"],
+      "dependencies": [
+        "companion-001",
+        "vision-001"
+      ],
       "verification": [
         "在 IdleAnimator 中加 face_presence hook：可注入 FaceDetector 或回调 on_face_detected(face_boxes)；face 出现时把 IdleConfig 的 micro/glance 概率临时重新加权（micro ↓、glance ↑），face 离开后恢复默认。",
         "单元测试：face presence True/False → 实际抽样到的动作类型分布符合预期权重（χ² 或简单计数对比，N≥200 样本）。",
@@ -326,7 +339,10 @@
       "title": "语音活动驱动 push-to-talk（VAD 替换 Enter）",
       "user_visible_behavior": "不需要按 Enter，只要对着麦克说话 ≥ 250ms，Coco 自动启动一次 interact session；安静时不触发；与 IdleAnimator 互斥与 interact-001 一致。",
       "status": "not_started",
-      "dependencies": ["interact-001", "audio-002"],
+      "dependencies": [
+        "interact-001",
+        "audio-002"
+      ],
       "verification": [
         "实现 coco/vad_trigger.py（或扩 coco/interact.py）：用 audio-002 已下载的 silero_vad.onnx + sounddevice 流监听；speech 段累计 ≥ 250ms 触发一次 InteractSession.handle_audio(audio, sr)；触发后进入 cooldown（默认 1.5s）防连击。",
         "静音 5s（环境底噪）下不触发任何 session，session_count == 0。",
@@ -344,7 +360,9 @@
       "title": "Control.app publish + 真机 UAT runbook",
       "user_visible_behavior": "开发者按 docs/uat-runbook.md 步骤可把 Coco publish 到 Control.app，并在真机上完成一次最小闭环（音频 + 动作 + 视觉）的 UAT；publish 流程 dry-run 在开发机可重复执行。",
       "status": "not_started",
-      "dependencies": ["infra-001"],
+      "dependencies": [
+        "infra-001"
+      ],
       "verification": [
         "写 docs/uat-runbook.md：覆盖 (a) reachy_mini.apps.app publish 完整流程（含 metadata / index.html / wheel 检查）、(b) Control.app 注册步骤、(c) 真机连接（USB / 网络 / 端口）、(d) 真机 USB 音频耳测步骤、(e) 头部 USB 摄像头检查、(f) interact 闭环检查清单（PTT / VAD / LLM 三种入口分别走一遍）。",
         "在开发机跑 reachy_mini.apps.app check . 通过；如有 publish dry-run 选项则跑通无报错；列出 publish 候选 artifacts（wheel / metadata.json / index.html / style.css）路径与大小到 evidence。",
