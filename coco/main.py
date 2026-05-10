@@ -29,6 +29,7 @@ from coco import tts as coco_tts
 from coco.asr import transcribe_wav
 from coco.idle import IdleAnimator, IdleConfig
 from coco.interact import InteractSession
+from coco.vad_trigger import VADTrigger, config_from_env, vad_disabled_from_env
 
 
 SAMPLE_RATE = 16000
@@ -131,7 +132,9 @@ class Coco(ReachyMiniApp):
 
         # interact-001：起 InteractSession + push-to-talk stdin 后台线程
         # interact-002：注入 LLM client（环境变量未配则自动 fallback 到 KEYWORD_ROUTES）
+        # interact-003：默认改用 VAD trigger 替代 stdin Enter；COCO_VAD_DISABLE=1 回退 PTT
         ptt_thread: threading.Thread | None = None
+        vad_trigger: VADTrigger | None = None
         try:
             from coco.llm import build_default_client as _build_llm
             _llm = _build_llm()
@@ -146,7 +149,30 @@ class Coco(ReachyMiniApp):
                 idle_animator=idle_animator,
                 llm_reply_fn=_llm.reply,
             )
-            if not PUSH_TO_TALK_DISABLED:
+
+            use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
+            if use_vad:
+                # interact-003: 用 VAD 取代 stdin Enter；session.tts_say_fn 包一层 mute 防自激
+                vad_cfg = config_from_env()
+
+                def _vad_on_utterance(audio_int16: np.ndarray, sr: int) -> None:
+                    r = session.handle_audio(audio_int16, sr, skip_action=False, skip_tts_play=False)
+                    print(
+                        f"[coco][vad] transcript={r['transcript']!r} reply={r['reply']!r} "
+                        f"action={r['action']} dt={r['duration_s']:.2f}s",
+                        flush=True,
+                    )
+
+                vad_trigger = VADTrigger(_vad_on_utterance, config=vad_cfg)
+                # 包一层 tts_say_fn：TTS 期间 mute，避免自家声音被回采再次触发
+                session.tts_say_fn = vad_trigger.wrap_tts(session.tts_say_fn)
+                vad_trigger.start_microphone()
+                print(
+                    f"[coco][vad] VAD trigger started (threshold={vad_cfg.threshold} "
+                    f"cooldown={vad_cfg.cooldown_seconds}s min_speech={vad_cfg.min_speech_seconds}s)",
+                    flush=True,
+                )
+            elif not PUSH_TO_TALK_DISABLED:
                 ptt_thread = threading.Thread(
                     target=_push_to_talk_loop,
                     args=(session, stop_event),
@@ -154,26 +180,32 @@ class Coco(ReachyMiniApp):
                     daemon=True,
                 )
                 ptt_thread.start()
-                print("[coco][ptt] push-to-talk listener started", flush=True)
+                print("[coco][ptt] push-to-talk listener started (COCO_VAD_DISABLE=1)", flush=True)
             else:
                 print("[coco][ptt] disabled by COCO_PTT_DISABLE=1", flush=True)
         except Exception as exc:  # noqa: BLE001
             print(f"[coco][ptt] init failed: {exc!r}", flush=True)
 
         try:
-            # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
-            with sd.InputStream(
-                samplerate=SAMPLE_RATE,
-                channels=1,
-                dtype="float32",
-                blocksize=block_frames,
-            ) as mic:
+            if vad_trigger is not None:
+                # interact-003: VADTrigger 已经开了一路 sounddevice InputStream；
+                # 主循环不再开第二路（避免设备争抢），只做 stop_event 心跳。
                 while not stop_event.is_set():
-                    data, _overflow = mic.read(block_frames)
-                    rms = float(np.sqrt(np.mean(np.square(data))))
-                    print(f"[coco] rms={rms:.4f}", flush=True)
-                    # 让出循环，给 stop_event 检查机会。
-                    time.sleep(0.05)
+                    time.sleep(0.5)
+            else:
+                # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
+                with sd.InputStream(
+                    samplerate=SAMPLE_RATE,
+                    channels=1,
+                    dtype="float32",
+                    blocksize=block_frames,
+                ) as mic:
+                    while not stop_event.is_set():
+                        data, _overflow = mic.read(block_frames)
+                        rms = float(np.sqrt(np.mean(np.square(data))))
+                        print(f"[coco] rms={rms:.4f}", flush=True)
+                        # 让出循环，给 stop_event 检查机会。
+                        time.sleep(0.05)
         finally:
             # 确保 idle 线程退出干净；stop_event 已被外部或本循环 set
             if idle_animator is not None:
@@ -187,6 +219,9 @@ class Coco(ReachyMiniApp):
             # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
             if ptt_thread is not None:
                 ptt_thread.join(timeout=1.0)
+            # interact-003: 停 VAD 麦克线程（如已启动）
+            if vad_trigger is not None:
+                vad_trigger.stop(timeout=1.5)
 
 
 def main() -> None:

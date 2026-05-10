@@ -498,3 +498,15 @@
 - **Reviewer 评审结果**：LGTM with minor findings；M1/M2/M3 三项已记 known-debt（mockup-sim fixture 限制）
 - **已知风险或未解决问题**：M1/M2/M3 三项 spec 覆盖度降级，等真机 UAT 阶段补严格回验
 - **下一步最佳动作**：interact-003（VAD push-to-talk，p12，deps=[interact-001, audio-002] 均 passing）—— phase-2 milestone gate 余下 1 个 feature，开 feat/interact-003 分支即可启动
+
+## Session 021 — interact-003 closeout (2026-05-10)
+
+- **会话起点动作**：feat/interact-003 HEAD=272cc3f（已 push origin），Reviewer LGTM with minor notes（高 0、中 3、低 6）；main HEAD=6d6a8fe
+- **本会话动作**：在 feat/interact-003 顺手修 M1（COCO_VAD_THRESHOLD/COOLDOWN/MIN_SPEECH/MAX_SPEECH 范围 clamp + log.warning）+ L1（vad_disabled_from_env truthy 解析 1/true/yes/on）；M2/M3/L3 留 known-debt
+- **更新过的文件或工件**：coco/vad_trigger.py（vad_disabled_from_env 改写 + 新增 _parse_clamped_float + config_from_env 全部走 clamp）、feature_list.json（interact-003 status=passing + evidence 7 行 + notes 追加 known-debt 行）、claude-progress.md（本段）
+- **复测**：scripts/verify_interact003.py 7/7 PASS、./init.sh EXIT=0
+- **commit + merge**：feat(interact-003): close out + env config hardening；feat/interact-003 merge --no-ff 回 main
+- **main HEAD 变化**：6d6a8fe → 合并 feat/interact-003 后新 merge commit（本段稍后填）
+- **Reviewer 评审结果**：LGTM with minor notes — M1/L1 已修，M2 (feed 持锁回调) / M3 (start_microphone 幂等加锁) / L3 (cooldown 文档) 留 known-debt
+- **已知风险或未解决问题**：真麦 VAD threshold 调参留真机 UAT；M2/M3 deeper refactor 留待 phase-3 或 hardening 窗口
+- **下一步最佳动作**：infra-publish-flow（priority 13，phase-2 milestone gate 最后 1 项；deps=[infra-001] passing），写 docs/uat-runbook.md + reachy_mini.apps.app check . 跑通

@@ -345,7 +345,7 @@
       "area": "interact",
       "title": "语音活动驱动 push-to-talk（VAD 替换 Enter）",
       "user_visible_behavior": "不需要按 Enter，只要对着麦克说话 ≥ 250ms，Coco 自动启动一次 interact session；安静时不触发；与 IdleAnimator 互斥与 interact-001 一致。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-001",
         "audio-002"
@@ -357,8 +357,16 @@
         "与 IdleAnimator 软互斥保持：触发期间 idle.is_paused() == True，session 完成后自动 resume；沿用 interact-001 设计。",
         "COCO_VAD_DISABLE=1 环境变量旁路 VAD trigger，回到 PTT (Enter) 模式；COCO_VAD_THRESHOLD / COCO_VAD_COOLDOWN 可调。"
       ],
-      "evidence": [],
-      "notes": "silero_vad.onnx 已在 audio-002 下载到 ~/.cache/coco/asr/，本 feature 不引入新模型。fixture wav 注入路径可绕开真实 sounddevice 流（避免 CI 设备依赖）。已知风险：(1) sounddevice 输入流在某些 macOS 权限缺失环境会拿不到数据 — 需在初始化时探测并 fallback；(2) VAD 阈值过低会被空调/键盘噪声误触发 — 默认偏严，留给 user 调；(3) cooldown 过短会与 TTS 自身播放声音形成自激（话筒收到 TTS 输出再次触发），TTS 期间应主动 mute VAD trigger。"
+      "evidence": [
+        "实现 coco/vad_trigger.py：VADTrigger 复用 asr._build_vad（Silero VAD onnx），feed(samples_f32) 接口让 verification 绕真麦直接喂 fixture wav；start_microphone() 起 daemon 线程从 sounddevice 持续采麦；stop() 干净退出（< 1ms）。",
+        "mute/unmute + wrap_tts() 在 TTS 期间自动 silencing 防话筒回采自激（notes 风险 3）；cooldown=1.5s 防连击；min_speech=0.25s 过滤误触；max_utterance=10s 安全上限。",
+        "COCO_VAD_DISABLE=1 旁路 VAD 回退 stdin Enter PTT；COCO_VAD_THRESHOLD / COCO_VAD_COOLDOWN / COCO_VAD_MIN_SPEECH / COCO_VAD_MAX_SPEECH 环境变量调参，越界 clamp + log.warning。",
+        "main.py 集成：默认走 VAD trigger；VAD 启动时跳过主循环 RMS InputStream 避免双开争抢设备；session.tts_say_fn 自动 wrap_tts。",
+        "scripts/verify_interact003.py 7/7 PASS：(1) fixture wav 单段语音 → 1 次 callback + 转写匹配，(2) 5s 静音 → 0 触发，(3) mute 拦截 + unmute+reset_buffer 恢复，(4) IdleAnimator soft mutex pause/resume，(5) cooldown 拦截连续两段（utterances_in_cooldown=2），(6) wrap_tts 自动 silencing，(7) stop() 干净退出。evidence/interact-003/verify.json。",
+        "smoke.py 加 smoke_vad()：fixture wav → callback 触发 1 次（< 0.1s 增量）；silero_vad.onnx 缺失则 WARN 跳过不阻断。init.sh EXIT=0。",
+        "Reviewer (sub-agent): LGTM with minor notes — 7/7 verify case PASS、init.sh EXIT=0；M1 (env range clamp) + L1 (truthy 解析) 已在 closeout 修复并复测；M2 (drain-out-of-lock) / M3 (start_microphone 幂等加锁) / L3 (cooldown 文档) 留 known-debt。真麦 UAT threshold 调参留 milestone gate。"
+      ],
+      "notes": "silero_vad.onnx 已在 audio-002 下载到 ~/.cache/coco/asr/，本 feature 不引入新模型。fixture wav 注入路径可绕开真实 sounddevice 流（避免 CI 设备依赖）。已知风险：(1) sounddevice 输入流在某些 macOS 权限缺失环境会拿不到数据 — 需在初始化时探测并 fallback；(2) VAD 阈值过低会被空调/键盘噪声误触发 — 默认偏严，留给 user 调；(3) cooldown 过短会与 TTS 自身播放声音形成自激（话筒收到 TTS 输出再次触发），TTS 期间应主动 mute VAD trigger。 known-debt: M2 feed() 持锁回调风险（建议 drain-out-of-lock refactor）；M3 start_microphone 幂等启动建议加 _mic_lock；真麦 VAD threshold 留真机 UAT 调参。"
     },
     {
       "id": "infra-publish-flow",

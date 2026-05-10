@@ -159,6 +159,41 @@ def smoke_companion_vision() -> None:
           f"present={tracker.latest().present}")
 
 
+def smoke_vad() -> None:
+    """interact-003: VAD trigger 不依赖真麦，喂 fixture wav → 断 callback 触发 1 次。
+
+    模型缺失则 WARN 跳过、不阻断（与 smoke_asr 一致）。
+    """
+    print("==> Smoke: VAD trigger (fixture wav)")
+    silero_path = Path.home() / ".cache" / "coco" / "asr" / "silero_vad" / "silero_vad.onnx"
+    if not silero_path.exists():
+        print("  WARN: silero_vad.onnx not downloaded, skipped (run scripts/fetch_asr_models.sh)")
+        return
+    fix_wav = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "audio" / "zh-001-walk-park.wav"
+    if not fix_wav.exists():
+        print(f"  WARN: fixture missing {fix_wav}, skipped")
+        return
+    try:
+        import numpy as np
+        import scipy.io.wavfile as wavfile
+        from coco.vad_trigger import VADConfig, VADTrigger
+    except Exception as e:  # noqa: BLE001
+        sys.exit(f"FAIL: VAD smoke import 失败 ({e})")
+    sr, a = wavfile.read(str(fix_wav))
+    audio_f32 = (a.astype(np.float32) / 32768.0) if a.dtype == np.int16 else a.astype(np.float32)
+    if audio_f32.ndim > 1:
+        audio_f32 = audio_f32.mean(axis=1)
+    captured: list[int] = []
+    trigger = VADTrigger(lambda audio, _sr: captured.append(1), config=VADConfig(cooldown_seconds=0.0))
+    chunk = 1600
+    for i in range(0, len(audio_f32), chunk):
+        trigger.feed(audio_f32[i : i + chunk])
+    trigger.flush()
+    if len(captured) != 1:
+        sys.exit(f"FAIL: VAD trigger 期望 1 次，实际 {len(captured)} 次")
+    print(f"  ok: VAD trigger fired {len(captured)} time(s) on fixture")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -207,6 +242,7 @@ def main() -> None:
     smoke_tts()
     smoke_vision()
     smoke_companion_vision()
+    smoke_vad()
     if args.daemon:
         smoke_daemon()
     print()
