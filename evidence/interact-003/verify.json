@@ -15,7 +15,7 @@
       "callback_ok": 1,
       "callback_fail": 0,
       "last_utterance_seconds": 3.77,
-      "last_trigger_monotonic": 109595.9461175
+      "last_trigger_monotonic": 110074.911701
     }
   },
   "case2_silence_no_trigger": {
@@ -47,7 +47,7 @@
       "callback_ok": 1,
       "callback_fail": 0,
       "last_utterance_seconds": 3.77,
-      "last_trigger_monotonic": 109596.506042791
+      "last_trigger_monotonic": 110075.429351916
     }
   },
   "case4_idle_soft_mutex": {
@@ -69,7 +69,7 @@
       "callback_ok": 1,
       "callback_fail": 0,
       "last_utterance_seconds": 1.914,
-      "last_trigger_monotonic": 109596.594828125
+      "last_trigger_monotonic": 110075.523576708
     }
   },
   "case6_wrap_tts_self_silencing": {
@@ -85,11 +85,11 @@
       "callback_ok": 1,
       "callback_fail": 0,
       "last_utterance_seconds": 3.77,
-      "last_trigger_monotonic": 109596.632426333
+      "last_trigger_monotonic": 110075.561680666
     }
   },
   "case7_mic_thread_clean_stop": {
-    "stop_seconds": 6.375004886649549e-06,
+    "stop_seconds": 5.708003300242126e-06,
     "is_listening": false
   }
 }

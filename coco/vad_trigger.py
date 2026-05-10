@@ -282,23 +282,41 @@ class VADTrigger:
 
 
 def vad_disabled_from_env() -> bool:
-    return os.environ.get("COCO_VAD_DISABLE", "0") == "1"
+    return os.environ.get("COCO_VAD_DISABLE", "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_clamped_float(env_key: str, default: float, lo: float, hi: float) -> float:
+    """Parse env float, clamp to [lo, hi]; warn + fallback on parse error or out-of-range."""
+    raw = os.environ.get(env_key)
+    if raw is None:
+        return default
+    try:
+        val = float(raw)
+    except ValueError:
+        log.warning("[vad] %s=%r invalid float; fallback default=%s", env_key, raw, default)
+        return default
+    if val < lo or val > hi:
+        clamped = max(lo, min(hi, val))
+        log.warning(
+            "[vad] %s=%s out of range [%s, %s]; clamped to %s",
+            env_key, val, lo, hi, clamped,
+        )
+        return clamped
+    return val
 
 
 def config_from_env() -> VADConfig:
     cfg = VADConfig()
-    try:
-        cfg.threshold = float(os.environ.get("COCO_VAD_THRESHOLD", cfg.threshold))
-    except ValueError:
-        pass
-    try:
-        cfg.cooldown_seconds = float(os.environ.get("COCO_VAD_COOLDOWN", cfg.cooldown_seconds))
-    except ValueError:
-        pass
-    try:
-        cfg.min_speech_seconds = float(os.environ.get("COCO_VAD_MIN_SPEECH", cfg.min_speech_seconds))
-    except ValueError:
-        pass
+    cfg.threshold = _parse_clamped_float("COCO_VAD_THRESHOLD", cfg.threshold, 0.0, 1.0)
+    cfg.cooldown_seconds = _parse_clamped_float(
+        "COCO_VAD_COOLDOWN", cfg.cooldown_seconds, 0.0, 10.0
+    )
+    cfg.min_speech_seconds = _parse_clamped_float(
+        "COCO_VAD_MIN_SPEECH", cfg.min_speech_seconds, 0.05, 5.0
+    )
+    cfg.max_utterance_seconds = _parse_clamped_float(
+        "COCO_VAD_MAX_SPEECH", cfg.max_utterance_seconds, 0.5, 30.0
+    )
     return cfg
 
 
