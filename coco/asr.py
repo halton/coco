@@ -23,8 +23,140 @@ DEFAULT_CACHE = Path(
     os.environ.get("COCO_ASR_CACHE", str(Path.home() / ".cache" / "coco" / "asr"))
 )
 SENSEVOICE_DIR = DEFAULT_CACHE / "sense-voice-2024-07-17"
+SILERO_VAD_PATH = DEFAULT_CACHE / "silero_vad" / "silero_vad.onnx"
 
 _recognizer: sherpa_onnx.OfflineRecognizer | None = None
+
+
+def _build_vad(
+    sample_rate: int = 16000,
+    threshold: float = 0.5,
+    min_silence_duration: float = 0.25,
+    min_speech_duration: float = 0.25,
+    buffer_size_in_seconds: float = 100.0,
+) -> sherpa_onnx.VoiceActivityDetector:
+    """构造 Silero VAD。窗口固定 512 (Silero v4/v5 16k 要求)。"""
+    if not SILERO_VAD_PATH.exists():
+        raise FileNotFoundError(
+            f"Silero VAD 模型未找到: {SILERO_VAD_PATH}。先跑 scripts/fetch_asr_models.sh"
+        )
+    silero = sherpa_onnx.SileroVadModelConfig(
+        model=str(SILERO_VAD_PATH),
+        threshold=threshold,
+        min_silence_duration=min_silence_duration,
+        min_speech_duration=min_speech_duration,
+        window_size=512,
+    )
+    cfg = sherpa_onnx.VadModelConfig(
+        silero_vad=silero,
+        sample_rate=sample_rate,
+        num_threads=1,
+        provider="cpu",
+        debug=False,
+    )
+    return sherpa_onnx.VoiceActivityDetector(cfg, buffer_size_in_seconds=buffer_size_in_seconds)
+
+
+def _decode_segment(samples: np.ndarray) -> str:
+    """对一段 float32 16k 单声道波形跑 OfflineRecognizer，返回文本。"""
+    rec = _get_recognizer()
+    stream = rec.create_stream()
+    stream.accept_waveform(sample_rate=16000, waveform=samples.astype(np.float32, copy=False))
+    rec.decode_stream(stream)
+    return stream.result.text.strip()
+
+
+def transcribe_segments_from_array(audio: np.ndarray, sample_rate: int = 16000) -> list[str]:
+    """对一段已加载的 float32 16k 波形跑 VAD + ASR，返回每段文本。
+
+    供离线脚本（喂 wav 给 VAD 验证 VAD→ASR 链路）使用，麦克路径走 transcribe_microphone。
+    """
+    if sample_rate != 16000:
+        raise ValueError(f"采样率 {sample_rate} != 16000，请先重采样")
+    audio = np.asarray(audio, dtype=np.float32)
+    vad = _build_vad(sample_rate=sample_rate)
+    # 按 window_size=512 chunk 喂给 VAD
+    window = 512
+    for i in range(0, len(audio), window):
+        chunk = audio[i : i + window]
+        if len(chunk) < window:
+            # 末尾不足一窗：补零
+            pad = np.zeros(window, dtype=np.float32)
+            pad[: len(chunk)] = chunk
+            chunk = pad
+        vad.accept_waveform(chunk)
+    vad.flush()
+    results: list[str] = []
+    while not vad.empty():
+        seg = vad.front
+        text = _decode_segment(np.asarray(seg.samples, dtype=np.float32))
+        if text:
+            results.append(text)
+        vad.pop()
+    return results
+
+
+def transcribe_microphone(
+    seconds: float = 5.0,
+    vad_speech_pad_seconds: float = 0.3,  # 兼容签名占位（Silero 内部已含 pad 逻辑）
+) -> list[str]:
+    """从默认输入设备录 ``seconds`` 秒，沿途 VAD 切段实时识别，返回每段文本列表。
+
+    退化路径：若 sounddevice 不可用或 VAD 初始化失败，抛原异常给调用方记录到 evidence。
+    """
+    import time
+
+    import sounddevice as sd
+
+    del vad_speech_pad_seconds  # noqa: F841 — 保留 API 兼容
+
+    sample_rate = 16000
+    block_seconds = 0.1
+    block_size = int(sample_rate * block_seconds)  # 1600
+    window = 512  # Silero 16k 必须 512
+
+    vad = _build_vad(sample_rate=sample_rate)
+    results: list[str] = []
+    leftover = np.zeros(0, dtype=np.float32)
+
+    deadline = time.monotonic() + float(seconds)
+    with sd.InputStream(
+        samplerate=sample_rate,
+        channels=1,
+        dtype="float32",
+        blocksize=block_size,
+    ) as stream:
+        while time.monotonic() < deadline:
+            data, _overflow = stream.read(block_size)
+            samples = np.asarray(data, dtype=np.float32).reshape(-1)
+            buf = np.concatenate([leftover, samples])
+            # 按 512 切窗喂 VAD
+            n_full = (len(buf) // window) * window
+            for i in range(0, n_full, window):
+                vad.accept_waveform(buf[i : i + window])
+            leftover = buf[n_full:]
+            # 取已完成的语音段
+            while not vad.empty():
+                seg = vad.front
+                text = _decode_segment(np.asarray(seg.samples, dtype=np.float32))
+                if text:
+                    results.append(text)
+                vad.pop()
+
+    # 收尾：补零冲掉 leftover，再 flush
+    if len(leftover) > 0:
+        pad = np.zeros(window, dtype=np.float32)
+        pad[: len(leftover)] = leftover
+        vad.accept_waveform(pad)
+    vad.flush()
+    while not vad.empty():
+        seg = vad.front
+        text = _decode_segment(np.asarray(seg.samples, dtype=np.float32))
+        if text:
+            results.append(text)
+        vad.pop()
+
+    return results
 
 
 def _get_recognizer() -> sherpa_onnx.OfflineRecognizer:
