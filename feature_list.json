@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-10",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -529,6 +529,118 @@
         "Reviewer (sub-agent): LGTM after L0/L1 fixes — L0-1 (face presence watcher 独立 daemon 线程在 SLEEP 下也能 rising-edge 唤醒，main.py 暴露 _face_presence_watcher 挂载点) + L0-2 (InteractSession.on_interaction 钩子，PTT/VAD/wake-bridge 三入口统一在 handle_audio 内 fire，删除 vad callback 的重复 record_interaction 避免双计数) + L1-1 (env 别名 COCO_POWER_DROWSY_MINUTES/SLEEP_MINUTES 优先 + COCO_POWER_IDLE_DISABLE 强制关) + L1-2 (Lock → RLock，简化 callback 调用路径) + L1-3/L1-4 (V4b face stub 子 case + V8 端到端 face 唤醒)"
       ],
       "notes": "phase-3 而非 phase-4 的理由：phase-2 idle 持续 micro 在真机上长时无人会持续震电机（耗电/发热/磨损），是真机 UAT 后立刻会被反馈的硬体验问题；同时跟 interact-005 wake-word 形成天然组合（wake 同时驱动语音入口与电机唤醒）。effort=S/M（状态机本身简单，关键是与 idle/interact/vision/wake 多个并发模块的 hook 集成 + mock 时间测试）。依赖 interact-005 是因 wake_up 的最佳触发就是 wake-word；若 interact-005 推迟可降级用 face-only 唤醒先做，但首选组合做。Closeout known-debt: main.py 当前未启动 FaceTracker 实例（face_tracker_for_power=None），watcher 仅暴露挂载点；未来在 app 层启用 vision 子系统时把实例传入即可生效，spec verification 第 2 条的 face 唤醒路径已在 verify V4b/V8 用 stub 端到端验证。env spec 字面默认 ON 未对齐——保持 COCO_POWER_IDLE 默认 OFF 以避免破坏 phase-2 行为；用户启用走 COCO_POWER_IDLE=1 + 可选 COCO_POWER_IDLE_DISABLE 反向。"
+    },
+    {
+      "id": "infra-002",
+      "priority": 19,
+      "area": "infra",
+      "title": "配置中心 + 结构化日志（jsonl）",
+      "user_visible_behavior": "Coco 所有 env-var 配置（COCO_LLM_*/COCO_VAD_*/COCO_WAKE_*/COCO_FACE_*/COCO_POWER_*/COCO_DIALOG_*/COCO_PTT_*/COCO_CAMERA 等十余个）集中到 coco/config.py，单点 from_env() 解析 + clamp + 日志告警；运行期日志可选输出结构化 jsonl（每行一个事件含 ts/level/component/event/payload），便于回放与离线分析。默认仍走人类可读 stderr，新模式由 COCO_LOG_JSONL=1 启用。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-debt-sweep"
+      ],
+      "verification": [
+        "实现 coco/config.py：CocoConfig dataclass 聚合所有 env (LLM/VAD/Wake/Face/Power/Dialog/PTT/Camera/Log)；from_env() 单次扫 os.environ 完成 clamp + 类型转换 + 越界 warning；现有模块（asr.py/llm.py/vad_trigger.py/wake_word.py/face_tracker.py/power_state.py/dialog.py/main.py）改为接收 CocoConfig 或子结构，env.getenv 直读集中到 config.py 内部。",
+        "向后兼容：未设置任何 env 时所有默认值与 phase-3 行为完全一致（逐字段 diff 列入 evidence）；现有 verify_*.py 全套 passing（vision-002/companion-003/interact-004/interact-005/infra-debt-sweep/interact-003）。",
+        "实现 coco/logging_setup.py：setup_logging(jsonl: bool, level: str)；jsonl 模式下每行 JSON {ts, level, component, event, message, **payload}；非 jsonl 模式行为与现有 logging.basicConfig 一致。COCO_LOG_JSONL=1 启用，COCO_LOG_LEVEL 控制等级（默认 INFO）。",
+        "至少 5 个关键 component 接入 structured event（component 字段固定）：asr.transcribe / llm.reply / vad.utterance / wake.hit / power.transition；payload 含必要字段（如 cer / latency_ms / backend / wake_score / from→to state）。",
+        "脚本 scripts/verify_infra_002.py：(a) 默认无 env 跑 CocoConfig.from_env() 字段逐个对照 phase-3 默认值；(b) 故意设非法值（如 COCO_LLM_TIMEOUT=-1）确认 clamp 到 spec 区间且 log warning；(c) jsonl 模式下捕获 stderr 输出，逐行 json.loads 通过且字段集合 ⊇ {ts, level, component, event}；(d) 5 个 component 各触发一次断 jsonl 行存在；(e) regression：verify_interact004/005/companion_003/vision_002 任选 2 个跑通。",
+        "smoke_config（scripts/smoke.py 加段）：构造默认 CocoConfig + jsonl 模式 setup_logging + 一次 emit，断言 stderr 行 json 解析 ok。",
+        "Reviewer fresh-context 评审：env 名向后兼容（不能删旧名）、CocoConfig 不变（frozen dataclass）、jsonl 模式下 logging stdlib 兼容（不破第三方库 logging 链路）、clamp 区间统一（与 phase-3 各模块一致）、最大行长 < 4KB（payload 防泄漏）。"
+      ],
+      "evidence": [],
+      "notes": "phase-4 第一个 feature 的理由：phase-3 累积 env 变量散落（CLAUDE.md 子系统边界段已列 COCO_CAMERA / COCO_VAD_* / COCO_WAKE_* / COCO_FACE_* / COCO_POWER_* / COCO_DIALOG_* / COCO_PTT_* / COCO_LLM_* / COCO_LOG_*），后续 phase-4 新功能（emotion/profile/face-id/proactive）若继续散落必失控。jsonl 日志为 phase-4 后续 feature（emotion/face-id/proactive）的回放分析铺路。effort=M（机械工作量大：~10 个模块改 import config + 5 个 component 接入 event；逻辑简单但触面广，必须配 regression 全跑）。known-risk：(a) 改触面广，回归测必须覆盖每个 verify_*.py；(b) 若 from_env() 一次性解析失败需 fail-fast 还是降级——选 fail-fast 但每个字段独立 try（一个字段非法不污染其他字段）；(c) jsonl 模式 payload 不能含完整音频/帧数据，仅 metadata（防写满磁盘）。"
+    },
+    {
+      "id": "interact-006",
+      "priority": 20,
+      "area": "interact",
+      "title": "情绪/语气检测（ASR 文本 → emotion label → idle/TTS 反馈）",
+      "user_visible_behavior": "Coco 听到用户说话后，从转写文本判断当前情绪（neutral/happy/sad/angry/surprised 五分类，简化版）；情绪驱动 idle 风格（happy 时 micro 幅度↑、sad 时 ↓）与 TTS 语气提示（log 标注 emotion=...，真机 TTS 语气调参留 milestone）；fallback 为 neutral，不阻塞主对话路径。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-004",
+        "infra-002"
+      ],
+      "verification": [
+        "实现 coco/emotion.py：EmotionDetector 类，detect(text: str) -> EmotionLabel(name, score)。phase-4 简化版：基于关键词词典 + 标点/重复模式启发式（'好开心/太棒了/!'→happy，'难过/伤心/哎'→sad，'气死/讨厌/烦'→angry，'真的吗/居然'→surprised，其余 neutral）；提供 backend Protocol 留接口给后续 LLM-based 替换。",
+        "fixture：tests/fixtures/text/emotion_cases.json 至少 20 条 (text, expected_label) 覆盖 5 类各 ≥3 条 + 边界（空串 / 仅标点 / 中英混杂）；准确率 ≥ 80%（heuristic baseline 够用，进阶留 phase-5 LLM-emotion）。",
+        "集成 IdleAnimator：IdleConfig 加 emotion_bias dict，micro_amp/glance_prob 按当前 emotion 缩放（happy=1.3x / sad=0.7x / 其它=1.0x）；EmotionDetector 由 InteractSession 在 handle_audio 里调用并写入 IdleAnimator.set_current_emotion(label)；happy/sad 衰减回 neutral 的半衰期 60s（COCO_EMOTION_DECAY_S 可调）。",
+        "集成 TTS：tts.say() 接 emotion 参数（仅 log 标注，不真实改 voice 参数；phase-4 simulate-only，真机调参留 milestone）；evidence 抓 log 行 'tts say emotion=happy text=...'。",
+        "scripts/verify_interact006.py：(a) 20 条 fixture 准确率 ≥80%；(b) 注入 happy 后 idle 60s trace 中 micro_amp 平均 > neutral baseline 的 1.2x；(c) 60s 后衰减回 neutral；(d) emotion='neutral' 时 idle 行为与 phase-3 完全一致（regression）；(e) 异常输入 (None/数字/超长字符串) 返回 neutral 不抛。",
+        "Reviewer fresh-context 评审：5 类标签集合是否合理（避免膨胀）、heuristic 关键词词典中英文覆盖、emotion 不污染 KEYWORD_ROUTES 路径选择（独立通道）、与 DialogMemory 无耦合（emotion 不进 history）、半衰期 60s 默认值合理性。"
+      ],
+      "evidence": [],
+      "notes": "phase-4 设计要点：simulate-first（关键词启发式）保证 100% 离线 + 0 推理延迟；后续如真机阶段需求强可换 LLM 二次回应（'你听起来有点难过' 类）—— 留 backend Protocol 不锁死。emotion 影响范围严格限定 idle 风格 + TTS log 标注，不改 reply 文本（reply 由 LLM/KEYWORD_ROUTES 自主决定，避免双层串扰）。半衰期决策依据：人类对话情绪持续约 30-90s（参考心理学常数），60s 居中。known-risk：(a) heuristic 准确率天花板低（多义词如 '哎' 可能 sad/无奈/感叹），fixture 必须严格选词；(b) idle 风格反馈在 mockup-sim 上是 log + 数值断言，真机才有用户可感知差异；(c) 中英混杂时 token 切分不严密（用空格 + 单字 fallback），生僻 emoji 不识别。"
+    },
+    {
+      "id": "companion-004",
+      "priority": 21,
+      "area": "companion",
+      "title": "用户档案长期记忆（昵称/兴趣/目标本地 JSON）",
+      "user_visible_behavior": "Coco 跨 session 记得用户的昵称、几个兴趣点与短期学习目标；用户说 '我叫小明' / '我喜欢恐龙' / '这周我想学加法' 时自动抽取并写入 ~/.cache/coco/profile/profile.json；下次启动后 Coco 在 LLM system prompt 中带上这些信息（'用户昵称：小明，兴趣：恐龙，目标：加法'），回应可主动引用。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-004",
+        "infra-002"
+      ],
+      "verification": [
+        "实现 coco/profile.py：UserProfile dataclass (name: str|None, interests: list[str]≤5, goals: list[str]≤3, last_updated: float)；ProfileStore (load/save/update_field)；存储路径 ~/.cache/coco/profile/profile.json（Windows 等价 LOCALAPPDATA）；非云端、本地纯 JSON、版本字段 schema_version=1 防未来破坏。",
+        "实现 ProfileExtractor：基于关键词模式（'我叫 X' / '我是 X' / '我喜欢 X' / '我想学 X' / '我的目标是 X'）抽取，X 长度 1-15 字；含负面过滤（'我不喜欢'/'我不叫'）；多次出现去重 + LRU 截断（interests ≤5 最旧出列）。",
+        "InteractSession 集成：handle_audio 在 LLM/KEYWORD reply 前调 ProfileExtractor.extract(text)；新字段写入 ProfileStore；LLM system prompt 注入 build_system_prompt(profile) -> str，无 profile 字段时退化为默认；DialogMemory.build_messages() 接 system_prompt 参数（已存在）。",
+        "scripts/verify_companion004.py：(a) extract 单元测试 12 条（5 名 + 4 兴趣 + 3 目标，含负面 case），抽取准确率 ≥ 85%；(b) ProfileStore round-trip：save→load 字段一致；(c) 多次注入相同兴趣不重复；(d) interests 第 6 个挤掉最旧；(e) 集成：fixture wav 序列模拟两次启动——session1 注入 '我叫小明' 写盘，session2 重启 ProfileStore.load 返回 name='小明'，DialogMemory.build_messages 系统消息含 '用户昵称：小明'；(f) 删除 profile.json 后 fresh start 不抛异常，behaviors 退化为无 profile。",
+        "隐私 & reset：实现 scripts/reset_profile.py 一键删除 profile.json + log；环境变量 COCO_PROFILE_DISABLE=1 禁用读写（既不 load 也不 save）；evidence 含跑 reset 后 verify 仍通过的 case。",
+        "Reviewer fresh-context 评审：本地存储路径跨平台正确（macOS ~/.cache/coco / Windows %LOCALAPPDATA%）、JSON 模式版本字段、抽取误判风险（'我喜欢哥哥'→兴趣='哥哥' 显然不对）、profile 注入对 fallback backend 的影响（KEYWORD_ROUTES 不读 system prompt 应不受影响）、文件锁/并发写（同一 host 双进程启动）。"
+      ],
+      "evidence": [],
+      "notes": "phase-4 定位：interact-004 解决了短期会话内 N 轮记忆，本 feature 解决跨 session 长期 profile——共同形成完整 '伴侣式' 记忆栈。明确不做：日记式 episodic memory（隐私 + 复杂度爆炸）/ 云同步（隐私 + 网络依赖）。schema_version=1 字段为未来扩展兜底。known-risk：(a) heuristic 抽取假阳性（'我不叫小明' 仍可能命中 '我叫'）→ 模式必须含负面前缀过滤；(b) 用户多人共用同一台机器时 profile 串台 → phase-4 单用户假设，多用户留 vision-003 face-id 之后做（profile 按 face_id 分桶）；(c) 文件并发写用 atomic write (写 .tmp → rename) 防 partial write。"
+    },
+    {
+      "id": "vision-003",
+      "priority": 22,
+      "area": "vision",
+      "title": "人脸 ID 识别（本地 LBPH，known_faces 持久化）",
+      "user_visible_behavior": "Coco 在 face-tracker 输出主脸时进一步识别 '是谁'：已注册 known_faces 中匹配的最高得分人 → 给 dialog 系统提示 'Alice 回来了'；新脸 → 'unknown'；可通过 scripts/enroll_face.py 注册新脸（拍 N 帧 + label）；known_faces 落 ~/.cache/coco/faces/。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-002",
+        "infra-002"
+      ],
+      "verification": [
+        "实现 coco/perception/face_id.py：FaceIdentifier 类，基于 cv2.face.LBPHFaceRecognizer_create()（opencv-contrib-python；evaluate wheel 大小 + cp313 三平台 wheel 可用性，若 contrib 不可用 fallback 到简单灰度直方图距离 baseline）。enroll(label, frames: list[ndarray])/identify(face_crop) -> (label|'unknown', confidence)；阈值 COCO_FACE_ID_THRESHOLD（默认 LBPH=80，越小越像）。",
+        "持久化：~/.cache/coco/faces/{label}/*.jpg + model.yml；FaceStore.save/load 幂等；version 字段；人脸 crop 通过 face_tracker 主脸 box 切出（统一 100x100 灰度）。",
+        "scripts/enroll_face.py：CLI 拍 N 帧（默认 10）从默认摄像头或 fixture 视频，解析 --label，写入 face store + 重训模型；干净退出。",
+        "fixture：tests/fixtures/vision/known_faces/{alice,bob}/*.jpg 各 5 张程序合成（gen_vision_fixtures.py 扩展，不同高斯噪声 + 几何变形模拟同人多角度）；tests/fixtures/vision/unknown_face.jpg 1 张。",
+        "scripts/verify_vision003.py：(a) enroll alice + bob 后 identify alice fixture → label='alice' confidence < threshold；(b) identify unknown_face → label='unknown'；(c) FaceStore round-trip 持久化；(d) 整合 face_tracker：video:user_walks_away.mp4 跑全程，每 10 帧 identify 一次，主脸 confidence trace.csv；(e) 阈值 clamp + env override；(f) Reviewer 关注 LBPH wheel 跨平台。",
+        "InteractSession / DialogMemory hook：FaceIdentifier 输出 'alice' 时一次性给 system prompt 加 '看到了 alice'；rapid flap (alice→bob→alice 5 秒内) 抑制（与 face_tracker hysteresis 复用，不在新增）。",
+        "Reviewer fresh-context 评审：opencv-contrib-python wheel 大小 + cp313 三平台 resolve；fixture 合成方式是否真能区分两人（高斯噪声 + 仿射区分性）；阈值默认值（LBPH 经验值 50-100）；隐私：face crop 不上传、enroll CLI 显式同意提示；并发写 model.yml。"
+      ],
+      "evidence": [],
+      "notes": "phase-4 定位：vision-001 检测、vision-002 跟踪、vision-003 识别——视觉子系统三层完整。简化策略：不上 deep embedding（FaceNet/ArcFace 模型 100MB+ 且推理依赖 onnxruntime gpu），LBPH 经典算法 OpenCV 自带，准确率对单家庭 2-5 人足够；fallback 灰度直方图保证 contrib 不可用时仍有 baseline。known-risk：(a) opencv-contrib-python 必须独立装且 cp313 darwin/linux/win 三平台 resolve 待 Researcher 验证（若不可用，feature 范围降级为 baseline-only 不阻塞）；(b) LBPH 对光照敏感，真机阶段需 enroll 多光照样本；(c) 程序合成 fixture 仅验证流程，真实辨识能力留 milestone 真人 enroll；(d) phase-4 单家庭场景，10 人以上准确率会显著下降。"
+    },
+    {
+      "id": "interact-007",
+      "priority": 23,
+      "area": "interact",
+      "title": "主动话题发起（idle 久 + face present + ACTIVE 时主动出题）",
+      "user_visible_behavior": "Coco 不再只被动等唤醒：当 PowerState=ACTIVE + face present 持续 ≥ 30 秒 + 距离上一次 InteractSession 结束 ≥ 60 秒时，Coco 主动用 TTS 出一道小题或讲一个短故事开头（'要不要我给你出一道加法题？' / '我刚才在想，恐龙到底是怎么灭绝的呢？'），鼓励用户回应；用户回应后正常进入 InteractSession；用户长时间不回（>15s）则记一次 'unaccepted' 退回 idle。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-003",
+        "companion-004",
+        "interact-006",
+        "vision-002"
+      ],
+      "verification": [
+        "实现 coco/proactive.py：ProactiveTopicEngine 类，gather state (power_state, face_tracker, last_interact_ts, profile) → should_speak() bool + pick_topic(profile) -> str；触发条件：state==ACTIVE && face_present_for ≥ 30s && (now - last_interact) ≥ 60s && (now - last_proactive) ≥ 180s；env COCO_PROACTIVE_DISABLE=1 旁路。",
+        "topic 池：tests/fixtures/text/proactive_topics.json 至少 12 条 (category, template) 覆盖 math/story/curiosity/encourage 4 类；pick_topic 优先匹配 profile.interests / profile.goals（'恐龙' 优先 story-恐龙；'加法' 优先 math），无匹配走 round-robin。",
+        "集成 main.py：proactive driver thread (period=5s) 评估 should_speak()；命中 → IdleAnimator.pause() + tts.say(topic) + 启动 15s 'awaiting response' 窗口；窗口内 InteractSession.handle_audio 命中 → cancel pending + 走正常 reply 路径；窗口超时 → log 'unaccepted' + IdleAnimator.resume() + last_proactive_ts 更新避免连击。",
+        "scripts/verify_interact007.py：(a) 单元 should_speak() 三参数边界（face=False/idle=20s/last_interact=30s 三个独立否决）；(b) profile 注入 'interests=[恐龙]' → pick_topic 5 次中 ≥3 次命中故事-恐龙类；(c) 注入 ACTIVE+face_present_30s+无 interact_60s → 触发 1 次 say；(d) 触发后 15s 内不重复触发；(e) sleep 模式下不触发；(f) regression：companion-003/interact-004/vision-002 全 verify 通过。",
+        "Reviewer fresh-context 评审：触发频率上限（180s 默认）是否扰民、SLEEP 状态严格静默（power_state.is_sleep_locked() 检查）、profile 缺失退化、与 wake-word/VAD 入口的优先级（proactive 触发期间用户开口仍能被 VAD 抓到）、TTS 期间 mute VAD 自激（沿用 interact-003 wrap_tts）。"
+      ],
+      "evidence": [],
+      "notes": "phase-4 终曲：组合 phase-3 全部能力（power-state ACTIVE / face-tracker presence / dialog-memory 短期 / wake-word 入口）+ phase-4 新能力（profile interests/goals / emotion 可选影响选题情绪 — phase-4 不强耦，留 hook）。设计哲学：proactive 不是让 Coco '主动叨叨'，是给 idle 模式注入一个低频 (≥3 分钟一次) 主动钩子；扰民阈值高优先（180s default 后续可调）。known-risk：(a) topic 静态模板很快重复 → phase-4 12 条够 demo，phase-5 接 LLM 生成；(b) 'face present 30s' 在 mockup-sim 用 fixture 视频持续命中模拟，真机用真摄像头；(c) TTS 期间被 VAD 误触发自激 → wrap_tts mute 已成熟方案；(d) 与 emotion-006 联动：sad 状态减少 proactive 频率（避免在用户难过时打扰）；本 feature 不做，phase-5 增强。"
     }
   ]
 }

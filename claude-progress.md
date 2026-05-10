@@ -621,3 +621,27 @@
 - **状态变化**：feature_list.json interact-004 `not_started` → `passing`，evidence 3 行（Verification 9/9 含 V5b / Regression / Reviewer LGTM after L1 fix），notes 末尾追加 known-debt 行（L2 KEYWORD 污染 / L2 DialogMemory 无锁 / L3 边界 / L3 env clamp 字面）。
 - **下一步最佳动作**：phase-3 软件层全部完成（infra-debt-sweep / vision-002 / interact-005 / companion-003 / interact-004 全 passing）。仅剩 milestone gate（真机 UAT）涉及 robot 子系统硬件操作，依 CLAUDE.md 规则 (a) 主会话停下等用户排期；或用户决定继续 phase-4 规划。
 
+## Session 028 — phase-4 规划（2026-05-10）
+
+- **本轮目标**：phase-3 软件层全 passing，用户决定不在 phase-4 内部 gate（"全部 feature 完成后再真机 UAT"），需要规划 phase-4 candidate 写入 feature_list.json。
+- **已完成**：feature_list.json 新增 phase-4 candidate 5 个（priority 19-23，全 not_started），_change_log + last_updated 同步：
+  - **infra-002** (p19, area=infra, deps=[infra-debt-sweep], effort=M)：配置中心 coco/config.py 集中所有 COCO_* env + structured jsonl logging（COCO_LOG_JSONL=1）+ 5 个关键 component 接入 event；phase-4 第一个上，给后续 feature 铺路。
+  - **interact-006** (p20, area=interact, deps=[interact-004, infra-002], effort=S/M)：情绪检测（5 类 heuristic 关键词）→ idle 风格缩放 + TTS log 标注；半衰期 60s；100% 离线 simulate-first，留 LLM-emotion backend Protocol。
+  - **companion-004** (p21, area=companion, deps=[interact-004, infra-002], effort=M)：UserProfile 长期记忆（昵称/兴趣 ≤5/目标 ≤3 本地 JSON ~/.cache/coco/profile/）+ 关键词抽取 + LLM system prompt 注入；COCO_PROFILE_DISABLE 旁路 + reset 脚本。
+  - **vision-003** (p22, area=vision, deps=[vision-002, infra-002], effort=M)：人脸 ID 识别（cv2.face LBPH，opencv-contrib-python）+ ~/.cache/coco/faces/ 持久化 + enroll CLI；contrib 不可用时 fallback 灰度直方图 baseline；视觉子系统 detect→track→identify 三层完整。
+  - **interact-007** (p23, area=interact, deps=[companion-003, companion-004, interact-006, vision-002], effort=M)：主动话题发起（ACTIVE + face_present_30s + idle_60s + 节流_180s）；topic 池 12 条按 profile.interests/goals 优先选；15s awaiting-response 窗口；phase-4 终曲组合 phase-3 全部 + phase-4 新能力。
+- **设计原则**：
+  - 优先 sim/fixture 可验：5 个 feature 全部能用 fixture 单跑通 verify_*.py；真机 UAT 一次性留 phase-4 末。
+  - 默认 OFF / env 可禁用：infra-002 设计后 phase-4 新功能（COCO_EMOTION_*/COCO_PROFILE_DISABLE/COCO_FACE_ID_*/COCO_PROACTIVE_DISABLE）一律走集中 config，不破 phase-3 默认行为。
+  - 依赖图：infra-002 是 phase-4 后 4 个 feature 的共同前置；interact-007 是 phase-4 拓扑末（依赖 phase-4 三个 + phase-3 一个）。
+- **未上 phase-4 的 backlog 候选（暂缓理由）**：
+  - audio-003-cache（TTS 缓存）：优化型 feature，对闭环价值低，留 phase-5 性能优化窗口。
+  - robot-003-action-dsl（动作组合 DSL "点头/欢迎手势"）：真机 UAT 价值远高于 sim，留下个 phase 与真机阶段同期。
+  - infra-003-auto-handoff（progress 自动追加）：harness 类改动，本 phase 优先业务闭环，留 backlog。
+- **执行顺序建议**：infra-002 → interact-006 → companion-004 → vision-003 → interact-007（先基础后能力，最后组合）。每个 feature `not_started` → `in_progress` → Reviewer LGTM → `passing` → merge。
+- **已知风险或未解决问题**：
+  - vision-003 需 Researcher 在 in_progress 阶段先验 opencv-contrib-python cp313 三平台 wheel；不可用降级 fallback baseline，feature 范围调整不阻塞。
+  - interact-007 触发条件参数（30s/60s/180s/15s）真机阶段需调参，sim 用 fixture 命中。
+  - phase-4 真机 UAT 一次性 gate（用户排期）覆盖所有 5 个 feature；不在 feature 内部停。
+- **下一步最佳动作**：派 Engineer sub-agent 起手 infra-002（p19，phase-4 第 1 个），开 feat/infra-002 分支，按 verification 7 条逐项推进。
+
