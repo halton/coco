@@ -43,6 +43,20 @@
 
 **不允许的反模式**：主会话亲自 Read / Edit / Bash 任何东西。一旦发生即视为流程违规，需在 progress 里记一笔。
 
+## 持续开发模式（默认启用）
+
+用户启动会话或下达 phase 任务后，主会话默认进入"持续开发模式"：
+
+- 完成一个 feature 的 close-out 后**不询问用户**，直接派下一个 candidate（按 `feature_list.json` 中 priority 最低数字的 `not_started`）
+- phase 内所有 in-flight feature 走完后，自动进入下一 phase 规划（候选写入 `feature_list.json`），立即开始执行第一个
+- 仅在以下情况停下并等用户输入：
+  - (a) 真机 UAT milestone gate（必须物理操作 Reachy Mini）
+  - (b) 用户已显式发出 "暂停" / "停" / "wait" / "hold" 指令
+  - (c) sub-agent 多次 socket / 网络失败无法恢复且需要外部协助
+  - (d) 决策本身需要用户偏好（例如 phase-N+1 候选间二选一且无客观依据）
+- 每个 feature close-out 后用一行回复说"[feature-id] DONE，main HEAD=xxx，继续 [next-feature]"，不再追加 "等通知" 或问句
+- 该规则覆盖全局 "ask user before commit/push" 默认（与本仓库现有 commit/push 例外一致）
+
 ## 规则
 
 - 同一时间只能有一个 active feature（`in_progress`）

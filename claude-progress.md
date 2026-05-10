@@ -525,3 +525,32 @@
 - **phase-2 软件层完结总结**：5 个 feature 全 passing — interact-002 (LLM 入口) / vision-001 (face detect) / companion-002 (vision-biased idle glance) / interact-003 (VAD push-to-talk) / infra-publish-flow (publish dry-run + UAT runbook)。phase-2 自动化层闭环：ASR → LLM/keyword → TTS、Vision face → idle glance、VAD → 录音、publish dry-run；smoke 8 项全绿
 - **已知风险或未解决问题**：phase-2 milestone 的物理 gate（真机 UAT 走通 LLM + Vision + VAD + USB 音频/摄像头闭环）尚未由用户执行，是 phase-2 milestone 切换前置条件；known-debt 项（companion-002 M1/M2/M3、interact-003 M2/M3/L3、infra-publish-flow M1/M4/M5/M6/L1-L3）累积入 phase-3 hardening backlog
 - **下一步最佳动作**：用户按 docs/uat-runbook.md 在真机执行一次 phase-2 UAT（音频耳测 + 摄像头 + 三入口闭环 + 仪式动作），通过后切 phase-2 milestone；并行：phase-3 规划（hardening 窗口清 known-debt 或新功能 backlog）
+
+## Session 023 — phase-3 规划 + 持续开发模式入规 (2026-05-10)
+
+- **本轮目标**：(1) 把 "持续开发不停" 规则写入 CLAUDE.md；(2) 基于 phase-2 软件层全 passing + 累积 known-debt 规划 phase-3 candidate 5 个写入 feature_list.json。
+- **已完成**：
+  - CLAUDE.md：在 "主会话编排模式（硬规则）" 段后、"规则" 段前新增 "持续开发模式（默认启用）" 一段。规则要点：完成 close-out 不再询问用户、phase 走完自动进下一 phase、仅 4 类情况停（真机 UAT / 显式暂停 / sub-agent 多次失败 / 决策需用户偏好）；close-out 一行回复 "[id] DONE，main HEAD=xxx，继续 [next]"；覆盖全局 ask-before-commit 默认与本仓 commit/push 例外联动。
+  - feature_list.json：新增 phase-3 candidate 5 个（priority 14-18，全 not_started），_change_log 与 last_updated 同步：
+    - **infra-debt-sweep** (p14, area=infra, deps=[infra-publish-flow, interact-003, audio-002), effort=M)：phase-2 cross-feature known-debt 清扫——interact-003 M2/M3 (feed 持锁 / start_microphone 幂等) refactor、audio-002 M1 (publish 模式 fixture 路径) 用 importlib.resources 修、audio-002 M4 + audio-003 fetch ps1 Windows 等价、infra-publish-flow M1/M4/M5/M6/L1-L3 runbook 增强收口。
+    - **interact-004** (p15, area=interact, deps=[interact-002, interact-003], effort=S/M)：DialogMemory 多轮对话上下文（最近 N=4 轮，120s idle 清空），LLMClient.reply(history=...) 接口扩展，KEYWORD_ROUTES 路径兼容但仅 LLM 实际生效。
+    - **interact-005** (p16, area=interact, deps=[interact-003, audio-002], effort=M)：'可可' wake-word（sherpa-onnx KWS 优先），VAD trigger 加 require_wake_word + 6s awake 窗口，COCO_WAKE_DISABLE 旁路；解 phase-2 VAD-only 多人/电视背景误触发问题。
+    - **vision-002** (p17, area=vision, deps=[vision-001, companion-002], effort=M)：FaceTracker 多帧滑动平均 + IoU 跟踪 + 主脸选择 + presence hysteresis (K=10/J=2)；直接清 companion-002 M1/M2 known-debt 根因（raw detect 抖动）；解锁真机视觉-运动闭环（追人脸需稳定 primary）。
+    - **companion-003** (p18, area=companion, deps=[companion-001, companion-002, interact-005], effort=S/M)：PowerState (active/drowsy/sleep)，N 分钟无活动 goto_sleep 停 idle micro 减少电机磨损/发热；wake-word/face/interact 任一触发 wake_up；与 interact-005 形成天然组合。
+  - candidate 来源拆分：
+    - **A. known-debt 清理**：infra-debt-sweep (单点收口 cross-feature 债，含 vision-001 真人脸/多人评估留 milestone)
+    - **B. phase-3 新能力**：interact-004 (multi-turn) + interact-005 (wake-word) + vision-002 (tracker) + companion-003 (power-idle)
+    - **C. 真机 UAT 准备类**：合入 infra-debt-sweep 的 ps1 + publish 模式 fixture 修复（不单列）
+- **运行过的验证**：python3 -c "import json; json.load(open('feature_list.json'))" 通过，features=19 (phase-1 9 + phase-2 5 + phase-3 5)。
+- **执行顺序建议**：
+  1. **infra-debt-sweep (p14) 优先**：理由 = phase-2 known-debt 累积影响真机 UAT 与 publish 模式可用性，且 interact-003 M2/M3 与 audio-002 M1 都是 'mockup 阶段够用、真机会出问题' 的边角；先清债再加新功能避免债滚债。
+  2. 然后 **vision-002 (p17)**：清 companion-002 M1/M2 根因（虽 priority 数字大，依赖关系上 vision-002 是 companion-003 wake-up trigger 之一，且与 infra-debt-sweep 无依赖冲突，可作为第二步推进）；如严格按 priority 数字推进则改为 interact-004 (p15)。
+  3. **interact-005 (p16)**：解 VAD-only 误触发，解锁 companion-003 wake-up 入口。
+  4. **companion-003 (p18)**：electricity/磨损保护，phase-3 收尾。
+  5. **interact-004 (p15)**：multi-turn LLM 上下文；可任意时间穿插，与 vision/wake/power 路径独立。
+- **已知风险或未解决问题**：
+  - phase-3 优先级数字 vs. 依赖+影响排序略有出入（debt-sweep 数字最小但本意是先清债，自然成为第一个；其余按依赖图推）；如严格走 priority 数字，主会话可改用 14→15→16→17→18 顺序，效果差别不大
+  - interact-005 选型不确定（sherpa-onnx KWS 是否支持自定义 '可可' keyword 待 Researcher 调研）；如不支持需 fallback 到 OfflineRecognizer + 后处理匹配
+  - companion-003 依赖 interact-005，若 interact-005 阻塞可降级用 face-only 唤醒先做
+  - phase-2 milestone 物理 gate（真机 UAT）由用户执行，与 phase-3 candidate 推进解耦——可并行
+- **下一步最佳动作**：按持续开发模式默认派下一 sub-agent 起手 infra-debt-sweep (p14)，开 feat/infra-debt-sweep 分支，feature_list.json status not_started → in_progress，按 verification 5 条逐项推进。

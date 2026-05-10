@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-10",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -394,6 +394,118 @@
         "smoke 全绿（audio / ASR CER=0 / TTS / vision / companion-vision / VAD trigger / publish）EXIT=0；环境基线 python 3.13.12 / reachy-mini 1.4.0 / sounddevice 0.5.5 / numpy 2.4.4。"
       ],
       "notes": "为 phase-2 milestone gate 做收尾——phase-2 实质完成 = 真机 UAT 走通 LLM + Vision + VAD 闭环。本 feature 自身只产出 docs + dry-run 证据；真机执行步骤由用户做，不在自动化范围。phase-2 milestone 切换前置条件：interact-002 / vision-001 / companion-002 / interact-003 全部 passing + 本 feature runbook 评审通过。 | known-debt：M1/M4/M5/M6 (Reviewer 标的次要 runbook 增强项) 与 L1/L2/L3 (cosmetic) 留 phase-3 文档 hardening 窗口；真机 UAT 闭环（音频+动作+视觉 LLM/VAD/Vision 三入口）由用户在真机上执行，是 phase-2 milestone gate 的物理验收，不在自动化 evidence 范围。"
+    },
+    {
+      "id": "infra-debt-sweep",
+      "priority": 14,
+      "area": "infra",
+      "title": "phase-2 known-debt 清理（cross-feature M/L 项）",
+      "user_visible_behavior": "phase-2 累积的 cross-feature known-debt 被收口：runbook 缺漏补齐、interact-003 VAD 内部锁与 start_microphone 幂等性 refactor、audio-002 fixture 路径在 publish 模式下不再 silent fail、fetch_*_models.ps1 Windows 等价脚本到位。开发者在 publish 模式下复跑 ASR self-check 不再 FileNotFoundError，VAD 在并发 stop/start 下不再 race。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-publish-flow",
+        "interact-003",
+        "audio-002"
+      ],
+      "verification": [
+        "interact-003 M2 (feed 持锁回调) refactor：把 callback 调用 drain 出 _lock 持有区间；写 unit case 模拟 callback 内反向调用 trigger.stop() 不死锁。",
+        "interact-003 M3 (start_microphone 幂等)：加 _mic_lock，重复调用 start_microphone() 只起一份 InputStream，第二次返回已起的引用并 log.warning；unit case 验证。",
+        "audio-002 M1 (publish 模式 fixture)：fixture wav 改为打包进 wheel（pyproject 加 [tool.hatch.build] include 或 importlib.resources），coco/main.py ASR self-check 在 publish 模式下不再 FileNotFoundError；reachy_mini.apps.app check . 仍过。",
+        "audio-002 M4 + audio-003 fetch ps1：scripts/fetch_asr_models.ps1 + scripts/fetch_tts_models.ps1 完成（pwsh 7+，跨平台调用 Invoke-WebRequest + tar），与 .sh 等价（幂等 + 校验文件大小），docs/uat-runbook.md 加 Windows 一节指向 ps1。",
+        "infra-publish-flow M1/M4/M5/M6/L1-L3 runbook 增强：逐项核对，能补就补（端口检测脚本 / 日志收集模板 / publish 失败回滚 / metadata 字段说明等），不能补的明确写 'wontfix: <reason>' 收口。",
+        "Reviewer fresh-context 评审：每条 debt 都要么 PASS、要么明确 wontfix；evidence 须含 grep 证明文件中相应 known-debt 行已删或转 'fixed in infra-debt-sweep'。"
+      ],
+      "evidence": [],
+      "notes": "目的：phase-2 留下的 known-debt 影响真机 UAT 的项一次性扫掉，把 'mockup 阶段够用、真机会出问题' 的边角清理干净。不做新功能，纯清债。effort=M（多个小项串起来）。验收门槛：所有列出的 debt 项要么 PASS 要么 wontfix，feature_list.json 对应 feature notes 里的 known-debt 行同步更新。"
+    },
+    {
+      "id": "interact-004",
+      "priority": 15,
+      "area": "interact",
+      "title": "多轮对话上下文（最近 N 轮注入 LLM）",
+      "user_visible_behavior": "Coco 在一次连续对话中能记住最近几轮内容；用户说 '它叫什么？' 紧跟上一句 '看这只猫' 后，Coco 回应能引用 '猫'，而不是把 '它' 当陌生指代；空闲超时（默认 120s）后上下文自动清空。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-002",
+        "interact-003"
+      ],
+      "verification": [
+        "实现 coco/dialog.py：DialogMemory 类，存最近 N 轮 (user, assistant) 对（默认 N=4）；reset_after_idle_seconds (默认 120)；append(user_text, assistant_text) / build_messages(system_prompt, user_text) -> list[{role,content}] / clear()。",
+        "coco/llm.py:LLMClient.reply() 接受可选 history 参数（list[{role,content}]）；OpenAIChatBackend / OllamaBackend 把 history 拼到 messages；FallbackBackend 忽略 history 仍走 KEYWORD_ROUTES。",
+        "coco/interact.py:InteractSession 持有 DialogMemory 实例；handle_audio 之后 append；route_reply 与 LLM reply 都触发 append（保持 KEYWORD_ROUTES 路径也能多轮，但只对 LLM backend 实际有效）。",
+        "单元测试：注入假 backend 记录收到的 messages — 第 1 轮无 history，第 2 轮 history=[(u1,a1)]，第 N+1 轮 history len 严格 ≤ N；idle 超时后 history 清零。",
+        "集成（fixture wav 序列）：构造 2-3 个 fixture wav 模拟 '看这只猫' → '它叫什么？'，注入 LLMClient（fallback 模式即可，验数据流而非语义），断言第二次 reply 调用时 backend.last_messages 含第一轮内容。",
+        "Reviewer fresh-context 评审：覆盖 history 长度上限不无限增长、idle reset 路径、fallback backend 不接 history 的兼容性、LLM 输入 token 估算（最大 N 轮 ≤ ~600 字）。"
+      ],
+      "evidence": [],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 把单轮 LLM 跑通了，但实际对话价值高度依赖上下文（'它/这个/刚才那个' 这类指代是日常对话主流），单轮回应给人感觉很机械——拉低 phase-2 LLM feature 的实际可用性。不引入持久存储（重启清空，符合 '陪伴' 而非 '助理' 定位）。effort=S/M（DialogMemory 简单 + LLMBackend 接口扩展 + 集成）。"
+    },
+    {
+      "id": "interact-005",
+      "priority": 16,
+      "area": "interact",
+      "title": "唤醒词（'可可' wake-word，KWS 前置 VAD）",
+      "user_visible_behavior": "用户说 '可可，今天天气怎么样' 才会触发 InteractSession；环境噪音 / 人之间普通对话 / 没说 '可可' 的句子不会触发；唤醒后 6s 窗口内可继续说，不再要求重复唤醒词。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-003",
+        "audio-002"
+      ],
+      "verification": [
+        "Researcher 调研：sherpa-onnx KWS 模型（kws-zipformer-wenetspeech 或类似）+ 中文唤醒词 '可可' 的发音覆盖；评估模型大小（< 100MB）+ cp313 跨平台 wheel + 推理延迟（应 < 200ms / 帧）。备选：picovoice porcupine（商业、需 license key，劣后）。",
+        "实现 coco/wake_word.py：WakeWordDetector 复用 sherpa-onnx OfflineRecognizer 或 KWS-specific runtime；feed(samples_f32) 接口，命中 '可可' 时回调 on_wake；6s active 窗口内旁路 wake check 直接走 VAD trigger。",
+        "coco/vad_trigger.py 集成：增加 require_wake_word 参数；wake 命中后进入 'awake' 状态 6s 窗口；窗口内 VAD 触发正常走 InteractSession；窗口超时回到 'sleeping' 等待下一次 wake。",
+        "单元/集成测试：fixture wav '可可你好' 触发 1 次 awake + 1 次 InteractSession；fixture wav '今天天气真好'（无 wake word）触发 0 次；连续两段相距 4s，第二段在 awake 窗口内不需要再次 '可可'。",
+        "环境变量 COCO_WAKE_DISABLE=1 旁路 wake-word，回到 phase-2 VAD-only 行为；COCO_WAKE_THRESHOLD / COCO_WAKE_WINDOW_SECONDS 可调；越界 clamp + log.warning。",
+        "Reviewer fresh-context 评审：误唤醒率（10 段无 wake word 噪声/对话 fixture 应 0 触发）、漏唤醒率（5 段不同语速 '可可' fixture 应全触发）、TTS 期间 wake-word 是否被自激（沿用 interact-003 wrap_tts mute）。"
+      ],
+      "evidence": [],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 VAD-only 触发在多人环境 / 电视背景音 / 用户自言自语场景下会大量误触发，是真机 UAT 后立刻会暴露的可用性问题。effort=M（Researcher 选型 + 模型集成 + VAD 状态机扩展 + 跨平台模型缓存）。已知风险：(a) 中文短词 '可可' 易与 'OK / 苦力 / 哥哥' 混淆，需选支持自定义 keyword 的 KWS 实现；(b) 模型下载 hops 进 ~/.cache/coco/wake/ 不进 git；(c) 真麦阈值留 milestone 调参。"
+    },
+    {
+      "id": "vision-002",
+      "priority": 17,
+      "area": "vision",
+      "title": "人脸跟踪（多帧滑动平均 + 主脸选择）",
+      "user_visible_behavior": "Coco 在视野中有多张脸时稳定跟踪 '主脸'（最大或最近）；单帧检测抖动（fixture mp4 上典型 ±5 像素跳动）不会让 face presence 在 True/False 之间剧烈震荡；多人场景下不在两张脸之间来回切换。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-001",
+        "companion-002"
+      ],
+      "verification": [
+        "实现 coco/perception/face_tracker.py：FaceTracker 类，输入帧序列 + FaceDetector，输出 TrackedFace（id, box, age_frames, smoothed_cx, smoothed_cy, presence_score）；用 N 帧滑动窗口（默认 N=5）+ IoU 匹配做简单跟踪，不引 deep_sort 等重型方案。",
+        "primary_face() 选 box.area 最大或与上一帧 primary 距离最近的那张；面孔切换需 ≥ M 连续帧（默认 M=3）支持新候选才允许切换，避免抖动。",
+        "Hysteresis：presence True → False 需 K 帧（默认 K=10）连续 0 face；False → True 需 J 帧（默认 J=2）连续 ≥1 face；环境变量可调。",
+        "companion-002 接入：FaceTracker 替换原 raw FaceDetector 输入；vision_biased_glance_count 在 fixture user_walks_away.mp4 上比 phase-2 实测更稳定（face_x 漂移 std 下降 ≥ 30%，断 trace.csv 数据）。",
+        "fixture 单元测试：(a) single_face.jpg 1 张稳定跟踪 5s；(b) no_one.jpg presence 一直 False；(c) user_walks_away.mp4 跟踪贯穿全片不丢；(d) 合成两脸 fixture（gen_vision_fixtures.py 扩）primary 切换次数 ≤ 1。",
+        "Reviewer fresh-context 评审：M=3 / K=10 / J=2 默认值合理性、IoU 阈值（默认 0.3）、跟踪丢失后重新初始化策略、CascadeClassifier thread 安全（每线程独立实例）依然遵守。"
+      ],
+      "evidence": [],
+      "notes": "phase-3 而非 phase-4 的理由：companion-002 V3 Reviewer M1 显式标了 'fixture haar 整段命中未真覆盖 face-absent 过渡'、M2 'N≥200 概率分布对比未严格' —— 这两个 known-debt 的根因是 raw detect 单帧抖动 + 缺 hysteresis；vision-002 直接清这部分债 + 解锁真机阶段视觉-运动闭环（Coco 转头追人脸需要稳定的 primary）。effort=M（tracker 算法不复杂但 fixture 扩 + 测试矩阵大）。"
+    },
+    {
+      "id": "companion-003",
+      "priority": 18,
+      "area": "companion",
+      "title": "节能 idle（长时无交互后 goto_sleep + 唤醒后 wake_up）",
+      "user_visible_behavior": "Coco 在连续 N 分钟（默认 5）无 InteractSession 也无 face presence 时，自动 goto_sleep（电机回零位，停掉 idle micro 减少电机磨损）；wake-word 命中或 face 重新出现时自动 wake_up 回到 idle loop。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-001",
+        "companion-002",
+        "interact-005"
+      ],
+      "verification": [
+        "实现 coco/idle.py 扩展：IdleAnimator 加 PowerState（active / drowsy / sleep）；drowsy = 最近 N/2 分钟无活动，micro 频率折半；sleep = 最近 N 分钟无活动，调 robot.goto_sleep() 并停掉 micro/glance。",
+        "wake 路径：FaceTracker presence True → False→True 边沿 OR WakeWordDetector on_wake OR InteractSession.handle_audio 调用都 trigger wake_up()，状态回 active；wake_up 完成后下一次 micro tick 立即开始。",
+        "环境变量 COCO_POWER_IDLE_DISABLE=1 旁路（开发期默认 ON 但可关）；COCO_POWER_DROWSY_MINUTES / COCO_POWER_SLEEP_MINUTES 可调。",
+        "单元测试：用 monotonic mock 把时间快进 N+1 分钟无活动，断 state == sleep + robot.goto_sleep() 被调用 1 次；再注入 face → state == active + wake_up() 被调用 1 次。",
+        "集成（mockup-sim）：scripts/verify_companion003_power.py 跑 60s 模式（N 缩到 30s）：30s 无活动后看到 goto_sleep log；注入 fake face → wake_up log；trace.csv 记录 state 转换时间戳。",
+        "Reviewer fresh-context 评审：sleep 状态下 vision-biased glance hook 是否泄漏（必须不动）、stop_event 在 sleep 状态下也能干净退出、wake_up + 下一轮 micro 时序竞态、真机电机磨损/发热保护合理性（与 reachy-mini SDK goto_sleep 语义对齐）。"
+      ],
+      "evidence": [],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 idle 持续 micro 在真机上长时无人会持续震电机（耗电/发热/磨损），是真机 UAT 后立刻会被反馈的硬体验问题；同时跟 interact-005 wake-word 形成天然组合（wake 同时驱动语音入口与电机唤醒）。effort=S/M（状态机本身简单，关键是与 idle/interact/vision/wake 多个并发模块的 hook 集成 + mock 时间测试）。依赖 interact-005 是因 wake_up 的最佳触发就是 wake-word；若 interact-005 推迟可降级用 face-only 唤醒先做，但首选组合做。"
     }
   ]
 }
