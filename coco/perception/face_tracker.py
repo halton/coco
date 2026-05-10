@@ -1,11 +1,15 @@
-"""coco.perception.face_tracker — 后台人脸跟踪线程（companion-002）.
+"""coco.perception.face_tracker — 后台人脸跟踪线程（companion-002 + vision-002）.
 
 设计目标：
 - 把"开摄像头 + 周期 detect"独立成一个 daemon 线程，不阻塞 IdleAnimator 的主循环。
 - 暴露线程安全 snapshot：``latest() -> FaceSnapshot``，IdleAnimator 在自己节奏下读。
-- 防闪烁：N 帧滑动平均（``presence_window`` 内 ≥ ``presence_min_hits`` 帧
-  检测到人脸才视为 "face present"），避免 fixture / 真机帧间检测抖动引起
-  概率分布剧烈切换（companion-002 notes 已声明）。
+- 多帧 IoU 跟踪（vision-002）：每个检测框跨帧绑定 ``track_id``，提供
+  ``TrackedFace``（id / box / age_frames / smoothed_cx,cy / presence_score）。
+- 主脸选择策略（vision-002）：默认按 box 面积最大；可选 "nearest_to_last"（与上一帧
+  primary 中心距离最近）/ "longest_lived"。primary 切换需 ``primary_switch_min_frames``
+  连续帧支持新候选才允许，避免抖动。
+- presence hysteresis（vision-002 强化）：True→False 需 K 帧（默认 K=10）连续 0 face；
+  False→True 需 J 帧（默认 J=2）连续 ≥1 face。环境变量可调。
 - 默认关闭：仅在 ``COCO_VISION_IDLE=1`` 或显式注入时启动，避免 smoke 默认路径
   引入新依赖 / 摄像头权限提示。
 
@@ -14,16 +18,21 @@
   ``stop_event.set()`` 都能在 ≤ 1/fps 内退出。
 - 共享 state 用 ``threading.Lock`` 保护；snapshot 是不可变 dataclass 拷贝。
 - CascadeClassifier 不保证 thread-safe → 本线程独占自己的 ``FaceDetector``。
+
+向后兼容（companion-002）：
+- ``FaceSnapshot.faces`` / ``.present`` / ``.primary`` / ``.x_ratio()`` 行为不变。
+- 旧调用方（idle.py）无须修改。新字段 ``tracks`` / ``primary_track`` 可选消费。
 """
 
 from __future__ import annotations
 
 import collections
 import logging
+import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from coco.perception.camera_source import CameraSource, open_camera
 from coco.perception.face_detect import FaceBox, FaceDetector
@@ -31,17 +40,55 @@ from coco.perception.face_detect import FaceBox, FaceDetector
 log = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# 数据类型
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class TrackedFace:
+    """跨帧追踪到的一张脸。
+
+    - ``track_id``: 单调递增整数，跟踪生命周期内不变
+    - ``box``: 当前帧的 FaceBox（最近一次匹配上的 raw 检测）
+    - ``age_frames``: 累计参与匹配的帧数（hit + miss）
+    - ``hit_count``: 累计被 detect 命中的帧数
+    - ``miss_count``: 当前连续 miss 帧数（命中即清零）
+    - ``smoothed_cx`` / ``smoothed_cy``: EMA 平滑中心坐标
+    - ``presence_score``: 最近窗口内命中比例 ∈ [0, 1]，用于稳定性判断
+    - ``first_seen_ts`` / ``last_seen_ts``: monotonic 时钟戳
+    """
+
+    track_id: int
+    box: FaceBox
+    age_frames: int
+    hit_count: int
+    miss_count: int
+    smoothed_cx: float
+    smoothed_cy: float
+    presence_score: float
+    first_seen_ts: float
+    last_seen_ts: float
+
+    @property
+    def area(self) -> int:
+        return int(self.box.w) * int(self.box.h)
+
+
 @dataclass(frozen=True)
 class FaceSnapshot:
     """线程安全的最新检测快照。
 
-    - ``faces``: 最近一次 detect 的结果（可能为空）
-    - ``frame_w`` / ``frame_h``: 最近一帧尺寸（face 中心算 x_ratio 用）
-    - ``present``: 经过滑动平均判定的"是否有人在场"
-    - ``primary``: 当 ``present=True`` 时取最大面积的 FaceBox，否则 None
-    - ``ts``: 单调时钟戳（最近一次 detect 完成时间）
-    - ``detect_count``: 自启动以来 detect 调用次数（含空结果）
-    - ``hit_count``: detect 返回 ≥1 face 的次数
+    向后兼容字段（companion-002 在用）：
+    - ``faces``: 最近一次 detect 的 raw 结果（可能为空）
+    - ``frame_w`` / ``frame_h``: 最近一帧尺寸
+    - ``present``: 经过 hysteresis 判定的"是否有人在场"
+    - ``primary``: 主 FaceBox（取自 ``primary_track.box``）；无则 None
+    - ``ts`` / ``detect_count`` / ``hit_count``: 同 v1
+
+    新字段（vision-002）：
+    - ``tracks``: 当前活跃 TrackedFace 列表
+    - ``primary_track``: 主脸 TrackedFace（含 track_id / age 等），便于上层判断切换
     """
 
     faces: tuple = ()
@@ -52,19 +99,16 @@ class FaceSnapshot:
     ts: float = 0.0
     detect_count: int = 0
     hit_count: int = 0
+    tracks: tuple = ()  # tuple[TrackedFace, ...]
+    primary_track: Optional[TrackedFace] = None
 
     def x_ratio(self) -> Optional[float]:
-        """primary face 中心 x 相对帧中心的偏移比例 ∈ [-1, 1]。
-
-        左侧（cx < frame_w/2）= 负值；右侧 = 正值。
-        无 primary / 帧宽未知时返回 None。
-        """
+        """primary face 中心 x 相对帧中心的偏移比例 ∈ [-1, 1]。"""
         if self.primary is None or self.frame_w <= 0:
             return None
         cx = self.primary.cx
         center = self.frame_w / 2.0
-        ratio = (cx - center) / center  # ∈ [-1, 1]
-        # 限幅
+        ratio = (cx - center) / center
         if ratio < -1.0:
             return -1.0
         if ratio > 1.0:
@@ -81,7 +125,128 @@ class FaceTrackerStats:
     detect_count: int = 0
     hit_count: int = 0
     error_count: int = 0
-    frames_dropped: int = 0  # camera.read() 返回 False 的次数
+    frames_dropped: int = 0
+    # vision-002
+    tracks_created: int = 0       # 累计新建 track 数
+    tracks_dropped: int = 0       # 累计销毁 track 数（连续 miss 超阈值）
+    primary_switches: int = 0     # primary track_id 实际切换次数
+
+
+# ---------------------------------------------------------------------------
+# IoU 工具
+# ---------------------------------------------------------------------------
+
+
+def iou_xywh(a: FaceBox, b: FaceBox) -> float:
+    """两个 xywh box 的 IoU。"""
+    ax2, ay2 = a.x + a.w, a.y + a.h
+    bx2, by2 = b.x + b.w, b.y + b.h
+    ix1, iy1 = max(a.x, b.x), max(a.y, b.y)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0, ix2 - ix1), max(0, iy2 - iy1)
+    inter = iw * ih
+    if inter <= 0:
+        return 0.0
+    area_a = max(0, a.w) * max(0, a.h)
+    area_b = max(0, b.w) * max(0, b.h)
+    union = area_a + area_b - inter
+    if union <= 0:
+        return 0.0
+    return float(inter) / float(union)
+
+
+# ---------------------------------------------------------------------------
+# 内部可变跟踪状态
+# ---------------------------------------------------------------------------
+
+
+class _TrackState:
+    """单 track 的可变累加状态；最终序列化成不可变 TrackedFace 进入 snapshot。"""
+
+    __slots__ = (
+        "track_id", "box", "age_frames", "hit_count", "miss_count",
+        "smoothed_cx", "smoothed_cy", "_hit_history",
+        "first_seen_ts", "last_seen_ts",
+    )
+
+    def __init__(self, track_id: int, box: FaceBox, ts: float, window: int) -> None:
+        self.track_id = track_id
+        self.box = box
+        self.age_frames = 1
+        self.hit_count = 1
+        self.miss_count = 0
+        self.smoothed_cx = float(box.cx)
+        self.smoothed_cy = float(box.cy)
+        self._hit_history: collections.deque = collections.deque([True], maxlen=window)
+        self.first_seen_ts = ts
+        self.last_seen_ts = ts
+
+    def update_hit(self, box: FaceBox, ts: float, alpha: float) -> None:
+        self.box = box
+        self.age_frames += 1
+        self.hit_count += 1
+        self.miss_count = 0
+        self.smoothed_cx = (1.0 - alpha) * self.smoothed_cx + alpha * float(box.cx)
+        self.smoothed_cy = (1.0 - alpha) * self.smoothed_cy + alpha * float(box.cy)
+        self._hit_history.append(True)
+        self.last_seen_ts = ts
+
+    def update_miss(self) -> None:
+        self.age_frames += 1
+        self.miss_count += 1
+        self._hit_history.append(False)
+
+    def presence_score(self) -> float:
+        if not self._hit_history:
+            return 0.0
+        return sum(1 for h in self._hit_history if h) / float(len(self._hit_history))
+
+    def to_tracked(self) -> TrackedFace:
+        return TrackedFace(
+            track_id=self.track_id,
+            box=self.box,
+            age_frames=self.age_frames,
+            hit_count=self.hit_count,
+            miss_count=self.miss_count,
+            smoothed_cx=self.smoothed_cx,
+            smoothed_cy=self.smoothed_cy,
+            presence_score=self.presence_score(),
+            first_seen_ts=self.first_seen_ts,
+            last_seen_ts=self.last_seen_ts,
+        )
+
+
+# ---------------------------------------------------------------------------
+# 默认环境变量解析
+# ---------------------------------------------------------------------------
+
+
+def _env_int(key: str, default: int) -> int:
+    v = os.environ.get(key)
+    if v is None or v == "":
+        return default
+    try:
+        return int(v)
+    except ValueError:
+        return default
+
+
+def _env_float(key: str, default: float) -> float:
+    v = os.environ.get(key)
+    if v is None or v == "":
+        return default
+    try:
+        return float(v)
+    except ValueError:
+        return default
+
+
+# ---------------------------------------------------------------------------
+# FaceTracker
+# ---------------------------------------------------------------------------
+
+
+_PRIMARY_STRATEGIES = ("area", "nearest_to_last", "longest_lived")
 
 
 class FaceTracker:
@@ -90,9 +255,7 @@ class FaceTracker:
     用法：
         tracker = FaceTracker(stop_event, camera_spec="image:.../single_face.jpg")
         tracker.start()
-        ...
         snap = tracker.latest()
-        ...
         stop_event.set()
         tracker.join(timeout=2)
     """
@@ -105,9 +268,17 @@ class FaceTracker:
         camera: Optional[CameraSource] = None,
         detector: Optional[FaceDetector] = None,
         fps: float = 5.0,
+        # presence hysteresis (vision-002: K/J 与原 absence_min_misses/presence_min_hits 等价)
         presence_window: int = 5,
-        presence_min_hits: int = 3,
-        absence_min_misses: int = 3,
+        presence_min_hits: Optional[int] = None,    # J: False→True 触发
+        absence_min_misses: Optional[int] = None,   # K: True→False 触发
+        # vision-002 IoU tracking
+        iou_threshold: float = 0.3,
+        max_track_misses: int = 3,
+        track_history_window: int = 10,
+        smoothing_alpha: float = 0.4,
+        primary_strategy: str = "area",
+        primary_switch_min_frames: int = 3,
     ) -> None:
         if camera is not None and camera_spec is not None:
             raise ValueError("camera 与 camera_spec 二选一")
@@ -118,22 +289,65 @@ class FaceTracker:
         self._detector = detector or FaceDetector()
         self._fps = max(0.5, float(fps))
         self._period = 1.0 / self._fps
-        if not (1 <= presence_window <= 30):
-            raise ValueError(f"presence_window={presence_window} 不合法 [1,30]")
-        if not (1 <= presence_min_hits <= presence_window):
-            raise ValueError(f"presence_min_hits={presence_min_hits} 不合法")
-        if not (1 <= absence_min_misses <= presence_window):
-            raise ValueError(f"absence_min_misses={absence_min_misses} 不合法")
-        self._presence_window = presence_window
-        self._presence_min_hits = presence_min_hits
-        self._absence_min_misses = absence_min_misses
+
+        # presence hysteresis 参数（环境变量可覆盖默认值）
+        if not (1 <= presence_window <= 60):
+            raise ValueError(f"presence_window={presence_window} 不合法 [1,60]")
+        # vision-002 默认：J=2 (False→True), K=10 (True→False)
+        # 兼容 companion-002：若调用方仍传 absence_min_misses，限其 ≤ presence_window
+        env_J = _env_int("COCO_FACE_PRESENCE_MIN_HITS",
+                         presence_min_hits if presence_min_hits is not None else 2)
+        env_K = _env_int("COCO_FACE_ABSENCE_MIN_MISSES",
+                         absence_min_misses if absence_min_misses is not None else 10)
+        if not (1 <= env_J <= max(presence_window, env_J)):
+            raise ValueError(f"presence_min_hits={env_J} 不合法")
+        if not (1 <= env_K):
+            raise ValueError(f"absence_min_misses={env_K} 不合法 (>=1)")
+        self._presence_window = max(presence_window, env_J, min(env_K, 60))
+        self._presence_min_hits = env_J  # J
+        self._absence_min_misses = env_K  # K
+
+        # IoU tracking 参数
+        self._iou_threshold = float(_env_float("COCO_FACE_IOU_THRESHOLD", iou_threshold))
+        if not (0.05 <= self._iou_threshold <= 0.95):
+            raise ValueError(f"iou_threshold={self._iou_threshold} 不合法 [0.05,0.95]")
+        self._max_track_misses = int(_env_int("COCO_FACE_MAX_TRACK_MISSES", max_track_misses))
+        if self._max_track_misses < 1:
+            raise ValueError("max_track_misses 必须 >= 1")
+        self._track_history_window = max(1, int(track_history_window))
+        self._smoothing_alpha = float(smoothing_alpha)
+        if not (0.0 < self._smoothing_alpha <= 1.0):
+            raise ValueError(f"smoothing_alpha={self._smoothing_alpha} 不合法 (0,1]")
+        if primary_strategy not in _PRIMARY_STRATEGIES:
+            raise ValueError(f"primary_strategy={primary_strategy} 不在 {_PRIMARY_STRATEGIES}")
+        self._primary_strategy = os.environ.get(
+            "COCO_FACE_PRIMARY_STRATEGY", primary_strategy
+        )
+        if self._primary_strategy not in _PRIMARY_STRATEGIES:
+            self._primary_strategy = "area"
+        self._primary_switch_min_frames = int(
+            _env_int("COCO_FACE_PRIMARY_SWITCH_MIN_FRAMES", primary_switch_min_frames)
+        )
+        if self._primary_switch_min_frames < 1:
+            self._primary_switch_min_frames = 1
+
         self.stats = FaceTrackerStats()
 
         self._lock = threading.Lock()
         self._snapshot = FaceSnapshot()
-        # True = 该帧 detect 命中
-        self._hit_history: collections.deque = collections.deque(maxlen=presence_window)
-        self._present = False  # 滑动平均后的稳定态
+        # 全局 hit 历史（presence hysteresis 输入，向后兼容旧实现）
+        self._hit_history: collections.deque = collections.deque(maxlen=self._presence_window)
+        self._present = False
+
+        # tracks 状态
+        self._tracks: List[_TrackState] = []
+        self._next_track_id = 1
+        self._current_primary_id: Optional[int] = None
+        # primary 切换候选累计：candidate_id → 连续帧支持数
+        self._primary_candidate_id: Optional[int] = None
+        self._primary_candidate_frames: int = 0
+        # 上一帧 primary 中心，用于 nearest_to_last 策略
+        self._last_primary_center: Optional[Tuple[float, float]] = None
 
         self._thread: Optional[threading.Thread] = None
 
@@ -142,12 +356,17 @@ class FaceTracker:
         if self._thread is not None and self._thread.is_alive():
             log.warning("FaceTracker already running")
             return
-        # 延迟打开相机，确保 start 时才占资源
         if self._camera is None:
             self._camera = open_camera(self._camera_spec)
         self.stats = FaceTrackerStats(started_at=time.time())
         self._hit_history.clear()
         self._present = False
+        self._tracks = []
+        self._next_track_id = 1
+        self._current_primary_id = None
+        self._primary_candidate_id = None
+        self._primary_candidate_frames = 0
+        self._last_primary_center = None
         with self._lock:
             self._snapshot = FaceSnapshot()
         self._thread = threading.Thread(target=self._run, name="coco-face-tracker", daemon=True)
@@ -156,7 +375,6 @@ class FaceTracker:
     def join(self, timeout: Optional[float] = None) -> None:
         if self._thread is not None:
             self._thread.join(timeout=timeout)
-        # camera 收尾（仅当我们打开的）
         if not self._camera_external and self._camera is not None:
             try:
                 self._camera.release()
@@ -168,21 +386,39 @@ class FaceTracker:
         return self._thread is not None and self._thread.is_alive()
 
     def latest(self) -> FaceSnapshot:
-        """返回最新 snapshot 的拷贝（线程安全）。"""
         with self._lock:
             return self._snapshot
+
+    # --- 测试钩子：纯函数地喂 detections，便于合成测试不依赖摄像头 ---
+    def feed_detections(
+        self,
+        boxes: List[FaceBox],
+        frame_w: int = 320,
+        frame_h: int = 240,
+        ts: Optional[float] = None,
+    ) -> FaceSnapshot:
+        """直接注入 detect 结果，跑一遍 tracking + presence + snapshot 更新。
+
+        verification 用此口子做 IoU / hysteresis / primary 切换的确定性测试，
+        不必经过摄像头与 cv2 detect。
+        """
+        if ts is None:
+            ts = time.monotonic()
+        self._process_detections(boxes, frame_w, frame_h, ts)
+        return self.latest()
 
     # --- internals ---
     def _run(self) -> None:
         log.info(
-            "FaceTracker started fps=%.1f window=%d min_hits=%d min_misses=%d",
-            self._fps, self._presence_window, self._presence_min_hits, self._absence_min_misses,
+            "FaceTracker started fps=%.1f window=%d J=%d K=%d iou=%.2f miss=%d strat=%s",
+            self._fps, self._presence_window, self._presence_min_hits,
+            self._absence_min_misses, self._iou_threshold, self._max_track_misses,
+            self._primary_strategy,
         )
         try:
             while not self.stop_event.is_set():
                 t0 = time.monotonic()
                 self._tick()
-                # 节流：剩余时间睡掉，但允许 stop_event 提前唤醒
                 elapsed = time.monotonic() - t0
                 remain = self._period - elapsed
                 if remain > 0:
@@ -213,36 +449,208 @@ class FaceTracker:
             log.warning("FaceTracker detect failed: %s: %s", type(e).__name__, e)
             return
 
+        h, w = frame.shape[:2]
+        self._process_detections(list(faces), int(w), int(h), time.monotonic())
+
+    def _process_detections(
+        self,
+        faces: List[FaceBox],
+        frame_w: int,
+        frame_h: int,
+        ts: float,
+    ) -> None:
         self.stats.detect_count += 1
         hit = len(faces) > 0
         if hit:
             self.stats.hit_count += 1
         self._hit_history.append(hit)
 
-        # 滑动平均判定 present 态切换（带迟滞）
-        recent_hits = sum(1 for h in self._hit_history if h)
-        recent_misses = len(self._hit_history) - recent_hits
-        if not self._present and recent_hits >= self._presence_min_hits:
-            self._present = True
-            log.info("FaceTracker presence ↑ TRUE (hits=%d/%d)", recent_hits, len(self._hit_history))
-        elif self._present and recent_misses >= self._absence_min_misses:
-            self._present = False
-            log.info("FaceTracker presence ↓ FALSE (misses=%d/%d)", recent_misses, len(self._hit_history))
+        # 1) IoU greedy 匹配 detections ↔ existing tracks
+        self._match_and_update_tracks(faces, ts)
 
-        primary = max(faces, key=lambda b: b.w * b.h) if (self._present and faces) else None
-        h, w = frame.shape[:2]
+        # 2) presence hysteresis（基于全局帧级命中历史）
+        self._update_presence()
+
+        # 3) 主脸选择（含切换迟滞）
+        primary_track = self._select_primary()
+
+        # 4) 拼装 snapshot（向后兼容字段不变）
+        primary_box = primary_track.box if primary_track is not None else None
+        # companion-002 行为：primary 仅在 present=True 时暴露
+        if not self._present:
+            primary_box = None
         snap = FaceSnapshot(
             faces=tuple(faces),
-            frame_w=int(w),
-            frame_h=int(h),
+            frame_w=frame_w,
+            frame_h=frame_h,
             present=self._present,
-            primary=primary,
-            ts=time.monotonic(),
+            primary=primary_box,
+            ts=ts,
             detect_count=self.stats.detect_count,
             hit_count=self.stats.hit_count,
+            tracks=tuple(t.to_tracked() for t in self._tracks),
+            primary_track=primary_track if self._present else None,
         )
         with self._lock:
             self._snapshot = snap
 
+    def _match_and_update_tracks(self, faces: List[FaceBox], ts: float) -> None:
+        """Greedy IoU 匹配：每次取剩余 (track, det) 对中 IoU 最大且 >= 阈值的一对绑定。"""
+        if not self._tracks and not faces:
+            return
 
-__all__ = ["FaceSnapshot", "FaceTracker", "FaceTrackerStats"]
+        unmatched_tracks = list(range(len(self._tracks)))
+        unmatched_dets = list(range(len(faces)))
+
+        # 计算所有候选 IoU
+        candidates: List[Tuple[float, int, int]] = []
+        for ti in unmatched_tracks:
+            for di in unmatched_dets:
+                v = iou_xywh(self._tracks[ti].box, faces[di])
+                if v >= self._iou_threshold:
+                    candidates.append((v, ti, di))
+        # 按 IoU 降序贪心
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        assigned_t: set = set()
+        assigned_d: set = set()
+        for v, ti, di in candidates:
+            if ti in assigned_t or di in assigned_d:
+                continue
+            self._tracks[ti].update_hit(faces[di], ts, self._smoothing_alpha)
+            assigned_t.add(ti)
+            assigned_d.add(di)
+
+        # 未匹配 track → miss++
+        for ti in range(len(self._tracks)):
+            if ti not in assigned_t:
+                self._tracks[ti].update_miss()
+
+        # 未匹配 detection → 新 track
+        for di in range(len(faces)):
+            if di not in assigned_d:
+                tid = self._next_track_id
+                self._next_track_id += 1
+                self._tracks.append(_TrackState(tid, faces[di], ts, self._track_history_window))
+                self.stats.tracks_created += 1
+
+        # 清理连续 miss 过阈值的 track
+        kept: List[_TrackState] = []
+        for t in self._tracks:
+            if t.miss_count >= self._max_track_misses:
+                self.stats.tracks_dropped += 1
+                if self._current_primary_id == t.track_id:
+                    self._current_primary_id = None
+                if self._primary_candidate_id == t.track_id:
+                    self._primary_candidate_id = None
+                    self._primary_candidate_frames = 0
+            else:
+                kept.append(t)
+        self._tracks = kept
+
+    def _update_presence(self) -> None:
+        """全局 hysteresis：True→False 需 K 连续 miss；False→True 需 J 连续 hit。
+
+        注意：这里"连续"基于 _hit_history 末尾连续段，比"窗口内总数"更符合
+        spec "K 帧连续 0 face / J 帧连续 ≥1 face" 描述。
+        """
+        if not self._hit_history:
+            return
+        # 计算末尾连续段
+        last = self._hit_history[-1]
+        run = 0
+        for v in reversed(self._hit_history):
+            if v == last:
+                run += 1
+            else:
+                break
+        if not self._present and last is True and run >= self._presence_min_hits:
+            self._present = True
+            log.info("FaceTracker presence ↑ TRUE (consecutive hits=%d/J=%d)",
+                     run, self._presence_min_hits)
+        elif self._present and last is False and run >= self._absence_min_misses:
+            self._present = False
+            log.info("FaceTracker presence ↓ FALSE (consecutive misses=%d/K=%d)",
+                     run, self._absence_min_misses)
+
+    def _select_primary(self) -> Optional[TrackedFace]:
+        """根据策略选主脸；切换需 ``primary_switch_min_frames`` 连续支持。"""
+        if not self._tracks:
+            self._current_primary_id = None
+            self._primary_candidate_id = None
+            self._primary_candidate_frames = 0
+            self._last_primary_center = None
+            return None
+
+        # 候选最优 track
+        best = self._compute_best_track()
+        if best is None:
+            return None
+
+        # 当前 primary 仍存在？
+        cur: Optional[_TrackState] = None
+        if self._current_primary_id is not None:
+            for t in self._tracks:
+                if t.track_id == self._current_primary_id:
+                    cur = t
+                    break
+
+        if cur is None:
+            # 没有 primary（首次 / 上一 primary 已 drop）→ 直接采纳 best
+            self._current_primary_id = best.track_id
+            self._primary_candidate_id = None
+            self._primary_candidate_frames = 0
+            self._last_primary_center = (best.smoothed_cx, best.smoothed_cy)
+            self.stats.primary_switches += 1
+            return best.to_tracked()
+
+        if best.track_id == cur.track_id:
+            # 当前 primary 仍是最优 → 重置候选
+            self._primary_candidate_id = None
+            self._primary_candidate_frames = 0
+            self._last_primary_center = (cur.smoothed_cx, cur.smoothed_cy)
+            return cur.to_tracked()
+
+        # 出现挑战者 → 累计连续支持帧
+        if self._primary_candidate_id == best.track_id:
+            self._primary_candidate_frames += 1
+        else:
+            self._primary_candidate_id = best.track_id
+            self._primary_candidate_frames = 1
+
+        if self._primary_candidate_frames >= self._primary_switch_min_frames:
+            log.info("FaceTracker primary switch %s → %s (after %d frames)",
+                     self._current_primary_id, best.track_id, self._primary_candidate_frames)
+            self._current_primary_id = best.track_id
+            self._primary_candidate_id = None
+            self._primary_candidate_frames = 0
+            self._last_primary_center = (best.smoothed_cx, best.smoothed_cy)
+            self.stats.primary_switches += 1
+            return best.to_tracked()
+
+        # 还没切，继续维持当前 primary
+        self._last_primary_center = (cur.smoothed_cx, cur.smoothed_cy)
+        return cur.to_tracked()
+
+    def _compute_best_track(self) -> Optional[_TrackState]:
+        if not self._tracks:
+            return None
+        strat = self._primary_strategy
+        if strat == "longest_lived":
+            return max(self._tracks, key=lambda t: (t.hit_count, t.box.w * t.box.h))
+        if strat == "nearest_to_last" and self._last_primary_center is not None:
+            lx, ly = self._last_primary_center
+            return min(
+                self._tracks,
+                key=lambda t: (t.smoothed_cx - lx) ** 2 + (t.smoothed_cy - ly) ** 2,
+            )
+        # default: area
+        return max(self._tracks, key=lambda t: t.box.w * t.box.h)
+
+
+__all__ = [
+    "FaceSnapshot",
+    "FaceTracker",
+    "FaceTrackerStats",
+    "TrackedFace",
+    "iou_xywh",
+]

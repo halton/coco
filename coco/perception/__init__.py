@@ -10,7 +10,12 @@ from coco.perception.camera_source import (
     parse_camera_env,
 )
 from coco.perception.face_detect import FaceBox, FaceDetector
-from coco.perception.face_tracker import FaceSnapshot, FaceTracker, FaceTrackerStats
+from coco.perception.face_tracker import (
+    FaceSnapshot,
+    FaceTracker,
+    FaceTrackerStats,
+    TrackedFace,
+)
 
 __all__ = [
     "CameraSource",
@@ -25,4 +30,5 @@ __all__ = [
     "FaceSnapshot",
     "FaceTracker",
     "FaceTrackerStats",
+    "TrackedFace",
 ]

@@ -159,6 +159,47 @@ def smoke_companion_vision() -> None:
           f"present={tracker.latest().present}")
 
 
+def smoke_face_tracker() -> None:
+    """vision-002: FaceTracker 跑 5 帧验 primary_track 稳定。
+
+    用 single_face.jpg image fixture，喂 tracker 5+ 帧，断言：
+      - 至少 1 个 active track
+      - primary_track.hit_count >= 3 (单脸不应被换 track_id)
+      - primary_switches <= 1 (首次无 → 设定算 1 次)
+    """
+    print("==> Smoke: face-tracker (primary stability 5 frames)")
+    fixture = (
+        Path(__file__).resolve().parent.parent
+        / "tests" / "fixtures" / "vision" / "single_face.jpg"
+    )
+    if not fixture.exists():
+        sys.exit(f"FAIL: fixture not found: {fixture}")
+    try:
+        from coco.perception import FaceTracker
+    except ImportError as e:
+        sys.exit(f"FAIL: import 失败 ({e})")
+    import threading as _th
+    stop = _th.Event()
+    tracker = FaceTracker(
+        stop, camera_spec=f"image:{fixture}", fps=10.0,
+        presence_window=5, presence_min_hits=2, absence_min_misses=5,
+        primary_strategy="area", primary_switch_min_frames=3,
+    )
+    tracker.start()
+    time.sleep(1.5)
+    stop.set()
+    tracker.join(timeout=2.0)
+    snap = tracker.latest()
+    if snap.primary_track is None:
+        sys.exit(f"FAIL: primary_track is None (detect={tracker.stats.detect_count} hit={tracker.stats.hit_count})")
+    if snap.primary_track.hit_count < 3:
+        sys.exit(f"FAIL: primary.hit_count={snap.primary_track.hit_count} < 3")
+    if tracker.stats.primary_switches > 1:
+        sys.exit(f"FAIL: primary_switches={tracker.stats.primary_switches} > 1 (单脸不应切)")
+    print(f"  ok: tracks={len(snap.tracks)} primary_id={snap.primary_track.track_id} "
+          f"hits={snap.primary_track.hit_count} switches={tracker.stats.primary_switches}")
+
+
 def smoke_vad() -> None:
     """interact-003: VAD trigger 不依赖真麦，喂 fixture wav → 断 callback 触发 1 次。
 
@@ -274,6 +315,7 @@ def main() -> None:
     smoke_tts()
     smoke_vision()
     smoke_companion_vision()
+    smoke_face_tracker()
     smoke_vad()
     smoke_publish()
     if args.daemon:

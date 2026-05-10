@@ -562,3 +562,14 @@
 - **main HEAD 前后**：eb8cc3e → merge --no-ff feat/infra-debt-sweep（phase-3 第 1 个 feature 完成）。
 - **状态变化**：feature_list.json infra-debt-sweep `not_started` → `passing`，evidence 三行 + notes 追加 known-debt 行；其余 phase-3 候选维持。
 - **下一步最佳动作**：vision-002（priority=17, area=vision，FaceTracker 滑动平均 + IoU + 主脸 + presence hysteresis），清 companion-002 M1/M2 根因 + 解锁真机视觉-运动闭环。
+
+## Session 024 — vision-002 ready-for-review（2026-05-10）
+
+- **起止动作**：feat/vision-002 分支起。重构 `coco/perception/face_tracker.py`：新增 `TrackedFace` dataclass（track_id/age_frames/hit_count/miss_count/smoothed_cx,cy/presence_score/first,last_seen_ts）+ `_TrackState` 可变累加器；IoU greedy 匹配（`iou_xywh` + `_match_and_update_tracks`，按 IoU 降序贪心、未匹配 det → 新 track、连续 miss ≥ `max_track_misses` → drop）；主脸选择三策略（`area`/`nearest_to_last`/`longest_lived`）+ 切换迟滞 `primary_switch_min_frames`；presence hysteresis 改为基于"末尾连续段"判定（更贴 spec "K 帧连续 0 face / J 帧连续 ≥1 face"）；hysteresis K/J 默认对齐 spec：K=10 (absence)、J=2 (presence)。环境变量：`COCO_FACE_PRESENCE_MIN_HITS` `COCO_FACE_ABSENCE_MIN_MISSES` `COCO_FACE_IOU_THRESHOLD` `COCO_FACE_MAX_TRACK_MISSES` `COCO_FACE_PRIMARY_STRATEGY` `COCO_FACE_PRIMARY_SWITCH_MIN_FRAMES`。新增 `feed_detections(...)` 测试钩子绕过摄像头做确定性 IoU/hysteresis 测试。`FaceSnapshot` 新增 `tracks: tuple[TrackedFace,...]` + `primary_track`，旧字段 `faces`/`present`/`primary`/`x_ratio()` 行为不变（idle.py 0 改动）。`coco/perception/__init__.py` 导出 `TrackedFace`。
+- **运行过的验证**：
+  - `scripts/verify_vision_002.py` 全 PASS：V1 单图（detect=20 hit=20 primary_id 稳定 hits≥5）/ V2 空画面（0 tracks present=False）/ V3 走开视频（detect=110 hit=110 tracks_created=3 switch_events=2 error=0）/ V4 K=4/J=2 边界（hit#1 False, hit#2 True, miss#1-3 True, miss#4 False）/ V5 IoU greedy（顺序交换 track_id 不变、IoU(A,B)=0、IoU(A1,A2)=0.89、A miss=1 B miss=0）。trace=evidence/vision-002/verify_trace.json
+  - `scripts/verify_companion_vision.py` 全 PASS（regression）：V1 vision_biased_glance_count=2 / V2 face_present_ticks=0 / V3 走开 vision_biased_glance_count=3 + 干净停。trace=evidence/companion-002/verify_trace.json
+  - `scripts/smoke.py` vision 段全 PASS（vision/companion-vision/face-tracker——新增 face-tracker smoke 段验 primary 稳定）。完整 `./init.sh` 因 macOS sd.rec 历史问题 audio 段卡顿，与本 feature 无关（brief 已豁免）；vision 段单独 driver 跑通。
+- **main HEAD 前后**：7182bc1 → feat/vision-002 (待 commit + push + Reviewer)。
+- **状态变化**：feature_list.json vision-002 `not_started` → `in_progress`，evidence 4 行（含 Reviewer pending）。
+- **下一步最佳动作**：commit + push feat/vision-002，主会话派 Reviewer fresh-context 评审；通过后 closeout sub-agent 切 passing + merge 回 main，自动派下一个 candidate（interact-005 或 companion-003）。
