@@ -126,6 +126,39 @@ def smoke_vision() -> None:
     print(f"  ok: detected {len(boxes)} face(s) in single_face.jpg")
 
 
+def smoke_companion_vision() -> None:
+    """跑 FaceTracker 2s 验后台线程通路 + 干净停。
+
+    companion-002 的快速健康检查：起 tracker 2s（image fixture），断言 ≥1 次
+    detect 命中、stop 干净。不连真 robot daemon，不带 IdleAnimator。
+    """
+    print("==> Smoke: companion-vision (FaceTracker 2s)")
+    fixture = (
+        Path(__file__).resolve().parent.parent
+        / "tests" / "fixtures" / "vision" / "single_face.jpg"
+    )
+    if not fixture.exists():
+        sys.exit(f"FAIL: fixture not found: {fixture}")
+    try:
+        from coco.perception import FaceTracker
+    except ImportError as e:
+        sys.exit(f"FAIL: import 失败 ({e})")
+    import threading as _th
+    stop = _th.Event()
+    tracker = FaceTracker(stop, camera_spec=f"image:{fixture}", fps=5.0,
+                          presence_window=3, presence_min_hits=2, absence_min_misses=2)
+    tracker.start()
+    time.sleep(2.0)
+    stop.set()
+    tracker.join(timeout=2.0)
+    if tracker.is_alive():
+        sys.exit("FAIL: FaceTracker 2s 后未退出")
+    if tracker.stats.hit_count < 1:
+        sys.exit(f"FAIL: 期望 ≥1 detect 命中，实际 {tracker.stats.hit_count}")
+    print(f"  ok: detect={tracker.stats.detect_count} hit={tracker.stats.hit_count} "
+          f"present={tracker.latest().present}")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -173,6 +206,7 @@ def main() -> None:
     smoke_asr()
     smoke_tts()
     smoke_vision()
+    smoke_companion_vision()
     if args.daemon:
         smoke_daemon()
     print()

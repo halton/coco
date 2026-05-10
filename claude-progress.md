@@ -481,3 +481,20 @@
 - **下一步最佳动作**：主会话派 Reviewer 评审 vision-001；LGTM 后切 passing + merge + push。后续 candidate：companion-002 (p11, area=companion, deps=[companion-001, vision-001]) 解锁；或 interact-003 (p12, deps=[interact-001, audio-002]) 始终 ready。建议 companion-002 优先——同一视觉路径连贯收尾 + phase-2 milestone gate (vision + 闭环) 更近。
 - **closeout**: Reviewer LGTM, status=passing, merged to main
 
+
+## Session 020 — companion-002 收尾 + merge
+
+- **本轮目标**：companion-002（视觉触发的 idle glance）Reviewer LGTM 之后的收尾——L4 低优先级 cleanup、status 切换、merge + push、init.sh 验证。
+- **已完成**：
+  - 切回 feat/companion-002 分支（HEAD=93541a6，已 push origin）
+  - L4 处理：coco/idle.py L293 `face_x_log = snap.primary.cx if snap.primary is not None else -1` 简化为 `face_x_log = snap.primary.cx` —— `x_ratio()` 在 primary 为 None 时返回 None，外层 `if x_ratio is not None` 已门控；去掉 -1 哨兵让 log 更干净
+  - feature_list.json companion-002：status `in_progress` → `passing`；evidence 写入 Engineer 摘要（V1/V2/V3 全 PASS + smoke 通过）+ Reviewer LGTM with M1/M2/M3 known-debt；notes 末尾追加 `known-debt: M1/M2/M3 mockup-sim 阶段 fixture 限制下 spec 覆盖度降级（V3 face-absent 过渡 / N≥200 概率分布 / log 字面 capture），milestone 真机 UAT 阶段补严格回验。`
+  - 同时把 evidence/companion-002/verify_trace.json 的 timing 抖动重跑结果一并提交（数值轻微差异，三段 PASS 不变）
+- **运行过的验证**：
+  - 切到 main 后 `./init.sh`：EXIT=0
+- **已记录证据**：evidence/companion-002/verify_trace.json（重跑后），feature_list.json evidence 段 + Reviewer 摘要
+- **更新过的文件或工件**：coco/idle.py（L4 cleanup）、feature_list.json（companion-002 status/evidence/notes）、evidence/companion-002/verify_trace.json、claude-progress.md（本段）
+- **main HEAD 变化**：dff84e8 → 合并 feat/companion-002 后新 merge commit
+- **Reviewer 评审结果**：LGTM with minor findings；M1/M2/M3 三项已记 known-debt（mockup-sim fixture 限制）
+- **已知风险或未解决问题**：M1/M2/M3 三项 spec 覆盖度降级，等真机 UAT 阶段补严格回验
+- **下一步最佳动作**：interact-003（VAD push-to-talk，p12，deps=[interact-001, audio-002] 均 passing）—— phase-2 milestone gate 余下 1 个 feature，开 feat/interact-003 分支即可启动

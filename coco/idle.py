@@ -35,6 +35,7 @@ from coco.actions import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
+    from coco.perception.face_tracker import FaceTracker
 
 
 log = logging.getLogger(__name__)
@@ -65,6 +66,15 @@ class IdleConfig:
     glance_amp_deg: float = 15.0
     glance_duration: float = 0.5
 
+    # --- companion-002: face presence 加权 ---
+    # 当 FaceTracker.latest().present == True 时，把 micro_interval 缩短、
+    # glance_interval 缩短，整体把行为分布推向"更频繁 glance（看人）"。
+    # face 离开后自动恢复默认。
+    face_micro_interval_scale: float = 0.7   # micro 间隔 * 0.7 → 略密
+    face_glance_interval_scale: float = 0.35  # glance 间隔 * 0.35 → 显著加密
+    # face 存在时 glance 的最大幅度（度）；走 actions.look_left/right 安全边界
+    face_glance_amp_deg: float = 25.0
+
     # 安全检查
     def validate(self) -> None:
         if not (0.5 <= self.micro_interval_min <= self.micro_interval_max <= 30.0):
@@ -77,6 +87,12 @@ class IdleConfig:
             raise ValueError(f"micro_pitch_amp_deg 应 ∈ (0, {MAX_PITCH_DEG/4}]")
         if not (0.0 < self.glance_amp_deg <= MAX_YAW_DEG):
             raise ValueError("glance_amp_deg 越界")
+        if not (0.0 < self.face_glance_amp_deg <= MAX_YAW_DEG):
+            raise ValueError("face_glance_amp_deg 越界")
+        if not (0.05 <= self.face_micro_interval_scale <= 1.0):
+            raise ValueError("face_micro_interval_scale 应 ∈ [0.05, 1.0]")
+        if not (0.05 <= self.face_glance_interval_scale <= 1.0):
+            raise ValueError("face_glance_interval_scale 应 ∈ [0.05, 1.0]")
         s = self.micro_p_head + self.micro_p_antenna + self.micro_p_breathe
         if abs(s - 1.0) > 1e-3:
             raise ValueError(f"micro_p_* 概率和 = {s}, 应 = 1.0")
@@ -91,6 +107,10 @@ class IdleStats:
     error_count: int = 0
     skipped_paused: int = 0
     micro_kinds: dict[str, int] = field(default_factory=lambda: {"head": 0, "antenna": 0, "breathe": 0})
+    # companion-002
+    vision_glance_count: int = 0       # face present 期间触发的 glance 数
+    vision_biased_glance_count: int = 0  # 实际朝 face 方向 glance 的数
+    face_present_ticks: int = 0        # 主循环中观察到 present=True 的次数
     started_at: float = 0.0
     stopped_at: float = 0.0
 
@@ -117,6 +137,7 @@ class IdleAnimator:
         stop_event: threading.Event,
         config: Optional[IdleConfig] = None,
         rng: Optional[random.Random] = None,
+        face_tracker: Optional["FaceTracker"] = None,
     ) -> None:
         self.robot = robot
         self.stop_event = stop_event
@@ -124,6 +145,7 @@ class IdleAnimator:
         self.config.validate()
         self.rng = rng or random.Random()
         self.stats = IdleStats()
+        self.face_tracker = face_tracker
         self._thread: Optional[threading.Thread] = None
         self._next_glance_at: float = 0.0
         # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
@@ -162,14 +184,28 @@ class IdleAnimator:
         return self._thread is not None and self._thread.is_alive()
 
     # --- internals ---
+    def _face_present(self) -> bool:
+        if self.face_tracker is None:
+            return False
+        try:
+            return bool(self.face_tracker.latest().present)
+        except Exception:  # noqa: BLE001
+            return False
+
     def _sample_micro_interval(self) -> float:
-        return self.rng.uniform(self.config.micro_interval_min, self.config.micro_interval_max)
+        base = self.rng.uniform(self.config.micro_interval_min, self.config.micro_interval_max)
+        if self._face_present():
+            base *= self.config.face_micro_interval_scale
+        return base
 
     def _sample_glance_interval(self) -> float:
-        return self.rng.uniform(self.config.glance_interval_min, self.config.glance_interval_max)
+        base = self.rng.uniform(self.config.glance_interval_min, self.config.glance_interval_max)
+        if self._face_present():
+            base *= self.config.face_glance_interval_scale
+        return base
 
     def _run(self) -> None:
-        log.info("IdleAnimator started cfg=%s", self.config)
+        log.info("IdleAnimator started cfg=%s vision=%s", self.config, self.face_tracker is not None)
         try:
             while not self.stop_event.is_set():
                 wait = self._sample_micro_interval()
@@ -180,6 +216,8 @@ class IdleAnimator:
                 if self._paused.is_set():
                     self.stats.skipped_paused += 1
                     continue
+                if self._face_present():
+                    self.stats.face_present_ticks += 1
 
                 now = time.time()
                 if now >= self._next_glance_at:
@@ -241,6 +279,39 @@ class IdleAnimator:
 
     def _do_glance(self) -> None:
         cfg = self.config
+        # companion-002: face present 时按 face 方向 bias
+        snap = self.face_tracker.latest() if self.face_tracker is not None else None
+        if snap is not None and snap.present:
+            self.stats.vision_glance_count += 1
+            x_ratio = snap.x_ratio()
+            if x_ratio is not None:
+                # ratio: 负 = face 在画面左侧 → 头向左转（look_left, yaw 正）
+                #        正 = face 在画面右侧 → 头向右转（look_right）
+                amp = abs(x_ratio) * cfg.face_glance_amp_deg
+                # 安全下限：太小的 amp 也走 amp=actions 默认下限
+                amp = max(2.0, min(amp, MAX_YAW_DEG))
+                # x_ratio is not None 已保证 primary 存在（见 FaceSnapshot.x_ratio）
+                face_x_log = snap.primary.cx
+                if x_ratio < 0:
+                    log.info("idle glance toward face_x=%d ratio=%.2f amp=%.1f° dir=left",
+                             face_x_log, x_ratio, amp)
+                    self._safe(
+                        "glance_face_left",
+                        lambda: look_left(self.robot, amplitude_deg=amp,
+                                          duration=cfg.glance_duration, return_to_center=True),
+                    )
+                else:
+                    log.info("idle glance toward face_x=%d ratio=%.2f amp=%.1f° dir=right",
+                             face_x_log, x_ratio, amp)
+                    self._safe(
+                        "glance_face_right",
+                        lambda: look_right(self.robot, amplitude_deg=amp,
+                                           duration=cfg.glance_duration, return_to_center=True),
+                    )
+                self.stats.vision_biased_glance_count += 1
+                self.stats.glance_count += 1
+                return
+            # 有 present 但 x_ratio 拿不到 → 退化到默认 glance
         amp = cfg.glance_amp_deg
         if self.rng.random() < 0.5:
             self._safe("glance_left", lambda: look_left(self.robot, amplitude_deg=amp, duration=cfg.glance_duration, return_to_center=True))

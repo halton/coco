@@ -1,0 +1,86 @@
+{
+  "V1": {
+    "label": "V1-single-face",
+    "elapsed_s": 8.003107786178589,
+    "stop_dt_s": 0.03651714324951172,
+    "animator_alive_after": false,
+    "tracker_alive_after": false,
+    "tracker": {
+      "detect_count": 39,
+      "hit_count": 39,
+      "frames_dropped": 0,
+      "error_count": 0,
+      "last_present": true,
+      "last_frame_w": 320,
+      "last_frame_h": 240
+    },
+    "idle": {
+      "micro_count": 13,
+      "glance_count": 2,
+      "vision_glance_count": 2,
+      "vision_biased_glance_count": 2,
+      "face_present_ticks": 15,
+      "error_count": 0
+    },
+    "robot": {
+      "goto_count": 17,
+      "antenna_count": 6
+    }
+  },
+  "V2": {
+    "label": "V2-no-one",
+    "elapsed_s": 8.085998058319092,
+    "stop_dt_s": 0.0007498264312744141,
+    "animator_alive_after": false,
+    "tracker_alive_after": false,
+    "tracker": {
+      "detect_count": 39,
+      "hit_count": 0,
+      "frames_dropped": 0,
+      "error_count": 0,
+      "last_present": false,
+      "last_frame_w": 320,
+      "last_frame_h": 240
+    },
+    "idle": {
+      "micro_count": 10,
+      "glance_count": 1,
+      "vision_glance_count": 0,
+      "vision_biased_glance_count": 0,
+      "face_present_ticks": 0,
+      "error_count": 0
+    },
+    "robot": {
+      "goto_count": 8,
+      "antenna_count": 6
+    }
+  },
+  "V3": {
+    "label": "V3-walk-away",
+    "elapsed_s": 12.006817102432251,
+    "stop_dt_s": 0.028048992156982422,
+    "animator_alive_after": false,
+    "tracker_alive_after": false,
+    "tracker": {
+      "detect_count": 58,
+      "hit_count": 58,
+      "frames_dropped": 0,
+      "error_count": 0,
+      "last_present": true,
+      "last_frame_w": 320,
+      "last_frame_h": 240
+    },
+    "idle": {
+      "micro_count": 20,
+      "glance_count": 3,
+      "vision_glance_count": 3,
+      "vision_biased_glance_count": 3,
+      "face_present_ticks": 23,
+      "error_count": 0
+    },
+    "robot": {
+      "goto_count": 21,
+      "antenna_count": 7
+    }
+  }
+}
