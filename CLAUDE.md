@@ -69,7 +69,8 @@
 
 - **audio**：sounddevice 直连本机麦克与扬声器（输入采麦、输出播 TTS wav），不走 reachy-mini daemon 的 audio backend / media 子系统。跨平台。测试：输入 wav 直喂 ASR，输出 TTS wav 用 sounddevice 播放。真机扬声器（USB 音频）作 milestone gate。
 - **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收是 milestone gate
-- 两路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
+- **vision**：业务层一律走 `coco.perception.open_camera()` / `CameraSource` Protocol，不直接 `cv2.VideoCapture`。通过 `COCO_CAMERA` 环境变量切换三档：`image:<jpg>`（A：单图循环）/ `video:<mp4>`（B/C：视频文件循环）/ `usb:<idx>`（真机，默认 `usb:0`）。fixture 在 `tests/fixtures/vision/` 下，全部程序合成。视觉-运动闭环（看到 → 转头 → 视野更新）fixture 不能 sim，必须真机 UAT。详见 `coco/perception/camera_source.py` 与 `tests/fixtures/vision/README.md`。
+- 三路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
 
 ### app 部署模型（路线 C：双模式）
 

@@ -1,0 +1,132 @@
+"""一次性 fixture 生成器：合成 single_face.jpg / no_one.jpg / user_walks_away.mp4。
+
+跨平台 codec：mp4 用 ``mp4v`` (FOURCC) 写 H.264-baseline 兼容容器，OpenCV 在
+macOS / Linux 默认 build 都能解码。所有 fixture 完全程序合成，不依赖外部下载。
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+OUT = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "vision"
+OUT.mkdir(parents=True, exist_ok=True)
+
+W, H = 320, 240
+
+
+def _bg(color=(40, 60, 80)) -> np.ndarray:
+    img = np.zeros((H, W, 3), dtype=np.uint8)
+    img[:] = color  # BGR
+    return img
+
+
+def draw_face(img: np.ndarray, cx: int, cy: int, scale: float = 1.0) -> None:
+    """在 img 上画一个简易的"人脸"几何（椭圆 + 双眼 + 嘴）。"""
+    color_skin = (180, 200, 220)
+    color_eye = (30, 30, 30)
+    color_mouth = (40, 40, 120)
+    a = int(40 * scale)
+    b = int(55 * scale)
+    cv2.ellipse(img, (cx, cy), (a, b), 0, 0, 360, color_skin, -1)
+    # 眼
+    eye_dx = int(15 * scale)
+    eye_dy = int(15 * scale)
+    eye_r = max(2, int(5 * scale))
+    cv2.circle(img, (cx - eye_dx, cy - eye_dy), eye_r, color_eye, -1)
+    cv2.circle(img, (cx + eye_dx, cy - eye_dy), eye_r, color_eye, -1)
+    # 嘴
+    cv2.ellipse(img, (cx, cy + int(20 * scale)), (int(15 * scale), int(6 * scale)), 0, 0, 180, color_mouth, 2)
+
+
+def gen_single_face() -> Path:
+    img = _bg()
+    draw_face(img, W // 2, H // 2, scale=1.0)
+    cv2.putText(img, "single_face fixture", (8, H - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+    p = OUT / "single_face.jpg"
+    ok = cv2.imwrite(str(p), img)
+    assert ok, f"imwrite failed: {p}"
+    return p
+
+
+def gen_no_one() -> Path:
+    img = _bg(color=(60, 60, 60))
+    cv2.putText(img, "no_one fixture (empty room)", (8, H - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+    # 几何家具示意：一道地平线 + 一把椅子轮廓
+    cv2.line(img, (0, int(H * 0.65)), (W, int(H * 0.65)), (90, 90, 90), 2)
+    cv2.rectangle(img, (200, 130), (260, 200), (80, 100, 120), 2)
+    cv2.line(img, (200, 130), (200, 100), (80, 100, 120), 2)
+    p = OUT / "no_one.jpg"
+    ok = cv2.imwrite(str(p), img)
+    assert ok, f"imwrite failed: {p}"
+    return p
+
+
+def gen_user_walks_away(seconds: float = 3.0, fps: float = 15.0) -> Path:
+    """合成"用户从画面中央走向远处"短视频。"""
+    p = OUT / "user_walks_away.mp4"
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    vw = cv2.VideoWriter(str(p), fourcc, fps, (W, H))
+    if not vw.isOpened():
+        raise RuntimeError(f"VideoWriter 打不开（codec mp4v 不可用？）：{p}")
+    n = int(seconds * fps)
+    for i in range(n):
+        t = i / max(1, n - 1)  # 0 → 1
+        # 比例从 1.0 缩到 0.35（远离）；y 略往上（透视）
+        scale = 1.0 - 0.65 * t
+        cx = W // 2
+        cy = int(H // 2 - 30 * t)
+        img = _bg()
+        draw_face(img, cx, cy, scale=scale)
+        cv2.putText(img, f"walks_away frame {i+1}/{n}", (8, H - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+        vw.write(img)
+    vw.release()
+    return p
+
+
+README = """# vision fixtures
+
+本目录所有 fixture 均由 `scripts/gen_vision_fixtures.py` 程序合成，无任何外部下载、无版权风险。
+
+## 文件清单
+
+- `single_face.jpg` — 320×240 BGR JPG，画面中央一张几何"人脸"（椭圆+双眼+嘴）。用于测试 ImageLoopSource 与未来"画面中有一个人"语义。
+- `no_one.jpg` — 320×240 BGR JPG，空房间示意（地平线 + 椅子轮廓）。用于测试"画面中没人"。
+- `user_walks_away.mp4` — 320×240 mp4v 编码，约 3 秒 @ 15fps。"人脸"从画面中央由近到远缩小同时上移。用于测试 VideoFileSource 与未来"用户走开"语义。
+
+## 编码注意
+
+mp4v FOURCC 是 OpenCV 在 macOS / Linux 上默认 build 都自带的解码器（MPEG-4 Part 2），不依赖系统专有 codec（如 H.264 GPL 包）。在 cv2.VideoCapture 下可正常解码。
+
+## fixture 不能 sim 的部分（必须真机 UAT）
+
+视觉-运动闭环：相机视角随头部转动而变化。fixture 是预录画面，无法响应 reachy_mini 的动作。
+凡涉及"看到 → 转头 → 视野更新"的功能，必须真机 UAT，不能仅用本目录 fixture 通过。
+此约束对应 infra-vision-source feature notes 第二段。
+
+## 重新生成
+
+```bash
+uv run python scripts/gen_vision_fixtures.py
+```
+
+幂等。文件会被覆盖。
+"""
+
+
+def main() -> int:
+    paths = [gen_single_face(), gen_no_one(), gen_user_walks_away()]
+    (OUT / "README.md").write_text(README, encoding="utf-8")
+    for p in paths:
+        size = p.stat().st_size
+        print(f"  ok: {p.name}  {size} bytes")
+    print(f"  ok: README.md")
+    print(f"OUT: {OUT}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

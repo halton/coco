@@ -1,0 +1,27 @@
+REPO: /Users/halton/work/coco
+== parse_camera_env ==
+  ok: None                             -> kind=usb target=0
+  ok: ''                               -> kind=usb target=0
+  ok: 'usb:0'                          -> kind=usb target=0
+  ok: 'usb:2'                          -> kind=usb target=2
+  ok: 'image:/tmp/x.jpg'               -> kind=image target=/tmp/x.jpg
+  ok: 'video:/tmp/y.mp4'               -> kind=video target=/tmp/y.mp4
+  ok (raised): 'foo' -> COCO_CAMERA 格式错误，需 'kind:target'：'foo'
+  ok (raised): 'image:' -> COCO_CAMERA target 不能为空：'image:'
+  ok (raised): 'junk:1' -> COCO_CAMERA kind 必须是 image/video/usb：'junk'
+  ok (raised): 'usb:abc' -> COCO_CAMERA usb:<idx> idx 必须是整数：'abc'
+== A 档：ImageLoopSource ==
+  [image] frames=136 elapsed=5.01s fps=27.12 shape=(240, 320, 3) dtype=uint8
+== B/C 档：VideoFileSource ==
+  [video] frames=72 elapsed=5.01s fps=14.37 shape=(240, 320, 3) dtype=uint8
+== 工厂 open_camera via COCO_CAMERA ==
+  ok: env image -> shape=(240, 320, 3)
+  ok: env video -> shape=(240, 320, 3)
+== 真机 UsbCameraSource (best-effort, SKIP if 不可用) ==
+  [usb] frames=152 elapsed=5.03s fps=30.22 shape=(1080, 1920, 3) dtype=uint8
+
+== summary ==
+  image  PASS  frames=136  fps=27.12
+  video  PASS  frames=72  fps=14.37
+  usb    OK    frames=152
+ALL PASS (image + video required; usb optional)

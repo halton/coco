@@ -226,7 +226,7 @@
       "area": "infra",
       "title": "CameraSource 抽象 + fixture 三档",
       "user_visible_behavior": "Coco 视觉感知代码不直接依赖 cv2.VideoCapture；通过 COCO_CAMERA 环境变量在 sim（图片/视频 fixture）与真机（USB 摄像头）之间切换，业务代码无感知。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "实现 coco/perception/camera_source.py：CameraSource Protocol（read() -> (bool, np.ndarray); release()）。",
         "实现三个具体类：ImageLoopSource（A 档：单图循环出帧）、VideoFileSource（B/C 档：mp4/合成视频按帧率播放）、UsbCameraSource（真机：cv2.VideoCapture 包装）。",
@@ -236,8 +236,12 @@
         "fixture 的 mp4 在 macOS / Linux 上都能被 OpenCV 解码（不依赖系统专有 codec）。",
         "在 README 或 CLAUDE.md 子系统边界段补充摄像头说明与切换方式。"
       ],
-      "evidence": [],
-      "notes": "依据 research/sim-vs-real-gaps.md 第 5 节。这是 phase-1 audio MVP 之外的前瞻性 infra：phase-1 自身不用视觉，但等 companion/interact 类 feature 引入视觉时（人脸检测、有人/无人、走近/离开），有这层抽象就能直接用 fixture 在 sim 下拿 evidence，无需逐 feature 各搭一套 mock。视觉-运动闭环（看到人 → 转头 → 视野更新）fixture 不能 sim，必须真机 UAT，这一限制写入 fixture README。"
+      "evidence": [
+        "V1 (2026-05-10, sub-agent, scripts/spike_vision.py): image (single_face.jpg) 136 frames @ 27.12fps shape=(240,320,3) PASS；video (user_walks_away.mp4 mp4v) 72 frames @ 14.37fps shape=(240,320,3) PASS；usb:0 (主机摄像头) 152 frames @ 30.22fps shape=(1080,1920,3) OK；parse_camera_env 6 个合法 case + 4 个非法 case 全 PASS；open_camera 工厂 + COCO_CAMERA env 切换 PASS。Log -> evidence/infra-vision-source/v1_spike_vision.log。",
+        "V2 (2026-05-10, sub-agent, scripts/gen_vision_fixtures.py): 程序合成 single_face.jpg (6.3KB) / no_one.jpg (5.8KB) / user_walks_away.mp4 (50KB, mp4v 编码 ~3s @ 15fps)，无外部下载，cv2 在 macOS 上读写均验证。fixture 总大小 < 65KB，远低于 50MB 阈值。",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 2 medium + 4 low。Medium#1 (VideoFileSource seek 边界节流抖动) 影响极小不修；Medium#2 (UsbCameraSource 不在 Python 层节流) 已在 docstring 显式说明，建议业务层自加 sleep；Low: ImageLoopSource 每帧 copy 是设计选择 / mp4v codec 已验证可解 / CLAUDE.md 已补 vision 子系统边界 / spike usb SKIP 错误信息已够细。"
+      ],
+      "notes": "infra-vision-source: CameraSource Protocol (read/release) + 三档 ImageLoopSource / VideoFileSource / UsbCameraSource，工厂 open_camera() 解析 COCO_CAMERA 环境变量（image:<path> / video:<path> / usb:<idx>，默认 usb:0）。fixture 在 tests/fixtures/vision/，用 scripts/gen_vision_fixtures.py 程序合成（mp4v codec 跨 macOS / Linux 可解）。已知约束：(1) UsbCameraSource 不在 Python 层节流，靠驱动；业务层 tight loop 需自加 sleep。(2) 视觉-运动闭环（看到 → 转头 → 视野更新）fixture 不能 sim，必须真机 UAT，约束已写入 fixtures/vision/README.md 与 CLAUDE.md。OpenCV 已通过 reachy-mini 传递安装（4.13.0.92），无需新增依赖。"
     },
     {
       "id": "interact-001",

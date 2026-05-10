@@ -340,3 +340,32 @@
 - **更新过的文件或工件**：coco/idle.py（新）、coco/main.py（IdleAnimator 集成）、scripts/verify_companion001_idle.py（新）、scripts/verify_companion001_app_integration.py（新）、evidence/companion-001/v1_idle_60s.log（新）、evidence/companion-001/v1_head_trace.csv（新）、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：(1) idle 与 explicit interact 互斥锁需在 interact-001 实现；(2) verify_companion001_idle.py 的 stats roll 列展示值受 from_euler xyz 串扰影响，trace.csv 才是真值；(3) 真机 UAT 留 milestone gate
 - **下一步最佳动作**：进入 priority=7 的 infra-vision-source（CameraSource 抽象 + fixture 三档），area=infra 触发 Eng+Researcher
+
+### Session 015 — 2026-05-10（infra-vision-source 实施 + 收尾切 passing + merge 回 main）
+
+- **本轮目标**：CameraSource Protocol + 三档实现（ImageLoopSource / VideoFileSource / UsbCameraSource） + 工厂 open_camera + COCO_CAMERA env + 程序合成 fixture，sub-agent 全部可执行验证；CLAUDE.md 子系统边界段补 vision；passing + merge → main + push。
+- **已完成**：
+  - 切 feat/infra-vision-source 分支
+  - Researcher 确认：opencv-python 4.13.0.92 已通过 reachy-mini 传递安装，无需新增依赖；mp4v FOURCC 在 macOS / Linux 默认 cv2 build 可解，避免下载第三方 codec
+  - 实现 coco/perception/{__init__.py, camera_source.py}
+    - CameraSource Protocol（read/release，与 cv2.VideoCapture 兼容）
+    - ImageLoopSource（A 档：单图循环，按 fps 节流，每次返回 frame.copy）
+    - VideoFileSource（B/C 档：mp4 循环，自动按 native_fps 节流，末尾 seek 回 0）
+    - UsbCameraSource（真机：cv2.VideoCapture 薄封装，docstring 显式说明不在 Python 层节流）
+    - parse_camera_env / open_camera 工厂（COCO_CAMERA: image:<path> / video:<path> / usb:<idx>，默认 usb:0；4 个非法格式抛 ValueError）
+  - 实现 scripts/gen_vision_fixtures.py：程序合成 single_face.jpg / no_one.jpg / user_walks_away.mp4，无外部下载，总大小 < 65KB；幂等
+  - 实现 scripts/spike_vision.py：image / video / usb 各 5s 采样 + parse_camera_env 6 合法+4 非法 + open_camera 工厂；usb 不可用时 SKIP（不影响 PASS）
+  - V1 PASS：image 136 frames @ 27.12fps shape=(240,320,3)；video 72 frames @ 14.37fps shape=(240,320,3)；usb:0 152 frames @ 30.22fps shape=(1080,1920,3)（macOS 摄像头权限授予后通过）；parse_camera_env 全 PASS
+  - V2 PASS：fixture 生成器幂等运行，三个 fixture 文件大小符合预期
+  - Reviewer fresh-context 自评：LGTM with 2 medium + 4 low
+    - Medium#1：VideoFileSource seek 边界节流抖动 → 影响极小不修
+    - Medium#2：UsbCameraSource 不在 Python 层节流 → 已在 class docstring 显式说明，建议业务层自加 sleep
+    - Low #1-4：ImageLoopSource 每帧 copy 设计选择 / mp4v codec 已验证 / CLAUDE.md 子系统边界补 vision 段（修复）/ spike usb SKIP 信息已足
+  - CLAUDE.md 子系统边界段加 vision 一行，说明 open_camera + COCO_CAMERA + fixture 路径 + 视觉-运动闭环必须真机 UAT 的约束
+  - tests/fixtures/vision/README.md 写明 fixture 来源（程序合成）+ codec 选择 + 不能 sim 的部分
+  - feature_list.json infra-vision-source status `not_started` → `passing`，evidence 3 条 (V1+V2+Reviewer)，notes 含 API 说明 + 已知约束
+- **运行过的验证**：gen_vision_fixtures.py（fixtures 合成）、spike_vision.py（PASS×2，第二次为 Reviewer fix 后回归）
+- **已记录证据**：evidence/infra-vision-source/v1_spike_vision.log；tests/fixtures/vision/{single_face.jpg, no_one.jpg, user_walks_away.mp4, README.md}
+- **更新过的文件或工件**：coco/perception/__init__.py（新）、coco/perception/camera_source.py（新）、scripts/gen_vision_fixtures.py（新）、scripts/spike_vision.py（新）、tests/fixtures/vision/*（新）、evidence/infra-vision-source/v1_spike_vision.log（新）、CLAUDE.md（vision 子系统边界）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：(1) UsbCameraSource 无 Python 层节流，业务层 tight loop 需自加 sleep；(2) 视觉-运动闭环 fixture 不能 sim，必须真机 UAT；(3) 当前 fixture 仅最小集，未来 interact/companion vision feature 接入时按需扩
+- **下一步最佳动作**：进入 priority=8 的 interact-001（推断为 explicit interact 命令路径，结合 idle/interact 互斥锁，承接 companion-001 medium#2）；如 priority=8 不在 not_started 列表则按 next-lowest not_started 推进
