@@ -1,6 +1,6 @@
 {
-  "total": 8,
-  "passed": 8,
+  "total": 9,
+  "passed": 9,
   "failed": 0,
   "failures": [],
   "results": [
@@ -25,6 +25,12 @@
       "name": "V5 llm history passthrough",
       "passed": true,
       "rec_calls": 2
+    },
+    {
+      "name": "V5b inner TypeError no retry",
+      "passed": true,
+      "case_a_calls": 1,
+      "case_b_calls": 1
     },
     {
       "name": "V6 session basic history",

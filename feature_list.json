@@ -428,7 +428,7 @@
       "area": "interact",
       "title": "多轮对话上下文（最近 N 轮注入 LLM）",
       "user_visible_behavior": "Coco 在一次连续对话中能记住最近几轮内容；用户说 '它叫什么？' 紧跟上一句 '看这只猫' 后，Coco 回应能引用 '猫'，而不是把 '它' 当陌生指代；空闲超时（默认 120s）后上下文自动清空。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-002",
         "interact-003"
@@ -441,8 +441,12 @@
         "集成（fixture wav 序列）：构造 2-3 个 fixture wav 模拟 '看这只猫' → '它叫什么？'，注入 LLMClient（fallback 模式即可，验数据流而非语义），断言第二次 reply 调用时 backend.last_messages 含第一轮内容。",
         "Reviewer fresh-context 评审：覆盖 history 长度上限不无限增长、idle reset 路径、fallback backend 不接 history 的兼容性、LLM 输入 token 估算（最大 N 轮 ≤ ~600 字）。"
       ],
-      "evidence": [],
-      "notes": "phase-3 而非 phase-4 的理由：phase-2 把单轮 LLM 跑通了，但实际对话价值高度依赖上下文（'它/这个/刚才那个' 这类指代是日常对话主流），单轮回应给人感觉很机械——拉低 phase-2 LLM feature 的实际可用性。不引入持久存储（重启清空，符合 '陪伴' 而非 '助理' 定位）。effort=S/M（DialogMemory 简单 + LLMBackend 接口扩展 + 集成）。"
+      "evidence": [
+        "Verification: scripts/verify_interact004.py 9/9 PASS（V1 ring-buffer / V2 idle-reset / V3 build_messages / V4 env clamp / V5 LLMClient.history 透传 / V5b 内部 TypeError 不重试 / V6 InteractSession 第 1/2 轮 history / V7 跨 idle history 清零 / V8 N=2 上限）",
+        "Regression: verify_interact005.py 7/7 PASS、verify_companion_003.py 全 PASS、smoke 通过（macOS sd.rec 段豁免）",
+        "Reviewer (sub-agent): LGTM after L1 fix — try/except TypeError fallback 改为构造期 inspect 探测 + 缓存 _llm_accepts_history bool，避免 fn 内部 TypeError 被误判为签名不匹配导致重复调用；V5b 回归覆盖该路径"
+      ],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 把单轮 LLM 跑通了，但实际对话价值高度依赖上下文（'它/这个/刚才那个' 这类指代是日常对话主流），单轮回应给人感觉很机械——拉低 phase-2 LLM feature 的实际可用性。不引入持久存储（重启清空，符合 '陪伴' 而非 '助理' 定位）。effort=S/M（DialogMemory 简单 + LLMBackend 接口扩展 + 集成）。 known-debt: L2 KEYWORD_ROUTES 短回复也被 append 进 history（只有 LLM 路径会真正读取，影响低，但 fallback 与 LLM 切换时 history 含模板回复可能干扰 LLM 上下文）；L2 DialogMemory 无锁，跨线程并发 append/recent_turns 有小概率竞态（当前 InteractSession._busy 已串行化 handle_audio 路径，UAT 单线程下安全）；L3 _check_idle 边界 elapsed > timeout 与 >= timeout 选择未文档化；L3 env clamp 区间 COCO_DIALOG_MAX_TURNS [1,16] / COCO_DIALOG_IDLE_S [1,3600] 字面值未在 spec 列出（已在 dialog.py log 出现）。"
     },
     {
       "id": "interact-005",

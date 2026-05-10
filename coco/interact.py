@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import threading
 import time
@@ -117,9 +118,12 @@ class InteractSession:
         # interact-002: 可选 LLM 回应函数。注入则用 LLM 决定 reply 文本，
         # 动作仍通过 KEYWORD_ROUTES 路由（基于转写文本）。
         # interact-004: llm_reply_fn 现支持可选 history kwarg —— 优先用
-        # ``llm_reply_fn(text, history=...)``；不接受 history 的旧签名也兼容
-        # （会自动 fallback 到不带 history 的调用）。
+        # ``llm_reply_fn(text, history=...)``；不接受 history 的旧签名也兼容。
+        # closeout L1: 用 inspect 在构造期一次性探测签名，缓存 bool；
+        # 避免 try/except TypeError 把 fn 内部的 TypeError 误判为"签名不接受
+        # history"导致重复调用 / 二次副作用。
         self.llm_reply_fn = llm_reply_fn
+        self._llm_accepts_history = self._probe_accepts_history(llm_reply_fn)
         # companion-003 L0-2: 任何 handle_audio 入口都是一次"交互"，统一在
         # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
         # 默认 None 不影响 interact-001/004/005 等历史 verify。
@@ -131,6 +135,32 @@ class InteractSession:
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
+
+    @staticmethod
+    def _probe_accepts_history(fn: Optional[Callable[..., str]]) -> bool:
+        """探测 llm_reply_fn 是否接受 ``history`` 关键字参数。
+
+        - None → False（不会被调用）
+        - 显式声明 ``history`` 参数 → True
+        - 含 ``**kwargs`` → True
+        - 否则 → False
+        - inspect 失败（C 函数等）→ False（保守：不传 history，等价旧行为）
+        """
+        if fn is None:
+            return False
+        try:
+            sig = inspect.signature(fn)
+        except (TypeError, ValueError):
+            return False
+        for p in sig.parameters.values():
+            if p.kind is inspect.Parameter.VAR_KEYWORD:
+                return True
+            if p.name == "history" and p.kind in (
+                inspect.Parameter.KEYWORD_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            ):
+                return True
+        return False
 
     # ------------------------------------------------------------------
     # 主入口
@@ -187,11 +217,14 @@ class InteractSession:
             reply, action = route_reply(transcript)
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
             # 动作仍走 KEYWORD_ROUTES（基于转写）；LLM 失败/空时已在 LLMClient 内降级。
-            # interact-004: 若有 dialog_memory，把最近 N 轮拼成 messages 注入；
-            # llm_reply_fn 的旧签名（不接受 history）走 TypeError fallback。
+            # interact-004: 若有 dialog_memory 且 llm_reply_fn 支持 history kwarg
+            # （构造时已用 inspect 探测，缓存于 self._llm_accepts_history），
+            # 把最近 N 轮拼成 messages 注入；否则按旧签名调用。
+            # 注意：不再用 try/except TypeError 探测——避免 fn 内部抛 TypeError
+            # 被误判为签名不匹配导致重复调用。
             if self.llm_reply_fn is not None and transcript:
                 history_msgs: Optional[List[dict]] = None
-                if self.dialog_memory is not None:
+                if self.dialog_memory is not None and self._llm_accepts_history:
                     history_msgs = []
                     for u, a in self.dialog_memory.recent_turns():
                         if u:
@@ -200,11 +233,7 @@ class InteractSession:
                             history_msgs.append({"role": "assistant", "content": a})
                 try:
                     if history_msgs is not None:
-                        try:
-                            llm_text = self.llm_reply_fn(transcript, history=history_msgs)
-                        except TypeError:
-                            # 旧签名（不接受 history）—— 兼容回退
-                            llm_text = self.llm_reply_fn(transcript)
+                        llm_text = self.llm_reply_fn(transcript, history=history_msgs)
                     else:
                         llm_text = self.llm_reply_fn(transcript)
                     if llm_text and llm_text.strip():

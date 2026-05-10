@@ -286,6 +286,87 @@ def v5_llm_history_passthrough() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# V5b — closeout L1 回归：llm_reply_fn 内部抛 TypeError 不应触发"签名 fallback"
+# ---------------------------------------------------------------------------
+
+
+def v5b_inner_typeerror_no_retry() -> dict:
+    print("=" * 60)
+    print("V5b — fn 内部 TypeError 不被误判为签名不匹配 (closeout L1 回归)")
+    print("=" * 60)
+
+    # case A: fn 接受 history kwarg，但内部主动抛 TypeError。
+    # 旧实现会把这个 TypeError 当作"签名不接受 history"再无 history 重试一次（共 2 次调用）。
+    # 修复后：inspect 探测过签名 → 直接调用一次 → 异常被 InteractSession 的 except Exception 兜住，
+    # 不再重试，调用次数 = 1，dialog_memory 不应记录这一轮（reply 为空走 KEYWORD_ROUTES，但 transcript 仍被 append？）。
+    # 重点：调用次数 = 1。
+    call_count = {"n": 0}
+
+    def llm_with_history(text: str, *, history=None) -> str:
+        call_count["n"] += 1
+        raise TypeError("foo from inside")
+
+    rec = RecordingBackend(reply="不会被用到")  # 仅作 backend 占位（不通过 LLMClient）
+    # 这里直接构造 InteractSession，绕过 LLMClient
+    seq_iter = iter(["你好"])
+
+    def _asr(_a, _sr): return next(seq_iter)
+    def _tts(_t, **_kw): return None
+
+    mem = DialogMemory(max_turns=4, idle_timeout_s=300.0)
+    sess = InteractSession(
+        robot=None,
+        asr_fn=_asr,
+        tts_say_fn=_tts,
+        llm_reply_fn=llm_with_history,
+        dialog_memory=mem,
+    )
+    # 探测应识别到 history kwarg
+    _ok(sess._llm_accepts_history is True,
+        f"inspect 应识别到 history kwarg，实际 {sess._llm_accepts_history}")
+
+    r = sess.handle_audio(_dummy_audio(), 16000, skip_action=True, skip_tts_play=True)
+    _ok(call_count["n"] == 1,
+        f"fn 内部 TypeError 不应触发重试，调用次数应为 1，实际 {call_count['n']}")
+    # transcript 非空，reply 走 KEYWORD_ROUTES（"你好"→"你好呀！…"）
+    _ok(r["transcript"] == "你好", f"transcript 错：{r['transcript']!r}")
+    _ok(r["reply"], f"应有 KEYWORD_ROUTES 兜底 reply，实际 {r['reply']!r}")
+
+    # case B: fn 不接受 history（旧签名），inspect 探测应返回 False，
+    # 调用一次、不传 history。内部不抛。
+    call_count_b = {"n": 0}
+    received_kwargs = {"history_seen": "MISSING"}
+
+    def llm_old(text: str) -> str:
+        call_count_b["n"] += 1
+        return "好的"
+
+    seq_iter_b = iter(["再说一遍"])
+    def _asr_b(_a, _sr): return next(seq_iter_b)
+    mem_b = DialogMemory(max_turns=4, idle_timeout_s=300.0)
+    sess_b = InteractSession(
+        robot=None,
+        asr_fn=_asr_b,
+        tts_say_fn=_tts,
+        llm_reply_fn=llm_old,
+        dialog_memory=mem_b,
+    )
+    _ok(sess_b._llm_accepts_history is False,
+        f"旧签名应识别为不接受 history，实际 {sess_b._llm_accepts_history}")
+    r_b = sess_b.handle_audio(_dummy_audio(), 16000, skip_action=True, skip_tts_play=True)
+    _ok(call_count_b["n"] == 1, f"旧签名应只调用 1 次，实际 {call_count_b['n']}")
+    _ok(r_b["reply"] == "好的", f"旧签名 reply 应被采用，实际 {r_b['reply']!r}")
+
+    print("V5b PASS")
+    return {
+        "name": "V5b inner TypeError no retry",
+        "passed": True,
+        "case_a_calls": call_count["n"],
+        "case_b_calls": call_count_b["n"],
+    }
+
+
+# ---------------------------------------------------------------------------
 # V6 / V7 / V8 — InteractSession 集成
 # ---------------------------------------------------------------------------
 
@@ -414,7 +495,8 @@ def main() -> int:
     results = []
     failures = []
     for fn in (v1_ring_buffer, v2_idle_reset, v3_build_messages, v4_env,
-               v5_llm_history_passthrough, v6_session_basic_history,
+               v5_llm_history_passthrough, v5b_inner_typeerror_no_retry,
+               v6_session_basic_history,
                v7_session_idle_reset, v8_history_capped_at_N):
         try:
             results.append(fn())
