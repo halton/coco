@@ -16,6 +16,14 @@ dependencies = [
 ]
 keywords = ["reachy-mini-app"]
 
+[project.optional-dependencies]
+# 联网兜底：edge-tts (云端中文 TTS) + soundfile (mp3 解码)
+# 离线必须能跑，所以这两项不放进默认 dependencies。
+tts-online = [
+    "edge-tts>=7.0.0",
+    "soundfile>=0.12.0",
+]
+
 [project.entry-points."reachy_mini_apps"]
 coco = "coco.main:Coco"
 

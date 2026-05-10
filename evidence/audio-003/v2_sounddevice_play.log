@@ -1,0 +1,5 @@
+default output device: [1, 2]
+default_out: name='MacBook Air Speakers' sr=48000.0 ch=2
+wav sr=24000 samples=55640 dur=2.32s
+opening output stream and writing 0.3s...
+PASS: sounddevice play 接口可达，无 PortAudio 异常

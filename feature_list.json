@@ -180,7 +180,7 @@
       "area": "audio",
       "title": "中文 TTS 输出（Kokoro-82M-zh via sherpa-onnx，edge-tts 联网兜底）",
       "user_visible_behavior": "给定一段中文文本，Coco 能用中文（普通话）合成语音并通过本机扬声器播放出来；离线可用，联网时可降级到云端 edge-tts 提质。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "选定方案：sherpa-onnx + Kokoro-82M-zh（本地、Apache-2.0）；联网兜底用 edge-tts。模型来源与版本号写入 evidence。",
         "依赖落到 pyproject.toml：sherpa-onnx 已被 audio-002 引入；edge-tts 单独加（声明为可选依赖）。",
@@ -191,8 +191,15 @@
         "开发期播放走本机默认输出设备；真机扬声器（Reachy Mini USB 音频）验证延后到 UAT，不在本 feature 范围。",
         "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 say() 不阻塞 ReachyMini 客户端心跳。"
       ],
-      "evidence": [],
-      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。Coco 是固定角色，不需要 voice cloning，所以 Kokoro 足够。edge-tts 仅作可选增强，不作为强依赖（不联网也必须能跑）。真机扬声器为 milestone gate，与 robot 子系统真机策略一致。"
+      "evidence": [
+        "V1 (2026-05-10, sub-agent): Kokoro int8 multi-lang v1.1 本地合成 + wav 写入 — synth dt=2.62s samples=55640 sr=24000 dur=2.32s rms=0.0530 peak=0.3549；wav 落 tests/fixtures/audio/tts_out/local_kokoro.wav (111324 B)；wave 模块回读 nframes/sr/rms 全一致；ASR 回环 (SenseVoice 转写 24k→16k 重采样后) 得「你好我是可可」与原文「你好，我是可可」去标点完全一致 → 普通话且咬字可懂的强代理证据。日志 evidence/audio-003/v1_local_kokoro.log。",
+        "V2 (2026-05-10, sub-agent): sounddevice 走本机默认输出设备 (MacBook Air Speakers @ 48k stereo) 打开 stream 写 0.3s Kokoro 音频无 PortAudio 异常 — 接口可达；sub-agent 无声卡耳测留 milestone。日志 evidence/audio-003/v2_sounddevice_play.log。",
+        "V3 (2026-05-10, sub-agent): ReachyMiniApp 集成 — mockup-sim daemon (PID 38694) + ReachyMini(no_media) + say_async(\"你好，我是可可\")，主循环每 100ms 跑 get_current_head_pose；5.09s 内 49 次心跳 ok / 0 失败，say_async 线程自然结束。日志 evidence/audio-003/v3_app_integration.log。",
+        "edge-tts 联网兜底 (verification 5)：默认未装 (pyproject extras=tts-online 未启用) → V1 走 skip 分支并记录；prefer=\"edge\" 失败时已实现自动回退 local。",
+        "init.sh 集成：TTS 模型经 scripts/fetch_tts_models.sh 幂等下载；scripts/smoke.py 加 smoke_tts() 段（合成「你好」21846 samples @ 24k dt=1.31s）；./init.sh EXIT=0 全过。",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 1 medium + 3 low — medium=say() 默认 blocking 在 ReachyMiniApp.run() 内会卡心跳，已通过 say_async 提供专用入口 + 在 say() docstring 顶部加注释; low #1 DEFAULT_SID=50 是经验值（v1.1 中文女声音色范围未文档化，留 notes 待真机阶段优化）; low #2 synthesize_edge 解码失败语义稍隐晦（zeros, 0），调用方有 say() 自动 fallback 兜底; low #3 fetch_tts_models.sh 未接入 init.sh 已修。"
+      ],
+      "notes": "模型: kokoro-int8-multi-lang-v1_1 (sherpa-onnx v1.13.1 兼容)；URL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2 (~140MB tarball, 解压 ~165MB: model.int8.onnx 114MB + voices.bin 51MB + dict/ + espeak-ng-data/)；缓存路径 ~/.cache/coco/tts/kokoro-int8-multi-lang-v1_1/. API: synthesize/say/say_async/synthesize_edge/play/write_wav；DEFAULT_SID=50 (v1.1 中文女声经验值, 待真机阶段挑选最佳音色), DEFAULT_SPEED=1.0, MAX_TEXT_LEN=500, speed ∈ [0.5, 2.0]. 离线契约: edge-tts 是 optional extras (tts-online), 离线必须能跑 — 已验. 真机扬声器 (Reachy Mini USB 音频) 验证延后到 milestone gate. 警告 \"you don't need to provide dict_dir\" 来自 sherpa-onnx ≥1.12.15 兼容性提示, 无害。"
     },
     {
       "id": "companion-001",
