@@ -1,0 +1,95 @@
+{
+  "case1_fixture_triggers_once": {
+    "utterances": 1,
+    "utterance_length_samples": 60320,
+    "utterance_seconds": 3.77,
+    "transcript": "今天天气真好 我们一起去公园散步",
+    "expected_text": "今天天气真好，我们一起去公园散步。",
+    "stats": {
+      "frames_fed": 60455,
+      "utterances_total": 1,
+      "utterances_too_short": 0,
+      "utterances_too_long": 0,
+      "utterances_in_cooldown": 0,
+      "utterances_while_muted": 0,
+      "callback_ok": 1,
+      "callback_fail": 0,
+      "last_utterance_seconds": 3.77,
+      "last_trigger_monotonic": 109595.9461175
+    }
+  },
+  "case2_silence_no_trigger": {
+    "utterances": 0,
+    "stats": {
+      "frames_fed": 80000,
+      "utterances_total": 0,
+      "utterances_too_short": 0,
+      "utterances_too_long": 0,
+      "utterances_in_cooldown": 0,
+      "utterances_while_muted": 0,
+      "callback_ok": 0,
+      "callback_fail": 0,
+      "last_utterance_seconds": 0.0,
+      "last_trigger_monotonic": 0.0
+    }
+  },
+  "case3_mute_blocks_callback": {
+    "muted_callbacks": 0,
+    "unmuted_callbacks": 1,
+    "while_muted_count": 1,
+    "stats": {
+      "frames_fed": 120910,
+      "utterances_total": 1,
+      "utterances_too_short": 0,
+      "utterances_too_long": 0,
+      "utterances_in_cooldown": 0,
+      "utterances_while_muted": 1,
+      "callback_ok": 1,
+      "callback_fail": 0,
+      "last_utterance_seconds": 3.77,
+      "last_trigger_monotonic": 109596.506042791
+    }
+  },
+  "case4_idle_soft_mutex": {
+    "pause_calls": 1,
+    "resume_calls": 1,
+    "paused_during_cb": true,
+    "paused_after_cb": false
+  },
+  "case5_cooldown_blocks_double_trigger": {
+    "callbacks": 1,
+    "in_cooldown": 2,
+    "stats": {
+      "frames_fed": 130510,
+      "utterances_total": 1,
+      "utterances_too_short": 0,
+      "utterances_too_long": 0,
+      "utterances_in_cooldown": 2,
+      "utterances_while_muted": 0,
+      "callback_ok": 1,
+      "callback_fail": 0,
+      "last_utterance_seconds": 1.914,
+      "last_trigger_monotonic": 109596.594828125
+    }
+  },
+  "case6_wrap_tts_self_silencing": {
+    "during_tts_callbacks": 0,
+    "after_tts_callbacks": 1,
+    "stats": {
+      "frames_fed": 120910,
+      "utterances_total": 1,
+      "utterances_too_short": 0,
+      "utterances_too_long": 0,
+      "utterances_in_cooldown": 0,
+      "utterances_while_muted": 0,
+      "callback_ok": 1,
+      "callback_fail": 0,
+      "last_utterance_seconds": 3.77,
+      "last_trigger_monotonic": 109596.632426333
+    }
+  },
+  "case7_mic_thread_clean_stop": {
+    "stop_seconds": 6.375004886649549e-06,
+    "is_listening": false
+  }
+}
