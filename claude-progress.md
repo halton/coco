@@ -554,3 +554,11 @@
   - companion-003 依赖 interact-005，若 interact-005 阻塞可降级用 face-only 唤醒先做
   - phase-2 milestone 物理 gate（真机 UAT）由用户执行，与 phase-3 candidate 推进解耦——可并行
 - **下一步最佳动作**：按持续开发模式默认派下一 sub-agent 起手 infra-debt-sweep (p14)，开 feat/infra-debt-sweep 分支，feature_list.json status not_started → in_progress，按 verification 5 条逐项推进。
+
+## Session 023 — infra-debt-sweep close（2026-05-10）
+
+- **起止动作**：feat/infra-debt-sweep HEAD=f41b2bb（5 段 verify 全 PASS），Reviewer fresh-context LGTM with 2 medium / 1 low（M1 verify_infra_debt_sweep M2 段走 _fire_segments helper、M2 stop self-join 1.5s 延迟、L1 stats += int 无锁）。closeout 修 M2（最便宜）：`coco/vad_trigger.py` `stop()` 加 `self._mic_thread is not threading.current_thread()` 守卫，回调内调 stop() 不再死等 1.5s。M1/L1 留 known-debt（infra-debt-sweep notes + feature evidence 都记了）。
+- **运行过的验证**：scripts/verify_infra_debt_sweep.py 5 段全 PASS、scripts/verify_interact003.py 7/7 PASS、./init.sh EXIT=0。
+- **main HEAD 前后**：eb8cc3e → merge --no-ff feat/infra-debt-sweep（phase-3 第 1 个 feature 完成）。
+- **状态变化**：feature_list.json infra-debt-sweep `not_started` → `passing`，evidence 三行 + notes 追加 known-debt 行；其余 phase-3 候选维持。
+- **下一步最佳动作**：vision-002（priority=17, area=vision，FaceTracker 滑动平均 + IoU + 主脸 + presence hysteresis），清 companion-002 M1/M2 根因 + 解锁真机视觉-运动闭环。

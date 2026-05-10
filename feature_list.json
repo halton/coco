@@ -401,7 +401,7 @@
       "area": "infra",
       "title": "phase-2 known-debt 清理（cross-feature M/L 项）",
       "user_visible_behavior": "phase-2 累积的 cross-feature known-debt 被收口：runbook 缺漏补齐、interact-003 VAD 内部锁与 start_microphone 幂等性 refactor、audio-002 fixture 路径在 publish 模式下不再 silent fail、fetch_*_models.ps1 Windows 等价脚本到位。开发者在 publish 模式下复跑 ASR self-check 不再 FileNotFoundError，VAD 在并发 stop/start 下不再 race。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-publish-flow",
         "interact-003",
@@ -415,8 +415,12 @@
         "infra-publish-flow M1/M4/M5/M6/L1-L3 runbook 增强：逐项核对，能补就补（端口检测脚本 / 日志收集模板 / publish 失败回滚 / metadata 字段说明等），不能补的明确写 'wontfix: <reason>' 收口。",
         "Reviewer fresh-context 评审：每条 debt 都要么 PASS、要么明确 wontfix；evidence 须含 grep 证明文件中相应 known-debt 行已删或转 'fixed in infra-debt-sweep'。"
       ],
-      "evidence": [],
-      "notes": "目的：phase-2 留下的 known-debt 影响真机 UAT 的项一次性扫掉，把 'mockup 阶段够用、真机会出问题' 的边角清理干净。不做新功能，纯清债。effort=M（多个小项串起来）。验收门槛：所有列出的 debt 项要么 PASS 要么 wontfix，feature_list.json 对应 feature notes 里的 known-debt 行同步更新。"
+      "evidence": [
+        "Verification: scripts/verify_infra_debt_sweep.py 5 段全 PASS（M2 锁外回调 + M3 _mic_lock 幂等 + audio-002 M1 fixture skip + init.ps1 + runbook §6.5）",
+        "Regression: verify_interact003.py 7/7 PASS、verify_publish.py 4/4 PASS、./init.sh EXIT=0",
+        "Reviewer (sub-agent): LGTM with 2 medium / 1 low — M2 stop self-join 已在 closeout 修复；M1 (verify 走 helper 非 feed 端到端) / L1 (stats 无 lock, free-threaded 风险) 留 known-debt。"
+      ],
+      "notes": "目的：phase-2 留下的 known-debt 影响真机 UAT 的项一次性扫掉，把 'mockup 阶段够用、真机会出问题' 的边角清理干净。不做新功能，纯清债。effort=M（多个小项串起来）。验收门槛：所有列出的 debt 项要么 PASS 要么 wontfix，feature_list.json 对应 feature notes 里的 known-debt 行同步更新。known-debt: M1 verify_infra_debt_sweep M2 段当前测 _fire_segments helper，建议补 feed→callback 端到端 case；L1 stats += int 依赖 GIL，free-threaded build 下 race 风险（影响极低）。"
     },
     {
       "id": "interact-004",

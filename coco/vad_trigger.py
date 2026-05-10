@@ -272,7 +272,7 @@ class VADTrigger:
 
     def stop(self, timeout: float = 1.5) -> None:
         self._stop_event.set()
-        if self._mic_thread is not None:
+        if self._mic_thread is not None and self._mic_thread is not threading.current_thread():
             self._mic_thread.join(timeout=timeout)
 
     def is_listening(self) -> bool:
