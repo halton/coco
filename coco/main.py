@@ -44,7 +44,19 @@ ASR_FIXTURE_PATH = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
 
 
 def _run_fixture_asr_once(fixture_path: Path) -> None:
-    """后台线程：跑一次 transcribe_wav，结果打到 stdout。失败只 print，不抛回主线程。"""
+    """后台线程：跑一次 transcribe_wav，结果打到 stdout。失败只 print，不抛回主线程。
+
+    infra-debt-sweep audio-002 M1：fixture 在 ``tests/fixtures/`` 下，wheel 不打包；
+    publish/Control.app 模式下文件不存在 → 直接 log warning 并 skip，不再 raise，
+    避免 publish 模式下 ASR self-check 用 FileNotFoundError 污染日志或被误判失败。
+    """
+    if not fixture_path.exists():
+        print(
+            f"[coco][asr] fixture missing (publish mode?) path={fixture_path}; "
+            f"skip self-check",
+            flush=True,
+        )
+        return
     try:
         text = transcribe_wav(fixture_path)
         print(f"[coco][asr] fixture={fixture_path.name} text={text!r}", flush=True)

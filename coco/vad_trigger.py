@@ -105,6 +105,10 @@ class VADTrigger:
         self._mic_thread: Optional[threading.Thread] = None
         # feed 内部状态保护（feed 自身串行）；mute 标志独立，主线程可改
         self._lock = threading.Lock()
+        # start_microphone 幂等保护（infra-debt-sweep M3）：
+        # 多线程并发调用 start_microphone() 时只允许起一份 InputStream，
+        # 第二次返回已起的引用并 log.warning。
+        self._mic_lock = threading.Lock()
 
     # ------------------------------------------------------------------
     # Mute / unmute（TTS 期间用，防自激）
@@ -140,6 +144,10 @@ class VADTrigger:
         """喂入一段 float32 mono 帧。VAD 内部累积 → 检出 utterance → 触发 callback。
 
         样本量任意；内部按 512 chunk 切窗喂 sherpa-onnx VAD。mute 期间样本依然消费但不触发回调。
+
+        线程模型（infra-debt-sweep M2）：VAD 内部状态变更（accept_waveform / leftover）持
+        ``self._lock``；但 ``on_utterance`` callback 在锁外调用，避免 callback 反向调用
+        ``self.stop()`` / ``self.reset_buffer()`` 死锁。
         """
         if samples_f32.size == 0:
             return
@@ -152,7 +160,9 @@ class VADTrigger:
             for i in range(0, n_full, cfg.window):
                 self._vad.accept_waveform(buf[i : i + cfg.window])
             self._leftover = buf[n_full:]
-            self._drain_segments()
+            ready = self._drain_ready_segments_locked()
+        # callback 在锁外，避免 callback 反向调用 stop()/reset_buffer() 死锁
+        self._fire_segments(ready)
 
     def flush(self) -> None:
         """末尾收尾：补零冲掉 leftover 并让 VAD flush。供 verification 收尾用。"""
@@ -164,7 +174,8 @@ class VADTrigger:
                 self._vad.accept_waveform(pad)
                 self._leftover = np.zeros(0, dtype=np.float32)
             self._vad.flush()
-            self._drain_segments()
+            ready = self._drain_ready_segments_locked()
+        self._fire_segments(ready)
 
     def reset_buffer(self) -> None:
         """丢掉 VAD 内部已累积的状态（mute 结束时用，避免 TTS 残留）。"""
@@ -175,12 +186,29 @@ class VADTrigger:
     # ------------------------------------------------------------------
     # 内部：从 VAD pop 出已完成 utterance，跑判决与回调
     # ------------------------------------------------------------------
-    def _drain_segments(self) -> None:
-        cfg = self.config
+    def _drain_ready_segments_locked(self) -> list[np.ndarray]:
+        """从 VAD pop 出全部已完成 segments（须在 self._lock 内调用）。
+
+        只做 VAD 层面的 pop（涉及 self._vad 内部状态），不跑长度/cooldown/mute 判决，
+        也不触发 callback。判决与 callback 由 ``_fire_segments`` 在锁外完成。
+        """
+        out: list[np.ndarray] = []
         while not self._vad.empty():
             seg = self._vad.front
             samples_f32 = np.asarray(seg.samples, dtype=np.float32)
             self._vad.pop()
+            out.append(samples_f32)
+        return out
+
+    def _fire_segments(self, segments: list[np.ndarray]) -> None:
+        """对锁外的 segments 跑长度/cooldown/mute 判决，必要时触发 callback。
+
+        infra-debt-sweep M2：callback 在 self._lock 之外调用，允许 callback 反向调
+        ``self.stop()`` / ``self.reset_buffer()`` 而不死锁。stats 更新依赖 GIL 原子性
+        （只是 ``+=`` 一个 int），不再额外加锁，与 mute 标志同样的并发模型。
+        """
+        cfg = self.config
+        for samples_f32 in segments:
             seconds = len(samples_f32) / float(cfg.sample_rate)
             self.stats.last_utterance_seconds = seconds
             # 长度过滤
@@ -203,7 +231,7 @@ class VADTrigger:
                 self.stats.utterances_in_cooldown += 1
                 log.debug("[vad] drop cooldown utterance %.3fs", seconds)
                 continue
-            # 触发：转 int16，调 callback
+            # 触发：转 int16，调 callback（锁外）
             self.stats.utterances_total += 1
             self.stats.last_trigger_monotonic = now
             audio_int16 = np.clip(samples_f32, -1.0, 1.0)
@@ -222,17 +250,25 @@ class VADTrigger:
         """起 daemon 线程持续读 sounddevice 输入，喂给 self.feed。
 
         失败（设备不可用 / 权限问题）会 log 并退出线程，不抛回主线程。
+
+        infra-debt-sweep M3：用 ``self._mic_lock`` 保护幂等性，重复并发调用只起一份
+        InputStream；第二次进入会 log.warning 并返回，不再起第二个线程。
         """
-        if self._mic_thread is not None and self._mic_thread.is_alive():
-            return
-        self._stop_event.clear()
-        self._mic_thread = threading.Thread(
-            target=self._mic_loop,
-            args=(block_seconds,),
-            name="coco-vad-mic",
-            daemon=True,
-        )
-        self._mic_thread.start()
+        with self._mic_lock:
+            if self._mic_thread is not None and self._mic_thread.is_alive():
+                log.warning(
+                    "[vad] start_microphone already running (thread=%s); ignoring",
+                    self._mic_thread.name,
+                )
+                return
+            self._stop_event.clear()
+            self._mic_thread = threading.Thread(
+                target=self._mic_loop,
+                args=(block_seconds,),
+                name="coco-vad-mic",
+                daemon=True,
+            )
+            self._mic_thread.start()
 
     def stop(self, timeout: float = 1.5) -> None:
         self._stop_event.set()
