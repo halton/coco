@@ -645,3 +645,18 @@
   - phase-4 真机 UAT 一次性 gate（用户排期）覆盖所有 5 个 feature；不在 feature 内部停。
 - **下一步最佳动作**：派 Engineer sub-agent 起手 infra-002（p19，phase-4 第 1 个），开 feat/infra-002 分支，按 verification 7 条逐项推进。
 
+
+## Session 029 — infra-002 ready-for-review（2026-05-10）
+
+- **本轮目标**：phase-4 第 1 个 feature infra-002 = CocoConfig 配置中心 + jsonl 结构化日志，落地 + 接通 main.py 5 个 component event。前次会话 socket 中断后 feat/infra-002 分支裸建无 commit；本会话从零做完整落地。
+- **已完成**：
+  - `coco/config.py`：`CocoConfig` frozen dataclass 聚合 8 个子配置（log/ptt/camera/llm/vad/wake/power/dialog）；`load_config(env=None)` 单点入口委托各模块原 `*_from_env()` helper（保持向后兼容，clamp 区间唯一来源不重复）；每个子模块 from_env 异常 fail-soft 回默认；`config_summary()` 输出无 secret dict（COCO_LLM_API_KEY 仅以 set/unset 表示）。
+  - `coco/logging_setup.py`：`setup_logging(jsonl, level)` 幂等清旧 handler；`emit("comp.event", **payload)` 拆 component/event 后发到 stdlib logger；`JsonlFormatter` 序列化 ts/level/component/event/message+payload；`MAX_LINE_BYTES=4000` truncate（防泄漏 / 防写满磁盘）。
+  - `coco/main.py`：run() 顶部 load_config + setup_logging + 启动 banner（jsonl 模式默认 OFF）；power on_sleep/on_active emit `power.transition`；vad utterance emit `vad.utterance` + `asr.transcribe` + `llm.reply`；wake hit emit `wake.hit`。共 5 个 component event 接通。
+  - `scripts/verify_infra_002.py`：8 子项（V1 默认值 / V2 env override+clamp / V3 非法值 fail-soft+warning / V4 summary 完整+无 secret / V5 jsonl 解析+非 jsonl 模式 / V6 旧 helper 向后兼容 / V7 5 component event / V8 truncate），共 58 checks 全 PASS。
+  - `scripts/smoke.py`：新增 `smoke_config()` 段。
+  - evidence: `evidence/infra-002/verify_summary.json` 写入。
+- **回归全 PASS**：verify_interact004 / verify_interact005 / verify_companion_003 / verify_companion_vision / verify_vision_002 / verify_infra_debt_sweep / verify_publish 全 PASS；smoke 全 PASS（含 smoke_config）。
+- **状态**：feat/infra-002 已 push origin；status=in_progress；Reviewer fresh-context 评审 pending（建议挑刺方向：env helper 委托是否真等价于 phase-3 行为；jsonl Formatter 与第三方 logging 链路兼容性；MAX_LINE_BYTES truncate 边界；config_summary 是否漏带未来新字段）。
+- **下一步**：Reviewer sub-agent fresh-context 评审 → 修 finding → status=passing → merge → 派 interact-006（phase-4 第 2 个）。
+

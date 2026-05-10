@@ -320,6 +320,46 @@ def smoke_power_state() -> None:
     print(f"  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb={sleep_calls[0]} wake_cb={wake_calls[0]}")
 
 
+def smoke_config() -> None:
+    """infra-002: CocoConfig + jsonl logging 最轻量自检。
+
+    - 默认 load_config() 不抛、config_summary() 顶层 keys 完整
+    - jsonl 模式 setup_logging + 一次 emit 后 stderr 行可 json.loads
+    """
+    print("==> Smoke: config (CocoConfig + jsonl logging)")
+    import io
+    import json as _json
+    import logging as _log
+    from contextlib import redirect_stderr
+
+    from coco.config import load_config, config_summary
+    from coco.logging_setup import setup_logging, emit
+
+    cfg = load_config(env={})
+    s = config_summary(cfg)
+    expected = {"log", "ptt", "camera", "llm", "vad", "wake", "power", "dialog"}
+    if set(s.keys()) != expected:
+        sys.exit(f"FAIL: summary keys {sorted(s.keys())} != {sorted(expected)}")
+
+    buf = io.StringIO()
+    with redirect_stderr(buf):
+        setup_logging(jsonl=True, level="INFO")
+        emit("asr.transcribe", text="smoke", cer=0.0, latency_ms=10)
+    lines = [l for l in buf.getvalue().splitlines() if l.strip()]
+    if not lines:
+        sys.exit("FAIL: jsonl 模式没捕获到任何行")
+    try:
+        obj = _json.loads(lines[0])
+    except Exception as e:  # noqa: BLE001
+        sys.exit(f"FAIL: jsonl 行 json.loads 失败: {type(e).__name__}: {e}")
+    need = {"ts", "level", "component", "event"}
+    if not need.issubset(obj.keys()):
+        sys.exit(f"FAIL: jsonl 行缺字段 {need - set(obj.keys())}")
+    # 重置 logging 回 basicConfig，不污染后续 smoke 段
+    setup_logging(jsonl=False, level="INFO")
+    print(f"  ok: summary keys 完整, jsonl line keys⊇{sorted(need)}, comp={obj['component']} event={obj['event']}")
+
+
 def smoke_publish() -> None:
     """infra-publish-flow 最轻量自检：entry_points + class import。
 
@@ -404,6 +444,7 @@ def main() -> None:
     smoke_vad()
     smoke_wake_word()
     smoke_power_state()
+    smoke_config()
     smoke_publish()
     if args.daemon:
         smoke_daemon()
