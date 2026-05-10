@@ -4,7 +4,7 @@
 跑法：
     ./.venv/bin/python scripts/verify_asr_wav.py
 
-阈值：CER < 0.15（合成音 fixture 的弹性阈值；真人录音再校准到 0.10）。
+阈值：CER < 0.10（与 feature_list.json audio-002 verification 3 对齐）。
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from coco.asr import transcribe_wav  # noqa: E402
 
 WAV = ROOT / "tests" / "fixtures" / "audio" / "zh-001-walk-park.wav"
 REF_TXT = ROOT / "tests" / "fixtures" / "audio" / "zh-001-walk-park.txt"
-CER_THRESHOLD = 0.15
+CER_THRESHOLD = 0.10
 
 
 def normalize(s: str) -> str:

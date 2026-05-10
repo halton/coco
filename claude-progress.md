@@ -233,3 +233,23 @@
 - **下一步最佳动作**：
   1. push origin main
   2. 启动 audio-002（中文 ASR / SenseVoice-Small）
+
+### Session 010 — 2026-05-10（audio-002 收尾切 passing + merge 回 main）
+
+- **本轮目标**：完成 audio-002 V7 Reviewer 评审 + 修 high finding + 切 passing + merge feat/audio-002 → main。
+- **已完成**：
+  - V1-V6 在前序 session 已完成（commit cdbe4fb / 862c54c / 7878ce6 / 43d7012 / 7760b5f）
+  - V7 Reviewer fresh-context sub-agent 评审：1 high + 4 medium + 5 low
+    - **H1（已修）**：`scripts/verify_asr_wav.py` `CER_THRESHOLD = 0.15` 与 feature_list.json verification 3「CER < 0.1」不一致 → 改为 0.10，重跑 fixture：CER=0.0000，RTF=0.168，V3 PASS；./init.sh smoke PASS
+    - **M1（登记 notes）**：`coco/main.py` fixture ASR 路径硬编码 `tests/fixtures/audio/...`，publish 模式 wheel 内不含 tests/，留 audio-003 / companion-001 接入实时 ASR 时一并解决
+    - **M4（登记 notes）**：`scripts/fetch_asr_models.sh` 仅 bash 版，待跨平台 UAT 触发时补 .ps1
+    - **M5（登记 notes）**：`coco/main.py` `request_media_backend = "no_media"` phase-1 临时，sunset 条件已声明
+    - **M2/M3/L1-L5**：入 backlog，不挡 passing
+  - audio-002 evidence 补齐 V1-V7 七条；status `in_progress` → `passing`
+  - feat/audio-002 收尾 commit + push origin
+  - merge feat/audio-002 → main（--no-ff，中文 commit message）；main 上 ./init.sh PASS；push origin main
+- **运行过的验证**：V3 主验（CER=0.0000，阈值 0.10）；./init.sh smoke（feat 分支 + main 分支）；Reviewer V7 fresh-context LGTM-after-H1
+- **已记录证据**：见 feature_list.json audio-002 evidence 段（V1-V7 七条）
+- **更新过的文件或工件**：scripts/verify_asr_wav.py、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：M1 / M4 / M5 已登记 notes，等下游 feature 触发时再处理
+- **下一步最佳动作**：进入 robot-001（feature_list.json 当前 priority 最低 not_started，priority=2，area=robot）
