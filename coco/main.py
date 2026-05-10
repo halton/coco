@@ -259,11 +259,31 @@ class Coco(ReachyMiniApp):
         wake_bridge: WakeVADBridge | None = None
         try:
             from coco.llm import build_default_client as _build_llm
+            from coco.dialog import (
+                DialogMemory,
+                config_from_env as dialog_config_from_env,
+                dialog_memory_enabled_from_env,
+            )
             _llm = _build_llm()
             if _llm.backend.name == "fallback":
                 print("[coco][llm] backend=fallback (未配 COCO_LLM_BACKEND，使用关键词路由)", flush=True)
             else:
                 print(f"[coco][llm] backend={_llm.backend.name} timeout={_llm.timeout}s", flush=True)
+
+            # interact-004: 可选 multi-turn dialog memory（默认 OFF，向后兼容）
+            _dialog_memory: DialogMemory | None = None
+            if dialog_memory_enabled_from_env():
+                _dcfg = dialog_config_from_env()
+                _dialog_memory = DialogMemory(
+                    max_turns=_dcfg.max_turns,
+                    idle_timeout_s=_dcfg.idle_timeout_s,
+                )
+                print(
+                    f"[coco][dialog] memory enabled max_turns={_dcfg.max_turns} "
+                    f"idle_timeout={_dcfg.idle_timeout_s:.0f}s",
+                    flush=True,
+                )
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -276,6 +296,7 @@ class Coco(ReachyMiniApp):
                     (lambda src, _ps=power_state: _ps.record_interaction(source=src))
                     if power_state is not None else None
                 ),
+                dialog_memory=_dialog_memory,
             )
 
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())

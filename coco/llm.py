@@ -113,8 +113,12 @@ class LLMStats:
 class LLMBackend(Protocol):
     name: str
 
-    def chat(self, user_text: str, *, timeout: float) -> str:
-        """返回原始 LLM 文本。失败时抛任何异常 — 由 LLMClient 兜底。"""
+    def chat(self, user_text: str, *, timeout: float, history: Optional[List[dict]] = None) -> str:
+        """返回原始 LLM 文本。失败时抛任何异常 — 由 LLMClient 兜底。
+
+        interact-004：``history`` 是 OpenAI/Ollama 兼容的 messages 列表（不含
+        system，也不含本轮 user）。FallbackBackend 会忽略它。
+        """
         ...
 
 
@@ -141,14 +145,15 @@ class OpenAIChatBackend:
         self.api_key = api_key
         self.model = model
 
-    def chat(self, user_text: str, *, timeout: float) -> str:
+    def chat(self, user_text: str, *, timeout: float, history: Optional[List[dict]] = None) -> str:
         url = f"{self.base_url}/chat/completions"
+        messages: List[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": user_text})
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_text},
-            ],
+            "messages": messages,
             "max_tokens": 96,
             "temperature": 0.7,
         }
@@ -186,14 +191,15 @@ class OllamaBackend:
         self.base_url = base_url.rstrip("/")
         self.model = model
 
-    def chat(self, user_text: str, *, timeout: float) -> str:
+    def chat(self, user_text: str, *, timeout: float, history: Optional[List[dict]] = None) -> str:
         url = f"{self.base_url}/api/chat"
+        messages: List[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": user_text})
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_text},
-            ],
+            "messages": messages,
             "stream": False,
             "options": {"temperature": 0.7, "num_predict": 96},
         }
@@ -222,8 +228,9 @@ class OllamaBackend:
 class FallbackBackend:
     name = "fallback"
 
-    def chat(self, user_text: str, *, timeout: float) -> str:
-        # 直接返回 KEYWORD_ROUTES；LLMClient.reply 会再走一次截断/中文校验
+    def chat(self, user_text: str, *, timeout: float, history: Optional[List[dict]] = None) -> str:
+        # 直接返回 KEYWORD_ROUTES；history 显式忽略（KEYWORD_ROUTES 不需要上下文）。
+        # LLMClient.reply 会再走一次截断/中文校验。
         return _fallback_reply(user_text)
 
 
@@ -245,8 +252,19 @@ class LLMClient:
         self.max_chars = max_chars
         self.stats = LLMStats()
 
-    def reply(self, user_text: str, *, timeout: Optional[float] = None) -> str:
-        """永远返回非空字符串。LLM backend 失败时降级到 KEYWORD_ROUTES。"""
+    def reply(
+        self,
+        user_text: str,
+        *,
+        timeout: Optional[float] = None,
+        history: Optional[List[dict]] = None,
+    ) -> str:
+        """永远返回非空字符串。LLM backend 失败时降级到 KEYWORD_ROUTES。
+
+        interact-004：``history`` 是 OpenAI/Ollama 兼容的 messages 列表
+        （不含 system，也不含本轮 user）；只对 OpenAI/Ollama backend 生效，
+        FallbackBackend 会忽略。``None`` 等价于无上下文（向后兼容）。
+        """
         t0 = time.monotonic()
         eff_timeout = timeout if timeout is not None else self.timeout
         self.stats.calls += 1
@@ -254,7 +272,7 @@ class LLMClient:
 
         # 1) 调 backend
         try:
-            raw = self.backend.chat(user_text or "", timeout=eff_timeout)
+            raw = self.backend.chat(user_text or "", timeout=eff_timeout, history=history)
             text = _truncate(raw, self.max_chars)
             # backend 返回若不含汉字（OpenAI 偶发返回英文）→ 视为失败降级
             if text and _has_chinese(text):

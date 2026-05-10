@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 import numpy as np
 
 from coco.actions import look_left, look_right, nod
+from coco.dialog import DialogMemory
 
 if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
@@ -105,8 +106,9 @@ class InteractSession:
         asr_fn: Callable[[np.ndarray, int], str],
         tts_say_fn: Callable[..., None],
         idle_animator: Optional["IdleAnimator"] = None,
-        llm_reply_fn: Optional[Callable[[str], str]] = None,
+        llm_reply_fn: Optional[Callable[..., str]] = None,
         on_interaction: Optional[Callable[[str], None]] = None,
+        dialog_memory: Optional[DialogMemory] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -114,11 +116,18 @@ class InteractSession:
         self.idle_animator = idle_animator
         # interact-002: 可选 LLM 回应函数。注入则用 LLM 决定 reply 文本，
         # 动作仍通过 KEYWORD_ROUTES 路由（基于转写文本）。
+        # interact-004: llm_reply_fn 现支持可选 history kwarg —— 优先用
+        # ``llm_reply_fn(text, history=...)``；不接受 history 的旧签名也兼容
+        # （会自动 fallback 到不带 history 的调用）。
         self.llm_reply_fn = llm_reply_fn
         # companion-003 L0-2: 任何 handle_audio 入口都是一次"交互"，统一在
         # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
         # 默认 None 不影响 interact-001/004/005 等历史 verify。
         self.on_interaction = on_interaction
+        # interact-004: 多轮对话 ring buffer。None 时退化为单轮模式（向后兼容）。
+        # 即使 LLM 走 fallback，append 仍记录（保持 KEYWORD_ROUTES 路径"看似"多轮，
+        # 但 history 仅在调用 llm_reply_fn 时实际注入）。
+        self.dialog_memory = dialog_memory
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -178,9 +187,26 @@ class InteractSession:
             reply, action = route_reply(transcript)
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
             # 动作仍走 KEYWORD_ROUTES（基于转写）；LLM 失败/空时已在 LLMClient 内降级。
+            # interact-004: 若有 dialog_memory，把最近 N 轮拼成 messages 注入；
+            # llm_reply_fn 的旧签名（不接受 history）走 TypeError fallback。
             if self.llm_reply_fn is not None and transcript:
+                history_msgs: Optional[List[dict]] = None
+                if self.dialog_memory is not None:
+                    history_msgs = []
+                    for u, a in self.dialog_memory.recent_turns():
+                        if u:
+                            history_msgs.append({"role": "user", "content": u})
+                        if a:
+                            history_msgs.append({"role": "assistant", "content": a})
                 try:
-                    llm_text = self.llm_reply_fn(transcript)
+                    if history_msgs is not None:
+                        try:
+                            llm_text = self.llm_reply_fn(transcript, history=history_msgs)
+                        except TypeError:
+                            # 旧签名（不接受 history）—— 兼容回退
+                            llm_text = self.llm_reply_fn(transcript)
+                    else:
+                        llm_text = self.llm_reply_fn(transcript)
                     if llm_text and llm_text.strip():
                         reply = llm_text.strip()
                 except Exception as e:  # noqa: BLE001
@@ -191,6 +217,15 @@ class InteractSession:
             result["reply"] = reply
             result["action"] = action
             log.info("[interact] reply=%r action=%s", reply, action)
+
+            # interact-004: 记一轮到 ring buffer。即使走 KEYWORD_ROUTES（无 LLM）
+            # 也 append —— 保持"对话发生过"的事实，下一次若 LLM 上线可立即接续。
+            # transcript 为空（ASR 失败/静音）时不记，避免污染上下文。
+            if self.dialog_memory is not None and transcript:
+                try:
+                    self.dialog_memory.append(transcript, reply)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
 
             # 4) TTS（可与动作并行；这里串行简化）
             if not skip_tts_play:
