@@ -36,6 +36,7 @@ from coco.actions import (
 if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
     from coco.perception.face_tracker import FaceTracker
+    from coco.power_state import PowerStateMachine
 
 
 log = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ class IdleAnimator:
         config: Optional[IdleConfig] = None,
         rng: Optional[random.Random] = None,
         face_tracker: Optional["FaceTracker"] = None,
+        power_state: Optional["PowerStateMachine"] = None,
     ) -> None:
         self.robot = robot
         self.stop_event = stop_event
@@ -146,6 +148,7 @@ class IdleAnimator:
         self.rng = rng or random.Random()
         self.stats = IdleStats()
         self.face_tracker = face_tracker
+        self.power_state = power_state
         self._thread: Optional[threading.Thread] = None
         self._next_glance_at: float = 0.0
         # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
@@ -192,20 +195,53 @@ class IdleAnimator:
         except Exception:  # noqa: BLE001
             return False
 
+    def _power_micro_scale(self) -> float:
+        """companion-003: drowsy 时 micro/glance 间隔放大；sleep 时返回特大值（外层会跳过本轮）。"""
+        if self.power_state is None:
+            return 1.0
+        try:
+            from coco.power_state import PowerState as _PS  # 局部 import 避免循环
+            st = self.power_state.current_state
+            if st == _PS.DROWSY:
+                return float(self.power_state.config.drowsy_micro_scale)
+            if st == _PS.SLEEP:
+                # sleep 状态下不应再 sample 任何动作；用一个保险的"被 skip"指示
+                return float("inf")
+        except Exception:  # noqa: BLE001
+            return 1.0
+        return 1.0
+
     def _sample_micro_interval(self) -> float:
         base = self.rng.uniform(self.config.micro_interval_min, self.config.micro_interval_max)
         if self._face_present():
             base *= self.config.face_micro_interval_scale
-        return base
+        scale = self._power_micro_scale()
+        if scale == float("inf"):
+            # SLEEP：用一个比 wait 上限大的 sentinel；_run 里会 detect 并改用短 wait + skip
+            return base
+        return base * scale
 
     def _sample_glance_interval(self) -> float:
         base = self.rng.uniform(self.config.glance_interval_min, self.config.glance_interval_max)
         if self._face_present():
             base *= self.config.face_glance_interval_scale
-        return base
+        scale = self._power_micro_scale()
+        if scale == float("inf"):
+            return base
+        return base * scale
+
+    def _is_power_sleep(self) -> bool:
+        if self.power_state is None:
+            return False
+        try:
+            from coco.power_state import PowerState as _PS
+            return self.power_state.current_state == _PS.SLEEP
+        except Exception:  # noqa: BLE001
+            return False
 
     def _run(self) -> None:
-        log.info("IdleAnimator started cfg=%s vision=%s", self.config, self.face_tracker is not None)
+        log.info("IdleAnimator started cfg=%s vision=%s power=%s",
+                 self.config, self.face_tracker is not None, self.power_state is not None)
         try:
             while not self.stop_event.is_set():
                 wait = self._sample_micro_interval()
@@ -214,6 +250,10 @@ class IdleAnimator:
                     break
                 # 互斥：interact 占用时跳过本轮（间隔继续走）
                 if self._paused.is_set():
+                    self.stats.skipped_paused += 1
+                    continue
+                # companion-003: power_state == SLEEP 时跳过任何动作
+                if self._is_power_sleep():
                     self.stats.skipped_paused += 1
                     continue
                 if self._face_present():

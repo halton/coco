@@ -1,0 +1,10 @@
+{
+  "v1_active_drowsy_sleep_progression": true,
+  "v2_record_interaction_resets": true,
+  "v3_drowsy_interval_scale": true,
+  "v4_sleep_skips_idle_and_wake_resumes": true,
+  "v5_env_default_off": true,
+  "v6_env_clamp": true,
+  "v7_driver_thread": true,
+  "errors": []
+}
