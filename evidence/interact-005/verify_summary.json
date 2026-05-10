@@ -1,0 +1,58 @@
+{
+  "verifications": {
+    "V1": {
+      "fixture": "tests/fixtures/audio/wake_keke.wav",
+      "audio_seconds": 2.9055625,
+      "feed_dt_s": 0.038,
+      "hits": [
+        "可可"
+      ],
+      "stats": {
+        "wakes_total": 1,
+        "wakes_while_muted": 0,
+        "callback_ok": 1
+      },
+      "pass": true
+    },
+    "V2": {
+      "fixture": "tests/fixtures/audio/zh-001-walk-park.wav",
+      "audio_seconds": 3.7784375,
+      "hits": [],
+      "pass": true
+    },
+    "V3": {
+      "sleeping": {
+        "forwarded": 0,
+        "dropped": 1
+      },
+      "awake": {
+        "forwarded": 1,
+        "dropped": 0
+      },
+      "expire": {
+        "expired_count": 1
+      },
+      "pass": true
+    },
+    "V4": {
+      "rem_before": 5.499,
+      "rem_after": 6.0,
+      "pass": true
+    },
+    "V5": {
+      "default_off": true,
+      "explicit_on": true,
+      "pass": true
+    },
+    "V6": {
+      "threshold": 0.95,
+      "window_seconds": 60.0,
+      "pass": true
+    },
+    "V7": {
+      "direct_callbacks": 1,
+      "pass": true
+    }
+  },
+  "all_pass": true
+}

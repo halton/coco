@@ -583,3 +583,11 @@
 - **main HEAD 前后**：7182bc1 → merge --no-ff feat/vision-002（phase-3 第 2 个 feature 完成）。
 - **状态变化**：feature_list.json vision-002 `in_progress` → `passing`，evidence 改为 4 行（Verification/Regression/Smoke/Reviewer LGTM with M1 修复 + L 系列 known-debt）；notes 末尾追加 known-debt 行（L1/L2/L3/L4/L5）。
 - **下一步最佳动作**：interact-005（priority=16, area=interact, deps=[interact-003, audio-002]）—— 中文唤醒词 "可可" 接入。
+
+## Session 025 — interact-005 close（2026-05-10）
+
+- **起止动作**：feat/interact-005 close-out。Reviewer fresh-context 评审 LGTM with debt：M2 fixture README + `.txt` 标注缺失（要求 merge 前补）已在本次修复——新增 `tests/fixtures/audio/wake_keke.wav.txt`（"可可，今天天气真好"）+ `wake_keke_short.wav.txt`（"可可"），README "当前清单" 表格补两行 + 追加 "Wake Word fixture (interact-005)" 段说明 TTS 合成来源 + known-debt（真人音色与多语速样本留 milestone gate 真机录音）。L6 cosmetic：`coco/main.py:222` `vad_trigger.feed = _shared_feed` 行前加注释 `# NOTE: 用 _shared_feed 代替 bridge.feed()，等价但保留 KWS→VAD 顺序在主流程显式可见`。M1（10 段噪声 + 5 段不同语速 fixture）+ L3-L8（cosmetic / 顺手）记入 feature_list.json notes 作 known-debt 留 milestone gate。
+- **运行过的验证**：`scripts/verify_interact005.py` 7 段全 PASS（V1 wake hit / V2 no-wake 0 hits / V3 awake-gate forward+drop / V4 timer reset rem 5.49→6.00s / V5 默认 off / V6 env clamp threshold=0.95 window=60.0 / V7 backward-compat direct callbacks=1）；`scripts/verify_interact003.py` 7/7 PASS（regression VAD 路径完整保留）。main 上 merge 后再次双 verify 仍 PASS。
+- **main HEAD 前后**：f47476b → merge --no-ff feat/interact-005（phase-3 第 3 个 feature 完成）。
+- **状态变化**：feature_list.json interact-005 `in_progress` → `passing`，evidence 4 行（Verification/Regression/Smoke/Reviewer LGTM with debt + M2 已修复）；notes 末尾追加 known-debt 行（M1/L4/L5/L6/L7/L8）。
+- **下一步最佳动作**：companion-003（priority=18, area=companion, deps=[companion-001, companion-002, interact-005]）—— 节能 idle，PowerState active/drowsy/sleep 状态机 + goto_sleep / wake_up 钩子，wake-word 与 face presence 任一即唤醒。

@@ -450,7 +450,7 @@
       "area": "interact",
       "title": "唤醒词（'可可' wake-word，KWS 前置 VAD）",
       "user_visible_behavior": "用户说 '可可，今天天气怎么样' 才会触发 InteractSession；环境噪音 / 人之间普通对话 / 没说 '可可' 的句子不会触发；唤醒后 6s 窗口内可继续说，不再要求重复唤醒词。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-003",
         "audio-002"
@@ -463,8 +463,13 @@
         "环境变量 COCO_WAKE_DISABLE=1 旁路 wake-word，回到 phase-2 VAD-only 行为；COCO_WAKE_THRESHOLD / COCO_WAKE_WINDOW_SECONDS 可调；越界 clamp + log.warning。",
         "Reviewer fresh-context 评审：误唤醒率（10 段无 wake word 噪声/对话 fixture 应 0 触发）、漏唤醒率（5 段不同语速 '可可' fixture 应全触发）、TTS 期间 wake-word 是否被自激（沿用 interact-003 wrap_tts mute）。"
       ],
-      "evidence": [],
-      "notes": "phase-3 而非 phase-4 的理由：phase-2 VAD-only 触发在多人环境 / 电视背景音 / 用户自言自语场景下会大量误触发，是真机 UAT 后立刻会暴露的可用性问题。effort=M（Researcher 选型 + 模型集成 + VAD 状态机扩展 + 跨平台模型缓存）。已知风险：(a) 中文短词 '可可' 易与 'OK / 苦力 / 哥哥' 混淆，需选支持自定义 keyword 的 KWS 实现；(b) 模型下载 hops 进 ~/.cache/coco/wake/ 不进 git；(c) 真麦阈值留 milestone 调参。"
+      "evidence": [
+        "Verification: scripts/verify_interact005.py 7 段全 PASS（V1 wake / V2 no-wake / V3 awake-gate / V4 timer reset / V5 默认 off / V6 env clamp / V7 backward-compat）",
+        "Regression: verify_interact003.py 7/7 PASS（VAD 路径完整保留）",
+        "Smoke: smoke_wake_word 模型缺失 WARN 跳过设计；macOS sd.rec hang 历史豁免",
+        "Reviewer (sub-agent): LGTM with debt — M2 (fixture README + .txt 标注) 已在 closeout 修复；M1 (10 段噪声 + 5 段不同语速 fixture) 留 milestone gate；L3-L8 cosmetic/顺手 known-debt"
+      ],
+      "notes": "phase-3 而非 phase-4 的理由：phase-2 VAD-only 触发在多人环境 / 电视背景音 / 用户自言自语场景下会大量误触发，是真机 UAT 后立刻会暴露的可用性问题。effort=M（Researcher 选型 + 模型集成 + VAD 状态机扩展 + 跨平台模型缓存）。已知风险：(a) 中文短词 '可可' 易与 'OK / 苦力 / 哥哥' 混淆，需选支持自定义 keyword 的 KWS 实现；(b) 模型下载 hops 进 ~/.cache/coco/wake/ 不进 git；(c) 真麦阈值留 milestone 调参。 known-debt: M1 误/漏唤醒大样本 (10+5) 留真机/真人 milestone gate 录音补足；L4 wake monkey-patch 与 wrap_tts 顺序 asymmetry 注释；L5 WakeGate.expired_count 计数 lag 注释；L6 WakeVADBridge.feed 与 _shared_feed 关系 (closeout 已加注释)；L7 fetch_kws_models.sh 临时目录残留清理；L8 main.py wake 段向后兼容 V7 已验。"
     },
     {
       "id": "vision-002",

@@ -47,4 +47,11 @@ zh-001-hello.wav    -> zh-001-hello.txt: "你好，今天我们学英语"
 
 | 文件 | 语言 | 时长 | 内容 | 用于 |
 |---|---|---|---|---|
-| _（占位 —— audio-002 进入 in_progress 时录制）_ | | | | |
+| `zh-001-walk-park.wav` | zh | ~? | 见 `.txt` | audio-002 |
+| `wake_keke.wav` | zh | ~2.91s | 可可，今天天气真好 | interact-005 KWS |
+| `wake_keke_short.wav` | zh | ~0.95s | 可可 | interact-005 KWS |
+
+### Wake Word fixture (interact-005)
+- `wake_keke.wav` — TTS 合成 "可可，今天天气真好"，~2.91s
+- `wake_keke_short.wav` — TTS 合成 "可可"，~0.95s
+- 用于 KWS 单元验证；known-debt: 真人音色与多语速样本留 milestone gate 真机录音
