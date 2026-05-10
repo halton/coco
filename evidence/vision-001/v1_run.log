@@ -1,0 +1,28 @@
+[face] expected (H,W,3) BGR, got shape=(100, 100)
+[face] expected (H,W,3) BGR, got shape=(10, 10, 4)
+[face] non-ndarray input, type=str
+============================================================
+V2 — single_face.jpg
+============================================================
+  detected 1 face(s): [(106, 63, 110, 110)]
+============================================================
+V3 — no_one.jpg
+============================================================
+  detected 0 face(s)
+============================================================
+V4 — user_walks_away.mp4 via open_camera('video:...')
+============================================================
+  video native: 45 frames @ 15.0fps
+  frames=45 elapsed=3.238s wall_fps=13.90
+  detect avg=7.63ms max=11.11ms
+  frames_with_face=45/45
+============================================================
+V5 — sanity (None / 灰度 / 错形状 / 不抛)
+============================================================
+  detect(None) -> []
+  detect(gray) -> []
+  detect(rgba) -> []
+  detect(str) -> []
+
+Summary -> /Users/halton/work/coco/evidence/vision-001/v1_summary.json
+ALL PASS

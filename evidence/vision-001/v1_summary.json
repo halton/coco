@@ -1,0 +1,34 @@
+{
+  "v2_single_face": {
+    "status": "PASS",
+    "n_faces": 1,
+    "first_box": [
+      106,
+      63,
+      110,
+      110
+    ]
+  },
+  "v3_no_one": {
+    "status": "PASS",
+    "n_faces": 0
+  },
+  "v4_video_fps": {
+    "status": "PASS",
+    "frames": 45,
+    "elapsed_s": 3.2346,
+    "wall_fps": 13.91,
+    "native_fps": 15.0,
+    "detect_avg_ms": 6.41,
+    "detect_max_ms": 10.26,
+    "frames_with_face": 45,
+    "fps_floor": 10.0
+  },
+  "v5_sanity": {
+    "status": "PASS",
+    "none_input": "PASS",
+    "gray_input": "PASS",
+    "rgba_input": "PASS",
+    "str_input": "PASS"
+  }
+}

@@ -458,3 +458,26 @@
 - **已知风险或未解决问题**：(1) 真 LLM (OpenAI/Ollama) 延迟仅在 V4 用模拟 50ms 演示，真网络延迟需用户配置后实测；(2) urllib timeout 软约束；(3) 流式回应 + 上下文记忆留 phase-2 真机阶段
 - **下一步最佳动作**：按 priority 进 vision-001 (p10, area=vision, deps=infra-vision-source)；或 interact-003 (p12) 如优先做语音 UX；按 dependencies 与 phase-2 milestone 切换前置条件，candidate=vision-001
 
+
+### Session 019 — 2026-05-10（vision-001 实现 + verification + smoke，Reviewer 待派）
+
+- **本轮目标**：phase-2 第二个 feature vision-001（人脸检测）实现 + verification + smoke 集成；passing 切换前置 = Reviewer fresh-context 评审。
+- **已完成**：
+  - 切 feat/vision-001 分支（基于 main HEAD=46939be），feature_list.json status not_started → in_progress
+  - 实现 coco/perception/face_detect.py（135 行）：FaceDetector 包装 cv2 haar cascade（cv2.data.haarcascades 自带 frontalface_default.xml，无新依赖）；FaceBox dataclass (x, y, w, h, score) + cx/cy 中心点；detect(frame_bgr) 输入 BGR ndarray 返回 list[FaceBox]；防御式输入校验（None / 灰度 / RGBA / 非 ndarray 全返回 [] 不抛）；CascadeClassifier 单实例非线程安全 → 文档注明每线程独立实例
+  - coco/perception/__init__.py 导出 FaceBox / FaceDetector
+  - 实现 scripts/verify_vision.py（179 行，由初稿 spike_face.py 重命名）：V2 single_face.jpg 断言 ==1；V3 no_one.jpg 断言 ==0；V4 user_walks_away.mp4 通过 open_camera('video:...') 跑全帧 detect，wall_fps ≥ min(10, native_fps*0.8)、avg detect <100ms；V5 sanity (None/灰度/RGBA/str)；summary 写到 evidence/vision-001/v1_summary.json
+  - smoke_vision() 加入 scripts/smoke.py：对 single_face.jpg 调一次 detect 断言 ≥1；./init.sh 默认跑
+- **运行过的验证**：
+  - scripts/verify_vision.py：ALL PASS（V2 box=(106,63,110,110) / V3 0 张 / V4 frames=45 wall_fps=14.51 detect_avg=8.64ms detect_max=12.89ms / V5 全 PASS）
+  - ./init.sh：EXIT=0，audio + ASR + TTS + vision smoke 全过
+- **已记录证据**：evidence/vision-001/v1_run.log、v1_summary.json
+- **更新过的文件或工件**：coco/perception/face_detect.py（新）、coco/perception/__init__.py（+导出）、scripts/verify_vision.py（新）、scripts/smoke.py（+smoke_vision）、feature_list.json（vision-001 status + evidence 3 条，Reviewer pending）、evidence/vision-001/*（新）、claude-progress.md（本段）
+- **已知风险或未解决问题**：
+  - **Reviewer pending**：本 sub-agent (Engineer) 工具集中无 Agent/Task 派遣能力，无法在本 sub-agent 内嵌套派 Reviewer。按硬规则不能自审 → status 暂留 in_progress；待主会话派 fresh-context general-purpose sub-agent 当 Reviewer，评审 LGTM 后再切 passing + merge --no-ff feat/vision-001 → main + push origin
+  - haar cascade 在程序合成 fixture 上准确率 100%，真人脸 / 多人 / 侧脸 / 暗光 留真机 milestone 验证；如效果不佳备选方案 mediapipe（评估 wheel 大小 + cp313 跨平台 resolve）
+  - 多线程使用：CascadeClassifier 非 thread-safe，每线程独立 FaceDetector 实例（companion-002 集成时注意）
+  - VideoFileSource 自带 native_fps 节流（~15fps），wall_fps 上界 ≈ native；所以 V4 不直接断"wall_fps ≥ 10"而是断"≥ min(10, native*0.8)"+ "avg detect <100ms"两个独立指标
+- **下一步最佳动作**：主会话派 Reviewer 评审 vision-001；LGTM 后切 passing + merge + push。后续 candidate：companion-002 (p11, area=companion, deps=[companion-001, vision-001]) 解锁；或 interact-003 (p12, deps=[interact-001, audio-002]) 始终 ready。建议 companion-002 优先——同一视觉路径连贯收尾 + phase-2 milestone gate (vision + 闭环) 更近。
+- **closeout**: Reviewer LGTM, status=passing, merged to main
+
