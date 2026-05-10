@@ -1,0 +1,57 @@
+{
+  "results": [
+    {
+      "transcript": "今天天气真好我们一起去公园散步",
+      "reply": "嗯，外面挺好的呀。",
+      "action": "look_right",
+      "duration_s": 1.5642681250028545,
+      "asr_ok": true,
+      "tts_ok": true,
+      "action_ok": true,
+      "dropped": false,
+      "fixture_label": "zh-001 walk-park",
+      "fixture_path": "/Users/halton/work/coco/tests/fixtures/audio/zh-001-walk-park.wav"
+    },
+    {
+      "transcript": "今天天气真好我们一起去公园散步",
+      "reply": "嗯，外面挺好的呀。",
+      "action": "look_right",
+      "duration_s": 1.1102853750053328,
+      "asr_ok": true,
+      "tts_ok": true,
+      "action_ok": true,
+      "dropped": false,
+      "fixture_label": "zh-001 walk-park",
+      "fixture_path": "/Users/halton/work/coco/tests/fixtures/audio/zh-001-walk-park.wav"
+    }
+  ],
+  "idle_stats": {
+    "micro_count": 3,
+    "glance_count": 0,
+    "skipped_paused": 4,
+    "error_count": 0,
+    "micro_kinds": {
+      "head": 1,
+      "antenna": 1,
+      "breathe": 1
+    }
+  },
+  "interact_stats": {
+    "sessions": 2,
+    "asr_ok": 2,
+    "asr_fail": 0,
+    "tts_fail": 0,
+    "action_fail": 0,
+    "last_transcript": "今天天气真好我们一起去公园散步",
+    "last_reply": "嗯，外面挺好的呀。",
+    "last_action": "look_right",
+    "durations_s": [
+      1.5642681250028545,
+      1.1102853750053328
+    ]
+  },
+  "stop_dt": 0.00033808300213422626,
+  "alive_after": false,
+  "delta_skip": 4,
+  "fails": []
+}

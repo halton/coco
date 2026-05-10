@@ -28,6 +28,21 @@ SILERO_VAD_PATH = DEFAULT_CACHE / "silero_vad" / "silero_vad.onnx"
 _recognizer: sherpa_onnx.OfflineRecognizer | None = None
 
 
+def clean_sensevoice_tags(text: str) -> str:
+    """去掉 SenseVoice 输出里的 ``<|zh|><|HAPPY|><|Speech|>`` 等控制标签，只留可读文本。"""
+    if not text:
+        return ""
+    out: list[str] = []
+    i = 0
+    while i < len(text):
+        if text[i] == "<" and "|>" in text[i:]:
+            i = text.index("|>", i) + 2
+            continue
+        out.append(text[i])
+        i += 1
+    return "".join(out).strip()
+
+
 def _build_vad(
     sample_rate: int = 16000,
     threshold: float = 0.5,
