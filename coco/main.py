@@ -30,6 +30,13 @@ from coco.asr import transcribe_wav
 from coco.idle import IdleAnimator, IdleConfig
 from coco.interact import InteractSession
 from coco.vad_trigger import VADTrigger, config_from_env, vad_disabled_from_env
+from coco.wake_word import (
+    WakeGate,
+    WakeVADBridge,
+    WakeWordDetector,
+    config_from_env as wake_config_from_env,
+    wake_word_enabled_from_env,
+)
 
 
 SAMPLE_RATE = 16000
@@ -145,8 +152,13 @@ class Coco(ReachyMiniApp):
         # interact-001：起 InteractSession + push-to-talk stdin 后台线程
         # interact-002：注入 LLM client（环境变量未配则自动 fallback 到 KEYWORD_ROUTES）
         # interact-003：默认改用 VAD trigger 替代 stdin Enter；COCO_VAD_DISABLE=1 回退 PTT
+        # interact-005：可选 wake-word 前置 KWS（COCO_WAKE_WORD=1 启用）；唤醒后开 6s
+        #             awake 窗口，窗口外的 VAD utterance 被 awake gate 丢弃，向后兼容
+        #             interact-003 默认行为（COCO_WAKE_WORD 默认关）。
         ptt_thread: threading.Thread | None = None
         vad_trigger: VADTrigger | None = None
+        wake_detector: WakeWordDetector | None = None
+        wake_bridge: WakeVADBridge | None = None
         try:
             from coco.llm import build_default_client as _build_llm
             _llm = _build_llm()
@@ -178,6 +190,62 @@ class Coco(ReachyMiniApp):
                 vad_trigger = VADTrigger(_vad_on_utterance, config=vad_cfg)
                 # 包一层 tts_say_fn：TTS 期间 mute，避免自家声音被回采再次触发
                 session.tts_say_fn = vad_trigger.wrap_tts(session.tts_say_fn)
+
+                # interact-005: 可选 wake-word 前置 KWS。COCO_WAKE_WORD=1 启用。
+                # 启用时：把 vad_trigger.on_utterance 包到 WakeVADBridge.vad_gate_callback，
+                # awake 窗口外丢弃 utterance；并把 wake_detector.feed 串在 vad_trigger.feed
+                # 之前（共享同一份 sounddevice 流，避免双开 InputStream 抢设备）。
+                if wake_word_enabled_from_env():
+                    try:
+                        wake_cfg = wake_config_from_env()
+                        wake_detector = WakeWordDetector(
+                            on_wake=lambda t: print(
+                                f"[coco][wake] hit {t!r}; awake for "
+                                f"{wake_cfg.window_seconds:.1f}s",
+                                flush=True,
+                            ),
+                            config=wake_cfg,
+                        )
+                        wake_gate = WakeGate(window_seconds=wake_cfg.window_seconds)
+                        wake_bridge = WakeVADBridge(wake_detector, wake_gate, _vad_on_utterance)
+                        wake_bridge.bind_vad(vad_trigger)
+                        # 关键替换：vad_trigger 的真 callback 改为 bridge.vad_gate_callback
+                        vad_trigger.on_utterance = wake_bridge.vad_gate_callback
+                        # 共享流：拦截 vad_trigger.feed，让样本先喂 wake，再走 vad
+                        _orig_vad_feed = vad_trigger.feed
+
+                        def _shared_feed(samples_f32, _orig=_orig_vad_feed,
+                                         _wake=wake_detector) -> None:
+                            _wake.feed(samples_f32)
+                            _orig(samples_f32)
+
+                        vad_trigger.feed = _shared_feed  # type: ignore[assignment]
+                        # TTS 期间也 mute KWS（与 vad_trigger.wrap_tts 同步）
+                        _orig_mute = vad_trigger.mute
+                        _orig_unmute = vad_trigger.unmute
+
+                        def _mute_both(_o=_orig_mute, _w=wake_detector) -> None:
+                            _o(); _w.mute()
+
+                        def _unmute_both(_o=_orig_unmute, _w=wake_detector) -> None:
+                            _o(); _w.unmute(); _w.reset_buffer()
+
+                        vad_trigger.mute = _mute_both    # type: ignore[assignment]
+                        vad_trigger.unmute = _unmute_both  # type: ignore[assignment]
+                        print(
+                            f"[coco][wake] wake-word enabled: keywords="
+                            f"{wake_cfg.keywords} threshold={wake_cfg.threshold} "
+                            f"window={wake_cfg.window_seconds}s",
+                            flush=True,
+                        )
+                    except FileNotFoundError as exc:
+                        print(
+                            f"[coco][wake] init failed (model missing): {exc!r}; "
+                            f"continuing without wake-word",
+                            flush=True,
+                        )
+                        wake_detector = None
+                        wake_bridge = None
                 vad_trigger.start_microphone()
                 print(
                     f"[coco][vad] VAD trigger started (threshold={vad_cfg.threshold} "
@@ -234,6 +302,9 @@ class Coco(ReachyMiniApp):
             # interact-003: 停 VAD 麦克线程（如已启动）
             if vad_trigger is not None:
                 vad_trigger.stop(timeout=1.5)
+            # interact-005: 停 wake detector mic（仅在独立 mic 模式才有；当前共享流模式下无）
+            if wake_detector is not None and wake_detector.is_listening():
+                wake_detector.stop(timeout=1.5)
 
 
 def main() -> None:

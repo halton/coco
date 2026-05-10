@@ -235,6 +235,48 @@ def smoke_vad() -> None:
     print(f"  ok: VAD trigger fired {len(captured)} time(s) on fixture")
 
 
+def smoke_wake_word() -> None:
+    """interact-005: KWS 命中 fixture wav '可可，今天天气真好' → wake 1 次。
+
+    模型缺失则 WARN 跳过、不阻断（与 smoke_asr / smoke_vad 一致）。
+    """
+    print("==> Smoke: wake-word (KWS on wake_keke fixture)")
+    kws_dir = (
+        Path.home() / ".cache" / "coco" / "kws"
+        / "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
+    )
+    if not (kws_dir / "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx").exists():
+        print("  WARN: KWS model not downloaded, skipped (run scripts/fetch_kws_models.sh)")
+        return
+    fix_wav = (
+        Path(__file__).resolve().parents[1]
+        / "tests" / "fixtures" / "audio" / "wake_keke.wav"
+    )
+    if not fix_wav.exists():
+        print(f"  WARN: fixture missing {fix_wav}, skipped")
+        return
+    try:
+        import numpy as np
+        import scipy.io.wavfile as wavfile
+        from coco.wake_word import WakeConfig, WakeWordDetector
+    except Exception as e:  # noqa: BLE001
+        sys.exit(f"FAIL: wake-word smoke import 失败 ({e})")
+    sr, a = wavfile.read(str(fix_wav))
+    audio_f32 = (a.astype(np.float32) / 32768.0) if a.dtype == np.int16 else a.astype(np.float32)
+    if audio_f32.ndim > 1:
+        audio_f32 = audio_f32.mean(axis=1)
+    hits: list[str] = []
+    det = WakeWordDetector(on_wake=lambda t: hits.append(t), config=WakeConfig())
+    chunk = 1600
+    for i in range(0, len(audio_f32), chunk):
+        det.feed(audio_f32[i : i + chunk])
+    # tail to flush
+    det.feed(np.zeros(int(0.5 * 16000), dtype=np.float32))
+    if len(hits) < 1:
+        sys.exit(f"FAIL: wake-word 期望 ≥1 次命中，实际 {len(hits)}")
+    print(f"  ok: wake hits={hits}")
+
+
 def smoke_publish() -> None:
     """infra-publish-flow 最轻量自检：entry_points + class import。
 
@@ -317,6 +359,7 @@ def main() -> None:
     smoke_companion_vision()
     smoke_face_tracker()
     smoke_vad()
+    smoke_wake_word()
     smoke_publish()
     if args.daemon:
         smoke_daemon()
