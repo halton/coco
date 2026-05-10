@@ -9,7 +9,7 @@
 | 组件 | 主选 | 兜底 |
 |---|---|---|
 | **统一 runtime** | sherpa-onnx（Apache-2.0；C++/Python；mac/Linux/Windows ARM/x86 wheel；NEON 加速） | — |
-| **ASR** | SenseVoice-Small INT8（60MB，CER 3-5%，~70ms / 10s 音频，Apache-2.0） | Paraformer-zh-small（30MB，更轻） |
+| **ASR** | SenseVoice-Small INT8（228MB，CER 3-5%，~70ms / 10s 音频，Apache-2.0） | Paraformer-zh-small（30MB，更轻） |
 | **TTS** | Kokoro-82M-zh（82MB，MOS ~4.2，Apache-2.0，CPU 友好，固定角色不需 voice cloning） | edge-tts（微软在线，免费，联网时使用，**不强制依赖网络**） |
 
 ## 候选对比
@@ -18,7 +18,9 @@
 
 | 模型 | CER (%) | 大小 | CPU 延迟 | License |
 |---|---|---|---|---|
-| **SenseVoice-Small INT8** | ~3-5 | 60MB | **~70ms** | Apache-2.0 |
+| **SenseVoice-Small INT8** | ~3-5 | 228MB | **~70ms** | Apache-2.0 |
+
+（订正：早期估计 60MB 是字段语义误读；sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2 实际 228MB，含 model.int8.onnx + tokens.txt）
 | Paraformer-zh | ~2-5 | 30-600MB | ~120ms | Apache-2.0 |
 | Whisper-large-v3 | ~5-6 | ~3GB | ~1050ms | MIT |
 | faster-whisper | 同 Whisper | 同 | ~250ms | MIT |
