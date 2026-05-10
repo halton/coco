@@ -297,7 +297,7 @@
       "area": "vision",
       "title": "人脸检测（基于 CameraSource）",
       "user_visible_behavior": "Coco 能从摄像头/fixture 视频中检测出当前画面的人脸数量与大致位置，作为后续视觉触发行为的输入；不阻塞主循环。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "infra-vision-source"
       ],
@@ -308,7 +308,11 @@
         "用 open_camera('video:tests/fixtures/vision/user_walks_away.mp4') 跑全帧 detect，主线程用 wall clock 测 FPS ≥ 10；不阻塞（单帧 detect 耗时 < 100ms 在主开发机上）。",
         "scripts/spike_face.py 或 smoke 集成：三个 fixture + FPS 测量一次跑通，输出可写入 evidence。"
       ],
-      "evidence": [],
+      "evidence": [
+        "Verification (scripts/verify_vision.py): V2 single_face.jpg 检出 1 张 box=(106,63,110,110)；V3 no_one.jpg 检出 0 张；V4 user_walks_away.mp4 frames=45 wall_fps=14.51 detect_avg=8.64ms detect_max=12.89ms (FPS floor 10 ✅, detect <100ms ✅)；V5 sanity (None/灰度/RGBA/str) 全部返回 [] 不抛异常。Summary: evidence/vision-001/v1_summary.json (ALL PASS)。",
+        "Smoke (./init.sh): smoke_vision 集成 scripts/smoke.py，对 single_face.jpg detect 1 张脸；audio + ASR + TTS + vision 全过 EXIT=0。",
+        "Reviewer (sub-agent): pending — 待主会话派 fresh-context Reviewer 评审。"
+      ],
       "notes": "haar cascade 自带于 cv2.data.haarcascades（haarcascade_frontalface_default.xml），不需要新依赖。mediapipe 若启用须先评估 wheel 大小 + cp313 darwin/linux/win 跨平台 resolve；目前优先级低。本 feature 只做检测，不做跟踪——跟踪由 companion-002 / 真机 milestone 视觉-运动闭环阶段考虑。CameraSource Protocol 已在 infra-vision-source 落地，face_detect 不应直接 import cv2.VideoCapture。"
     },
     {

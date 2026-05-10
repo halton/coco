@@ -9,6 +9,7 @@ from coco.perception.camera_source import (
     open_camera,
     parse_camera_env,
 )
+from coco.perception.face_detect import FaceBox, FaceDetector
 
 __all__ = [
     "CameraSource",
@@ -18,4 +19,6 @@ __all__ = [
     "VideoFileSource",
     "open_camera",
     "parse_camera_env",
+    "FaceBox",
+    "FaceDetector",
 ]

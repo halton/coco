@@ -97,6 +97,35 @@ def smoke_tts() -> None:
     print(f"  ok: samples={samples.size} sr={sr} dt={dt:.2f}s")
 
 
+def smoke_vision() -> None:
+    """对 single_face.jpg 调一次 face detect，断言 ≥1 张脸。
+
+    vision-001 的快速健康检查；fixture 自带于 tests/fixtures/vision/，
+    cv2 由 reachy-mini 间接安装；不引新依赖。
+    """
+    print("==> Smoke: vision (face detect on single_face.jpg)")
+    fixture = (
+        Path(__file__).resolve().parent.parent
+        / "tests" / "fixtures" / "vision" / "single_face.jpg"
+    )
+    if not fixture.exists():
+        sys.exit(f"FAIL: fixture not found: {fixture}")
+    try:
+        import cv2  # noqa: F401  # 仅探测可用性
+        from coco.perception import FaceDetector
+    except ImportError as e:
+        sys.exit(f"FAIL: import 失败 ({e})")
+    import cv2 as _cv2
+    img = _cv2.imread(str(fixture))
+    if img is None:
+        sys.exit(f"FAIL: 无法加载 fixture: {fixture}")
+    det = FaceDetector()
+    boxes = det.detect(img)
+    if len(boxes) < 1:
+        sys.exit(f"FAIL: 期望 ≥1 张脸，实际 {len(boxes)}")
+    print(f"  ok: detected {len(boxes)} face(s) in single_face.jpg")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -143,6 +172,7 @@ def main() -> None:
     smoke_audio()
     smoke_asr()
     smoke_tts()
+    smoke_vision()
     if args.daemon:
         smoke_daemon()
     print()
