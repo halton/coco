@@ -29,6 +29,12 @@ from coco import tts as coco_tts
 from coco.asr import transcribe_wav
 from coco.idle import IdleAnimator, IdleConfig
 from coco.interact import InteractSession
+from coco.power_state import (
+    PowerState,
+    PowerStateMachine,
+    config_from_env as power_config_from_env,
+    power_idle_enabled_from_env,
+)
 from coco.vad_trigger import VADTrigger, config_from_env, vad_disabled_from_env
 from coco.wake_word import (
     WakeGate,
@@ -88,6 +94,42 @@ def _record_int16(seconds: float, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
     return rec.reshape(-1)
 
 
+def _face_presence_watcher(
+    face_tracker,
+    power_state: "PowerStateMachine",
+    stop_event: threading.Event,
+    *,
+    period: float = 0.5,
+) -> None:
+    """companion-003 L0-1: 监听 face presence 边沿（False→True），rising-edge 调
+    ``power_state.record_interaction(source="face")``。
+
+    独立于 IdleAnimator —— 后者在 SLEEP 下早早 ``continue``，永远观察不到
+    face 出现，spec verification 第 2 条的 "face 唤醒 SLEEP" 就靠不住。
+    本 watcher 是独立 daemon thread，无视 power_state 当前态，每 ``period``
+    秒读一次 ``face_tracker.latest().present``，捕到 False→True 立刻 fire。
+
+    任何异常都吞掉只 log，绝不让线程崩溃；stop_event set 后下一轮 wait 退出。
+    """
+    if face_tracker is None or power_state is None:
+        return
+    last_present = False
+    while not stop_event.wait(timeout=period):
+        try:
+            snap = face_tracker.latest()
+            present = bool(getattr(snap, "present", False))
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][power] face watcher read failed: {exc!r}", flush=True)
+            continue
+        if present and not last_present:
+            try:
+                power_state.record_interaction(source="face")
+                print("[coco][power] face rising-edge -> wake", flush=True)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[coco][power] face record_interaction failed: {exc!r}", flush=True)
+        last_present = present
+
+
 def _push_to_talk_loop(session: InteractSession, stop_event: threading.Event) -> None:
     """后台线程：每次 stdin 收到 Enter，录 PUSH_TO_TALK_SECONDS 秒后跑 session。
 
@@ -137,13 +179,69 @@ class Coco(ReachyMiniApp):
 
         # companion-001：起 idle 动画后台线程。共用 stop_event；动作经 robot-002 的安全幅度封装。
         # 失败/异常只 log，不影响 mic loop 或主退出。
+        # companion-003：可选挂 PowerStateMachine（COCO_POWER_IDLE=1 启用）。drowsy 时
+        #             idle interval 自动放大；sleep 时 idle 跳过 micro/glance + 调
+        #             robot.goto_sleep()；wake 事件（wake-word/face/interact）调
+        #             robot.wake_up() 并回 active。默认 OFF 保持 companion-002 行为不变。
         idle_animator: IdleAnimator | None = None
+        power_state: PowerStateMachine | None = None
         try:
             try:
                 reachy_mini.wake_up()
             except Exception as exc:  # noqa: BLE001
                 print(f"[coco][idle] wake_up failed (continuing without): {exc!r}", flush=True)
-            idle_animator = IdleAnimator(reachy_mini, stop_event, config=IdleConfig())
+            if power_idle_enabled_from_env():
+                try:
+                    pcfg = power_config_from_env()
+                    power_state = PowerStateMachine(config=pcfg)
+
+                    def _on_sleep(_psm: PowerStateMachine, _r=reachy_mini) -> None:
+                        print(f"[coco][power] -> sleep, calling goto_sleep()", flush=True)
+                        try:
+                            _r.goto_sleep()
+                        except Exception as e:  # noqa: BLE001
+                            print(f"[coco][power] goto_sleep failed: {e!r}", flush=True)
+
+                    def _on_active(_psm: PowerStateMachine, prev: PowerState, _r=reachy_mini) -> None:
+                        if prev == PowerState.SLEEP:
+                            print(f"[coco][power] sleep -> active, calling wake_up()", flush=True)
+                            try:
+                                _r.wake_up()
+                            except Exception as e:  # noqa: BLE001
+                                print(f"[coco][power] wake_up failed: {e!r}", flush=True)
+                        else:
+                            print(f"[coco][power] {prev.value} -> active", flush=True)
+
+                    def _on_drowsy(_psm: PowerStateMachine) -> None:
+                        print(f"[coco][power] -> drowsy (interval x{pcfg.drowsy_micro_scale})", flush=True)
+
+                    power_state.on_enter_sleep = _on_sleep
+                    power_state.on_enter_active = _on_active
+                    power_state.on_enter_drowsy = _on_drowsy
+                    power_state.start_driver(stop_event)
+                    print(
+                        f"[coco][power] enabled drowsy_after={pcfg.drowsy_after}s "
+                        f"sleep_after={pcfg.sleep_after}s scale={pcfg.drowsy_micro_scale}x",
+                        flush=True,
+                    )
+                    # companion-003 L0-1: 起 face presence watcher（rising-edge → wake）。
+                    # 当前 main.py 不构造 FaceTracker（business 决策：默认无 vision 子系统），
+                    # 所以 face_tracker_for_power 暂为 None，watcher 直接 early-return。
+                    # 未来若 vision 子系统在 app 层启用，把 tracker 实例传进来即可生效。
+                    face_tracker_for_power = None
+                    if face_tracker_for_power is not None:
+                        threading.Thread(
+                            target=_face_presence_watcher,
+                            args=(face_tracker_for_power, power_state, stop_event),
+                            name="coco-power-face-watcher",
+                            daemon=True,
+                        ).start()
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[coco][power] init failed: {exc!r}", flush=True)
+                    power_state = None
+            idle_animator = IdleAnimator(
+                reachy_mini, stop_event, config=IdleConfig(), power_state=power_state
+            )
             idle_animator.start()
             print("[coco][idle] IdleAnimator started", flush=True)
         except Exception as exc:  # noqa: BLE001
@@ -172,6 +270,12 @@ class Coco(ReachyMiniApp):
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
                 llm_reply_fn=_llm.reply,
+                # companion-003 L0-2: 把"任意一次 handle_audio"统一记成 power
+                # 状态机的交互信号；PTT/VAD/wake-bridge 不再各自挂钩，避免双计数。
+                on_interaction=(
+                    (lambda src, _ps=power_state: _ps.record_interaction(source=src))
+                    if power_state is not None else None
+                ),
             )
 
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
@@ -180,6 +284,8 @@ class Coco(ReachyMiniApp):
                 vad_cfg = config_from_env()
 
                 def _vad_on_utterance(audio_int16: np.ndarray, sr: int) -> None:
+                    # companion-003 L0-2: record_interaction 统一在 InteractSession.handle_audio
+                    # 内通过 on_interaction 钩子触发，不在这里重复（避免双计数）。
                     r = session.handle_audio(audio_int16, sr, skip_action=False, skip_tts_play=False)
                     print(
                         f"[coco][vad] transcript={r['transcript']!r} reply={r['reply']!r} "
@@ -199,10 +305,14 @@ class Coco(ReachyMiniApp):
                     try:
                         wake_cfg = wake_config_from_env()
                         wake_detector = WakeWordDetector(
-                            on_wake=lambda t: print(
-                                f"[coco][wake] hit {t!r}; awake for "
-                                f"{wake_cfg.window_seconds:.1f}s",
-                                flush=True,
+                            on_wake=lambda t: (
+                                power_state.record_interaction(source="wake_word")
+                                if power_state is not None else None,
+                                print(
+                                    f"[coco][wake] hit {t!r}; awake for "
+                                    f"{wake_cfg.window_seconds:.1f}s",
+                                    flush=True,
+                                ),
                             ),
                             config=wake_cfg,
                         )
@@ -306,6 +416,9 @@ class Coco(ReachyMiniApp):
             # interact-005: 停 wake detector mic（仅在独立 mic 模式才有；当前共享流模式下无）
             if wake_detector is not None and wake_detector.is_listening():
                 wake_detector.stop(timeout=1.5)
+            # companion-003: 停 power_state driver
+            if power_state is not None:
+                power_state.join_driver(timeout=2.0)
 
 
 def main() -> None:

@@ -277,6 +277,49 @@ def smoke_wake_word() -> None:
     print(f"  ok: wake hits={hits}")
 
 
+def smoke_power_state() -> None:
+    """companion-003: PowerStateMachine FakeClock 推进 active→drowsy→sleep + 唤醒."""
+    print("==> Smoke: power-state (companion-003)")
+    import threading as _th
+    from coco.power_state import (
+        PowerConfig,
+        PowerState,
+        PowerStateMachine,
+    )
+
+    class _Clk:
+        def __init__(self) -> None:
+            self.t = 0.0
+
+        def __call__(self) -> float:
+            return self.t
+
+    clk = _Clk()
+    psm = PowerStateMachine(
+        config=PowerConfig(drowsy_after=60.0, sleep_after=120.0),
+        clock=clk,
+    )
+    sleep_calls = [0]
+    wake_calls = [0]
+    psm.on_enter_sleep = lambda m: sleep_calls.__setitem__(0, sleep_calls[0] + 1)
+    psm.on_enter_active = lambda m, prev: wake_calls.__setitem__(0, wake_calls[0] + 1) if prev == PowerState.SLEEP else None
+
+    clk.t = 70.0; psm.tick()
+    if psm.current_state != PowerState.DROWSY:
+        sys.exit(f"FAIL: 70s 后期望 DROWSY, got {psm.current_state}")
+    clk.t = 200.0; psm.tick()
+    if psm.current_state != PowerState.SLEEP:
+        sys.exit(f"FAIL: 200s 后期望 SLEEP, got {psm.current_state}")
+    if sleep_calls[0] != 1:
+        sys.exit(f"FAIL: on_enter_sleep should fire once, got {sleep_calls[0]}")
+    psm.record_interaction("smoke")
+    if psm.current_state != PowerState.ACTIVE:
+        sys.exit(f"FAIL: record_interaction 后期望 ACTIVE, got {psm.current_state}")
+    if wake_calls[0] != 1:
+        sys.exit(f"FAIL: on_enter_active(prev=SLEEP) should fire, got {wake_calls[0]}")
+    print(f"  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb={sleep_calls[0]} wake_cb={wake_calls[0]}")
+
+
 def smoke_publish() -> None:
     """infra-publish-flow 最轻量自检：entry_points + class import。
 
@@ -360,6 +403,7 @@ def main() -> None:
     smoke_face_tracker()
     smoke_vad()
     smoke_wake_word()
+    smoke_power_state()
     smoke_publish()
     if args.daemon:
         smoke_daemon()

@@ -591,3 +591,19 @@
 - **main HEAD 前后**：f47476b → merge --no-ff feat/interact-005（phase-3 第 3 个 feature 完成）。
 - **状态变化**：feature_list.json interact-005 `in_progress` → `passing`，evidence 4 行（Verification/Regression/Smoke/Reviewer LGTM with debt + M2 已修复）；notes 末尾追加 known-debt 行（M1/L4/L5/L6/L7/L8）。
 - **下一步最佳动作**：companion-003（priority=18, area=companion, deps=[companion-001, companion-002, interact-005]）—— 节能 idle，PowerState active/drowsy/sleep 状态机 + goto_sleep / wake_up 钩子，wake-word 与 face presence 任一即唤醒。
+
+## Session 026 — companion-003 close（2026-05-10）
+
+- **起止动作**：feat/companion-003 close-out。Reviewer fresh-context 评审产出 2 L0 必修 + 4 L1 顺手：
+  - **L0-1 已修**：face presence 边沿无法唤醒 SLEEP。`coco/main.py` 新增 `_face_presence_watcher(face_tracker, power_state, stop_event, period=0.5)` 独立 daemon helper —— 不依赖 IdleAnimator（IdleAnimator 在 SLEEP 下早早 continue，看不到 face），独立线程读 `face_tracker.latest().present` 边沿 False→True 直接调 `power_state.record_interaction(source="face")`。main.run() 中预留挂载点（当前 face_tracker_for_power=None；FaceTracker 实例化未在 main 层启动，留作 known-debt）。
+  - **L0-2 已修**：PTT 路径未挂 record_interaction。`coco/interact.py` `InteractSession.__init__` 新增 `on_interaction: Optional[Callable[[str], None]] = None` 参数，`handle_audio` 入口统一 fire `on_interaction("audio")`（任何异常吞掉）；`coco/main.py` 构造时注入 `lambda src: power_state.record_interaction(source=src)`，并删除 `_vad_on_utterance` 中重复的 `record_interaction` 调用以避免双计数。wake-word callback 内的 `record_interaction(source="wake_word")` 保留——wake-hit 早于音频 capture，与后续 audio 事件性质不同。
+  - **L1-1 已修**：env 别名。`COCO_POWER_DROWSY_MINUTES`/`COCO_POWER_SLEEP_MINUTES`（×60 转秒）优先于 `_AFTER`；`COCO_POWER_IDLE_DISABLE=1` 强制关闭，覆盖 `COCO_POWER_IDLE`。新增 `_resolve_seconds()` helper 处理两套 env 优先级。默认仍 OFF（保持 phase-2 行为不变）。
+  - **L1-2 已修**：`coco/power_state.py` `_lock` 由 `Lock` → `RLock`，删除 `_transit_locked` 的 `release/reacquire` hack，callback 改在锁内直接调用——用户 callback 内若再调 `record_interaction` 不再死锁。
+  - **L1-3/L1-4 已修**：`scripts/verify_companion_003.py` 新增 V4b（face_tracker stub 注入 IdleAnimator 时 SLEEP 仍 skip 动作 + watcher rising-edge 触发唤醒）+ V8（端到端 face 唤醒 via watcher + driver thread 综合）+ V9（env alias 三 case）+ V10（RLock callback 重入不死锁）。
+- **运行过的验证**：
+  - `scripts/verify_companion_003.py` ALL PASS（V1-V10）→ `evidence/companion-003/verify_summary.json` 含 stats（transitions_to_active=1 sleep_callbacks_invoked / wake_callbacks_invoked / callback_errors=0）。
+  - `scripts/smoke.py` 全段 PASS：power-state（ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1）/ vision / companion-vision / vad / wake-word / publish。
+  - Regression：`scripts/verify_interact005.py` all_pass=True；`scripts/verify_companion_vision.py` PASS（V1/V2/V3 全 ok）。
+- **main HEAD 前后**：9b261c1 → merge --no-ff feat/companion-003（phase-3 第 4 个 feature 完成）。
+- **状态变化**：feature_list.json companion-003 `not_started` → `passing`（注：原 status 直接从 not_started 跳到 passing；本会话 close-out 直接接 brief 修复后 verify）。evidence 4 行 + notes 追加 known-debt 行（main.py face_tracker 实例化暂留挂载点 + env 默认 OFF 与 spec 字面"默认 ON"差异）。
+- **下一步最佳动作**：interact-004（multi-turn dialog memory，phase-3 最后 1 个 candidate）。
