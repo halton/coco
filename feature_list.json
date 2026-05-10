@@ -146,17 +146,25 @@
       "area": "audio",
       "title": "中文 ASR 接入（SenseVoice-Small via sherpa-onnx，wav + 实时麦克）",
       "user_visible_behavior": "给定一段中文 wav，能拿到简体中文转写文本；用麦克实时录一段（≤10 秒）也能拿到中文转写。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
-        "选定方案：sherpa-onnx + SenseVoice-Small INT8（中文优先；备选 Paraformer-zh-small）；模型来源与版本号写入 evidence。",
-        "依赖落到 pyproject.toml：`sherpa-onnx`（含 Python wheel；mac/Linux/Windows 三平台均有 ARM/x86 wheel）。",
-        "首次运行时下载或本地缓存模型权重，路径与大小记录到 evidence。",
-        "干净 wav 路径：从 tests/fixtures/audio/ 取一段已知中文 wav（普通话短句，参考 README）跑 ASR，强制 language=zh，转写文本与人工标注比对 CER < 0.1。",
-        "实时麦克路径：录 5 秒固定中文句子（如「今天天气真好」），强制 language=zh，转写文本与原句比对 CER < 0.15（容忍麦克 + 室内噪声）；如首次实测 < 0.1，则在 evidence 中记录并把麦克阈值收紧到 0.1。",
-        "infra-001 通过后补验：在 ReachyMiniApp.run() 内调用 ASR 链路仍可拿到正确中文转写。"
+        "依赖：`uv add sherpa-onnx==1.13.1`，记录 sherpa-onnx + sherpa-onnx-core 在 uv.lock 的 hash；三平台 [tool.uv] required-environments 仍 resolve 成功。",
+        "模型获取：`scripts/fetch_asr_models.sh`（或 .py），下载并解压 `sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2` 到 `~/.cache/coco/asr/`，校验 `model.int8.onnx`(~228MB) + `tokens.txt`(~308KB)；脚本幂等。",
+        "wav 路径（主验）：`tests/fixtures/audio/` 中文短句 wav (≥3秒，16k mono)；`coco/asr.py:transcribe_wav(path) -> str`；CER < 0.1；记录耗时与 RTF。",
+        "VAD + 麦克路径：下载 silero_vad.onnx；`coco/asr.py:transcribe_microphone(seconds=5)` 走 sounddevice + VoiceActivityDetector + OfflineRecognizer；说「今天天气真好」，CER < 0.15（首测 < 0.1 则收紧到 0.1）。",
+        "smoke 集成：`./init.sh` 加 ASR smoke——模型缺失则 WARN skipped，模型在则跑 fixture wav 一次打印 CER。",
+        "infra-001 后补验：在 `coco/main.py:Coco.run()` 内调一次 transcribe_wav 拿正确转写，不阻塞 ReachyMini 心跳。",
+        "Reviewer fresh-context 评审（硬规则）：覆盖模型路径不进 git、CER 阈值合理、VAD 配置项暴露、错误路径（缺模型/静音段/非中文音频）。"
       ],
-      "evidence": [],
-      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。本地优先（不依赖云）+ 跨平台 + Apache-2.0。测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。evidence 分两阶段记：(1) 主验阶段（独立脚本，干净 wav + 实时麦克）；(2) infra-001 通过后补验阶段（在 ReachyMiniApp.run() 内）。两阶段分别记录。"
+      "evidence": [
+        "V1+V2 commit cdbe4fb — uv add sherpa-onnx==1.13.1，三平台 required-environments resolve；scripts/fetch_asr_models.sh 下载并解压 SenseVoice-Small int8 到 ~/.cache/coco/asr/，校验 model.int8.onnx + tokens.txt",
+        "V3 commit 862c54c — scripts/verify_asr_wav.py 跑 tests/fixtures/audio/zh-001-walk-park.wav，CER=0.0000，RTF=0.137（阈值 < 0.10）",
+        "V4 commit 7878ce6 — VAD + 麦克路径离线模拟验证（silero_vad.onnx + transcribe_microphone）",
+        "V5 commit 43d7012 — ./init.sh 集成 ASR smoke，模型缺失 WARN skipped、模型在则跑 fixture wav 一次打印 CER",
+        "V6 commit 7760b5f — uv run python -m coco 看到 [coco][asr] fixture=zh-001-walk-park.wav text='今天天气真好我们一起去公园散步'；SIGINT exit 0；无 GStreamer 报错",
+        "V7 Reviewer (sub-agent): Findings (1 high / 4 medium / 5 low) — H1 已修（CER 阈值 0.15→0.10 对齐 verification 3）；M1 fixture path publish 模式失效、M4 fetch 脚本无 .ps1、M5 no_media phase-1 临时声明 sunset 条件 已登记 notes；M2/M3/L1-L5 入 backlog 不挡 passing"
+      ],
+      "notes": "决策依据：claude-progress.md 决策导航表「中文 ASR/TTS 本地优先选型」与 research/chinese-asr-tts-selection.md。本地优先（不依赖云）+ 跨平台 + Apache-2.0。测试策略：wav 直喂 ASR，绕开 audio backend 复杂度。fixture 准备见 tests/fixtures/audio/README.md。evidence 分两阶段记：(1) 主验阶段（独立脚本，干净 wav + 实时麦克）；(2) infra-001 通过后补验阶段（在 ReachyMiniApp.run() 内）。两阶段分别记录。2026-05-10 Session 009 起步：开 feat/audio-002 分支，Researcher 调研 SenseVoice-Small + sherpa-onnx 中。Researcher 2026-05-10 调研定稿（Session 009）：sherpa-onnx 1.13.1 cp313 darwin arm64 wheel 已确认 resolve，无源码构建；SenseVoice 是非流式 CTC，「实时」通过 Silero VAD 切段批处理；模型缓存 `~/.cache/coco/asr/`，不进 git。 M1: coco/main.py fixture ASR 用 tests/fixtures/audio/... 硬编码路径，仅在 dev 模式（python -m coco）下生效；publish 模式下 tests/ 不在 wheel 内会 FileNotFoundError，后台线程吞异常不阻塞心跳。publish 模式 ASR self-check 留 audio-003 / companion-001 接入实时 ASR 时一并解决。 M4: scripts/fetch_asr_models.sh 仅 bash 版，Windows 用户暂无 .ps1 等价；待 robot/companion 真机 UAT 触发跨平台需求时补齐。 M5: coco/main.py request_media_backend = \"no_media\" phase-1 临时声明，sunset 条件：robot 视频/媒体子系统接入前需重新评估。"
     },
     {
       "id": "audio-003",

@@ -55,6 +55,21 @@ def smoke_audio() -> None:
     print(f"  ok: shape={rec.shape} rms={rms:.6f}  (rms 非零即视为通过)")
 
 
+def smoke_asr() -> None:
+    """跑 sense-voice wav 主验脚本一次；模型缺失则 WARN 跳过、不阻断。"""
+    print("==> Smoke: ASR (sense-voice wav)")
+    model_path = Path.home() / ".cache" / "coco" / "asr" / "sense-voice-2024-07-17" / "model.int8.onnx"
+    if not model_path.exists():
+        print("  WARN: ASR model not downloaded, skipped (run scripts/fetch_asr_models.sh)")
+        return
+
+    script = Path(__file__).resolve().parent / "verify_asr_wav.py"
+    sys.stdout.flush()
+    rc = subprocess.call([sys.executable, str(script)])
+    if rc != 0:
+        sys.exit(f"FAIL: ASR smoke 退出码 {rc}")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -99,6 +114,7 @@ def main() -> None:
 
     print_env_baseline()
     smoke_audio()
+    smoke_asr()
     if args.daemon:
         smoke_daemon()
     print()

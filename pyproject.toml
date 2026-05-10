@@ -10,6 +10,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "reachy-mini>=1.4.0",
+    "sherpa-onnx==1.13.1",
+    "sherpa-onnx-core==1.13.1",
     "sounddevice>=0.5.5",
 ]
 keywords = ["reachy-mini-app"]
