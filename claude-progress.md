@@ -274,3 +274,22 @@
 - **更新过的文件或工件**：feature_list.json、claude-progress.md、evidence/robot-001/v1_control_app.log、evidence/robot-001/v2_init_daemon.log
 - **已知风险或未解决问题**：no_media + --deactivate-audio 仍是 phase-1 临时豁免，待 robot-003 视频链路时撤回；SDK API 校正已登记给 robot-002
 - **下一步最佳动作**：进入 robot-002（priority=3，area=robot，「头部姿态基础动作 look_left/look_right/nod」），依赖 robot-001 已通；基于 set_target_head_pose / look_at_world 真名实现
+
+### Session 012 — 2026-05-10（robot-002 实施 + 收尾切 passing + merge 回 main）
+
+- **本轮目标**：基于 robot-001 校正后的 SDK API，实现并验证头部姿态基础动作 look_left / look_right / nod，evidence 落地，Reviewer fresh-context 自评，passing + merge → main + push。
+- **已完成**：
+  - 切 feat/robot-002 分支
+  - 起 mockup-sim --deactivate-audio --localhost-only daemon (PID 36785)
+  - 实现 coco/actions.py：look_left / look_right / nod，基于 goto_target(head=4x4) + INIT_HEAD_POSE=eye(4)；euler_pose() 公开 helper；安全幅度上限 yaw ±45° / pitch ±30° / duration [0.1, 5.0]s
+  - 实现 scripts/verify_robot002_actions.py：connect → wake_up → look_left(25°) → look_right(25°) → nod(15°) → goto_sleep；阈值 PASS_THRESHOLD_DEG=3.0°
+  - V1 PASS：evidence/robot-002/v1_actions.log — connect 2.85s, look_left max|Δ|yaw=25.0°, look_right max|Δ|yaw=25.07°, nod pitch peak=14.8° (重跑 14.77°), goto_sleep OK, total=13.55s
+  - Reviewer fresh-context 自评：LGTM with 1 medium + 3 low
+    - medium：daemon 中途断开后位姿未自动兜底（已在 robot-002 notes 记给 companion 层处理）
+    - low：动作过程并行采样真机阶段需重写（mockup-sim "target = current" 已在 V3 验证，本轮可接受）；nod 抬头 0.4× 设计合理；_euler_pose 私有外用（已修为公开 euler_pose 并重跑 verify 仍 PASS）
+  - feature_list.json robot-002 status `not_started` → `passing`，evidence 落 V1 + Reviewer 两条，notes 落 SDK 用法 + 安全幅度 + companion 兜底要求
+- **运行过的验证**：mockup-sim daemon 起停、verify_robot002_actions.py（PASS×2，第二次为 Reviewer fix 后回归）
+- **已记录证据**：evidence/robot-002/v1_actions.log；feature_list.json robot-002 evidence 段
+- **更新过的文件或工件**：coco/actions.py（新）、scripts/verify_robot002_actions.py（新）、evidence/robot-002/v1_actions.log（新）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：companion 层接入时需在 SDK 异常分支调一次 goto_target(INIT_HEAD_POSE) 兜底；真机硬件采样策略待 robot-003 后回看；no_media + --deactivate-audio 仍是 phase-1 临时豁免
+- **下一步最佳动作**：进入 priority=4 的下一个 not_started feature
