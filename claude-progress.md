@@ -506,7 +506,7 @@
 - **更新过的文件或工件**：coco/vad_trigger.py（vad_disabled_from_env 改写 + 新增 _parse_clamped_float + config_from_env 全部走 clamp）、feature_list.json（interact-003 status=passing + evidence 7 行 + notes 追加 known-debt 行）、claude-progress.md（本段）
 - **复测**：scripts/verify_interact003.py 7/7 PASS、./init.sh EXIT=0
 - **commit + merge**：feat(interact-003): close out + env config hardening；feat/interact-003 merge --no-ff 回 main
-- **main HEAD 变化**：6d6a8fe → 合并 feat/interact-003 后新 merge commit（本段稍后填）
+- **main HEAD 变化**：6d6a8fe → cc1ba1e（merge commit）
 - **Reviewer 评审结果**：LGTM with minor notes — M1/L1 已修，M2 (feed 持锁回调) / M3 (start_microphone 幂等加锁) / L3 (cooldown 文档) 留 known-debt
 - **已知风险或未解决问题**：真麦 VAD threshold 调参留真机 UAT；M2/M3 deeper refactor 留待 phase-3 或 hardening 窗口
 - **下一步最佳动作**：infra-publish-flow（priority 13，phase-2 milestone gate 最后 1 项；deps=[infra-001] passing），写 docs/uat-runbook.md + reachy_mini.apps.app check . 跑通
