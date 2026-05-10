@@ -510,3 +510,18 @@
 - **Reviewer 评审结果**：LGTM with minor notes — M1/L1 已修，M2 (feed 持锁回调) / M3 (start_microphone 幂等加锁) / L3 (cooldown 文档) 留 known-debt
 - **已知风险或未解决问题**：真麦 VAD threshold 调参留真机 UAT；M2/M3 deeper refactor 留待 phase-3 或 hardening 窗口
 - **下一步最佳动作**：infra-publish-flow（priority 13，phase-2 milestone gate 最后 1 项；deps=[infra-001] passing），写 docs/uat-runbook.md + reachy_mini.apps.app check . 跑通
+
+## Session 022 — infra-publish-flow closeout + phase-2 软件层完结 (2026-05-10)
+
+- **会话起点动作**：前一个 closeout sub-agent 在 12 次工具调用后 socket 中断；恢复后诊断：feat/infra-publish-flow HEAD=356f2d2（已 push origin，含 publish dry-run + UAT runbook 初稿），main 还在 03e9e9c（Session 021 末尾），working tree 留有 docs/uat-runbook.md M2/M3 未提交修改，feature_list.json infra-publish-flow status 仍是 not_started。
+- **本会话动作**：
+  - M2（§5.3.2 PTT）已补具体环境变量切换命令：`COCO_VAD_DISABLE=1 uv run python -m coco`（dev mode 必走，Control.app 模式无 stdin 不支持 PTT）+ Enter 启停说明
+  - M3（§5.3.4 LLM）已补最小可跑 env 三套：OpenAI 兼容（含 GitHub Models 例）/ Ollama 本地 / unset fallback；env 名与默认值与 coco/llm.py:298-324 校对一致；补可选调参（COCO_LLM_TIMEOUT / COCO_LLM_MAX_CHARS）+ 失败/超时/非中文降级到 KEYWORD_ROUTES 描述
+  - feature_list.json：infra-publish-flow `not_started` → `passing`，evidence 写 6 行（verify_publish PASS 详情 + runbook 覆盖范围 + M2/M3 修复内容 + Reviewer LGTM + smoke EXIT=0 + 环境基线），notes 追加 known-debt（M1/M4/M5/M6/L1/L2/L3 留 phase-3 hardening；真机 UAT 是 milestone gate 物理验收）
+- **复测**：`uv run python scripts/verify_publish.py` 全过（reachy_mini.apps.app check + artifacts 齐全 + entry_points + Coco 加载）；`./init.sh` EXIT=0（audio / ASR CER=0 / TTS / vision / companion-vision / VAD trigger / publish 全绿）
+- **commit + merge**：`feat(infra-publish-flow): close out + PTT/LLM env docs` 落在 feat/infra-publish-flow，再 merge --no-ff 回 main
+- **main HEAD 变化**：03e9e9c → merge commit（含 356f2d2 + closeout commit）
+- **Reviewer 评审结果**：LGTM — M2/M3 已补，M1/M4/M5/M6/L1-L3 known-debt
+- **phase-2 软件层完结总结**：5 个 feature 全 passing — interact-002 (LLM 入口) / vision-001 (face detect) / companion-002 (vision-biased idle glance) / interact-003 (VAD push-to-talk) / infra-publish-flow (publish dry-run + UAT runbook)。phase-2 自动化层闭环：ASR → LLM/keyword → TTS、Vision face → idle glance、VAD → 录音、publish dry-run；smoke 8 项全绿
+- **已知风险或未解决问题**：phase-2 milestone 的物理 gate（真机 UAT 走通 LLM + Vision + VAD + USB 音频/摄像头闭环）尚未由用户执行，是 phase-2 milestone 切换前置条件；known-debt 项（companion-002 M1/M2/M3、interact-003 M2/M3/L3、infra-publish-flow M1/M4/M5/M6/L1-L3）累积入 phase-3 hardening backlog
+- **下一步最佳动作**：用户按 docs/uat-runbook.md 在真机执行一次 phase-2 UAT（音频耳测 + 摄像头 + 三入口闭环 + 仪式动作），通过后切 phase-2 milestone；并行：phase-3 规划（hardening 窗口清 known-debt 或新功能 backlog）

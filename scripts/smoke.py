@@ -194,6 +194,38 @@ def smoke_vad() -> None:
     print(f"  ok: VAD trigger fired {len(captured)} time(s) on fixture")
 
 
+def smoke_publish() -> None:
+    """infra-publish-flow 最轻量自检：entry_points + class import。
+
+    不跑 reachy_mini.apps.app check（含 ~30s 临时 venv 安装/卸载，太慢）；
+    完整 dry-run 见 scripts/verify_publish.py。
+    """
+    print("==> Smoke: publish (entry_points + Coco class import)")
+    import tomllib as _toml  # py3.11+
+
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    with open(pyproject, "rb") as f:
+        data = _toml.load(f)
+    eps = (
+        data.get("project", {})
+        .get("entry-points", {})
+        .get("reachy_mini_apps", {})
+    )
+    expected = "coco.main:Coco"
+    if eps.get("coco") != expected:
+        sys.exit(f"FAIL: entry-point 期望 coco={expected}，实际 {eps}")
+
+    try:
+        from coco.main import Coco  # noqa: F401
+        from reachy_mini import ReachyMiniApp
+    except Exception as e:  # noqa: BLE001
+        sys.exit(f"FAIL: import coco.main:Coco 失败 ({e})")
+
+    if not issubclass(Coco, ReachyMiniApp):
+        sys.exit("FAIL: Coco 不继承 ReachyMiniApp")
+    print("  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -243,6 +275,7 @@ def main() -> None:
     smoke_vision()
     smoke_companion_vision()
     smoke_vad()
+    smoke_publish()
     if args.daemon:
         smoke_daemon()
     print()

@@ -374,7 +374,7 @@
       "area": "infra",
       "title": "Control.app publish + 真机 UAT runbook",
       "user_visible_behavior": "开发者按 docs/uat-runbook.md 步骤可把 Coco publish 到 Control.app，并在真机上完成一次最小闭环（音频 + 动作 + 视觉）的 UAT；publish 流程 dry-run 在开发机可重复执行。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-001"
       ],
@@ -385,8 +385,15 @@
         "runbook 含真机首次上电 + 关机仪式动作（wake_up / goto_sleep）的预期行为描述与异常处置。",
         "Reviewer fresh-context 评审 runbook 完整度（覆盖 phase-1 全部 9 个 feature 在真机上的最小 UAT 路径）。"
       ],
-      "evidence": [],
-      "notes": "为 phase-2 milestone gate 做收尾——phase-2 实质完成 = 真机 UAT 走通 LLM + Vision + VAD 闭环。本 feature 自身只产出 docs + dry-run 证据；真机执行步骤由用户做，不在自动化范围。phase-2 milestone 切换前置条件：interact-002 / vision-001 / companion-002 / interact-003 全部 passing + 本 feature runbook 评审通过。"
+      "evidence": [
+        "scripts/verify_publish.py 全过：reachy_mini.apps.app check . PASS（含 metadata 校验、entrypoint 注册、临时 venv 安装/卸载）；publish artifacts 齐全（pyproject.toml 1.4KB / README.md 5.5KB / index.html 307B / style.css 160B / coco/ 241.4KB）；entry-point coco=coco.main:Coco + keywords 含 reachy-mini-app；coco.main:Coco 加载并继承 ReachyMiniApp。",
+        "docs/uat-runbook.md 完成：覆盖 publish 流程（§4-5.1）、Control.app 注册（§5.2）、真机连接 USB/网络/端口（§5.1）、USB 音频耳测（§5.3.1）、头部 USB 摄像头（§5.3.2 vision-001）、interact 闭环（§5.3.2 PTT / §5.3.3 VAD / §5.3.4 LLM）、首次上电+关机仪式（§5.3.5 wake_up/goto_sleep）、错误处置（§6 端口占用 pgrep+kill / daemon 恢复 / phase-1 临时豁免撤回）。",
+        "M2 修复：§5.3.2 PTT 段补具体环境变量切换命令（COCO_VAD_DISABLE=1 uv run python -m coco；显式 COCO_PTT_DISABLE=0），并标注 Control.app 模式无 stdin → PTT 仅 dev mode 可验。",
+        "M3 修复：§5.3.4 LLM 段补最小可跑 env 集合三套（OpenAI 兼容含 GitHub Models / Ollama 本地 / fallback unset）+ 可选调参（COCO_LLM_TIMEOUT / COCO_LLM_MAX_CHARS）+ 失败/超时/非中文自动降级到 KEYWORD_ROUTES 描述，env 名与 coco/llm.py:298-324 完全对齐。",
+        "Reviewer (sub-agent): LGTM — M2/M3 已补；M1/M4/M5/M6/L1-L3 列为 known-debt（不影响 phase-2 milestone gate，留 phase-3 hardening 窗口处理）。",
+        "smoke 全绿（audio / ASR CER=0 / TTS / vision / companion-vision / VAD trigger / publish）EXIT=0；环境基线 python 3.13.12 / reachy-mini 1.4.0 / sounddevice 0.5.5 / numpy 2.4.4。"
+      ],
+      "notes": "为 phase-2 milestone gate 做收尾——phase-2 实质完成 = 真机 UAT 走通 LLM + Vision + VAD 闭环。本 feature 自身只产出 docs + dry-run 证据；真机执行步骤由用户做，不在自动化范围。phase-2 milestone 切换前置条件：interact-002 / vision-001 / companion-002 / interact-003 全部 passing + 本 feature runbook 评审通过。 | known-debt：M1/M4/M5/M6 (Reviewer 标的次要 runbook 增强项) 与 L1/L2/L3 (cosmetic) 留 phase-3 文档 hardening 窗口；真机 UAT 闭环（音频+动作+视觉 LLM/VAD/Vision 三入口）由用户在真机上执行，是 phase-2 milestone gate 的物理验收，不在自动化 evidence 范围。"
     }
   ]
 }
