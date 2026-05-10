@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-10",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -264,6 +264,96 @@
         "Control.app 模式：本轮未做（CLAUDE.md 'Robot UAT 真机动作由用户执行'），留 milestone gate。`reachy_mini.apps.app check .` + 由 Control.app 启动后真按 Enter 闭环作为真机 UAT 入口。"
       ],
       "notes": "interact-001 MVP 闭环：push-to-talk (stdin Enter 触发录音 4s) → SenseVoice 转写 → KEYWORD_ROUTES 关键词路由模板回应 → Kokoro TTS + robot 动作 (nod/look_left/look_right)。互斥设计：IdleAnimator.pause()/resume() 用 threading.Event 软互斥，idle 在 wait 唤醒后检查 _paused 跳过本轮 micro/glance；interact 自身用 _busy = threading.Lock 防重入；SDK 命令本身不在锁内（避免 deadlock）。已知约束：(1) 软互斥不阻挡 idle in-flight 的 SDK 命令，但 zenoh 端用最新 target 覆盖，功能上无撕裂；(2) KEYWORD_ROUTES 顺序敏感（更具体的主题词须在通用词前面）；(3) PTT stdin readline 阻塞，stop_event 后线程等 Enter 才退；daemon 线程进程退出时回收，无泄漏；(4) Control.app 模式真闭环留真机 UAT；(5) 不引 LLM，模板回应——LLM 接入留下个 feature。环境变量：COCO_PTT_SECONDS（录音秒数，默认 4.0）、COCO_PTT_DISABLE=1（禁 stdin 监听，Control.app 或非 tty 用）。"
+    },
+    {
+      "id": "interact-002",
+      "priority": 9,
+      "area": "interact",
+      "title": "LLM 回应升级（替换关键词模板）",
+      "user_visible_behavior": "用户说一句中文后，Coco 用一句自然中文回应（≤60 字），比 interact-001 的关键词模板更贴合上下文；LLM 不可用（未配置/网络断/超时）时自动降级到 KEYWORD_ROUTES，行为等价 interact-001。",
+      "status": "not_started",
+      "dependencies": ["interact-001"],
+      "verification": [
+        "实现 coco/llm.py：LLMClient 接口（reply(user_text: str, *, timeout: float = 2.0) -> str）+ 至少 1 个 backend。建议优先 OpenAIChatBackend（OpenAI 兼容 API；环境变量 COCO_LLM_BACKEND/COCO_LLM_BASE_URL/COCO_LLM_API_KEY/COCO_LLM_MODEL；默认 model=qwen2.5-3b-instruct 或 gpt-4o-mini，由实施者实测决定），可选 OllamaBackend（local http://localhost:11434）。FallbackBackend 永远走 KEYWORD_ROUTES。",
+        "单元测试：reply 返回非空字符串，含至少 1 个汉字（u4e00-u9fff），长度 ≤ 60；空输入或 backend 抛异常/超时时降级到 KEYWORD_ROUTES，不抛任何异常给上层。",
+        "集成：fixture wav (tests/fixtures/audio/zh-001-walk-park.wav) 在 mockup-sim 下闭环跑 2 次：转写 → LLM reply → TTS + 动作；记录两次 reply 文本到 evidence；Idle 互斥与 interact-001 一致。",
+        "降级路径实测：取消 COCO_LLM_BACKEND 或设为非法值，闭环仍能跑通，reply 来自 KEYWORD_ROUTES（evidence 标注两组对照文本）。",
+        "延迟采样：成功 backend 下连续调用 reply 至少 10 次，记录 P50/P95/max 延迟到 evidence；P95 > 2s 时给出 notes 与未来优化建议。"
+      ],
+      "evidence": [],
+      "notes": "phase-2 起手 feature。本地不下 LLM 模型权重（>50MB 阈值）；依赖外部 OpenAI 兼容 API 或用户已装的 Ollama daemon。设计原则：超时与降级路径优先于回应质量——任何环境下 interact 闭环不能因 LLM 出问题而中断。Reviewer 关注点：(1) timeout 是否真的能切断慢请求；(2) 异常路径是否覆盖网络断/401/JSON 解析失败；(3) reply 长度截断策略（硬截断 vs 让 LLM 自己控字数）。"
+    },
+    {
+      "id": "vision-001",
+      "priority": 10,
+      "area": "vision",
+      "title": "人脸检测（基于 CameraSource）",
+      "user_visible_behavior": "Coco 能从摄像头/fixture 视频中检测出当前画面的人脸数量与大致位置，作为后续视觉触发行为的输入；不阻塞主循环。",
+      "status": "not_started",
+      "dependencies": ["infra-vision-source"],
+      "verification": [
+        "实现 coco/perception/face_detect.py：FaceDetector 类（detect(frame: np.ndarray) -> list[FaceBox(x, y, w, h, score)]）。优先 OpenCV haar cascade（cv2.data.haarcascades 自带，无需下载）；mediapipe 仅在评估 wheel 大小 < 50MB 且明显优于 haar 时才考虑。",
+        "fixture tests/fixtures/vision/single_face.jpg 检测出 ≥ 1 张脸（首测应稳定 1，允许 ±0 偏差）。",
+        "fixture tests/fixtures/vision/no_one.jpg 检测出 0 张脸。",
+        "用 open_camera('video:tests/fixtures/vision/user_walks_away.mp4') 跑全帧 detect，主线程用 wall clock 测 FPS ≥ 10；不阻塞（单帧 detect 耗时 < 100ms 在主开发机上）。",
+        "scripts/spike_face.py 或 smoke 集成：三个 fixture + FPS 测量一次跑通，输出可写入 evidence。"
+      ],
+      "evidence": [],
+      "notes": "haar cascade 自带于 cv2.data.haarcascades（haarcascade_frontalface_default.xml），不需要新依赖。mediapipe 若启用须先评估 wheel 大小 + cp313 darwin/linux/win 跨平台 resolve；目前优先级低。本 feature 只做检测，不做跟踪——跟踪由 companion-002 / 真机 milestone 视觉-运动闭环阶段考虑。CameraSource Protocol 已在 infra-vision-source 落地，face_detect 不应直接 import cv2.VideoCapture。"
+    },
+    {
+      "id": "companion-002",
+      "priority": 11,
+      "area": "companion",
+      "title": "视觉触发的微动（人脸出现 → glance 朝向）",
+      "user_visible_behavior": "当摄像头检测到人脸时，Coco idle 行为概率分布偏向 glance（看人）；mockup-sim 阶段 glance 方向参数照常走 SDK 但额外打 log 'glance toward face_x=...'，真机阶段接电机让头朝向人脸 x 坐标。",
+      "status": "not_started",
+      "dependencies": ["companion-001", "vision-001"],
+      "verification": [
+        "在 IdleAnimator 中加 face_presence hook：可注入 FaceDetector 或回调 on_face_detected(face_boxes)；face 出现时把 IdleConfig 的 micro/glance 概率临时重新加权（micro ↓、glance ↑），face 离开后恢复默认。",
+        "单元测试：face presence True/False → 实际抽样到的动作类型分布符合预期权重（χ² 或简单计数对比，N≥200 样本）。",
+        "集成：跑 video:tests/fixtures/vision/user_walks_away.mp4 + IdleAnimator 30s，分别统计 face 出现期间与 face 离开期间的 glance_count，前者比例显著高于后者（≥1.5x）。",
+        "stop_event 干净退出（沿用 companion-001 daemon 线程 + stop_event.wait 模式），face_presence 监听线程同样响应。",
+        "mockup-sim 阶段 glance 方向参数仍走现有 SDK API（不要求真转向 face）；只验逻辑分支与 log 'glance toward face_x=<float>' 出现。真机方向接电机留 milestone gate。"
+      ],
+      "evidence": [],
+      "notes": "视觉-运动闭环 fixture 不能 sim（face 位置不会随头部转动改变），sim 阶段只验检测到人脸 → 概率分布切换 + 日志记录方向意图。真机阶段 glance 方向真接电机由 milestone gate 用户做。互斥与 interact 的关系：face_presence 仅影响 idle 内部行为权重，不与 InteractSession 互斥（interact 仍 pause idle，不受 face hook 干扰）。已知风险：人脸闪烁（fixture 帧间检测抖动）会引起权重剧烈切换，需在 hook 内做 N 帧滑动平均。"
+    },
+    {
+      "id": "interact-003",
+      "priority": 12,
+      "area": "interact",
+      "title": "语音活动驱动 push-to-talk（VAD 替换 Enter）",
+      "user_visible_behavior": "不需要按 Enter，只要对着麦克说话 ≥ 250ms，Coco 自动启动一次 interact session；安静时不触发；与 IdleAnimator 互斥与 interact-001 一致。",
+      "status": "not_started",
+      "dependencies": ["interact-001", "audio-002"],
+      "verification": [
+        "实现 coco/vad_trigger.py（或扩 coco/interact.py）：用 audio-002 已下载的 silero_vad.onnx + sounddevice 流监听；speech 段累计 ≥ 250ms 触发一次 InteractSession.handle_audio(audio, sr)；触发后进入 cooldown（默认 1.5s）防连击。",
+        "静音 5s（环境底噪）下不触发任何 session，session_count == 0。",
+        "fixture wav 注入流（用 sounddevice.play 回放或直接调用 vad 喂帧）触发恰好 1 次 session，转写文本 == fixture 期望文本。",
+        "与 IdleAnimator 软互斥保持：触发期间 idle.is_paused() == True，session 完成后自动 resume；沿用 interact-001 设计。",
+        "COCO_VAD_DISABLE=1 环境变量旁路 VAD trigger，回到 PTT (Enter) 模式；COCO_VAD_THRESHOLD / COCO_VAD_COOLDOWN 可调。"
+      ],
+      "evidence": [],
+      "notes": "silero_vad.onnx 已在 audio-002 下载到 ~/.cache/coco/asr/，本 feature 不引入新模型。fixture wav 注入路径可绕开真实 sounddevice 流（避免 CI 设备依赖）。已知风险：(1) sounddevice 输入流在某些 macOS 权限缺失环境会拿不到数据 — 需在初始化时探测并 fallback；(2) VAD 阈值过低会被空调/键盘噪声误触发 — 默认偏严，留给 user 调；(3) cooldown 过短会与 TTS 自身播放声音形成自激（话筒收到 TTS 输出再次触发），TTS 期间应主动 mute VAD trigger。"
+    },
+    {
+      "id": "infra-publish-flow",
+      "priority": 13,
+      "area": "infra",
+      "title": "Control.app publish + 真机 UAT runbook",
+      "user_visible_behavior": "开发者按 docs/uat-runbook.md 步骤可把 Coco publish 到 Control.app，并在真机上完成一次最小闭环（音频 + 动作 + 视觉）的 UAT；publish 流程 dry-run 在开发机可重复执行。",
+      "status": "not_started",
+      "dependencies": ["infra-001"],
+      "verification": [
+        "写 docs/uat-runbook.md：覆盖 (a) reachy_mini.apps.app publish 完整流程（含 metadata / index.html / wheel 检查）、(b) Control.app 注册步骤、(c) 真机连接（USB / 网络 / 端口）、(d) 真机 USB 音频耳测步骤、(e) 头部 USB 摄像头检查、(f) interact 闭环检查清单（PTT / VAD / LLM 三种入口分别走一遍）。",
+        "在开发机跑 reachy_mini.apps.app check . 通过；如有 publish dry-run 选项则跑通无报错；列出 publish 候选 artifacts（wheel / metadata.json / index.html / style.css）路径与大小到 evidence。",
+        "runbook 显式覆盖三类常见错误处理：(i) 端口占用（Control.app 自带 daemon 抢 8000/7447） — 给出 pgrep + kill 流程；(ii) daemon 未启或挂掉 — 给出 init.sh --daemon 与手动 mockup-sim 两条恢复路径；(iii) phase-1 临时豁免（request_media_backend = no_media、daemon --deactivate-audio）撤回时机判断标准。",
+        "runbook 含真机首次上电 + 关机仪式动作（wake_up / goto_sleep）的预期行为描述与异常处置。",
+        "Reviewer fresh-context 评审 runbook 完整度（覆盖 phase-1 全部 9 个 feature 在真机上的最小 UAT 路径）。"
+      ],
+      "evidence": [],
+      "notes": "为 phase-2 milestone gate 做收尾——phase-2 实质完成 = 真机 UAT 走通 LLM + Vision + VAD 闭环。本 feature 自身只产出 docs + dry-run 证据；真机执行步骤由用户做，不在自动化范围。phase-2 milestone 切换前置条件：interact-002 / vision-001 / companion-002 / interact-003 全部 passing + 本 feature runbook 评审通过。"
     }
   ]
 }

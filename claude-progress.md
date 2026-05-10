@@ -398,3 +398,35 @@
 - **更新过的文件或工件**：coco/interact.py（新）、coco/idle.py（pause/resume + skipped_paused）、coco/asr.py（clean_sensevoice_tags helper）、coco/main.py（InteractSession + PTT loop + COCO_PTT_DISABLE）、scripts/verify_interact001.py（新）、scripts/verify_interact001_app_integration.py（新）、evidence/interact-001/*（新）、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：(1) 软互斥不阻挡 idle in-flight SDK 命令；(2) KEYWORD_ROUTES 顺序敏感；(3) PTT readline 阻塞；(4) Control.app 模式真闭环留 milestone；(5) 模板回应非 LLM
 - **下一步最佳动作**：进入下一个 priority 最低的 not_started feature（按 feature_list 自查；候选：interact-002/companion-002 之类的"LLM 回应升级"或 vision 接入）
+
+### Session 017 — 2026-05-10（Phase-2 backlog 规划）
+
+- **本轮目标**：基于 phase-1 9/9 passing 现状（main HEAD=c30600f）规划 phase-2 backlog，写入 feature_list.json，dependencies 字段进入 schema。
+- **已完成**：
+  - feature_list.json 追加 5 个 phase-2 feature (priority 9-13)：
+    - **interact-002** (p9, area=interact, deps=[interact-001]): LLM 回应升级（OpenAI 兼容 API / Ollama 可切换；不可用降级 KEYWORD_ROUTES；P95 延迟采样）
+    - **vision-001** (p10, area=vision, deps=[infra-vision-source]): 人脸检测（OpenCV haar cascade 优先；FPS ≥ 10；三个 fixture 验证）
+    - **companion-002** (p11, area=companion, deps=[companion-001, vision-001]): 视觉触发的微动（face presence → glance 概率上调 + 方向 log；mockup-sim 只验逻辑，方向真转向留真机 milestone）
+    - **interact-003** (p12, area=interact, deps=[interact-001, audio-002]): VAD 驱动 push-to-talk（silero_vad.onnx 复用；250ms 阈值；TTS 期间 mute 防自激）
+    - **infra-publish-flow** (p13, area=infra, deps=[infra-001]): Control.app publish + 真机 UAT runbook（docs/uat-runbook.md + dry-run + Reviewer 评审）
+  - 依赖图（ASCII）：
+    ```
+    infra-001 ──────────► infra-publish-flow (p13)
+    interact-001 ─┬─────► interact-002 (p9)
+                  └─┬───► interact-003 (p12)
+    audio-002 ──────┘
+    infra-vision-source ─┬─► vision-001 (p10)
+    companion-001 ──┐    │
+                    └────┴► companion-002 (p11)
+    ```
+  - feature_list.json _change_log 追加 phase-2 行；last_updated=2026-05-10；JSON 验证 OK (14 features 总数)
+- **运行过的验证**：python3 -c "import json; json.load(open('feature_list.json'))" 通过；features=14
+- **已记录证据**：feature_list.json 5 条新 feature（status=not_started, evidence=[]）
+- **更新过的文件或工件**：feature_list.json（+5 features + dependencies 字段 + _change_log）、claude-progress.md（本段）
+- **已知风险或未解决问题**：
+  - interact-002 依赖外部 LLM（成本/网络/隐私），降级路径与延迟约束需 Reviewer 重点关注
+  - vision-001 + companion-002 的视觉-运动闭环本质 fixture 不能 sim，真机 milestone 必须收尾
+  - infra-publish-flow 真机 UAT 步骤由用户做，本仓库只产 docs + dry-run 证据
+  - phase-2 milestone 切换前置：interact-002/vision-001/companion-002/interact-003 全 passing + infra-publish-flow runbook 评审通过
+- **下一步最佳动作**：起手 interact-002（priority=9，本会话 Part B 即将进行）
+
