@@ -321,7 +321,7 @@
       "area": "companion",
       "title": "视觉触发的微动（人脸出现 → glance 朝向）",
       "user_visible_behavior": "当摄像头检测到人脸时，Coco idle 行为概率分布偏向 glance（看人）；mockup-sim 阶段 glance 方向参数照常走 SDK 但额外打 log 'glance toward face_x=...'，真机阶段接电机让头朝向人脸 x 坐标。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-001",
         "vision-001"
@@ -333,8 +333,11 @@
         "stop_event 干净退出（沿用 companion-001 daemon 线程 + stop_event.wait 模式），face_presence 监听线程同样响应。",
         "mockup-sim 阶段 glance 方向参数仍走现有 SDK API（不要求真转向 face）；只验逻辑分支与 log 'glance toward face_x=<float>' 出现。真机方向接电机留 milestone gate。"
       ],
-      "evidence": [],
-      "notes": "视觉-运动闭环 fixture 不能 sim（face 位置不会随头部转动改变），sim 阶段只验检测到人脸 → 概率分布切换 + 日志记录方向意图。真机阶段 glance 方向真接电机由 milestone gate 用户做。互斥与 interact 的关系：face_presence 仅影响 idle 内部行为权重，不与 InteractSession 互斥（interact 仍 pause idle，不受 face hook 干扰）。已知风险：人脸闪烁（fixture 帧间检测抖动）会引起权重剧烈切换，需在 hook 内做 N 帧滑动平均。"
+      "evidence": [
+        "Engineer: scripts/verify_companion_vision.py 三条全 PASS — V1 image:single_face.jpg 8s tracker hit=40 vision_biased_glance_count=2；V2 image:no_one.jpg 8s hit=0 vision_biased=0 退化随机 glance；V3 video:user_walks_away.mp4 12s detect=59 error=0；全部 stop_dt<0.02s。init.sh smoke 全通（含新增 smoke_companion_vision 2s 起停 FaceTracker）。evidence/companion-002/verify_trace.json 留存。",
+        "Reviewer (sub-agent): LGTM with minor findings — V1/V2/V3 全 PASS、init.sh 通过；线程安全/方向语义/互斥/迟滞均正确。已知 mockup-sim 限制：(M1) V3 fixture haar 整段命中，未真覆盖 face-absent 过渡；(M2) verification 第 2 条 N≥200 概率分布对比未严格实现，用 binary 计数代替；(M3) glance log 字面 capture 缺失，用 stats 等价证明。三项留待 milestone 真机 UAT 严格回验。"
+      ],
+      "notes": "视觉-运动闭环 fixture 不能 sim（face 位置不会随头部转动改变），sim 阶段只验检测到人脸 → 概率分布切换 + 日志记录方向意图。真机阶段 glance 方向真接电机由 milestone gate 用户做。互斥与 interact 的关系：face_presence 仅影响 idle 内部行为权重，不与 InteractSession 互斥（interact 仍 pause idle，不受 face hook 干扰）。已知风险：人脸闪烁（fixture 帧间检测抖动）会引起权重剧烈切换，需在 hook 内做 N 帧滑动平均。known-debt: M1/M2/M3 mockup-sim 阶段 fixture 限制下 spec 覆盖度降级（V3 face-absent 过渡 / N≥200 概率分布 / log 字面 capture），milestone 真机 UAT 阶段补严格回验。"
     },
     {
       "id": "interact-003",

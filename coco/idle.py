@@ -290,7 +290,8 @@ class IdleAnimator:
                 amp = abs(x_ratio) * cfg.face_glance_amp_deg
                 # 安全下限：太小的 amp 也走 amp=actions 默认下限
                 amp = max(2.0, min(amp, MAX_YAW_DEG))
-                face_x_log = snap.primary.cx if snap.primary is not None else -1
+                # x_ratio is not None 已保证 primary 存在（见 FaceSnapshot.x_ratio）
+                face_x_log = snap.primary.cx
                 if x_ratio < 0:
                     log.info("idle glance toward face_x=%d ratio=%.2f amp=%.1f° dir=left",
                              face_x_log, x_ratio, amp)
