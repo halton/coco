@@ -317,3 +317,26 @@
 - **更新过的文件或工件**：coco/tts.py（新）、scripts/fetch_tts_models.sh（新）、scripts/verify_audio003_tts.py（新）、scripts/verify_audio003_app_integration.py（新）、scripts/smoke.py（+smoke_tts）、init.sh（+fetch_tts_models）、pyproject.toml（+tts-online extras）、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：DEFAULT_SID=50 是经验值，真机 milestone 时可能需挑选更自然的音色；真机扬声器（Reachy Mini USB 音频）耳测仍需 UAT 阶段做；edge-tts 网络兜底未实测（默认未装）但路径已实现+测试为 skip
 - **下一步最佳动作**：进入 priority=6 的 companion-001（陪伴动作循环 idle 微动），area=companion 触发全员组合
+
+### Session 014 — 2026-05-10（companion-001 实施 + 收尾切 passing + merge 回 main）
+
+- **本轮目标**：陪伴动作 idle 循环（micro 微动 + glance 偶尔环顾）实现，可被 stop_event 干净打断；集成进 Coco.run() 不阻塞心跳；Reviewer fresh-context；passing + merge → main + push。
+- **已完成**：
+  - 切 feat/companion-001 分支
+  - 起 mockup-sim --deactivate-audio --localhost-only daemon
+  - 实现 coco/idle.py：IdleConfig（dataclass + validate，micro yaw ±2.5° / pitch ±2.0° / glance ±15°，全部严小于 robot-002 上限）+ IdleStats + IdleAnimator（daemon 线程 + stop_event.wait(timeout) 模式，micro/glance 三档：head/antenna/breathe；SDK 异常 _safe 吞掉只 log + error_count++ 不崩线程）
+  - 集成 coco/main.py:Coco.run()：try wake_up → 起 IdleAnimator → finally stop_event.set() + animator.join(timeout=2.0)；ASR fixture 后台线程保留
+  - V1 PASS：scripts/verify_companion001_idle.py — mockup-sim 60s + 100ms 采样；578 heartbeats / 0 fails；micro_count=13 (head=5/antenna=6/breathe=2)；glance_count=3；error_count=0；yaw ∈ [-14.96°, 14.99°] std=2.19°；pitch ∈ [-1.72°, 1.84°] std=0.62°；stop_dt=0.000s alive_after=False
+  - V2 PASS：scripts/verify_companion001_app_integration.py — Coco.run() 在子线程跑 8s，stop_event.set() 后主线程 join_dt=0.42s；ASR fixture 后台正常；idle stats 正常退出
+  - Reviewer fresh-context 自评：LGTM with 2 medium + 3 low
+    - medium#1：stats roll 列展示 max=19.25° 看似越界 → 实为 R.from_matrix(...).as_euler("xyz") 在 yaw≈±15° 时对 roll 数值串扰；trace.csv 实测 roll ∈ [-0.025°, 1.01°]。已修：verify 改用 trace-based roll_abs_max 断言 + 加注释
+    - medium#2：idle 与未来 explicit interact 命令的互斥锁尚无 → 留 interact-001 处理
+    - low #1：SDK zenoh_client 在 stop 时偶发 'Unknown task UUID' assert（SDK 已知 shutdown 行为）
+    - low #2：idle 不主动回中位（设计选择，下一次 micro 自然带回）
+    - low #3：IdleConfig 概率和已在 validate() 校验
+  - feature_list.json companion-001 status `not_started` → `passing`，evidence 3 条（V1 / V2 / Reviewer），notes 含遗留事项与互斥锁警告
+- **运行过的验证**：mockup-sim daemon 起停、verify_companion001_idle.py（PASS, 60s）、verify_companion001_app_integration.py（PASS, 8s）
+- **已记录证据**：evidence/companion-001/v1_idle_60s.log、evidence/companion-001/v1_head_trace.csv (578 rows)
+- **更新过的文件或工件**：coco/idle.py（新）、coco/main.py（IdleAnimator 集成）、scripts/verify_companion001_idle.py（新）、scripts/verify_companion001_app_integration.py（新）、evidence/companion-001/v1_idle_60s.log（新）、evidence/companion-001/v1_head_trace.csv（新）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：(1) idle 与 explicit interact 互斥锁需在 interact-001 实现；(2) verify_companion001_idle.py 的 stats roll 列展示值受 from_euler xyz 串扰影响，trace.csv 才是真值；(3) 真机 UAT 留 milestone gate
+- **下一步最佳动作**：进入 priority=7 的 infra-vision-source（CameraSource 抽象 + fixture 三档），area=infra 触发 Eng+Researcher

@@ -207,14 +207,18 @@
       "area": "companion",
       "title": "陪伴动作循环（idle 微动）",
       "user_visible_behavior": "Coco 在 idle 状态下间歇性做小幅头部动作（呼吸感、偶尔环顾），不显得僵硬。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "依赖 robot-002 通过。",
         "实现 idle loop，定义动作幅度与周期。",
         "在 mockup-sim 下跑 60 秒，记录 head joint 时序，确认动作分布合理（非完全静止、也不疯狂抖动）。"
       ],
-      "evidence": [],
-      "notes": ""
+      "evidence": [
+        "V1 (2026-05-10, sub-agent, scripts/verify_companion001_idle.py): mockup-sim daemon 60s + 100ms 采样 head_pose；578 heartbeats / 0 fails；micro_count=13 (head=5/antenna=6/breathe=2)；glance_count=3；error_count=0；yaw ∈ [-14.96°, 14.99°] std=2.19°；pitch ∈ [-1.72°, 1.84°] std=0.62°；stop_dt=0.000s alive_after=False；trace -> evidence/companion-001/v1_head_trace.csv (578 rows)；log -> evidence/companion-001/v1_idle_60s.log。",
+        "V2 (2026-05-10, sub-agent, scripts/verify_companion001_app_integration.py): Coco.run() 在子线程里跑 8s，stop_event.set() 后主线程 join_dt=0.42s；ASR fixture 后台线程正常打印；idle stats 正常退出。",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 2 medium + 3 low。Medium#1 (stats roll max=19.25°) 已修复：from_euler xyz 在 yaw≈±15° 处对 roll 数值串扰，trace 实际 roll ∈ [-0.025°, 1.01°]，verify 改用 trace-based 断言并加注释。Medium#2 (idle 与未来 interact 命令的互斥锁) 留给 interact-001。Low: SDK zenoh_client 在 stop 时偶发 'Unknown task UUID' assert（SDK 已知行为）；idle 不主动回中位（设计选择）；config 概率和校验已在 IdleConfig.validate()。"
+      ],
+      "notes": "companion-001 V1 + V2 均通过 mockup-sim。IdleAnimator 用 daemon 线程 + stop_event.wait(timeout) 模式，幅度严格小于 robot-002 上限 (micro yaw ±2.5° / pitch ±2.0°，glance ±15°)。已知遗留：(1) idle 与显式 interact 命令的互斥锁需要 interact-001 实现；(2) verify_companion001_idle.py 的 stats roll 列展示值受 from_euler xyz 串扰影响，trace.csv 才是真值。真机 UAT 留 milestone gate。"
     },
     {
       "id": "infra-vision-source",
