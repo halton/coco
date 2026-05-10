@@ -1,0 +1,26 @@
+/Users/halton/work/coco/coco/asr.py:196: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, audio = wavfile.read(path)
+[companion-001 V2] connect mockup-sim daemon ...
+  connect OK
+[companion-001 V2] start Coco.run() in thread, will run 8.0s ...
+[coco][asr] fixture=zh-001-walk-park.wav text='今天天气真好我们一起去公园散步'
+Audio system is not initialized.
+[coco][idle] IdleAnimator started
+[coco] rms=0.0037
+[coco] rms=0.0040
+[coco] rms=0.0032
+[coco] rms=0.0032
+[coco] rms=0.0131
+[coco] rms=0.0122
+[coco] rms=0.0124
+[coco] rms=0.0088
+[coco] rms=0.0032
+[coco] rms=0.0108
+[companion-001 V2] set stop_event at t=8.0s
+[coco] rms=0.0072
+[coco][idle] stopped stats=IdleStats(micro_count=1, glance_count=0, error_count=0, micro_kinds={'head': 0, 'antenna': 0, 'breathe': 1}, started_at=1778376998.985974, stopped_at=1778377004.446868)
+Audio system is not initialized.
+  thread joined dt=0.423s alive_after=False
+  goto_sleep OK
+
+[companion-001 V2] PASS — Coco.run() 内 IdleAnimator 启停干净，主线程在 stop_dt=0.42s 内退出

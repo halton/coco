@@ -5,6 +5,7 @@
 - UAT/发布：通过 entry-point 被 Reachy Mini Control.app 发现并启动
 
 audio 解耦：run() 内只用 sounddevice 采麦，不调用 reachy_mini.media。
+companion-001：run() 内挂 IdleAnimator 后台线程做 idle 微动 + 偶尔环顾。
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ import sounddevice as sd
 from reachy_mini import ReachyMini, ReachyMiniApp
 
 from coco.asr import transcribe_wav
+from coco.idle import IdleAnimator, IdleConfig
 
 
 SAMPLE_RATE = 16000
@@ -58,21 +60,44 @@ class Coco(ReachyMiniApp):
         )
         asr_thread.start()
 
-        # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
-        with sd.InputStream(
-            samplerate=SAMPLE_RATE,
-            channels=1,
-            dtype="float32",
-            blocksize=block_frames,
-        ) as mic:
-            while not stop_event.is_set():
-                data, _overflow = mic.read(block_frames)
-                rms = float(np.sqrt(np.mean(np.square(data))))
-                # 占位：后续 feature（audio-002 ASR / companion-001 idle 动作）在此扩展。
-                # 当前仅打印 rms 证明采集链路活着，且不触碰 reachy_mini.media。
-                print(f"[coco] rms={rms:.4f}", flush=True)
-                # 让出循环，给 stop_event 检查机会。
-                time.sleep(0.05)
+        # companion-001：起 idle 动画后台线程。共用 stop_event；动作经 robot-002 的安全幅度封装。
+        # 失败/异常只 log，不影响 mic loop 或主退出。
+        idle_animator: IdleAnimator | None = None
+        try:
+            try:
+                reachy_mini.wake_up()
+            except Exception as exc:  # noqa: BLE001
+                print(f"[coco][idle] wake_up failed (continuing without): {exc!r}", flush=True)
+            idle_animator = IdleAnimator(reachy_mini, stop_event, config=IdleConfig())
+            idle_animator.start()
+            print("[coco][idle] IdleAnimator started", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][idle] start failed: {exc!r}", flush=True)
+
+        try:
+            # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
+            with sd.InputStream(
+                samplerate=SAMPLE_RATE,
+                channels=1,
+                dtype="float32",
+                blocksize=block_frames,
+            ) as mic:
+                while not stop_event.is_set():
+                    data, _overflow = mic.read(block_frames)
+                    rms = float(np.sqrt(np.mean(np.square(data))))
+                    # 占位：后续 feature（interact-001 push-to-talk → ASR → 中文回应）在此扩展。
+                    print(f"[coco] rms={rms:.4f}", flush=True)
+                    # 让出循环，给 stop_event 检查机会。
+                    time.sleep(0.05)
+        finally:
+            # 确保 idle 线程退出干净；stop_event 已被外部或本循环 set
+            if idle_animator is not None:
+                stop_event.set()
+                idle_animator.join(timeout=2.0)
+                if idle_animator.is_alive():
+                    print("[coco][idle] WARN: animator did not stop within 2s", flush=True)
+                else:
+                    print(f"[coco][idle] stopped stats={idle_animator.stats}", flush=True)
 
 
 def main() -> None:

@@ -1,0 +1,162 @@
+Audio system is not initialized.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+Audio system is not initialized.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+[companion-001 V1] connect mockup-sim daemon ...
+  connect OK dt=2.03s
+  wake_up OK
+  start IdleAnimator cfg micro=[2.0,4.5]s glance=[12.0,25.0]s micro_amp yaw=±2.5° pitch=±2.0° glance_amp=±15.0°
+
+[companion-001 V1] 60s 完成 elapsed=60.03s heartbeats=578 fails=0
+[companion-001 V1] stop_event.set() ...
+  stop dt=0.000s alive_after=False
+  goto_sleep OK
+
+[companion-001 V1] stats:
+{
+  "samples": 578,
+  "duration_s": 60.02977275848389,
+  "heartbeat_ok": 578,
+  "heartbeat_fail": 0,
+  "yaw_deg": {
+    "min": -14.95806182023879,
+    "max": 14.98650177848935,
+    "std": 2.1912441801301243
+  },
+  "pitch_deg": {
+    "min": -1.720833653315695,
+    "max": 1.844614552195907,
+    "std": 0.6224675065067713
+  },
+  "roll_deg": {
+    "min": 0.0065265835926067075,
+    "max": 19.253325076672084,
+    "std": 1.0979304653742492
+  },
+  "idle": {
+    "micro_count": 13,
+    "glance_count": 3,
+    "error_count": 0,
+    "micro_kinds": {
+      "head": 5,
+      "antenna": 6,
+      "breathe": 2
+    }
+  },
+  "stop_dt_s": 0.000308990478515625,
+  "alive_after_stop": false
+}
+
+[companion-001 V1] 合理性检查:
+  ok   非静止: yaw.std=2.19° pitch.std=0.62°
+  ok   yaw 范围合理 |max|=14.99° ≤ 20°
+  ok   pitch 范围合理 |max|=1.84° ≤ 18°
+  ok   micro_count=13 ∈ [10, 30]
+  ok   glance_count=3 ∈ [1, 5]
+  ok   SDK error_count=0 == 0
+  ok   stop 干净 dt=0.000s < 1.0s, alive=False
+  ok   主线程心跳 0 失败 (实测 fails=0)
+
+  trace -> evidence/companion-001/v1_head_trace.csv (578 rows)
+
+[companion-001 V1] PASS
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
+callback error
+Traceback (most recent call last):
+  File "/Users/halton/work/coco/.venv/lib/python3.13/site-packages/reachy_mini/io/zenoh_client.py", line 286, in _handle_task_progress
+    assert progress.uuid in self.tasks, "Unknown task UUID."
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Unknown task UUID.
