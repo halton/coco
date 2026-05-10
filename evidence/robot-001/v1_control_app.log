@@ -1,0 +1,11 @@
+=== robot-001 V1: Control.app 端口冲突检查（接力 sub-agent 复跑）===
+date: 2026-05-10T00:54:51Z
+--- pgrep -f 'Reachy Mini Control' ---
+(no match — Control.app not running)
+--- pgrep -f 'desktop-app-daemon' ---
+(no match)
+--- pgrep -f 'reachy_mini.daemon' ---
+(no daemon running)
+--- lsof :7447 :8000 ---
+(ports free)
+RESULT: PASS — Control.app 未运行；daemon 未运行；端口空闲，可安全跑 V2
