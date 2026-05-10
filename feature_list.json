@@ -1,7 +1,6 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-10",
-
   "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。",
   "rules": {
     "single_active_feature": true,
@@ -136,15 +135,18 @@
       "area": "robot",
       "title": "头部姿态基础动作（look_left / look_right / nod）",
       "user_visible_behavior": "调用 API 让 mockup-sim 中的头部按指定 yaw/pitch 移动，且能用三个语义化动作（左看、右看、点头）封装。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "依赖 robot-001 通过。",
         "实现 coco/robot.py（或类似）暴露 look_left/look_right/nod。",
         "在 mockup-sim 下调用三个动作，读取 robot 状态确认 head joint 目标值变化。",
         "记录调用前后的 joint 状态到 evidence。"
       ],
-      "evidence": [],
-      "notes": ""
+      "evidence": [
+        "V1 (2026-05-10, sub-agent): scripts/verify_robot002_actions.py 在已起 mockup-sim --deactivate-audio --localhost-only daemon (PID 36785, 端口 7447/8000) 上跑通 — connect 2.85s; wake_up OK; look_left amp=25° max|Δ|yaw=25.0°; look_right amp=25° max|Δ|yaw=25.07°; nod amp=15° pitch peak=14.8°; goto_sleep OK; total=13.55s; 全部 ≥ PASS_THRESHOLD_DEG=3.0°. 日志 evidence/robot-002/v1_actions.log. branch feat/robot-002.",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 1 medium + 3 low — API 命名一致 (goto_target + 4x4 pose, 不复用 spike 期错误名); 幅度上限保守 (MAX_YAW=45°, MAX_PITCH=30°, 默认 25°/15°); 阈值 3° 远低于 25°/15° 实测幅度，断言强度足够; medium=daemon 中途断开后位姿未自动兜底，已记 notes 由 companion 层处理; low=动作过程中并行采样真机阶段需重写、nod 抬头 0.4× 设计 OK、_euler_pose 私有外用已修为公开 euler_pose 并重跑 verify 仍 PASS (yaw 25.0/25.07, pitch 14.77)."
+      ],
+      "notes": "API 基于 robot-001 校正后的 SDK 名: goto_target(head=4x4, duration) + INIT_HEAD_POSE=eye(4); xyz 欧拉约定下 yaw=z (左转+), pitch=y (低头+). 安全幅度上限: yaw ±45°, pitch ±30°, duration [0.1, 5.0]s, 超出 raise ValueError. companion 层注意: SDK goto_target 是同步阻塞 (wait_for_task_completion); 若 daemon 中途断开会卡到 timeout 后 raise, 此时机器停在动作中间位; 上层应在异常分支调一次 goto_target(INIT_HEAD_POSE, 0.5) 兜底. 真机 milestone (硬件采样需并行) 待 robot-003 后回看."
     },
     {
       "id": "audio-002",
