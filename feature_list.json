@@ -1,6 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-10",
+
   "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。",
   "rules": {
     "single_active_feature": true,
@@ -115,16 +116,19 @@
       "area": "robot",
       "title": "mockup-sim daemon 通路验证",
       "user_visible_behavior": "启动 mockup-sim daemon 后，Python 客户端能通过 ReachyMini(spawn_daemon=False) 连上并读取 robot 状态。",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "关闭 Reachy Mini Control.app（避免端口冲突）。",
         "运行 ./init.sh --daemon，看到 'Zenoh 通'。",
         "或手动跑 .venv/bin/python -m reachy_mini.daemon.app.main --mockup-sim --deactivate-audio，再用 ReachyMini 客户端（带 media_backend='no_media'）连。"
       ],
       "evidence": [
-        "V3 (2026-05-10, sub-agent): scripts/verify_robot001_daemon.py 在已起 mockup-sim --deactivate-audio daemon (PID 16052, 端口 7447/8000) 上跑通 — connect dt=2.18s, get_current_joint_positions 返回 7 关节 + 2 antenna, get_current_head_pose 返回 4x4, wake_up dt=2.55s 关节明显变化, set_target_antenna_joint_positions([0.3,-0.3]) 实测 antenna 到 [0.3,-0.3], goto_sleep OK; 全程 9.25s. 日志 evidence/robot-001/v3b_daemon_connect_and_move.log. branch feat/robot-001."
+        "V1 (2026-05-10, sub-agent 接力): evidence/robot-001/v1_control_app.log — Control.app 未运行 (pgrep 无匹配)，desktop-app-daemon 未运行，端口 7447/8000 空闲；满足 V2 前置条件。",
+        "V2 (2026-05-10, sub-agent 接力): evidence/robot-001/v2_init_daemon.log — ./init.sh --daemon EXIT=0；audio smoke ok rms=0.001460；ASR smoke CER=0.0000 RTF=0.127；'Smoke: robot mockup-sim daemon ok: Zenoh 通'。",
+        "V3 (2026-05-10, sub-agent): scripts/verify_robot001_daemon.py 在已起 mockup-sim --deactivate-audio daemon (PID 16052, 端口 7447/8000) 上跑通 — connect dt=2.18s, get_current_joint_positions 返回 7 关节 + 2 antenna, get_current_head_pose 返回 4x4, wake_up dt=2.55s 关节明显变化, set_target_antenna_joint_positions([0.3,-0.3]) 实测 antenna 到 [0.3,-0.3], goto_sleep OK; 全程 9.25s. 日志 evidence/robot-001/v3b_daemon_connect_and_move.log. branch feat/robot-001.",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 1 medium — verify 脚本健壮性 OK（每个 SDK 调用独立 try/except + traceback + moved flag）；V1/V2/V3 evidence 关键字均命中（'no match' / 'Zenoh 通' / 'DONE moved=True'）；no_media phase-1 sunset 条件已在 notes 声明且与 infra-001 联动；M1 SDK API 名校正（goto_zero/look_at → wake_up/goto_sleep/set_target_head_pose/look_at_world/get_current_*）已在 notes 登记防止后续 robot-002 误用；V2 与 V3 的 daemon 起停路径互不冲突（smoke.py 自管 spawn+kill；V3 依赖手工 launch，靠 V1 端口检查保证空闲）。"
       ],
-      "notes": "spike 期已部分验证（commit 4999f03 上下文），未固化为可重复的 smoke。当前 smoke 客户端用 media_backend='no_media' 是**临时 workaround**——Lite SDK 默认 backend 在缺 GStreamer/`gi` 时挂住 4+ 分钟。产品目标含视频/媒体能力（人脸/物体检测、摄像头取流），不是 audio-only：待 robot-003（视频链路）落地装 GStreamer 后，必须撤回此豁免、smoke 改回默认 backend 验全媒体通路。"
+      "notes": "spike 期已部分验证（commit 4999f03 上下文），未固化为可重复的 smoke。当前 smoke 客户端用 media_backend='no_media' 是**临时 workaround**——Lite SDK 默认 backend 在缺 GStreamer/`gi` 时挂住 4+ 分钟。产品目标含视频/媒体能力（人脸/物体检测、摄像头取流），不是 audio-only：待 robot-003（视频链路）落地装 GStreamer 后，必须撤回此豁免、smoke 改回默认 backend 验全媒体通路。SDK API 名校正（2026-05-10 接力 sub-agent 实测 reachy-mini 1.4.0 Lite SDK）：实际可用的高层方法是 wake_up() / goto_sleep() / look_at_world(point) / set_target_head_pose(mat4) / set_target_antenna_joint_positions([l,r]) / get_current_joint_positions() / get_current_head_pose() / get_present_antenna_joint_positions()；不存在 goto_zero / look_at —— robot-002 实现 look_left/look_right/nod 时请基于这套真名构建，避免 spike 期错误命名复发。"
     },
     {
       "id": "robot-002",

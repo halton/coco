@@ -253,3 +253,24 @@
 - **更新过的文件或工件**：scripts/verify_asr_wav.py、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：M1 / M4 / M5 已登记 notes，等下游 feature 触发时再处理
 - **下一步最佳动作**：进入 robot-001（feature_list.json 当前 priority 最低 not_started，priority=2，area=robot）
+
+### Session 011 — 2026-05-10（robot-001 收尾切 passing + merge 回 main）
+
+- **本轮目标**：完成 robot-001 V1/V2 fresh evidence + Reviewer 评审 + 切 passing + merge feat/robot-001 → main。
+- **已完成**：
+  - 接力前任 sub-agent V3 PASS evidence（df3b306 已落 feat/robot-001）
+  - 清理残留 daemon (PID 16050/16052)，恢复端口空闲
+  - V1（fresh）：evidence/robot-001/v1_control_app.log — Control.app / desktop-app-daemon / reachy_mini.daemon 全无；7447/8000 空闲
+  - V2（fresh）：evidence/robot-001/v2_init_daemon.log — `./init.sh --daemon` EXIT=0，audio rms=0.001460，ASR CER=0.0000 RTF=0.127，'Smoke: robot mockup-sim daemon ok: Zenoh 通'
+  - V3（已存）：evidence/robot-001/v3b_daemon_connect_and_move.log — connect 2.18s + wake_up + set_target_antenna + goto_sleep，DONE moved=True total=9.25s
+  - Reviewer fresh-context sub-agent 评审：LGTM with 1 medium
+    - M1（登记 notes）：SDK API 名校正 — wake_up / goto_sleep / look_at_world / set_target_head_pose / set_target_antenna_joint_positions / get_current_joint_positions / get_current_head_pose / get_present_antenna_joint_positions；不存在 goto_zero / look_at；防 robot-002 误用
+  - feature_list.json robot-001 status `in_progress` → `passing`，evidence 补 V1/V2/V3/Reviewer 四条，notes 加 SDK API 名校正
+  - feat/robot-001 收尾 commit
+  - merge feat/robot-001 → main（--no-ff，中文 commit）；main 上 ./init.sh PASS
+  - push origin（feat/audio-002 + feat/robot-001 + main）
+- **运行过的验证**：V1 端口检查、V2 ./init.sh --daemon、V3 verify_robot001_daemon.py、Reviewer fresh-context、main 上 ./init.sh smoke
+- **已记录证据**：见 feature_list.json robot-001 evidence 段（V1-V3 + Reviewer 四条）；evidence/robot-001/{v1_control_app,v2_init_daemon,v3b_daemon_connect_and_move}.log
+- **更新过的文件或工件**：feature_list.json、claude-progress.md、evidence/robot-001/v1_control_app.log、evidence/robot-001/v2_init_daemon.log
+- **已知风险或未解决问题**：no_media + --deactivate-audio 仍是 phase-1 临时豁免，待 robot-003 视频链路时撤回；SDK API 校正已登记给 robot-002
+- **下一步最佳动作**：进入 robot-002（priority=3，area=robot，「头部姿态基础动作 look_left/look_right/nod」），依赖 robot-001 已通；基于 set_target_head_pose / look_at_world 真名实现

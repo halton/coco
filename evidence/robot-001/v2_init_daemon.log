@@ -1,0 +1,30 @@
+==> Repo: /Users/halton/work/coco
+==> uv sync
+Resolved 104 packages in 3ms
+Checked 81 packages in 2ms
+==> Smoke
+==> 环境基线
+  python: 3.13.12
+  platform: Darwin 25.4.0 arm64
+  reachy-mini: 1.4.0
+  sounddevice: 0.5.5
+  numpy: 2.4.4
+==> Smoke: audio (sounddevice 0.3s)
+  ok: shape=(4800, 1) rms=0.001460  (rms 非零即视为通过)
+==> Smoke: ASR (sense-voice wav)
+/Users/halton/work/coco/scripts/verify_asr_wav.py:55: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, data = wavfile.read(str(path))
+/Users/halton/work/coco/coco/asr.py:196: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, audio = wavfile.read(path)
+WAV : zh-001-walk-park.wav  (3.78s)
+REF : 今天天气真好，我们一起去公园散步。
+HYP : 今天天气真好我们一起去公园散步
+NORM HYP: 今天天气真好我们一起去公园散步
+NORM REF: 今天天气真好我们一起去公园散步
+CER : 0.0000  (阈值 < 0.1)
+耗时: 0.48s   RTF: 0.127
+V3 PASS
+==> Smoke: robot mockup-sim daemon
+  ok: Zenoh 通
+
+==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json
