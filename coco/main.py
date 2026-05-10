@@ -219,6 +219,7 @@ class Coco(ReachyMiniApp):
                             _wake.feed(samples_f32)
                             _orig(samples_f32)
 
+                        # NOTE: 用 _shared_feed 代替 bridge.feed()，等价但保留 KWS→VAD 顺序在主流程显式可见
                         vad_trigger.feed = _shared_feed  # type: ignore[assignment]
                         # TTS 期间也 mute KWS（与 vad_trigger.wrap_tts 同步）
                         _orig_mute = vad_trigger.mute
