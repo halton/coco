@@ -150,7 +150,19 @@ uv run python -m reachy_mini.apps.app publish . "<commit message>"
 
 > 仅在 PTT 没被 VAD 接管的环境下走；当前默认是 VAD（interact-003），PTT 走的是 `COCO_PTT_DISABLE=0` + 无 VAD 的早期分支；按真机配置而定。
 
-- [ ] 按 Enter（或 Control.app 暴露的 PTT 按钮，如有）触发录音 N 秒
+**前置：禁用 VAD 让 PTT 走 stdin 监听（仅 dev mode，Control.app 模式不支持 stdin）**
+
+```bash
+# dev mode（推荐做 PTT UAT）：关 VAD，开 stdin readline daemon
+COCO_VAD_DISABLE=1 uv run python -m coco
+
+# 如需显式确认 PTT 启用（默认就开）
+COCO_VAD_DISABLE=1 COCO_PTT_DISABLE=0 uv run python -m coco
+```
+
+> Control.app 启动模式没有 stdin（app 是被 daemon spawn 出来，stdout/stderr 走日志、stdin 不可用）。PTT 验证仅在 dev mode（`python -m coco` / `uv run python -m coco`）下做；Control.app 模式默认只验 VAD（5.3.3）。
+
+- [ ] 在终端按 Enter 键开始一段语音（stdin readline daemon 监听），再按 Enter 结束（或按配置的录音时长 N 秒自动结束）
 - [ ] 看到 ASR 转写日志
 - [ ] 听到 TTS 回应（USB 音频走真扬声器）
 - [ ] 看到机器人头部回应动作（look_left / look_right / nod）
@@ -164,9 +176,34 @@ uv run python -m reachy_mini.apps.app publish . "<commit message>"
 
 #### 5.3.4 LLM 入口（interact-002）
 
-- [ ] LLM 模板分支启用时（`COCO_LLM_*` env），ASR 后走 LLM 回应而非模板
-- [ ] LLM 回应在合理延迟（<5s）内出 TTS
-- [ ] LLM 失败时降级到模板回应，不崩溃
+**最小可跑 env 集合**（任选一组；未配置 `COCO_LLM_BACKEND` 或 backend 失败时自动走 keyword fallback，参见 `coco/llm.py` 顶部 docstring）：
+
+```bash
+# 选项 A：OpenAI 兼容（OpenAI / GitHub Models / 任何兼容 endpoint）
+export COCO_LLM_BACKEND=openai
+export COCO_LLM_API_KEY=sk-...                       # 必需
+export COCO_LLM_MODEL=gpt-4o-mini                    # 默认值，可省
+export COCO_LLM_BASE_URL=https://api.openai.com/v1   # 默认值，可省
+# GitHub Models 例子：
+#   COCO_LLM_BASE_URL=https://models.inference.ai.azure.com
+#   COCO_LLM_API_KEY=<GH_TOKEN with models:read>
+
+# 选项 B：本地 Ollama（无需 API key，假定本机已 ollama serve）
+export COCO_LLM_BACKEND=ollama
+export COCO_LLM_BASE_URL=http://localhost:11434      # 默认
+export COCO_LLM_MODEL=qwen2.5:3b-instruct            # 默认；先 ollama pull
+# 不需要 COCO_LLM_API_KEY
+
+# 选项 C：显式 fallback（或未设 COCO_LLM_BACKEND）
+unset COCO_LLM_BACKEND   # 或 export COCO_LLM_BACKEND=fallback
+# → 永远走 KEYWORD_ROUTES，不发外网请求
+```
+
+可选调参：`COCO_LLM_TIMEOUT`（默认 2.0s）、`COCO_LLM_MAX_CHARS`（默认 60，硬截断）。
+
+- [ ] LLM 模板分支启用时（`COCO_LLM_BACKEND=openai|ollama` + 必要 endpoint/key），ASR 后走 LLM 回应而非模板
+- [ ] LLM 回应在合理延迟（< `COCO_LLM_TIMEOUT` + 一点 ASR/TTS overhead）内出 TTS
+- [ ] LLM 失败 / 超时 / 返回非中文 → 自动降级到 KEYWORD_ROUTES 模板回应，不崩溃（看日志 `[llm] backend ... failed ... falling back`）
 
 #### 5.3.5 真机首次上电 + 关机仪式
 
