@@ -369,3 +369,32 @@
 - **更新过的文件或工件**：coco/perception/__init__.py（新）、coco/perception/camera_source.py（新）、scripts/gen_vision_fixtures.py（新）、scripts/spike_vision.py（新）、tests/fixtures/vision/*（新）、evidence/infra-vision-source/v1_spike_vision.log（新）、CLAUDE.md（vision 子系统边界）、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：(1) UsbCameraSource 无 Python 层节流，业务层 tight loop 需自加 sleep；(2) 视觉-运动闭环 fixture 不能 sim，必须真机 UAT；(3) 当前 fixture 仅最小集，未来 interact/companion vision feature 接入时按需扩
 - **下一步最佳动作**：进入 priority=8 的 interact-001（推断为 explicit interact 命令路径，结合 idle/interact 互斥锁，承接 companion-001 medium#2）；如 priority=8 不在 not_started 列表则按 next-lowest not_started 推进
+
+### Session 016 — 2026-05-10（interact-001 实施 + 收尾切 passing + merge 回 main）
+
+- **本轮目标**：最小语音交互闭环 MVP（push-to-talk → ASR → 模板回应 → TTS + robot 动作），与 IdleAnimator 互斥，承接 audio-002/audio-003/robot-002/companion-001；passing + merge → main + push。
+- **已完成**：
+  - 切 feat/interact-001 分支
+  - 起 mockup-sim --deactivate-audio --localhost-only daemon
+  - IdleAnimator 加 idle/interact 互斥：pause()/resume()/is_paused() + IdleStats.skipped_paused 计数；wait 唤醒后检查 _paused 跳过本轮（不打断已 in-flight SDK 命令——软互斥避免 deadlock）
+  - 实现 coco/interact.py：
+    - KEYWORD_ROUTES（顺序敏感，"天气/公园" 在 "好/对" 前避免被通用词截胡）
+    - route_reply(text) 纯函数：含关键词命中 → 模板 + 动作；空 → "我没听清"；未命中 → "我听到你说：<text>"
+    - InteractSession：threading.Lock 防重入；handle_audio(audio_int16, sr) 同步调用，内部 idle.pause → ASR → reply → TTS + 动作 → idle.resume；所有异常吞掉记 stats，不抛
+    - FixtureTrigger：用 fixture wav 模拟 push-to-talk 触发
+  - 集成 coco/main.py：stdin 后台线程 _push_to_talk_loop（按 Enter 录 PUSH_TO_TALK_SECONDS=4s），COCO_PTT_DISABLE=1 旁路；InteractSession 与 IdleAnimator 共享 robot
+  - 抽公共 coco.asr.clean_sensevoice_tags（去 <|...|> 标签），消除 main.py 与 verify 重复
+  - V1 PASS：scripts/verify_interact001.py — route_reply 7 cases / fixture×2 触发 (asr_ok=2 fail=0) / 转写 "今天天气真好我们一起去公园散步" → 路由 "嗯，外面挺好的呀。" + look_right / TTS 合成 ok / 动作 ok / idle skipped_paused=4-5 / stop_dt=0.0003s
+  - V2 PASS：scripts/verify_interact001_app_integration.py — COCO_PTT_DISABLE=1 模式下 Coco.run() 8s，IdleAnimator+Session+ASR fixture 全启动，stop_event.set 后 join_dt=0.348s
+  - Reviewer fresh-context 自评：LGTM with 0 high + 3 medium + 4 low
+    - Medium#1：软互斥（idle 不在 SDK 命令上加锁）→ 设计选择，zenoh 端用最新 target 覆盖
+    - Medium#2：KEYWORD_ROUTES 顺序敏感 → 通过 "天气" 在 "好" 之前规避
+    - Medium#3：PTT readline 阻塞 stop_event → daemon 线程 + COCO_PTT_DISABLE 规避
+    - Low#1-4：TTS blocking 设计 OK / FixtureTrigger 函数级 import OK / 标签清洗重复 已修抽 coco.asr.clean_sensevoice_tags / ASR exception 与空转写不区分 留 notes
+  - Control.app 模式真闭环：留真机 UAT milestone gate（CLAUDE.md "Robot UAT 真机动作由用户执行"）
+  - feature_list.json interact-001 status `not_started` → `passing`，evidence 4 条 (V1 + V2 + Reviewer + Control.app UAT 留 milestone)，notes 含设计选择 + 5 项已知约束 + env vars
+- **运行过的验证**：mockup-sim daemon 起停、verify_interact001.py（PASS×2，第二次为 Reviewer fix 后回归）、verify_interact001_app_integration.py（PASS×2）
+- **已记录证据**：evidence/interact-001/v1_run.log、v1_interact_summary.json、v2_app_integration.log
+- **更新过的文件或工件**：coco/interact.py（新）、coco/idle.py（pause/resume + skipped_paused）、coco/asr.py（clean_sensevoice_tags helper）、coco/main.py（InteractSession + PTT loop + COCO_PTT_DISABLE）、scripts/verify_interact001.py（新）、scripts/verify_interact001_app_integration.py（新）、evidence/interact-001/*（新）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：(1) 软互斥不阻挡 idle in-flight SDK 命令；(2) KEYWORD_ROUTES 顺序敏感；(3) PTT readline 阻塞；(4) Control.app 模式真闭环留 milestone；(5) 模板回应非 LLM
+- **下一步最佳动作**：进入下一个 priority 最低的 not_started feature（按 feature_list 自查；候选：interact-002/companion-002 之类的"LLM 回应升级"或 vision 接入）

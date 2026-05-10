@@ -89,6 +89,7 @@ class IdleStats:
     micro_count: int = 0
     glance_count: int = 0
     error_count: int = 0
+    skipped_paused: int = 0
     micro_kinds: dict[str, int] = field(default_factory=lambda: {"head": 0, "antenna": 0, "breathe": 0})
     started_at: float = 0.0
     stopped_at: float = 0.0
@@ -125,6 +126,20 @@ class IdleAnimator:
         self.stats = IdleStats()
         self._thread: Optional[threading.Thread] = None
         self._next_glance_at: float = 0.0
+        # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
+        # 动作前检查并跳过本轮 micro/glance；不互锁 SDK 命令本身（避免 deadlock）
+        self._paused = threading.Event()
+
+    # --- idle/interact 互斥 ---
+    def pause(self) -> None:
+        """让 idle 暂停发新动作（不打断已 in-flight 的单次 SDK 调用）。"""
+        self._paused.set()
+
+    def resume(self) -> None:
+        self._paused.clear()
+
+    def is_paused(self) -> bool:
+        return self._paused.is_set()
 
     def start(self) -> None:
         if self._thread is not None and self._thread.is_alive():
@@ -161,6 +176,10 @@ class IdleAnimator:
                 # wait() 返回 True 表示被 set —— 立刻退出，不再起任何动作
                 if self.stop_event.wait(timeout=wait):
                     break
+                # 互斥：interact 占用时跳过本轮（间隔继续走）
+                if self._paused.is_set():
+                    self.stats.skipped_paused += 1
+                    continue
 
                 now = time.time()
                 if now >= self._next_glance_at:

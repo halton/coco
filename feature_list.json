@@ -249,7 +249,7 @@
       "area": "interact",
       "title": "最小语音交互闭环（push-to-talk → 中文转写 → 中文回应 + 动作）",
       "user_visible_behavior": "按下某个键开始录音，松开停止；Coco 用中文转写说话内容，并用一句中文语音 + 一个动作（点头或左看）作为简单回应。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "依赖 audio-002、audio-003 与 robot-002 通过。",
         "实现 push-to-talk CLI（终端按 Enter 触发）。",
@@ -257,8 +257,13 @@
         "Control.app 模式下也跑通同样流程（python -m reachy_mini.apps.app check . 通过 + 由 Control.app 启动后能完整闭环）。",
         "记录两次完整 session（开发模式 + Control.app 模式）的日志到 evidence，包含转写文本与 TTS 输出 wav。"
       ],
-      "evidence": [],
-      "notes": "MVP 闭环；不要求 LLM 回应内容质量，只要求链路通——回应可以是模板（如「我听到你说：<转写>」）。Control.app 模式覆盖是真机 UAT 的前置。"
+      "evidence": [
+        "V1 (2026-05-10, sub-agent, scripts/verify_interact001.py): mockup-sim daemon + ReachyMini(no_media)；route_reply 7 cases (你好/再见/好的对/看一看/天气真好/xyz/空) 全 PASS；fixture wav (zh-001-walk-park, '今天天气真好我们一起去公园散步') 跑两次 push-to-talk 触发；ASR ok=2 fail=0；reply='嗯，外面挺好的呀。' (天气路由) action=look_right；TTS 合成 ok；动作 ok；idle skipped_paused=4-5 (期间被 pause)，post-interact micro 计数继续增长；stop_dt=0.0003s alive_after=False。Log -> evidence/interact-001/v1_run.log；Summary -> evidence/interact-001/v1_interact_summary.json。",
+        "V2 (2026-05-10, sub-agent, scripts/verify_interact001_app_integration.py): COCO_PTT_DISABLE=1 跑 Coco.run() 8s，IdleAnimator 启动 + InteractSession 创建 + ASR fixture 后台线程跑通 ('今天天气真好我们一起去公园散步')；stop_event.set() 后 join_dt=0.348s 干净退出。Log -> evidence/interact-001/v2_app_integration.log。",
+        "Reviewer (sub-agent fresh-context, 2026-05-10): LGTM with 0 high + 3 medium + 4 low。Medium#1 (idle/interact 软互斥) 设计选择，notes 记；Medium#2 (KEYWORD_ROUTES 顺序敏感) 已通过把'天气'放'好'前面规避；Medium#3 (PTT readline 阻塞，stop_event 后要等 Enter) 已通过 daemon 线程 + 进程退出回收 + COCO_PTT_DISABLE 环境变量规避；Low#3 (SenseVoice 标签清洗代码重复) 已修：抽到 coco.asr.clean_sensevoice_tags，main.py 与 verify 复用。",
+        "Control.app 模式：本轮未做（CLAUDE.md 'Robot UAT 真机动作由用户执行'），留 milestone gate。`reachy_mini.apps.app check .` + 由 Control.app 启动后真按 Enter 闭环作为真机 UAT 入口。"
+      ],
+      "notes": "interact-001 MVP 闭环：push-to-talk (stdin Enter 触发录音 4s) → SenseVoice 转写 → KEYWORD_ROUTES 关键词路由模板回应 → Kokoro TTS + robot 动作 (nod/look_left/look_right)。互斥设计：IdleAnimator.pause()/resume() 用 threading.Event 软互斥，idle 在 wait 唤醒后检查 _paused 跳过本轮 micro/glance；interact 自身用 _busy = threading.Lock 防重入；SDK 命令本身不在锁内（避免 deadlock）。已知约束：(1) 软互斥不阻挡 idle in-flight 的 SDK 命令，但 zenoh 端用最新 target 覆盖，功能上无撕裂；(2) KEYWORD_ROUTES 顺序敏感（更具体的主题词须在通用词前面）；(3) PTT stdin readline 阻塞，stop_event 后线程等 Enter 才退；daemon 线程进程退出时回收，无泄漏；(4) Control.app 模式真闭环留真机 UAT；(5) 不引 LLM，模板回应——LLM 接入留下个 feature。环境变量：COCO_PTT_SECONDS（录音秒数，默认 4.0）、COCO_PTT_DISABLE=1（禁 stdin 监听，Control.app 或非 tty 用）。"
     }
   ]
 }

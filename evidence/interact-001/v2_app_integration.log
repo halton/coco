@@ -1,0 +1,33 @@
+2026-05-10 10:04:24,305 INFO Daemon on localhost: True
+2026-05-10 10:04:24,309 INFO Connection mode selected: localhost_only
+2026-05-10 10:04:24,904 INFO No media backend requested.
+2026-05-10 10:04:26,907 INFO No media backend selected.
+2026-05-10 10:04:26,908 INFO Coco.run() started in thread
+/Users/halton/work/coco/coco/asr.py:211: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, audio = wavfile.read(path)
+[coco][asr] fixture=zh-001-walk-park.wav text='今天天气真好我们一起去公园散步'
+2026-05-10 10:04:29,027 WARNING Audio system is not initialized.
+2026-05-10 10:04:29,445 INFO IdleAnimator started cfg=IdleConfig(micro_interval_min=2.0, micro_interval_max=4.5, micro_yaw_amp_deg=2.5, micro_pitch_amp_deg=2.0, micro_duration=0.6, micro_antenna_amp_rad=0.15, micro_p_head=0.5, micro_p_antenna=0.3, micro_p_breathe=0.2, glance_interval_min=12.0, glance_interval_max=25.0, glance_amp_deg=15.0, glance_duration=0.5)
+[coco][idle] IdleAnimator started
+[coco][ptt] disabled by COCO_PTT_DISABLE=1
+[coco] rms=0.0105
+[coco] rms=0.0101
+[coco] rms=0.0117
+[coco] rms=0.0153
+[coco] rms=0.0149
+[coco] rms=0.0151
+[coco] rms=0.0101
+[coco] rms=0.0246
+[coco] rms=0.0178
+[coco] rms=0.0141
+2026-05-10 10:04:34,909 INFO setting stop_event ...
+2026-05-10 10:04:34,909 INFO IdleAnimator stopped stats=IdleStats(micro_count=1, glance_count=0, error_count=0, skipped_paused=0, micro_kinds={'head': 0, 'antenna': 1, 'breathe': 0}, started_at=1778378669.445533, stopped_at=1778378674.9096189)
+[coco] rms=0.0128
+[coco][idle] stopped stats=IdleStats(micro_count=1, glance_count=0, error_count=0, skipped_paused=0, micro_kinds={'head': 0, 'antenna': 1, 'breathe': 0}, started_at=1778378669.445533, stopped_at=1778378674.9096189)
+2026-05-10 10:04:35,257 INFO Coco.run returned
+2026-05-10 10:04:35,257 INFO join_dt=0.348s alive_after=False
+
+=== V2 summary ===
+join_dt=0.348s alive_after=False
+FAILS: []
+ALL PASS

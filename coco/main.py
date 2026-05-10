@@ -6,11 +6,15 @@
 
 audio 解耦：run() 内只用 sounddevice 采麦，不调用 reachy_mini.media。
 companion-001：run() 内挂 IdleAnimator 后台线程做 idle 微动 + 偶尔环顾。
+interact-001：run() 内挂 stdin push-to-talk 后台线程，按 Enter 录音 N 秒
+            → ASR → 模板回应 → TTS + robot 动作；与 idle 互斥。
 """
 
 from __future__ import annotations
 
+import os
 import signal
+import sys
 import threading
 import time
 from pathlib import Path
@@ -20,12 +24,18 @@ import numpy as np
 import sounddevice as sd
 from reachy_mini import ReachyMini, ReachyMiniApp
 
+from coco import asr as coco_asr
+from coco import tts as coco_tts
 from coco.asr import transcribe_wav
 from coco.idle import IdleAnimator, IdleConfig
+from coco.interact import InteractSession
 
 
 SAMPLE_RATE = 16000
 BLOCK_SECONDS = 0.5
+PUSH_TO_TALK_SECONDS = float(os.environ.get("COCO_PTT_SECONDS", "4.0"))
+# 设 COCO_PTT_DISABLE=1 可禁用 stdin 监听（Control.app 模式 / 无 tty 环境）
+PUSH_TO_TALK_DISABLED = os.environ.get("COCO_PTT_DISABLE", "0") == "1"
 
 # audio-002 V6：主循环启动时跑一次 fixture 转写，证明 ASR 在 ReachyMiniApp
 # 主进程内可用且不阻塞心跳。后台线程保证 mic loop / stop_event 检查不被卡。
@@ -39,6 +49,51 @@ def _run_fixture_asr_once(fixture_path: Path) -> None:
         print(f"[coco][asr] fixture={fixture_path.name} text={text!r}", flush=True)
     except Exception as exc:  # noqa: BLE001 — 后台线程兜底，避免炸主循环
         print(f"[coco][asr] fixture transcribe failed: {exc!r}", flush=True)
+
+
+def _asr_int16_fn(audio_int16: np.ndarray, sr: int) -> str:
+    """interact 用：int16 16k → SenseVoice 转写并去标签。"""
+    if sr != 16000:
+        raise ValueError(f"interact 仅支持 16k，sr={sr}")
+    audio_f32 = audio_int16.astype(np.float32) / 32768.0
+    segs = coco_asr.transcribe_segments_from_array(audio_f32, sample_rate=16000)
+    return " ".join(t for t in (coco_asr.clean_sensevoice_tags(s) for s in segs) if t)
+
+
+def _record_int16(seconds: float, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
+    """阻塞录 ``seconds`` 秒，返回 int16 mono。"""
+    n = int(seconds * sample_rate)
+    rec = sd.rec(n, samplerate=sample_rate, channels=1, dtype="int16")
+    sd.wait()
+    return rec.reshape(-1)
+
+
+def _push_to_talk_loop(session: InteractSession, stop_event: threading.Event) -> None:
+    """后台线程：每次 stdin 收到 Enter，录 PUSH_TO_TALK_SECONDS 秒后跑 session。
+
+    无 tty / EOF / 异常 → 直接结束本线程，不影响主循环。
+    """
+    if not sys.stdin or not sys.stdin.isatty():
+        print("[coco][ptt] stdin 非 tty，push-to-talk 监听跳过", flush=True)
+        return
+    print(f"[coco][ptt] 按 Enter 触发录音 {PUSH_TO_TALK_SECONDS:.1f}s（Ctrl-C 退出）", flush=True)
+    while not stop_event.is_set():
+        try:
+            line = sys.stdin.readline()
+        except Exception as e:  # noqa: BLE001
+            print(f"[coco][ptt] stdin error: {e!r}", flush=True)
+            return
+        if line == "":  # EOF
+            return
+        if stop_event.is_set():
+            return
+        try:
+            print(f"[coco][ptt] 录音 {PUSH_TO_TALK_SECONDS:.1f}s ...", flush=True)
+            audio = _record_int16(PUSH_TO_TALK_SECONDS)
+            r = session.handle_audio(audio, SAMPLE_RATE, skip_action=False, skip_tts_play=False)
+            print(f"[coco][ptt] transcript={r['transcript']!r} reply={r['reply']!r} action={r['action']} dt={r['duration_s']:.2f}s", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"[coco][ptt] handle_audio failed: {e!r}", flush=True)
 
 
 class Coco(ReachyMiniApp):
@@ -74,6 +129,29 @@ class Coco(ReachyMiniApp):
         except Exception as exc:  # noqa: BLE001
             print(f"[coco][idle] start failed: {exc!r}", flush=True)
 
+        # interact-001：起 InteractSession + push-to-talk stdin 后台线程
+        ptt_thread: threading.Thread | None = None
+        try:
+            session = InteractSession(
+                robot=reachy_mini,
+                asr_fn=_asr_int16_fn,
+                tts_say_fn=coco_tts.say,
+                idle_animator=idle_animator,
+            )
+            if not PUSH_TO_TALK_DISABLED:
+                ptt_thread = threading.Thread(
+                    target=_push_to_talk_loop,
+                    args=(session, stop_event),
+                    name="coco-push-to-talk",
+                    daemon=True,
+                )
+                ptt_thread.start()
+                print("[coco][ptt] push-to-talk listener started", flush=True)
+            else:
+                print("[coco][ptt] disabled by COCO_PTT_DISABLE=1", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][ptt] init failed: {exc!r}", flush=True)
+
         try:
             # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
             with sd.InputStream(
@@ -85,7 +163,6 @@ class Coco(ReachyMiniApp):
                 while not stop_event.is_set():
                     data, _overflow = mic.read(block_frames)
                     rms = float(np.sqrt(np.mean(np.square(data))))
-                    # 占位：后续 feature（interact-001 push-to-talk → ASR → 中文回应）在此扩展。
                     print(f"[coco] rms={rms:.4f}", flush=True)
                     # 让出循环，给 stop_event 检查机会。
                     time.sleep(0.05)
@@ -98,6 +175,10 @@ class Coco(ReachyMiniApp):
                     print("[coco][idle] WARN: animator did not stop within 2s", flush=True)
                 else:
                     print(f"[coco][idle] stopped stats={idle_animator.stats}", flush=True)
+            # ptt_thread 是 daemon，stop_event 一 set 它的下一次 readline 返回前可能还在阻塞，
+            # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
+            if ptt_thread is not None:
+                ptt_thread.join(timeout=1.0)
 
 
 def main() -> None:
