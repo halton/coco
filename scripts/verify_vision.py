@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""spike_face.py — vision-001 验证脚本.
+"""verify_vision.py — vision-001 验证脚本.
 
 覆盖 verification 2-5：
   V2: single_face.jpg 检测 ≥ 1 张脸

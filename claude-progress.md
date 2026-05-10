@@ -479,4 +479,5 @@
   - 多线程使用：CascadeClassifier 非 thread-safe，每线程独立 FaceDetector 实例（companion-002 集成时注意）
   - VideoFileSource 自带 native_fps 节流（~15fps），wall_fps 上界 ≈ native；所以 V4 不直接断"wall_fps ≥ 10"而是断"≥ min(10, native*0.8)"+ "avg detect <100ms"两个独立指标
 - **下一步最佳动作**：主会话派 Reviewer 评审 vision-001；LGTM 后切 passing + merge + push。后续 candidate：companion-002 (p11, area=companion, deps=[companion-001, vision-001]) 解锁；或 interact-003 (p12, deps=[interact-001, audio-002]) 始终 ready。建议 companion-002 优先——同一视觉路径连贯收尾 + phase-2 milestone gate (vision + 闭环) 更近。
+- **closeout**: Reviewer LGTM, status=passing, merged to main
 

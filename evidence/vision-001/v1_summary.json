@@ -16,11 +16,11 @@
   "v4_video_fps": {
     "status": "PASS",
     "frames": 45,
-    "elapsed_s": 3.1019,
-    "wall_fps": 14.51,
+    "elapsed_s": 3.2346,
+    "wall_fps": 13.91,
     "native_fps": 15.0,
-    "detect_avg_ms": 8.64,
-    "detect_max_ms": 12.89,
+    "detect_avg_ms": 6.41,
+    "detect_max_ms": 10.26,
     "frames_with_face": 45,
     "fps_floor": 10.0
   },
