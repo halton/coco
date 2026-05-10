@@ -278,7 +278,16 @@ HF_TOKEN=hf_xxx uv run python -m reachy_mini.apps.app publish . "msg" --public
 
 token 在 https://huggingface.co/settings/tokens 生成，权限选 write。
 
-### 6.5 Control.app 装上后启动报 ImportError
+### 6.5 infra-debt-sweep 注意事项（运维须知）
+
+phase-3 第一项 infra-debt-sweep 已修这几个点；如果遇到下列现象按对应路径排查：
+
+- **VAD callback 死锁怀疑（M2）**：之前 `VADTrigger.feed` 在持有内部 `self._lock` 的同时调 `on_utterance`，callback 反向调 `trigger.stop()` / `trigger.reset_buffer()` 会死锁。已改为先在锁内 `pop` 全部 segment，再到锁外跑判决与 callback。如真机上看到 PTT/VAD 卡住、`coco-vad-mic` 线程 stuck，先用 `py-spy dump` 看是不是回到锁的 owner。
+- **start_microphone 被多次调用（M3）**：`VADTrigger.start_microphone()` 现在有 `self._mic_lock` 守卫，重复并发调用第二次起会记 `[vad] start_microphone already running ...` warning 并直接返回。看到该 warning 是预期，不是 bug；调用方（通常是 `coco/main.py` 或 sub-agent verification）多调了一次。
+- **publish 模式 ASR self-check 报 fixture missing（audio-002 M1）**：HF Space publish 出去的 wheel 不包含 `tests/fixtures/`，Control.app 启动 Coco 时 `_run_fixture_asr_once` 检查到 fixture 不存在，会打印 `[coco][asr] fixture missing (publish mode?) ... skip self-check` 然后跳过；这是预期行为，不要误判为 ASR 模型缺失。
+- **Windows 入口（init.ps1）**：dev mode 自检脚本 `init.ps1` 已加，等价于 `init.sh` 的 `uv sync + smoke`；TTS 模型 fetch 在 Windows 自动跳过（需要时去 WSL/Git Bash 跑 `bash scripts/fetch_tts_models.sh`）。Windows 真机 UAT 仍待真机环境上手专项验证。
+
+### 6.6 Control.app 装上后启动报 ImportError
 
 通常是 reachy-mini 版本不匹配 / Control.app venv 解析失败。
 
