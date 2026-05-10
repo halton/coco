@@ -293,3 +293,27 @@
 - **更新过的文件或工件**：coco/actions.py（新）、scripts/verify_robot002_actions.py（新）、evidence/robot-002/v1_actions.log（新）、feature_list.json、claude-progress.md
 - **已知风险或未解决问题**：companion 层接入时需在 SDK 异常分支调一次 goto_target(INIT_HEAD_POSE) 兜底；真机硬件采样策略待 robot-003 后回看；no_media + --deactivate-audio 仍是 phase-1 临时豁免
 - **下一步最佳动作**：进入 priority=4 的下一个 not_started feature
+
+### Session 013 — 2026-05-10（audio-003 实施 + 收尾切 passing + merge 回 main）
+
+- **本轮目标**：中文 TTS 输出（Kokoro-multi-lang-v1.1 int8 via sherpa-onnx + edge-tts 联网兜底）实现、验证、Reviewer fresh-context、passing + merge → main + push。
+- **已完成**：
+  - 切 feat/audio-003 分支
+  - Researcher 实测 sherpa-onnx tts-models 仓库，确认 URL：`https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_1.tar.bz2`（int8, 147MB tarball；fp32=348MB 太大不选）
+  - 写 scripts/fetch_tts_models.sh（幂等下载 + 校验，缓存 ~/.cache/coco/tts/）
+  - 写 coco/tts.py：synthesize / say / say_async / synthesize_edge / play / write_wav；DEFAULT_SID=50, DEFAULT_SPEED=1.0, MAX_TEXT_LEN=500；模块级 OfflineTts 单例
+  - pyproject 加 `[project.optional-dependencies] tts-online = [edge-tts, soundfile]`，离线必须能跑契约保留
+  - V1 PASS：scripts/verify_audio003_tts.py — Kokoro 合成「你好，我是可可」dt=2.62s sr=24000 dur=2.32s rms=0.0530；wav 回读一致；**ASR 回环** SenseVoice 转写得「你好我是可可」（去标点完全一致），证明普通话+咬字可懂
+  - V2 PASS：sounddevice 走 MacBook Air Speakers @ 48k 打开 stream 写 0.3s 无 PortAudio 异常
+  - V3 PASS：scripts/verify_audio003_app_integration.py — mockup-sim daemon + ReachyMini(no_media) + say_async，5.09s 内 49 次心跳 ok / 0 失败，say_async 自然结束
+  - Reviewer fresh-context 自评：LGTM with 1 medium + 3 low
+    - medium：say() 默认 blocking 在 ReachyMiniApp.run() 内会卡心跳 → 已加 say_async + docstring 警告
+    - low #1：DEFAULT_SID=50 是经验值（v1.1 中文女声音色未文档化）→ notes
+    - low #2：synthesize_edge 解码失败返回 (zeros, 0) 语义隐晦 → say() fallback 兜底
+    - low #3：fetch_tts_models.sh 未接入 init.sh → 已修，init.sh 加 fetch + smoke_tts() 段
+  - feature_list.json audio-003 status `not_started` → `passing`，evidence 落 6 条（V1/V2/V3 + edge-tts skip + init.sh 集成 + Reviewer），notes 含模型 URL/路径/API 说明
+- **运行过的验证**：fetch_tts_models.sh 幂等性、verify_audio003_tts.py（PASS）、sounddevice 播放 smoke、verify_audio003_app_integration.py（PASS）、./init.sh（EXIT=0，新增 TTS smoke「你好」21846 samples @ 24k dt=1.31s）
+- **已记录证据**：evidence/audio-003/v1_local_kokoro.log、v2_sounddevice_play.log、v3_app_integration.log；tests/fixtures/audio/tts_out/local_kokoro.wav (111KB)
+- **更新过的文件或工件**：coco/tts.py（新）、scripts/fetch_tts_models.sh（新）、scripts/verify_audio003_tts.py（新）、scripts/verify_audio003_app_integration.py（新）、scripts/smoke.py（+smoke_tts）、init.sh（+fetch_tts_models）、pyproject.toml（+tts-online extras）、feature_list.json、claude-progress.md
+- **已知风险或未解决问题**：DEFAULT_SID=50 是经验值，真机 milestone 时可能需挑选更自然的音色；真机扬声器（Reachy Mini USB 音频）耳测仍需 UAT 阶段做；edge-tts 网络兜底未实测（默认未装）但路径已实现+测试为 skip
+- **下一步最佳动作**：进入 priority=6 的 companion-001（陪伴动作循环 idle 微动），area=companion 触发全员组合

@@ -70,6 +70,33 @@ def smoke_asr() -> None:
         sys.exit(f"FAIL: ASR smoke 退出码 {rc}")
 
 
+def smoke_tts() -> None:
+    """加载 Kokoro TTS 并合成短句一次；模型缺失则 WARN 跳过、不阻断。
+
+    只验合成路径不放音，避免开发期声卡噪声；播放路径由 verify_audio003_tts.py 覆盖。
+    """
+    print("==> Smoke: TTS (kokoro-zh)")
+    model_path = Path.home() / ".cache" / "coco" / "tts" / "kokoro-int8-multi-lang-v1_1" / "model.int8.onnx"
+    if not model_path.exists():
+        print("  WARN: TTS model not downloaded, skipped (run scripts/fetch_tts_models.sh)")
+        return
+
+    try:
+        from coco.tts import synthesize  # 延迟 import 避免 PortAudio init 干扰
+    except ImportError as e:
+        sys.exit(f"FAIL: import coco.tts 失败 ({e})")
+
+    t0 = time.time()
+    try:
+        samples, sr = synthesize("你好")
+    except Exception as e:
+        sys.exit(f"FAIL: Kokoro 合成失败 ({e})")
+    dt = time.time() - t0
+    if samples.size == 0:
+        sys.exit("FAIL: Kokoro 合成 0 个样本")
+    print(f"  ok: samples={samples.size} sr={sr} dt={dt:.2f}s")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -115,6 +142,7 @@ def main() -> None:
     print_env_baseline()
     smoke_audio()
     smoke_asr()
+    smoke_tts()
     if args.daemon:
         smoke_daemon()
     print()

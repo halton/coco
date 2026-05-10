@@ -1,0 +1,11 @@
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓
+Audio system is not initialized.
+[audio-003 V3] connect mockup-sim daemon...
+  connect OK dt=2.79s
+  pre heartbeat OK pose.shape=(4, 4)
+[audio-003 V3] start say_async('你好，我是可可')...
+  heartbeats ok=49 fail=0 elapsed=5.09s say_alive=False
+  goto_sleep OK
+
+[audio-003 V3] PASS — say_async 不阻塞 ReachyMini 心跳；49 次成功，0 失败 in 5.09s

@@ -16,5 +16,11 @@ echo "==> Repo: $PWD"
 echo "==> uv sync"
 uv sync
 
+# TTS 模型按需拉取（幂等；已就绪即跳过）
+echo "==> TTS 模型 (kokoro-zh) 检查"
+bash scripts/fetch_tts_models.sh || {
+  echo "WARN: TTS 模型下载失败；smoke 会以 WARN skip TTS 段，不阻断" >&2
+}
+
 echo "==> Smoke"
 uv run python scripts/smoke.py "$@"

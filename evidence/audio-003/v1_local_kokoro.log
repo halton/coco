@@ -1,0 +1,34 @@
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓
+[audio-003 V1] 本地 Kokoro 合成
+  KOKORO_DIR=/Users/halton/.cache/coco/tts/kokoro-int8-multi-lang-v1_1
+  ok   KOKORO_DIR 存在: /Users/halton/.cache/coco/tts/kokoro-int8-multi-lang-v1_1
+  synth ok dt=2.62s samples.shape=(55640,) sr=24000
+  ok   synth 耗时 2.62s < 30s
+  ok   samples.size=55640 > 0
+  ok   sample_rate=24000 在常用集合内
+  ok   duration=2.32s 在 [0.5, 10] 区间
+  rms=0.0530 peak=0.3549
+  ok   rms=0.0530 > 0.01 (非静音)
+  ok   peak=0.3549 <= 1.0 (无 clip)
+  wrote tests/fixtures/audio/tts_out/local_kokoro.wav size=111324B
+  ok   wav size 111324B > 30KB
+  reread sr=24000 nframes=55640 pcm.shape=(55640,)
+  ok   reread sr 24000 == 原 sr 24000
+  ok   reread nframes 55640 ≈ 原 samples.size 55640
+  ok   reread rms 0.0530 ≈ 原 rms 0.0530 (Δ<0.01)
+
+[audio-003 V1] edge-tts 联网兜底（可选）
+  skip: edge-tts 未安装（pyproject extras=tts-online 未启用）→ skip 联网兜底验证
+
+[audio-003 V1] 总结
+  note: edge-tts 未安装（pyproject extras=tts-online 未启用）→ skip 联网兜底验证
+
+[audio-003 V1] PASS — Kokoro 本地合成 OK，wav 落 tests/fixtures/audio/tts_out/local_kokoro.wav
+
+---
+[audio-003 V1 附] ASR 回环验证（额外强化）
+本地 Kokoro 合成 wav (24k) → 重采样到 16k → SenseVoice ASR
+原始文本: "你好，我是可可"
+ASR 转写: "你好我是可可"
+比对：去标点完全一致 → Kokoro 中文合成确实是普通话且咬字可懂（机器可识别 = 可懂的强代理）。
