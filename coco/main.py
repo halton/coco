@@ -207,6 +207,32 @@ class Coco(ReachyMiniApp):
         #             robot.wake_up() 并回 active。默认 OFF 保持 companion-002 行为不变。
         idle_animator: IdleAnimator | None = None
         power_state: PowerStateMachine | None = None
+
+        # interact-007 L1-1: 集中构造 face_tracker（COCO_FACE_TRACK=1 启用），
+        # 同一实例供 power presence watcher 与 ProactiveScheduler 共用。
+        # 默认 OFF：不构造 → power watcher 直接 skip，proactive 因 face_tracker=None
+        # 在 _should_trigger 内被判 "no_face"（保护性默认），三方行为完全向后兼容。
+        _face_tracker_shared = None
+        try:
+            if os.environ.get("COCO_FACE_TRACK", "0") == "1":
+                from coco.perception.face_tracker import FaceTracker as _FaceTracker
+                _spec = os.environ.get("COCO_CAMERA")
+                if _spec:
+                    _face_tracker_shared = _FaceTracker(stop_event, camera_spec=_spec)
+                    _face_tracker_shared.start()
+                    print(
+                        f"[coco][face] FaceTracker started camera={_spec!r}",
+                        flush=True,
+                    )
+                else:
+                    print(
+                        "[coco][face] COCO_FACE_TRACK=1 但 COCO_CAMERA 未设；FaceTracker 跳过构造",
+                        flush=True,
+                    )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][face] FaceTracker init failed: {exc!r}", flush=True)
+            _face_tracker_shared = None
+
         try:
             try:
                 reachy_mini.wake_up()
@@ -255,17 +281,23 @@ class Coco(ReachyMiniApp):
                         flush=True,
                     )
                     # companion-003 L0-1: 起 face presence watcher（rising-edge → wake）。
-                    # 当前 main.py 不构造 FaceTracker（business 决策：默认无 vision 子系统），
-                    # 所以 face_tracker_for_power 暂为 None，watcher 直接 early-return。
-                    # 未来若 vision 子系统在 app 层启用，把 tracker 实例传进来即可生效。
-                    face_tracker_for_power = None
-                    if face_tracker_for_power is not None:
+                    # interact-007 L1-1: face_tracker 构造前移到此（_init_face_tracker），
+                    # 同一实例同时供 power watcher 和 ProactiveScheduler 使用，
+                    # 避免 Reviewer 指出的 "scheduler 拿到 face_tracker=None" 死锁。
+                    # 未来 face tracker 注入由 _init_face_tracker_for_app() 集中决定。
+                    if _face_tracker_shared is not None:
                         threading.Thread(
                             target=_face_presence_watcher,
-                            args=(face_tracker_for_power, power_state, stop_event),
+                            args=(_face_tracker_shared, power_state, stop_event),
                             name="coco-power-face-watcher",
                             daemon=True,
                         ).start()
+                    else:
+                        print(
+                            "[coco][power] face watcher skipped (face_tracker not constructed; "
+                            "set COCO_FACE_TRACK=1 to enable)",
+                            flush=True,
+                        )
                 except Exception as exc:  # noqa: BLE001
                     print(f"[coco][power] init failed: {exc!r}", flush=True)
                     power_state = None
@@ -400,7 +432,7 @@ class Coco(ReachyMiniApp):
                     _proactive = _ProactiveScheduler(
                         config=_pcfg,
                         power_state=power_state,
-                        face_tracker=None,  # main 当前不构造 FaceTracker；与 face_tracker_for_power 同步
+                        face_tracker=_face_tracker_shared,  # interact-007 L1-1: 复用 power watcher 同一实例
                         llm_reply_fn=_llm.reply,
                         tts_say_fn=coco_tts.say,
                         profile_store=_profile_store,
@@ -622,6 +654,12 @@ class Coco(ReachyMiniApp):
                     _proactive.join(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][proactive] join failed: {e!r}", flush=True)
+            # interact-007 L1-1: 停 FaceTracker（如已构造）
+            try:
+                if _face_tracker_shared is not None:
+                    _face_tracker_shared.join(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][face] join failed: {e!r}", flush=True)
 
 
 def main() -> None:

@@ -99,7 +99,8 @@ class ProactiveStats:
     tts_errors: int = 0
     last_topic: str = ""
     last_topic_ts: float = 0.0
-    history: List[str] = field(default_factory=list)
+    # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
+    history: Deque[str] = field(default_factory=lambda: collections.deque(maxlen=200))
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +324,12 @@ class ProactiveScheduler:
         """同步检查并触发；返回是否触发了一次主动话题。
 
         verify 路径直接调；scheduler 线程也调它（共享路径，避免行为漂移）。
+
+        interact-007 L1-2: 锁的作用域从"全程"收缩到"判定 + 抢占式预占"，
+        实际 LLM/TTS（耗时数秒）在锁外执行，避免阻塞 InteractSession.record_interaction
+        刷新 _last_interaction_ts。
         """
+        # ---- 锁内：判定 + 抢占式预占（fail-soft：不回滚，宁少发也不连发）----
         with self._lock:
             self.stats.ticks += 1
             t = now if now is not None else self.clock()
@@ -333,15 +339,26 @@ class ProactiveScheduler:
                 if hasattr(self.stats, key):
                     setattr(self.stats, key, getattr(self.stats, key) + 1)
                 return False
-            # 通过——执行触发
-            self._do_trigger(t)
-            return True
+            # 抢占式预占：先把 last_proactive_ts / last_interaction_ts / recent_triggers
+            # 写好，再放锁；这样 LLM/TTS 期间外部线程读到的"已发"，不会被同 tick 重复触发。
+            self._last_proactive_ts = t
+            self._last_interaction_ts = t
+            self._recent_triggers.append(t)
+            self.stats.triggered += 1
+            system_prompt = self._build_system_prompt()
+            seed = self.config.topic_seed
+        # ---- 锁外：实际 LLM + TTS + emit + on_interaction（耗时操作）----
+        self._do_trigger_unlocked(t, system_prompt=system_prompt, seed=seed)
+        return True
 
-    def _do_trigger(self, t: float) -> None:
-        """实际触发：组 system_prompt → llm.reply → tts.say → 记账 → emit."""
+    def _do_trigger_unlocked(self, t: float, *, system_prompt: Optional[str], seed: str) -> None:
+        """实际触发的耗时段：LLM → TTS → emit → on_interaction。锁外执行。
+
+        失败时**不回滚**预占（fail-soft）：即使 LLM/TTS 都失败，也宁可少一次主动话题，
+        也不冒"重新放锁后立即重发"的风险。仅 emit 一个 proactive_topic_failed 事件
+        让上层可观测。
+        """
         topic_text = ""
-        system_prompt = self._build_system_prompt()
-        seed = self.config.topic_seed
         # 1) LLM
         if self.llm_reply_fn is not None:
             try:
@@ -359,18 +376,16 @@ class ProactiveScheduler:
             topic_text = "我们聊点什么吧？"
 
         # 2) TTS
+        tts_ok = True
         if self.tts_say_fn is not None:
             try:
                 self.tts_say_fn(topic_text, blocking=True)
             except Exception as e:  # noqa: BLE001
+                tts_ok = False
                 self.stats.tts_errors += 1
                 log.warning("[proactive] tts_say_fn failed: %s: %s", type(e).__name__, e)
 
-        # 3) 记账
-        self._last_proactive_ts = t
-        self._last_interaction_ts = t  # 主动话题也算交互，避免连发
-        self._recent_triggers.append(t)
-        self.stats.triggered += 1
+        # 3) 记 last_topic / history（锁内已经预占了 ts/triggered/recent_triggers）
         self.stats.last_topic = topic_text
         self.stats.last_topic_ts = t
         self.stats.history.append(f"@{t:.2f}: {topic_text[:60]}")
@@ -388,12 +403,20 @@ class ProactiveScheduler:
             if emit_fn is None:
                 from coco.logging_setup import emit as _emit
                 emit_fn = _emit
+            # interact-007 L2: 去掉 informational 但语义无效的 idle_for 字段
             emit_fn(
                 "interact.proactive_topic",
                 topic=topic_text[:200],
                 source="scheduler",
-                idle_for=round(t - 0.0, 2),  # 仅 informational
             )
+            if not tts_ok or self.stats.llm_errors > 0:
+                # 仅记一次失败事件（不影响计数已经预占的 triggered）
+                emit_fn(
+                    "interact.proactive_topic_failed",
+                    topic=topic_text[:200],
+                    llm_errors=int(self.stats.llm_errors),
+                    tts_errors=int(self.stats.tts_errors),
+                )
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] emit failed: %s: %s", type(e).__name__, e)
 

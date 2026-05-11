@@ -1,6 +1,6 @@
 {
   "verification": "verify_interact_007",
-  "pass_count": 65,
+  "pass_count": 76,
   "fail_count": 0,
   "passes": [
     "proactive_enabled_from_env() 未设: False == False",
@@ -67,7 +67,18 @@
     "max/h clamp 上限: 60 == 60",
     "last_interaction_ts 被刷新 (1000.0->1030.0)",
     "session 后未到 idle → 不触发: False == False",
-    "session 后到 idle → 触发"
+    "session 后到 idle → 触发",
+    "main.py 含 _face_tracker_shared 共享变量",
+    "main.py 用 COCO_FACE_TRACK 守门 FaceTracker 构造",
+    "ProactiveScheduler face_tracker 来自共享实例（不是 None 字面量）",
+    "ProactiveScheduler 不再硬编码 face_tracker=None",
+    "power face watcher 复用 _face_tracker_shared",
+    "注入的 face_tracker 即被 scheduler 持有",
+    "LLM 已被调用（锁内段已完成）",
+    "record_interaction 在 LLM 阻塞期间 0.0ms 返回 (<100ms)",
+    "trigger 线程正常结束",
+    "triggered 计 1 次（锁内已预占）: 1 == 1",
+    "TTS 已被锁外调用: 1 == 1"
   ],
   "failures": []
 }

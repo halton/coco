@@ -17,6 +17,10 @@
   V13 env clamp：非法值回退默认；超界 clamp 到边界
   V14 集成 InteractSession.on_interaction → ProactiveScheduler.record_interaction：
       InteractSession.handle_audio 触发后，scheduler 的 last_interaction_ts 被刷新
+  V15 main.py 集成层 face_tracker 注入：grep 主装配函数确认 ProactiveScheduler 拿到
+      非 None 的 face_tracker（COCO_FACE_TRACK=1 时由共享实例提供）
+  V16 maybe_trigger 锁外执行 LLM/TTS：模拟 LLM 耗时数秒期间，外部线程调
+      record_interaction 必须在 <100ms 内返回（不被 scheduler 锁阻塞）
 
 evidence/interact-007/verify_summary.json 写确定性结果。
 """
@@ -541,6 +545,109 @@ def v14_session_integration() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V15 — main.py 集成层 face_tracker 注入
+# ---------------------------------------------------------------------------
+
+
+def v15_main_face_tracker_injection() -> None:
+    print("\n[V15] main.py ProactiveScheduler 拿到非 None face_tracker", flush=True)
+    main_src = (ROOT / "coco" / "main.py").read_text(encoding="utf-8")
+    # 1) face_tracker_shared 在 run() 顶部构造（COCO_FACE_TRACK=1 守门）
+    assert_true(
+        "_face_tracker_shared" in main_src,
+        "main.py 含 _face_tracker_shared 共享变量",
+    )
+    assert_true(
+        'COCO_FACE_TRACK' in main_src,
+        "main.py 用 COCO_FACE_TRACK 守门 FaceTracker 构造",
+    )
+    # 2) ProactiveScheduler 接收 _face_tracker_shared（非 None 字面量）
+    assert_true(
+        "face_tracker=_face_tracker_shared" in main_src,
+        "ProactiveScheduler face_tracker 来自共享实例（不是 None 字面量）",
+    )
+    assert_true(
+        "face_tracker=None" not in main_src.split("_ProactiveScheduler(")[1].split(")")[0]
+        if "_ProactiveScheduler(" in main_src else False,
+        "ProactiveScheduler 不再硬编码 face_tracker=None",
+    )
+    # 3) power watcher 也用同一实例
+    assert_true(
+        "args=(_face_tracker_shared, power_state, stop_event)" in main_src,
+        "power face watcher 复用 _face_tracker_shared",
+    )
+
+    # 4) 行为层：用 fake 注入 mimic main 装配，确保 scheduler.face_tracker 就是注入对象
+    fake_tracker = FakeFaceTracker(present=True)
+    cfg = ProactiveConfig(enabled=True, idle_threshold_s=10.0)
+    sched = ProactiveScheduler(
+        config=cfg,
+        face_tracker=fake_tracker,
+        llm_reply_fn=CapturedLLM().reply,
+        tts_say_fn=CapturedTTS().say,
+        clock=FakeClock(t0=1000.0),
+    )
+    assert_true(sched.face_tracker is fake_tracker, "注入的 face_tracker 即被 scheduler 持有")
+
+
+# ---------------------------------------------------------------------------
+# V16 — 锁外 LLM/TTS：record_interaction 不被阻塞
+# ---------------------------------------------------------------------------
+
+
+def v16_lock_released_during_llm_tts() -> None:
+    print("\n[V16] LLM/TTS 期间 record_interaction <100ms 返回（锁外执行）", flush=True)
+    clock = FakeClock(t0=1000.0)
+
+    llm_started = threading.Event()
+    llm_release = threading.Event()
+
+    def _slow_llm(text: str, *, system_prompt: Optional[str] = None) -> str:
+        llm_started.set()
+        # 模拟 LLM 阻塞 N 秒（用 event 让 verify 控制释放时机）
+        llm_release.wait(timeout=5.0)
+        return "你好呀"
+
+    tts_calls = []
+
+    def _tts(text: str, blocking: bool = True) -> None:
+        tts_calls.append(text)
+
+    cfg = ProactiveConfig(enabled=True, idle_threshold_s=10.0, cooldown_s=180.0)
+    sched = ProactiveScheduler(
+        config=cfg,
+        face_tracker=FakeFaceTracker(present=True),
+        llm_reply_fn=_slow_llm,
+        tts_say_fn=_tts,
+        clock=clock,
+    )
+    clock.advance(20.0)
+
+    # 后台线程 fire maybe_trigger
+    trig_thread = threading.Thread(target=sched.maybe_trigger, daemon=True)
+    trig_thread.start()
+
+    # 等 LLM 实际开始执行（说明锁内已经放行）
+    assert_true(llm_started.wait(timeout=2.0), "LLM 已被调用（锁内段已完成）")
+
+    # LLM 还在 block。此时调 record_interaction，必须立即返回（不被锁阻塞）
+    t0 = time.monotonic()
+    sched.record_interaction(source="user_speech")
+    elapsed = (time.monotonic() - t0) * 1000.0
+    assert_true(
+        elapsed < 100.0,
+        f"record_interaction 在 LLM 阻塞期间 {elapsed:.1f}ms 返回 (<100ms)",
+    )
+
+    # 释放 LLM，让线程收尾
+    llm_release.set()
+    trig_thread.join(timeout=3.0)
+    assert_true(not trig_thread.is_alive(), "trigger 线程正常结束")
+    assert_eq(sched.stats.triggered, 1, "triggered 计 1 次（锁内已预占）")
+    assert_eq(len(tts_calls), 1, "TTS 已被锁外调用")
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -562,6 +669,8 @@ def main() -> int:
     v12_llm_failure_failsoft()
     v13_env_clamp()
     v14_session_integration()
+    v15_main_face_tracker_injection()
+    v16_lock_released_during_llm_tts()
 
     print(f"\n--- 总结 ---", flush=True)
     print(f"PASS={len(PASSES)}  FAIL={len(FAILURES)}", flush=True)
