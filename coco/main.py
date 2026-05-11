@@ -374,8 +374,53 @@ class Coco(ReachyMiniApp):
                 except Exception as exc:  # noqa: BLE001
                     print(f"[coco][power] init failed: {exc!r}", flush=True)
                     power_state = None
+            # companion-005: 可选 situational idle modulator（默认 OFF）
+            _sit_modulator = None
+            try:
+                from coco.companion.situational_idle import (
+                    situational_idle_enabled_from_env as _sit_enabled,
+                    situational_idle_config_from_env as _sit_cfg_from_env,
+                    SituationalIdleModulator as _SitModulator,
+                )
+                from coco.logging_setup import emit as _emit
+                if _sit_enabled():
+                    _scfg = _sit_cfg_from_env()
+                    def _sit_emit_cb(prev, curr, sit, _e=_emit):
+                        try:
+                            _e(
+                                "companion.idle_situation_changed",
+                                micro_amp_scale=curr.micro_amp_scale,
+                                glance_prob_scale=curr.glance_prob_scale,
+                                glance_amp_scale=curr.glance_amp_scale,
+                                face_present=sit.face_present,
+                                focus_stable_s=sit.focus_stable_s,
+                                time_since_interaction_s=sit.time_since_interaction_s,
+                                power_state=sit.power_state,
+                                emotion=sit.emotion,
+                                profile_has_interests=sit.profile_has_interests,
+                            )
+                        except Exception:  # noqa: BLE001
+                            pass
+                    _sit_modulator = _SitModulator(
+                        config=_scfg,
+                        power_state=power_state,
+                        face_tracker=_face_tracker_shared,
+                        attention_selector=_attention_selector,
+                        emotion_tracker=None,
+                        profile_store=None,
+                        emit_cb=_sit_emit_cb,
+                    )
+                    print(
+                        f"[coco][sit_idle] enabled focus_stable={_scfg.focus_stable_threshold_s}s "
+                        f"recent={_scfg.interaction_recent_s}s stale={_scfg.interaction_stale_s}s",
+                        flush=True,
+                    )
+            except Exception as exc:  # noqa: BLE001
+                print(f"[coco][sit_idle] init failed: {exc!r}", flush=True)
+                _sit_modulator = None
             idle_animator = IdleAnimator(
-                reachy_mini, stop_event, config=IdleConfig(), power_state=power_state
+                reachy_mini, stop_event, config=IdleConfig(), power_state=power_state,
+                situational_modulator=_sit_modulator,
             )
             idle_animator.start()
             print("[coco][idle] IdleAnimator started", flush=True)
