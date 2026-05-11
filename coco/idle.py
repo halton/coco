@@ -22,7 +22,7 @@ import random
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from coco.actions import (
     INIT_HEAD_POSE,
@@ -37,6 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
     from coco.perception.face_tracker import FaceTracker
     from coco.power_state import PowerStateMachine
+    from coco.emotion import Emotion
 
 
 log = logging.getLogger(__name__)
@@ -75,6 +76,32 @@ class IdleConfig:
     face_glance_interval_scale: float = 0.35  # glance 间隔 * 0.35 → 显著加密
     # face 存在时 glance 的最大幅度（度）；走 actions.look_left/right 安全边界
     face_glance_amp_deg: float = 25.0
+
+    # --- interact-006: emotion bias ---
+    # IdleAnimator.set_current_emotion(label) 注入后，按 label 缩放
+    # micro_amp（head 微动幅度）与 glance 频率（每轮 glance 间隔的反向缩放）。
+    # spec：happy=1.3x / sad=0.7x / 其它=1.0x。键为 emotion 字符串值
+    # （'happy' / 'sad' / 'angry' / 'surprised' / 'neutral'）。
+    # 缺失键 → 1.0（fallback）。COCO_EMOTION 未启用时 IdleAnimator 不接
+    # set_current_emotion，整段 bias 路径完全不走，行为等价 phase-3。
+    #
+    # emotion_bias 保留为 micro_amp 缩放（向后兼容旧字段名）；
+    # emotion_glance_bias 为 glance 频率缩放（值越大 → glance 越频繁；
+    # 实现上按 1/scale 缩 interval）。
+    emotion_bias: dict = field(default_factory=lambda: {
+        "happy": 1.3,
+        "sad": 0.7,
+        "angry": 1.0,
+        "surprised": 1.0,
+        "neutral": 1.0,
+    })
+    emotion_glance_bias: dict = field(default_factory=lambda: {
+        "happy": 1.3,
+        "sad": 0.7,
+        "angry": 0.7,
+        "surprised": 1.3,
+        "neutral": 1.0,
+    })
 
     # 安全检查
     def validate(self) -> None:
@@ -154,6 +181,44 @@ class IdleAnimator:
         # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
         # 动作前检查并跳过本轮 micro/glance；不互锁 SDK 命令本身（避免 deadlock）
         self._paused = threading.Event()
+        # interact-006: 当前情绪（默认 None；set_current_emotion 注入后生效）。
+        # None 等价 phase-3 行为（一切 bias 路径不走）。
+        self._current_emotion: Optional[str] = None
+
+    # --- interact-006: emotion bias 钩子 ---
+    def set_current_emotion(self, emotion: Any) -> None:
+        """注入当前情绪。emotion 可以是 ``coco.emotion.Emotion`` 枚举、
+        其 ``.value``（'happy' 等字符串），或 None（清除）。
+
+        线程安全：dataclass 字段读写在 CPython 上是原子的；不需要 lock。
+        """
+        if emotion is None:
+            self._current_emotion = None
+            return
+        # 兼容枚举与字符串
+        v = getattr(emotion, "value", emotion)
+        if not isinstance(v, str):
+            log.warning("set_current_emotion: 非法类型 %r → 忽略", type(emotion).__name__)
+            return
+        self._current_emotion = v.lower()
+
+    def get_current_emotion(self) -> Optional[str]:
+        return self._current_emotion
+
+    def _emotion_scale(self) -> float:
+        """返回当前 emotion 对应的 micro_amp 缩放系数。无注入或未知 emotion → 1.0。"""
+        if self._current_emotion is None:
+            return 1.0
+        return float(self.config.emotion_bias.get(self._current_emotion, 1.0))
+
+    def _emotion_glance_scale(self) -> float:
+        """返回当前 emotion 对应的 glance 频率缩放系数。无注入或未知 emotion → 1.0。
+
+        语义：值越大 → glance 越频繁；调用方将其反向应用到 interval（interval / scale）。
+        """
+        if self._current_emotion is None:
+            return 1.0
+        return float(self.config.emotion_glance_bias.get(self._current_emotion, 1.0))
 
     # --- idle/interact 互斥 ---
     def pause(self) -> None:
@@ -225,6 +290,10 @@ class IdleAnimator:
         base = self.rng.uniform(self.config.glance_interval_min, self.config.glance_interval_max)
         if self._face_present():
             base *= self.config.face_glance_interval_scale
+        # interact-006: emotion 反向缩放 interval（scale 越大 → interval 越小 → glance 越频繁）
+        emo_scale = self._emotion_glance_scale()
+        if emo_scale > 0.0:
+            base /= emo_scale
         scale = self._power_micro_scale()
         if scale == float("inf"):
             return base
@@ -294,8 +363,9 @@ class IdleAnimator:
 
     def _micro_head(self) -> None:
         cfg = self.config
-        yaw = self.rng.uniform(-cfg.micro_yaw_amp_deg, cfg.micro_yaw_amp_deg)
-        pitch = self.rng.uniform(-cfg.micro_pitch_amp_deg, cfg.micro_pitch_amp_deg)
+        scale = self._emotion_scale()
+        yaw = self.rng.uniform(-cfg.micro_yaw_amp_deg * scale, cfg.micro_yaw_amp_deg * scale)
+        pitch = self.rng.uniform(-cfg.micro_pitch_amp_deg * scale, cfg.micro_pitch_amp_deg * scale)
         target = euler_pose(pitch_deg=pitch, yaw_deg=yaw)
         self._safe("micro_head", lambda: self.robot.goto_target(head=target, duration=cfg.micro_duration))
         # 不立刻回中位；下一次 micro 会自然带回附近

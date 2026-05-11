@@ -337,7 +337,7 @@ def smoke_config() -> None:
 
     cfg = load_config(env={})
     s = config_summary(cfg)
-    expected = {"log", "ptt", "camera", "llm", "vad", "wake", "power", "dialog"}
+    expected = {"log", "ptt", "camera", "llm", "vad", "wake", "power", "dialog", "emotion"}
     if set(s.keys()) != expected:
         sys.exit(f"FAIL: summary keys {sorted(s.keys())} != {sorted(expected)}")
 

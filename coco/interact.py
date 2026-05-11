@@ -31,6 +31,7 @@ from coco.dialog import DialogMemory
 if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
     from coco.idle import IdleAnimator
+    from coco.emotion import EmotionDetector, EmotionTracker
 
 
 log = logging.getLogger(__name__)
@@ -110,6 +111,8 @@ class InteractSession:
         llm_reply_fn: Optional[Callable[..., str]] = None,
         on_interaction: Optional[Callable[[str], None]] = None,
         dialog_memory: Optional[DialogMemory] = None,
+        emotion_detector: Optional["EmotionDetector"] = None,
+        emotion_tracker: Optional["EmotionTracker"] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -132,6 +135,11 @@ class InteractSession:
         # 即使 LLM 走 fallback，append 仍记录（保持 KEYWORD_ROUTES 路径"看似"多轮，
         # 但 history 仅在调用 llm_reply_fn 时实际注入）。
         self.dialog_memory = dialog_memory
+        # interact-006: 情绪检测。emotion_detector=None 时整段路径不走，
+        # 完全等价 phase-3 行为（向后兼容）。注入后：transcript 拿到 → detect →
+        # tracker.record → idle_animator.set_current_emotion(effective) → emit。
+        self.emotion_detector = emotion_detector
+        self.emotion_tracker = emotion_tracker
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -213,6 +221,36 @@ class InteractSession:
             result["transcript"] = transcript
             log.info("[interact] ASR -> %r", transcript)
 
+            # interact-006: 情绪检测。检测到非 NEUTRAL 才 record + emit；
+            # NEUTRAL 走"无信号"分支不污染 tracker 的最近一次强情绪。
+            # 异常一律吞掉（emotion 是非关键路径，绝不阻塞主对话流）。
+            if self.emotion_detector is not None and transcript:
+                try:
+                    label = self.emotion_detector.detect(transcript)
+                    if self.emotion_tracker is not None:
+                        self.emotion_tracker.record(label)
+                        effective = self.emotion_tracker.effective()
+                    else:
+                        effective = label.name
+                    if self.idle_animator is not None and hasattr(self.idle_animator, "set_current_emotion"):
+                        self.idle_animator.set_current_emotion(effective)
+                    # 局部 import 避免顶层依赖（emotion 模块在 phase-4 才上）
+                    try:
+                        from coco.logging_setup import emit as _emit
+                        _emit(
+                            "interact.emotion_classified",
+                            emotion=label.value,
+                            score=label.score,
+                            matched_terms=list(label.matched_terms),
+                            effective=getattr(effective, "value", str(effective)),
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                    result["emotion"] = label.value
+                    result["emotion_score"] = label.score
+                except Exception as e:  # noqa: BLE001
+                    log.warning("emotion detect failed: %s: %s", type(e).__name__, e)
+
             # 3) 路由 reply + action
             reply, action = route_reply(transcript)
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
@@ -259,7 +297,28 @@ class InteractSession:
             # 4) TTS（可与动作并行；这里串行简化）
             if not skip_tts_play:
                 try:
-                    self.tts_say_fn(reply, blocking=True)
+                    # interact-006: 若 emotion 已检测且 tts_say_fn 接受 emotion kwarg，传入；
+                    # 用 inspect 在调用点轻量探测，失败回退到不带 emotion 的旧调用。
+                    em = result.get("emotion")
+                    if em:
+                        try:
+                            sig = inspect.signature(self.tts_say_fn)
+                            accepts_emotion = any(
+                                p.kind is inspect.Parameter.VAR_KEYWORD
+                                or (p.name == "emotion" and p.kind in (
+                                    inspect.Parameter.KEYWORD_ONLY,
+                                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                                ))
+                                for p in sig.parameters.values()
+                            )
+                        except (TypeError, ValueError):
+                            accepts_emotion = False
+                        if accepts_emotion:
+                            self.tts_say_fn(reply, blocking=True, emotion=em)
+                        else:
+                            self.tts_say_fn(reply, blocking=True)
+                    else:
+                        self.tts_say_fn(reply, blocking=True)
                 except Exception as e:  # noqa: BLE001
                     log.warning("TTS failed: %s: %s", type(e).__name__, e)
                     self.stats.tts_fail += 1
