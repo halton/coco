@@ -1,0 +1,72 @@
+{
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "failures": [],
+  "results": [
+    {
+      "name": "V1 round-trip + atomic",
+      "passed": true
+    },
+    {
+      "name": "V2 missing/corrupt soft-fail",
+      "passed": true
+    },
+    {
+      "name": "V3 LRU truncation",
+      "passed": true
+    },
+    {
+      "name": "V4 extractor accuracy",
+      "passed": true,
+      "accuracy": 1.0,
+      "n_pass": 12,
+      "n_total": 12,
+      "failures": []
+    },
+    {
+      "name": "V5 build_system_prompt",
+      "passed": true
+    },
+    {
+      "name": "V6 session backward-compat",
+      "passed": true
+    },
+    {
+      "name": "V7 end-to-end 2 sessions",
+      "passed": true
+    },
+    {
+      "name": "V8 disable kill switch",
+      "passed": true
+    },
+    {
+      "name": "V9 schema_version mismatch",
+      "passed": true
+    },
+    {
+      "name": "V10 reset script",
+      "passed": true
+    },
+    {
+      "name": "V11 file permission 0o600",
+      "passed": true
+    },
+    {
+      "name": "V12 fsync called",
+      "passed": true
+    }
+  ],
+  "closeout": {
+    "reviewer": "sub-agent fresh-context: LGTM after L1 fix",
+    "L1_fixes": [
+      "L1-1 chmod 0o600 on profile.json (PII tightening) — coco/profile.py ProfileStore.save",
+      "L1-2 explicit fsync before os.replace (atomic write crash-safe) — coco/profile.py ProfileStore.save"
+    ],
+    "new_verifications": [
+      "V11 file permission 0o600 (POSIX; Windows skip)",
+      "V12 fsync called via unittest.mock.patch wrapping real fsync"
+    ],
+    "known_debt_recorded": "feature_list.json companion-004.notes + claude-progress.md Session 032"
+  }
+}

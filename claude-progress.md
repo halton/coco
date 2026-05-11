@@ -704,3 +704,52 @@
 - **状态**：feat/interact-006 → status=passing；merge --no-ff 到 main；推 origin。
 - **下一步**：phase-4 进度 2/5 done (infra-002 / interact-006)，next: companion-004（UserProfile 跨 session 长期记忆，priority=21）。
 
+
+## Session 032 — companion-004 实现（2026-05-11）
+
+- **本轮目标**：实现 companion-004（UserProfile 跨 session 长期记忆，priority=21）。Engineer sub-agent 一轮跑通，等 Reviewer LGTM 后再 merge。
+- **新增**：
+  - `coco/profile.py` — `UserProfile` dataclass（name/interests≤5/goals≤3/last_updated/schema_version=1）+ `ProfileStore`（thread-safe RLock + atomic write `tmp + os.replace` + load fail-soft）+ `ProfileExtractor` heuristic 抽取（我叫/我的名字是/我是/我喜欢/我对…感兴趣/我想学/我的目标是/这周我想学；负面前缀 我不叫/我不喜欢/我不想学；name+interest 黑名单防"我喜欢哥哥"=兴趣"哥哥"那种）+ `build_system_prompt(profile, base)` 把档案拼成 [用户档案]块 注入 LLM system 前缀。
+  - `scripts/verify_companion004.py` — V1-V10 全 PASS（10/10），覆盖 round-trip+atomic / missing+corrupt soft-fail / LRU 截断 / 抽取 12/12 准确率 100% / build_system_prompt / backward-compat（profile_store=None 等价 phase-3）/ 端到端两 session + LLM system_prompt 注入 / `COCO_PROFILE_DISABLE=1` kill switch / schema_version 不匹配 fail-soft / `reset_profile.py` 删后 fresh start 不抛。
+  - `scripts/reset_profile.py` — `python scripts/reset_profile.py [--dry-run]` 一键删默认 profile.json，尊重 `COCO_PROFILE_PATH` env 覆盖。
+- **改动**：
+  - `coco/llm.py` — `LLMBackend.chat` Protocol 加 `system_prompt: Optional[str]=None` kwarg；OpenAIChatBackend / OllamaBackend 实际消费（覆盖 SYSTEM_PROMPT 默认）；FallbackBackend 显式忽略；`LLMClient.reply` 加 `system_prompt` kwarg，构造期 inspect 探测 backend 是否接受 → 决定是否透传，旧 backend stub 不变签名零冲击。
+  - `coco/interact.py` — `InteractSession.__init__` 加 `profile_store: Optional[ProfileStore]`；通用 `_probe_kwarg(fn, name)` 替代旧 `_probe_accepts_history`（后者保留向后 API）；`handle_audio` 在 transcript 拿到后 → `extract_profile_signals` → `set_name`/`add_interest`/`add_goal` → emit `interact.profile_extracted`；LLM 调用前 `build_system_prompt(load(), base=SYSTEM_PROMPT)` 透传 `system_prompt` kwarg（仅当 `_llm_accepts_system_prompt`）。
+  - `coco/main.py` — 起步时构造 `ProfileStore`（`COCO_PROFILE_DISABLE` 时跳过），注入 `InteractSession`，启动 banner 打 `[coco][profile]` 行 + emit `interact.profile_loaded`。
+- **设计要点**：
+  - 默认 OFF 兼容：`profile_store=None` 时整段抽取/注入路径不走，行为完全等价 phase-3 + interact-006。
+  - `COCO_PROFILE_DISABLE=1` 杀手锏：load/save/add_*/reset 全 no-op；既不读盘也不写盘。
+  - schema_version 不匹配 → fail-soft 返空，原文件保留待人工迁移。
+  - atomic write 用 `os.replace`（Windows / POSIX 都原子）。
+  - emit 复用 "interact" component 短名（`interact.profile_extracted` / `interact.profile_loaded`），不扩展 AUTHORITATIVE_COMPONENTS。
+  - 路径默认 `~/.cache/coco/profile/profile.json`（macOS/Linux）或 `%LOCALAPPDATA%\coco\profile\profile.json`（Win）；`COCO_PROFILE_PATH` 完全覆盖。
+- **Verification**：verify_companion004.py 10/10 PASS → `evidence/companion-004/verify_summary.json`。
+- **Smoke**：全 9 段 PASS。
+- **Regression（独立行）**：interact004 PASS / interact005 PASS / interact006 PASS / companion_003 PASS / companion_vision PASS / vision_002 PASS / infra_debt_sweep PASS / infra_002 PASS / publish PASS。
+- **状态**：feat/companion-004 push 完待 Reviewer。in_progress；Reviewer LGTM 后 → passing + merge。
+- **下一步**：Reviewer fresh-context 评审（重点：抽取假阳性 / 跨平台路径 / fallback backend 不受影响 / 文件并发）；通过后切 passing 并 merge。
+
+
+## Session 032 — companion-004 closeout（2026-05-11）
+
+- **本轮目标**：Reviewer fresh-context 评审 LGTM (无 L0)，2 L1 必修 + L2/L3 known-debt 入档；执行修复 + V11/V12 新增 + 全量 regression + merge to main。
+- **L1 修复**（`coco/profile.py` `ProfileStore.save`）：
+  - **L1-1 profile.json 落盘权限收紧 0o600**：含 PII（昵称/兴趣/目标），原默认 0o644 全用户可读。`os.chmod(path, 0o600)` after `os.replace`；父目录 mkdir 后 `chmod 0o700`；Windows 仅影响 read-only 位，吞 `OSError`。
+  - **L1-2 atomic write 缺 fsync**：原代码 `tmp.write_text` 无 flush + fsync，power loss 可能丢数据。改为显式 `open(tmp, 'wb') + write + flush + os.fsync(fileno)` 后再 `os.replace(tmp, path)`，crash-safe。
+- **新增 verification**：
+  - **V11 file permission 0o600**（POSIX；`sys.platform == 'win32'` skip）：save 后断 `oct(p.stat().st_mode & 0o777) == '0o600'`；覆盖 save 仍为 0o600。
+  - **V12 fsync called**：`unittest.mock.patch('coco.profile.os.fsync', side_effect=real_fsync)` 包真 fsync 防 partial write 干扰；断 call_count ≥ 1；round-trip 仍正常。
+- **Verification**：verify_companion004.py 12/12 PASS（V1-V10 + V11/V12）。
+- **Smoke**：全 9 段 PASS。
+- **Regression（独立行）**：interact004 PASS / interact005 PASS / interact006 PASS / companion_003 PASS / companion_vision PASS / vision_002 PASS / infra_debt_sweep PASS / infra_002 PASS / publish PASS。
+- **known-debt 入档**（不阻断 passing）：
+  - L2 `_trim_to_word` 不切非标点中文（'我叫小明老师'→ name='小明老师'）；NAME_BLACKLIST 仅精确等值
+  - L2 '我喜欢吃饭'→ interests=['吃饭']；'我喜欢恐龙和太空'→ ['恐龙和太空']（未切'和'）
+  - L2 name 模式吞 1 字符英文（建议 MIN_X_LEN=2）
+  - L2 add_interest 跨进程 read-modify-write 非原子（单用户 OK；未来加 fcntl/msvcrt file lock）
+  - L2 NEGATIVE_INTEREST 整句一刀切，'我喜欢A但不喜欢B' 会丢 A
+  - L3 set_name(None) vs set_name('') 语义不区分
+  - L3 save() 不自更新 last_updated
+  - L3 os.replace 在 Windows AV 占用偶发 raise，无重试
+- **状态**：feat/companion-004 → status=passing；merge --no-ff 到 main；推 origin。
+- **下一步**：phase-4 进度 3/5 done (infra-002 / interact-006 / companion-004)，next: vision-003（LBPH 人脸 ID，priority=22）。

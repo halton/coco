@@ -1,8 +1,8 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.07214903831482,
-    "stop_dt_s": 0.0006721019744873047,
+    "elapsed_s": 8.002282857894897,
+    "stop_dt_s": 0.0004909038543701172,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -23,14 +23,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 12,
-      "antenna_count": 10
+      "goto_count": 14,
+      "antenna_count": 7
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.068535089492798,
-    "stop_dt_s": 0.012554168701171875,
+    "elapsed_s": 8.065608978271484,
+    "stop_dt_s": 0.004899263381958008,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -51,19 +51,19 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 9,
-      "antenna_count": 5
+      "goto_count": 12,
+      "antenna_count": 1
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.084849119186401,
-    "stop_dt_s": 0.0012958049774169922,
+    "elapsed_s": 12.010325193405151,
+    "stop_dt_s": 0.001322031021118164,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 60,
-      "hit_count": 60,
+      "detect_count": 59,
+      "hit_count": 59,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -79,8 +79,8 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 22,
-      "antenna_count": 6
+      "goto_count": 19,
+      "antenna_count": 7
     }
   }
 }

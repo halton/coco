@@ -51,37 +51,5 @@
     "V12.4 env override decay_s=120: 120.0 == 120.0",
     "V12.5 config_summary 含 emotion 段：{'enabled': True, 'config': {'decay_s': 120.0, 'enabled': True}}"
   ],
-  "failures": [],
-  "closeout": {
-    "reviewer_verdict": "LGTM after L1 fix (无 L0)",
-    "l1_fixes": [
-      "L1-1: glance_prob 缩放未实现 → 新增 emotion_glance_bias dict + _emotion_glance_scale() + _sample_glance_interval 反向缩 interval (happy/surprised=1.3 → interval/=1.3；sad/angry=0.7 → interval/=0.7)",
-      "L1-2: 半衰期术语 → 全仓改为 保持时长 (hold time / cutoff，cliff cutoff 非 half-life)；行为不变（V8.3 仍跑通）"
-    ],
-    "new_verifications": [
-      "V6.4 set_current_emotion(neutral) → scale=1.0 amp 上界等于 cfg 默认（PASS）",
-      "V7.3a happy glance interval ≤ base × 0.85（PASS：14.105 ≤ 15.586）",
-      "V7.3b sad glance interval ≥ base × 1.15（PASS：26.195 ≥ 21.087）"
-    ],
-    "pass_count_after": 47,
-    "fail_count_after": 0,
-    "known_debt": [
-      "L2: emit 异常静默吞掉（建议 except as e: log.warning）",
-      "L2: EmotionTracker.record() 无 score 阈值，低分覆盖高分",
-      "L2: emotion 是唯一接受 env 注入的子模块（与 L2-2 行为不一致；需后续逐步对齐）",
-      "L3: confidence 公式经验值 (/4)，未做语料校准",
-      "L3: TTS inspect 每次 handle_audio 重做（应构造期缓存 self._tts_accepts_emotion）",
-      "L3: set_current_emotion 无 lock（CPython GIL 下安全；phase-5 复合 state 时再加）"
-    ],
-    "regression": {
-      "verify_interact004": "PASS",
-      "verify_interact005": "PASS",
-      "verify_companion_003": "PASS",
-      "verify_companion_vision": "PASS",
-      "verify_vision_002": "PASS",
-      "verify_infra_debt_sweep": "PASS",
-      "verify_infra_002": "PASS",
-      "verify_publish": "PASS"
-    }
-  }
+  "failures": []
 }

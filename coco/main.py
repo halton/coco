@@ -314,6 +314,39 @@ class Coco(ReachyMiniApp):
                     flush=True,
                 )
 
+            # companion-004: 可选 ProfileStore（默认 OFF，向后兼容）。
+            # COCO_PROFILE_DISABLE=1 即使代码侧构造了 store，store 内部 load/save 也会 no-op。
+            _profile_store = None
+            try:
+                from coco.profile import (
+                    ProfileStore as _ProfileStore,
+                    profile_store_disabled_from_env as _profile_disabled,
+                    default_profile_path as _default_profile_path,
+                )
+                if not _profile_disabled():
+                    _profile_store = _ProfileStore()
+                    _p = _profile_store.load()
+                    print(
+                        f"[coco][profile] enabled path={_default_profile_path()} "
+                        f"name={_p.name!r} interests={_p.interests} goals={_p.goals}",
+                        flush=True,
+                    )
+                    try:
+                        emit(
+                            "interact.profile_loaded",
+                            name=_p.name,
+                            interests=list(_p.interests),
+                            goals=list(_p.goals),
+                            schema_version=_p.schema_version,
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                else:
+                    print("[coco][profile] disabled (COCO_PROFILE_DISABLE=1)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][profile] init failed: {type(e).__name__}: {e}", flush=True)
+                _profile_store = None
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -327,6 +360,7 @@ class Coco(ReachyMiniApp):
                     if power_state is not None else None
                 ),
                 dialog_memory=_dialog_memory,
+                profile_store=_profile_store,
             )
 
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())

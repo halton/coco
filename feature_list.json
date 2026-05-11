@@ -593,7 +593,7 @@
       "area": "companion",
       "title": "用户档案长期记忆（昵称/兴趣/目标本地 JSON）",
       "user_visible_behavior": "Coco 跨 session 记得用户的昵称、几个兴趣点与短期学习目标；用户说 '我叫小明' / '我喜欢恐龙' / '这周我想学加法' 时自动抽取并写入 ~/.cache/coco/profile/profile.json；下次启动后 Coco 在 LLM system prompt 中带上这些信息（'用户昵称：小明，兴趣：恐龙，目标：加法'），回应可主动引用。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-004",
         "infra-002"
@@ -606,8 +606,12 @@
         "隐私 & reset：实现 scripts/reset_profile.py 一键删除 profile.json + log；环境变量 COCO_PROFILE_DISABLE=1 禁用读写（既不 load 也不 save）；evidence 含跑 reset 后 verify 仍通过的 case。",
         "Reviewer fresh-context 评审：本地存储路径跨平台正确（macOS ~/.cache/coco / Windows %LOCALAPPDATA%）、JSON 模式版本字段、抽取误判风险（'我喜欢哥哥'→兴趣='哥哥' 显然不对）、profile 注入对 fallback backend 的影响（KEYWORD_ROUTES 不读 system prompt 应不受影响）、文件锁/并发写（同一 host 双进程启动）。"
       ],
-      "evidence": [],
-      "notes": "phase-4 定位：interact-004 解决了短期会话内 N 轮记忆，本 feature 解决跨 session 长期 profile——共同形成完整 '伴侣式' 记忆栈。明确不做：日记式 episodic memory（隐私 + 复杂度爆炸）/ 云同步（隐私 + 网络依赖）。schema_version=1 字段为未来扩展兜底。known-risk：(a) heuristic 抽取假阳性（'我不叫小明' 仍可能命中 '我叫'）→ 模式必须含负面前缀过滤；(b) 用户多人共用同一台机器时 profile 串台 → phase-4 单用户假设，多用户留 vision-003 face-id 之后做（profile 按 face_id 分桶）；(c) 文件并发写用 atomic write (写 .tmp → rename) 防 partial write。"
+      "evidence": [
+        "Session 032 (Engineer sub-agent, 2026-05-11): coco/profile.py + scripts/verify_companion004.py + scripts/reset_profile.py + InteractSession.profile_store + LLMClient.system_prompt 透传。verify_companion004.py 10/10 PASS（V1 round-trip+atomic / V2 missing+corrupt soft-fail / V3 LRU 截断 / V4 抽取 12/12=100% / V5 build_system_prompt / V6 backward-compat / V7 端到端两 session + LLM system_prompt 注入 / V8 COCO_PROFILE_DISABLE 杀手锏 / V9 schema_version 不匹配 fail-soft / V10 reset_profile.py 删后 load 不抛）。Smoke 9/9 PASS。Regression 9/9 PASS（interact004/005/006/companion_003/companion_vision/vision_002/infra_debt_sweep/infra_002/publish）。evidence/companion-004/verify_summary.json。Reviewer fresh-context 评审待跑（pending）。",
+        "feat/companion-004 push 完待 review 后 merge。",
+        "Session 032 closeout (sub-agent, 2026-05-11): Reviewer (sub-agent) fresh-context: LGTM after L1 fix. L1-1 chmod 0o600 落盘后 (PII tightening) + L1-2 显式 fsync before os.replace (crash-safe) 已修于 coco/profile.py ProfileStore.save。新增 V11 (file permission 0o600，POSIX；Windows skip) + V12 (fsync called via mock wrapping real fsync)。verify_companion004.py 12/12 PASS。Smoke 9/9 PASS。Regression 9/9 PASS (interact004/005/006/companion_003/companion_vision/vision_002/infra_debt_sweep/infra_002/publish)。evidence/companion-004/verify_summary.json closeout 段已写入。"
+      ],
+      "notes": "phase-4 定位：interact-004 解决了短期会话内 N 轮记忆，本 feature 解决跨 session 长期 profile——共同形成完整 '伴侣式' 记忆栈。明确不做：日记式 episodic memory（隐私 + 复杂度爆炸）/ 云同步（隐私 + 网络依赖）。schema_version=1 字段为未来扩展兜底。known-risk：(a) heuristic 抽取假阳性（'我不叫小明' 仍可能命中 '我叫'）→ 模式必须含负面前缀过滤；(b) 用户多人共用同一台机器时 profile 串台 → phase-4 单用户假设，多用户留 vision-003 face-id 之后做（profile 按 face_id 分桶）；(c) 文件并发写用 atomic write (写 .tmp → rename) 防 partial write。 [closeout known-debt 入档（不修，记案）]: (L2) _trim_to_word 不切非标点中文（'我叫小明老师'→ name='小明老师'）; (L2) NAME_BLACKLIST 仅精确等值; (L2) '我喜欢吃饭'→ interests=['吃饭']；'我喜欢恐龙和太空'→ ['恐龙和太空']（未切'和'）; (L2) name 模式吞 1 字符英文（建议 MIN_X_LEN=2）; (L2) add_interest 跨进程 read-modify-write 非原子（单用户 OK；未来加 fcntl/msvcrt file lock）; (L2) NEGATIVE_INTEREST 整句一刀切，'我喜欢A但不喜欢B' 会丢 A; (L3) set_name(None) vs set_name('') 语义不区分; (L3) save() 不自更新 last_updated; (L3) os.replace 在 Windows AV 占用偶发 raise，无重试。"
     },
     {
       "id": "vision-003",
