@@ -626,7 +626,7 @@
 - **本轮目标**：phase-3 软件层全 passing，用户决定不在 phase-4 内部 gate（"全部 feature 完成后再真机 UAT"），需要规划 phase-4 candidate 写入 feature_list.json。
 - **已完成**：feature_list.json 新增 phase-4 candidate 5 个（priority 19-23，全 not_started），_change_log + last_updated 同步：
   - **infra-002** (p19, area=infra, deps=[infra-debt-sweep], effort=M)：配置中心 coco/config.py 集中所有 COCO_* env + structured jsonl logging（COCO_LOG_JSONL=1）+ 5 个关键 component 接入 event；phase-4 第一个上，给后续 feature 铺路。
-  - **interact-006** (p20, area=interact, deps=[interact-004, infra-002], effort=S/M)：情绪检测（5 类 heuristic 关键词）→ idle 风格缩放 + TTS log 标注；半衰期 60s；100% 离线 simulate-first，留 LLM-emotion backend Protocol。
+  - **interact-006** (p20, area=interact, deps=[interact-004, infra-002], effort=S/M)：情绪检测（5 类 heuristic 关键词）→ idle 风格缩放 + TTS log 标注；保持时长（hold time / cutoff，cliff cutoff，非 half-life）60s；100% 离线 simulate-first，留 LLM-emotion backend Protocol。
   - **companion-004** (p21, area=companion, deps=[interact-004, infra-002], effort=M)：UserProfile 长期记忆（昵称/兴趣 ≤5/目标 ≤3 本地 JSON ~/.cache/coco/profile/）+ 关键词抽取 + LLM system prompt 注入；COCO_PROFILE_DISABLE 旁路 + reset 脚本。
   - **vision-003** (p22, area=vision, deps=[vision-002, infra-002], effort=M)：人脸 ID 识别（cv2.face LBPH，opencv-contrib-python）+ ~/.cache/coco/faces/ 持久化 + enroll CLI；contrib 不可用时 fallback 灰度直方图 baseline；视觉子系统 detect→track→identify 三层完整。
   - **interact-007** (p23, area=interact, deps=[companion-003, companion-004, interact-006, vision-002], effort=M)：主动话题发起（ACTIVE + face_present_30s + idle_60s + 节流_180s）；topic 池 12 条按 profile.interests/goals 优先选；15s awaiting-response 窗口；phase-4 终曲组合 phase-3 全部 + phase-4 新能力。
@@ -683,4 +683,24 @@
   - L3-4 跨平台日志路径
 - **状态**：feat/infra-002 → status=passing；merge --no-ff 到 main；推 origin。
 - **下一步**：phase-4 进度 1/5 done (infra-002)，next: interact-006（情绪检测，priority=20）。
+
+## Session 031 — interact-006 closeout（2026-05-11）
+
+- **本轮目标**：Reviewer LGTM (无 L0)，2 个 L1 必修 + L2/L3 known-debt 入档；执行修复 + V6.4/V7.3a/V7.3b 新增 verification + 全量 regression + merge to main。
+- **L1 修复**：
+  - **L1-1 glance_prob 缩放未实现**：spec 第 3 条要求 micro_amp **AND** glance_prob 都按 emotion 缩放；之前只接了 micro。`coco/idle.py` 新增 `IdleConfig.emotion_glance_bias` dict (happy/surprised=1.3, sad/angry=0.7, neutral=1.0) + `_emotion_glance_scale()` 方法 + `_sample_glance_interval()` 反向应用 (interval /= scale)。新增 V7.3a/b 锁住：happy interval ≤ base × 0.85；sad interval ≥ base × 1.15。
+  - **L1-2 半衰期术语 vs 实现**：实现是 cliff cutoff 不是 half-life；`coco/emotion.py` docstring + `feature_list.json` interact-006 spec/notes + `claude-progress.md` Session 028 + `scripts/verify_interact006.py` V8 print 全部把 "半衰期" 改为 "保持时长 (hold time / cutoff，cliff cutoff 非 half-life)"；行为不变（V8.3 仍跑通）。
+- **顺手项**：新增 V6.4 锁 `set_current_emotion("neutral")` 行为等价默认 (scale=1.0，amp 上界与 cfg 默认一致)；evidence/interact-006/verify_summary.json 加 closeout 块。
+- **Verification**：`scripts/verify_interact006.py` V1-V12 + V6.4 + V7.3a/b 共 47/0 PASS。
+- **Smoke**：全 9 段 PASS（VAD/wake/ASR/TTS/vision/face-tracker/companion-vision/power-state/config/publish）。
+- **Regression（独立行）**：verify_interact004 PASS / verify_interact005 PASS / verify_companion_003 PASS / verify_companion_vision PASS / verify_vision_002 PASS / verify_infra_debt_sweep PASS / verify_infra_002 PASS / verify_publish PASS。
+- **known-debt 入档**（不阻断 passing）：
+  - L2 emit 异常静默吞掉（建议 except as e: log.warning）
+  - L2 EmotionTracker.record() 无 score 阈值，低分覆盖高分
+  - L2 emotion 是唯一接受 env 注入的子模块（与 infra-002 L2-2 行为不一致；需后续逐步对齐）
+  - L3 confidence 公式 /4 经验值未做语料校准
+  - L3 TTS inspect 每次 handle_audio 重做（应构造期缓存 self._tts_accepts_emotion）
+  - L3 set_current_emotion 无 lock（CPython GIL 下安全；phase-5 复合 state 时再加）
+- **状态**：feat/interact-006 → status=passing；merge --no-ff 到 main；推 origin。
+- **下一步**：phase-4 进度 2/5 done (infra-002 / interact-006)，next: companion-004（UserProfile 跨 session 长期记忆，priority=21）。
 

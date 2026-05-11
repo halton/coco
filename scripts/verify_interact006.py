@@ -241,6 +241,31 @@ def v6_backward_compat() -> None:
     else:
         fail(f"V6.3 micro_head call_count={robot.goto_target.call_count}")
 
+    # 6.4 set_current_emotion('neutral') 后 micro_head 行为等价默认 (scale=1.0，amp 上界与 cfg 默认相同)
+    cfg3 = IdleConfig()
+    robot3 = MagicMock()
+    anim3 = IdleAnimator(robot3, stop_ev, config=cfg3)
+    anim3.set_current_emotion("neutral")
+    captured_amps: List[float] = []
+    orig_uniform_3 = anim3.rng.uniform
+
+    def _spy_neutral(a, b):
+        captured_amps.append(b)
+        return orig_uniform_3(a, b)
+    anim3.rng.uniform = _spy_neutral  # type: ignore[assignment]
+    for _ in range(50):
+        anim3._micro_head()
+    if anim3._emotion_scale() == 1.0 and robot3.goto_target.call_count >= 50:
+        # 上界中应包含 cfg3.micro_yaw_amp_deg 与 cfg3.micro_pitch_amp_deg
+        max_amp_seen = max(captured_amps) if captured_amps else 0.0
+        expected_max = max(cfg3.micro_yaw_amp_deg, cfg3.micro_pitch_amp_deg)
+        if abs(max_amp_seen - expected_max) < 1e-6:
+            ok(f"V6.4 emotion='neutral' scale=1.0；amp 上界 {max_amp_seen:.4f} == 默认 {expected_max:.4f}")
+        else:
+            fail(f"V6.4 amp 上界 {max_amp_seen:.4f} != 默认 {expected_max:.4f}")
+    else:
+        fail(f"V6.4 scale={anim3._emotion_scale()} calls={robot3.goto_target.call_count}")
+
 
 # ---------------------------------------------------------------------------
 # V7: emotion bias 影响 micro_amp
@@ -300,6 +325,38 @@ def v7_emotion_bias_amp() -> None:
     else:
         fail(f"V7.2 sad_amp {sad_avg:.3f} > base × 0.8 ({base_avg * 0.8:.3f})")
 
+    # V7.3 glance 频率缩放：emotion_glance_bias 反向应用到 interval。
+    #   happy/surprised scale=1.3 → interval ≈ baseline / 1.3
+    #   sad/angry scale=0.7 → interval ≈ baseline / 0.7
+    def _trace_glance_intervals(emotion: Optional[str], n: int = 200) -> List[float]:
+        import random as _r
+        robot_g = MagicMock()
+        stop_ev_g = _th.Event()
+        cfg_g = IdleConfig()
+        anim_g = IdleAnimator(robot_g, stop_ev_g, config=cfg_g, rng=_r.Random(7))
+        if emotion is not None:
+            anim_g.set_current_emotion(emotion)
+        return [anim_g._sample_glance_interval() for _ in range(n)]
+
+    base_int = _trace_glance_intervals(None, n=300)
+    happy_int = _trace_glance_intervals("happy", n=300)
+    sad_int = _trace_glance_intervals("sad", n=300)
+    base_int_avg = sum(base_int) / len(base_int)
+    happy_int_avg = sum(happy_int) / len(happy_int)
+    sad_int_avg = sum(sad_int) / len(sad_int)
+    print(f"  glance interval base={base_int_avg:.3f}  happy={happy_int_avg:.3f}  sad={sad_int_avg:.3f}", flush=True)
+
+    # happy 应让 interval 比 base 短至少 15%（理论 1/1.3 ≈ 0.769，留 buffer）
+    if happy_int_avg <= base_int_avg * 0.85:
+        ok(f"V7.3a happy glance interval ≤ base × 0.85 ({happy_int_avg:.3f} <= {base_int_avg * 0.85:.3f})")
+    else:
+        fail(f"V7.3a happy glance interval {happy_int_avg:.3f} > base × 0.85 ({base_int_avg * 0.85:.3f})")
+    # sad 应让 interval 比 base 长至少 15%（理论 1/0.7 ≈ 1.428）
+    if sad_int_avg >= base_int_avg * 1.15:
+        ok(f"V7.3b sad glance interval ≥ base × 1.15 ({sad_int_avg:.3f} >= {base_int_avg * 1.15:.3f})")
+    else:
+        fail(f"V7.3b sad glance interval {sad_int_avg:.3f} < base × 1.15 ({base_int_avg * 1.15:.3f})")
+
 
 # ---------------------------------------------------------------------------
 # V8: EmotionTracker decay
@@ -307,7 +364,7 @@ def v7_emotion_bias_amp() -> None:
 
 
 def v8_tracker_decay() -> None:
-    print("\n[V8] EmotionTracker decay 半衰期", flush=True)
+    print("\n[V8] EmotionTracker decay 保持时长 (hold time / cutoff)", flush=True)
     clk = {"t": 1000.0}
     tracker = EmotionTracker(decay_s=60.0, clock=lambda: clk["t"])
     label = EmotionLabel(Emotion.HAPPY, 0.5, ["开心"])

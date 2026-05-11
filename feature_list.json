@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
-  "last_updated": "2026-05-10",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。",
+  "last_updated": "2026-05-11",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -566,7 +566,7 @@
       "area": "interact",
       "title": "情绪/语气检测（ASR 文本 → emotion label → idle/TTS 反馈）",
       "user_visible_behavior": "Coco 听到用户说话后，从转写文本判断当前情绪（neutral/happy/sad/angry/surprised 五分类，简化版）；情绪驱动 idle 风格（happy 时 micro 幅度↑、sad 时 ↓）与 TTS 语气提示（log 标注 emotion=...，真机 TTS 语气调参留 milestone）；fallback 为 neutral，不阻塞主对话路径。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-004",
         "infra-002"
@@ -574,13 +574,18 @@
       "verification": [
         "实现 coco/emotion.py：EmotionDetector 类，detect(text: str) -> EmotionLabel(name, score)。phase-4 简化版：基于关键词词典 + 标点/重复模式启发式（'好开心/太棒了/!'→happy，'难过/伤心/哎'→sad，'气死/讨厌/烦'→angry，'真的吗/居然'→surprised，其余 neutral）；提供 backend Protocol 留接口给后续 LLM-based 替换。",
         "fixture：tests/fixtures/text/emotion_cases.json 至少 20 条 (text, expected_label) 覆盖 5 类各 ≥3 条 + 边界（空串 / 仅标点 / 中英混杂）；准确率 ≥ 80%（heuristic baseline 够用，进阶留 phase-5 LLM-emotion）。",
-        "集成 IdleAnimator：IdleConfig 加 emotion_bias dict，micro_amp/glance_prob 按当前 emotion 缩放（happy=1.3x / sad=0.7x / 其它=1.0x）；EmotionDetector 由 InteractSession 在 handle_audio 里调用并写入 IdleAnimator.set_current_emotion(label)；happy/sad 衰减回 neutral 的半衰期 60s（COCO_EMOTION_DECAY_S 可调）。",
+        "集成 IdleAnimator：IdleConfig 加 emotion_bias dict，micro_amp/glance_prob 按当前 emotion 缩放（happy=1.3x / sad=0.7x / 其它=1.0x）；EmotionDetector 由 InteractSession 在 handle_audio 里调用并写入 IdleAnimator.set_current_emotion(label)；happy/sad 衰减回 neutral 的保持时长（hold time / cutoff，cliff cutoff，非 half-life）60s（COCO_EMOTION_DECAY_S 可调）。",
         "集成 TTS：tts.say() 接 emotion 参数（仅 log 标注，不真实改 voice 参数；phase-4 simulate-only，真机调参留 milestone）；evidence 抓 log 行 'tts say emotion=happy text=...'。",
         "scripts/verify_interact006.py：(a) 20 条 fixture 准确率 ≥80%；(b) 注入 happy 后 idle 60s trace 中 micro_amp 平均 > neutral baseline 的 1.2x；(c) 60s 后衰减回 neutral；(d) emotion='neutral' 时 idle 行为与 phase-3 完全一致（regression）；(e) 异常输入 (None/数字/超长字符串) 返回 neutral 不抛。",
-        "Reviewer fresh-context 评审：5 类标签集合是否合理（避免膨胀）、heuristic 关键词词典中英文覆盖、emotion 不污染 KEYWORD_ROUTES 路径选择（独立通道）、与 DialogMemory 无耦合（emotion 不进 history）、半衰期 60s 默认值合理性。"
+        "Reviewer fresh-context 评审：5 类标签集合是否合理（避免膨胀）、heuristic 关键词词典中英文覆盖、emotion 不污染 KEYWORD_ROUTES 路径选择（独立通道）、与 DialogMemory 无耦合（emotion 不进 history）、保持时长（hold time / cutoff）60s 默认值合理性。"
       ],
-      "evidence": [],
-      "notes": "phase-4 设计要点：simulate-first（关键词启发式）保证 100% 离线 + 0 推理延迟；后续如真机阶段需求强可换 LLM 二次回应（'你听起来有点难过' 类）—— 留 backend Protocol 不锁死。emotion 影响范围严格限定 idle 风格 + TTS log 标注，不改 reply 文本（reply 由 LLM/KEYWORD_ROUTES 自主决定，避免双层串扰）。半衰期决策依据：人类对话情绪持续约 30-90s（参考心理学常数），60s 居中。known-risk：(a) heuristic 准确率天花板低（多义词如 '哎' 可能 sad/无奈/感叹），fixture 必须严格选词；(b) idle 风格反馈在 mockup-sim 上是 log + 数值断言，真机才有用户可感知差异；(c) 中英混杂时 token 切分不严密（用空格 + 单字 fallback），生僻 emoji 不识别。"
+      "evidence": [
+        "scripts/verify_interact006.py: PASS=47 FAIL=0 (V1-V12 + V6.4 + V7.3a/b 新增)；evidence/interact-006/verify_summary.json",
+        "Reviewer (sub-agent): LGTM after L1 fix (无 L0)；L1-1 glance_prob 缩放新增 emotion_glance_bias + _emotion_glance_scale + _sample_glance_interval 反向缩 interval；L1-2 半衰期术语全仓改为 保持时长 (hold time / cutoff，cliff cutoff 非 half-life)，行为不变",
+        "Smoke (./scripts/smoke.py)：全 9 段 PASS（VAD/wake/ASR/TTS/vision/face-tracker/companion-vision/power-state/config/publish）",
+        "Regression：verify_interact004/005 + verify_companion_003 + verify_companion_vision + verify_vision_002 + verify_infra_debt_sweep + verify_infra_002 + verify_publish 各独立 PASS"
+      ],
+      "notes": "phase-4 设计要点：simulate-first（关键词启发式）保证 100% 离线 + 0 推理延迟；后续如真机阶段需求强可换 LLM 二次回应（'你听起来有点难过' 类）—— 留 backend Protocol 不锁死。emotion 影响范围严格限定 idle 风格 + TTS log 标注，不改 reply 文本（reply 由 LLM/KEYWORD_ROUTES 自主决定，避免双层串扰）。保持时长（hold time / cutoff，cliff cutoff，非 half-life）决策依据：人类对话情绪持续约 30-90s（参考心理学常数），60s 居中。known-risk：(a) heuristic 准确率天花板低（多义词如 '哎' 可能 sad/无奈/感叹），fixture 必须严格选词；(b) idle 风格反馈在 mockup-sim 上是 log + 数值断言，真机才有用户可感知差异；(c) 中英混杂时 token 切分不严密（用空格 + 单字 fallback），生僻 emoji 不识别。closeout (Session 031) 修 L1-1 (glance_prob scale) + L1-2 (术语)；known-debt：L2 emit 异常静默吞掉（建议 except as e: log.warning）；L2 EmotionTracker.record() 无 score 阈值低分覆盖高分；L2 emotion 是唯一接受 env 注入的子模块（与 infra-002 L2-2 不一致，需后续对齐）；L3 confidence 公式 /4 经验值未做语料校准；L3 TTS inspect 每次 handle_audio 重做（应构造期缓存 self._tts_accepts_emotion）；L3 set_current_emotion 无 lock（CPython GIL 下安全，phase-5 复合 state 时再加）。"
     },
     {
       "id": "companion-004",
