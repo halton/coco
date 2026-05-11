@@ -14,7 +14,16 @@ from typing import Any, Dict, List, Mapping, Optional
 from coco.config import CocoConfig, config_summary
 
 
-SENSITIVE_TOKENS = ("API_KEY", "TOKEN", "SECRET", "PASSWORD", "ACCESS_KEY")
+SENSITIVE_TOKENS = (
+    "API_KEY",
+    "TOKEN",
+    "SECRET",
+    "PASSWORD",
+    "ACCESS_KEY",
+    "_KEY",          # 捕获 *_KEY 后缀（COCO_FOO_KEY / SIGN_KEY 等）
+    "PRIVATE_KEY",
+    "AUTH",          # 捕获 *_AUTH / AUTH_TOKEN 等
+)
 
 
 def _is_sensitive_key(name: str) -> bool:
@@ -97,7 +106,7 @@ def render_banner(cfg: CocoConfig, env: Optional[Mapping[str, str]] = None) -> s
 
     # --- env ---
     lines.append("")
-    lines.append("[COCO_* env]")
+    lines.append("[COCO_* env] (COCO_* only)")
     env_snap = coco_env_snapshot(env)
     if env_snap:
         for k in sorted(env_snap.keys()):

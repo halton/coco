@@ -212,6 +212,11 @@ class RotatingJsonlWriter:
     def _should_rotate(self, line_bytes: int) -> bool:
         if self.max_bytes <= 0:
             return False
+        # infra-004 L2: 保护——若单行本身就超过 max_bytes，rotate 之后新文件仍装不下，
+        # 每条超长行都消耗一档 backup_count，几条就把 retention 链全冲掉。直接写下去
+        # 让单条超长行存活，不破坏 rotate 链路。
+        if line_bytes > self.max_bytes:
+            return False
         return (self._bytes_written + line_bytes) > self.max_bytes
 
     def _do_rotate(self) -> None:

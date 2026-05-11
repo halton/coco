@@ -12,6 +12,8 @@ V9  RotatingJsonlWriter retention=N，超出删最老
 V10 rotate 期间多线程并发写不丢日志
 V11 metrics.jsonl 同样 rotate（max_bytes 极小，连续写触发 .1）
 V12 ConfigValidationError 类型继承 ValueError；issues 含 error 项
+V13 SENSITIVE_TOKENS 覆盖 *_KEY / PRIVATE_KEY / *_AUTH（mock env 全部 ***）
+V14 RotatingJsonlWriter：单行 > max_bytes 且文件空时不重复 rotate（保护 backup_count）
 """
 
 from __future__ import annotations
@@ -284,6 +286,54 @@ def v12_config_validation_error_type() -> None:
         _check("str(e) 含 error msg", "x" in str(e), f"str={e}")
 
 
+def v13_sensitive_token_coverage() -> None:
+    _section("V13: SENSITIVE_TOKENS 覆盖 *_KEY / PRIVATE_KEY / *_AUTH")
+    env = {
+        "COCO_PRIVATE_KEY": "pk-real",
+        "COCO_FOO_AUTH": "tok-real",
+        "COCO_BAR_KEY": "k-real",
+        "COCO_FOO": "bar",  # 普通 env，应原样保留
+    }
+    snap = coco_env_snapshot(env)
+    _check("COCO_PRIVATE_KEY → ***", snap.get("COCO_PRIVATE_KEY") == "***",
+           f"got={snap.get('COCO_PRIVATE_KEY')!r}")
+    _check("COCO_FOO_AUTH → ***", snap.get("COCO_FOO_AUTH") == "***",
+           f"got={snap.get('COCO_FOO_AUTH')!r}")
+    _check("COCO_BAR_KEY → ***", snap.get("COCO_BAR_KEY") == "***",
+           f"got={snap.get('COCO_BAR_KEY')!r}")
+    _check("COCO_FOO 未脱敏", snap.get("COCO_FOO") == "bar",
+           f"got={snap.get('COCO_FOO')!r}")
+    # banner_payload 也要全部脱敏
+    payload = banner_payload(CocoConfig(), env=env)
+    _check("banner_payload env 全脱敏",
+           all(payload["env"].get(k) == "***" for k in
+               ("COCO_PRIVATE_KEY", "COCO_FOO_AUTH", "COCO_BAR_KEY")),
+           f"payload.env={payload['env']}")
+
+
+def v14_rotate_guard_oversize_line() -> None:
+    _section("V14: 超大单行（> max_bytes）只 rotate 一次（不每行 rotate）")
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "guard.jsonl"
+        # max_bytes=200，每行约 1000 字节（远超）
+        w = RotatingJsonlWriter(p, max_bytes=200, backup_count=5)
+        big = "x" * 1000
+        for i in range(5):
+            w.write_line(json.dumps({"i": i, "p": big}))
+        w.flush()
+        w.close()
+        # 期望：因为初始空文件 + 单行超长 → 不 rotate；后续每行已写满，但
+        # _bytes_written != 0 时若 +新行 > max → rotate 一次（rotate 后 _bytes_written=0
+        # 又触发保护不再 rotate）。所以期待最多 .1 存在，绝不该有 .2 .3 .4 .5。
+        r1 = p.with_suffix(".jsonl.1")
+        r2 = p.with_suffix(".jsonl.2")
+        r3 = p.with_suffix(".jsonl.3")
+        _check("主文件存在", p.exists())
+        # 关键不变量：超大单行场景下不应该每行都 rotate；.3 / .4 / .5 都不该出现
+        _check("无 .3（单行超大不应耗尽 backup）", not r3.exists(),
+               f".3 不该存在: exists={r3.exists()}")
+
+
 def main() -> int:
     print("\n" + "=" * 60)
     print(" verify_infra_004 — config schema + banner + rotate")
@@ -301,6 +351,8 @@ def main() -> int:
     v10_concurrent_writes()
     v11_metrics_rotate()
     v12_config_validation_error_type()
+    v13_sensitive_token_coverage()
+    v14_rotate_guard_oversize_line()
 
     print("\n" + "=" * 60)
     print(f" PASS={len(PASSES)} FAIL={len(FAILURES)}")

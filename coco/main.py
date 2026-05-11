@@ -196,6 +196,16 @@ class Coco(ReachyMiniApp):
                 )
                 print(f"[coco][banner] render failed: {_be!r}", flush=True)
         except Exception as _e:  # noqa: BLE001
+            # infra-004 L2: ConfigValidationError 必须干净退出，不能"continuing" — 否则
+            # setup_logging 没跑、cfg 未定义，下游 import / 读 _coco_cfg 会 NameError 半启动。
+            from coco.config import ConfigValidationError as _CVE
+            if isinstance(_e, _CVE):
+                print(
+                    f"[coco][config] FATAL: config validation failed: {_e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                sys.exit(2)
             print(f"[coco][config] load_config/setup_logging failed (continuing): {_e!r}", flush=True)
 
         block_frames = int(SAMPLE_RATE * BLOCK_SECONDS)

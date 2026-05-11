@@ -878,7 +878,7 @@
       "area": "infra",
       "title": "config schema 校验 + 启动 banner + jsonl 日志按大小 rotate",
       "user_visible_behavior": "启动时若 coco.yaml 缺关键 key / 类型错误 / 超出阈值，给出明确错误并 fail-fast（不再默默 fallback 默默运行不一致状态）；启动 banner 列出生效配置摘要（model/log path/feature flags）；events.jsonl / metrics.jsonl 超过可配置大小（默认 10MB）时自动 rotate 出 .1 / .2，最多保留 3 份。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-002",
         "infra-003"
@@ -889,8 +889,13 @@
         "scripts/verify_infra_004.py：V1 正常 yaml load OK；V2 缺 key fail-fast；V3 类型错误 fail-fast；V4 banner 输出含 model/log path；V5 rotate 触发（写入超过阈值后产生 .1 文件）；V6 retention（超过 N 份后最旧的被删）；V7 regression infra-002/003 verify 全通过。",
         "Reviewer fresh-context 评审：schema 演进策略（向后兼容/字段废弃流程）、rotate 并发安全（多线程写 jsonl）、banner 不泄漏敏感 env、retention 删除前 fsync。"
       ],
-      "evidence": [],
-      "notes": "纯 sim 可验。rotate 并发安全用文件锁或 single-writer 约束；优先后者（events.jsonl 写入只在 EventBus 单线程）。banner 重在'看一眼就知道生效配置'，不做交互。"
+      "evidence": [
+        "verify_infra_004.py V1-V14 PASS=35 FAIL=0 (含 V13 SENSITIVE_TOKENS 覆盖 *_KEY/PRIVATE_KEY/*_AUTH + V14 超大单行 rotate 保护)。",
+        "Reviewer (sub-agent): LGTM-with-fixes。L1 修复：banner.SENSITIVE_TOKENS 扩 ('_KEY','PRIVATE_KEY','AUTH')，COCO_PRIVATE_KEY/COCO_FOO_AUTH/COCO_BAR_KEY 全部脱敏为 ***。L2 修复：(a) main.py ConfigValidationError 路径改 sys.exit(2) 干净退出，避免 setup_logging 未跑导致下游半启动 NameError；(b) banner [COCO_* env] 标题加 (COCO_* only) 说明范围；(c) RotatingJsonlWriter._should_rotate 加保护——单行本身 > max_bytes 时不 rotate（否则每条超长行都消耗一档 backup_count，几条就把 retention 链冲掉）。",
+        "回归：infra_002/003 + interact_004/005/006/007/008 + companion_003/004/005 + companion_vision + vision_002/003/004/004b + vision_004b_wire (SKIP) + infra_debt_sweep + publish 全 PASS（exit=0）。",
+        "L3 known-debt：(a) RotatingJsonlWriter._do_rotate 多步 rename 非原子（崩溃可能中间态丢日志）；(b) RotatingJsonlWriter 仅 flush 不 fsync（OS 硬崩溃丢 buffer）；(c) metrics(50MB) vs logging(10MB) 默认 max_bytes 不同（有意设计）。后续 feature 再处理。"
+      ],
+      "notes": "纯 sim 可验。rotate 并发安全用 threading.Lock（single-writer 在 metrics 端、stdlib RotatingFileHandler 内置锁在 logging 端）。banner 重在'看一眼就知道生效配置'，不做交互。closeout Session 032 (2026-05-11)。"
     },
     {
       "id": "interact-009",
