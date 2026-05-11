@@ -73,6 +73,16 @@ class LLMConfig:
     api_key_set: bool = False  # 仅记是否已设，不存 secret
 
 
+@dataclass(frozen=True)
+class MetricsConfig:
+    """COCO_METRICS=1 启用；COCO_METRICS_INTERVAL 秒（clamp [1,300]）；
+    COCO_METRICS_PATH 输出 jsonl 路径（默认 ~/.cache/coco/metrics.jsonl）。"""
+
+    enabled: bool = False
+    interval_s: float = 5.0
+    path: str = ""
+
+
 # 业务子 config（来自各模块 dataclass，避免重复定义；这里只引类型）
 # 在 __init__ 时按需 import，防循环。
 
@@ -89,6 +99,7 @@ class CocoConfig:
     ptt: PTTConfig = field(default_factory=PTTConfig)
     camera: CameraConfig = field(default_factory=CameraConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
+    metrics: MetricsConfig = field(default_factory=MetricsConfig)
 
     # 各业务子 config 用 Any 占位以避免 import 时循环（运行期 from_env 注入）。
     vad: Any = None  # coco.vad_trigger.VADConfig
@@ -199,6 +210,13 @@ def _log_from_env(env: Mapping[str, str]) -> LogConfig:
     return LogConfig(jsonl=jsonl, level=level)
 
 
+def _metrics_from_env(env: Mapping[str, str]) -> MetricsConfig:
+    enabled = _bool_env(env, "COCO_METRICS", default=False)
+    interval_s = _float_env(env, "COCO_METRICS_INTERVAL", default=5.0, lo=1.0, hi=300.0)
+    path = _str_env(env, "COCO_METRICS_PATH")
+    return MetricsConfig(enabled=enabled, interval_s=interval_s, path=path)
+
+
 def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     """单点入口：env=None 时用 os.environ。
 
@@ -244,6 +262,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         ptt=_ptt_from_env(env),
         camera=CameraConfig(spec=_str_env(env, "COCO_CAMERA")),
         llm=_llm_from_env(env),
+        metrics=_metrics_from_env(env),
         vad=vad_cfg,
         vad_enabled=vad_enabled,
         wake=wake_cfg,
@@ -287,6 +306,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
             "model": cfg.llm.model or "(unset)",
             "api_key": "set" if cfg.llm.api_key_set else "unset",
         },
+        "metrics": asdict(cfg.metrics),
         "vad": {"enabled": cfg.vad_enabled, "config": _sub(cfg.vad)},
         "wake": {"enabled": cfg.wake_enabled, "config": _sub(cfg.wake)},
         "power": {"idle_enabled": cfg.power_idle_enabled, "config": _sub(cfg.power)},
@@ -301,6 +321,7 @@ __all__ = [
     "PTTConfig",
     "CameraConfig",
     "LLMConfig",
+    "MetricsConfig",
     "load_config",
     "config_summary",
 ]

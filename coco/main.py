@@ -488,6 +488,42 @@ class Coco(ReachyMiniApp):
                 except Exception as e:  # noqa: BLE001
                     print(f"[coco][proactive] start failed: {type(e).__name__}: {e}", flush=True)
 
+            # infra-003: 可选 MetricsCollector（默认 OFF；COCO_METRICS=1 启用）。
+            # 把已构造的 power/dialog/proactive/face 注入；缺谁就 skip 谁的 source。
+            # L1-5: 真正用 cfg.metrics 驱动（path / interval_s / enabled），不再走
+            # path_from_env 的次级路径——env 解析仍由 config.py 完成。
+            _metrics = None
+            try:
+                from coco.metrics import (
+                    metrics_enabled_from_env as _metrics_enabled,
+                    build_default_collector as _build_metrics,
+                    default_metrics_path as _default_metrics_path,
+                )
+                _mcfg = getattr(_coco_cfg, "metrics", None)
+                _enabled = bool(_mcfg.enabled) if _mcfg is not None else _metrics_enabled()
+                if _enabled:
+                    _m_path = Path(_mcfg.path) if (_mcfg and _mcfg.path) else _default_metrics_path()
+                    _m_interval = float(_mcfg.interval_s) if _mcfg is not None else None
+                    _metrics = _build_metrics(
+                        power_state=power_state,
+                        dialog_memory=_dialog_memory,
+                        proactive=_proactive,
+                        face_tracker=_face_tracker_shared,
+                        path=_m_path,
+                        interval_s=_m_interval,
+                    )
+                    _metrics.start(stop_event)
+                    print(
+                        f"[coco][metrics] enabled path={_metrics.path} "
+                        f"interval={_metrics.interval_s:.1f}s sources={len(_metrics.sources)}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][metrics] disabled (cfg.metrics.enabled=False)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][metrics] init failed: {type(e).__name__}: {e}", flush=True)
+                _metrics = None
+
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
             if use_vad:
                 # interact-003: 用 VAD 取代 stdin Enter；session.tts_say_fn 包一层 mute 防自激
@@ -660,6 +696,12 @@ class Coco(ReachyMiniApp):
                     _face_tracker_shared.join(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][face] join failed: {e!r}", flush=True)
+            # infra-003: 停 MetricsCollector
+            try:
+                if "_metrics" in locals() and _metrics is not None:
+                    _metrics.stop(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][metrics] stop failed: {e!r}", flush=True)
 
 
 def main() -> None:

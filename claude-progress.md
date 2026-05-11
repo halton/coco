@@ -844,3 +844,42 @@ milestone 切到 `phase-5 体验深化（多目标视觉 + 对话状态机 + 情
 ### 下一步
 - 持续开发模式继续：下一个执行 **infra-003**（priority=24，infra 类，唯一 not_started 中最低数字）。
 - `uat-phase4` 不阻塞，由用户在方便时启动；执行结果回填对应 feature evidence。
+
+---
+
+## Session — infra-003 step 1 实现 (Engineer sub-agent)
+
+**feat/infra-003** 分支：
+- `coco/metrics.py` 新增：`Metric` dataclass + `MetricsCollector`（后台线程，按 interval 写 jsonl）+ `SLORule`（连续违例 emit `metrics.slo_breach`）+ 5 个内置 source（cpu_percent / mem_rss_mb / power_state / dialog_turns_total / proactive_topics_total / face_tracks_active）；psutil 软依赖（缺失即 skip system source）；env：`COCO_METRICS=1` 默认 OFF / `COCO_METRICS_INTERVAL` clamp [1,300] / `COCO_METRICS_PATH` 默认 `~/.cache/coco/metrics.jsonl`。
+- `coco/logging_setup.py`：`AUTHORITATIVE_COMPONENTS` 加 `metrics`。
+- `coco/config.py`：新增 `MetricsConfig`（enabled/interval_s/path）+ `_metrics_from_env`，`config_summary` 顶层 keys += `metrics`。
+- `coco/main.py`：`COCO_METRICS=1` 时构造 + start collector，注入已构造的 power/dialog/proactive/face 引用；finally 段加 `_metrics.stop()`。
+- `scripts/verify_infra_003.py`：V1-V14 全 PASS（50/50）。
+- 回归：infra-002 / interact-004/005/006/007 / companion-003/004/companion-vision / vision-002/003 / infra-debt-sweep / publish 全部 PASS。
+- evidence: `evidence/infra-003/verify_summary.json`。
+
+待 Reviewer fresh-context 评审；feature_list.json status=in_progress。
+
+---
+
+## Session — infra-003 close-out (Reviewer L1 修复 + merge)
+
+**feat/infra-003** L1 修复 5/5：
+- L1-1 SLO emit 后 reset → 漏报严重违例：改成 latched 状态机——首次连续 N 次违例 emit 一次后 latched=True；任何 healthy 采样才 unlatch 重新累积；新增 `SLORule.cooldown_s`（默认 60s）作为 emit 最小间隔保险。
+- L1-2 stop bridge 线程泄漏：bridge 改 `Event.wait(timeout=0.5)` 轮询 `self._stop`，stop() set 内部 _stop 即唤醒 bridge 退出，不再死等外部 stop_event。
+- L1-3 `_write_metric` close 后写竞争：`if self._fh is None` 检查移入 `with self._lock` 块内。
+- L1-4 ts 精度：与 `logging_setup.py` 一致（都 `round(ts, 3)`），加注释说明跨日志对齐。
+- L1-5 cfg.metrics 没真驱动 collector：`coco/main.py` 现在用 `cfg.metrics.path / interval_s / enabled` 真正驱动；`_default_metrics_path()` fallback；env 解析仍由 `config.py` 完成。
+
+**L2 顺手修**：
+- `_serialize_metric` 截断时 dict / list / 其他非 str value 也按 `repr()[:200]` 截断。
+- `default_metrics_path()` 改 `Path.home() / ".cache" / "coco" / "metrics.jsonl"` 风格统一。
+
+**verify_infra_003 加 V15-V17，全 PASS（V1-V17 56/56）**：
+- V15 latched：6 次违例 + 1 次 healthy + 4 次违例 → 共 emit 2 次。
+- V16 bridge 不泄漏：start/stop 反复 5 次后 `coco-metrics-stop-bridge` 线程 ≤1。
+- V17 cfg 驱动：源码字符串校验 main.py 用 `_mcfg.path / interval_s` 构造 collector。
+
+**回归**：infra-002 / interact-007 / companion-003 / companion-vision / vision-002 / vision-003 / infra-debt-sweep / publish 全 PASS；smoke.py 同步加 `metrics` 到 expected keys；`./init.sh` 通过。
+
+merge 回 main：infra-003 status=passing；继续按 priority 进入 **interact-008**。

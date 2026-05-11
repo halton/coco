@@ -1,13 +1,13 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.102757930755615,
-    "stop_dt_s": 0.0012090206146240234,
+    "elapsed_s": 8.063817977905273,
+    "stop_dt_s": 0.0007638931274414062,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 39,
-      "hit_count": 39,
+      "detect_count": 40,
+      "hit_count": 40,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -15,22 +15,22 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 13,
+      "micro_count": 14,
       "glance_count": 1,
       "vision_glance_count": 1,
       "vision_biased_glance_count": 1,
-      "face_present_ticks": 14,
+      "face_present_ticks": 15,
       "error_count": 0
     },
     "robot": {
       "goto_count": 12,
-      "antenna_count": 5
+      "antenna_count": 6
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.085440158843994,
-    "stop_dt_s": 0.0003592967987060547,
+    "elapsed_s": 8.093400716781616,
+    "stop_dt_s": 0.00043010711669921875,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -43,7 +43,7 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 9,
+      "micro_count": 10,
       "glance_count": 1,
       "vision_glance_count": 0,
       "vision_biased_glance_count": 0,
@@ -51,14 +51,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 7,
-      "antenna_count": 5
+      "goto_count": 9,
+      "antenna_count": 8
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.082951068878174,
-    "stop_dt_s": 0.002624034881591797,
+    "elapsed_s": 12.018142938613892,
+    "stop_dt_s": 0.0010519027709960938,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -79,8 +79,8 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 21,
-      "antenna_count": 8
+      "goto_count": 19,
+      "antenna_count": 10
     }
   }
 }
