@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "feature": "interact-006",
+    "purpose": "5 类情绪 heuristic 分类基线 fixture",
+    "source": "人工挑词；优先无歧义典型句；中英混杂 + 边界各 ≥1",
+    "labels": ["neutral", "happy", "sad", "angry", "surprised"],
+    "min_per_label": 3,
+    "expected_accuracy": ">= 0.80 (heuristic baseline)"
+  },
+  "cases": [
+    {"text": "今天好开心啊", "expected": "happy"},
+    {"text": "哈哈太棒了", "expected": "happy"},
+    {"text": "我喜欢你", "expected": "happy"},
+    {"text": "好玩好玩", "expected": "happy"},
+    {"text": "yay great job", "expected": "happy"},
+
+    {"text": "我有点难过", "expected": "sad"},
+    {"text": "唉，好累", "expected": "sad"},
+    {"text": "感觉很失望", "expected": "sad"},
+    {"text": "i feel sad today", "expected": "sad"},
+
+    {"text": "气死我了", "expected": "angry"},
+    {"text": "讨厌你这样", "expected": "angry"},
+    {"text": "烦死了", "expected": "angry"},
+    {"text": "真的受不了", "expected": "angry"},
+
+    {"text": "真的吗？", "expected": "surprised"},
+    {"text": "哇，居然是这样", "expected": "surprised"},
+    {"text": "天哪", "expected": "surprised"},
+    {"text": "wow omg", "expected": "surprised"},
+
+    {"text": "我们一起去公园看看", "expected": "neutral"},
+    {"text": "现在几点了", "expected": "neutral"},
+    {"text": "", "expected": "neutral"},
+    {"text": "...", "expected": "neutral"},
+    {"text": "hello world 你好世界", "expected": "neutral"}
+  ]
+}

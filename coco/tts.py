@@ -18,6 +18,7 @@ import os
 import shutil
 import time
 import wave
+import logging
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -186,15 +187,24 @@ def say(
     sid: int = DEFAULT_SID,
     speed: float = DEFAULT_SPEED,
     blocking: bool = True,
+    emotion: Optional[str] = None,
 ) -> None:
     """合成并通过本机扬声器播放（**默认阻塞，整段播完才返回**）。
 
     prefer="local"  → Kokoro；
     prefer="edge"   → edge-tts，失败/无网/未装时自动回退到 local。
 
+    interact-006: ``emotion`` 参数仅 log 标注（''tts say emotion=happy text=...''），
+    phase-4 simulate-only 不真实改 voice 参数；真机调参留 milestone gate。
+
     注意：在 ReachyMiniApp.run() 等需要保持心跳/stop_event 循环的主线程内，
     请改用 say_async()，否则播放期间 (~2-5s) 心跳会被卡住。
     """
+    if emotion:
+        # spec V4: 用 print 与 logging 双发；evidence 抓 'tts say emotion=...'
+        msg = f"tts say emotion={emotion} text={text!r}"
+        print(f"[coco.tts] {msg}")
+        logging.getLogger("tts").info(msg, extra={"component": "tts", "event": "say", "emotion": emotion, "text": text})
     if prefer == "edge":
         try:
             samples, sr = synthesize_edge(text)

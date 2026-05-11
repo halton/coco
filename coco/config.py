@@ -99,6 +99,8 @@ class CocoConfig:
     power_idle_enabled: bool = False  # COCO_POWER_IDLE；默认 False
     dialog: Any = None  # coco.dialog.DialogConfig
     dialog_memory_enabled: bool = False  # COCO_DIALOG_MEMORY；默认 False
+    emotion: Any = None  # coco.emotion.EmotionConfig
+    emotion_enabled: bool = False  # COCO_EMOTION；默认 False
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +221,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     from coco import wake_word as _wake
     from coco import power_state as _power
     from coco import dialog as _dialog
+    from coco import emotion as _emotion
 
     vad_cfg = _safe_call("vad", lambda: _vad.config_from_env()) or _vad.VADConfig()
     wake_cfg = _safe_call("wake", lambda: _wake.config_from_env()) or _wake.WakeConfig()
@@ -227,11 +230,14 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     # env，业务路径都是 os.environ）。
     power_cfg = _safe_call("power", lambda: _power.config_from_env()) or _power.PowerConfig()
     dialog_cfg = _safe_call("dialog", lambda: _dialog.config_from_env()) or _dialog.DialogConfig()
+    # emotion.config_from_env 接受 env 参数；env 注入即可生效（与 phase-4 known-debt L2-2 不同）
+    emotion_cfg = _safe_call("emotion", lambda: _emotion.config_from_env(env)) or _emotion.EmotionConfig()
 
     vad_enabled = not _vad.vad_disabled_from_env() if env is os.environ else not _bool_env(env, "COCO_VAD_DISABLE", False)
     wake_enabled = _wake.wake_word_enabled_from_env() if env is os.environ else _bool_env(env, "COCO_WAKE_WORD", False)
     power_idle_enabled = _power.power_idle_enabled_from_env() if env is os.environ else _bool_env(env, "COCO_POWER_IDLE", False)
     dialog_memory_enabled = _dialog.dialog_memory_enabled_from_env() if env is os.environ else _bool_env(env, "COCO_DIALOG_MEMORY", False)
+    emotion_enabled = _emotion.emotion_enabled_from_env(env)
 
     return CocoConfig(
         log=_log_from_env(env),
@@ -246,6 +252,8 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         power_idle_enabled=power_idle_enabled,
         dialog=dialog_cfg,
         dialog_memory_enabled=dialog_memory_enabled,
+        emotion=emotion_cfg,
+        emotion_enabled=emotion_enabled,
     )
 
 
@@ -283,6 +291,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
         "wake": {"enabled": cfg.wake_enabled, "config": _sub(cfg.wake)},
         "power": {"idle_enabled": cfg.power_idle_enabled, "config": _sub(cfg.power)},
         "dialog": {"memory_enabled": cfg.dialog_memory_enabled, "config": _sub(cfg.dialog)},
+        "emotion": {"enabled": cfg.emotion_enabled, "config": _sub(cfg.emotion)},
     }
 
 
