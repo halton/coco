@@ -76,11 +76,11 @@
   ],
   "failures": [],
   "closeout": {
-    "reviewer": "sub-agent: LGTM after L1 fix (L1-1 traceback / L1-2 component / L1-3 PTT 单源)",
+    "reviewer": "sub-agent: LGTM after L1 fix (L1-1 traceback / L1-2 component / L1-3 PTT 单源 / L1-4 env-injection 文档锁)",
     "L1_fixes": [
       "L1-1 jsonl 缺 traceback → JsonlFormatter.format 加 exc 字段（V9 锁住）",
       "L1-2 component 命名不一致 → AUTHORITATIVE_COMPONENTS 集合 + emit warn（V10 锁住）",
-      "L1-3 PTT 两套真值源 → Coco.run global 写回 cfg.ptt.* 到模块级（V2b 锁住）",
+      "L1-3 PTT 两套真值源 → Coco.run 内写回 cfg.ptt.* 到模块级（V2b 锁住）",
       "L1-4 load_config(env=...) 注入语义文档锁 → V11 + docstring 注释"
     ],
     "regression": {
@@ -92,10 +92,11 @@
       "verify_infra_debt_sweep": "PASS",
       "verify_publish": "PASS"
     },
-    "smoke": "PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake/power/config/publish)",
+    "smoke": "11/11 PASS (init.sh)",
+    "checks_total": 70,
     "known_debt": [
-      "L2-1 聚合不替代（config.py 顶部 TODO；后续 feature 接入时归口）",
-      "L2-2 load_config(env=...) 注入对子模块 dataclass 字段无效（V11 锁住 + docstring）",
+      "L2-1 聚合不替代（config.py 顶部 TODO）",
+      "L2-2 load_config(env=...) 注入对子模块 dataclass 字段无效（V11 + docstring 锁）",
       "L2-3 config_summary 缺 COCO_*_CACHE / COCO_POWER_IDLE_DISABLE",
       "L2-4 无文件落盘（用户 stderr 重定向 / 等 RotatingFileHandler）",
       "L3-1 emit 5 处 except Exception 过度防御",
