@@ -83,6 +83,24 @@ class MetricsConfig:
     path: str = ""
 
 
+@dataclass(frozen=True)
+class AttentionConfig:
+    """vision-004：多目标人脸注视切换配置。
+
+    - COCO_ATTENTION=1 启用（默认 OFF）
+    - COCO_ATTENTION_POLICY ∈ round_robin / largest_face / newest / named_first（默认 round_robin）
+    - COCO_ATTENTION_MIN_FOCUS_S clamp [0.0, 60.0]，默认 3.0
+    - COCO_ATTENTION_SWITCH_COOLDOWN_S clamp [0.0, 60.0]，默认 1.0
+    - COCO_ATTENTION_INTERVAL_MS clamp [50, 2000]，默认 200（~5Hz）
+    """
+
+    enabled: bool = False
+    policy: str = "round_robin"
+    min_focus_s: float = 3.0
+    switch_cooldown_s: float = 1.0
+    interval_ms: int = 200
+
+
 # 业务子 config（来自各模块 dataclass，避免重复定义；这里只引类型）
 # 在 __init__ 时按需 import，防循环。
 
@@ -100,6 +118,7 @@ class CocoConfig:
     camera: CameraConfig = field(default_factory=CameraConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
     metrics: MetricsConfig = field(default_factory=MetricsConfig)
+    attention: AttentionConfig = field(default_factory=AttentionConfig)
 
     # 各业务子 config 用 Any 占位以避免 import 时循环（运行期 from_env 注入）。
     vad: Any = None  # coco.vad_trigger.VADConfig
@@ -220,6 +239,41 @@ def _metrics_from_env(env: Mapping[str, str]) -> MetricsConfig:
     return MetricsConfig(enabled=enabled, interval_s=interval_s, path=path)
 
 
+_ATTENTION_VALID_POLICIES = {"round_robin", "largest_face", "newest", "named_first"}
+
+
+def _attention_from_env(env: Mapping[str, str]) -> AttentionConfig:
+    enabled = _bool_env(env, "COCO_ATTENTION", False)
+    policy = _str_env(env, "COCO_ATTENTION_POLICY", "round_robin").lower() or "round_robin"
+    if policy not in _ATTENTION_VALID_POLICIES:
+        log.warning("[config] COCO_ATTENTION_POLICY=%r 非法，回退 round_robin", policy)
+        policy = "round_robin"
+    min_focus_s = _float_env(env, "COCO_ATTENTION_MIN_FOCUS_S", default=3.0, lo=0.0, hi=60.0)
+    switch_cooldown_s = _float_env(env, "COCO_ATTENTION_SWITCH_COOLDOWN_S",
+                                   default=1.0, lo=0.0, hi=60.0)
+    raw_interval = env.get("COCO_ATTENTION_INTERVAL_MS")
+    interval_ms = 200
+    if raw_interval is not None and raw_interval != "":
+        try:
+            interval_ms = int(raw_interval)
+        except ValueError:
+            log.warning("[config] COCO_ATTENTION_INTERVAL_MS=%r 非整数，回退 200", raw_interval)
+            interval_ms = 200
+    if interval_ms < 50:
+        log.warning("[config] COCO_ATTENTION_INTERVAL_MS=%d <50，clamp 50", interval_ms)
+        interval_ms = 50
+    elif interval_ms > 2000:
+        log.warning("[config] COCO_ATTENTION_INTERVAL_MS=%d >2000，clamp 2000", interval_ms)
+        interval_ms = 2000
+    return AttentionConfig(
+        enabled=enabled,
+        policy=policy,
+        min_focus_s=min_focus_s,
+        switch_cooldown_s=switch_cooldown_s,
+        interval_ms=interval_ms,
+    )
+
+
 def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     """单点入口：env=None 时用 os.environ。
 
@@ -271,6 +325,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         camera=CameraConfig(spec=_str_env(env, "COCO_CAMERA")),
         llm=_llm_from_env(env),
         metrics=_metrics_from_env(env),
+        attention=_attention_from_env(env),
         vad=vad_cfg,
         vad_enabled=vad_enabled,
         wake=wake_cfg,
@@ -318,6 +373,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
             "api_key": "set" if cfg.llm.api_key_set else "unset",
         },
         "metrics": asdict(cfg.metrics),
+        "attention": asdict(cfg.attention),
         "vad": {"enabled": cfg.vad_enabled, "config": _sub(cfg.vad)},
         "wake": {"enabled": cfg.wake_enabled, "config": _sub(cfg.wake)},
         "power": {"idle_enabled": cfg.power_idle_enabled, "config": _sub(cfg.power)},
@@ -335,6 +391,7 @@ __all__ = [
     "CameraConfig",
     "LLMConfig",
     "MetricsConfig",
+    "AttentionConfig",
     "load_config",
     "config_summary",
 ]

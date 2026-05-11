@@ -233,6 +233,79 @@ class Coco(ReachyMiniApp):
             print(f"[coco][face] FaceTracker init failed: {exc!r}", flush=True)
             _face_tracker_shared = None
 
+        # vision-004: AttentionSelector — 多目标人脸注视切换。
+        # 默认 OFF；仅在 COCO_ATTENTION=1 且 FaceTracker 已构造时启动。
+        # focus 变化时 emit "vision.attention_changed"（component "vision"）。
+        _attention_selector = None
+        _attention_thread: threading.Thread | None = None
+        _attention_stop = threading.Event()
+        try:
+            if (
+                os.environ.get("COCO_ATTENTION", "0") == "1"
+                and _face_tracker_shared is not None
+            ):
+                from coco.config import _attention_from_env  # type: ignore
+                from coco.perception.attention import (
+                    AttentionPolicy,
+                    AttentionSelector,
+                )
+
+                _att_cfg = _attention_from_env(os.environ)
+
+                def _on_attention_change(prev, curr):  # noqa: ANN001
+                    try:
+                        emit(
+                            "vision.attention_changed",
+                            component="vision",
+                            prev_track_id=(prev.track_id if prev else None),
+                            prev_name=(prev.name if prev else None),
+                            target_track_id=(curr.track_id if curr else None),
+                            target_name=(curr.name if curr else None),
+                            policy=_att_cfg.policy,
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+
+                _attention_selector = AttentionSelector(
+                    policy=AttentionPolicy(_att_cfg.policy),
+                    min_focus_s=_att_cfg.min_focus_s,
+                    switch_cooldown_s=_att_cfg.switch_cooldown_s,
+                    on_change=_on_attention_change,
+                )
+
+                def _attention_loop(
+                    sel=_attention_selector,
+                    tracker=_face_tracker_shared,
+                    stop_evt=_attention_stop,
+                    outer_stop=stop_event,
+                    interval_s=max(0.05, _att_cfg.interval_ms / 1000.0),
+                ):
+                    while not stop_evt.is_set() and not outer_stop.is_set():
+                        try:
+                            snap = tracker.latest()
+                            sel.select(list(snap.tracks))
+                        except Exception as e:  # noqa: BLE001
+                            print(f"[coco][attention] tick failed: {e!r}", flush=True)
+                        if stop_evt.wait(timeout=interval_s):
+                            break
+
+                _attention_thread = threading.Thread(
+                    target=_attention_loop,
+                    name="coco-attention",
+                    daemon=True,
+                )
+                _attention_thread.start()
+                print(
+                    f"[coco][attention] AttentionSelector started policy={_att_cfg.policy} "
+                    f"min_focus_s={_att_cfg.min_focus_s} cooldown_s={_att_cfg.switch_cooldown_s} "
+                    f"interval_ms={_att_cfg.interval_ms}",
+                    flush=True,
+                )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][attention] init failed: {exc!r}", flush=True)
+            _attention_selector = None
+            _attention_thread = None
+
         try:
             try:
                 reachy_mini.wake_up()
@@ -738,6 +811,13 @@ class Coco(ReachyMiniApp):
                     _face_tracker_shared.join(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][face] join failed: {e!r}", flush=True)
+            # vision-004: 停 AttentionSelector tick 线程
+            try:
+                _attention_stop.set()
+                if _attention_thread is not None:
+                    _attention_thread.join(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][attention] stop failed: {e!r}", flush=True)
             # infra-003: 停 MetricsCollector
             try:
                 if "_metrics" in locals() and _metrics is not None:
