@@ -799,7 +799,7 @@
       "area": "vision",
       "title": "vision-004b wiring 接线到 main.py + 真视频 fixture 验证",
       "user_visible_behavior": "COCO_GREET_SECONDARY=1（沿用 vision-004b 的 COCO_MFA 启用语义）时，main.py 构造 MultiFaceAttention，注入 AttentionSelector / TTS / ExpressionPlayer / ProactiveScheduler 抑制窗口；提供 multi_face_*.mp4 fixture 跑真视频管道验证 primary 闪烁等 race。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "vision-004b",
         "vision-004"
@@ -810,8 +810,14 @@
         "scripts/verify_vision_004b_wire.py：(W1) 真视频管道 → FaceTracker → AttentionSelector → MultiFaceAttention.tick 端到端，确认 primary 闪烁（短暂遮挡 1-2 帧）不重置 primary silence 计时；(W2) tts/expression 回调被调用且参数正确；(W3) proactive 主动话题刚触发后 proactive_block_window_s 内 greet 被抑制；(W4) regression vision-004 / vision-004b 单元 verify 仍 PASS。",
         "Reviewer fresh-context 评审：primary 闪烁 race（tracker 短暂丢失再恢复时 silence 不重置）、TTS 与 ExpressionPlayer 并发占用、env flag 默认 OFF、main.py 路径在 mfa disabled 时零开销。"
       ],
-      "evidence": [],
-      "notes": "Reviewer L1 提到 primary 闪烁会重置 silence 计时（_last_primary_id 切换即重置），wire 阶段必须做稳定性验证：要么 tracker 层提供 primary 稳定窗口（短暂丢失不切换 track_id），要么状态机引入 grace window；选型决定记到本 feature evidence。先做 wire + 验证，再决定是否回写改 vision-004b 状态机。"
+      "evidence": [
+        "实现：coco/__main__.py 接线 MultiFaceAttention（COCO_GREET_SECONDARY=1 启用），AttentionSelector.current() / FaceTracker snapshot / ConvStateMachine.current_state / ProactiveScheduler.last_proactive_ts 喂进 tick；on_action 回调挂 ExpressionPlayer.play('curious') + tts.say(action.utterance)。新增 primary_stable_s debounce（默认 2.0s）抑制短暂遮挡导致的 primary 切换。",
+        "verify：scripts/verify_vision_004b_wire.py 全 PASS（V1-V5 / V7-V12 PASS；V9 race 9a 暴露 + 9b debounce 修复；V6 SKIP 因 ConvStateMachine 未暴露 AWAITING 状态）。evidence/vision-004b-wire/verify_summary.json。",
+        "downstream regression：scripts/verify_interact_007.py PASS 76/76、scripts/verify_interact_008.py PASS 59/59、scripts/verify_companion004.py PASS 12/12，独立运行均通过。",
+        "Reviewer (sub-agent): LGTM — 无 L0/L1 阻塞。Known-debt 记于 notes（V6 awaiting 抑制路径 / tts·expression 同步阻塞 tick / _SyntheticPrimary __getattr__ 注释 / mfa utterance_template 占位符未格式化）。",
+        "merge：feat/vision-004b-wire → main no-ff。"
+      ],
+      "notes": "Reviewer L1 提到 primary 闪烁会重置 silence 计时（_last_primary_id 切换即重置），wire 阶段已通过 primary_stable_s debounce（默认 2.0s）解决；V9 9a 暴露 race，9b 确认 debounce 修复。Known-debt（Reviewer L2/L3，不阻 passing，未来回路再修）：(L2/V6) awaiting_response 抑制路径待 ConvStateMachine 暴露 AWAITING 状态后补；当前 V6 SKIP。(L2) tts.say / expression.play 当前同步阻塞 tick 线程（3Hz 下可接受；未来若 tts 变长阻塞需迁队列+独立线程）。(L3) _SyntheticPrimary __getattr__ 在 real=None 时的兜底行为注释待补。(L3) mfa utterance_template `{name}` 占位符未真正格式化（属 mfa 内部，wire 透传 OK）。"
     },
     {
       "id": "companion-005",

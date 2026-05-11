@@ -1,7 +1,7 @@
 {
   "feature": "vision-004b-wire",
   "outcome": "PASS",
-  "elapsed_s": 0.614,
+  "elapsed_s": 0.617,
   "results": {
     "V1": "PASS",
     "V2": "PASS",
@@ -17,5 +17,11 @@
     "V12": "PASS"
   },
   "errors": [],
-  "primary_stable_debounce": "added (primary_stable_s, default 2.0s); V9 9a exposes race, 9b confirms debounce fixes silence-reset race"
+  "primary_stable_debounce": "added (primary_stable_s, default 2.0s); V9 9a exposes race, 9b confirms debounce fixes silence-reset race",
+  "downstream_verify_scripts": {
+    "verify_interact_007.py": "PASS 76/76",
+    "verify_interact_008.py": "PASS 59/59",
+    "verify_companion004.py": "PASS 12/12"
+  },
+  "v6_skip_reason": "awaiting_response 抑制路径待 ConvStateMachine 暴露 AWAITING 状态后补"
 }
