@@ -387,21 +387,74 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][face_id] init failed: {type(e).__name__}: {e}", flush=True)
                 _face_id_classifier = None
 
+            # interact-007: 可选 ProactiveScheduler（默认 OFF）。
+            # 构造放在 InteractSession 之前以便把 record_interaction 钩进 session.on_interaction。
+            _proactive = None
+            try:
+                from coco.proactive import (
+                    ProactiveScheduler as _ProactiveScheduler,
+                    config_from_env as _proactive_config_from_env,
+                )
+                _pcfg = _proactive_config_from_env()
+                if _pcfg.enabled:
+                    _proactive = _ProactiveScheduler(
+                        config=_pcfg,
+                        power_state=power_state,
+                        face_tracker=None,  # main 当前不构造 FaceTracker；与 face_tracker_for_power 同步
+                        llm_reply_fn=_llm.reply,
+                        tts_say_fn=coco_tts.say,
+                        profile_store=_profile_store,
+                        on_interaction=(
+                            (lambda src, _ps=power_state: _ps.record_interaction(source=src))
+                            if power_state is not None else None
+                        ),
+                    )
+                    print(
+                        f"[coco][proactive] enabled idle={_pcfg.idle_threshold_s:.0f}s "
+                        f"cooldown={_pcfg.cooldown_s:.0f}s max/h={_pcfg.max_topics_per_hour}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][proactive] disabled (COCO_PROACTIVE not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][proactive] init failed: {type(e).__name__}: {e}", flush=True)
+                _proactive = None
+
+            def _on_interaction_combined(src: str, _ps=power_state, _pa=_proactive) -> None:
+                if _ps is not None:
+                    try:
+                        _ps.record_interaction(source=src)
+                    except Exception as e:  # noqa: BLE001
+                        print(f"[coco][power] record_interaction failed: {e!r}", flush=True)
+                if _pa is not None:
+                    try:
+                        _pa.record_interaction(source=src)
+                    except Exception as e:  # noqa: BLE001
+                        print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
                 llm_reply_fn=_llm.reply,
-                # companion-003 L0-2: 把"任意一次 handle_audio"统一记成 power
-                # 状态机的交互信号；PTT/VAD/wake-bridge 不再各自挂钩，避免双计数。
+                # companion-003 L0-2 + interact-007: 统一交互钩子，同时通知 power_state
+                # 与 ProactiveScheduler，避免 phase-3 双计数 / phase-4 主动话题误发。
                 on_interaction=(
-                    (lambda src, _ps=power_state: _ps.record_interaction(source=src))
-                    if power_state is not None else None
+                    _on_interaction_combined
+                    if (power_state is not None or _proactive is not None) else None
                 ),
                 dialog_memory=_dialog_memory,
                 profile_store=_profile_store,
             )
+
+            # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession
+            # 把 on_interaction 钩到 _proactive.record_interaction，避免一启动就秒发）。
+            if _proactive is not None:
+                try:
+                    _proactive.start(stop_event)
+                except Exception as e:  # noqa: BLE001
+                    print(f"[coco][proactive] start failed: {type(e).__name__}: {e}", flush=True)
 
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
             if use_vad:
@@ -563,6 +616,12 @@ class Coco(ReachyMiniApp):
             # companion-003: 停 power_state driver
             if power_state is not None:
                 power_state.join_driver(timeout=2.0)
+            # interact-007: 停 ProactiveScheduler
+            try:
+                if "_proactive" in locals() and _proactive is not None:
+                    _proactive.join(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][proactive] join failed: {e!r}", flush=True)
 
 
 def main() -> None:
