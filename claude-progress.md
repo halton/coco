@@ -1018,3 +1018,23 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
   4. (L3) mfa `utterance_template` `{name}` 占位符未真正格式化（属 mfa 内部，wire 透传 OK）。
 - **merge & smoke**：`feat/vision-004b-wire` → `main` no-ff merge；merge 后 `./init.sh` PASS。
 - **下一执行**：`infra-004`（priority=30）。
+
+---
+
+## Session — infra-004 close-out (2026-05-11)
+
+- **infra-004 → passing**：config schema 校验 + 启动 banner + jsonl rotate（feat/infra-004 上 step 1-4 已完成；本会话 closeout 修 L1 + L2，加 V13/V14）。
+- **L1 修复 1/1**：`coco/banner.py:17` `SENSITIVE_TOKENS` 扩 `("_KEY","PRIVATE_KEY","AUTH")`。`COCO_PRIVATE_KEY / COCO_FOO_AUTH / COCO_BAR_KEY` 现在全部脱敏为 ***，覆盖所有 *_KEY / *_AUTH 后缀。
+- **L2 顺手修 3/3**：
+  1. `coco/main.py` ConfigValidationError 半启动路径 → 改 `sys.exit(2)` 干净退出（避免 setup_logging 未跑导致下游 import / `_coco_cfg` 引用 NameError）；
+  2. `coco/banner.py` `[COCO_* env]` 标题加 `(COCO_* only)` 显式说明范围（不暴露非 COCO_ 前缀的 secret）；
+  3. `coco/logging_setup.py` `RotatingJsonlWriter._should_rotate` 加保护：单行本身 > max_bytes 时不 rotate（否则每条超长行都消耗一档 backup_count，几条就把 retention 链冲掉）。
+- **verify**：`scripts/verify_infra_004.py` V1-V14 全 PASS=35 FAIL=0（新增 V13 SENSITIVE_TOKENS 覆盖 + V14 超大单行 rotate 保护）。
+- **Reviewer (sub-agent)**：LGTM-with-fixes（1 个 L1 + 3 个 L2 已修）。
+- **L3 known-debt（仅记录，不改）**：
+  1. `RotatingJsonlWriter._do_rotate` 多步 rename 非原子（崩溃可能中间态）；
+  2. `RotatingJsonlWriter` 仅 flush 不 fsync（OS 硬崩溃丢 buffer）；
+  3. `metrics(50MB)` vs `logging(10MB)` 默认 max_bytes 不同（设计选择）。
+- **回归**：`infra_002 / infra_003 / interact_004 / interact_005 / interact_006 / interact_007 / interact_008 / companion_003 / companion_004 / companion_005 / companion_vision / vision_002 / vision_003 / vision_004 / vision_004b / vision_004b_wire (SKIP) / infra_debt_sweep / publish` 全 exit=0。
+- **merge & smoke**：`feat/infra-004` → `main` no-ff merge；merge 后 `./init.sh` PASS。
+- **下一执行**：`interact-009`（priority=31，phase-6 history-compact）。

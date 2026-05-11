@@ -34,9 +34,13 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
+import threading
 import time
-from typing import Any, Dict
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any, Dict, Optional, Union
 
 MAX_LINE_BYTES = 4000
 
@@ -60,6 +64,7 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "vision",
     "companion",
     "robot",
+    "startup",
 })
 
 _UNKNOWN_COMPONENTS_WARNED: set = set()
@@ -145,10 +150,156 @@ class JsonlFormatter(logging.Formatter):
         return s
 
 
+class RotatingJsonlHandler(RotatingFileHandler):
+    """size-based rotating handler，写 jsonl 行（接 logging.LogRecord 接口）。
+
+    基于 stdlib ``RotatingFileHandler``：达到 ``max_bytes`` 触发 rollover，
+    保留 .1 .2 ... .N（``backup_count``）。每行 jsonl 在 emit 时已经是单行
+    ``JsonlFormatter`` 输出，rollover 在行边界发生，不会切坏 JSON。
+
+    并发：stdlib 已用 ``self.lock`` 保护 emit；多线程写不丢日志。
+    """
+
+    def __init__(self, filename: Union[str, Path], max_bytes: int = 10 * 1024 * 1024,
+                 backup_count: int = 3, encoding: str = "utf-8") -> None:
+        p = Path(filename)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        super().__init__(
+            filename=str(p),
+            maxBytes=int(max_bytes),
+            backupCount=int(backup_count),
+            encoding=encoding,
+        )
+
+
+class RotatingJsonlWriter:
+    """独立于 logging 的 jsonl 写入器，支持 size-based rotate。
+
+    用于 ``coco.metrics``：直接写 ``metric`` 行而不经 root logger。和
+    ``RotatingFileHandler`` 同样语义（rotate 行边界 + 保留 N 份），但是
+    暴露 ``write_line(s: str)`` 而非 logging.LogRecord 接口。
+
+    线程安全：内部 ``threading.Lock`` 保护 write + rotate。
+    """
+
+    def __init__(self, path: Union[str, Path], max_bytes: int = 50 * 1024 * 1024,
+                 backup_count: int = 3) -> None:
+        self.path = Path(path)
+        self.max_bytes = int(max_bytes)
+        self.backup_count = max(1, int(backup_count))
+        self._lock = threading.Lock()
+        self._fh = None
+        self._bytes_written = 0  # 当前 fh 已写字节（包含未 flush）
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._open()
+
+    def _open(self) -> None:
+        if self._fh is not None:
+            return
+        try:
+            # 续写模式；初始 bytes_written = 现有文件大小
+            self._fh = open(self.path, "a", encoding="utf-8")
+            try:
+                self._bytes_written = self.path.stat().st_size if self.path.exists() else 0
+            except OSError:
+                self._bytes_written = 0
+        except Exception as e:  # noqa: BLE001
+            logging.getLogger("coco.logging_setup").warning(
+                "[rotating_jsonl] open %s failed: %r", self.path, e)
+            self._fh = None
+            self._bytes_written = 0
+
+    def _should_rotate(self, line_bytes: int) -> bool:
+        if self.max_bytes <= 0:
+            return False
+        # infra-004 L2: 保护——若单行本身就超过 max_bytes，rotate 之后新文件仍装不下，
+        # 每条超长行都消耗一档 backup_count，几条就把 retention 链全冲掉。直接写下去
+        # 让单条超长行存活，不破坏 rotate 链路。
+        if line_bytes > self.max_bytes:
+            return False
+        return (self._bytes_written + line_bytes) > self.max_bytes
+
+    def _do_rotate(self) -> None:
+        """关闭当前文件、shift .N → .N+1，重新打开。"""
+        if self._fh is not None:
+            try:
+                self._fh.flush()
+                self._fh.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._fh = None
+        suf = self.path.suffix  # 通常 ".jsonl"
+        base = self.path
+        # 删最老
+        oldest = base.with_suffix(suf + f".{self.backup_count}")
+        try:
+            if oldest.exists():
+                oldest.unlink()
+        except OSError:
+            pass
+        # shift .{N-1} -> .{N}
+        for i in range(self.backup_count - 1, 0, -1):
+            src = base.with_suffix(suf + f".{i}")
+            dst = base.with_suffix(suf + f".{i+1}")
+            try:
+                if src.exists():
+                    src.rename(dst)
+            except OSError:
+                pass
+        # main -> .1
+        try:
+            if base.exists():
+                base.rename(base.with_suffix(suf + ".1"))
+        except OSError:
+            pass
+        self._open()
+
+    def write_line(self, s: str) -> None:
+        """单行（不带 \\n 也行）写入，自动追加换行。rotate 在行边界发生。"""
+        if not s.endswith("\n"):
+            s = s + "\n"
+        b = s.encode("utf-8")
+        with self._lock:
+            if self._should_rotate(len(b)):
+                self._do_rotate()
+            if self._fh is None:
+                self._open()
+            if self._fh is None:
+                return
+            try:
+                self._fh.write(s)
+                self._bytes_written += len(b)
+            except Exception as e:  # noqa: BLE001
+                logging.getLogger("coco.logging_setup").debug(
+                    "[rotating_jsonl] write failed: %r", e)
+
+    def flush(self) -> None:
+        with self._lock:
+            if self._fh is not None:
+                try:
+                    self._fh.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    def close(self) -> None:
+        with self._lock:
+            if self._fh is not None:
+                try:
+                    self._fh.flush()
+                    self._fh.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                self._fh = None
+
+
 def setup_logging(jsonl: bool = False, level: str = "INFO") -> None:
     """配置 root logger。jsonl=False 时与现有 basicConfig 行为兼容。
 
     幂等：重复调用清旧 handler。
+
+    infra-004: 当 jsonl=True 且 ``COCO_LOG_FILE`` 设置时，附加 ``RotatingJsonlHandler``
+    写入文件（rotate by size，env ``COCO_LOG_MAX_MB`` 默认 10，retention=3）。
+    stderr handler 保留，不影响现有 verify。
     """
     global _INSTALLED
     root = logging.getLogger()
@@ -163,6 +314,22 @@ def setup_logging(jsonl: bool = False, level: str = "INFO") -> None:
             logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
         )
     root.addHandler(handler)
+    # infra-004: 可选 file rotate handler（jsonl 模式下生效；非 jsonl 行为不变）
+    if jsonl:
+        log_file = os.environ.get("COCO_LOG_FILE", "").strip()
+        if log_file:
+            try:
+                max_mb = float(os.environ.get("COCO_LOG_MAX_MB", "10"))
+                backup_n = int(os.environ.get("COCO_LOG_BACKUP_N", "3"))
+                fh = RotatingJsonlHandler(
+                    Path(os.path.expanduser(log_file)),
+                    max_bytes=int(max_mb * 1024 * 1024),
+                    backup_count=max(1, backup_n),
+                )
+                fh.setFormatter(JsonlFormatter())
+                root.addHandler(fh)
+            except Exception as e:  # noqa: BLE001
+                root.warning("[logging_setup] file handler init failed: %r", e)
     try:
         root.setLevel(getattr(logging, level.upper()))
     except AttributeError:
@@ -197,4 +364,5 @@ def emit(component_event: str, message: str = "", **payload: Any) -> None:
     logger.info(message or f"{component}.{event}", extra=extra)
 
 
-__all__ = ["setup_logging", "emit", "JsonlFormatter", "MAX_LINE_BYTES", "AUTHORITATIVE_COMPONENTS"]
+__all__ = ["setup_logging", "emit", "JsonlFormatter", "MAX_LINE_BYTES",
+           "AUTHORITATIVE_COMPONENTS", "RotatingJsonlHandler", "RotatingJsonlWriter"]
