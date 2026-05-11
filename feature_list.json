@@ -691,7 +691,7 @@
       "area": "infra",
       "title": "运行时健康监控（metrics 面板 + 异常告警 jsonl）",
       "user_visible_behavior": "Coco 运行时持续暴露关键指标（loop period、ASR/TTS 延迟、LLM 调用耗时、相机 fps、power_state 切换次数、proactive 命中率），写入 logs/metrics.jsonl，并在终端可选打印一行紧凑 dashboard；任何关键 SLO 越界（如 ASR>3s/TTS>5s/loop>500ms）写一条 warn。",
-      "status": "in_progress",
+      "status": "passing",
       "dependencies": [
         "infra-002"
       ],
@@ -704,9 +704,10 @@
         "Reviewer fresh-context 评审：指标命名规范、jsonl schema 稳定性、性能开销（不能拖慢 main loop > 5ms）、disable 路径正确、与现有 logger 不重复。"
       ],
       "evidence": [
-        "verify_summary: evidence/infra-003/verify_summary.json (50/50 PASS)",
-        "regression: infra-002, interact-004/005/006/007, companion-003/004/companion-vision, vision-002/003, infra-debt-sweep, publish ALL PASS",
-        "待 Reviewer fresh-context 评审"
+        "verify_summary: evidence/infra-003/verify_summary.json (V1-V17 56/56 PASS)",
+        "regression: infra-002, interact-007, companion-003/companion-vision, vision-002/003, infra-debt-sweep, publish ALL PASS",
+        "Reviewer (sub-agent) fresh-context: LGTM-with-fixes — 5 L1 已全部修复 (latched SLO + cooldown / bridge cleanup / write_metric 锁内 _fh 检查 / ts 与 logging 对齐注释 / cfg.metrics 真驱动 collector)；新增 V15-V17 用例锁住修复",
+        "L2/L3 known-debt: dict/list value repr 截 200 + default_metrics_path 用 Path.home() 风格统一（已顺手修）"
       ],
       "notes": "纯 sim 可验证；真机环境只是数据来源，不影响验证规则。"
     },

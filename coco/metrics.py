@@ -71,6 +71,7 @@ class SLORule:
     """SLO 阈值规则，连续 window_n 次违例 emit metrics.slo_breach。
 
     op: ">" / ">=" / "<" / "<=" / "==" / "!="
+    cooldown_s: 同一规则两次 emit 之间最小间隔（秒），默认 60s
     """
 
     metric: str
@@ -78,6 +79,7 @@ class SLORule:
     threshold: float
     window_n: int = 3
     severity: str = "warn"
+    cooldown_s: float = 60.0
 
 
 def _cmp(op: str, value: float, threshold: float) -> bool:
@@ -210,11 +212,16 @@ def face_tracks_source_factory(face_tracker) -> Optional[MetricSource]:
 
 
 def default_metrics_path() -> Path:
-    return Path(os.path.expanduser("~/.cache/coco/metrics.jsonl"))
+    # L2: 用 Path.home() 风格统一（与项目其他 default path 风格一致）
+    return Path.home() / ".cache" / "coco" / "metrics.jsonl"
 
 
 def _serialize_metric(m: Metric) -> str:
-    """单行 JSON；若超 MAX_LINE_BYTES 则丢 tags 重序列化。"""
+    """单行 JSON；若超 MAX_LINE_BYTES 则丢 tags 重序列化。
+
+    ts 精度：``round(ts, 3)`` 与 ``coco.logging_setup`` 中 ``record.created`` 同样
+    截到毫秒（见 logging_setup.py 第 110 行），保持两层时间戳跨日志可对齐。
+    """
     line: Dict[str, Any] = {
         "ts": round(float(m.ts), 3),
         "metric": str(m.name),
@@ -225,13 +232,21 @@ def _serialize_metric(m: Metric) -> str:
         line["tags"] = tags
     s = json.dumps(line, ensure_ascii=False)
     if len(s.encode("utf-8")) > MAX_LINE_BYTES:
+        # L2: 不仅 str value 截 200，dict / list / 其他 repr 长的也截 200
+        v = line["value"]
+        if isinstance(v, str):
+            v_short: Any = v[:200]
+        elif isinstance(v, (int, float, bool)) or v is None:
+            v_short = v
+        else:
+            v_short = repr(v)[:200]
         short = {
             "ts": line["ts"],
             "metric": line["metric"],
-            "value": line["value"] if not isinstance(line["value"], str) else str(line["value"])[:200],
+            "value": v_short,
             "_truncated": True,
         }
-        s = json.dumps(short, ensure_ascii=False)
+        s = json.dumps(short, ensure_ascii=False, default=str)
         # 如果 value 本身就超长（极端），强行用 placeholder
         if len(s.encode("utf-8")) > MAX_LINE_BYTES:
             short["value"] = "<truncated>"
@@ -260,6 +275,10 @@ class MetricsCollector:
         self._fh = None
         # 每条 SLO 的连续违例计数
         self._slo_violations: Dict[int, int] = {}
+        # L1-1: latched 状态——一旦 emit 一次就锁定，直到出现 healthy 才解锁
+        self._slo_latched: Dict[int, bool] = {}
+        # L1-1: 上次 emit 时间戳（cooldown 用）
+        self._slo_last_emit: Dict[int, float] = {}
         self._lock = threading.Lock()
         # tick 计数（test 用）
         self.ticks = 0
@@ -299,11 +318,12 @@ class MetricsCollector:
                 self._fh = None
 
     def _write_metric(self, m: Metric) -> None:
-        if self._fh is None:
-            return
+        # L1-3: 把 _fh None 检查放进锁内，避免 close 后竞争写
         try:
             line = _serialize_metric(m)
             with self._lock:
+                if self._fh is None:
+                    return
                 self._fh.write(line + "\n")
         except Exception as e:  # noqa: BLE001
             log.debug("[metrics] write failed: %r", e)
@@ -324,7 +344,16 @@ class MetricsCollector:
             if breached:
                 self._slo_violations[idx] = self._slo_violations.get(idx, 0) + 1
                 if self._slo_violations[idx] >= int(rule.window_n):
-                    # emit 一次 + reset 计数（避免连续暴雨）
+                    # L1-1: latched 模式——已 latched 时不再 emit；
+                    # 同时遵守 cooldown_s 最小间隔保险
+                    now = time.time()
+                    last = self._slo_last_emit.get(idx, 0.0)
+                    if self._slo_latched.get(idx, False):
+                        # 已 latched，跳过 emit；保持计数不清零等 healthy 解锁
+                        continue
+                    if (now - last) < float(rule.cooldown_s):
+                        # cooldown 期内，跳过 emit
+                        continue
                     try:
                         emit(
                             "metrics.slo_breach",
@@ -337,10 +366,13 @@ class MetricsCollector:
                         )
                     except Exception as e:  # noqa: BLE001
                         log.debug("[metrics] emit slo_breach failed: %r", e)
-                    self._slo_violations[idx] = 0
+                    self._slo_latched[idx] = True
+                    self._slo_last_emit[idx] = now
+                    # 不 reset 计数；保持 latched，等 healthy 采样才 unlatch
             else:
-                # 未违例则计数清零（防抖）
+                # L1-1: healthy 采样 → unlatch + 计数清零
                 self._slo_violations[idx] = 0
+                self._slo_latched[idx] = False
 
     def tick_once(self) -> List[Metric]:
         """同步跑一轮采集 + 写 + SLO 检查。test 路径用。"""
@@ -385,12 +417,15 @@ class MetricsCollector:
         if self._thread is not None and self._thread.is_alive():
             return
         if stop_event is not None:
-            # 桥接：外部 stop_event set → 我们的内部 _stop 也 set
+            # L1-2: 桥接用 0.5s 轮询 + 双唤醒——外部 stop_event 或内部 _stop
+            # 任一 set 都让 bridge 退出，避免 stop() 后 bridge 永远死等外部 event
             self._external_stop = stop_event
 
             def _bridge(_e=stop_event, _s=self._stop) -> None:
-                _e.wait()
-                _s.set()
+                while not _s.is_set():
+                    if _e.wait(timeout=0.5):
+                        _s.set()
+                        return
 
             threading.Thread(target=_bridge, name="coco-metrics-stop-bridge", daemon=True).start()
         self._stop.clear()

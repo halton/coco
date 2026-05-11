@@ -1,6 +1,6 @@
 {
   "verification": "verify_infra_003",
-  "pass_count": 50,
+  "pass_count": 56,
   "fail_count": 0,
   "passes": [
     "metrics_enabled_from_env(env={})==False",
@@ -52,7 +52,13 @@
     "默认 interval=5.0",
     "env enabled=True",
     "env interval=10.0",
-    "env path=/tmp/m.jsonl"
+    "env path=/tmp/m.jsonl",
+    "持续违例 6 次 + healthy + 4 次违例 → 共 emit 2 次 (latched)",
+    "bridge 线程不累积（≤1）",
+    "main.py 引用 cfg.metrics",
+    "main.py 用 _mcfg.path 构造 collector",
+    "main.py 用 _mcfg.interval_s",
+    "main.py 把 path 传给 _build_metrics"
   ],
   "failures": []
 }

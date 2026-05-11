@@ -14,6 +14,9 @@ V11 stop() 干净退出（线程 join + 文件 flush）
 V12 env clamp（COCO_METRICS_INTERVAL=0.1 → 1.0；500 → 300）
 V13 main.py 在 COCO_METRICS=1 时构造 _metrics（源码字符串校验）
 V14 config.py MetricsConfig 字段从 env 读取并填入 CocoConfig
+V15 SLO latched 行为：持续违例只 emit 一次；healthy 后再次累积
+V16 stop bridge 不泄漏：start/stop 反复 5 次后 bridge 线程清零
+V17 cfg.metrics 真驱动 collector：main.py 用 cfg.metrics.path / interval_s
 """
 
 from __future__ import annotations
@@ -431,6 +434,87 @@ def v14_config_integration() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V15: SLO latched
+# ---------------------------------------------------------------------------
+
+
+def v15_slo_latched(tmp_dir: Path) -> None:
+    _section("V15 SLO latched 行为")
+    p = tmp_dir / "v15.jsonl"
+    # cooldown_s=0 让 cooldown 不影响 latched 验证
+    rule = SLORule(metric="cpu", op=">", threshold=80.0, window_n=2, severity="warn", cooldown_s=0.0)
+    c = MetricsCollector(path=p, interval_s=10.0, slo_rules=[rule])
+
+    # 阶段 1: 持续违例 6 次 — 应只 emit 1 次（latched）
+    val = {"v": 95.0}
+    c.add_source(lambda: [Metric("cpu", val["v"])])
+
+    buf = io.StringIO()
+    real_stderr = sys.stderr
+    sys.stderr = buf
+    try:
+        setup_logging(jsonl=True, level="INFO")
+        for _ in range(6):
+            c.tick_once()
+        # 阶段 2: 一次 healthy 解锁
+        val["v"] = 50.0
+        c.tick_once()
+        # 阶段 3: 再次连续违例 — 应再 emit 1 次
+        val["v"] = 95.0
+        for _ in range(4):
+            c.tick_once()
+    finally:
+        sys.stderr = real_stderr
+        setup_logging(jsonl=False)
+    c.stop()
+
+    breaches = []
+    for l in buf.getvalue().splitlines():
+        try:
+            r = json.loads(l)
+            if r.get("event") == "slo_breach":
+                breaches.append(r)
+        except Exception:
+            pass
+    _check("持续违例 6 次 + healthy + 4 次违例 → 共 emit 2 次 (latched)", len(breaches) == 2, f"got {len(breaches)}")
+
+
+# ---------------------------------------------------------------------------
+# V16: stop bridge 不泄漏
+# ---------------------------------------------------------------------------
+
+
+def v16_bridge_no_leak(tmp_dir: Path) -> None:
+    _section("V16 stop bridge 不泄漏")
+    p = tmp_dir / "v16.jsonl"
+    for i in range(5):
+        c = MetricsCollector(path=p, interval_s=0.05)
+        c.add_source(lambda: [Metric("alive", 1)])
+        ext = threading.Event()
+        c.start(stop_event=ext)
+        time.sleep(0.1)
+        c.stop(timeout=2.0)
+    # 给 bridge 线程退出留点时间
+    time.sleep(0.6)
+    bridge_threads = [t for t in threading.enumerate() if t.name == "coco-metrics-stop-bridge"]
+    _check("bridge 线程不累积（≤1）", len(bridge_threads) <= 1, f"got {len(bridge_threads)} alive")
+
+
+# ---------------------------------------------------------------------------
+# V17: cfg.metrics 真驱动 collector
+# ---------------------------------------------------------------------------
+
+
+def v17_cfg_drives_collector() -> None:
+    _section("V17 cfg.metrics 驱动 collector")
+    src = (ROOT / "coco" / "main.py").read_text(encoding="utf-8")
+    _check("main.py 引用 cfg.metrics", "_coco_cfg, \"metrics\"" in src or "_coco_cfg.metrics" in src or "getattr(_coco_cfg" in src and "metrics" in src)
+    _check("main.py 用 _mcfg.path 构造 collector", "_mcfg.path" in src or "_m_path" in src)
+    _check("main.py 用 _mcfg.interval_s", "_mcfg.interval_s" in src or "_m_interval" in src)
+    _check("main.py 把 path 传给 _build_metrics", "path=_m_path" in src or "path=Path(_mcfg.path)" in src)
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -454,6 +538,9 @@ def main() -> int:
         v12_env_clamp()
         v13_main_integration()
         v14_config_integration()
+        v15_slo_latched(tmp)
+        v16_bridge_no_leak(tmp)
+        v17_cfg_drives_collector()
     finally:
         # cleanup tmp dir
         try:
