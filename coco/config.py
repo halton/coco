@@ -32,9 +32,22 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
 log = logging.getLogger(__name__)
+
+
+class ConfigValidationError(ValueError):
+    """infra-004: validate_config 检出 error 级别问题时抛出。
+
+    携带完整 issues list（含 error / warning / info），便于上层日志。
+    """
+
+    def __init__(self, issues):  # type: ignore[no-untyped-def]
+        self.issues = list(issues)
+        errs = [m for sev, m in self.issues if sev == "error"]
+        super().__init__("config validation failed: " + "; ".join(errs))
 
 
 # ---------------------------------------------------------------------------
@@ -332,7 +345,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         log.warning("[config] expressions module import failed: %s: %s", type(e).__name__, e)
         expr_cfg = None
 
-    return CocoConfig(
+    cfg = CocoConfig(
         log=_log_from_env(env),
         ptt=_ptt_from_env(env),
         camera=CameraConfig(spec=_str_env(env, "COCO_CAMERA")),
@@ -354,6 +367,109 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         conversation=conversation_cfg,
         expressions=expr_cfg,
     )
+    # infra-004: 跨字段 / 路径 / 不兼容组合校验。error 抛 ConfigValidationError；
+    # warning / info 只写日志。
+    issues = validate_config(cfg, env=env)
+    for sev, msg in issues:
+        if sev == "error":
+            log.error("[config] %s", msg)
+        elif sev == "warning":
+            log.warning("[config] %s", msg)
+        else:
+            log.info("[config] %s", msg)
+    if any(sev == "error" for sev, _ in issues):
+        raise ConfigValidationError(issues)
+    return cfg
+
+
+# ---------------------------------------------------------------------------
+# validate_config — infra-004 schema 校验
+# ---------------------------------------------------------------------------
+
+
+def validate_config(cfg: CocoConfig, env: Optional[Mapping[str, str]] = None) -> list:
+    """检出 cfg 中的跨字段不一致 / 路径不可写 / 不兼容组合。
+
+    返回 list[(severity, message)]：severity ∈ {"error", "warning", "info"}。
+    主调用方（load_config）负责落日志 + 决定是否抛 ConfigValidationError。
+
+    设计原则：
+    - error：必然导致运行时崩溃或语义错乱（如 drowsy>=sleep，metrics.path 不可写）
+    - warning：可运行但用户可能不希望（如 proactive 开但 intent 关，导致 QUIET 失效）
+    - info：纯提示（如 jsonl=False 时 rotate 配置被忽略）
+
+    所有检查 try/except 包住，单个检查异常不会让 validate_config 自己崩。
+    """
+    issues: list = []
+    e = env if env is not None else os.environ
+
+    # 1. cross-field: power drowsy < sleep（双保险——PowerConfig 自身已检查）
+    try:
+        if cfg.power is not None:
+            d = float(getattr(cfg.power, "drowsy_after", 0.0))
+            s = float(getattr(cfg.power, "sleep_after", 0.0))
+            if d >= s:
+                issues.append(("error",
+                    f"power.drowsy_after={d} 必须 < power.sleep_after={s}"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("warning", f"power cross-check skipped: {ex!r}"))
+
+    # 2. metrics.path 父目录可创建/可写
+    try:
+        if cfg.metrics.enabled:
+            p_raw = cfg.metrics.path or ""
+            if p_raw:
+                p = Path(os.path.expanduser(p_raw))
+            else:
+                p = Path.home() / ".cache" / "coco" / "metrics.jsonl"
+            parent = p.parent
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+                if not os.access(parent, os.W_OK):
+                    issues.append(("error",
+                        f"metrics.path 父目录不可写 path={p} parent={parent}"))
+            except (OSError, PermissionError) as ex:
+                issues.append(("error",
+                    f"metrics.path 父目录无法创建 path={p}: {ex!r}"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("warning", f"metrics.path check skipped: {ex!r}"))
+
+    # 3. proactive=1 + intent=0：QUIET 期间 proactive 不会被静音，可能扰民
+    try:
+        proactive_enabled = (e.get("COCO_PROACTIVE") or "0").strip().lower() in {"1", "true", "yes", "on"}
+        if proactive_enabled and not cfg.intent_enabled:
+            issues.append(("warning",
+                "COCO_PROACTIVE=1 但 COCO_INTENT=0：QUIET 期间主动话题不会被静音"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("warning", f"proactive/intent combo check skipped: {ex!r}"))
+
+    # 4. attention=1 但 face_track=0：AttentionSelector 启动时会被 main 跳过
+    try:
+        att_on = cfg.attention.enabled
+        face_track = (e.get("COCO_FACE_TRACK") or "0").strip().lower() in {"1", "true", "yes", "on"}
+        if att_on and not face_track:
+            issues.append(("warning",
+                "COCO_ATTENTION=1 但 COCO_FACE_TRACK=0：AttentionSelector 不会启动"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("warning", f"attention/face_track combo check skipped: {ex!r}"))
+
+    # 5. wake_word=1 但 vad disabled：wake-word 需要 VAD 才能产生 utterance
+    try:
+        if cfg.wake_enabled and not cfg.vad_enabled:
+            issues.append(("warning",
+                "COCO_WAKE_WORD=1 但 COCO_VAD_DISABLE=1：wake-word 没有 VAD 兜底"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("warning", f"wake/vad combo check skipped: {ex!r}"))
+
+    # 6. info: jsonl=False 时 rotate 配置不生效
+    try:
+        if not cfg.log.jsonl and (e.get("COCO_LOG_MAX_MB") or "").strip():
+            issues.append(("info",
+                "COCO_LOG_MAX_MB 设置了但 COCO_LOG_JSONL=0：rotate 仅对 jsonl 文件输出生效"))
+    except Exception as ex:  # noqa: BLE001
+        issues.append(("info", f"rotate config check skipped: {ex!r}"))
+
+    return issues
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +517,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
 
 __all__ = [
     "CocoConfig",
+    "ConfigValidationError",
     "LogConfig",
     "PTTConfig",
     "CameraConfig",
@@ -409,4 +526,5 @@ __all__ = [
     "AttentionConfig",
     "load_config",
     "config_summary",
+    "validate_config",
 ]

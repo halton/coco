@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from coco.logging_setup import emit
+from coco.logging_setup import emit, RotatingJsonlWriter
 
 log = logging.getLogger(__name__)
 
@@ -265,14 +265,26 @@ class MetricsCollector:
         path: Optional[Path] = None,
         interval_s: float = DEFAULT_INTERVAL_S,
         slo_rules: Optional[Sequence[SLORule]] = None,
+        max_bytes: Optional[int] = None,
+        backup_count: int = 3,
     ):
         self.path = Path(path) if path else default_metrics_path()
         self.interval_s = float(interval_s)
+        # infra-004: rotate by size。max_bytes=None 时读 COCO_METRICS_MAX_MB
+        # env（默认 50MB）；显式 0 表示不 rotate（向后兼容）
+        if max_bytes is None:
+            try:
+                mb = float(os.environ.get("COCO_METRICS_MAX_MB", "50"))
+            except ValueError:
+                mb = 50.0
+            max_bytes = int(mb * 1024 * 1024)
+        self.max_bytes = int(max_bytes)
+        self.backup_count = max(1, int(backup_count))
         self.sources: List[MetricSource] = []
         self.slo_rules: List[SLORule] = list(slo_rules or [])
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
-        self._fh = None
+        self._writer: Optional[RotatingJsonlWriter] = None
         # 每条 SLO 的连续违例计数
         self._slo_violations: Dict[int, int] = {}
         # L1-1: latched 状态——一旦 emit 一次就锁定，直到出现 healthy 才解锁
@@ -298,33 +310,35 @@ class MetricsCollector:
             log.warning("[metrics] mkdir %s failed: %r", self.path.parent, e)
 
     def _open(self) -> None:
-        if self._fh is not None:
+        if self._writer is not None:
             return
         self._ensure_dir()
         try:
-            self._fh = open(self.path, "a", encoding="utf-8")
+            self._writer = RotatingJsonlWriter(
+                self.path,
+                max_bytes=self.max_bytes,
+                backup_count=self.backup_count,
+            )
         except Exception as e:  # noqa: BLE001
             log.warning("[metrics] open %s failed: %r", self.path, e)
-            self._fh = None
+            self._writer = None
 
     def _close(self) -> None:
         with self._lock:
-            if self._fh is not None:
+            if self._writer is not None:
                 try:
-                    self._fh.flush()
-                    self._fh.close()
+                    self._writer.close()
                 except Exception:  # noqa: BLE001
                     pass
-                self._fh = None
+                self._writer = None
 
     def _write_metric(self, m: Metric) -> None:
-        # L1-3: 把 _fh None 检查放进锁内，避免 close 后竞争写
         try:
             line = _serialize_metric(m)
             with self._lock:
-                if self._fh is None:
+                if self._writer is None:
                     return
-                self._fh.write(line + "\n")
+                self._writer.write_line(line)
         except Exception as e:  # noqa: BLE001
             log.debug("[metrics] write failed: %r", e)
 
@@ -391,10 +405,10 @@ class MetricsCollector:
                 self._write_metric(m)
                 self._check_slo(m)
         # flush so jsonl 立即可读（test 路径关键）
-        if self._fh is not None:
+        if self._writer is not None:
             try:
                 with self._lock:
-                    self._fh.flush()
+                    self._writer.flush()
             except Exception:  # noqa: BLE001
                 pass
         self.ticks += 1

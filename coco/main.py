@@ -170,21 +170,31 @@ class Coco(ReachyMiniApp):
     def run(self, reachy_mini: ReachyMini, stop_event: threading.Event) -> None:
         # infra-002: 单点 load_config + setup_logging。banner 写 config_summary（无 secret）。
         # 默认 jsonl=False、INFO；不改任何 phase-3 默认行为。COCO_LOG_JSONL=1 启用 jsonl。
+        # infra-004: load_config 内置 validate_config；error → ConfigValidationError；
+        # 启动 banner 改用 coco.banner.render_banner + emit("startup.banner")。
         try:
             _coco_cfg = load_config()
             setup_logging(jsonl=_coco_cfg.log.jsonl, level=_coco_cfg.log.level)
             # L1-3：把 cfg.ptt.* 写回模块级变量，避免"两套 PTT 真值源"。
-            # 模块级 PUSH_TO_TALK_SECONDS / PUSH_TO_TALK_DISABLED 仍保留作为 import-time
-            # 默认（旧测试脚本 import 后直接读模块属性的路径不破），但 run() 路径下
-            # cfg.ptt 才是 SoT。
             global PUSH_TO_TALK_SECONDS, PUSH_TO_TALK_DISABLED
             PUSH_TO_TALK_SECONDS = float(_coco_cfg.ptt.seconds)
             PUSH_TO_TALK_DISABLED = bool(_coco_cfg.ptt.disabled)
-            import json as _json
-            print(
-                f"[coco][config] " + _json.dumps(config_summary(_coco_cfg), ensure_ascii=False),
-                flush=True,
-            )
+            try:
+                from coco.banner import render_banner, banner_payload
+                _banner_text = render_banner(_coco_cfg)
+                print(_banner_text, flush=True)
+                try:
+                    emit("startup.banner", component="startup", **banner_payload(_coco_cfg))
+                except Exception:  # noqa: BLE001
+                    pass
+            except Exception as _be:  # noqa: BLE001
+                # banner 失败不阻断；回落到旧 config_summary 单行 print
+                import json as _json
+                print(
+                    f"[coco][config] " + _json.dumps(config_summary(_coco_cfg), ensure_ascii=False),
+                    flush=True,
+                )
+                print(f"[coco][banner] render failed: {_be!r}", flush=True)
         except Exception as _e:  # noqa: BLE001
             print(f"[coco][config] load_config/setup_logging failed (continuing): {_e!r}", flush=True)
 
