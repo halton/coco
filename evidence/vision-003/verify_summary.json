@@ -1,6 +1,6 @@
 {
   "feature_id": "vision-003",
-  "ts": "2026-05-11 10:32:40",
+  "ts": "2026-05-11 11:07:38",
   "backend_selected": "histogram",
   "has_cv2_face": false,
   "results": {
@@ -69,8 +69,15 @@
           "COCO_FACE_ID_THRESHOLD": "abc"
         },
         "field": "threshold",
-        "expect": 0.4,
-        "actual": 0.4,
+        "expect": null,
+        "actual": null,
+        "ok": true
+      },
+      {
+        "env": {},
+        "field": "threshold",
+        "expect": null,
+        "actual": null,
         "ok": true
       },
       {

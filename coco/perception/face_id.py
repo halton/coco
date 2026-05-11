@@ -284,13 +284,18 @@ def default_store_path() -> Path:
     return Path(base) / "coco" / "face_id"
 
 
-def _atomic_write_bytes(path: Path, data: bytes) -> None:
-    """原子写入 + fsync + chmod 0o600（参考 companion-004 patterns）。"""
+def _atomic_write_bytes(path: Path, data: bytes, owned_dir: Optional[Path] = None) -> None:
+    """原子写入 + fsync + chmod 0o600（参考 companion-004 patterns）。
+
+    L1 fix: 仅当 ``owned_dir`` 给定且就是 ``path.parent`` 时才对该目录 chmod 0o700，
+    避免误改 sibling 目录权限（例如把 ``~/.cache/coco/`` 整体改为 0o700）。
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        os.chmod(str(path.parent), 0o700)
-    except OSError:
-        pass
+    if owned_dir is not None and Path(owned_dir).resolve() == path.parent.resolve():
+        try:
+            os.chmod(str(path.parent), 0o700)
+        except OSError:
+            pass
     tmp = path.with_suffix(path.suffix + ".tmp")
     with open(str(tmp), "wb") as fh:
         fh.write(data)
@@ -372,7 +377,7 @@ class FaceIDStore:
                 "saved_at": time.time(),
             }
             blob = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
-            _atomic_write_bytes(self.index_path, blob)
+            _atomic_write_bytes(self.index_path, blob, owned_dir=self.root)
 
     # ----- mutations -----
     def add(self, name: str, gray_crops: List[np.ndarray]) -> int:
@@ -503,7 +508,9 @@ class FaceIDStore:
 class FaceIDConfig:
     enabled: bool = False
     path: str = ""  # 空 → default_store_path()
-    confidence_threshold: float = DEFAULT_HIST_THRESHOLD
+    # L1 fix: None 表示 "未显式设置 threshold，由 backend.default_threshold() 决定"。
+    # 这样切换 backend (LBPH ↔ Histogram) 不会被一个不匹配的硬编码默认值卡死。
+    confidence_threshold: Optional[float] = None
     backend: str = "auto"
 
 
@@ -520,18 +527,20 @@ def config_from_env(env: Optional[Dict[str, str]] = None) -> FaceIDConfig:
     enabled = _bool_env(e, "COCO_FACE_ID", False)
     path = (e.get("COCO_FACE_ID_PATH") or "").strip()
     raw_thr = e.get("COCO_FACE_ID_THRESHOLD")
+    # L1 fix: 只有 env 显式给值才覆盖；否则保持 None，由 classifier 调用 backend.default_threshold()。
     if raw_thr is None or raw_thr == "":
-        thr = DEFAULT_HIST_THRESHOLD
+        thr: Optional[float] = None
     else:
         try:
             thr = float(raw_thr)
         except ValueError:
             log.warning("[face_id] COCO_FACE_ID_THRESHOLD=%r 非数字，回退默认", raw_thr)
-            thr = DEFAULT_HIST_THRESHOLD
-    if thr < 0.0:
-        thr = 0.0
-    elif thr > 1.0:
-        thr = 1.0
+            thr = None
+    if thr is not None:
+        if thr < 0.0:
+            thr = 0.0
+        elif thr > 1.0:
+            thr = 1.0
     backend = (e.get("COCO_FACE_ID_BACKEND") or "auto").lower().strip()
     if backend not in {"auto", "lbph", "histogram"}:
         log.warning("[face_id] COCO_FACE_ID_BACKEND=%r 非法，回退 auto", backend)

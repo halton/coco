@@ -3,7 +3,7 @@
     "V1": {
       "fixture": "tests/fixtures/audio/wake_keke.wav",
       "audio_seconds": 2.9055625,
-      "feed_dt_s": 0.041,
+      "feed_dt_s": 0.065,
       "hits": [
         "可可"
       ],

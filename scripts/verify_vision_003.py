@@ -225,7 +225,10 @@ print("\n[V7] env clamp")
 test_cases = [
     ({"COCO_FACE_ID_THRESHOLD": "2.0"}, "threshold", 1.0),
     ({"COCO_FACE_ID_THRESHOLD": "-0.5"}, "threshold", 0.0),
-    ({"COCO_FACE_ID_THRESHOLD": "abc"}, "threshold", DEFAULT_HIST_THRESHOLD),
+    # L1 fix: 非数字 env → None (sentinel)，由 backend.default_threshold() 决定
+    ({"COCO_FACE_ID_THRESHOLD": "abc"}, "threshold", None),
+    # L1 fix: env 未给 → None (sentinel)
+    ({}, "threshold", None),
     ({"COCO_FACE_ID_BACKEND": "wat"}, "backend", "auto"),
     ({"COCO_FACE_ID_BACKEND": "LBPH"}, "backend", "lbph"),
     ({"COCO_FACE_ID": "1"}, "enabled", True),

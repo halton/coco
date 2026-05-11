@@ -484,38 +484,47 @@ class FaceTracker:
         except Exception as e:  # noqa: BLE001
             log.warning("FaceTracker face-id identify failed: %s: %s", type(e).__name__, e)
             return
-        # 重新封装 primary_track 与 tracks（注入 name 字段）
-        new_pt = TrackedFace(
-            track_id=pt.track_id,
-            box=pt.box,
-            age_frames=pt.age_frames,
-            hit_count=pt.hit_count,
-            miss_count=pt.miss_count,
-            smoothed_cx=pt.smoothed_cx,
-            smoothed_cy=pt.smoothed_cy,
-            presence_score=pt.presence_score,
-            first_seen_ts=pt.first_seen_ts,
-            last_seen_ts=pt.last_seen_ts,
-            name=name,
-            name_confidence=float(conf),
-        )
-        new_tracks = tuple(
-            new_pt if t.track_id == pt.track_id else t
-            for t in snap.tracks
-        )
-        new_snap = FaceSnapshot(
-            faces=snap.faces,
-            frame_w=snap.frame_w,
-            frame_h=snap.frame_h,
-            present=snap.present,
-            primary=snap.primary,
-            ts=snap.ts,
-            detect_count=snap.detect_count,
-            hit_count=snap.hit_count,
-            tracks=new_tracks,
-            primary_track=new_pt,
-        )
+        # vision-003 L1 fix: identify() 跑在锁外，回填时必须重新按 track_id
+        # 在最新快照里查找 TrackedFace 实例；若 track 已被淘汰或 id 已变，
+        # 丢弃这次识别结果，避免 lost-update / patch 到错误对象。
         with self._lock:
+            cur_snap = self._snapshot
+            cur_pt = cur_snap.primary_track
+            if cur_pt is None or cur_pt.track_id != pt.track_id:
+                return
+            # 也要保证 tracks 里仍存在该 track_id（防御性）
+            if not any(t.track_id == pt.track_id for t in cur_snap.tracks):
+                return
+            new_pt = TrackedFace(
+                track_id=cur_pt.track_id,
+                box=cur_pt.box,
+                age_frames=cur_pt.age_frames,
+                hit_count=cur_pt.hit_count,
+                miss_count=cur_pt.miss_count,
+                smoothed_cx=cur_pt.smoothed_cx,
+                smoothed_cy=cur_pt.smoothed_cy,
+                presence_score=cur_pt.presence_score,
+                first_seen_ts=cur_pt.first_seen_ts,
+                last_seen_ts=cur_pt.last_seen_ts,
+                name=name,
+                name_confidence=float(conf),
+            )
+            new_tracks = tuple(
+                new_pt if t.track_id == cur_pt.track_id else t
+                for t in cur_snap.tracks
+            )
+            new_snap = FaceSnapshot(
+                faces=cur_snap.faces,
+                frame_w=cur_snap.frame_w,
+                frame_h=cur_snap.frame_h,
+                present=cur_snap.present,
+                primary=cur_snap.primary,
+                ts=cur_snap.ts,
+                detect_count=cur_snap.detect_count,
+                hit_count=cur_snap.hit_count,
+                tracks=new_tracks,
+                primary_track=new_pt,
+            )
             self._snapshot = new_snap
 
     def _process_detections(
