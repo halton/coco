@@ -728,3 +728,28 @@
 - **Regression（独立行）**：interact004 PASS / interact005 PASS / interact006 PASS / companion_003 PASS / companion_vision PASS / vision_002 PASS / infra_debt_sweep PASS / infra_002 PASS / publish PASS。
 - **状态**：feat/companion-004 push 完待 Reviewer。in_progress；Reviewer LGTM 后 → passing + merge。
 - **下一步**：Reviewer fresh-context 评审（重点：抽取假阳性 / 跨平台路径 / fallback backend 不受影响 / 文件并发）；通过后切 passing 并 merge。
+
+
+## Session 032 — companion-004 closeout（2026-05-11）
+
+- **本轮目标**：Reviewer fresh-context 评审 LGTM (无 L0)，2 L1 必修 + L2/L3 known-debt 入档；执行修复 + V11/V12 新增 + 全量 regression + merge to main。
+- **L1 修复**（`coco/profile.py` `ProfileStore.save`）：
+  - **L1-1 profile.json 落盘权限收紧 0o600**：含 PII（昵称/兴趣/目标），原默认 0o644 全用户可读。`os.chmod(path, 0o600)` after `os.replace`；父目录 mkdir 后 `chmod 0o700`；Windows 仅影响 read-only 位，吞 `OSError`。
+  - **L1-2 atomic write 缺 fsync**：原代码 `tmp.write_text` 无 flush + fsync，power loss 可能丢数据。改为显式 `open(tmp, 'wb') + write + flush + os.fsync(fileno)` 后再 `os.replace(tmp, path)`，crash-safe。
+- **新增 verification**：
+  - **V11 file permission 0o600**（POSIX；`sys.platform == 'win32'` skip）：save 后断 `oct(p.stat().st_mode & 0o777) == '0o600'`；覆盖 save 仍为 0o600。
+  - **V12 fsync called**：`unittest.mock.patch('coco.profile.os.fsync', side_effect=real_fsync)` 包真 fsync 防 partial write 干扰；断 call_count ≥ 1；round-trip 仍正常。
+- **Verification**：verify_companion004.py 12/12 PASS（V1-V10 + V11/V12）。
+- **Smoke**：全 9 段 PASS。
+- **Regression（独立行）**：interact004 PASS / interact005 PASS / interact006 PASS / companion_003 PASS / companion_vision PASS / vision_002 PASS / infra_debt_sweep PASS / infra_002 PASS / publish PASS。
+- **known-debt 入档**（不阻断 passing）：
+  - L2 `_trim_to_word` 不切非标点中文（'我叫小明老师'→ name='小明老师'）；NAME_BLACKLIST 仅精确等值
+  - L2 '我喜欢吃饭'→ interests=['吃饭']；'我喜欢恐龙和太空'→ ['恐龙和太空']（未切'和'）
+  - L2 name 模式吞 1 字符英文（建议 MIN_X_LEN=2）
+  - L2 add_interest 跨进程 read-modify-write 非原子（单用户 OK；未来加 fcntl/msvcrt file lock）
+  - L2 NEGATIVE_INTEREST 整句一刀切，'我喜欢A但不喜欢B' 会丢 A
+  - L3 set_name(None) vs set_name('') 语义不区分
+  - L3 save() 不自更新 last_updated
+  - L3 os.replace 在 Windows AV 占用偶发 raise，无重试
+- **状态**：feat/companion-004 → status=passing；merge --no-ff 到 main；推 origin。
+- **下一步**：phase-4 进度 3/5 done (infra-002 / interact-006 / companion-004)，next: vision-003（LBPH 人脸 ID，priority=22）。

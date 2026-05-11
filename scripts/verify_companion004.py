@@ -510,6 +510,58 @@ def v10_reset_script() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# V11 — file permission 0o600（POSIX；Windows skip）
+# ---------------------------------------------------------------------------
+
+
+def v11_file_permission() -> dict:
+    print("=" * 60)
+    print("V11 — closeout L1-1：profile.json 落盘后 chmod 0o600")
+    print("=" * 60)
+    if sys.platform == "win32":
+        print("V11 SKIP（Windows 上 chmod 仅影响 read-only 位）")
+        return {"name": "V11 file permission 0o600", "passed": True, "skipped": "win32"}
+    with temp_profile_path() as p:
+        prof_mod = _imports()
+        store = prof_mod.ProfileStore(path=p)
+        store.save(prof_mod.UserProfile(name="小明", interests=["恐龙"]))
+        _ok(p.exists(), "save 后应存在")
+        mode = oct(p.stat().st_mode & 0o777)
+        _ok(mode == "0o600", f"profile.json 权限应为 0o600，实际 {mode}")
+        # 第二次 save（覆盖）后权限仍应是 0o600
+        store.save(prof_mod.UserProfile(name="小红"))
+        mode2 = oct(p.stat().st_mode & 0o777)
+        _ok(mode2 == "0o600", f"覆盖后权限应仍为 0o600，实际 {mode2}")
+    print("V11 PASS")
+    return {"name": "V11 file permission 0o600", "passed": True}
+
+
+# ---------------------------------------------------------------------------
+# V12 — fsync called（atomic write crash-safe）
+# ---------------------------------------------------------------------------
+
+
+def v12_fsync_called() -> dict:
+    print("=" * 60)
+    print("V12 — closeout L1-2：save 显式 fsync")
+    print("=" * 60)
+    from unittest.mock import patch
+    with temp_profile_path() as p:
+        prof_mod = _imports()
+        store = prof_mod.ProfileStore(path=p)
+        # patch coco.profile.os.fsync — wraps real fsync 保持 crash-safe
+        real_fsync = os.fsync
+        with patch("coco.profile.os.fsync", side_effect=real_fsync) as m:
+            store.save(prof_mod.UserProfile(name="小明"))
+        _ok(m.call_count >= 1, f"fsync 应被调用 ≥1 次，实际 {m.call_count}")
+        # round-trip 仍正常
+        loaded = store.load()
+        _ok(loaded.name == "小明", f"fsync 后 round-trip 错：{loaded}")
+    print("V12 PASS")
+    return {"name": "V12 fsync called", "passed": True}
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -528,6 +580,8 @@ def main() -> int:
         v8_disable_kill_switch,
         v9_schema_version_mismatch,
         v10_reset_script,
+        v11_file_permission,
+        v12_fsync_called,
     ):
         try:
             results.append(fn())

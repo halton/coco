@@ -152,15 +152,29 @@ class ProfileStore:
             return UserProfile.from_dict(obj)
 
     def save(self, profile: UserProfile) -> None:
-        """atomic write（tmp + os.replace）。"""
+        """atomic write（tmp + fsync + os.replace），落盘后 chmod 0o600 限本人读写。"""
         if self._disabled:
             return
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
+            # 父目录尽量收紧到 0o700（POSIX）；Windows 上 chmod 仅影响 read-only 位，吞错。
+            try:
+                os.chmod(str(self.path.parent), 0o700)
+            except OSError:
+                pass
             tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-            data = json.dumps(profile.to_dict(), ensure_ascii=False, indent=2)
-            tmp.write_text(data, encoding="utf-8")
+            data = json.dumps(profile.to_dict(), ensure_ascii=False, indent=2).encode("utf-8")
+            # 显式 binary write + flush + fsync，确保 crash-safe（防 power loss 写入丢失）。
+            with open(str(tmp), "wb") as fh:
+                fh.write(data)
+                fh.flush()
+                os.fsync(fh.fileno())
             os.replace(str(tmp), str(self.path))
+            # 含 PII（昵称/兴趣/目标）→ 收紧为 0o600。Windows 上仅影响 read-only 位。
+            try:
+                os.chmod(str(self.path), 0o600)
+            except OSError:
+                pass
 
     # -------------------------------------------------- mutations
     def update_field(self, **kwargs: Any) -> UserProfile:

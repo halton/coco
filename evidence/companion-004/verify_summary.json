@@ -1,6 +1,6 @@
 {
-  "total": 10,
-  "passed": 10,
+  "total": 12,
+  "passed": 12,
   "failed": 0,
   "failures": [],
   "results": [
@@ -47,6 +47,26 @@
     {
       "name": "V10 reset script",
       "passed": true
+    },
+    {
+      "name": "V11 file permission 0o600",
+      "passed": true
+    },
+    {
+      "name": "V12 fsync called",
+      "passed": true
     }
-  ]
+  ],
+  "closeout": {
+    "reviewer": "sub-agent fresh-context: LGTM after L1 fix",
+    "L1_fixes": [
+      "L1-1 chmod 0o600 on profile.json (PII tightening) — coco/profile.py ProfileStore.save",
+      "L1-2 explicit fsync before os.replace (atomic write crash-safe) — coco/profile.py ProfileStore.save"
+    ],
+    "new_verifications": [
+      "V11 file permission 0o600 (POSIX; Windows skip)",
+      "V12 fsync called via unittest.mock.patch wrapping real fsync"
+    ],
+    "known_debt_recorded": "feature_list.json companion-004.notes + claude-progress.md Session 032"
+  }
 }
