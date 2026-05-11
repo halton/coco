@@ -793,7 +793,7 @@
       "area": "companion",
       "title": "情境化 idle 行为（按 power_state + face + 时段挑选 micro-action）",
       "user_visible_behavior": "idle 阶段 Coco 不再只重复同一组随机微动：按 (power_state, face_present, hour_of_day, last_interaction_age) 选择不同'气质'：白天有人时偏向好奇（左右张望）、晚上无人时偏向安静（极慢呼吸）、刚结束对话偏向回味（短点头），让陪伴更自然。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-001",
         "companion-003",
@@ -806,8 +806,14 @@
         "scripts/verify_companion005.py：(a) 12 个 (power_state×face×time×age) 组合 fixture，断言落入预期 micro-action 族；(b) 权重表 hot-reload 可读；(c) SLEEP 状态严格静默（policy 不输出动作）；(d) regression：companion-001/003 verify 通过。",
         "Reviewer fresh-context 评审：micro-action 族划分是否过细以致频繁切换、SLEEP/AWAITING_RESPONSE 期严格静默、yaml 缺失/损坏的退化路径、与情绪标签（interact-006）耦合是否合理。"
       ],
-      "evidence": [],
-      "notes": "纯 sim 可验证（mockup-sim daemon 收到的 SetTarget 序列即可断言）。物理观感归 uat-phase4。"
+      "evidence": [
+        "实现：coco/companion/situational_idle.py（IdleSituation/IdleBias/SituationalIdleModulator），主接线在 coco/__main__.py 通过 COCO_SIT_IDLE=1 启用；IdleAnimator 增加 modulator hook（不破坏默认路径，向后兼容）。",
+        "verify：scripts/verify_companion005.py 全 PASS，覆盖 V1 focus-stable→micro↑、V2 interaction-recent→glance↓、V3 DROWSY/SLEEP→damp、V4 face-absent→damp、V5 emotion×situational 叠加上限 ≤ MAX_YAW_DEG/4、V6 yaml 缺失/损坏 fail-soft、V7 regression companion-001/003。evidence/companion-005/verify_summary.json。",
+        "regression：./init.sh 全 smoke PASS；companion-002 / interact-005 / vision-002 / vision-003 verify 重跑（非确定性数据有正常波动，无 fail）。",
+        "Reviewer (sub-agent): LGTM。L0/L1 无阻塞。已记 L2/L3 known-debt（见 notes）。",
+        "merge：feat/companion-005 → main no-ff。"
+      ],
+      "notes": "纯 sim 可验证（mockup-sim daemon 收到的 SetTarget 序列即可断言）。物理观感归 uat-phase4。Known-debt（Reviewer L2/L3，不阻 passing，未来回路再修）：(L2) _sample_glance_interval 每次 sample 调 tick 重复，可加 per-tick cache。(L2) SLEEP 状态 modulator 仍 tick + 可能 emit，sleep_damp=0 后 bias 长期不变即不再 emit，可接受。(L2) profile_has_interests 启动后一次性读取，运行期 ProfileStore 写入不反映。(L2) _bool_env/_float_env 在 config.py 与 situational_idle.py 重复（DRY）。(L2) snapshot/compute/tick 线程模型已在 docstring 补"仅由 IdleAnimator 后台线程调用"。(L3) IdleBias.glance_amp_scale 保留未用（注释说明）。(L3) emotion×situational 叠加 happy+focus_stable micro 倍率 1.7875×2.5°=4.47°（< MAX_YAW_DEG/4=8.75°），未来叠加新维度需关注上限。"
     },
     {
       "id": "robot-003",

@@ -930,3 +930,18 @@ merge 回 main：interact-008 status=passing；下一个：vision-004。
 merge feat/vision-004 回 main；vision-004 status=passing；新增 vision-004b not_started。下一个执行：companion-005（priority=27，依赖 companion-001/003 + interact-006，全 passing）。
 
 **未 push**（按新规则等用户指令统一 push）。
+
+## Session 037 — companion-005 closeout（情境化 idle modulator）(2026-05-11)
+
+**实现**：`coco/companion/situational_idle.py` 落地 `IdleSituation` / `IdleBias` / `SituationalIdleModulator`。snapshot 读 power_state / face_tracker / attention_selector / emotion_tracker / profile_store，每路 try-except 保护单点故障。compute 对 micro_amp_scale / glance_prob_scale / glance_amp_scale 做加权累乘并 clamp 到 [scale_min, scale_max]。`coco/__main__.py` 在 `COCO_SIT_IDLE=1` 时注入到 `IdleAnimator`；默认 OFF，向后兼容 phase-4 路径。
+
+**verify_companion005**：V1 focus-stable→micro↑、V2 interaction-recent→glance↓、V3 DROWSY/SLEEP→damp、V4 face-absent→damp、V5 emotion×situational 叠加上限 ≤ MAX_YAW_DEG/4、V6 yaml 缺失/损坏 fail-soft（IdleBias(1,1,1)）、V7 regression companion-001/003 全 PASS。evidence/companion-005/verify_summary.json。
+
+**回归**：./init.sh smoke + companion-002 / interact-005 / vision-002 / vision-003 verify 重跑，trace 中 elapsed_s/count 有正常非确定性波动，无 fail。
+
+**Reviewer (sub-agent) LGTM**，无 L0/L1 阻塞。Known-debt（L2/L3）记入 feature_list.json companion-005.notes，不阻 passing：
+- L2: _sample_glance_interval 重复 tick；SLEEP 状态 modulator 仍 tick；profile_has_interests 启动后一次读；_bool_env/_float_env 重复（DRY）。
+- L2 已补：situational_idle.py docstring 加 "snapshot/compute/tick 仅由 IdleAnimator 后台线程调用"。
+- L3: IdleBias.glance_amp_scale 保留未用；happy+focus_stable micro 1.7875×2.5°=4.47° (< MAX_YAW_DEG/4=8.75°)。
+
+merge feat/companion-005 → main no-ff；companion-005 status=passing。下一个执行：robot-003（priority=28）。

@@ -1,20 +1,20 @@
 {
   "V1": {
-    "detect_count": 20,
-    "hit_count": 20,
+    "detect_count": 19,
+    "hit_count": 19,
     "tracks_created": 1,
     "tracks_dropped": 0,
     "primary_switches": 1,
     "tracks_now": [
       {
         "id": 1,
-        "hits": 20,
-        "age": 20,
+        "hits": 19,
+        "age": 19,
         "ps": 1.0
       }
     ],
     "primary_id": 1,
-    "primary_hits": 20,
+    "primary_hits": 19,
     "present": true
   },
   "V2": {
@@ -33,19 +33,19 @@
     "primary_switches_stat": 3,
     "primary_switches_observed": [
       {
-        "ts": 0.11,
+        "ts": 0.103,
         "from": null,
         "to": 1,
         "present": true
       },
       {
-        "ts": 3.354,
+        "ts": 3.375,
         "from": 1,
         "to": 2,
         "present": true
       },
       {
-        "ts": 6.595,
+        "ts": 6.576,
         "from": 2,
         "to": 3,
         "present": true

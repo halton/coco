@@ -38,6 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from coco.perception.face_tracker import FaceTracker
     from coco.power_state import PowerStateMachine
     from coco.emotion import Emotion
+    from coco.companion.situational_idle import SituationalIdleModulator
 
 
 log = logging.getLogger(__name__)
@@ -167,6 +168,7 @@ class IdleAnimator:
         rng: Optional[random.Random] = None,
         face_tracker: Optional["FaceTracker"] = None,
         power_state: Optional["PowerStateMachine"] = None,
+        situational_modulator: Optional["SituationalIdleModulator"] = None,
     ) -> None:
         self.robot = robot
         self.stop_event = stop_event
@@ -176,6 +178,7 @@ class IdleAnimator:
         self.stats = IdleStats()
         self.face_tracker = face_tracker
         self.power_state = power_state
+        self.situational_modulator = situational_modulator
         self._thread: Optional[threading.Thread] = None
         self._next_glance_at: float = 0.0
         # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
@@ -219,6 +222,22 @@ class IdleAnimator:
         if self._current_emotion is None:
             return 1.0
         return float(self.config.emotion_glance_bias.get(self._current_emotion, 1.0))
+
+    # --- companion-005: situational idle modulator ---
+    def _situational_bias(self):
+        """返回当前 SituationalIdle bias；未注入或异常时返回 (1.0, 1.0, 1.0)。"""
+        if self.situational_modulator is None:
+            return (1.0, 1.0, 1.0)
+        try:
+            b = self.situational_modulator.tick()
+            return (
+                float(b.micro_amp_scale),
+                float(b.glance_prob_scale),
+                float(b.glance_amp_scale),
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("situational modulator failed: %s: %s", type(exc).__name__, exc)
+            return (1.0, 1.0, 1.0)
 
     # --- idle/interact 互斥 ---
     def pause(self) -> None:
@@ -294,6 +313,13 @@ class IdleAnimator:
         emo_scale = self._emotion_glance_scale()
         if emo_scale > 0.0:
             base /= emo_scale
+        # companion-005: situational glance_prob_scale 越小 → glance 越稀 → interval 越大
+        _, sit_glance_prob, _ = self._situational_bias()
+        if sit_glance_prob > 0.0:
+            base /= sit_glance_prob
+        else:
+            # glance_prob_scale == 0 → 极大 interval（实际 SLEEP 已被外层 skip）
+            base *= 1e6
         scale = self._power_micro_scale()
         if scale == float("inf"):
             return base
@@ -364,6 +390,8 @@ class IdleAnimator:
     def _micro_head(self) -> None:
         cfg = self.config
         scale = self._emotion_scale()
+        sit_micro, _, _ = self._situational_bias()
+        scale *= sit_micro
         yaw = self.rng.uniform(-cfg.micro_yaw_amp_deg * scale, cfg.micro_yaw_amp_deg * scale)
         pitch = self.rng.uniform(-cfg.micro_pitch_amp_deg * scale, cfg.micro_pitch_amp_deg * scale)
         target = euler_pose(pitch_deg=pitch, yaw_deg=yaw)
