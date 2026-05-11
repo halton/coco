@@ -645,3 +645,42 @@
   - phase-4 真机 UAT 一次性 gate（用户排期）覆盖所有 5 个 feature；不在 feature 内部停。
 - **下一步最佳动作**：派 Engineer sub-agent 起手 infra-002（p19，phase-4 第 1 个），开 feat/infra-002 分支，按 verification 7 条逐项推进。
 
+
+## Session 029 — infra-002 ready-for-review（2026-05-10）
+
+- **本轮目标**：phase-4 第 1 个 feature infra-002 = CocoConfig 配置中心 + jsonl 结构化日志，落地 + 接通 main.py 5 个 component event。前次会话 socket 中断后 feat/infra-002 分支裸建无 commit；本会话从零做完整落地。
+- **已完成**：
+  - `coco/config.py`：`CocoConfig` frozen dataclass 聚合 8 个子配置（log/ptt/camera/llm/vad/wake/power/dialog）；`load_config(env=None)` 单点入口委托各模块原 `*_from_env()` helper（保持向后兼容，clamp 区间唯一来源不重复）；每个子模块 from_env 异常 fail-soft 回默认；`config_summary()` 输出无 secret dict（COCO_LLM_API_KEY 仅以 set/unset 表示）。
+  - `coco/logging_setup.py`：`setup_logging(jsonl, level)` 幂等清旧 handler；`emit("comp.event", **payload)` 拆 component/event 后发到 stdlib logger；`JsonlFormatter` 序列化 ts/level/component/event/message+payload；`MAX_LINE_BYTES=4000` truncate（防泄漏 / 防写满磁盘）。
+  - `coco/main.py`：run() 顶部 load_config + setup_logging + 启动 banner（jsonl 模式默认 OFF）；power on_sleep/on_active emit `power.transition`；vad utterance emit `vad.utterance` + `asr.transcribe` + `llm.reply`；wake hit emit `wake.hit`。共 5 个 component event 接通。
+  - `scripts/verify_infra_002.py`：8 子项（V1 默认值 / V2 env override+clamp / V3 非法值 fail-soft+warning / V4 summary 完整+无 secret / V5 jsonl 解析+非 jsonl 模式 / V6 旧 helper 向后兼容 / V7 5 component event / V8 truncate），共 58 checks 全 PASS。
+  - `scripts/smoke.py`：新增 `smoke_config()` 段。
+  - evidence: `evidence/infra-002/verify_summary.json` 写入。
+- **回归全 PASS**：verify_interact004 / verify_interact005 / verify_companion_003 / verify_companion_vision / verify_vision_002 / verify_infra_debt_sweep / verify_publish 全 PASS；smoke 全 PASS（含 smoke_config）。
+- **状态**：feat/infra-002 已 push origin；status=in_progress；Reviewer fresh-context 评审 pending（建议挑刺方向：env helper 委托是否真等价于 phase-3 行为；jsonl Formatter 与第三方 logging 链路兼容性；MAX_LINE_BYTES truncate 边界；config_summary 是否漏带未来新字段）。
+- **下一步**：Reviewer sub-agent fresh-context 评审 → 修 finding → status=passing → merge → 派 interact-006（phase-4 第 2 个）。
+
+
+## Session 030 — infra-002 closeout（2026-05-11）
+
+- **本轮目标**：Reviewer LGTM (无 L0)，3 个 L1 必修 + L1-4 文档锁；执行修复 + V9/V10/V11/V2b 新增 verification + 全量 regression + merge to main。
+- **L1 修复**：
+  - **L1-1 jsonl 缺 traceback**：`coco/logging_setup.py` `JsonlFormatter.format()` 末尾根据 `record.exc_info` / `record.exc_text` 加 `exc` 字段；truncate 分支也带 exc 摘要（≤1KB）。新增 V9 锁住：`logger.exception` 后 jsonl 行含 `'ValueError'` + 异常 message。
+  - **L1-2 component 命名不一致**：`logging_setup.py` 加 `AUTHORITATIVE_COMPONENTS = frozenset({asr,llm,vad,wake,power,dialog,face,idle,interact})`；`emit()` 入参 component 不在集合时 warn 一次（每个未知 component 仅 warn 一次）不阻断。新增 V10 锁住：`coco/main.py` 5 处 emit 短名全部命中 + 未知 component warn 不抛。
+  - **L1-3 PTT 两套真值源**：`coco/main.py` `run()` 内部用 `global` 把 `cfg.ptt.seconds` / `cfg.ptt.disabled` 写回模块级 `PUSH_TO_TALK_SECONDS` / `PUSH_TO_TALK_DISABLED`，让 cfg.ptt 成为 SoT（模块级保留作为 import-time 默认）。新增 V2b 锁住：env 注入 + cfg 写回路径同步。
+  - **L1-4 env-injection 文档锁**：`coco/config.py` `load_config` docstring 明文化 phase-4 已知限制（注入仅覆盖本文件直管字段，子模块 dataclass 字段仍读 os.environ）；新增 V11 锁住：`load_config(env={"COCO_DIALOG_MAX_TURNS":"7"})` 时 `cfg.dialog.max_turns == 4`（默认）。
+- **顺手项**：`feature_list.json` infra-002 user_visible_behavior 把 `COCO_FACE_*` 字样改成 "face 相关 env 待 phase-5"；`config.py` 文件顶部加 L2-1 TODO；evidence/infra-002/verify_summary.json 加 closeout 块（reviewer / L1_fixes / regression 各独立行 / known_debt）。
+- **Verification**：`scripts/verify_infra_002.py` V1-V11 + V2b 共 70/70 PASS。
+- **Smoke**：全 11 段 PASS（audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake/power/config/publish）。
+- **Regression（独立行）**：verify_interact004 (9/9 PASS) / verify_interact005 (all_pass=True) / verify_companion_003 (PASS) / verify_companion_vision (PASS) / verify_vision_002 (PASS) / verify_infra_debt_sweep (PASS) / verify_publish (PASS)。
+- **known-debt 入档**（不阻断 passing）：
+  - L2-1 spec 偏离：聚合不替代（config.py 顶部 TODO；后续 feature 接入时归口）
+  - L2-2 load_config(env=...) 注入对子模块 dataclass 字段无效（V11 锁住 + docstring）
+  - L2-3 config_summary 缺 COCO_*_CACHE / COCO_POWER_IDLE_DISABLE
+  - L2-4 无文件落盘（用户 stderr 重定向 / 等 RotatingFileHandler）
+  - L3-1 emit 5 处 except Exception 过度防御
+  - L3-3 LLMConfig 字段未被 llm.py 消费
+  - L3-4 跨平台日志路径
+- **状态**：feat/infra-002 → status=passing；merge --no-ff 到 main；推 origin。
+- **下一步**：phase-4 进度 1/5 done (infra-002)，next: interact-006（情绪检测，priority=20）。
+

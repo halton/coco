@@ -27,8 +27,10 @@ from reachy_mini import ReachyMini, ReachyMiniApp
 from coco import asr as coco_asr
 from coco import tts as coco_tts
 from coco.asr import transcribe_wav
+from coco.config import load_config, config_summary
 from coco.idle import IdleAnimator, IdleConfig
 from coco.interact import InteractSession
+from coco.logging_setup import setup_logging, emit
 from coco.power_state import (
     PowerState,
     PowerStateMachine,
@@ -166,6 +168,26 @@ class Coco(ReachyMiniApp):
     request_media_backend: str | None = "no_media"
 
     def run(self, reachy_mini: ReachyMini, stop_event: threading.Event) -> None:
+        # infra-002: 单点 load_config + setup_logging。banner 写 config_summary（无 secret）。
+        # 默认 jsonl=False、INFO；不改任何 phase-3 默认行为。COCO_LOG_JSONL=1 启用 jsonl。
+        try:
+            _coco_cfg = load_config()
+            setup_logging(jsonl=_coco_cfg.log.jsonl, level=_coco_cfg.log.level)
+            # L1-3：把 cfg.ptt.* 写回模块级变量，避免"两套 PTT 真值源"。
+            # 模块级 PUSH_TO_TALK_SECONDS / PUSH_TO_TALK_DISABLED 仍保留作为 import-time
+            # 默认（旧测试脚本 import 后直接读模块属性的路径不破），但 run() 路径下
+            # cfg.ptt 才是 SoT。
+            global PUSH_TO_TALK_SECONDS, PUSH_TO_TALK_DISABLED
+            PUSH_TO_TALK_SECONDS = float(_coco_cfg.ptt.seconds)
+            PUSH_TO_TALK_DISABLED = bool(_coco_cfg.ptt.disabled)
+            import json as _json
+            print(
+                f"[coco][config] " + _json.dumps(config_summary(_coco_cfg), ensure_ascii=False),
+                flush=True,
+            )
+        except Exception as _e:  # noqa: BLE001
+            print(f"[coco][config] load_config/setup_logging failed (continuing): {_e!r}", flush=True)
+
         block_frames = int(SAMPLE_RATE * BLOCK_SECONDS)
 
         # audio-002 V6：把 ASR 一次性 fixture 验证放后台线程，避免阻塞心跳/stop_event
@@ -198,11 +220,19 @@ class Coco(ReachyMiniApp):
                     def _on_sleep(_psm: PowerStateMachine, _r=reachy_mini) -> None:
                         print(f"[coco][power] -> sleep, calling goto_sleep()", flush=True)
                         try:
+                            emit("power.transition", from_state="drowsy", to_state="sleep", source="tick")
+                        except Exception:  # noqa: BLE001
+                            pass
+                        try:
                             _r.goto_sleep()
                         except Exception as e:  # noqa: BLE001
                             print(f"[coco][power] goto_sleep failed: {e!r}", flush=True)
 
                     def _on_active(_psm: PowerStateMachine, prev: PowerState, _r=reachy_mini) -> None:
+                        try:
+                            emit("power.transition", from_state=prev.value, to_state="active", source="interaction")
+                        except Exception:  # noqa: BLE001
+                            pass
                         if prev == PowerState.SLEEP:
                             print(f"[coco][power] sleep -> active, calling wake_up()", flush=True)
                             try:
@@ -307,7 +337,25 @@ class Coco(ReachyMiniApp):
                 def _vad_on_utterance(audio_int16: np.ndarray, sr: int) -> None:
                     # companion-003 L0-2: record_interaction 统一在 InteractSession.handle_audio
                     # 内通过 on_interaction 钩子触发，不在这里重复（避免双计数）。
+                    try:
+                        emit("vad.utterance", samples=int(audio_int16.shape[0]), sr=sr)
+                    except Exception:  # noqa: BLE001
+                        pass
                     r = session.handle_audio(audio_int16, sr, skip_action=False, skip_tts_play=False)
+                    try:
+                        emit(
+                            "asr.transcribe",
+                            text=str(r.get("transcript", ""))[:200],
+                            ok=bool(r.get("asr_ok", False)),
+                        )
+                        emit(
+                            "llm.reply",
+                            text=str(r.get("reply", ""))[:200],
+                            action=str(r.get("action", "")),
+                            duration_s=float(r.get("duration_s", 0.0)),
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
                     print(
                         f"[coco][vad] transcript={r['transcript']!r} reply={r['reply']!r} "
                         f"action={r['action']} dt={r['duration_s']:.2f}s",
@@ -329,6 +377,7 @@ class Coco(ReachyMiniApp):
                             on_wake=lambda t: (
                                 power_state.record_interaction(source="wake_word")
                                 if power_state is not None else None,
+                                emit("wake.hit", word=str(t), window_s=wake_cfg.window_seconds),
                                 print(
                                     f"[coco][wake] hit {t!r}; awake for "
                                     f"{wake_cfg.window_seconds:.1f}s",
