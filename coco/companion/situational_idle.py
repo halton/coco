@@ -34,7 +34,9 @@
 线程模型
 ========
 
-- ``compute()`` 是纯计算（不打 IO、不调下游）；线程安全。
+- ``snapshot()`` / ``compute()`` / ``tick()`` 仅由 ``IdleAnimator`` 后台线程调用，
+  不为多线程并发访问设计；外部调用方请勿跨线程复用同一 modulator 实例。
+- ``compute()`` 是纯计算（不打 IO、不调下游）；在单线程契约下天然安全。
 - ``snapshot()`` 在 IdleAnimator 后台线程被调用，会读 power_state /
   face_tracker / attention_selector / emotion_tracker / profile_store。
   每个子组件读取都 try-except 包裹，单点故障不影响其他维度。
