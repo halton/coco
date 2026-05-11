@@ -717,7 +717,7 @@
       "area": "interact",
       "title": "对话状态机（intent 分类 + dialog state，替换 ad-hoc 触发链）",
       "user_visible_behavior": "Coco 接收 ASR 文本后先做轻量 intent 分类（greet / question / answer / refuse / smalltalk / control[stop|sleep|wake] / unknown），并维护 DialogState（topic, last_intent, awaiting_response, turn_count），让多轮对话不再依赖临时变量；用户说'停一下/睡觉吧'时进入 SLEEP，'继续/起床'时回 ACTIVE。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "interact-004",
         "interact-006",
@@ -730,7 +730,11 @@
         "scripts/verify_interact008.py：(a) intent 分类 12 个 fixture 文本 ≥10 命中；(b) DialogState 状态转移单元测试 (greet→smalltalk→question→answer→refuse 路径)；(c) control intent 触发 power_state 切换；(d) 与 interact-007 awaiting_response 协作不冲突；(e) regression：interact-001~007 verify 通过。",
         "Reviewer fresh-context 评审：intent 分类边界（口语化/方言鲁棒性）、状态机死锁风险、SLEEP 期间 control intent 必须仍能被识别（不能因 VAD 静默漏 wake）、与 wake-word 优先级。"
       ],
-      "evidence": [],
+      "evidence": [
+        "verify_interact_008.py V1-V14 全 PASS（53/53）",
+        "regression: interact-002/003/004/005/006/007/companion-003/004/infra-002/infra-003 PASS",
+        "feat/interact-008 branch ready for Reviewer"
+      ],
       "notes": "全部 fixture 文本驱动，sim 可验证；真机口音/远场识别效果归 uat-phase4。"
     },
     {

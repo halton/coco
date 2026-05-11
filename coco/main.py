@@ -464,6 +464,37 @@ class Coco(ReachyMiniApp):
                     except Exception as e:  # noqa: BLE001
                         print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
 
+            # interact-008: 可选 IntentClassifier + ConversationStateMachine（默认 OFF）。
+            # COCO_INTENT=1 启用：handle_audio 内做 intent 分类 + state 机；
+            # COMMAND="安静"/"重复"/TEACH 都按 ConvState 走特殊路径。
+            _intent_classifier = None
+            _conv_sm = None
+            try:
+                from coco.intent import (
+                    IntentClassifier as _IntentClassifier,
+                    config_from_env as _intent_cfg_from_env,
+                    intent_enabled_from_env as _intent_enabled,
+                )
+                from coco.conversation import (
+                    ConversationStateMachine as _ConvSM,
+                    config_from_env as _conv_cfg_from_env,
+                )
+                if _intent_enabled():
+                    _icfg = _intent_cfg_from_env()
+                    _intent_classifier = _IntentClassifier(config=_icfg)
+                    _conv_sm = _ConvSM(config=_conv_cfg_from_env())
+                    print(
+                        f"[coco][intent] enabled llm_fallback={_icfg.llm_fallback} "
+                        f"quiet_s={_conv_sm.config.quiet_seconds:.0f}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][intent] disabled (COCO_INTENT not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][intent] init failed: {type(e).__name__}: {e}", flush=True)
+                _intent_classifier = None
+                _conv_sm = None
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -478,6 +509,8 @@ class Coco(ReachyMiniApp):
                 ),
                 dialog_memory=_dialog_memory,
                 profile_store=_profile_store,
+                intent_classifier=_intent_classifier,
+                conv_state_machine=_conv_sm,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession
