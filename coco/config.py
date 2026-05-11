@@ -134,6 +134,8 @@ class CocoConfig:
     intent: Any = None  # coco.intent.IntentConfig
     intent_enabled: bool = False  # COCO_INTENT；默认 False
     conversation: Any = None  # coco.conversation.ConversationConfig
+    # robot-003: ExpressionsConfig（默认 OFF）
+    expressions: Any = None  # coco.robot.expressions.ExpressionsConfig
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +321,17 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     intent_enabled = _intent.intent_enabled_from_env(env)
     conversation_cfg = _safe_call("conversation", lambda: _conversation.config_from_env(env)) or _conversation.ConversationConfig()
 
+    # robot-003: ExpressionsConfig
+    try:
+        from coco.robot.expressions import (
+            expressions_config_from_env as _expr_from_env,
+            ExpressionsConfig as _ExpressionsConfig,
+        )
+        expr_cfg = _safe_call("expressions", lambda: _expr_from_env(env)) or _ExpressionsConfig()
+    except Exception as e:  # noqa: BLE001
+        log.warning("[config] expressions module import failed: %s: %s", type(e).__name__, e)
+        expr_cfg = None
+
     return CocoConfig(
         log=_log_from_env(env),
         ptt=_ptt_from_env(env),
@@ -339,6 +352,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         intent=intent_cfg,
         intent_enabled=intent_enabled,
         conversation=conversation_cfg,
+        expressions=expr_cfg,
     )
 
 
@@ -381,6 +395,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
         "emotion": {"enabled": cfg.emotion_enabled, "config": _sub(cfg.emotion)},
         "intent": {"enabled": cfg.intent_enabled, "config": _sub(cfg.intent)},
         "conversation": {"config": _sub(cfg.conversation)},
+        "expressions": {"config": _sub(cfg.expressions)},
     }
 
 
