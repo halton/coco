@@ -717,7 +717,7 @@
       "area": "interact",
       "title": "对话状态机（intent 分类 + dialog state，替换 ad-hoc 触发链）",
       "user_visible_behavior": "Coco 接收 ASR 文本后先做轻量 intent 分类（greet / question / answer / refuse / smalltalk / control[stop|sleep|wake] / unknown），并维护 DialogState（topic, last_intent, awaiting_response, turn_count），让多轮对话不再依赖临时变量；用户说'停一下/睡觉吧'时进入 SLEEP，'继续/起床'时回 ACTIVE。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-004",
         "interact-006",
@@ -730,7 +730,12 @@
         "scripts/verify_interact008.py：(a) intent 分类 12 个 fixture 文本 ≥10 命中；(b) DialogState 状态转移单元测试 (greet→smalltalk→question→answer→refuse 路径)；(c) control intent 触发 power_state 切换；(d) 与 interact-007 awaiting_response 协作不冲突；(e) regression：interact-001~007 verify 通过。",
         "Reviewer fresh-context 评审：intent 分类边界（口语化/方言鲁棒性）、状态机死锁风险、SLEEP 期间 control intent 必须仍能被识别（不能因 VAD 静默漏 wake）、与 wake-word 优先级。"
       ],
-      "evidence": [],
+      "evidence": [
+        "verify_interact_008.py V1-V15 全 PASS（59/59）",
+        "regression: smoke + interact-002/003/004/005/006/007/companion-003/004/companion-vision/vision-002/003/infra-002/003/infra-debt-sweep/publish 全 PASS",
+        "Reviewer (sub-agent): LGTM-with-fixes — L1-1 (ProactiveScheduler QUIET skip + skipped_quiet_state 计数) 与 L1-2 (repeat 路径显式 on_tts_start 让 SPEAKING→IDLE 完整 + V12 升级断言) 已修复；L2 顺手修：TEACH_TERMS 删 '怎么'、ConvSM add_transition_listener 公开 API、InteractSession._skip_llm_this_turn 显式初始化、TEACHING teaching_max_seconds=600 自动过期（COCO_TEACHING_MAX_S）、main.py 在 COCO_INTENT_LLM=1 时把 _llm.reply 注入 IntentClassifier。",
+        "feat/interact-008 → main via merge --no-ff"
+      ],
       "notes": "全部 fixture 文本驱动，sim 可验证；真机口音/远场识别效果归 uat-phase4。"
     },
     {

@@ -95,6 +95,7 @@ class ProactiveStats:
     skipped_idle: int = 0
     skipped_cooldown: int = 0
     skipped_rate_limit: int = 0
+    skipped_quiet_state: int = 0
     llm_errors: int = 0
     tts_errors: int = 0
     last_topic: str = ""
@@ -197,6 +198,7 @@ class ProactiveScheduler:
         on_interaction: Optional[Callable[[str], None]] = None,
         clock: Optional[Callable[[], float]] = None,
         emit_fn: Optional[Callable[..., None]] = None,
+        conv_state_machine: Any = None,
     ) -> None:
         self.config = config or ProactiveConfig()
         self.power_state = power_state
@@ -207,6 +209,10 @@ class ProactiveScheduler:
         self.on_interaction = on_interaction
         self.clock = clock or time.monotonic
         self._emit = emit_fn  # 由测试注入；None 时延迟 import logging_setup.emit
+        # interact-008 L1-1: ConversationStateMachine（可选）。
+        # 注入后 _should_trigger 在 QUIET 状态返回 "quiet_state"，
+        # 避免后台 ProactiveScheduler 在用户要求"安静"期间还自顾自地开口。
+        self.conv_state_machine = conv_state_machine
         self._lock = threading.RLock()
         self.stats = ProactiveStats()
 
@@ -281,6 +287,13 @@ class ProactiveScheduler:
         if not self.config.enabled:
             return "disabled"
         t = now if now is not None else self.clock()
+        # interact-008 L1-1: 如果对话状态机在 QUIET，跳过（用户明确要求安静）
+        if self.conv_state_machine is not None:
+            try:
+                if self.conv_state_machine.is_quiet_now():
+                    return "quiet_state"
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive] conv_state_machine read failed: %s: %s", type(e).__name__, e)
         # 1) power state must be ACTIVE
         if self.power_state is not None:
             try:

@@ -883,3 +883,33 @@ milestone 切到 `phase-5 体验深化（多目标视觉 + 对话状态机 + 情
 **回归**：infra-002 / interact-007 / companion-003 / companion-vision / vision-002 / vision-003 / infra-debt-sweep / publish 全 PASS；smoke.py 同步加 `metrics` 到 expected keys；`./init.sh` 通过。
 
 merge 回 main：infra-003 status=passing；继续按 priority 进入 **interact-008**。
+
+---
+
+## Session — interact-008 close-out (Reviewer L1 修复 + L2 + merge) + 规范更新
+
+**docs(harness) on main** (`739b4e3`)：closeout 默认只 commit 不 push。
+- sub-agent 在 closeout 中完成 commit + merge --no-ff 后即停，不再自动 `git push origin main`、不 push feat 分支。
+- push 改为用户显式指令时才执行，覆盖此前 "自动 push + 3 轮重试 sleep 30s" 默认。
+- CLAUDE.md / AGENTS.md 同步更新；commit 例外保留（sub-agent 直接 commit 不向用户确认）。
+
+**feat/interact-008** L1 修复 2/2：
+- L1-1 ProactiveScheduler 在 ConvState.QUIET 时跳过：`ProactiveScheduler` 新增 `conv_state_machine` 参数，`_should_trigger` 优先调 `is_quiet_now()`，命中返回 `"quiet_state"` 并累加 `stats.skipped_quiet_state`；`main.py` 把同一个 `_conv_sm` 注入 scheduler，IntentClassifier+ConvSM 构造段提前到 ProactiveScheduler 之前。
+- L1-2 repeat 路径 SPEAKING→IDLE 完整：`InteractSession` 在识别到 repeat command 时设 `_emit_tts_start_for_repeat=True`，TTS 调用前显式 `conv_state_machine.on_tts_start()`，finally 段照常 `on_tts_done()`，保证 emit 序列含 SPEAKING transition。
+
+**L2 顺手修**：
+- `coco/intent.py` `TEACH_TERMS` 删 `"怎么"`（消除 "怎么样" 误判分支，IntentClassifier 简化）。
+- `coco/conversation.py` `ConversationStateMachine.add_transition_listener(callback)` 公开 API；`coco/interact.py` 改用它注册 emit listener，不再覆盖私有 `_on_transition`，多 listener 互不干扰。
+- `InteractSession.__init__` 显式 `self._skip_llm_this_turn = False` + `self._emit_tts_start_for_repeat = False`。
+- TEACHING 自动过期：`ConversationConfig.teaching_max_seconds=600.0`，env `COCO_TEACHING_MAX_S`（10–7200，超界 clamp+warn）；`_maybe_expire_teaching_locked` 被 `current_state` / `is_teaching` getter 触发。
+- `coco/main.py` 在 `COCO_INTENT_LLM=1`（intent_cfg.llm_fallback=True）时把 `_llm.reply` 作为 `llm_fn` 注入 IntentClassifier；fail-soft 行为不变。
+
+**verify_interact_008**：V12 升级断言 emit 序列含 `to_state="speaking"`；新增 V15（ProactiveScheduler QUIET skip + skipped_quiet_state 计数 + 退出 QUIET 后可触发）。V1-V15 全 PASS（59/59）。
+
+**`scripts/smoke.py`**：`smoke_config` expected keys 同步加 `conversation` + `intent`。
+
+**回归**：smoke + infra-002 / infra-003 / interact-002/003/004/005/006/007 / companion-003/004/companion-vision / vision-002/003 / infra-debt-sweep / publish 全 PASS。
+
+merge 回 main：interact-008 status=passing；下一个：vision-004。
+
+**未 push**（按新规则等用户指令统一 push）。

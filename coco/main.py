@@ -419,6 +419,43 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][face_id] init failed: {type(e).__name__}: {e}", flush=True)
                 _face_id_classifier = None
 
+            # interact-008: 可选 IntentClassifier + ConversationStateMachine（默认 OFF）。
+            # COCO_INTENT=1 启用：handle_audio 内做 intent 分类 + state 机；
+            # COMMAND="安静"/"重复"/TEACH 都按 ConvState 走特殊路径。
+            # 注意：放在 ProactiveScheduler 构造之前，便于把 _conv_sm 注入 proactive，
+            # QUIET 期间后台主动话题也会跳过（interact-008 L1-1）。
+            _intent_classifier = None
+            _conv_sm = None
+            try:
+                from coco.intent import (
+                    IntentClassifier as _IntentClassifier,
+                    config_from_env as _intent_cfg_from_env,
+                    intent_enabled_from_env as _intent_enabled,
+                )
+                from coco.conversation import (
+                    ConversationStateMachine as _ConvSM,
+                    config_from_env as _conv_cfg_from_env,
+                )
+                if _intent_enabled():
+                    _icfg = _intent_cfg_from_env()
+                    # interact-008 L2: COCO_INTENT_LLM=1 时把 _llm.reply 作为 llm_fn 注入；
+                    # IntentClassifier 内仅在 config.llm_fallback=True 才真的调，仍 fail-soft。
+                    _intent_llm_fn = _llm.reply if _icfg.llm_fallback else None
+                    _intent_classifier = _IntentClassifier(config=_icfg, llm_fn=_intent_llm_fn)
+                    _conv_sm = _ConvSM(config=_conv_cfg_from_env())
+                    print(
+                        f"[coco][intent] enabled llm_fallback={_icfg.llm_fallback} "
+                        f"quiet_s={_conv_sm.config.quiet_seconds:.0f} "
+                        f"teaching_max_s={_conv_sm.config.teaching_max_seconds:.0f}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][intent] disabled (COCO_INTENT not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][intent] init failed: {type(e).__name__}: {e}", flush=True)
+                _intent_classifier = None
+                _conv_sm = None
+
             # interact-007: 可选 ProactiveScheduler（默认 OFF）。
             # 构造放在 InteractSession 之前以便把 record_interaction 钩进 session.on_interaction。
             _proactive = None
@@ -440,6 +477,8 @@ class Coco(ReachyMiniApp):
                             (lambda src, _ps=power_state: _ps.record_interaction(source=src))
                             if power_state is not None else None
                         ),
+                        # interact-008 L1-1: QUIET 期间后台主动话题也跳过
+                        conv_state_machine=_conv_sm,
                     )
                     print(
                         f"[coco][proactive] enabled idle={_pcfg.idle_threshold_s:.0f}s "
@@ -464,6 +503,7 @@ class Coco(ReachyMiniApp):
                     except Exception as e:  # noqa: BLE001
                         print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
 
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -478,6 +518,8 @@ class Coco(ReachyMiniApp):
                 ),
                 dialog_memory=_dialog_memory,
                 profile_store=_profile_store,
+                intent_classifier=_intent_classifier,
+                conv_state_machine=_conv_sm,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession

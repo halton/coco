@@ -112,6 +112,9 @@ class CocoConfig:
     dialog_memory_enabled: bool = False  # COCO_DIALOG_MEMORY；默认 False
     emotion: Any = None  # coco.emotion.EmotionConfig
     emotion_enabled: bool = False  # COCO_EMOTION；默认 False
+    intent: Any = None  # coco.intent.IntentConfig
+    intent_enabled: bool = False  # COCO_INTENT；默认 False
+    conversation: Any = None  # coco.conversation.ConversationConfig
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +243,8 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     from coco import power_state as _power
     from coco import dialog as _dialog
     from coco import emotion as _emotion
+    from coco import intent as _intent
+    from coco import conversation as _conversation
 
     vad_cfg = _safe_call("vad", lambda: _vad.config_from_env()) or _vad.VADConfig()
     wake_cfg = _safe_call("wake", lambda: _wake.config_from_env()) or _wake.WakeConfig()
@@ -256,6 +261,9 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     power_idle_enabled = _power.power_idle_enabled_from_env() if env is os.environ else _bool_env(env, "COCO_POWER_IDLE", False)
     dialog_memory_enabled = _dialog.dialog_memory_enabled_from_env() if env is os.environ else _bool_env(env, "COCO_DIALOG_MEMORY", False)
     emotion_enabled = _emotion.emotion_enabled_from_env(env)
+    intent_cfg = _safe_call("intent", lambda: _intent.config_from_env(env)) or _intent.IntentConfig()
+    intent_enabled = _intent.intent_enabled_from_env(env)
+    conversation_cfg = _safe_call("conversation", lambda: _conversation.config_from_env(env)) or _conversation.ConversationConfig()
 
     return CocoConfig(
         log=_log_from_env(env),
@@ -273,6 +281,9 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         dialog_memory_enabled=dialog_memory_enabled,
         emotion=emotion_cfg,
         emotion_enabled=emotion_enabled,
+        intent=intent_cfg,
+        intent_enabled=intent_enabled,
+        conversation=conversation_cfg,
     )
 
 
@@ -312,6 +323,8 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
         "power": {"idle_enabled": cfg.power_idle_enabled, "config": _sub(cfg.power)},
         "dialog": {"memory_enabled": cfg.dialog_memory_enabled, "config": _sub(cfg.dialog)},
         "emotion": {"enabled": cfg.emotion_enabled, "config": _sub(cfg.emotion)},
+        "intent": {"enabled": cfg.intent_enabled, "config": _sub(cfg.intent)},
+        "conversation": {"config": _sub(cfg.conversation)},
     }
 
 

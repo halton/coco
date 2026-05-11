@@ -33,6 +33,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from coco.idle import IdleAnimator
     from coco.emotion import EmotionDetector, EmotionTracker
     from coco.profile import ProfileStore
+    from coco.intent import IntentClassifier
+    from coco.conversation import ConversationStateMachine
 
 
 log = logging.getLogger(__name__)
@@ -115,6 +117,8 @@ class InteractSession:
         emotion_detector: Optional["EmotionDetector"] = None,
         emotion_tracker: Optional["EmotionTracker"] = None,
         profile_store: Optional["ProfileStore"] = None,
+        intent_classifier: Optional["IntentClassifier"] = None,
+        conv_state_machine: Optional["ConversationStateMachine"] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -150,6 +154,51 @@ class InteractSession:
         self.profile_store = profile_store
         # 探测 llm_reply_fn 是否接受 system_prompt kwarg（与 history 类似）。
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
+        # interact-008: 可选 intent classifier + conv state machine（默认 None）。
+        # 注入后：handle_audio 内 transcript 拿到 → classify → 通知 state machine →
+        # 根据 ConvState 决定动作（QUIET 直接返回；COMMAND 重复重发上一句不调
+        # LLM；TEACH 注入教学 system_prompt）。emit interact.intent_classified +
+        # interact.state_transition。
+        self.intent_classifier = intent_classifier
+        self.conv_state_machine = conv_state_machine
+        # 状态机回调挂钩（emit interact.state_transition）
+        if conv_state_machine is not None:
+            try:
+                from coco.logging_setup import emit as _emit_init
+
+                def _emit_transition(tr) -> None:
+                    try:
+                        _emit_init(
+                            "interact.state_transition",
+                            from_state=tr.from_state.value,
+                            to_state=tr.to_state.value,
+                            source=tr.source,
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                # interact-008 L2: 改用公开 API（add_transition_listener），
+                # 不再覆盖私有 _on_transition；多个 listener 互不干扰。
+                if hasattr(conv_state_machine, "add_transition_listener"):
+                    conv_state_machine.add_transition_listener(_emit_transition)
+                else:
+                    # 旧版本兜底（理论上不会走到，留保险）
+                    prior_cb = conv_state_machine._on_transition  # type: ignore[attr-defined]
+
+                    def _wrapper(tr, _p=prior_cb) -> None:
+                        _emit_transition(tr)
+                        if _p is not None:
+                            try:
+                                _p(tr)
+                            except Exception:  # noqa: BLE001
+                                pass
+                    conv_state_machine._on_transition = _wrapper  # type: ignore[attr-defined]
+            except Exception:  # noqa: BLE001
+                pass
+        # 记录上一次 reply（用于 COMMAND="重复"）
+        self._last_reply: str = ""
+        # interact-008 L2: 显式初始化跳过 LLM 标志，避免依赖 handle_audio 内首次赋值
+        self._skip_llm_this_turn: bool = False
+        self._emit_tts_start_for_repeat: bool = False
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -206,6 +255,17 @@ class InteractSession:
             log.warning("InteractSession 正忙，丢弃本次音频")
             return {"transcript": "", "reply": "", "action": "", "duration_s": 0.0,
                     "asr_ok": False, "tts_ok": False, "action_ok": False, "dropped": True}
+        # interact-008: QUIET 状态早返回（在 acquire 之后才检查，确保 lock 释放）
+        if self.conv_state_machine is not None:
+            try:
+                if self.conv_state_machine.is_quiet_now():
+                    self._busy.release()
+                    log.info("[interact] QUIET 状态，drop audio")
+                    return {"transcript": "", "reply": "", "action": "",
+                            "duration_s": 0.0, "asr_ok": False, "tts_ok": False,
+                            "action_ok": False, "dropped": True, "quiet": True}
+            except Exception:  # noqa: BLE001
+                pass
         t0 = time.monotonic()
         result = {"transcript": "", "reply": "", "action": "", "duration_s": 0.0,
                   "asr_ok": False, "tts_ok": False, "action_ok": False, "dropped": False}
@@ -295,6 +355,68 @@ class InteractSession:
 
             # 3) 路由 reply + action
             reply, action = route_reply(transcript)
+            # interact-008: intent 分类（在 LLM 之前），并通知 state machine。
+            # COMMAND="安静" → 进 QUIET，本轮不再 LLM/TTS；COMMAND="重复" → 重发上一句。
+            intent_label = None
+            if self.intent_classifier is not None and transcript:
+                try:
+                    intent_label = self.intent_classifier.classify(transcript)
+                    result["intent"] = intent_label.intent.value
+                    result["intent_confidence"] = intent_label.confidence
+                    try:
+                        from coco.logging_setup import emit as _emit
+                        _emit(
+                            "interact.intent_classified",
+                            intent=intent_label.intent.value,
+                            confidence=intent_label.confidence,
+                            matched_terms=list(intent_label.matched_terms),
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                except Exception as e:  # noqa: BLE001
+                    log.warning("intent classify failed: %s: %s", type(e).__name__, e)
+                    intent_label = None
+
+            # 通知 state machine
+            if self.conv_state_machine is not None and intent_label is not None:
+                try:
+                    from coco.intent import IntentClassifier as _IC
+                    if _IC.is_quiet_command(intent_label):
+                        # 进入 QUIET：跳过 LLM/TTS/动作，本轮直接结束
+                        self.conv_state_machine.enter_quiet(source="command:quiet")
+                        result["reply"] = ""
+                        result["action"] = ""
+                        result["intent_action"] = "quiet"
+                        result["tts_ok"] = True  # 跳过即视为 ok
+                        result["action_ok"] = True
+                        return result
+                    if _IC.is_repeat_command(intent_label):
+                        # 不调 LLM，重发上一句
+                        if self._last_reply:
+                            reply = self._last_reply
+                            result["intent_action"] = "repeat"
+                            # 直接走 TTS 不调 LLM；标记跳过
+                            self._skip_llm_this_turn = True
+                            # interact-008 L1-2: repeat 路径不经 LLM，但仍需让
+                            # state machine 完整经过 SPEAKING→IDLE，避免下游
+                            # 按 SPEAKING 推算时长时整段缺失。
+                            self._emit_tts_start_for_repeat = True
+                        else:
+                            self._skip_llm_this_turn = False
+                            self._emit_tts_start_for_repeat = False
+                    else:
+                        self._skip_llm_this_turn = False
+                        self._emit_tts_start_for_repeat = False
+                    # 普通路径：通知 state machine
+                    self.conv_state_machine.on_user_utterance(intent_label.intent.value)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("conv state machine failed: %s: %s", type(e).__name__, e)
+                    self._skip_llm_this_turn = False
+                    self._emit_tts_start_for_repeat = False
+            else:
+                self._skip_llm_this_turn = False
+                self._emit_tts_start_for_repeat = False
+
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
             # 动作仍走 KEYWORD_ROUTES（基于转写）；LLM 失败/空时已在 LLMClient 内降级。
             # interact-004: 若有 dialog_memory 且 llm_reply_fn 支持 history kwarg
@@ -302,7 +424,7 @@ class InteractSession:
             # 把最近 N 轮拼成 messages 注入；否则按旧签名调用。
             # 注意：不再用 try/except TypeError 探测——避免 fn 内部抛 TypeError
             # 被误判为签名不匹配导致重复调用。
-            if self.llm_reply_fn is not None and transcript:
+            if self.llm_reply_fn is not None and transcript and not self._skip_llm_this_turn:
                 history_msgs: Optional[List[dict]] = None
                 if self.dialog_memory is not None and self._llm_accepts_history:
                     history_msgs = []
@@ -322,18 +444,37 @@ class InteractSession:
                     except Exception as e:  # noqa: BLE001
                         log.warning("profile system_prompt build failed: %s: %s",
                                     type(e).__name__, e)
+                # interact-008: TEACHING 状态合并教学 system_prompt
+                if (self.conv_state_machine is not None
+                        and self.conv_state_machine.is_teaching()
+                        and self._llm_accepts_system_prompt):
+                    teach_sp = self.conv_state_machine.teaching_system_prompt()
+                    if profile_sys_prompt:
+                        profile_sys_prompt = profile_sys_prompt + "\n\n" + teach_sp
+                    else:
+                        profile_sys_prompt = teach_sp
                 try:
                     kwargs: dict = {}
                     if history_msgs is not None:
                         kwargs["history"] = history_msgs
                     if profile_sys_prompt is not None:
                         kwargs["system_prompt"] = profile_sys_prompt
+                    if self.conv_state_machine is not None:
+                        try:
+                            self.conv_state_machine.on_llm_start()
+                        except Exception:  # noqa: BLE001
+                            pass
                     if kwargs:
                         llm_text = self.llm_reply_fn(transcript, **kwargs)
                     else:
                         llm_text = self.llm_reply_fn(transcript)
                     if llm_text and llm_text.strip():
                         reply = llm_text.strip()
+                    if self.conv_state_machine is not None:
+                        try:
+                            self.conv_state_machine.on_llm_done()
+                        except Exception:  # noqa: BLE001
+                            pass
                 except Exception as e:  # noqa: BLE001
                     log.warning("LLM reply failed: %s: %s; using keyword route", type(e).__name__, e)
             self.stats.last_reply = reply
@@ -341,6 +482,9 @@ class InteractSession:
             self.stats.reply_ok += 1
             result["reply"] = reply
             result["action"] = action
+            # interact-008: 记录上一句以便 COMMAND="重复" 重发
+            if reply:
+                self._last_reply = reply
             log.info("[interact] reply=%r action=%s", reply, action)
 
             # interact-004: 记一轮到 ring buffer。即使走 KEYWORD_ROUTES（无 LLM）
@@ -353,6 +497,14 @@ class InteractSession:
                     log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
 
             # 4) TTS（可与动作并行；这里串行简化）
+            # interact-008 L1-2: repeat 路径无 on_llm_start/done，需手动 fire
+            # on_tts_start 让状态完整经过 SPEAKING（finally 中 on_tts_done 收尾）。
+            if (self.conv_state_machine is not None
+                    and getattr(self, "_emit_tts_start_for_repeat", False)):
+                try:
+                    self.conv_state_machine.on_tts_start()
+                except Exception:  # noqa: BLE001
+                    pass
             if not skip_tts_play:
                 try:
                     # interact-006: 若 emotion 已检测且 tts_say_fn 接受 emotion kwarg，传入；
@@ -398,6 +550,12 @@ class InteractSession:
                 result["action_ok"] = True
 
         finally:
+            # interact-008: 通知 state machine TTS 结束（回 IDLE 或 TEACHING）
+            if self.conv_state_machine is not None:
+                try:
+                    self.conv_state_machine.on_tts_done()
+                except Exception:  # noqa: BLE001
+                    pass
             # 6) 恢复 idle
             if self.idle_animator is not None:
                 self.idle_animator.resume()
