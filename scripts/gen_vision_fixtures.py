@@ -65,6 +65,77 @@ def gen_no_one() -> Path:
     return p
 
 
+def _gen_face_id_person(label: str, seed: int, eye_color: tuple, mouth_offset: int,
+                        skin_color: tuple, n: int = 5, scale_jitter: float = 0.05) -> list[Path]:
+    """vision-003: 生成单人 N 张 100x100 灰度脸 fixture（不同高斯噪声 + 微仿射变形）。
+
+    每"人"用唯一组合（皮肤色 / 眼色 / 嘴位置 / 噪声种子）确保 histogram 统计上可区分。
+    """
+    rng = np.random.default_rng(seed)
+    out_dir = OUT / "face_id" / label
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+    for i in range(n):
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        img[:] = (60, 70, 90)  # 背景
+        # 仿射偏移（模拟同人多角度）
+        scale = 1.0 + rng.uniform(-scale_jitter, scale_jitter)
+        cx = 50 + int(rng.integers(-3, 4))
+        cy = 50 + int(rng.integers(-3, 4))
+        a = int(28 * scale)
+        b = int(36 * scale)
+        cv2.ellipse(img, (cx, cy), (a, b), 0, 0, 360, skin_color, -1)
+        # 双眼
+        eye_dx = int(10 * scale)
+        eye_dy = int(8 * scale)
+        eye_r = max(2, int(3 * scale))
+        cv2.circle(img, (cx - eye_dx, cy - eye_dy), eye_r, eye_color, -1)
+        cv2.circle(img, (cx + eye_dx, cy - eye_dy), eye_r, eye_color, -1)
+        # 嘴
+        cv2.ellipse(img, (cx, cy + mouth_offset),
+                    (int(10 * scale), int(4 * scale)), 0, 0, 180, (40, 40, 120), 2)
+        # 高斯噪声（同人不同采样）
+        noise = rng.normal(0, 8, img.shape).astype(np.int16)
+        img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+        p = out_dir / f"{i + 1}.jpg"
+        ok = cv2.imwrite(str(p), img)
+        assert ok, f"imwrite failed: {p}"
+        paths.append(p)
+    return paths
+
+
+def gen_face_id_fixtures() -> list[Path]:
+    """生成 alice / bob 各 5 张 + unknown_face.jpg 1 张，全程序合成。"""
+    all_paths: list[Path] = []
+    # alice：浅肤色 + 黑眼 + 嘴较低
+    all_paths.extend(_gen_face_id_person(
+        "alice", seed=42,
+        eye_color=(20, 20, 20), mouth_offset=18,
+        skin_color=(200, 215, 230),
+    ))
+    # bob：偏黄肤色 + 棕眼 + 嘴较高
+    all_paths.extend(_gen_face_id_person(
+        "bob", seed=137,
+        eye_color=(40, 60, 100), mouth_offset=10,
+        skin_color=(150, 180, 200),
+    ))
+    # unknown：第三种组合，alice/bob 训练集外
+    rng = np.random.default_rng(999)
+    img = np.zeros((100, 100, 3), dtype=np.uint8)
+    img[:] = (40, 50, 70)
+    cv2.ellipse(img, (50, 50), (30, 38), 0, 0, 360, (100, 130, 160), -1)
+    cv2.circle(img, (40, 40), 4, (200, 200, 200), -1)
+    cv2.circle(img, (60, 40), 4, (200, 200, 200), -1)
+    cv2.rectangle(img, (40, 65), (60, 70), (50, 50, 50), -1)
+    noise = rng.normal(0, 10, img.shape).astype(np.int16)
+    img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    unk = OUT / "unknown_face.jpg"
+    ok = cv2.imwrite(str(unk), img)
+    assert ok, f"imwrite failed: {unk}"
+    all_paths.append(unk)
+    return all_paths
+
+
 def gen_user_walks_away(seconds: float = 3.0, fps: float = 15.0) -> Path:
     """合成"用户从画面中央走向远处"短视频。"""
     p = OUT / "user_walks_away.mp4"
@@ -119,10 +190,12 @@ uv run python scripts/gen_vision_fixtures.py
 
 def main() -> int:
     paths = [gen_single_face(), gen_no_one(), gen_user_walks_away()]
+    face_id_paths = gen_face_id_fixtures()
     (OUT / "README.md").write_text(README, encoding="utf-8")
     for p in paths:
         size = p.stat().st_size
         print(f"  ok: {p.name}  {size} bytes")
+    print(f"  ok (face_id): {len(face_id_paths)} files")
     print(f"  ok: README.md")
     print(f"OUT: {OUT}")
     return 0

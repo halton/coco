@@ -1,0 +1,140 @@
+{
+  "feature_id": "vision-003",
+  "ts": "2026-05-11 11:07:38",
+  "backend_selected": "histogram",
+  "has_cv2_face": false,
+  "results": {
+    "V1": {
+      "backend_selected": "histogram",
+      "has_cv2_face": false
+    },
+    "V2": {
+      "records": 2,
+      "samples_total": 6
+    },
+    "V3": [
+      {
+        "gt": "alice",
+        "pred": "alice",
+        "conf": 0.438
+      },
+      {
+        "gt": "alice",
+        "pred": "alice",
+        "conf": 0.5436
+      },
+      {
+        "gt": "bob",
+        "pred": "bob",
+        "conf": 0.4259
+      },
+      {
+        "gt": "bob",
+        "pred": "bob",
+        "conf": 0.6
+      }
+    ],
+    "V4": {
+      "unknown_pred": null,
+      "unknown_conf": 0.2858
+    },
+    "V5": {
+      "enabled_default": false,
+      "tracker_name": null
+    },
+    "V6": {
+      "reloaded_records": 2
+    },
+    "V7": [
+      {
+        "env": {
+          "COCO_FACE_ID_THRESHOLD": "2.0"
+        },
+        "field": "threshold",
+        "expect": 1.0,
+        "actual": 1.0,
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID_THRESHOLD": "-0.5"
+        },
+        "field": "threshold",
+        "expect": 0.0,
+        "actual": 0.0,
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID_THRESHOLD": "abc"
+        },
+        "field": "threshold",
+        "expect": null,
+        "actual": null,
+        "ok": true
+      },
+      {
+        "env": {},
+        "field": "threshold",
+        "expect": null,
+        "actual": null,
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID_BACKEND": "wat"
+        },
+        "field": "backend",
+        "expect": "auto",
+        "actual": "auto",
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID_BACKEND": "LBPH"
+        },
+        "field": "backend",
+        "expect": "lbph",
+        "actual": "lbph",
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID": "1"
+        },
+        "field": "enabled",
+        "expect": true,
+        "actual": true,
+        "ok": true
+      },
+      {
+        "env": {
+          "COCO_FACE_ID": "0"
+        },
+        "field": "enabled",
+        "expect": false,
+        "actual": false,
+        "ok": true
+      }
+    ],
+    "V8": {
+      "alice_conf": 0.438,
+      "bob_conf": 0.4259,
+      "unknown_conf": 0.2858
+    },
+    "V9": {
+      "happy_rc": 0,
+      "bad_rc": 2
+    },
+    "V10": {
+      "events_seen": [
+        "coco.perception.face_id.log",
+        "face.id_backend_selected",
+        "face.identified",
+        "face.unknown"
+      ]
+    }
+  },
+  "errors": [],
+  "all_pass": true
+}

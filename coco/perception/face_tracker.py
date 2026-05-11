@@ -32,7 +32,7 @@ import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from coco.perception.camera_source import CameraSource, open_camera
 from coco.perception.face_detect import FaceBox, FaceDetector
@@ -69,6 +69,9 @@ class TrackedFace:
     presence_score: float
     first_seen_ts: float
     last_seen_ts: float
+    # vision-003: 可选 face-id 识别结果（默认 None 向后兼容）
+    name: Optional[str] = None
+    name_confidence: float = 0.0
 
     @property
     def area(self) -> int:
@@ -279,6 +282,8 @@ class FaceTracker:
         smoothing_alpha: float = 0.4,
         primary_strategy: str = "area",
         primary_switch_min_frames: int = 3,
+        # vision-003 face-id（可选注入；默认 None 不识别）
+        face_id_classifier: Optional[Any] = None,
     ) -> None:
         if camera is not None and camera_spec is not None:
             raise ValueError("camera 与 camera_spec 二选一")
@@ -352,6 +357,9 @@ class FaceTracker:
         self._last_primary_center: Optional[Tuple[float, float]] = None
 
         self._thread: Optional[threading.Thread] = None
+
+        # vision-003 face-id（可选）
+        self._face_id_classifier = face_id_classifier
 
     # --- public ---
     def start(self) -> None:
@@ -453,6 +461,71 @@ class FaceTracker:
 
         h, w = frame.shape[:2]
         self._process_detections(list(faces), int(w), int(h), time.monotonic())
+        # vision-003: primary face → identify
+        self._maybe_identify(frame, faces)
+
+    def _maybe_identify(self, frame, faces) -> None:
+        """对 primary face 跑一次 face-id；patch snapshot.primary_track.name/confidence。"""
+        if self._face_id_classifier is None:
+            return
+        with self._lock:
+            snap = self._snapshot
+        pt = snap.primary_track
+        if pt is None or snap.primary is None:
+            return
+        try:
+            box = snap.primary
+            x1, y1 = max(0, int(box.x)), max(0, int(box.y))
+            x2, y2 = min(frame.shape[1], int(box.x + box.w)), min(frame.shape[0], int(box.y + box.h))
+            if x2 <= x1 or y2 <= y1:
+                return
+            crop = frame[y1:y2, x1:x2]
+            name, conf = self._face_id_classifier.identify(crop)
+        except Exception as e:  # noqa: BLE001
+            log.warning("FaceTracker face-id identify failed: %s: %s", type(e).__name__, e)
+            return
+        # vision-003 L1 fix: identify() 跑在锁外，回填时必须重新按 track_id
+        # 在最新快照里查找 TrackedFace 实例；若 track 已被淘汰或 id 已变，
+        # 丢弃这次识别结果，避免 lost-update / patch 到错误对象。
+        with self._lock:
+            cur_snap = self._snapshot
+            cur_pt = cur_snap.primary_track
+            if cur_pt is None or cur_pt.track_id != pt.track_id:
+                return
+            # 也要保证 tracks 里仍存在该 track_id（防御性）
+            if not any(t.track_id == pt.track_id for t in cur_snap.tracks):
+                return
+            new_pt = TrackedFace(
+                track_id=cur_pt.track_id,
+                box=cur_pt.box,
+                age_frames=cur_pt.age_frames,
+                hit_count=cur_pt.hit_count,
+                miss_count=cur_pt.miss_count,
+                smoothed_cx=cur_pt.smoothed_cx,
+                smoothed_cy=cur_pt.smoothed_cy,
+                presence_score=cur_pt.presence_score,
+                first_seen_ts=cur_pt.first_seen_ts,
+                last_seen_ts=cur_pt.last_seen_ts,
+                name=name,
+                name_confidence=float(conf),
+            )
+            new_tracks = tuple(
+                new_pt if t.track_id == cur_pt.track_id else t
+                for t in cur_snap.tracks
+            )
+            new_snap = FaceSnapshot(
+                faces=cur_snap.faces,
+                frame_w=cur_snap.frame_w,
+                frame_h=cur_snap.frame_h,
+                present=cur_snap.present,
+                primary=cur_snap.primary,
+                ts=cur_snap.ts,
+                detect_count=cur_snap.detect_count,
+                hit_count=cur_snap.hit_count,
+                tracks=new_tracks,
+                primary_track=new_pt,
+            )
+            self._snapshot = new_snap
 
     def _process_detections(
         self,

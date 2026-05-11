@@ -619,7 +619,7 @@
       "area": "vision",
       "title": "人脸 ID 识别（本地 LBPH，known_faces 持久化）",
       "user_visible_behavior": "Coco 在 face-tracker 输出主脸时进一步识别 '是谁'：已注册 known_faces 中匹配的最高得分人 → 给 dialog 系统提示 'Alice 回来了'；新脸 → 'unknown'；可通过 scripts/enroll_face.py 注册新脸（拍 N 帧 + label）；known_faces 落 ~/.cache/coco/faces/。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "vision-002",
         "infra-002"
@@ -633,8 +633,29 @@
         "InteractSession / DialogMemory hook：FaceIdentifier 输出 'alice' 时一次性给 system prompt 加 '看到了 alice'；rapid flap (alice→bob→alice 5 秒内) 抑制（与 face_tracker hysteresis 复用，不在新增）。",
         "Reviewer fresh-context 评审：opencv-contrib-python wheel 大小 + cp313 三平台 resolve；fixture 合成方式是否真能区分两人（高斯噪声 + 仿射区分性）；阈值默认值（LBPH 经验值 50-100）；隐私：face crop 不上传、enroll CLI 显式同意提示；并发写 model.yml。"
       ],
-      "evidence": [],
-      "notes": "phase-4 定位：vision-001 检测、vision-002 跟踪、vision-003 识别——视觉子系统三层完整。简化策略：不上 deep embedding（FaceNet/ArcFace 模型 100MB+ 且推理依赖 onnxruntime gpu），LBPH 经典算法 OpenCV 自带，准确率对单家庭 2-5 人足够；fallback 灰度直方图保证 contrib 不可用时仍有 baseline。known-risk：(a) opencv-contrib-python 必须独立装且 cp313 darwin/linux/win 三平台 resolve 待 Researcher 验证（若不可用，feature 范围降级为 baseline-only 不阻塞）；(b) LBPH 对光照敏感，真机阶段需 enroll 多光照样本；(c) 程序合成 fixture 仅验证流程，真实辨识能力留 milestone 真人 enroll；(d) phase-4 单家庭场景，10 人以上准确率会显著下降。"
+      "evidence": [
+        {
+          "ts": "2026-05-11",
+          "kind": "verification",
+          "note": "verify_vision_003.py V1-V10 全 PASS（cv2.face 不可用，自动选 HistogramBackend；fixture alice/bob 各5 + unknown 程序合成；threshold=0.4 chi-square）；smoke 全段 PASS；回归 10 个 verify 独立行 PASS。Reviewer (sub-agent): pending fresh-context 评审。"
+        },
+        {
+          "ts": "2026-05-11",
+          "kind": "review",
+          "note": "Reviewer (sub-agent) fresh-context: LGTM（无 L0），4 个 L1 issues。"
+        },
+        {
+          "ts": "2026-05-11",
+          "kind": "closeout",
+          "note": "L1 修复 4/4 完成: (1) Naming drift 仅文档说明（实际 FaceIDClassifier vs spec FaceIdentifier、~/.cache/coco/face_id/ vs spec known_faces/、verify_vision_003 vs spec verify_vision003），统一 face_id 命名空间避免与 detection 'faces' 混淆，不改代码; (2) face_tracker._maybe_identify lost-update race 修复：identify() 跑在锁外，回填时回锁内按 track_id 重新查找最新快照里的 TrackedFace 实例，找不到或 id 已变就丢弃这次结果; (3) face_id._atomic_write_bytes chmod 范围收敛：新增 owned_dir 参数，仅当 owned_dir == path.parent 时才 chmod 0o700，避免误改 ~/.cache/coco/ sibling 目录; (4) FaceIDConfig.confidence_threshold 改 Optional[float]=None sentinel：仅 env 显式给 COCO_FACE_ID_THRESHOLD 才覆盖，否则 None → backend.default_threshold() 决定（解决 LBPH ↔ Histogram 切换被硬编码默认值卡死）。重跑 verify_vision_003 V1-V10 全 PASS；回归 10 个 verify 全 PASS。"
+        },
+        {
+          "ts": "2026-05-11",
+          "kind": "known-debt",
+          "note": "(L2) scripts/verify_vision_003.py:170 死代码 'Path(td) + \"_empty\" if False else tempfile.mkdtemp()' 且 tempdir 未清理 — 后续清理; (L3) HistogramBackend 同人 vs 陌生人 confidence margin 仅 ~0.04 (alice 0.438-0.544, bob 0.426-0.600, unk 0.286)，threshold 0.4 偏紧 — 后续可调或加自适应/per-user threshold; (L2/L3) 其它 Reviewer 报告项: Histogram 仅 256-bin gray hist 对真实光照/姿态变化区分力弱，待真机 enroll 多光照样本验证; LBPH backend cp313 三平台 wheel 实际可用性留 phase-5 真机 milestone gate; enroll CLI 不强校验 same-name 追加（已加注释，behavior 是 intended）。"
+        }
+      ],
+      "notes": "phase-4 定位：vision-001 检测、vision-002 跟踪、vision-003 识别——视觉子系统三层完整。简化策略：不上 deep embedding（FaceNet/ArcFace 模型 100MB+ 且推理依赖 onnxruntime gpu），LBPH 经典算法 OpenCV 自带，准确率对单家庭 2-5 人足够；fallback 灰度直方图保证 contrib 不可用时仍有 baseline。known-risk：(a) opencv-contrib-python 必须独立装且 cp313 darwin/linux/win 三平台 resolve 待 Researcher 验证（若不可用，feature 范围降级为 baseline-only 不阻塞）；(b) LBPH 对光照敏感，真机阶段需 enroll 多光照样本；(c) 程序合成 fixture 仅验证流程，真实辨识能力留 milestone 真人 enroll；(d) phase-4 单家庭场景，10 人以上准确率会显著下降。 [naming drift 说明]: 实现采用 face_id 命名空间统一: 类 FaceIDClassifier (spec 写 FaceIdentifier)、缓存目录 ~/.cache/coco/face_id/ (spec 写 ~/.cache/coco/faces/)、fixture 目录 face_id/ (spec 写 known_faces/)、verify 脚本 verify_vision_003.py (spec 写 verify_vision003.py)。统一 face_id 前缀以与 detection 阶段输出的 'faces' (FaceBox 检出) 区分，避免概念混淆。spec 与代码差异不阻塞 V1-V10。 [closeout known-debt]: L2 verify 死代码 + tempdir 未清理; L3 Histogram backend confidence margin 偏窄需 per-user threshold; L2/L3 真实光照下区分力待真机 milestone 验证。"
     },
     {
       "id": "interact-007",
