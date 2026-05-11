@@ -96,7 +96,7 @@ class MFAConfig:
     greet_cooldown_s: float = 30.0        # 距上一次 greet_secondary 的冷却
     greet_duration_s: float = 1.2         # GREET 状态持续（短 glance + TTS 大致时长）
     return_duration_s: float = 0.8        # RETURN 状态持续（回 primary 的过渡）
-    proactive_block_window_s: float = 3.0 # 距 proactive_topic 的抑制窗口
+    proactive_block_window_s: float = 3.0 # 距 proactive_topic 的抑制窗口（调用方据此窗口计算 proactive_recent 后传入 tick）
     require_named_secondary: bool = True  # 仅 named secondary 才致意
 
     def __post_init__(self) -> None:
@@ -377,6 +377,9 @@ class MultiFaceAttention:
         # 触发 greet：构造 GreetAction
         name = getattr(candidate, "name", None) or ""
         utterance = self._utterance_template.format(name=name)
+        if not name:
+            # name 为空时模板会留下尾部空格（如 "你好 "），rstrip 退化为 "你好"
+            utterance = utterance.rstrip()
         glance_hint = self._compute_glance_hint(candidate, primary, track_list)
         action = GreetAction(
             secondary_track_id=int(candidate.track_id),
@@ -396,6 +399,29 @@ class MultiFaceAttention:
         v = getattr(conv_state, "value", conv_state)
         return str(v).lower() == "idle"
 
+    def _is_eligible_secondary(
+        self,
+        t: Any,
+        primary_id: Optional[int],
+    ) -> Optional[int]:
+        """判定一个 track 是否够格作 secondary candidate。
+
+        返回其 track_id（int）若合格，否则 None。
+        合格条件：能解析出 int track_id、非 primary、若
+        ``require_named_secondary`` 则 name 非空。
+        被 _update_secondary_visible 与 _pick_secondary 共享，避免两处逻辑漂移。
+        """
+        try:
+            tid = int(getattr(t, "track_id"))
+        except (TypeError, ValueError, AttributeError):
+            return None
+        if tid == primary_id:
+            return None
+        name = getattr(t, "name", None)
+        if self.config.require_named_secondary and not name:
+            return None
+        return tid
+
     def _update_secondary_visible(
         self,
         tracks: Sequence[Any],
@@ -403,17 +429,10 @@ class MultiFaceAttention:
         now: float,
     ) -> None:
         """维护 secondary candidates 的 first_seen_ts；离开视野则清除。"""
-        cfg = self.config
         present_ids: set[int] = set()
         for t in tracks:
-            try:
-                tid = int(getattr(t, "track_id"))
-            except (TypeError, ValueError, AttributeError):
-                continue
-            if tid == primary_id:
-                continue
-            name = getattr(t, "name", None)
-            if cfg.require_named_secondary and not name:
+            tid = self._is_eligible_secondary(t, primary_id)
+            if tid is None:
                 continue
             present_ids.add(tid)
             if tid not in self._secondary_visible_since:
@@ -436,14 +455,8 @@ class MultiFaceAttention:
         cfg = self.config
         eligible: List[Any] = []
         for t in tracks:
-            try:
-                tid = int(getattr(t, "track_id"))
-            except (TypeError, ValueError, AttributeError):
-                continue
-            if tid == primary_id:
-                continue
-            name = getattr(t, "name", None)
-            if cfg.require_named_secondary and not name:
+            tid = self._is_eligible_secondary(t, primary_id)
+            if tid is None:
                 continue
             first_seen = self._secondary_visible_since.get(tid)
             if first_seen is None:

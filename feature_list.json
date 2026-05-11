@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-11",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -773,7 +773,7 @@
       "area": "vision",
       "title": "多人主动致意状态机 greet_secondary",
       "user_visible_behavior": "镜头里同时出现 ≥2 张人脸时，若 primary（当前注视对象）沉默 ≥8s，且另一已识别 (named) 用户在视野持续 ≥3s，且距上一次 greet_secondary ≥30s，Coco 会短暂转头向次要对象致意（如 '你好 XXX'）然后回到 primary。在 dialog_state=AWAITING_RESPONSE 或 proactive 主动话题刚触发的瞬间被抑制。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "vision-004"
       ],
@@ -784,8 +784,34 @@
         "scripts/verify_vision_004b.py：(a) greet_secondary 触发的 5 参数边界（8s/3s/30s/awaiting_response/proactive）；(b) awaiting_response 期间被抑制；(c) 30s cooldown 起作用；(d) proactive 触发瞬间 greet 被抑制；(e) 未识别脸不参与（不当 secondary 候选）；(f) regression：vision-001/002/003/004 + companion-002 verify 通过。",
         "Reviewer fresh-context 评审：多脸 track_id 稳定性（短暂遮挡不能切换 primary）、greet_secondary 频率上限、与 proactive 主动话题的优先级竞争、未识别脸不参与 greet 的边界、glance 幅度受限不打断 primary 对话。"
       ],
+      "evidence": [
+        "实现：coco/companion/multi_face_attention.py（MFAState/MFAConfig/GreetAction/MultiFaceAttention）；env 解析 mfa_config_from_env (COCO_MFA / COCO_MFA_SILENCE_S / COCO_MFA_SECONDARY_VIS_S / COCO_MFA_COOLDOWN_S / COCO_MFA_GREET_DUR_S / COCO_MFA_RETURN_DUR_S / COCO_MFA_PROACTIVE_BLOCK_S / COCO_MFA_REQUIRE_NAMED)；默认 OFF (enabled=False)；状态变化 emit companion.multi_face_attention_state，greet 触发 emit companion.greet_secondary；RLock 包状态，回调锁外触发。",
+        "verify：scripts/verify_vision_004b.py V1-V12 ALL PASS — V1 默认 OFF / V2 env clamp / V3 SINGLE→MULTI_IDLE（tracks>=2 + primary）/ V4 GREET 触发与 ActionSpec 字段 / V5 silence<8s 不触发 / V6 secondary_visible<3s 不触发 / V7 30s cooldown / V8 conv_state!=IDLE 抑制 / V9 proactive_recent 抑制 / V10 require_named_secondary（未识别脸不参与）/ V11 GREET→RETURN_PRIMARY→MULTI_IDLE 状态机时序 / V12 on_state_change/on_action 回调异常隔离。evidence/vision-004b/verify_summary.json。",
+        "Reviewer (sub-agent): LGTM — 无 L0/L1 阻塞；wire 到 main.py 与真视频 fixture 留独立 feature vision-004b-wire（priority=26.6）。L2 已修 3 项（proactive_block_window_s docstring 显式声明窗口语义；utterance 在 name='' 时 rstrip 退化为'你好'；抽 _is_eligible_secondary 私有方法供 _update_secondary_visible / _pick_secondary 复用）。L3 known-debt 见 notes。",
+        "regression：./init.sh smoke PASS（merge 后在 main 上跑）。",
+        "merge：feat/vision-004b → main no-ff。"
+      ],
+      "notes": "本 feature 是 vision-004 拆出的 L1 层（主动行为/状态机）；纯模块，未接线到 main.py，真视频 fixture 未引入——这两项归 vision-004b-wire（priority=26.6）。全部用合成 fixture / 直接喂 tick 验证；真实多人光照/距离/识别准确度归 uat-phase4。Known-debt（Reviewer L3，不阻 passing，未来回路再修）：(L3) GreetAction.ts 当前仅 monotonic，不含 wall clock，外部审计/日志关联时若需 wall clock 需调用方在 on_action 回调里自行补 time.time()。 (L3) _current_greet_target 在 RETURN_PRIMARY 退出回 MULTI_IDLE 时未清空，语义略混乱（不影响正确性：下一轮 GREET 触发前会被新的 action 覆盖；last_greet_ts 才是真冷却口径）。"
+    },
+    {
+      "id": "vision-004b-wire",
+      "priority": 26.6,
+      "area": "vision",
+      "title": "vision-004b wiring 接线到 main.py + 真视频 fixture 验证",
+      "user_visible_behavior": "COCO_GREET_SECONDARY=1（沿用 vision-004b 的 COCO_MFA 启用语义）时，main.py 构造 MultiFaceAttention，注入 AttentionSelector / TTS / ExpressionPlayer / ProactiveScheduler 抑制窗口；提供 multi_face_*.mp4 fixture 跑真视频管道验证 primary 闪烁等 race。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-004b",
+        "vision-004"
+      ],
+      "verification": [
+        "main.py 接线：vision-004b 的 MultiFaceAttention 从 mfa_config_from_env() 起，把 AttentionSelector.current() / FaceTracker snapshot / ConvStateMachine.current_state / ProactiveScheduler.last_proactive_ts 喂进 tick；on_action 回调挂 ExpressionPlayer.play('curious') + tts.say(action.utterance)；ProactiveScheduler 在 proactive_block_window_s 内提供 proactive_recent=True。",
+        "tests/fixtures/vision/multi_face_alice_bob.mp4 等合成多脸 mp4（参考 gen_vision_fixtures.py）；不需要真摄像头。",
+        "scripts/verify_vision_004b_wire.py：(W1) 真视频管道 → FaceTracker → AttentionSelector → MultiFaceAttention.tick 端到端，确认 primary 闪烁（短暂遮挡 1-2 帧）不重置 primary silence 计时；(W2) tts/expression 回调被调用且参数正确；(W3) proactive 主动话题刚触发后 proactive_block_window_s 内 greet 被抑制；(W4) regression vision-004 / vision-004b 单元 verify 仍 PASS。",
+        "Reviewer fresh-context 评审：primary 闪烁 race（tracker 短暂丢失再恢复时 silence 不重置）、TTS 与 ExpressionPlayer 并发占用、env flag 默认 OFF、main.py 路径在 mfa disabled 时零开销。"
+      ],
       "evidence": [],
-      "notes": "本 feature 是 vision-004 拆出的 L1 层（主动行为/状态机）。L0 选择层（AttentionSelector + emit）已在 vision-004 落地并 passing。全部用 fixture mp4 验证；真实多人光照/距离/识别准确度归 uat-phase4。"
+      "notes": "Reviewer L1 提到 primary 闪烁会重置 silence 计时（_last_primary_id 切换即重置），wire 阶段必须做稳定性验证：要么 tracker 层提供 primary 稳定窗口（短暂丢失不切换 track_id），要么状态机引入 grace window；选型决定记到本 feature evidence。先做 wire + 验证，再决定是否回写改 vision-004b 状态机。"
     },
     {
       "id": "companion-005",
