@@ -32,7 +32,7 @@ import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from coco.perception.camera_source import CameraSource, open_camera
 from coco.perception.face_detect import FaceBox, FaceDetector
@@ -69,6 +69,9 @@ class TrackedFace:
     presence_score: float
     first_seen_ts: float
     last_seen_ts: float
+    # vision-003: 可选 face-id 识别结果（默认 None 向后兼容）
+    name: Optional[str] = None
+    name_confidence: float = 0.0
 
     @property
     def area(self) -> int:
@@ -279,6 +282,8 @@ class FaceTracker:
         smoothing_alpha: float = 0.4,
         primary_strategy: str = "area",
         primary_switch_min_frames: int = 3,
+        # vision-003 face-id（可选注入；默认 None 不识别）
+        face_id_classifier: Optional[Any] = None,
     ) -> None:
         if camera is not None and camera_spec is not None:
             raise ValueError("camera 与 camera_spec 二选一")
@@ -352,6 +357,9 @@ class FaceTracker:
         self._last_primary_center: Optional[Tuple[float, float]] = None
 
         self._thread: Optional[threading.Thread] = None
+
+        # vision-003 face-id（可选）
+        self._face_id_classifier = face_id_classifier
 
     # --- public ---
     def start(self) -> None:
@@ -453,6 +461,62 @@ class FaceTracker:
 
         h, w = frame.shape[:2]
         self._process_detections(list(faces), int(w), int(h), time.monotonic())
+        # vision-003: primary face → identify
+        self._maybe_identify(frame, faces)
+
+    def _maybe_identify(self, frame, faces) -> None:
+        """对 primary face 跑一次 face-id；patch snapshot.primary_track.name/confidence。"""
+        if self._face_id_classifier is None:
+            return
+        with self._lock:
+            snap = self._snapshot
+        pt = snap.primary_track
+        if pt is None or snap.primary is None:
+            return
+        try:
+            box = snap.primary
+            x1, y1 = max(0, int(box.x)), max(0, int(box.y))
+            x2, y2 = min(frame.shape[1], int(box.x + box.w)), min(frame.shape[0], int(box.y + box.h))
+            if x2 <= x1 or y2 <= y1:
+                return
+            crop = frame[y1:y2, x1:x2]
+            name, conf = self._face_id_classifier.identify(crop)
+        except Exception as e:  # noqa: BLE001
+            log.warning("FaceTracker face-id identify failed: %s: %s", type(e).__name__, e)
+            return
+        # 重新封装 primary_track 与 tracks（注入 name 字段）
+        new_pt = TrackedFace(
+            track_id=pt.track_id,
+            box=pt.box,
+            age_frames=pt.age_frames,
+            hit_count=pt.hit_count,
+            miss_count=pt.miss_count,
+            smoothed_cx=pt.smoothed_cx,
+            smoothed_cy=pt.smoothed_cy,
+            presence_score=pt.presence_score,
+            first_seen_ts=pt.first_seen_ts,
+            last_seen_ts=pt.last_seen_ts,
+            name=name,
+            name_confidence=float(conf),
+        )
+        new_tracks = tuple(
+            new_pt if t.track_id == pt.track_id else t
+            for t in snap.tracks
+        )
+        new_snap = FaceSnapshot(
+            faces=snap.faces,
+            frame_w=snap.frame_w,
+            frame_h=snap.frame_h,
+            present=snap.present,
+            primary=snap.primary,
+            ts=snap.ts,
+            detect_count=snap.detect_count,
+            hit_count=snap.hit_count,
+            tracks=new_tracks,
+            primary_track=new_pt,
+        )
+        with self._lock:
+            self._snapshot = new_snap
 
     def _process_detections(
         self,

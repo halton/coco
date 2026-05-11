@@ -753,3 +753,31 @@
   - L3 os.replace 在 Windows AV 占用偶发 raise，无重试
 - **状态**：feat/companion-004 → status=passing；merge --no-ff 到 main；推 origin。
 - **下一步**：phase-4 进度 3/5 done (infra-002 / interact-006 / companion-004)，next: vision-003（LBPH 人脸 ID，priority=22）。
+
+
+## Session 033 — vision-003 实现 ready-for-review（2026-05-11）
+
+- **本轮目标**：phase-4 第 4 个 feature vision-003 = 人脸 ID 识别（LBPH + Histogram fallback）落地。Engineer sub-agent 一轮跑通，等 Reviewer LGTM。
+- **Backend 决策（关键）**：启动期 `select_backend("auto")` 探测 cv2.face → 本环境 `cv2 4.13.0 / opencv-python` **无 contrib**，自动回退 `HistogramBackend`（256-bin gray histogram + chi-square distance）。LBPH backend 代码仍在（cv2.face 可用时启用）；不强制替换 opencv-python（避免破 vision-001/002）。confidence 转换 `1 - chi2`，默认 threshold=0.4（fixture 校准：同人 chi2≈0.4-0.6 → conf 0.43-0.60；陌生人 chi2≈0.71 → conf 0.29）。
+- **新增**：
+  - `coco/perception/face_id.py` — `FaceIDBackend` Protocol + `LBPHBackend` / `HistogramBackend`；`select_backend(prefer)` auto/lbph/histogram；`FaceIDStore` 持久化（known_faces.json + per-user .npy），`add/remove/reset/load/all_records/all_features/name_for`；atomic write tmp+fsync+os.replace+chmod 0o600（PII，复用 companion-004 patterns）；`FaceIDClassifier` 门面 `enroll(name, images)/identify(crop)→(name|None, conf)`，自动按 backend 默认阈值；`FaceIDConfig` + `config_from_env(env=None)` clamp threshold ∈ [0,1] + 非法 backend 回退 auto + `face_id_enabled_from_env`；`default_store_path()` 跨平台（macOS/Linux ~/.cache/coco/face_id/，Windows %LOCALAPPDATA%）。
+  - `scripts/enroll_face.py` — CLI `--name` + `--image*` / `--from-camera N` + `--store-path` + `--threshold` + `--backend` + `--yes` 跳过 PII 同意提示；自动 FaceDetector 找最大脸 crop（找不到时整图当 crop，便于 fixture 用）；摄像头打不开 / 无脸返非零退出码 + 中文错误。
+  - `scripts/verify_vision_003.py` — V1-V10 全 PASS：V1 backend 探测 + 强制 lbph 行为符合 contrib 可用性；V2 enroll 2 user × 3 image + chmod 0o600（POSIX）；V3 identify 同人 alice/bob 4/4 命中 + conf ≥ threshold；V4 unknown → None + 空 store 返 (None, 0.0)；V5 backward-compat（COCO_FACE_ID 默认 OFF + FaceTracker 无 classifier 时 primary_track.name=None）；V6 持久化 round-trip（重启后 records=2 仍识别 alice/bob）；V7 env clamp（threshold 2.0→1.0、-0.5→0.0、abc→默认；backend wat→auto、LBPH→lbph 大小写不敏感；COCO_FACE_ID 0/1）；V8 强制 histogram 三类区分；V9 enroll CLI happy rc=0 + 无 image+camera rc=2；V10 emit 三事件 face.id_backend_selected/face.identified/face.unknown 全到（注意 jsonl handler 走 sys.stderr，verify 重定向 stderr 而非 stdout）。
+- **改动**：
+  - `coco/perception/face_tracker.py` — `TrackedFace` 加 `name: Optional[str]=None` + `name_confidence: float=0.0`（向后兼容，frozen dataclass 默认值）；`FaceTracker.__init__` 加 `face_id_classifier=None` 可选注入；`_tick` 在 `_process_detections` 后调 `_maybe_identify(frame, faces)` 对 primary box 切 crop → identify → 用 lock 替换 snapshot 注入 name/confidence。
+  - `coco/main.py` — `COCO_FACE_ID=1` 时构造 FaceIDClassifier + emit `face.id_backend_selected`（component "face" 已在 AUTHORITATIVE_COMPONENTS）；默认 OFF。当前 main 不构造 FaceTracker（同 face_tracker_for_power），classifier 留作未来 vision 子系统启用时的注入点。
+  - `scripts/gen_vision_fixtures.py` — 新增 `gen_face_id_fixtures()` 程序合成 alice/bob 各 5 张 100×100 + unknown_face.jpg 1 张：每"人"用唯一组合（皮肤色 / 眼色 / 嘴位置 / 噪声种子 / 微仿射）；`tests/fixtures/vision/face_id/{alice,bob}/{1..5}.jpg` + `unknown_face.jpg`。
+- **设计要点**：
+  - 默认 OFF 兼容：FaceTracker 无 `face_id_classifier` 注入时整段 identify 路径不走，`TrackedFace.name` 始终 None；现有 vision-001/002 / companion-vision 行为完全等价。
+  - PII 隐私：face features 落 `~/.cache/coco/face_id/`，atomic write + chmod 0o600；enroll CLI `--yes` 才跳过同意提示。
+  - schema_version=1，不匹配 → fail-soft 返空（参考 companion-004）。
+  - 小图 (100×100) histogram 区分能力有限：fixture 校准的 0.4 阈值仅适合本程序合成对照；真机 enroll 多光照样本后 phase-5 要重校 + 切到 LBPH（要求 opencv-contrib-python wheel 验过 cp313 三平台）。
+- **已知限制 / 留 phase-5**：
+  - opencv-contrib-python cp313 三平台 wheel 当前未验（本环境无 contrib，跑的是 fallback）；spec notes 已注明 "feature 范围降级为 baseline-only 不阻塞"。
+  - InteractSession / DialogMemory hook 未接（spec 第 5 条）：留下了 `TrackedFace.name` 字段供未来 interact-007 主动话题消费；rapid flap 抑制复用 face_tracker primary 切换迟滞，**phase-4 范围内不写主动话题**。
+  - 真机 enroll + 真人识别 = milestone gate（不在本会话）。
+- **Verification**：verify_vision_003.py V1-V10 全 PASS → `evidence/vision-003/verify_summary.json`。
+- **Smoke**：全 11 段 PASS（audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake/power/config/publish）。
+- **Regression（独立行）**：interact004 PASS / interact005 PASS / interact006 PASS / companion_003 PASS / companion004 PASS / companion_vision PASS / vision_002 PASS / infra_debt_sweep PASS / infra_002 PASS / publish PASS。
+- **状态**：feat/vision-003 push 完待 Reviewer。in_progress；Reviewer LGTM 后 → passing + merge。
+- **下一步**：Reviewer fresh-context 评审（重点：Histogram backend chi-square 阈值是否泄漏到真实场景；fixture 程序合成 vs 真人区分性；FaceTracker `_maybe_identify` 在 lock 边界外读 frame 的线程安全；schema_version 升级 path；threshold env clamp 与 backend 默认值耦合）；通过后切 passing 并 merge。

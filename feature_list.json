@@ -619,7 +619,7 @@
       "area": "vision",
       "title": "人脸 ID 识别（本地 LBPH，known_faces 持久化）",
       "user_visible_behavior": "Coco 在 face-tracker 输出主脸时进一步识别 '是谁'：已注册 known_faces 中匹配的最高得分人 → 给 dialog 系统提示 'Alice 回来了'；新脸 → 'unknown'；可通过 scripts/enroll_face.py 注册新脸（拍 N 帧 + label）；known_faces 落 ~/.cache/coco/faces/。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "vision-002",
         "infra-002"
@@ -633,7 +633,13 @@
         "InteractSession / DialogMemory hook：FaceIdentifier 输出 'alice' 时一次性给 system prompt 加 '看到了 alice'；rapid flap (alice→bob→alice 5 秒内) 抑制（与 face_tracker hysteresis 复用，不在新增）。",
         "Reviewer fresh-context 评审：opencv-contrib-python wheel 大小 + cp313 三平台 resolve；fixture 合成方式是否真能区分两人（高斯噪声 + 仿射区分性）；阈值默认值（LBPH 经验值 50-100）；隐私：face crop 不上传、enroll CLI 显式同意提示；并发写 model.yml。"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "ts": "2026-05-11",
+          "kind": "verification",
+          "note": "verify_vision_003.py V1-V10 全 PASS（cv2.face 不可用，自动选 HistogramBackend；fixture alice/bob 各5 + unknown 程序合成；threshold=0.4 chi-square）；smoke 全段 PASS；回归 10 个 verify 独立行 PASS。Reviewer (sub-agent): pending fresh-context 评审。"
+        }
+      ],
       "notes": "phase-4 定位：vision-001 检测、vision-002 跟踪、vision-003 识别——视觉子系统三层完整。简化策略：不上 deep embedding（FaceNet/ArcFace 模型 100MB+ 且推理依赖 onnxruntime gpu），LBPH 经典算法 OpenCV 自带，准确率对单家庭 2-5 人足够；fallback 灰度直方图保证 contrib 不可用时仍有 baseline。known-risk：(a) opencv-contrib-python 必须独立装且 cp313 darwin/linux/win 三平台 resolve 待 Researcher 验证（若不可用，feature 范围降级为 baseline-only 不阻塞）；(b) LBPH 对光照敏感，真机阶段需 enroll 多光照样本；(c) 程序合成 fixture 仅验证流程，真实辨识能力留 milestone 真人 enroll；(d) phase-4 单家庭场景，10 人以上准确率会显著下降。"
     },
     {

@@ -347,6 +347,46 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][profile] init failed: {type(e).__name__}: {e}", flush=True)
                 _profile_store = None
 
+            # vision-003: 可选 face-id 识别（默认 OFF）。
+            # 当前 main 不构造 FaceTracker（business 决策同 face_tracker_for_power）；
+            # 这里只在 COCO_FACE_ID=1 时初始化 classifier 并 emit backend_selected event，
+            # 留作未来 vision 子系统启用时的注入点。
+            _face_id_classifier = None
+            try:
+                from coco.perception.face_id import (
+                    FaceIDClassifier as _FaceIDClassifier,
+                    FaceIDStore as _FaceIDStore,
+                    config_from_env as _face_id_config_from_env,
+                )
+                _fid_cfg = _face_id_config_from_env()
+                if _fid_cfg.enabled:
+                    _store_root = Path(_fid_cfg.path) if _fid_cfg.path else None
+                    _face_id_classifier = _FaceIDClassifier(
+                        store=_FaceIDStore(_store_root),
+                        threshold=_fid_cfg.confidence_threshold,
+                        backend_pref=_fid_cfg.backend,
+                    )
+                    print(
+                        f"[coco][face_id] enabled backend={_face_id_classifier.backend_name} "
+                        f"threshold={_face_id_classifier.threshold:.2f} "
+                        f"records={len(_face_id_classifier.store.all_records())}",
+                        flush=True,
+                    )
+                    try:
+                        emit(
+                            "face.id_backend_selected",
+                            backend=_face_id_classifier.backend_name,
+                            threshold=_face_id_classifier.threshold,
+                            records=len(_face_id_classifier.store.all_records()),
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                else:
+                    print("[coco][face_id] disabled (COCO_FACE_ID not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][face_id] init failed: {type(e).__name__}: {e}", flush=True)
+                _face_id_classifier = None
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
