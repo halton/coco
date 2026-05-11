@@ -17,6 +17,8 @@
   V11 stop() 干净退出（主程序集成路径：tick 线程被 stop_event 终止）
   V12 emit "vision.attention_changed"（component vision 在 AUTHORITATIVE_COMPONENTS）
        + AttentionConfig env clamp（interval_ms / min_focus_s / policy 非法回退）
+  V13 on_change 在 selector._lock 之外被触发：回调内反向操作 selector
+       不死锁；回调抛异常后 selector 仍可继续 select()。
 
 retval：0 全 PASS；1 任一失败
 evidence 落 evidence/vision-004/verify_summary.json
@@ -425,6 +427,61 @@ ccfg3 = _attention_from_env(clamp_env3)
 check(ccfg3.interval_ms == 200, "interval_ms 非整数回退 200")
 
 # ---------------------------------------------------------------------------
+# V13 on_change 在 selector._lock 之外被 fire（不死锁 + 回调可反向调 selector）
+# ---------------------------------------------------------------------------
+print("\n[V13] on_change 出锁触发 (无自死锁)")
+clock = FakeClock()
+v13_observed: List[Optional[int]] = []
+v13_callback_done = threading.Event()
+
+# 回调里反向调 selector 的方法（current()）：如果 select() 仍在锁内 fire
+# 回调，且 _lock 是非可重入的会死锁；用 RLock 则同线程不死锁但持锁时间被
+# 拉长。这里用线程做"另一个调用者"模拟：回调内启线程去 select(),验证
+# 主线程 fire 时锁已释放（另一线程能立刻拿到锁）。
+def _v13_on_change(prev, curr):
+    # 在 callback 内启动后台线程，让它对 selector 再做一次同步操作。
+    # 如果 fire 还在锁内，后台线程会被阻塞到 v13_done 之后才返回；
+    # 我们要求后台线程在 fire 返回之前就已完成 -> 锁必须已释放。
+    finished = threading.Event()
+
+    def _worker():
+        # current() 进入 selector._lock；若主线程仍在锁内则会被阻塞
+        cur = v13_sel.current()
+        v13_observed.append(cur.track_id if cur else None)
+        finished.set()
+
+    th = threading.Thread(target=_worker, daemon=True)
+    th.start()
+    # 给 worker 200ms 拿锁；fire 在锁外时这一步会很快完成
+    got = finished.wait(timeout=0.5)
+    if got:
+        v13_callback_done.set()
+
+v13_sel = AttentionSelector(
+    policy=AttentionPolicy.LARGEST_FACE,
+    min_focus_s=0.0,
+    switch_cooldown_s=0.0,
+    clock=clock,
+    on_change=_v13_on_change,
+)
+v13_sel.select([FakeTrack(track_id=42, area=500)])
+check(v13_callback_done.is_set(),
+      "callback 内启动的后台线程能在 fire 返回前拿到 _lock（说明 fire 在锁外）")
+check(v13_observed == [42],
+      f"后台线程从 current() 读到刚切好的 focus=42（实测 {v13_observed}）")
+
+# 进一步：on_change 抛异常不应破坏 selector 后续工作（既存承诺）
+v13b = AttentionSelector(
+    policy=AttentionPolicy.LARGEST_FACE,
+    min_focus_s=0.0,
+    switch_cooldown_s=0.0,
+    on_change=lambda p, c: (_ for _ in ()).throw(RuntimeError("boom")),
+)
+v13b.select([FakeTrack(track_id=1, area=100)])
+t = v13b.select([FakeTrack(track_id=1, area=100)])
+check(t is not None and t.track_id == 1, "回调抛异常后 selector 仍可工作")
+
+# ---------------------------------------------------------------------------
 # 汇总
 # ---------------------------------------------------------------------------
 print("\n=== summary ===")
@@ -439,7 +496,7 @@ out_dir.mkdir(parents=True, exist_ok=True)
 (out_dir / "verify_summary.json").write_text(json.dumps(results, ensure_ascii=False, indent=2))
 
 if ok:
-    print("vision-004 verification: ALL PASS (V1..V12)")
+    print("vision-004 verification: ALL PASS (V1..V13)")
     sys.exit(0)
 else:
     print(f"vision-004 verification: {len(errors)} FAIL")

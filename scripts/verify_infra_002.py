@@ -171,7 +171,7 @@ def v4_summary() -> None:
     _section("V4 config_summary 字段完整 + 不含 secret")
     cfg = load_config(env={"COCO_LLM_API_KEY": "sk-SECRET-ABC"})
     s = config_summary(cfg)
-    expected_keys = {"log", "ptt", "camera", "llm", "metrics", "vad", "wake", "power", "dialog", "emotion", "intent", "conversation"}
+    expected_keys = {"log", "ptt", "camera", "llm", "metrics", "vad", "wake", "power", "dialog", "emotion", "intent", "conversation", "attention"}
     _check("summary 顶层 keys 完整",
            set(s.keys()) == expected_keys,
            f"got {sorted(s.keys())}")

@@ -1,8 +1,8 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.095253944396973,
-    "stop_dt_s": 0.10297870635986328,
+    "elapsed_s": 8.100556135177612,
+    "stop_dt_s": 0.0011179447174072266,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -15,22 +15,22 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 15,
+      "micro_count": 12,
       "glance_count": 2,
       "vision_glance_count": 2,
       "vision_biased_glance_count": 2,
-      "face_present_ticks": 17,
+      "face_present_ticks": 14,
       "error_count": 0
     },
     "robot": {
-      "goto_count": 11,
-      "antenna_count": 9
+      "goto_count": 10,
+      "antenna_count": 7
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.045968055725098,
-    "stop_dt_s": 0.0007979869842529297,
+    "elapsed_s": 8.08629584312439,
+    "stop_dt_s": 0.00043487548828125,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -51,14 +51,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 7,
-      "antenna_count": 6
+      "goto_count": 6,
+      "antenna_count": 7
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.03945016860962,
-    "stop_dt_s": 0.033854007720947266,
+    "elapsed_s": 12.063966989517212,
+    "stop_dt_s": 0.017433881759643555,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -79,8 +79,8 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 17,
-      "antenna_count": 11
+      "goto_count": 21,
+      "antenna_count": 8
     }
   }
 }

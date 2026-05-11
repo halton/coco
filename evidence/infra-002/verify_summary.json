@@ -1,7 +1,7 @@
 {
   "verification": "verify_infra_002",
-  "pass_count": 69,
-  "fail_count": 1,
+  "pass_count": 70,
+  "fail_count": 0,
   "passes": [
     "vad_enabled=True",
     "wake_enabled=False",
@@ -36,6 +36,7 @@
     "ptt.seconds 'not-a-num' -> 4.0",
     "warnings 含 COCO_LLM_TIMEOUT",
     "warnings 含 COCO_LLM_MAX_CHARS",
+    "summary 顶层 keys 完整",
     "llm.api_key=='set' (而非明文)",
     "序列化不含 'sk-SECRET-ABC'",
     "vad 子结构有 enabled+config",
@@ -73,7 +74,5 @@
     "cfg.ptt.seconds == 12.5",
     "run 路径模拟：PUSH_TO_TALK_SECONDS == cfg.ptt.seconds"
   ],
-  "failures": [
-    "summary 顶层 keys 完整 :: got ['attention', 'camera', 'conversation', 'dialog', 'emotion', 'intent', 'llm', 'log', 'metrics', 'power', 'ptt', 'vad', 'wake']"
-  ]
+  "failures": []
 }

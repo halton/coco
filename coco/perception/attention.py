@@ -169,9 +169,18 @@ class AttentionSelector:
         - 若有 tracks：按 policy 算 best；当前 focus 仍在 tracks 中时考虑
           min_focus_s / cooldown 决定是否切换；当前 focus 已消失时直接切到 best
           （但仍受 cooldown 限制——cooldown 内强制持有 None 以避免抖出）。
+
+        线程安全说明：on_change 回调在 self._lock 释放之后才被调用，避免下游
+        回调里反向回到 selector 上的同步调用（例如再 emit / log / 取 current()）
+        触发自死锁或长持锁。
         """
         track_list = list(tracks)
         now = self._clock()
+        # 锁内只决定状态转移，把要 fire 的 (prev, curr) 攒到 pending_change
+        # 上，锁外再发；on_change 回调通常会做 emit/log/IO，不应在锁内执行。
+        pending_change: Optional[tuple] = None  # (prev, curr) 或 None
+        result: Optional[AttentionTarget]
+
         with self._lock:
             prev = self._current
 
@@ -180,61 +189,63 @@ class AttentionSelector:
                 if prev is not None:
                     self._current = None
                     self._last_switch_ts = now
-                    self._fire_change(prev, None)
-                return None
+                    pending_change = (prev, None)
+                result = None
+            else:
+                # 2) 当前 focus 是否仍在 tracks 中
+                cur_still_present = (
+                    prev is not None
+                    and any(int(getattr(t, "track_id", -1)) == prev.track_id for t in track_list)
+                )
 
-            # 2) 当前 focus 是否仍在 tracks 中
-            cur_still_present = (
-                prev is not None
-                and any(int(getattr(t, "track_id", -1)) == prev.track_id for t in track_list)
-            )
+                # 3) 按 policy 选 best 候选
+                best = self._pick_best(track_list, prev, now)
+                if best is None:
+                    # 极端：tracks 非空但 picker 没返回（不应发生）；清焦点
+                    if prev is not None:
+                        self._current = None
+                        self._last_switch_ts = now
+                        pending_change = (prev, None)
+                    result = None
+                else:
+                    best_target = self._to_target(best, now)
 
-            # 3) 按 policy 选 best 候选
-            best = self._pick_best(track_list, prev)
-            if best is None:
-                # 极端：tracks 非空但 picker 没返回（不应发生）；清焦点
-                if prev is not None:
-                    self._current = None
-                    self._last_switch_ts = now
-                    self._fire_change(prev, None)
-                return None
+                    # 4) 决定是否切换
+                    if prev is None:
+                        # 无 focus → 直接采纳 best；不受 cooldown 限制（首次抓住）
+                        self._current = best_target
+                        self._last_switch_ts = now
+                        pending_change = (None, best_target)
+                        result = best_target
+                    elif cur_still_present and int(best.track_id) == prev.track_id:
+                        # best 就是当前 focus，无切换
+                        result = prev
+                    else:
+                        # best 与当前 focus 不同 → 检查门槛
+                        in_min_focus = (now - prev.last_focused_ts) < self._min_focus_s
+                        in_cooldown = (now - self._last_switch_ts) < self._cooldown_s
 
-            best_target = self._to_target(best, now)
+                        if cur_still_present and (in_min_focus or in_cooldown):
+                            # 当前还在 tracks 里，且未到切换条件 → 维持
+                            result = prev
+                        else:
+                            # (not cur_still_present) and in_cooldown 时：
+                            # prev 已从 tracks 中消失，cooldown 是"切换之间"的冷却，
+                            # 但 prev 消失属事件强制——若卡死会让 focus 永远落不到
+                            # 新 track；故 fallthrough 到下方"触发切换"分支。
+                            self._current = best_target
+                            self._last_switch_ts = now
+                            pending_change = (prev, best_target)
+                            result = best_target
 
-            # 4) 决定是否切换
-            if prev is None:
-                # 无 focus → 直接采纳 best；不受 cooldown 限制（首次抓住）
-                self._current = best_target
-                self._last_switch_ts = now
-                self._fire_change(None, best_target)
-                return best_target
-
-            if cur_still_present and int(best.track_id) == prev.track_id:
-                # best 就是当前 focus，无切换
-                return prev
-
-            # best 与当前 focus 不同 → 检查门槛
-            in_min_focus = (now - prev.last_focused_ts) < self._min_focus_s
-            in_cooldown = (now - self._last_switch_ts) < self._cooldown_s
-
-            if cur_still_present and (in_min_focus or in_cooldown):
-                # 当前还在 tracks 里，且未到切换条件 → 维持
-                return prev
-
-            if (not cur_still_present) and in_cooldown:
-                # 当前 focus 已消失但仍在冷却内 → 维持 None 焦点状态会过激；
-                # 这里选择：仍然切到 best（消失场景不应被 cooldown 永远卡住），
-                # 但 cooldown 是"切换之间"，prev 已消失算作"事件强制"，允许切。
-                pass
-
-            # 触发切换
-            self._current = best_target
-            self._last_switch_ts = now
-            self._fire_change(prev, best_target)
-            return best_target
+        # 锁外 fire：on_change 回调里可以安全地反向调 selector (current() 等)，
+        # 也不会因为下游 emit/log 阻塞而长持 selector 锁。
+        if pending_change is not None:
+            self._fire_change(pending_change[0], pending_change[1])
+        return result
 
     # ----- helpers -----
-    def _pick_best(self, tracks: Sequence, prev: Optional[AttentionTarget]):
+    def _pick_best(self, tracks: Sequence, prev: Optional[AttentionTarget], now: Optional[float] = None):
         p = self._policy
         if p is AttentionPolicy.LARGEST_FACE:
             return _pick_largest(tracks)
@@ -247,7 +258,9 @@ class AttentionSelector:
             return _pick_round_robin(tracks, None)
         # 若当前 focus 仍在 tracks 中且 min_focus_s 未到 → best 仍为它
         # （让外层 select() 看到 best.track_id == prev.track_id 直接维持）
-        now = self._clock()
+        # now 从 select() 透传过来，与外层判断保持同源时钟；旧调用方未传时回退。
+        if now is None:
+            now = self._clock()
         if (now - prev.last_focused_ts) < self._min_focus_s and any(
             int(t.track_id) == prev.track_id for t in tracks
         ):
