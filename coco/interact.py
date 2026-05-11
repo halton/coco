@@ -165,7 +165,6 @@ class InteractSession:
         if conv_state_machine is not None:
             try:
                 from coco.logging_setup import emit as _emit_init
-                prior_cb = conv_state_machine._on_transition  # type: ignore[attr-defined]
 
                 def _emit_transition(tr) -> None:
                     try:
@@ -177,16 +176,29 @@ class InteractSession:
                         )
                     except Exception:  # noqa: BLE001
                         pass
-                    if prior_cb is not None:
-                        try:
-                            prior_cb(tr)
-                        except Exception:  # noqa: BLE001
-                            pass
-                conv_state_machine._on_transition = _emit_transition  # type: ignore[attr-defined]
+                # interact-008 L2: 改用公开 API（add_transition_listener），
+                # 不再覆盖私有 _on_transition；多个 listener 互不干扰。
+                if hasattr(conv_state_machine, "add_transition_listener"):
+                    conv_state_machine.add_transition_listener(_emit_transition)
+                else:
+                    # 旧版本兜底（理论上不会走到，留保险）
+                    prior_cb = conv_state_machine._on_transition  # type: ignore[attr-defined]
+
+                    def _wrapper(tr, _p=prior_cb) -> None:
+                        _emit_transition(tr)
+                        if _p is not None:
+                            try:
+                                _p(tr)
+                            except Exception:  # noqa: BLE001
+                                pass
+                    conv_state_machine._on_transition = _wrapper  # type: ignore[attr-defined]
             except Exception:  # noqa: BLE001
                 pass
         # 记录上一次 reply（用于 COMMAND="重复"）
         self._last_reply: str = ""
+        # interact-008 L2: 显式初始化跳过 LLM 标志，避免依赖 handle_audio 内首次赋值
+        self._skip_llm_this_turn: bool = False
+        self._emit_tts_start_for_repeat: bool = False
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -385,17 +397,25 @@ class InteractSession:
                             result["intent_action"] = "repeat"
                             # 直接走 TTS 不调 LLM；标记跳过
                             self._skip_llm_this_turn = True
+                            # interact-008 L1-2: repeat 路径不经 LLM，但仍需让
+                            # state machine 完整经过 SPEAKING→IDLE，避免下游
+                            # 按 SPEAKING 推算时长时整段缺失。
+                            self._emit_tts_start_for_repeat = True
                         else:
                             self._skip_llm_this_turn = False
+                            self._emit_tts_start_for_repeat = False
                     else:
                         self._skip_llm_this_turn = False
+                        self._emit_tts_start_for_repeat = False
                     # 普通路径：通知 state machine
                     self.conv_state_machine.on_user_utterance(intent_label.intent.value)
                 except Exception as e:  # noqa: BLE001
                     log.warning("conv state machine failed: %s: %s", type(e).__name__, e)
                     self._skip_llm_this_turn = False
+                    self._emit_tts_start_for_repeat = False
             else:
                 self._skip_llm_this_turn = False
+                self._emit_tts_start_for_repeat = False
 
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
             # 动作仍走 KEYWORD_ROUTES（基于转写）；LLM 失败/空时已在 LLMClient 内降级。
@@ -477,6 +497,14 @@ class InteractSession:
                     log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
 
             # 4) TTS（可与动作并行；这里串行简化）
+            # interact-008 L1-2: repeat 路径无 on_llm_start/done，需手动 fire
+            # on_tts_start 让状态完整经过 SPEAKING（finally 中 on_tts_done 收尾）。
+            if (self.conv_state_machine is not None
+                    and getattr(self, "_emit_tts_start_for_repeat", False)):
+                try:
+                    self.conv_state_machine.on_tts_start()
+                except Exception:  # noqa: BLE001
+                    pass
             if not skip_tts_play:
                 try:
                     # interact-006: 若 emotion 已检测且 tts_say_fn 接受 emotion kwarg，传入；

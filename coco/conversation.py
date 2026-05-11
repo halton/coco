@@ -59,6 +59,7 @@ class ConversationConfig:
     """
 
     quiet_seconds: float = 30.0
+    teaching_max_seconds: float = 600.0
     teaching_system_prompt: str = (
         "你现在处于教学模式。请用更耐心、更结构化、更易懂的方式回答，"
         "可以用类比和分步骤说明，避免一次塞太多概念。"
@@ -80,7 +81,20 @@ def config_from_env(env: Optional[Mapping[str, str]] = None) -> ConversationConf
                 qs = 3600.0
         except ValueError:
             log.warning("[conversation] COCO_QUIET_S=%r 非数字，回退默认 30", raw)
-    return ConversationConfig(quiet_seconds=qs)
+    raw_t = (env.get("COCO_TEACHING_MAX_S") or "").strip()
+    tms = 600.0
+    if raw_t:
+        try:
+            tms = float(raw_t)
+            if tms < 10.0:
+                log.warning("[conversation] COCO_TEACHING_MAX_S=%.2f <10，clamp 10", tms)
+                tms = 10.0
+            elif tms > 7200.0:
+                log.warning("[conversation] COCO_TEACHING_MAX_S=%.2f >7200，clamp 7200", tms)
+                tms = 7200.0
+        except ValueError:
+            log.warning("[conversation] COCO_TEACHING_MAX_S=%r 非数字，回退默认 600", raw_t)
+    return ConversationConfig(quiet_seconds=qs, teaching_max_seconds=tms)
 
 
 @dataclass
@@ -114,13 +128,26 @@ class ConversationStateMachine:
         self.config = config or ConversationConfig()
         self._clock = clock or time.monotonic
         self._on_transition = on_transition
+        # interact-008 L2: 公开的 listener 列表（覆盖 _on_transition 是反模式）
+        self._transition_listeners: list[Callable[[StateTransition], None]] = []
         self._lock = threading.RLock()
         self._state: ConvState = ConvState.IDLE
         # 进入 TEACHING 模式后，对话主循环结束（SPEAKING→…）时回到 TEACHING 而非 IDLE
         self._teaching_active: bool = False
+        # interact-008 L2: TEACHING 进入时间戳，超过 teaching_max_seconds 自动失效
+        self._teaching_entered_at: float = 0.0
         # QUIET 进入时间戳
         self._quiet_entered_at: float = 0.0
         self.transitions: list[StateTransition] = []
+
+    def add_transition_listener(self, callback: Callable[[StateTransition], None]) -> None:
+        """注册 transition 监听器，每次 state 变化都被调用。
+
+        - 多个 listener 按注册顺序触发；任意 listener 抛异常不影响其他 listener 与状态机本身。
+        - 旧 ``on_transition`` 构造参数仍保留作为单回调兼容入口。
+        """
+        with self._lock:
+            self._transition_listeners.append(callback)
 
     # ------------------------------------------------------------------
     # state read
@@ -130,6 +157,7 @@ class ConversationStateMachine:
     def current_state(self) -> ConvState:
         with self._lock:
             self._maybe_expire_quiet_locked()
+            self._maybe_expire_teaching_locked()
             return self._state
 
     def is_quiet_now(self) -> bool:
@@ -139,6 +167,7 @@ class ConversationStateMachine:
 
     def is_teaching(self) -> bool:
         with self._lock:
+            self._maybe_expire_teaching_locked()
             return self._teaching_active
 
     # ------------------------------------------------------------------
@@ -160,12 +189,31 @@ class ConversationStateMachine:
                 self._on_transition(tr)
             except Exception as e:  # noqa: BLE001
                 log.warning("on_transition callback failed: %s: %s", type(e).__name__, e)
+        for cb in self._transition_listeners:
+            try:
+                cb(tr)
+            except Exception as e:  # noqa: BLE001
+                log.warning("transition listener failed: %s: %s", type(e).__name__, e)
 
     def _maybe_expire_quiet_locked(self) -> None:
         if self._state is ConvState.QUIET:
             now = self._clock()
             if (now - self._quiet_entered_at) >= self.config.quiet_seconds:
                 self._transition_locked(ConvState.IDLE, source="quiet_expired")
+
+    def _maybe_expire_teaching_locked(self) -> None:
+        """TEACHING 持续超过 teaching_max_seconds 自动失效，回 IDLE。
+
+        - 仅在 _teaching_active=True 时检查
+        - 与 QUIET 过期类似，由所有 read getter 触发
+        """
+        if not self._teaching_active:
+            return
+        now = self._clock()
+        if (now - self._teaching_entered_at) >= self.config.teaching_max_seconds:
+            self._teaching_active = False
+            if self._state is ConvState.TEACHING:
+                self._transition_locked(ConvState.IDLE, source="teaching_expired")
 
     def force_to(self, new: ConvState, source: str = "force") -> None:
         with self._lock:
@@ -190,6 +238,8 @@ class ConversationStateMachine:
                 # 仍在 QUIET 内，不改状态
                 return
             if intent_value == "teach":
+                if not self._teaching_active:
+                    self._teaching_entered_at = self._clock()
                 self._teaching_active = True
                 self._transition_locked(ConvState.TEACHING, source="user_utterance:teach")
             elif intent_value == "farewell":

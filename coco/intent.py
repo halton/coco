@@ -71,7 +71,7 @@ COMMAND_TERMS = COMMAND_QUIET_TERMS + COMMAND_REPEAT_TERMS
 
 FAREWELL_TERMS = ("再见", "拜拜", "晚安", "bye", "回头见", "下次见")
 
-TEACH_TERMS = ("教我", "教一下", "怎么写", "如何", "怎么做", "怎么", "如何做")
+TEACH_TERMS = ("教我", "教一下", "怎么写", "如何", "怎么做", "如何做")
 
 CHITCHAT_TERMS = ("你好", "嗨", "hello", "hi", "在吗", "今天")
 
@@ -144,11 +144,7 @@ class IntentClassifier:
         # 3) TEACH（教学请求）
         teach_term = _contains_any(t, TEACH_TERMS)
         if teach_term:
-            # "怎么样" 实为 QUESTION 而非 TEACH，单独排除
-            if teach_term == "怎么" and "怎么样" in t:
-                pass
-            else:
-                return IntentLabel(Intent.TEACH, 0.85, raw, (teach_term,))
+            return IntentLabel(Intent.TEACH, 0.85, raw, (teach_term,))
 
         # 4) QUESTION（句末问号 / 疑问词）
         if any(p in t for p in QUESTION_PUNCT):

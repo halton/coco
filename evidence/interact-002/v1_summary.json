@@ -4,7 +4,7 @@
     "fallback_hello": "你好呀！很高兴见到你。",
     "raising_fallback": "嗯，外面挺好的呀。",
     "english_fallback": "你好呀！很高兴见到你。",
-    "long_truncated_len": 20,
+    "long_truncated_len": 11,
     "empty_input": "我没听清，可以再说一次吗？"
   },
   "v2_integration": {
@@ -31,12 +31,12 @@
     "n": 12,
     "stats": {
       "calls": 12,
-      "backend_ok": 12,
-      "backend_fail": 0,
-      "fallback_used": 0,
-      "p50_s": 0.0571,
-      "p95_s": 0.0601,
-      "max_s": 0.0601
+      "backend_ok": 0,
+      "backend_fail": 12,
+      "fallback_used": 12,
+      "p50_s": 0.0,
+      "p95_s": 0.0,
+      "max_s": 0.0
     }
   }
 }

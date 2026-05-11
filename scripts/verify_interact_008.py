@@ -12,9 +12,10 @@ V8  classify UNKNOWN（长文本不触发任何启发式）
 V9  ConvState 转换：IDLE→LISTENING→THINKING→SPEAKING→IDLE
 V10 COMMAND="安静" → QUIET 状态，N 秒内 handle_audio 直接返回
 V11 QUIET 自动过期回 IDLE
-V12 COMMAND="重复" → 不调 LLM，重发上次 TTS
+V12 COMMAND="重复" → 不调 LLM，重发上次 TTS；emit 序列含 SPEAKING transition
 V13 TEACHING 状态注入教学 system_prompt
 V14 emit "interact.intent_classified" + "interact.state_transition"
+V15 ProactiveScheduler 在 QUIET 状态跳过；退出 QUIET 后可触发
 """
 
 from __future__ import annotations
@@ -303,29 +304,51 @@ def v11_quiet_auto_expire() -> None:
 
 
 def v12_repeat_command() -> None:
-    print("\n[V12] COMMAND='重复' → 不调 LLM，重发上一句", flush=True)
-    clock = FakeClock()
-    sm = ConversationStateMachine(clock=clock)
-    clf = IntentClassifier()
-    llm = CapturedLLM(reply_text="今天阳光不错")
-    tts_calls: list = []
-    session = _build_session(clock, llm, tts_calls, sm, clf)
+    print("\n[V12] COMMAND='重复' → 不调 LLM，重发上一句 + emit SPEAKING transition", flush=True)
+    from coco import logging_setup as _ls
+    captured: list[dict] = []
+    orig_emit = _ls.emit
 
-    audio = np.zeros(16000, dtype=np.int16)
-    # 第 1 次：正常对话产生 last_reply
-    session.asr_fn = lambda a, sr: "今天天气怎么样"  # type: ignore[assignment]
-    r1 = session.handle_audio(audio, 16000, skip_action=True, skip_tts_play=False)
-    assert_eq(r1["reply"], "今天阳光不错", "首句 reply")
-    assert_eq(len(llm.calls), 1, "LLM 调 1 次")
-    assert_eq(len(tts_calls), 1, "TTS 调 1 次")
+    def _spy(component_event: str, message: str = "", **payload):
+        captured.append({"event": component_event, **payload})
+        return orig_emit(component_event, message, **payload)
+    _ls.emit = _spy  # type: ignore[assignment]
+    try:
+        clock = FakeClock()
+        sm = ConversationStateMachine(clock=clock)
+        clf = IntentClassifier()
+        llm = CapturedLLM(reply_text="今天阳光不错")
+        tts_calls: list = []
+        session = _build_session(clock, llm, tts_calls, sm, clf)
 
-    # 第 2 次："再说一遍" → 不调 LLM，重发上一句
-    session.asr_fn = lambda a, sr: "再说一遍"  # type: ignore[assignment]
-    r2 = session.handle_audio(audio, 16000, skip_action=True, skip_tts_play=False)
-    assert_eq(r2.get("intent_action"), "repeat", "intent_action=repeat")
-    assert_eq(r2["reply"], "今天阳光不错", "重发上一句")
-    assert_eq(len(llm.calls), 1, "LLM 仍 1 次（未调）")
-    assert_eq(len(tts_calls), 2, "TTS 调 2 次")
+        audio = np.zeros(16000, dtype=np.int16)
+        # 第 1 次：正常对话产生 last_reply
+        session.asr_fn = lambda a, sr: "今天天气怎么样"  # type: ignore[assignment]
+        r1 = session.handle_audio(audio, 16000, skip_action=True, skip_tts_play=False)
+        assert_eq(r1["reply"], "今天阳光不错", "首句 reply")
+        assert_eq(len(llm.calls), 1, "LLM 调 1 次")
+        assert_eq(len(tts_calls), 1, "TTS 调 1 次")
+
+        # 清空 captured，专注观测 repeat 这一轮的 emit 序列
+        captured.clear()
+
+        # 第 2 次："再说一遍" → 不调 LLM，重发上一句
+        session.asr_fn = lambda a, sr: "再说一遍"  # type: ignore[assignment]
+        r2 = session.handle_audio(audio, 16000, skip_action=True, skip_tts_play=False)
+        assert_eq(r2.get("intent_action"), "repeat", "intent_action=repeat")
+        assert_eq(r2["reply"], "今天阳光不错", "重发上一句")
+        assert_eq(len(llm.calls), 1, "LLM 仍 1 次（未调）")
+        assert_eq(len(tts_calls), 2, "TTS 调 2 次")
+
+        # interact-008 L1-2: 断言 emit 序列含 to_state=SPEAKING 的 transition
+        st_events = [c for c in captured if c.get("event") == "interact.state_transition"]
+        to_states = [c.get("to_state") for c in st_events]
+        assert_true(
+            "speaking" in to_states,
+            f"repeat 路径 emit 含 SPEAKING transition (to_states={to_states})",
+        )
+    finally:
+        _ls.emit = orig_emit  # type: ignore[assignment]
 
 
 # ---------------------------------------------------------------------------
@@ -405,6 +428,73 @@ def v14_emit_events() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V15 — ProactiveScheduler 在 QUIET 状态跳过
+# ---------------------------------------------------------------------------
+
+
+def v15_proactive_quiet_skip() -> None:
+    print("\n[V15] ProactiveScheduler 在 QUIET 状态跳过；退出 QUIET 后可触发", flush=True)
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+
+    clock = FakeClock(t0=1000.0)
+    sm = ConversationStateMachine(
+        config=ConversationConfig(quiet_seconds=5.0),
+        clock=clock,
+    )
+
+    # fake face tracker：present=True
+    class _FakeSnap:
+        present = True
+
+    class _FakeFaceTracker:
+        def latest(self):
+            return _FakeSnap()
+
+    # fake llm + tts，避免真的调
+    def _fake_llm_reply(text: str, **kw) -> str:
+        return "随便聊聊"
+
+    def _fake_tts(text: str, **kw) -> None:
+        pass
+
+    cfg = ProactiveConfig(
+        enabled=True,
+        idle_threshold_s=30.0,
+        cooldown_s=60.0,
+        max_topics_per_hour=10,
+    )
+    sched = ProactiveScheduler(
+        config=cfg,
+        power_state=None,  # 不强制 power
+        face_tracker=_FakeFaceTracker(),
+        llm_reply_fn=_fake_llm_reply,
+        tts_say_fn=_fake_tts,
+        clock=clock,
+        conv_state_machine=sm,
+    )
+    # 把 last_interaction_ts 设到很早，让 idle 满足
+    sched._last_interaction_ts = clock.t - 1000.0
+
+    # Step 1: QUIET 状态 → 跳过
+    sm.enter_quiet(source="verify_v15")
+    assert_true(sm.is_quiet_now(), "前置：进入 QUIET")
+    fired_1 = sched.maybe_trigger()
+    assert_true(not fired_1, "QUIET 下未触发")
+    assert_true(
+        sched.stats.skipped_quiet_state >= 1,
+        f"skipped_quiet_state >=1（actual={sched.stats.skipped_quiet_state}）",
+    )
+
+    # Step 2: QUIET 过期 → 可触发
+    clock.advance(10.0)  # 超过 quiet_seconds=5
+    assert_true(not sm.is_quiet_now(), "QUIET 过期回 IDLE")
+    # reset last_interaction 让 idle 继续满足
+    sched._last_interaction_ts = clock.t - 1000.0
+    fired_2 = sched.maybe_trigger()
+    assert_true(fired_2, "退出 QUIET 后触发成功")
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -426,6 +516,7 @@ def main() -> int:
     v12_repeat_command()
     v13_teaching_system_prompt()
     v14_emit_events()
+    v15_proactive_quiet_skip()
 
     print(f"\n--- 总结 ---", flush=True)
     print(f"PASS={len(PASSES)}  FAIL={len(FAILURES)}", flush=True)

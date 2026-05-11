@@ -1,6 +1,6 @@
 {
   "verification": "verify_interact_008",
-  "pass_count": 53,
+  "pass_count": 59,
   "fail_count": 0,
   "passes": [
     "intent_enabled_from_env() 未设: False == False",
@@ -47,6 +47,7 @@
     "重发上一句: '今天阳光不错' == '今天阳光不错'",
     "LLM 仍 1 次（未调）: 1 == 1",
     "TTS 调 2 次: 2 == 2",
+    "repeat 路径 emit 含 SPEAKING transition (to_states=['listening', 'speaking', 'idle'])",
     "intent=teach: 'teach' == 'teach'",
     "LLM 调 1 次: 1 == 1",
     "system_prompt 含教学提示",
@@ -55,7 +56,12 @@
     "emit interact.intent_classified",
     "emit interact.state_transition",
     "至少一次 state_transition emit",
-    "state_transition payload 完整"
+    "state_transition payload 完整",
+    "前置：进入 QUIET",
+    "QUIET 下未触发",
+    "skipped_quiet_state >=1（actual=1）",
+    "QUIET 过期回 IDLE",
+    "退出 QUIET 后触发成功"
   ],
   "failures": []
 }
