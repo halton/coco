@@ -427,6 +427,33 @@ class Coco(ReachyMiniApp):
         except Exception as exc:  # noqa: BLE001
             print(f"[coco][idle] start failed: {exc!r}", flush=True)
 
+        # robot-003: 可选 ExpressionPlayer（COCO_EXPRESSIONS=1 启用，默认 OFF）。
+        # 注入 tts 模块（say(expression=...) 自动触发）+ 后续 ProactiveScheduler。
+        _expression_player = None
+        try:
+            from coco.robot.expressions import (
+                ExpressionPlayer as _ExpressionPlayer,
+                expressions_config_from_env as _expr_from_env,
+            )
+            _ecfg = _expr_from_env()
+            if _ecfg.enabled and reachy_mini is not None:
+                _expression_player = _ExpressionPlayer(
+                    reachy_mini,
+                    idle_animator=idle_animator,
+                    config=_ecfg,
+                )
+                coco_tts.set_expression_player(_expression_player)
+                print(
+                    f"[coco][expr] ExpressionPlayer enabled speed={_ecfg.global_speed_scale} "
+                    f"cooldown_default={_ecfg.cooldown_default_s}s",
+                    flush=True,
+                )
+            else:
+                print("[coco][expr] disabled (COCO_EXPRESSIONS not set)", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][expr] init failed: {exc!r}", flush=True)
+            _expression_player = None
+
         # interact-001：起 InteractSession + push-to-talk stdin 后台线程
         # interact-002：注入 LLM client（环境变量未配则自动 fallback 到 KEYWORD_ROUTES）
         # interact-003：默认改用 VAD trigger 替代 stdin Enter；COCO_VAD_DISABLE=1 回退 PTT
@@ -831,6 +858,16 @@ class Coco(ReachyMiniApp):
                     print("[coco][idle] WARN: animator did not stop within 2s", flush=True)
                 else:
                     print(f"[coco][idle] stopped stats={idle_animator.stats}", flush=True)
+            # robot-003: 停 ExpressionPlayer（解绑 tts 注入并 stop()）
+            if _expression_player is not None:
+                try:
+                    _expression_player.stop()
+                except Exception as e:  # noqa: BLE001
+                    print(f"[coco][expr] stop failed: {e!r}", flush=True)
+                try:
+                    coco_tts.set_expression_player(None)
+                except Exception:  # noqa: BLE001
+                    pass
             # ptt_thread 是 daemon，stop_event 一 set 它的下一次 readline 返回前可能还在阻塞，
             # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
             if ptt_thread is not None:

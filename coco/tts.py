@@ -39,6 +39,25 @@ MAX_TEXT_LEN = 500
 
 _tts: sherpa_onnx.OfflineTts | None = None
 
+# robot-003: 可选 ExpressionPlayer 注入点。
+# main.py 在构造完 ExpressionPlayer 后调 ``set_expression_player(player)``。
+# 若未注入，``say(expression=...)`` 仅 log 不触发 robot 动作。
+_expression_player: object | None = None
+
+
+def set_expression_player(player: object | None) -> None:
+    """注入 ExpressionPlayer（None 表示解绑）。
+
+    main.py 启动时调用一次。expression_player 是 robot-003 的能力；
+    未注入时 ``say(expression=...)`` 路径完全退化（行为等价 phase-3）。
+    """
+    global _expression_player
+    _expression_player = player
+
+
+def get_expression_player() -> object | None:
+    return _expression_player
+
 
 def _build_tts() -> sherpa_onnx.OfflineTts:
     """构造 Kokoro OfflineTts。缺文件直接 raise FileNotFoundError 并提示。"""
@@ -188,6 +207,7 @@ def say(
     speed: float = DEFAULT_SPEED,
     blocking: bool = True,
     emotion: Optional[str] = None,
+    expression: Optional[str] = None,
 ) -> None:
     """合成并通过本机扬声器播放（**默认阻塞，整段播完才返回**）。
 
@@ -197,14 +217,33 @@ def say(
     interact-006: ``emotion`` 参数仅 log 标注（''tts say emotion=happy text=...''），
     phase-4 simulate-only 不真实改 voice 参数；真机调参留 milestone gate。
 
+    robot-003: ``expression`` 参数语义化触发 ExpressionPlayer.play(expression)。
+    与 emotion 等价共用同一触发路径（expression 显式胜过 emotion）。两者都未传则
+    完全不走 expression 链路。
+
     注意：在 ReachyMiniApp.run() 等需要保持心跳/stop_event 循环的主线程内，
     请改用 say_async()，否则播放期间 (~2-5s) 心跳会被卡住。
     """
-    if emotion:
+    # expression 优先级 > emotion；emotion 作为兼容路径
+    trigger_label = expression or emotion
+    if trigger_label:
         # spec V4: 用 print 与 logging 双发；evidence 抓 'tts say emotion=...'
-        msg = f"tts say emotion={emotion} text={text!r}"
+        msg = f"tts say emotion={trigger_label} text={text!r}"
         print(f"[coco.tts] {msg}")
-        logging.getLogger("tts").info(msg, extra={"component": "tts", "event": "say", "emotion": emotion, "text": text})
+        logging.getLogger("tts").info(msg, extra={"component": "tts", "event": "say", "emotion": trigger_label, "text": text})
+        # robot-003: 若 ExpressionPlayer 已注入且 expression 命中库，触发 play
+        # 设计：与 TTS 同步前置 fire（先动头再发声），fail-soft 失败不阻塞 say()
+        player = _expression_player
+        if player is not None:
+            try:
+                play_fn = getattr(player, "play", None)
+                if callable(play_fn):
+                    play_fn(trigger_label)
+            except Exception as e:  # noqa: BLE001
+                logging.getLogger("tts").warning(
+                    "expression_player.play(%r) failed: %s: %s",
+                    trigger_label, type(e).__name__, e,
+                )
     if prefer == "edge":
         try:
             samples, sr = synthesize_edge(text)
@@ -263,4 +302,6 @@ __all__ = [
     "play",
     "write_wav",
     "has_edge_tts",
+    "set_expression_player",
+    "get_expression_player",
 ]
