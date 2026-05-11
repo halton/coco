@@ -221,8 +221,10 @@ def say(
     与 emotion 等价共用同一触发路径（expression 显式胜过 emotion）。两者都未传则
     完全不走 expression 链路。
 
-    注意：在 ReachyMiniApp.run() 等需要保持心跳/stop_event 循环的主线程内，
-    请改用 say_async()，否则播放期间 (~2-5s) 心跳会被卡住。
+    注意：player.play(expression) 在 say() 内**同步阻塞**（典型 ~1s，依 sequence
+    帧数与 duration），随后才进入 synthesize/play 音频环节。在 ReachyMiniApp.run()
+    等需要保持心跳/stop_event 循环的主线程内，请改用 say_async()，否则播放期间
+    (~2-5s) 心跳会被卡住。
     """
     # expression 优先级 > emotion；emotion 作为兼容路径
     trigger_label = expression or emotion
@@ -271,17 +273,32 @@ def say_async(
     prefer: Literal["local", "edge"] = "local",
     sid: int = DEFAULT_SID,
     speed: float = DEFAULT_SPEED,
+    *,
+    expression: Optional[str] = None,
+    emotion: Optional[str] = None,
 ):
     """非阻塞版 say()。返回一个 daemon Thread，调用方可决定是否 join。
 
     用于 ReachyMiniApp.run() 等需要保持心跳/stop_event 循环不被阻塞的场景。
     异常被吞掉只打日志，避免线程崩溃影响主循环。
+
+    robot-003: ``expression`` / ``emotion`` 透传到 say()，让异步路径同样能触发
+    ExpressionPlayer.play(expression)；与同步 say() 行为等价（player.play 同步
+    在 worker 线程内调用，~1s 阻塞不影响主线程心跳）。
     """
     import threading
 
     def _worker() -> None:
         try:
-            say(text, prefer=prefer, sid=sid, speed=speed, blocking=True)
+            say(
+                text,
+                prefer=prefer,
+                sid=sid,
+                speed=speed,
+                blocking=True,
+                expression=expression,
+                emotion=emotion,
+            )
         except Exception as e:  # noqa: BLE001
             print(f"[coco.tts] say_async 失败: {type(e).__name__}: {e}", flush=True)
 

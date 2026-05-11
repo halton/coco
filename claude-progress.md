@@ -945,3 +945,22 @@ merge feat/vision-004 回 main；vision-004 status=passing；新增 vision-004b 
 - L3: IdleBias.glance_amp_scale 保留未用；happy+focus_stable micro 1.7875×2.5°=4.47° (< MAX_YAW_DEG/4=8.75°)。
 
 merge feat/companion-005 → main no-ff；companion-005 status=passing。下一个执行：robot-003（priority=28）。
+
+## Session 038 — robot-003 closeout（表情序列编排器）(2026-05-11)
+
+**实现**：`coco/robot/expressions.py` 落地 `ExpressionFrame`/`ExpressionSequence`/`ExpressionPlayer`/`ExpressionsConfig`。EXPRESSION_LIBRARY 含 9 个预设（welcome/thinking/praise/confused/shy + agreeing/curious/sad/excited），安全幅度 yaw ±45°、pitch ±30°、duration clamp [0.1, 5.0]s。`coco/tts.py` 注入点 `set_expression_player()`；`say(expression=...)` 同步触发 player.play 后再合成音频；`say_async()` 透传 expression/emotion。
+
+**L1 修复（merge 前）**：
+
+- L1-1: `coco/tts.py` `say_async()` 增加 `*, expression=None, emotion=None` 形参，_worker 把它们传给 `say()`。补 V13 验证：mock ExpressionPlayer，`say_async("...", expression="excited")` join 后 player.play 被调且参数=excited；emotion 路径同步覆盖；不传二者时 player.play 不调。
+- L1-2: `coco/robot/expressions.py` `_play_locked()` 末尾改为"仅在 `frames_done > 0` 时更新 `_last_play_ts` + 计 `plays_completed`"。SDK 全失败/stop() 早断的 frames_done=0 路径不再被记成"刚播过"，避免短暂故障被放大成 cooldown 周期静默。补 V14 验证：monkey-patch `_dispatch_frame` 抛错（绕开 fail-soft 让外层 finally 触发但不增 frames_done），第一次 play 不记 cooldown；第二次 play 同名能再次尝试且实际 dispatch 了帧。
+- L2: `ExpressionsConfig.__post_init__` 加 clamp（frozen dataclass 走 object.__setattr__），让非 env 构造路径也安全；`say()` docstring 明确 player.play 同步阻塞 ~1s 后才进入音频。
+- 顺手修：`scripts/smoke.py` config expected_keys 加 `"expressions"`（baseline drift，与 config_summary 一致，否则 init.sh 红）。
+
+**verify_robot_003**：V1-V14 ALL PASS（1.88s）。
+
+**回归**：infra_002/003 + interact004/005/006/007/008 + companion_003/004/005 + companion_vision + vision_002/003/004 + infra_debt_sweep + publish 全 PASS；./init.sh smoke 全段通过。
+
+**Reviewer (sub-agent) LGTM-with-fixes**：2 L1 已修；L2 已补；L3 known-debt 留 uat：真机 SDK 卡死缺超时保护；ProactiveScheduler/IdleAnimator 协调走包一层 tts_say_fn 的轻耦合，未做硬接线（更易扩展）。
+
+merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 5/5 done（vision-004 / companion-005 / robot-003 + 前序），进入 phase-6 规划。

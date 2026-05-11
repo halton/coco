@@ -284,6 +284,25 @@ class ExpressionsConfig:
     cooldown_default_s: float = 1.0
     global_speed_scale: float = 1.0
 
+    def __post_init__(self) -> None:
+        # L2: 让非 env 构造路径（直接 ExpressionsConfig(...)）也安全 clamp。
+        # frozen=True → 用 object.__setattr__ 绕过；env 路径已 clamp，这里幂等。
+        cd = self.cooldown_default_s
+        if cd < 0.0:
+            cd = 0.0
+        elif cd > 30.0:
+            cd = 30.0
+        if cd != self.cooldown_default_s:
+            object.__setattr__(self, "cooldown_default_s", cd)
+
+        sp = self.global_speed_scale
+        if sp < 0.25:
+            sp = 0.25
+        elif sp > 4.0:
+            sp = 4.0
+        if sp != self.global_speed_scale:
+            object.__setattr__(self, "global_speed_scale", sp)
+
 
 def _bool_env(env: Mapping[str, str], key: str, default: bool = False) -> bool:
     raw = (env.get(key) or "").strip().lower()
@@ -496,8 +515,12 @@ class ExpressionPlayer:
                     )
 
         t1 = self.clock()
-        self._last_play_ts[seq.name] = t1
-        self.stats.plays_completed += 1
+        # L1-2: 仅在确有帧成功 dispatch 时才记 cooldown / 计 plays_completed。
+        # frames_done==0（SDK 全失败或 stop() 在第一帧前命中）不应被记成"刚播过"，
+        # 否则短暂故障会被放大成一整个 cooldown 周期的静默——同名表情会被 skip。
+        if frames_done > 0:
+            self._last_play_ts[seq.name] = t1
+            self.stats.plays_completed += 1
         self.stats.last_played = seq.name
         self.stats.last_played_ts = t1
         self._emit_event(

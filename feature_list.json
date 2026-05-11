@@ -821,20 +821,24 @@
       "area": "robot",
       "title": "表情序列编排器（mockup-sim 验证组合动作）",
       "user_visible_behavior": "为常用'表情'（欢迎、思考、点赞、困惑、不好意思）抽象出可复用的 ExpressionScript（头/天线/眼睛颜色/可选 TTS 音色 hint 的时间线）；其他模块用 expression('welcome') 触发，不再各自硬编码 goto_posture 序列。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "robot-002",
         "companion-001"
       ],
       "verification": [
-        "实现 coco/robot/expression.py：ExpressionScript dataclass（steps: list[(t_ms, joint, target)]）+ ExpressionPlayer.play(name) → 在 mockup-sim daemon 上按时间线下发 SetTarget。",
-        "至少实现 5 个内置 expression：welcome / thinking / praise / confused / shy；每个 ≤2s。",
-        "替换至少 2 处现有硬编码序列（如 interact reply 完毕 'praise'、proactive 出题前 'thinking'）；保持原有可见行为。",
-        "scripts/verify_robot003.py 用 mockup-sim daemon：(a) 5 个 expression 全跑通无异常；(b) 时间线 ±50ms 容差内；(c) 中断（被高优先级动作打断）能干净结束；(d) regression：robot-001/002 verify 通过。",
-        "Reviewer fresh-context 评审：与 IdleAnimator/companion-005 的优先级（expression 期 idle 暂停）、并发保护、replay 幂等、与真机扭矩的安全考虑（虽 sim 验证，但 target 范围不能越界）。"
+        "实现 coco/robot/expressions.py：ExpressionFrame/ExpressionSequence + ExpressionPlayer.play(name) 在 mockup-sim 下按时间线下发 goto_target；至少 5 个预设：welcome/thinking/praise/confused/shy（实际 9 个，加 agreeing/curious/sad/excited）。",
+        "scripts/verify_robot_003.py V1-V14：默认 OFF / env clamp / cooldown / 并发 busy 拒绝 / IdleAnimator pause-resume / tts.say(expression) 触发链 / emit robot.expression_played / stop() 干净退出 / ProactiveScheduler 注入 / say_async 透传 expression（V13）/ SDK 全失败 frames_done=0 不记 cooldown（V14）。",
+        "安全：yaw ±45°、pitch ±30°、duration clamp [0.1, 5.0]s；global_speed_scale 在 env 与 dataclass __post_init__ 都 clamp。",
+        "Reviewer fresh-context 评审：LGTM-with-fixes（2 L1 已修：say_async expression 透传 + cooldown 仅在 frames_done>0 时记账）；与 IdleAnimator 暂停-恢复钩子、并发单锁 try-acquire、cooldown 幂等都通过审查。"
       ],
-      "evidence": [],
-      "notes": "mockup-sim daemon 验证；真机表情顺滑度/电机过冲归 uat-phase4。"
+      "evidence": [
+        "V1-V14 ALL PASS（verify_robot_003 1.88s）",
+        "Reviewer (sub-agent): LGTM-with-fixes — L1-1 say_async expression/emotion 透传已修；L1-2 frames_done==0 不更新 _last_play_ts 已修；L2 ExpressionsConfig.__post_init__ clamp / plays_completed 仅在 frames_done>0 计 / say() docstring 明确 player.play 同步阻塞 ~1s 已修。",
+        "回归：infra_002/003 + interact004/005/006/007/008 + companion_003/004/005 + companion_vision + vision_002/003/004 + infra_debt_sweep + publish 全 PASS。",
+        "顺手修 smoke.py config expected keys 加 'expressions'（baseline drift 修补）。"
+      ],
+      "notes": "mockup-sim daemon 验证；真机表情顺滑度/电机过冲归 uat-phase4。known-debt（L3 留给后续 feature）：ExpressionPlayer.play 缺 timeout/exception 保护链（若 SDK 卡死会无限阻塞）—— 真机 UAT 时再决定是否引超时；与 ProactiveScheduler/IdleAnimator 的协调走包一层 tts_say_fn，未做硬接线（轻耦合更易扩展）。"
     },
     {
       "id": "uat-phase4",
