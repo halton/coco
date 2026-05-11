@@ -55,7 +55,7 @@
   - (c) 决策本身需要用户偏好（例如 phase-N+1 候选间二选一且无客观依据）
 - 注意：**真机 UAT 不再是阻塞 gate**，详见下文「Sim-First 开发原则」。
 - 每个 feature close-out 后用一行回复说"[feature-id] DONE，main HEAD=xxx，继续 [next-feature]"，不再追加 "等通知" 或问句
-- 该规则覆盖全局 "ask user before commit" 默认（与本仓库现有 commit 例外一致）；push 仍需用户显式指示，详见 Git 工作流
+- 该规则覆盖全局 "ask user before commit" 默认（与本仓库现有 commit 例外一致）；push 策略详见 Git 工作流（commit 后尝试 push 一次，失败忽略继续）
 
 ## Sim-First 开发原则（默认启用）
 
@@ -79,20 +79,19 @@
 - 不要通过重写功能清单来隐藏未完成工作
 - 不要为了"看起来完成"而删除或削弱测试
 - 以仓库内文件作为唯一事实来源
-- 中文沟通；遵守 `~/.claude/memory/git-conventions.md`，但 commit 与 push 例外见下文 Git 工作流（默认只 commit 不 push）
+- 中文沟通；遵守 `~/.claude/memory/git-conventions.md`，但 commit 与 push 例外见下文 Git 工作流（commit 后尝试 push，失败忽略继续）
 - Control.app daemon 处理：当 Control.app 自带的 reachy-mini daemon 占用 8000/7447 端口阻塞 `./init.sh --daemon` 或 verification 时，sub-agent 可直接 kill 该进程（`pgrep -f 'desktop-app-daemon'`），不需要再向用户确认。
 
 ## Git 工作流
 
 - **本项目 commit 例外**：本仓库的 `git commit` 一律由 sub-agent 直接执行，主会话**不再向用户确认草稿**。此条**覆盖**全局 `~/.claude/memory/git-conventions.md` 中"commit 前用户确认"的默认规则。仍须遵守：Co-Authored-By 行、conventional commit 格式。
-- **push 策略——默认只 commit 不 push**：sub-agent 在 feature closeout 中完成 `commit` + `merge --no-ff` 到 main 后**即停**，**不再自动 `git push origin main`、不 push feat 分支**。push 改为**用户在合适时机统一发起**，或在用户**显式发出 "push" 指令**时才执行。此规则覆盖此前 "closeout 自动 push origin main + feat/xxx，失败 3 轮重试 sleep 30s" 的默认行为。
-- 用户显式要求 push 时的命令模板（仅供按需使用，不要在 closeout 中主动调用）：
+- **push 策略——commit 后必须尝试 push 一次，失败忽略继续**：sub-agent 在 feature closeout（或 main 上的直接 commit）后必须执行一次 `git push origin main`；若该 feature 还在 `feat/<feature-id>` 分支上，则 push 该分支。push **不重试、不 sleep**：任何失败（网络 / 认证 / socket / 超时 / 拒绝等）都只在返回报告里记录原因，**立即继续下一步任务**，不阻塞流程。此规则**覆盖**此前 "closeout 自动 push origin main + feat/xxx，失败 3 轮重试 sleep 30s" 与 "默认只 commit 不 push 等用户指令" 两套旧规则。
+- push 命令模板（每条只执行一次，失败不重试）：
   - `git push origin main`
   - `git push origin feat/<feature-id>`
-  - 若仍发生网络/socket 失败，由用户决定是否重试，sub-agent 不在 closeout 自动 sleep + 重试。
-- 每个 in_progress feature 在 `feat/<feature-id>` 分支上做；passing 后 merge 回 main（不 push）
+- 每个 in_progress feature 在 `feat/<feature-id>` 分支上做；passing 后 merge 回 main，并尝试 push main 与 feat 分支各一次
 - main 永远保持 `./init.sh` 通过的状态
-- 例外：harness 加固、文档、依赖升级等基础设施改动可直接在 main 做（短促、低风险）；同样**只 commit 不 push**。
+- 例外：harness 加固、文档、依赖升级等基础设施改动可直接在 main 做（短促、低风险）；commit 后同样尝试 push main 一次，失败忽略。
 
 ## 依赖升级策略
 

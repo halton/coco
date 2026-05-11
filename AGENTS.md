@@ -65,7 +65,7 @@
 - main 永远保持 `./init.sh` 通过的状态
 - 例外：harness 加固、文档、依赖升级等基础设施改动可直接在 main 做（短促、低风险）
 - **commit 例外**：本仓库的 `git commit` 一律由 sub-agent 直接执行，主会话不再向用户确认草稿（覆盖全局 `~/.claude/memory/git-conventions.md` 中"commit 前用户确认"默认）。仍须遵守：Co-Authored-By 行、conventional commit 格式。
-- **push 策略——默认只 commit 不 push**：sub-agent 在 closeout 中完成 `commit` + `merge --no-ff` 到 main 后即停，**不再自动 `git push origin main`、不 push feat 分支**。push 改为用户在合适时机统一发起，或仅在用户显式发出 "push" 指令时执行。该规则覆盖此前 "closeout 自动 push origin main + feat/xxx、失败 3 轮重试 sleep 30s" 的行为。push 命令模板（仅按需）：`git push origin main` / `git push origin feat/<feature-id>`。
+- **push 策略——commit 后必须尝试 push 一次，失败忽略继续**：sub-agent 在 closeout（或直接在 main 上的基础设施 commit）后必须执行一次 `git push origin main`；若仍在 `feat/<feature-id>` 分支上，也要 push 该分支。push **不重试、不 sleep**：网络/认证/socket/超时/拒绝等任何失败都只在返回报告里记录原因，**立即继续下一步任务**，不阻塞流程。此规则覆盖此前 "closeout 自动 push origin main + feat/xxx、失败 3 轮重试 sleep 30s" 与 "默认只 commit 不 push、push 等用户指令" 两套旧规则。push 命令模板（每条只跑一次）：`git push origin main` / `git push origin feat/<feature-id>`。
 
 ## 依赖升级策略
 
