@@ -663,7 +663,7 @@
       "area": "interact",
       "title": "主动话题发起（idle 久 + face present + ACTIVE 时主动出题）",
       "user_visible_behavior": "Coco 不再只被动等唤醒：当 PowerState=ACTIVE + face present 持续 ≥ 30 秒 + 距离上一次 InteractSession 结束 ≥ 60 秒时，Coco 主动用 TTS 出一道小题或讲一个短故事开头（'要不要我给你出一道加法题？' / '我刚才在想，恐龙到底是怎么灭绝的呢？'），鼓励用户回应；用户回应后正常进入 InteractSession；用户长时间不回（>15s）则记一次 'unaccepted' 退回 idle。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-003",
         "companion-004",
@@ -677,7 +677,12 @@
         "scripts/verify_interact007.py：(a) 单元 should_speak() 三参数边界（face=False/idle=20s/last_interact=30s 三个独立否决）；(b) profile 注入 'interests=[恐龙]' → pick_topic 5 次中 ≥3 次命中故事-恐龙类；(c) 注入 ACTIVE+face_present_30s+无 interact_60s → 触发 1 次 say；(d) 触发后 15s 内不重复触发；(e) sleep 模式下不触发；(f) regression：companion-003/interact-004/vision-002 全 verify 通过。",
         "Reviewer fresh-context 评审：触发频率上限（180s 默认）是否扰民、SLEEP 状态严格静默（power_state.is_sleep_locked() 检查）、profile 缺失退化、与 wake-word/VAD 入口的优先级（proactive 触发期间用户开口仍能被 VAD 抓到）、TTS 期间 mute VAD 自激（沿用 interact-003 wrap_tts）。"
       ],
-      "evidence": [],
+      "evidence": [
+        "scripts/verify_interact_007.py V1-V16 全 PASS (76/76) → evidence/interact-007/verify_summary.json (V15 新增: main.py 集成层 face_tracker 注入断言；V16 新增: maybe_trigger 锁外 LLM/TTS — record_interaction 在 LLM 阻塞期间 0.0ms 返回)。",
+        "回归全 PASS: verify_infra_002 (70/70) / verify_interact004 (9/9) / verify_interact005 / verify_interact006 (47/47) / verify_companion_003 / verify_companion004 (12/12) / verify_companion_vision / verify_vision_002 / verify_vision_003 / verify_infra_debt_sweep / verify_publish。",
+        "Reviewer (sub-agent) LGTM-with-fixes：原 L1-1 (main.py:403 face_tracker=None 死锁) + L1-2 (maybe_trigger 整段持锁阻塞 record_interaction) 均已修复并加 V15/V16 回归。L2/L3 known-debt 已记 notes：(L2) main.py 退出未显式 stop_event.set() 靠 daemon+join 2s；(L2) proactive emit idle_for 无语义已删；(L2) stats.history 改 deque(maxlen=200)；(L3) DEFAULT_TOPIC_SEED 与 spec '12 条 4 类静态池' 设计差距 — LLM 自由生成代替静态池，profile-bias 通过 system_prompt 完成。",
+        "./init.sh smoke 通过；feat/interact-007 已合并到 main。"
+      ],
       "notes": "phase-4 终曲：组合 phase-3 全部能力（power-state ACTIVE / face-tracker presence / dialog-memory 短期 / wake-word 入口）+ phase-4 新能力（profile interests/goals / emotion 可选影响选题情绪 — phase-4 不强耦，留 hook）。设计哲学：proactive 不是让 Coco '主动叨叨'，是给 idle 模式注入一个低频 (≥3 分钟一次) 主动钩子；扰民阈值高优先（180s default 后续可调）。known-risk：(a) topic 静态模板很快重复 → phase-4 12 条够 demo，phase-5 接 LLM 生成；(b) 'face present 30s' 在 mockup-sim 用 fixture 视频持续命中模拟，真机用真摄像头；(c) TTS 期间被 VAD 误触发自激 → wrap_tts mute 已成熟方案；(d) 与 emotion-006 联动：sad 状态减少 proactive 频率（避免在用户难过时打扰）；本 feature 不做，phase-5 增强。"
     }
   ]

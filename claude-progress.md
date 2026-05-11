@@ -799,3 +799,22 @@
   - (L2/L3) 256-bin gray hist 对真实光照/姿态变化区分力弱，留真机 milestone 验证 + 多光照 enroll；LBPH cp313 三平台 wheel 留 phase-5 milestone gate；enroll CLI same-name 追加是 intended behavior（已注释）。
 - **状态**：feat/vision-003 → passing；merge --no-ff 到 main；推 origin。
 - **下一步**：phase-4 进度 4/5 done (infra-002 / interact-006 / companion-004 / vision-003)；next: interact-007 proactive-topic（priority=23）。
+
+
+## Session 035 — interact-007 Reviewer L1 closeout + merge（2026-05-11）
+
+- **本轮目标**：interact-007 proactive-topic Reviewer fresh-context 评审给出 LGTM-with-fixes（2 个 L1 必修 + 数个 L2/L3）；修完合并到 main，phase-4 收口。
+- **Reviewer L1 修复 2/2**：
+  1. **`coco/main.py:403` ProactiveScheduler face_tracker=None 死锁**：原 `face_tracker=None` 硬编码 → `_should_trigger` 永返 "no_face"，全链路 no-op。修：在 `run()` 顶部新增 `_face_tracker_shared`（COCO_FACE_TRACK=1 + COCO_CAMERA 才构造 FaceTracker，默认 OFF 向后兼容），同一实例同时供 power presence watcher 与 ProactiveScheduler 使用；finally 内 join 收尾。verify 加 V15 grep main.py 装配代码 + 注入对象身份断言。
+  2. **`coco/proactive.py:maybe_trigger` 整段持锁阻塞**：原实现 `_do_trigger`（含 LLM/TTS 数秒 blocking）跑在锁内 → InteractSession.record_interaction 期间无法刷新 `_last_interaction_ts`。修：拆两段——锁内只做 should_trigger 判定 + 抢占式预占（`_last_proactive_ts`/`_last_interaction_ts`/`_recent_triggers`/`triggered++` + system_prompt 快照），锁外执行 `_do_trigger_unlocked`（LLM + TTS + emit + on_interaction）。fail-soft：锁外失败不回滚预占，宁少发也不连发；额外 emit `interact.proactive_topic_failed` 事件。verify 加 V16：fake LLM 用 Event 阻塞 → 后台线程 fire maybe_trigger → 主线程在 LLM block 期间调 record_interaction 必须 <100ms 返回（实测 0.0ms PASS）。
+- **L2 顺手修**：
+  - `proactive.py:emit interact.proactive_topic` 去掉 `idle_for=round(t-0.0,2)`（绝对值无语义）字段。
+  - `ProactiveStats.history` 由 `list` 改 `deque(maxlen=200)`，避免长跑会话内存无界增长。
+- **L2/L3 已记 known-debt（不修）**：
+  - (L2) main.py 退出未显式 `stop_event.set()`，靠 daemon + join 2s 兜底（可后续清理）。
+  - (L3) `DEFAULT_TOPIC_SEED` 与 spec "12 条 4 类静态池" 设计差距：实现选择 LLM 自由生成 + profile-bias system_prompt 注入（spec 静态池在 phase-5 接 LLM 时本会被替换，提前合并）；feature notes 已说明。
+- **Verification**：verify_interact_007.py V1-V16 全 PASS（76/76）→ `evidence/interact-007/verify_summary.json`。
+- **Regression（11 独立行）**：infra_002 (70/70) / interact004 (9/9) / interact005 / interact006 (47/47) / companion_003 / companion004 (12/12) / companion_vision / vision_002 / vision_003 / infra_debt_sweep / publish — 全 PASS。
+- **Smoke**：`./init.sh` 全段通过。
+- **状态**：feat/interact-007 → passing；merge --no-ff 到 main；推 origin（main + feat 分支均推）。
+- **下一步**：**phase-4 软件层 5/5 done**（infra-002 / interact-006 / companion-004 / vision-003 / interact-007）→ 触发 phase-4 末 **真机 UAT milestone gate**（用户物理操作 Reachy Mini 验：power active/drowsy/sleep + 真摄像头 face presence + 真扬声器 + face_id enroll + proactive 触发体感）。
