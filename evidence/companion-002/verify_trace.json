@@ -1,8 +1,8 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.010622024536133,
-    "stop_dt_s": 0.0006957054138183594,
+    "elapsed_s": 8.022615909576416,
+    "stop_dt_s": 0.0011131763458251953,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -23,14 +23,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 7,
-      "antenna_count": 10
+      "goto_count": 9,
+      "antenna_count": 8
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.102811813354492,
-    "stop_dt_s": 0.0004930496215820312,
+    "elapsed_s": 8.079430341720581,
+    "stop_dt_s": 0.0006778240203857422,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -51,19 +51,19 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 11,
+      "goto_count": 7,
       "antenna_count": 5
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.052978992462158,
-    "stop_dt_s": 0.0020890235900878906,
+    "elapsed_s": 12.044675827026367,
+    "stop_dt_s": 0.009796142578125,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 59,
-      "hit_count": 59,
+      "detect_count": 60,
+      "hit_count": 60,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -71,16 +71,16 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 18,
+      "micro_count": 20,
       "glance_count": 3,
       "vision_glance_count": 3,
       "vision_biased_glance_count": 3,
-      "face_present_ticks": 21,
+      "face_present_ticks": 23,
       "error_count": 0
     },
     "robot": {
-      "goto_count": 21,
-      "antenna_count": 7
+      "goto_count": 15,
+      "antenna_count": 12
     }
   }
 }

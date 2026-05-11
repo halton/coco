@@ -43,6 +43,24 @@ MAX_LINE_BYTES = 4000
 _INSTALLED = False
 
 
+# infra-002 closeout L1-2：authoritative component 短名集合。
+# emit() 入参 component 短名不在此集合时仅 warn 不阻断，避免出现
+# 同子系统 jsonl 行 component 字段两套（如 'vad' vs 'coco.vad_trigger'）。
+AUTHORITATIVE_COMPONENTS = frozenset({
+    "asr",
+    "llm",
+    "vad",
+    "wake",
+    "power",
+    "dialog",
+    "face",
+    "idle",
+    "interact",
+})
+
+_UNKNOWN_COMPONENTS_WARNED: set = set()
+
+
 class JsonlFormatter(logging.Formatter):
     """每条 record 序列化成单行 JSON。
 
@@ -95,6 +113,16 @@ class JsonlFormatter(logging.Formatter):
             "message": record.getMessage(),
         }
         line.update(payload)
+        # infra-002 closeout L1-1：保留 traceback。logger.exception() 出来的
+        # record 携带 exc_info，phase-1 实现把它列入 _RESERVED 直接丢掉，导致
+        # jsonl 行只有 message 没有 stack trace；现在用 formatException 补回。
+        if record.exc_info:
+            try:
+                line["exc"] = self.formatException(record.exc_info)
+            except Exception:  # noqa: BLE001
+                line["exc"] = repr(record.exc_info)
+        elif record.exc_text:
+            line["exc"] = record.exc_text
         s = json.dumps(line, ensure_ascii=False)
         if len(s.encode("utf-8")) > MAX_LINE_BYTES:
             # 暴力 truncate：保留 ts/level/component/event/message + truncated 标志
@@ -106,6 +134,9 @@ class JsonlFormatter(logging.Formatter):
                 "message": line["message"][:200],
                 "_truncated": True,
             }
+            # 即便 truncate 也带 exc 摘要（最多 1KB），避免崩栈被吞
+            if "exc" in line:
+                short["exc"] = line["exc"][:1000]
             s = json.dumps(short, ensure_ascii=False)
         return s
 
@@ -140,15 +171,26 @@ def emit(component_event: str, message: str = "", **payload: Any) -> None:
 
     component_event: 形如 'asr.transcribe' / 'power.transition'。第一个 '.'
     左侧为 component，右侧为 event。
+
+    L1-2：component 短名不在 ``AUTHORITATIVE_COMPONENTS`` 时 warn 一次（每个未知
+    component 仅 warn 一次），但不阻断 emit。
     """
     if "." in component_event:
         component, event = component_event.split(".", 1)
     else:
         component = component_event
         event = "event"
+    if component not in AUTHORITATIVE_COMPONENTS and component not in _UNKNOWN_COMPONENTS_WARNED:
+        _UNKNOWN_COMPONENTS_WARNED.add(component)
+        logging.getLogger("coco.logging_setup").warning(
+            "[logging_setup] emit() component=%r 不在 AUTHORITATIVE_COMPONENTS=%s；"
+            "请改用短名以保持 jsonl 行 component 字段一致",
+            component,
+            sorted(AUTHORITATIVE_COMPONENTS),
+        )
     logger = logging.getLogger(component)
     extra = {"component": component, "event": event, **payload}
     logger.info(message or f"{component}.{event}", extra=extra)
 
 
-__all__ = ["setup_logging", "emit", "JsonlFormatter", "MAX_LINE_BYTES"]
+__all__ = ["setup_logging", "emit", "JsonlFormatter", "MAX_LINE_BYTES", "AUTHORITATIVE_COMPONENTS"]

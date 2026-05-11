@@ -173,6 +173,13 @@ class Coco(ReachyMiniApp):
         try:
             _coco_cfg = load_config()
             setup_logging(jsonl=_coco_cfg.log.jsonl, level=_coco_cfg.log.level)
+            # L1-3：把 cfg.ptt.* 写回模块级变量，避免"两套 PTT 真值源"。
+            # 模块级 PUSH_TO_TALK_SECONDS / PUSH_TO_TALK_DISABLED 仍保留作为 import-time
+            # 默认（旧测试脚本 import 后直接读模块属性的路径不破），但 run() 路径下
+            # cfg.ptt 才是 SoT。
+            global PUSH_TO_TALK_SECONDS, PUSH_TO_TALK_DISABLED
+            PUSH_TO_TALK_SECONDS = float(_coco_cfg.ptt.seconds)
+            PUSH_TO_TALK_DISABLED = bool(_coco_cfg.ptt.disabled)
             import json as _json
             print(
                 f"[coco][config] " + _json.dumps(config_summary(_coco_cfg), ensure_ascii=False),

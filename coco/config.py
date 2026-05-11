@@ -1,5 +1,9 @@
 """infra-002: CocoConfig — 全仓 env 聚合层 + 单点 from_env。
 
+TODO (phase-4 known-debt L2-1)：当前实现是"聚合不替代" —— 各子模块仍保留
+``config_from_env()`` helper，业务代码可绕过 CocoConfig 直接调它们。后续
+feature 接入时应逐步把读取路径归口到 CocoConfig，让本文件成为唯一入口。
+
 设计原则
 ========
 
@@ -198,6 +202,15 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
 
     为了**完全向后兼容**，业务子 config 直接调各模块原 helper（不复制 clamp 逻辑）。
     任一子模块 from_env 异常被吞，用该模块 dataclass 默认值兜底。
+
+    **已知限制（phase-4 known-debt L2-2）**：``env=`` 注入仅覆盖 *本文件直管* 的字段
+    （``log`` / ``ptt`` / ``camera`` / ``llm`` / 各子系统 enabled 标志位）。子模块
+    dataclass 字段（如 ``DialogConfig.max_turns`` 通过 ``COCO_DIALOG_MAX_TURNS``、
+    ``PowerConfig.*`` 通过 ``COCO_POWER_*``、``WakeConfig.*``、``VADConfig.*``）
+    走各自模块的 ``config_from_env()``，那里直接读 ``os.environ``，不接受注入 env。
+    所以 ``load_config(env={"COCO_DIALOG_MAX_TURNS": "7"})`` 不会改 ``cfg.dialog.max_turns``，
+    后者仍是 ``DialogConfig`` 默认或 ``os.environ`` 的值。verify V11 锁住此行为；
+    要改请重写各子模块 ``config_from_env(env=...)`` 签名（独立 feature）。
     """
     env = env if env is not None else os.environ
 

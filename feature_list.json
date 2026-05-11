@@ -535,8 +535,8 @@
       "priority": 19,
       "area": "infra",
       "title": "配置中心 + 结构化日志（jsonl）",
-      "user_visible_behavior": "Coco 所有 env-var 配置（COCO_LLM_*/COCO_VAD_*/COCO_WAKE_*/COCO_FACE_*/COCO_POWER_*/COCO_DIALOG_*/COCO_PTT_*/COCO_CAMERA 等十余个）集中到 coco/config.py，单点 from_env() 解析 + clamp + 日志告警；运行期日志可选输出结构化 jsonl（每行一个事件含 ts/level/component/event/payload），便于回放与离线分析。默认仍走人类可读 stderr，新模式由 COCO_LOG_JSONL=1 启用。",
-      "status": "in_progress",
+      "user_visible_behavior": "Coco 所有 env-var 配置（COCO_LLM_*/COCO_VAD_*/COCO_WAKE_*/COCO_POWER_*/COCO_DIALOG_*/COCO_PTT_*/COCO_CAMERA/COCO_LOG_* 等十余个；face 相关 env 待 phase-5）集中到 coco/config.py，单点 from_env() 解析 + clamp + 日志告警；运行期日志可选输出结构化 jsonl（每行一个事件含 ts/level/component/event/payload），便于回放与离线分析。默认仍走人类可读 stderr，新模式由 COCO_LOG_JSONL=1 启用。",
+      "status": "passing",
       "dependencies": [
         "infra-debt-sweep"
       ],
@@ -551,14 +551,14 @@
       ],
       "evidence": [
         "coco/config.py: CocoConfig (frozen dataclass) + load_config(env=None) + config_summary()，聚合 8 子配置（log/ptt/camera/llm/vad/wake/power/dialog），各模块原 *_from_env() 保留并被委托。",
-        "coco/logging_setup.py: setup_logging(jsonl, level) + emit(component.event, **payload) + JsonlFormatter；MAX_LINE_BYTES=4000 truncate 防泄漏。",
-        "coco/main.py: run() 顶部 load_config + setup_logging + banner（无 secret）；power.transition / vad.utterance / asr.transcribe / llm.reply / wake.hit 5 个 component event 接通。",
-        "scripts/verify_infra_002.py: 8 子项 58 checks 全 PASS。evidence/infra-002/verify_summary.json 已写。",
-        "scripts/smoke.py: 新增 smoke_config 段 PASS。",
-        "Regression: verify_interact004/005 / verify_companion_003 / verify_companion_vision / verify_vision_002 / verify_infra_debt_sweep / verify_publish 全 PASS。",
-        "Reviewer (sub-agent): pending —— 留下一会话 fresh-context 评审。"
+        "coco/logging_setup.py: setup_logging(jsonl, level) + emit(component.event, **payload) + JsonlFormatter；MAX_LINE_BYTES=4000 truncate 防泄漏；closeout L1-1 加 exc 字段保留 traceback；closeout L1-2 加 AUTHORITATIVE_COMPONENTS 集合 + emit warn。",
+        "coco/main.py: run() 顶部 load_config + setup_logging + banner（无 secret）；power.transition / vad.utterance / asr.transcribe / llm.reply / wake.hit 5 个 component event 接通；closeout L1-3 把 cfg.ptt.* 写回模块级 PUSH_TO_TALK_SECONDS/DISABLED 统一真值源。",
+        "scripts/verify_infra_002.py: V1-V8 + V9 (exception traceback) + V10 (authoritative components) + V11 (env injection scope 文档锁) + V2b (PTT 单源) 全 PASS — 70/70 checks。evidence/infra-002/verify_summary.json 已写。",
+        "scripts/smoke.py: smoke_config 段 PASS；全 11 段 smoke 通过。",
+        "Regression 各独立 PASS：verify_interact004 (9/9) / verify_interact005 (all_pass=True) / verify_companion_003 / verify_companion_vision / verify_vision_002 / verify_infra_debt_sweep / verify_publish。",
+        "Reviewer (sub-agent): LGTM after L1 fix (L1-1 traceback / L1-2 component / L1-3 PTT 单源 / L1-4 env-injection 文档锁) — 评审记录见 closeout sub-agent brief；L2/L3 入 known-debt 不阻断。"
       ],
-      "notes": "phase-4 第一个 feature 的理由：phase-3 累积 env 变量散落（CLAUDE.md 子系统边界段已列 COCO_CAMERA / COCO_VAD_* / COCO_WAKE_* / COCO_FACE_* / COCO_POWER_* / COCO_DIALOG_* / COCO_PTT_* / COCO_LLM_* / COCO_LOG_*），后续 phase-4 新功能（emotion/profile/face-id/proactive）若继续散落必失控。jsonl 日志为 phase-4 后续 feature（emotion/face-id/proactive）的回放分析铺路。effort=M（机械工作量大：~10 个模块改 import config + 5 个 component 接入 event；逻辑简单但触面广，必须配 regression 全跑）。known-risk：(a) 改触面广，回归测必须覆盖每个 verify_*.py；(b) 若 from_env() 一次性解析失败需 fail-fast 还是降级——选 fail-fast 但每个字段独立 try（一个字段非法不污染其他字段）；(c) jsonl 模式 payload 不能含完整音频/帧数据，仅 metadata（防写满磁盘）。"
+      "notes": "phase-4 第一个 feature 的理由：phase-3 累积 env 变量散落，后续 phase-4 新功能（emotion/profile/face-id/proactive）若继续散落必失控。jsonl 日志为 phase-4 后续 feature（emotion/face-id/proactive）的回放分析铺路。effort=M。closeout (Session 030) 修 L1-1/L1-2/L1-3/L1-4，余下 known-debt：L2-1 聚合不替代（config.py 顶部 TODO，后续 feature 接入归口）；L2-2 load_config(env=...) 注入对子模块 dataclass 字段无效（V11 锁住 + load_config docstring）；L2-3 config_summary 缺 COCO_*_CACHE / COCO_POWER_IDLE_DISABLE；L2-4 无文件落盘（用户 stderr 重定向 / 等 RotatingFileHandler）；L3-1 emit 5 处 except Exception 过度防御；L3-3 LLMConfig 字段未被 llm.py 消费；L3-4 跨平台日志路径。"
     },
     {
       "id": "interact-006",

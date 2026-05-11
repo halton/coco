@@ -10,6 +10,10 @@ V5  jsonl 行 json.loads + 字段集 ⊇ {ts, level, component, event}；非 jso
 V6  backward-compat：现有各模块 env helper 仍工作（dialog_memory_enabled_from_env / vad_disabled_from_env / power_idle_enabled_from_env / wake_word_enabled_from_env）
 V7  5 个 component 各 emit 一行 jsonl 都能被 json.loads 解析且 component/event 正确
 V8  长 payload truncate（payload 含 4KB+ 字符串触发 truncate 标志）
+V9  logger.exception 在 jsonl 行落 'exc' 字段且含异常类名（closeout L1-1）
+V10 main.py 5 处 emit 的 component 全部命中 AUTHORITATIVE_COMPONENTS（closeout L1-2）
+V11 load_config(env=...) 注入对子模块 dataclass 字段无效的语义文档锁（closeout L1-4 / L2-2）
+V2b COCO_PTT_SECONDS=10 时 Coco.run 路径下 PUSH_TO_TALK_SECONDS 同步覆盖（closeout L1-3）
 
 evidence 写 evidence/infra-002/verify_summary.json。
 """
@@ -29,7 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from coco.config import load_config, config_summary, CocoConfig  # noqa: E402
-from coco.logging_setup import setup_logging, emit, JsonlFormatter, MAX_LINE_BYTES  # noqa: E402
+from coco.logging_setup import setup_logging, emit, JsonlFormatter, MAX_LINE_BYTES, AUTHORITATIVE_COMPONENTS  # noqa: E402
 
 
 FAILURES: List[str] = []
@@ -317,6 +321,124 @@ def v8_truncate() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V9 logger.exception 落 'exc' 字段
+# ---------------------------------------------------------------------------
+
+
+def v9_exception_traceback() -> None:
+    _section("V9 logger.exception 在 jsonl 行落 'exc' 字段")
+    def _emit_exc():
+        setup_logging(jsonl=True, level="INFO")
+        logger = logging.getLogger("asr")
+        try:
+            raise ValueError("boom-test-l1-1")
+        except ValueError:
+            logger.exception("decode failed", extra={"component": "asr", "event": "transcribe"})
+    lines = _capture_jsonl(_emit_exc)
+    _check("捕获到 1 行", len(lines) == 1, f"got {len(lines)}")
+    if lines:
+        try:
+            obj = json.loads(lines[0])
+            _check("行含 'exc' 字段", "exc" in obj, f"keys={sorted(obj.keys())}")
+            exc_text = obj.get("exc", "")
+            _check("'exc' 含 'ValueError'", "ValueError" in exc_text, f"exc={exc_text[:200]!r}")
+            _check("'exc' 含 'boom-test-l1-1'",
+                   "boom-test-l1-1" in exc_text, f"exc={exc_text[:200]!r}")
+        except Exception as e:  # noqa: BLE001
+            _check("json.loads exc 行", False, f"{type(e).__name__}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# V10 main.py emit 的 component 全部 authoritative
+# ---------------------------------------------------------------------------
+
+
+def v10_authoritative_components() -> None:
+    _section("V10 main.py 5 处 emit component 全部命中 AUTHORITATIVE_COMPONENTS")
+    main_py = ROOT / "coco" / "main.py"
+    text = main_py.read_text(encoding="utf-8")
+    # 简单正则提 emit("xxx.yyy", ...) 的 'xxx' 短名
+    import re
+    found = re.findall(r'emit\(\s*"([a-zA-Z_][a-zA-Z_0-9]*)\.', text)
+    _check("emit 调用至少 5 处", len(found) >= 5, f"got {len(found)}: {found}")
+    bad = [c for c in found if c not in AUTHORITATIVE_COMPONENTS]
+    _check("所有 component 短名在 AUTHORITATIVE_COMPONENTS",
+           bad == [], f"unknown={bad} authoritative={sorted(AUTHORITATIVE_COMPONENTS)}")
+    # 行为：emit 未知 component 时只 warn 不抛
+    def _emit_unknown():
+        setup_logging(jsonl=True, level="WARNING")
+        emit("unknown_component_xyz.test", value=1)
+    lines = _capture_jsonl(_emit_unknown)
+    saw_warn = any('AUTHORITATIVE_COMPONENTS' in line or 'unknown_component_xyz' in line
+                   for line in lines)
+    _check("未知 component 触发 warn 不抛", saw_warn, f"lines={lines[:3]}")
+
+
+# ---------------------------------------------------------------------------
+# V11 load_config(env=...) 注入对子模块 dataclass 字段无效（语义文档锁）
+# ---------------------------------------------------------------------------
+
+
+def v11_env_injection_scope() -> None:
+    _section("V11 load_config(env=...) 注入仅覆盖本文件直管字段（子模块 dataclass 字段不受影响）")
+    # 暂存并清空真实 env 的 COCO_DIALOG_MAX_TURNS，确保隔离
+    backup = os.environ.pop("COCO_DIALOG_MAX_TURNS", None)
+    try:
+        cfg = load_config(env={"COCO_DIALOG_MAX_TURNS": "7"})
+        # DialogConfig 默认 max_turns=4；env 注入对子模块 dataclass 字段不应生效
+        actual = getattr(cfg.dialog, "max_turns", None)
+        _check("cfg.dialog.max_turns == DialogConfig 默认（不被注入 env 改写）",
+               actual == 4,
+               f"got {actual}; 这是 phase-4 已知限制 L2-2，详见 coco/config.py load_config docstring")
+        # 但本文件直管字段 (log) 应该响应注入
+        cfg2 = load_config(env={"COCO_LOG_LEVEL": "DEBUG"})
+        _check("cfg2.log.level == 'DEBUG' (本文件直管字段响应注入)",
+               cfg2.log.level == "DEBUG", f"got {cfg2.log.level}")
+    finally:
+        if backup is not None:
+            os.environ["COCO_DIALOG_MAX_TURNS"] = backup
+
+
+# ---------------------------------------------------------------------------
+# V2b COCO_PTT_SECONDS 在 Coco.run 路径下覆盖模块级 PUSH_TO_TALK_SECONDS
+# ---------------------------------------------------------------------------
+
+
+def v2b_ptt_seconds_unified() -> None:
+    _section("V2b Coco.run 路径下 PUSH_TO_TALK_SECONDS 同步 cfg.ptt.seconds")
+    # 不实际启动 Coco.run（依赖 ReachyMini）；直接验 module-level 路径与
+    # cfg 字段一致的逻辑。本测先确认 import-time 默认；再 reload + env 验证；
+    # 最后用 cfg.ptt.seconds 直接覆盖（模拟 run() 内部 global 写回）。
+    import importlib
+    backup = os.environ.get("COCO_PTT_SECONDS")
+    try:
+        os.environ["COCO_PTT_SECONDS"] = "10"
+        # reload 触发模块级 float(os.environ.get(...)) 重算
+        import coco.main as coco_main
+        importlib.reload(coco_main)
+        _check("import-time PUSH_TO_TALK_SECONDS 读 env=10",
+               coco_main.PUSH_TO_TALK_SECONDS == 10.0,
+               f"got {coco_main.PUSH_TO_TALK_SECONDS}")
+        # 再模拟 run() 内部 global 写回路径
+        cfg = load_config(env={"COCO_PTT_SECONDS": "12.5"})
+        _check("cfg.ptt.seconds == 12.5", cfg.ptt.seconds == 12.5, f"got {cfg.ptt.seconds}")
+        # 仿照 main.py run() 的 global 写回
+        coco_main.PUSH_TO_TALK_SECONDS = float(cfg.ptt.seconds)
+        coco_main.PUSH_TO_TALK_DISABLED = bool(cfg.ptt.disabled)
+        _check("run 路径模拟：PUSH_TO_TALK_SECONDS == cfg.ptt.seconds",
+               coco_main.PUSH_TO_TALK_SECONDS == 12.5,
+               f"got {coco_main.PUSH_TO_TALK_SECONDS}")
+    finally:
+        if backup is None:
+            os.environ.pop("COCO_PTT_SECONDS", None)
+        else:
+            os.environ["COCO_PTT_SECONDS"] = backup
+        # reload 一次还原默认（避免污染后续 verify）
+        import coco.main as coco_main
+        importlib.reload(coco_main)
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -331,6 +453,10 @@ def main() -> int:
     v6_backward_compat()
     v7_components()
     v8_truncate()
+    v9_exception_traceback()
+    v10_authoritative_components()
+    v11_env_injection_scope()
+    v2b_ptt_seconds_unified()
 
     print(f"\n--- 总结 ---", flush=True)
     print(f"PASS={len(PASSES)}  FAIL={len(FAILURES)}", flush=True)

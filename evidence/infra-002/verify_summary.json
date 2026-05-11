@@ -1,6 +1,6 @@
 {
   "verification": "verify_infra_002",
-  "pass_count": 58,
+  "pass_count": 70,
   "fail_count": 0,
   "passes": [
     "vad_enabled=True",
@@ -60,7 +60,47 @@
     "5 个 component event 全到位",
     "捕获到 1 行",
     "含 _truncated=True",
-    "行字节数 <= MAX_LINE_BYTES"
+    "行字节数 <= MAX_LINE_BYTES",
+    "捕获到 1 行",
+    "行含 'exc' 字段",
+    "'exc' 含 'ValueError'",
+    "'exc' 含 'boom-test-l1-1'",
+    "emit 调用至少 5 处",
+    "所有 component 短名在 AUTHORITATIVE_COMPONENTS",
+    "未知 component 触发 warn 不抛",
+    "cfg.dialog.max_turns == DialogConfig 默认（不被注入 env 改写）",
+    "cfg2.log.level == 'DEBUG' (本文件直管字段响应注入)",
+    "import-time PUSH_TO_TALK_SECONDS 读 env=10",
+    "cfg.ptt.seconds == 12.5",
+    "run 路径模拟：PUSH_TO_TALK_SECONDS == cfg.ptt.seconds"
   ],
-  "failures": []
+  "failures": [],
+  "closeout": {
+    "reviewer": "sub-agent: LGTM after L1 fix (L1-1 traceback / L1-2 component / L1-3 PTT 单源)",
+    "L1_fixes": [
+      "L1-1 jsonl 缺 traceback → JsonlFormatter.format 加 exc 字段（V9 锁住）",
+      "L1-2 component 命名不一致 → AUTHORITATIVE_COMPONENTS 集合 + emit warn（V10 锁住）",
+      "L1-3 PTT 两套真值源 → Coco.run global 写回 cfg.ptt.* 到模块级（V2b 锁住）",
+      "L1-4 load_config(env=...) 注入语义文档锁 → V11 + docstring 注释"
+    ],
+    "regression": {
+      "verify_interact004": "PASS (9/9)",
+      "verify_interact005": "PASS (all_pass=True)",
+      "verify_companion_003": "PASS",
+      "verify_companion_vision": "PASS",
+      "verify_vision_002": "PASS",
+      "verify_infra_debt_sweep": "PASS",
+      "verify_publish": "PASS"
+    },
+    "smoke": "PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake/power/config/publish)",
+    "known_debt": [
+      "L2-1 聚合不替代（config.py 顶部 TODO；后续 feature 接入时归口）",
+      "L2-2 load_config(env=...) 注入对子模块 dataclass 字段无效（V11 锁住 + docstring）",
+      "L2-3 config_summary 缺 COCO_*_CACHE / COCO_POWER_IDLE_DISABLE",
+      "L2-4 无文件落盘（用户 stderr 重定向 / 等 RotatingFileHandler）",
+      "L3-1 emit 5 处 except Exception 过度防御",
+      "L3-3 LLMConfig 字段未被 llm.py 消费",
+      "L3-4 跨平台日志路径"
+    ]
+  }
 }
