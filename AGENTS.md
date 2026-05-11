@@ -76,9 +76,19 @@
 
 ## 子系统约定
 
-- **audio 子系统**：输入直连本机麦克、输出走本机默认输出设备，全部通过 sounddevice，不通过 reachy-mini daemon 的 audio backend / media 子系统。测试：输入用 wav 文件直喂 ASR；输出把 TTS 合成的 wav 用 sounddevice 播放。跨平台。真机扬声器（Reachy Mini USB 音频）作 milestone gate，不卡住开发期模拟。
-- **robot 子系统**：通过 `ReachyMini` + Zenoh + mockup-sim daemon 验动作。reachy-mini Lite SDK 提供 macOS / Linux / Windows 的 cp313 wheel，开发跨平台；真机硬件相关功能（USB 音频等）可能仍受限。真机验收作为 milestone gate，不卡住模拟开发。
+- **audio 子系统**：输入直连本机麦克、输出走本机默认输出设备，全部通过 sounddevice，不通过 reachy-mini daemon 的 audio backend / media 子系统。测试：输入用 wav 文件直喂 ASR；输出把 TTS 合成的 wav 用 sounddevice 播放。跨平台。真机扬声器（Reachy Mini USB 音频）作**异步 UAT 项**（见下文 Sim-First 原则），不阻 merge。
+- **robot 子系统**：通过 `ReachyMini` + Zenoh + mockup-sim daemon 验动作。reachy-mini Lite SDK 提供 macOS / Linux / Windows 的 cp313 wheel，开发跨平台；真机硬件相关功能（USB 音频等）可能仍受限。真机验收作**异步 UAT 项**（见下文 Sim-First 原则），不阻 merge。
 - 两个子系统独立，仅在应用层汇合。详见 `research/spike-audio-attempt.md`。
+
+## Sim-First 开发原则（默认启用）
+
+本规则**覆盖**先前 AGENTS.md / CLAUDE.md 中任何"真机 UAT 作为 milestone gate 阻塞 phase 推进"或"phase 末停下等真机 UAT"的说法。与 `CLAUDE.md` 同名段语义一致，更新时同步改。
+
+1. **默认 sim-first**：所有 feature 的开发、verification、Reviewer 评审、close-out、merge 一律在 sim / mockup-sim / fake / fixture 环境下完成。`./init.sh` smoke + 该 feature 的 `scripts/verify_*.py` 全 PASS（含 Reviewer fresh-context LGTM）即可将 status 切到 `passing` 并 merge 回 main。
+2. **真机 UAT 不阻塞 phase 推进**：phase 内所有 sim-feature 走完后立即继续下一 phase 规划与执行。
+3. **真机 UAT 是显式 milestone gate，但异步**：真机验收单独立项为 `uat-*` feature，或在相关 feature 的 evidence 中加 `real_machine_uat: pending` 字段，由用户在方便时执行；结果回填 evidence，不阻断软件迭代。
+4. **以下能力 sim 不可证明，最终需真机确认**（仅作记录，不阻 merge）：真扬声器 TTS 听感 / USB 音频；真麦克风 ASR/VAD 信噪比；真摄像头光照下 face_id 区分力；Reachy Mini 真硬件电机 / 头部姿态 / goto_sleep；视觉-运动闭环（看到 → 转头 → 视野更新）。
+5. 主会话不得以"等真机 UAT"为由停下持续开发模式。
 
 ### app 部署模型（路线 C：双模式）
 

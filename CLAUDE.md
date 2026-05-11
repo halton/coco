@@ -50,12 +50,27 @@
 - 完成一个 feature 的 close-out 后**不询问用户**，直接派下一个 candidate（按 `feature_list.json` 中 priority 最低数字的 `not_started`）
 - phase 内所有 in-flight feature 走完后，自动进入下一 phase 规划（候选写入 `feature_list.json`），立即开始执行第一个
 - 仅在以下情况停下并等用户输入：
-  - (a) 真机 UAT milestone gate（必须物理操作 Reachy Mini）
-  - (b) 用户已显式发出 "暂停" / "停" / "wait" / "hold" 指令
-  - (c) sub-agent 多次 socket / 网络失败无法恢复且需要外部协助
-  - (d) 决策本身需要用户偏好（例如 phase-N+1 候选间二选一且无客观依据）
+  - (a) 用户已显式发出 "暂停" / "停" / "wait" / "hold" 指令
+  - (b) sub-agent 多次 socket / 网络失败无法恢复且需要外部协助
+  - (c) 决策本身需要用户偏好（例如 phase-N+1 候选间二选一且无客观依据）
+- 注意：**真机 UAT 不再是阻塞 gate**，详见下文「Sim-First 开发原则」。
 - 每个 feature close-out 后用一行回复说"[feature-id] DONE，main HEAD=xxx，继续 [next-feature]"，不再追加 "等通知" 或问句
 - 该规则覆盖全局 "ask user before commit/push" 默认（与本仓库现有 commit/push 例外一致）
+
+## Sim-First 开发原则（默认启用）
+
+本规则**覆盖**先前 CLAUDE.md / AGENTS.md 中任何"phase-N 末停下等真机 UAT"或"真机 UAT 作为 milestone gate 阻塞 phase 推进"的说法。
+
+1. **默认 sim-first**：所有 feature 的开发、verification、Reviewer 评审、close-out、merge 一律在 sim / mockup-sim / fake / fixture 环境下完成。`./init.sh` smoke + 该 feature 的 `scripts/verify_*.py` 全 PASS（含 Reviewer fresh-context LGTM）即可将 status 切到 `passing` 并 merge 回 main。
+2. **真机 UAT 不阻塞 phase 推进**：phase 内所有 sim-feature 走完后**立即继续下一 phase 规划与执行**，不再停下等真机操作。
+3. **真机 UAT 是显式 milestone gate，但异步**：真机验收单独立项为 `uat-*` feature（或在相关 feature 的 evidence 中加 `real_machine_uat: pending` 字段），由用户在方便时物理执行；执行结果回填 evidence，不阻断软件迭代。
+4. **以下能力 sim 不可证明，最终需真机确认**（仅作记录，不阻 merge）：
+   - 真扬声器 TTS 听感 / USB 音频通路
+   - 真麦克风 ASR / VAD 在实际信噪比下的鲁棒性
+   - 真摄像头在实际光照下 face_id 的区分力与误判率
+   - Reachy Mini 真硬件电机扭矩 / 头部姿态 / goto_sleep 物理表现
+   - 视觉-运动闭环（看到 → 转头 → 视野更新）的整体延迟与抖动
+5. 主会话不得以"等真机 UAT"为由停下持续开发模式；遇到 sim 已通过、真机未跑的情况，直接登记 `uat-*` 异步项，主线推进。
 
 ## 规则
 
@@ -81,8 +96,8 @@
 
 ## 子系统边界
 
-- **audio**：sounddevice 直连本机麦克与扬声器（输入采麦、输出播 TTS wav），不走 reachy-mini daemon 的 audio backend / media 子系统。跨平台。测试：输入 wav 直喂 ASR，输出 TTS wav 用 sounddevice 播放。真机扬声器（USB 音频）作 milestone gate。
-- **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收是 milestone gate
+- **audio**：sounddevice 直连本机麦克与扬声器（输入采麦、输出播 TTS wav），不走 reachy-mini daemon 的 audio backend / media 子系统。跨平台。测试：输入 wav 直喂 ASR，输出 TTS wav 用 sounddevice 播放。真机扬声器（USB 音频）作异步 UAT 项（不阻 merge，见 Sim-First 段）。
+- **robot**：ReachyMini + Zenoh + `--mockup-sim` daemon。reachy-mini Lite SDK 跨平台（mac / Linux / Windows，cp313 wheel）；真机硬件相关功能可能仍受限。真机验收作异步 UAT 项（不阻 merge，见 Sim-First 段）
 - **vision**：业务层一律走 `coco.perception.open_camera()` / `CameraSource` Protocol，不直接 `cv2.VideoCapture`。通过 `COCO_CAMERA` 环境变量切换三档：`image:<jpg>`（A：单图循环）/ `video:<mp4>`（B/C：视频文件循环）/ `usb:<idx>`（真机，默认 `usb:0`）。fixture 在 `tests/fixtures/vision/` 下，全部程序合成。视觉-运动闭环（看到 → 转头 → 视野更新）fixture 不能 sim，必须真机 UAT。详见 `coco/perception/camera_source.py` 与 `tests/fixtures/vision/README.md`。
 - 三路独立，应用层汇合。背景见 `research/spike-audio-attempt.md`
 

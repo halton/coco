@@ -818,3 +818,29 @@
 - **Smoke**：`./init.sh` 全段通过。
 - **状态**：feat/interact-007 → passing；merge --no-ff 到 main；推 origin（main + feat 分支均推）。
 - **下一步**：**phase-4 软件层 5/5 done**（infra-002 / interact-006 / companion-004 / vision-003 / interact-007）→ 触发 phase-4 末 **真机 UAT milestone gate**（用户物理操作 Reachy Mini 验：power active/drowsy/sleep + 真摄像头 face presence + 真扬声器 + face_id enroll + proactive 触发体感）。
+
+## Session 008 — 2026-05-11 — Sim-First 规范 + phase-5 规划
+
+### Sim-First 开发原则落地（规范侧）
+- `CLAUDE.md` 新增 **Sim-First 开发原则** 段，覆盖先前"phase 末停下等真机 UAT"的默认行为；持续开发模式停下条件中删除 `(a) 真机 UAT milestone gate`，改为指向 Sim-First 段说明。
+- 子系统段（audio / robot）措辞由"真机扬声器作 milestone gate / 真机验收是 milestone gate"→"作异步 UAT 项，不阻 merge"。
+- `AGENTS.md` 同步更新两处子系统措辞，并新增同名 **Sim-First 开发原则** 段（与 CLAUDE.md 语义等价）。
+- 核心规则：所有 feature sim/mockup-sim/fixture 验证 + Reviewer LGTM 即可 passing 并 merge；真机 UAT 单独立 `uat-*` feature 或在 evidence 加 `real_machine_uat: pending`，由用户异步执行回填，不阻断软件迭代；明确列出 5 类 sim 不可证明、最终需真机确认的能力（真扬声器/真麦克/真摄像头/真电机/视觉-运动闭环）。
+
+### phase-5 规划
+milestone 切到 `phase-5 体验深化（多目标视觉 + 对话状态机 + 情境化陪伴 + 表情编排）`。新增 6 个 feature（5 软件 + 1 异步 UAT）：
+
+| priority | id | area | 重点 |
+|---|---|---|---|
+| 24 | infra-003 | infra | 运行时健康监控（metrics jsonl + SLO 告警） |
+| 25 | interact-008 | interact | 对话状态机 + intent 分类（替换 ad-hoc 触发链） |
+| 26 | vision-004 | vision | 多目标人脸跟踪 + 主动注视切换 |
+| 27 | companion-005 | companion | 情境化 idle（按 power/face/time/age 选 micro-action） |
+| 28 | robot-003 | robot | 表情序列编排器（mockup-sim 验证） |
+| 999 | uat-phase4 | uat | phase-1~4 累积真机 UAT（异步，不阻 phase-5） |
+
+依赖关系：infra-003 仅依赖 infra-002；interact-008 依赖 interact-004/006/007；vision-004 依赖 vision-002/003 + companion-002；companion-005 依赖 companion-001/003 + interact-006；robot-003 依赖 robot-001/002 + companion-001。**无环**，按 priority 数字串行执行（infra-003 → interact-008 → vision-004 → companion-005 → robot-003）。
+
+### 下一步
+- 持续开发模式继续：下一个执行 **infra-003**（priority=24，infra 类，唯一 not_started 中最低数字）。
+- `uat-phase4` 不阻塞，由用户在方便时启动；执行结果回填对应 feature evidence。

@@ -18,7 +18,7 @@
     "blocked": "因为已记录的阻塞问题，当前无法继续推进。",
     "passing": "要求的验证已经通过，证据已经记录，且经过一次 Reviewer sub-agent fresh-context 评审（evidence 格式见 AGENTS.md 角色段）。"
   },
-  "milestone": "phase-1-mvp 桌面学习搭子（场景 1）",
+  "milestone": "phase-5 体验深化（多目标视觉 + 对话状态机 + 情境化陪伴 + 表情编排）",
   "features": [
     {
       "id": "infra-001",
@@ -684,6 +684,135 @@
         "./init.sh smoke 通过；feat/interact-007 已合并到 main。"
       ],
       "notes": "phase-4 终曲：组合 phase-3 全部能力（power-state ACTIVE / face-tracker presence / dialog-memory 短期 / wake-word 入口）+ phase-4 新能力（profile interests/goals / emotion 可选影响选题情绪 — phase-4 不强耦，留 hook）。设计哲学：proactive 不是让 Coco '主动叨叨'，是给 idle 模式注入一个低频 (≥3 分钟一次) 主动钩子；扰民阈值高优先（180s default 后续可调）。known-risk：(a) topic 静态模板很快重复 → phase-4 12 条够 demo，phase-5 接 LLM 生成；(b) 'face present 30s' 在 mockup-sim 用 fixture 视频持续命中模拟，真机用真摄像头；(c) TTS 期间被 VAD 误触发自激 → wrap_tts mute 已成熟方案；(d) 与 emotion-006 联动：sad 状态减少 proactive 频率（避免在用户难过时打扰）；本 feature 不做，phase-5 增强。"
+    },
+    {
+      "id": "infra-003",
+      "priority": 24,
+      "area": "infra",
+      "title": "运行时健康监控（metrics 面板 + 异常告警 jsonl）",
+      "user_visible_behavior": "Coco 运行时持续暴露关键指标（loop period、ASR/TTS 延迟、LLM 调用耗时、相机 fps、power_state 切换次数、proactive 命中率），写入 logs/metrics.jsonl，并在终端可选打印一行紧凑 dashboard；任何关键 SLO 越界（如 ASR>3s/TTS>5s/loop>500ms）写一条 warn。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-002"
+      ],
+      "verification": [
+        "实现 coco/observability/metrics.py：MetricsRegistry（counter / gauge / histogram 三类）+ 装饰器 @timed / @counted；线程安全；通过 get_registry() 单例访问。",
+        "集成主要路径：ASR/TTS/LLM 调用、main loop tick、camera frame、power_state 切换、proactive trigger，至少 8 个指标。",
+        "metrics dump：每 10s 写一条 jsonl 到 logs/metrics-YYYYMMDD.jsonl；env COCO_METRICS_DISABLE=1 旁路；env COCO_METRICS_STDOUT=1 同时打印一行紧凑 dashboard。",
+        "SLO 告警：阈值默认在 coco/observability/slos.py，越界写 logger.warning + metrics counter slo_violations[name] += 1。",
+        "scripts/verify_infra003.py：(a) 单元 MetricsRegistry 三类指标读写；(b) @timed 装饰器测时正确（mock time）；(c) jsonl 文件落盘格式校验；(d) SLO 越界触发 warn；(e) 与 infra-002 logger 集成不冲突；(f) regression：smoke + 关键 features verify 通过。",
+        "Reviewer fresh-context 评审：指标命名规范、jsonl schema 稳定性、性能开销（不能拖慢 main loop > 5ms）、disable 路径正确、与现有 logger 不重复。"
+      ],
+      "evidence": [],
+      "notes": "纯 sim 可验证；真机环境只是数据来源，不影响验证规则。"
+    },
+    {
+      "id": "interact-008",
+      "priority": 25,
+      "area": "interact",
+      "title": "对话状态机（intent 分类 + dialog state，替换 ad-hoc 触发链）",
+      "user_visible_behavior": "Coco 接收 ASR 文本后先做轻量 intent 分类（greet / question / answer / refuse / smalltalk / control[stop|sleep|wake] / unknown），并维护 DialogState（topic, last_intent, awaiting_response, turn_count），让多轮对话不再依赖临时变量；用户说'停一下/睡觉吧'时进入 SLEEP，'继续/起床'时回 ACTIVE。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-004",
+        "interact-006",
+        "interact-007"
+      ],
+      "verification": [
+        "实现 coco/dialog/state_machine.py：DialogState dataclass + transitions；coco/dialog/intent.py：rule-based + 关键词的 intent 分类器（不引入新模型，复用现有 LLM 二阶段判别即可），返回 (intent, confidence)。",
+        "集成 main：ASR → intent → DialogState.transition → 路由到 reply/control/refuse handler；proactive_topic 命中时设置 awaiting_response=True，与现有 interact-007 逻辑互通。",
+        "control intent 处理：'停/暂停/睡觉吧' → power_state.goto_sleep()；'继续/起床/可可你好' 在 SLEEP 时 → wake_up；evidence 含切换日志。",
+        "scripts/verify_interact008.py：(a) intent 分类 12 个 fixture 文本 ≥10 命中；(b) DialogState 状态转移单元测试 (greet→smalltalk→question→answer→refuse 路径)；(c) control intent 触发 power_state 切换；(d) 与 interact-007 awaiting_response 协作不冲突；(e) regression：interact-001~007 verify 通过。",
+        "Reviewer fresh-context 评审：intent 分类边界（口语化/方言鲁棒性）、状态机死锁风险、SLEEP 期间 control intent 必须仍能被识别（不能因 VAD 静默漏 wake）、与 wake-word 优先级。"
+      ],
+      "evidence": [],
+      "notes": "全部 fixture 文本驱动，sim 可验证；真机口音/远场识别效果归 uat-phase4。"
+    },
+    {
+      "id": "vision-004",
+      "priority": 26,
+      "area": "vision",
+      "title": "多目标人脸跟踪 + 主动注视切换（多人场景）",
+      "user_visible_behavior": "当镜头里同时出现多张人脸（家庭使用），Coco 按策略选择主注视对象（最近一次开口/最大脸/已识别用户优先），并在主对象沉默 ≥ 8s 且另一已识别用户在视野时短暂转头致意（'你好 XXX'），然后回到主对象。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-002",
+        "vision-003",
+        "companion-002"
+      ],
+      "verification": [
+        "扩展 coco/perception/face_tracker.py：支持 N 脸列表 (track_id, bbox, identity, last_seen, last_speech_ts)，主对象选择策略 pick_primary(faces, dialog_state) 可注入。",
+        "新增 coco/companion/multi_face_attention.py：状态机 (single → multi_idle → greet_secondary → return_primary)，触发条件：primary 沉默 ≥8s + 另一 known identity 在视野 ≥3s + 距上一次 greet_secondary ≥30s。",
+        "集成 companion-002 glance：转头幅度受限（不打断 primary 对话），只在 dialog_state != awaiting_response 时触发。",
+        "scripts/verify_vision004.py 用 multi-face fixture 视频（tests/fixtures/vision/multi_face_*.mp4，程序合成 2-3 张合成脸的拼接帧）：(a) pick_primary 策略 4 个 case；(b) greet_secondary 触发条件 5 参数边界；(c) awaiting_response 期间被抑制；(d) 30s cooldown 起作用；(e) regression：vision-001~003 + companion-002 verify 通过。",
+        "Reviewer fresh-context 评审：多脸 track_id 稳定性（短暂遮挡不能切换 primary）、greet_secondary 频率上限、与 proactive 主动话题的优先级（不能在 proactive 出题瞬间转头）、未识别脸不参与 greet。"
+      ],
+      "evidence": [],
+      "notes": "全部用 fixture mp4 验证。真实多人光照/距离/识别准确度归 uat-phase4。"
+    },
+    {
+      "id": "companion-005",
+      "priority": 27,
+      "area": "companion",
+      "title": "情境化 idle 行为（按 power_state + face + 时段挑选 micro-action）",
+      "user_visible_behavior": "idle 阶段 Coco 不再只重复同一组随机微动：按 (power_state, face_present, hour_of_day, last_interaction_age) 选择不同'气质'：白天有人时偏向好奇（左右张望）、晚上无人时偏向安静（极慢呼吸）、刚结束对话偏向回味（短点头），让陪伴更自然。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-001",
+        "companion-003",
+        "interact-006"
+      ],
+      "verification": [
+        "实现 coco/companion/contextual_idle.py：IdlePolicy.choose(state) -> ActionSpec；context 维度：power_state、face_present、hour_of_day（晨/午/晚/夜）、last_interaction_age（<60s 回味 / 60-300s 平静 / >300s 寻人）。",
+        "ActionSpec 调用现有 IdleAnimator 已有动作族（不新增电机指令），只是按权重重新组合；权重表 yaml 化（coco/config/idle_policy.yaml）便于调整。",
+        "集成 main：IdleAnimator.tick() 每 5s 调 IdlePolicy.choose() 重新选 micro-action 族。",
+        "scripts/verify_companion005.py：(a) 12 个 (power_state×face×time×age) 组合 fixture，断言落入预期 micro-action 族；(b) 权重表 hot-reload 可读；(c) SLEEP 状态严格静默（policy 不输出动作）；(d) regression：companion-001/003 verify 通过。",
+        "Reviewer fresh-context 评审：micro-action 族划分是否过细以致频繁切换、SLEEP/AWAITING_RESPONSE 期严格静默、yaml 缺失/损坏的退化路径、与情绪标签（interact-006）耦合是否合理。"
+      ],
+      "evidence": [],
+      "notes": "纯 sim 可验证（mockup-sim daemon 收到的 SetTarget 序列即可断言）。物理观感归 uat-phase4。"
+    },
+    {
+      "id": "robot-003",
+      "priority": 28,
+      "area": "robot",
+      "title": "表情序列编排器（mockup-sim 验证组合动作）",
+      "user_visible_behavior": "为常用'表情'（欢迎、思考、点赞、困惑、不好意思）抽象出可复用的 ExpressionScript（头/天线/眼睛颜色/可选 TTS 音色 hint 的时间线）；其他模块用 expression('welcome') 触发，不再各自硬编码 goto_posture 序列。",
+      "status": "not_started",
+      "dependencies": [
+        "robot-002",
+        "companion-001"
+      ],
+      "verification": [
+        "实现 coco/robot/expression.py：ExpressionScript dataclass（steps: list[(t_ms, joint, target)]）+ ExpressionPlayer.play(name) → 在 mockup-sim daemon 上按时间线下发 SetTarget。",
+        "至少实现 5 个内置 expression：welcome / thinking / praise / confused / shy；每个 ≤2s。",
+        "替换至少 2 处现有硬编码序列（如 interact reply 完毕 'praise'、proactive 出题前 'thinking'）；保持原有可见行为。",
+        "scripts/verify_robot003.py 用 mockup-sim daemon：(a) 5 个 expression 全跑通无异常；(b) 时间线 ±50ms 容差内；(c) 中断（被高优先级动作打断）能干净结束；(d) regression：robot-001/002 verify 通过。",
+        "Reviewer fresh-context 评审：与 IdleAnimator/companion-005 的优先级（expression 期 idle 暂停）、并发保护、replay 幂等、与真机扭矩的安全考虑（虽 sim 验证，但 target 范围不能越界）。"
+      ],
+      "evidence": [],
+      "notes": "mockup-sim daemon 验证；真机表情顺滑度/电机过冲归 uat-phase4。"
+    },
+    {
+      "id": "uat-phase4",
+      "priority": 999,
+      "area": "uat",
+      "title": "phase-1~4 累积真机 UAT（异步 milestone gate）",
+      "user_visible_behavior": "在 Reachy Mini 真硬件上跑通 phase-1~4 已 sim 通过的所有功能，重点验证 sim 不可证明的能力（真扬声器/真麦克/真摄像头/真电机/视觉-运动闭环），结果回填到对应 feature 的 evidence。",
+      "status": "not_started",
+      "dependencies": [],
+      "real_machine_uat": "pending",
+      "verification": [
+        "用户按 research/control-app-deployment-research.md 流程把当前 main 部署到 Control.app（infra-publish-flow runbook）。",
+        "依次跑 audio-001/002/003 真扬声器+真麦克验证（说一句中文 → 看转写 → 听 TTS 回应）。",
+        "robot-001/002 真硬件 look_left/look_right/nod/goto_sleep。",
+        "vision-001/002/003 真摄像头：单脸跟踪 + face_id 识别已知用户。",
+        "interact-001~007 端到端：唤醒 → push-to-talk → LLM 回应 → 多轮 → 主动话题。",
+        "视觉-运动闭环：看到人 → 转头 → 视野中心更新（fixture 不能 sim 的核心项）。",
+        "把每项的真机表现（pass/issue + 现象描述）回填到对应 feature 的 evidence；issue 单开 fix-* feature。"
+      ],
+      "evidence": [],
+      "notes": "异步项，不阻 phase-5 软件推进；用户在方便时执行；可拆成多次 session。Reviewer 不强制（真机操作本身就是 fresh evidence）。"
     }
   ]
 }
