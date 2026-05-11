@@ -1,0 +1,21 @@
+{
+  "feature": "vision-004b-wire",
+  "outcome": "PASS",
+  "elapsed_s": 0.614,
+  "results": {
+    "V1": "PASS",
+    "V2": "PASS",
+    "V3": "PASS",
+    "V4": "PASS",
+    "V5": "PASS",
+    "V6": "SKIP",
+    "V7": "PASS",
+    "V8": "PASS",
+    "V9": "PASS (race exposed, debounce fixes)",
+    "V10": "PASS",
+    "V11": "PASS",
+    "V12": "PASS"
+  },
+  "errors": [],
+  "primary_stable_debounce": "added (primary_stable_s, default 2.0s); V9 9a exposes race, 9b confirms debounce fixes silence-reset race"
+}

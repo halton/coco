@@ -711,6 +711,48 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][metrics] init failed: {type(e).__name__}: {e}", flush=True)
                 _metrics = None
 
+            # vision-004b-wire: 可选 MultiFaceAttention 接线（COCO_GREET_SECONDARY=1 启用，默认 OFF）。
+            # 把 AttentionSelector / FaceTracker / ConvSM / Proactive 喂进状态机；
+            # 触发 GreetAction 时调 ExpressionPlayer.play("greet") + tts.say(utterance)。
+            _greet_wire = None
+            try:
+                from coco.companion.greet_secondary_wire import (
+                    build_greet_secondary_wire as _build_greet_wire,
+                    greet_secondary_config_from_env as _greet_cfg_from_env,
+                )
+                _gwcfg = _greet_cfg_from_env()
+                if _gwcfg.enabled:
+                    _greet_wire = _build_greet_wire(
+                        config=_gwcfg,
+                        attention_selector=_attention_selector,
+                        face_tracker=_face_tracker_shared,
+                        tts_say_fn=coco_tts.say,
+                        expression_player=_expression_player,
+                        conv_state_machine=_conv_sm,
+                        proactive_scheduler=_proactive,
+                        emit_fn=emit,
+                    )
+                    if _greet_wire is not None:
+                        _greet_wire.start(stop_event)
+                        print(
+                            f"[coco][greet_wire] enabled tick_hz={_gwcfg.tick_hz} "
+                            f"silence={_gwcfg.silence_threshold_s}s "
+                            f"cooldown={_gwcfg.cooldown_s}s "
+                            f"primary_stable={_gwcfg.primary_stable_s}s",
+                            flush=True,
+                        )
+                    else:
+                        print(
+                            "[coco][greet_wire] disabled (missing attention_selector "
+                            "or face_tracker; need COCO_ATTENTION=1 + COCO_FACE_TRACK=1)",
+                            flush=True,
+                        )
+                else:
+                    print("[coco][greet_wire] disabled (COCO_GREET_SECONDARY not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][greet_wire] init failed: {type(e).__name__}: {e}", flush=True)
+                _greet_wire = None
+
             use_vad = (not PUSH_TO_TALK_DISABLED) and (not vad_disabled_from_env())
             if use_vad:
                 # interact-003: 用 VAD 取代 stdin Enter；session.tts_say_fn 包一层 mute 防自激
@@ -906,6 +948,12 @@ class Coco(ReachyMiniApp):
                     _metrics.stop(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][metrics] stop failed: {e!r}", flush=True)
+            # vision-004b-wire: 停 GreetSecondaryWire
+            try:
+                if "_greet_wire" in locals() and _greet_wire is not None:
+                    _greet_wire.stop(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][greet_wire] stop failed: {e!r}", flush=True)
 
 
 def main() -> None:
