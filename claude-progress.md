@@ -844,3 +844,18 @@ milestone 切到 `phase-5 体验深化（多目标视觉 + 对话状态机 + 情
 ### 下一步
 - 持续开发模式继续：下一个执行 **infra-003**（priority=24，infra 类，唯一 not_started 中最低数字）。
 - `uat-phase4` 不阻塞，由用户在方便时启动；执行结果回填对应 feature evidence。
+
+---
+
+## Session — infra-003 step 1 实现 (Engineer sub-agent)
+
+**feat/infra-003** 分支：
+- `coco/metrics.py` 新增：`Metric` dataclass + `MetricsCollector`（后台线程，按 interval 写 jsonl）+ `SLORule`（连续违例 emit `metrics.slo_breach`）+ 5 个内置 source（cpu_percent / mem_rss_mb / power_state / dialog_turns_total / proactive_topics_total / face_tracks_active）；psutil 软依赖（缺失即 skip system source）；env：`COCO_METRICS=1` 默认 OFF / `COCO_METRICS_INTERVAL` clamp [1,300] / `COCO_METRICS_PATH` 默认 `~/.cache/coco/metrics.jsonl`。
+- `coco/logging_setup.py`：`AUTHORITATIVE_COMPONENTS` 加 `metrics`。
+- `coco/config.py`：新增 `MetricsConfig`（enabled/interval_s/path）+ `_metrics_from_env`，`config_summary` 顶层 keys += `metrics`。
+- `coco/main.py`：`COCO_METRICS=1` 时构造 + start collector，注入已构造的 power/dialog/proactive/face 引用；finally 段加 `_metrics.stop()`。
+- `scripts/verify_infra_003.py`：V1-V14 全 PASS（50/50）。
+- 回归：infra-002 / interact-004/005/006/007 / companion-003/004/companion-vision / vision-002/003 / infra-debt-sweep / publish 全部 PASS。
+- evidence: `evidence/infra-003/verify_summary.json`。
+
+待 Reviewer fresh-context 评审；feature_list.json status=in_progress。
