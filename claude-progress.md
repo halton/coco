@@ -988,3 +988,19 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 **fix**: 修复 feature_list.json 一处未转义双引号（companion-005.notes 内 docstring 引号），现 JSON valid，36 features total。
 
 启动 vision-004b 详见后续条目。
+
+---
+
+## Session — vision-004b close-out (2026-05-11)
+
+- **vision-004b → passing**：MultiFaceAttention 状态机（SINGLE → MULTI_IDLE → GREET_SECONDARY → RETURN_PRIMARY）落地于 `coco/companion/multi_face_attention.py`；env 解析 `mfa_config_from_env`（COCO_MFA / SILENCE_S / SECONDARY_VIS_S / COOLDOWN_S / GREET_DUR_S / RETURN_DUR_S / PROACTIVE_BLOCK_S / REQUIRE_NAMED），默认 OFF；emit `companion.multi_face_attention_state` + `companion.greet_secondary`；RLock 包状态，回调锁外触发。
+- **verify**：`scripts/verify_vision_004b.py` V1-V12 全 PASS（默认 OFF / env clamp / SINGLE→MULTI_IDLE / GREET 触发字段 / silence<8s 不触发 / visible<3s 不触发 / 30s cooldown / conv_state!=IDLE 抑制 / proactive 抑制 / require_named / GREET→RETURN→MULTI_IDLE 时序 / 回调异常隔离）。
+- **Reviewer (sub-agent)**：LGTM，无 L0/L1 阻塞；wire 到 main.py 与真视频 fixture 留独立 feature `vision-004b-wire`（priority=26.6, not_started）。
+- **L2 顺手修 3/3**：
+  1. `proactive_block_window_s` docstring 显式声明调用方据此窗口计算 `proactive_recent`；
+  2. `require_named_secondary=False` 且 name="" 时 utterance rstrip 退化为 "你好"（去末尾空格）；
+  3. 抽 `_is_eligible_secondary(t, primary_id)` 私有方法，`_update_secondary_visible` / `_pick_secondary` 共用，避免两处逻辑漂移。
+- **L3 known-debt（记于 vision-004b.notes，不阻 passing）**：(a) `GreetAction.ts` 仅 monotonic，外部审计若需 wall clock 由调用方在 on_action 回调里补 `time.time()`；(b) `_current_greet_target` 退出 GREET 回 MULTI_IDLE 时未清空，语义略混乱但不影响正确性（`last_greet_ts` 才是真冷却口径）。
+- **vision-004b-wire (priority=26.6, deps: vision-004b + vision-004)**：跟踪 main.py 接线（MultiFaceAttention ← AttentionSelector/FaceTracker/ConvStateMachine/ProactiveScheduler）+ multi_face_*.mp4 真视频 fixture + Reviewer L1 提到的 primary 闪烁 race 验证（短暂遮挡不应重置 silence 计时；选型方案记入该 feature evidence 后再决定是否回写状态机）。
+- **merge & smoke**：`feat/vision-004b` → `main` no-ff merge；merge 后 `./init.sh` PASS。
+- **下一执行**：`vision-004b-wire`（priority=26.6）优先于 `infra-004`（30）——按 phase-6 priority 数字小先做的规则。

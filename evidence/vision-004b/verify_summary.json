@@ -1,0 +1,20 @@
+{
+  "feature": "vision-004b",
+  "outcome": "PASS",
+  "elapsed_s": 0.0,
+  "results": {
+    "V1": "PASS",
+    "V2": "PASS",
+    "V3": "PASS",
+    "V4": "PASS",
+    "V5": "PASS",
+    "V6": "PASS",
+    "V7": "PASS",
+    "V8": "PASS",
+    "V9": "PASS",
+    "V10": "PASS",
+    "V11": "PASS",
+    "V12": "PASS"
+  },
+  "errors": []
+}
