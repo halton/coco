@@ -912,4 +912,21 @@ merge 回 main：infra-003 status=passing；继续按 priority 进入 **interact
 
 merge 回 main：interact-008 status=passing；下一个：vision-004。
 
+## Session 036 — vision-004 closeout（拆分 L1 至 vision-004b）（2026-05-11）
+
+**vision-004 L0（AttentionSelector + 4 policies）已 passing**；多人主动致意状态机 greet_secondary 拆出至独立 feature `vision-004b`（priority=26.5，not_started，依赖 vision-004）。决定来自 Reviewer fresh-context 评审：当前实现完整覆盖"注视选择器层"，但 multi_face_*.mp4 fixture / state machine / awaiting_response 抑制 / 30s cooldown / proactive 优先级竞争未实现 —— 不应在同一个 feature 下既声明 L0 又把 L1 verification 写成 evidence。
+
+**L1 修复（merge 前）**：
+
+- `coco/perception/attention.py` `select()` 重构：`on_change` 回调在 `_lock` 释放之后才被 fire。原实现在锁持有期间同步调 `on_change`，下游 main.py `_on_attention_change` 会做 emit + (未来) 反向查询 selector，长持锁 + 自死锁风险。修复做法：锁内只决定状态转移，把要 fire 的 `(prev, curr)` 攒到 `pending_change` 局部变量；锁释放后再统一 fire。语义不变（每次 select 至多一次 on_change）。
+- 新增 V13 在 `scripts/verify_vision_004.py`：on_change 回调内启动后台线程调 `selector.current()`；若 fire 仍在锁内，后台线程会被阻塞超过 500ms，断言失败。同时验证回调抛 RuntimeError 后 selector 仍能继续 select()（既存承诺）。
+- L2：`_pick_best(tracks, prev, now=None)` 接受 now 透传，与 `select()` 同源时钟避免双取 `self._clock()` 时序漂移；旧调用方未传时回退到 `self._clock()`。`select()` cooldown 内 prev 消失分支加显式注释（fallthrough 到 trigger switch，cooldown 不卡死亡 track）。
+- `scripts/verify_infra_002.py` V4 `expected_keys` 同步加 `attention`（vision-004 引入新 config 段，与 config_summary 一致）。
+
+**verify_vision_004**：V1-V13 全 PASS。
+
+**回归**：infra-002/003 + interact-004/005/006/007/008 + companion-003/004/companion-vision + vision-002/003 + infra-debt-sweep + publish 全 PASS。
+
+merge feat/vision-004 回 main；vision-004 status=passing；新增 vision-004b not_started。下一个执行：companion-005（priority=27，依赖 companion-001/003 + interact-006，全 passing）。
+
 **未 push**（按新规则等用户指令统一 push）。

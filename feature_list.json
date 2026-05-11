@@ -742,23 +742,50 @@
       "id": "vision-004",
       "priority": 26,
       "area": "vision",
-      "title": "多目标人脸跟踪 + 主动注视切换（多人场景）",
-      "user_visible_behavior": "当镜头里同时出现多张人脸（家庭使用），Coco 按策略选择主注视对象（最近一次开口/最大脸/已识别用户优先），并在主对象沉默 ≥ 8s 且另一已识别用户在视野时短暂转头致意（'你好 XXX'），然后回到主对象。",
-      "status": "not_started",
+      "title": "多目标人脸注视切换 L0（AttentionSelector + 4 policies）",
+      "user_visible_behavior": "当镜头里同时出现多张人脸（家庭使用），Coco 按可选策略（ROUND_ROBIN/LARGEST_FACE/NEWEST/NAMED_FIRST）选择主注视对象；focus 切换受 min_focus_s（焦点保持）与 switch_cooldown_s（切换冷却）约束，并通过 emit 'vision.attention_changed' 通知业务层。默认 OFF（COCO_ATTENTION=1 启用）。",
+      "status": "passing",
       "dependencies": [
         "vision-002",
         "vision-003",
         "companion-002"
       ],
       "verification": [
-        "扩展 coco/perception/face_tracker.py：支持 N 脸列表 (track_id, bbox, identity, last_seen, last_speech_ts)，主对象选择策略 pick_primary(faces, dialog_state) 可注入。",
-        "新增 coco/companion/multi_face_attention.py：状态机 (single → multi_idle → greet_secondary → return_primary)，触发条件：primary 沉默 ≥8s + 另一 known identity 在视野 ≥3s + 距上一次 greet_secondary ≥30s。",
-        "集成 companion-002 glance：转头幅度受限（不打断 primary 对话），只在 dialog_state != awaiting_response 时触发。",
-        "scripts/verify_vision004.py 用 multi-face fixture 视频（tests/fixtures/vision/multi_face_*.mp4，程序合成 2-3 张合成脸的拼接帧）：(a) pick_primary 策略 4 个 case；(b) greet_secondary 触发条件 5 参数边界；(c) awaiting_response 期间被抑制；(d) 30s cooldown 起作用；(e) regression：vision-001~003 + companion-002 verify 通过。",
-        "Reviewer fresh-context 评审：多脸 track_id 稳定性（短暂遮挡不能切换 primary）、greet_secondary 频率上限、与 proactive 主动话题的优先级（不能在 proactive 出题瞬间转头）、未识别脸不参与 greet。"
+        "实现 coco/perception/attention.py：AttentionSelector + AttentionPolicy 枚举（ROUND_ROBIN/LARGEST_FACE/NEWEST/NAMED_FIRST）+ AttentionTarget dataclass；min_focus_s（焦点保持下限）+ switch_cooldown_s（切换冷却）+ on_change 回调；线程安全（RLock）。",
+        "config 集成：AttentionConfig + _attention_from_env + load_config().attention；env clamp（interval_ms[50,2000]/min_focus_s>=0/switch_cooldown_s<=60/policy 非法回退 round_robin）。",
+        "main.py 启动路径：COCO_ATTENTION=1 且 FaceTracker 已就绪时构造 selector + 启动 attention tick 线程；on_change 内 emit 'vision.attention_changed'（component=vision 在 AUTHORITATIVE_COMPONENTS）；stop_event 干净退出。",
+        "scripts/verify_vision_004.py V1-V13 全 PASS：V1 默认 OFF / V2 构造 / V3 单目标 / V4 ROUND_ROBIN / V5 LARGEST_FACE / V6 NEWEST / V7 NAMED_FIRST / V8 min_focus_s 防抖 / V9 switch_cooldown_s / V10 空集→None / V11 stop 干净 / V12 emit+component+env clamp / V13 on_change 在 _lock 之外触发（无自死锁 + 回调异常不破坏 selector）。",
+        "Reviewer fresh-context 评审：状态机闭合性、cooldown/min_focus 优先级、emit 字段稳定、与现有 FaceTracker 接口契合、AUTHORITATIVE_COMPONENTS 同步。"
+      ],
+      "evidence": [
+        "Session 036 (vision-004 closeout) — feat/vision-004 @ <merge sha>",
+        "scripts/verify_vision_004.py V1-V13 ALL PASS — evidence/vision-004/verify_summary.json",
+        "回归：infra-002/003 + interact-004/005/006/007/008 + companion-003/004/vision + vision-002/003 + infra-debt-sweep + publish 全 PASS",
+        "Reviewer (sub-agent): LGTM — 当前实现为'L0 AttentionSelector 选择层'，多人主动致意状态机拆出至 vision-004b 独立跟进。",
+        "L1 修复：on_change 移出 selector._lock 之外触发（coco/perception/attention.py select() 锁内攒 pending_change，锁外 fire；V13 用后台线程在回调内拿 _lock 验证）。",
+        "L2 修复：ROUND_ROBIN _pick_best 接收 now 透传与 select() 同源时钟；cooldown 内 prev 消失 fallthrough 路径加显式注释。"
+      ],
+      "notes": "本 feature 是'注视选择器 L0 层'。原 verification 中关于 multi_face_*.mp4 fixture、greet_secondary 状态机、awaiting_response 抑制、30s cooldown、proactive 优先级等已拆出至 vision-004b（多人主动致意状态机），priority=26.5，状态 not_started，依赖本 feature。"
+    },
+    {
+      "id": "vision-004b",
+      "priority": 26.5,
+      "area": "vision",
+      "title": "多人主动致意状态机 greet_secondary",
+      "user_visible_behavior": "镜头里同时出现 ≥2 张人脸时，若 primary（当前注视对象）沉默 ≥8s，且另一已识别 (named) 用户在视野持续 ≥3s，且距上一次 greet_secondary ≥30s，Coco 会短暂转头向次要对象致意（如 '你好 XXX'）然后回到 primary。在 dialog_state=AWAITING_RESPONSE 或 proactive 主动话题刚触发的瞬间被抑制。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-004"
+      ],
+      "verification": [
+        "新增 coco/companion/multi_face_attention.py：状态机 (single → multi_idle → greet_secondary → return_primary)；输入 = AttentionSelector.current() + FaceTracker snapshot + DialogState；输出 = ActionSpec（短暂 glance + TTS '你好 <name>'）。",
+        "触发条件：primary 沉默 ≥8s + 另一 known identity 在视野 ≥3s + 距上一次 greet_secondary ≥30s + dialog_state != AWAITING_RESPONSE + 距上一次 proactive_topic ≥可配置阈值。",
+        "tests/fixtures/vision/multi_face_*.mp4：程序合成 2-3 张合成脸的拼接帧（参考 gen_vision_fixtures.py 现有合成方式）；不需要真摄像头。",
+        "scripts/verify_vision_004b.py：(a) greet_secondary 触发的 5 参数边界（8s/3s/30s/awaiting_response/proactive）；(b) awaiting_response 期间被抑制；(c) 30s cooldown 起作用；(d) proactive 触发瞬间 greet 被抑制；(e) 未识别脸不参与（不当 secondary 候选）；(f) regression：vision-001/002/003/004 + companion-002 verify 通过。",
+        "Reviewer fresh-context 评审：多脸 track_id 稳定性（短暂遮挡不能切换 primary）、greet_secondary 频率上限、与 proactive 主动话题的优先级竞争、未识别脸不参与 greet 的边界、glance 幅度受限不打断 primary 对话。"
       ],
       "evidence": [],
-      "notes": "全部用 fixture mp4 验证。真实多人光照/距离/识别准确度归 uat-phase4。"
+      "notes": "本 feature 是 vision-004 拆出的 L1 层（主动行为/状态机）。L0 选择层（AttentionSelector + emit）已在 vision-004 落地并 passing。全部用 fixture mp4 验证；真实多人光照/距离/识别准确度归 uat-phase4。"
     },
     {
       "id": "companion-005",
