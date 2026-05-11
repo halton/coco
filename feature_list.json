@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-11",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -813,7 +813,7 @@
         "Reviewer (sub-agent): LGTM。L0/L1 无阻塞。已记 L2/L3 known-debt（见 notes）。",
         "merge：feat/companion-005 → main no-ff。"
       ],
-      "notes": "纯 sim 可验证（mockup-sim daemon 收到的 SetTarget 序列即可断言）。物理观感归 uat-phase4。Known-debt（Reviewer L2/L3，不阻 passing，未来回路再修）：(L2) _sample_glance_interval 每次 sample 调 tick 重复，可加 per-tick cache。(L2) SLEEP 状态 modulator 仍 tick + 可能 emit，sleep_damp=0 后 bias 长期不变即不再 emit，可接受。(L2) profile_has_interests 启动后一次性读取，运行期 ProfileStore 写入不反映。(L2) _bool_env/_float_env 在 config.py 与 situational_idle.py 重复（DRY）。(L2) snapshot/compute/tick 线程模型已在 docstring 补"仅由 IdleAnimator 后台线程调用"。(L3) IdleBias.glance_amp_scale 保留未用（注释说明）。(L3) emotion×situational 叠加 happy+focus_stable micro 倍率 1.7875×2.5°=4.47°（< MAX_YAW_DEG/4=8.75°），未来叠加新维度需关注上限。"
+      "notes": "纯 sim 可验证（mockup-sim daemon 收到的 SetTarget 序列即可断言）。物理观感归 uat-phase4。Known-debt（Reviewer L2/L3，不阻 passing，未来回路再修）：(L2) _sample_glance_interval 每次 sample 调 tick 重复，可加 per-tick cache。(L2) SLEEP 状态 modulator 仍 tick + 可能 emit，sleep_damp=0 后 bias 长期不变即不再 emit，可接受。(L2) profile_has_interests 启动后一次性读取，运行期 ProfileStore 写入不反映。(L2) _bool_env/_float_env 在 config.py 与 situational_idle.py 重复（DRY）。(L2) snapshot/compute/tick 线程模型已在 docstring 补『仅由 IdleAnimator 后台线程调用』。(L3) IdleBias.glance_amp_scale 保留未用（注释说明）。(L3) emotion×situational 叠加 happy+focus_stable micro 倍率 1.7875×2.5°=4.47°（< MAX_YAW_DEG/4=8.75°），未来叠加新维度需关注上限。"
     },
     {
       "id": "robot-003",
@@ -839,6 +839,112 @@
         "顺手修 smoke.py config expected keys 加 'expressions'（baseline drift 修补）。"
       ],
       "notes": "mockup-sim daemon 验证；真机表情顺滑度/电机过冲归 uat-phase4。known-debt（L3 留给后续 feature）：ExpressionPlayer.play 缺 timeout/exception 保护链（若 SDK 卡死会无限阻塞）—— 真机 UAT 时再决定是否引超时；与 ProactiveScheduler/IdleAnimator 的协调走包一层 tts_say_fn，未做硬接线（轻耦合更易扩展）。"
+    },
+    {
+      "id": "infra-004",
+      "priority": 30,
+      "area": "infra",
+      "title": "config schema 校验 + 启动 banner + jsonl 日志按大小 rotate",
+      "user_visible_behavior": "启动时若 coco.yaml 缺关键 key / 类型错误 / 超出阈值，给出明确错误并 fail-fast（不再默默 fallback 默默运行不一致状态）；启动 banner 列出生效配置摘要（model/log path/feature flags）；events.jsonl / metrics.jsonl 超过可配置大小（默认 10MB）时自动 rotate 出 .1 / .2，最多保留 3 份。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-002",
+        "infra-003"
+      ],
+      "verification": [
+        "coco/config/schema.py：用 dataclass + validator 覆盖现有 yaml 字段；启动时 ConfigCenter.load() 跑校验，缺失/类型错误 raise ConfigError；可选字段保留默认值。",
+        "coco/__main__.py 启动 banner：打印 model/log_path/feature flags（COCO_* env）+ schema 校验结果；jsonl 写入器接入 RotatingJsonlWriter（按 size_mb rotate，保留 N 份）。",
+        "scripts/verify_infra_004.py：V1 正常 yaml load OK；V2 缺 key fail-fast；V3 类型错误 fail-fast；V4 banner 输出含 model/log path；V5 rotate 触发（写入超过阈值后产生 .1 文件）；V6 retention（超过 N 份后最旧的被删）；V7 regression infra-002/003 verify 全通过。",
+        "Reviewer fresh-context 评审：schema 演进策略（向后兼容/字段废弃流程）、rotate 并发安全（多线程写 jsonl）、banner 不泄漏敏感 env、retention 删除前 fsync。"
+      ],
+      "evidence": [],
+      "notes": "纯 sim 可验。rotate 并发安全用文件锁或 single-writer 约束；优先后者（events.jsonl 写入只在 EventBus 单线程）。banner 重在'看一眼就知道生效配置'，不做交互。"
+    },
+    {
+      "id": "interact-009",
+      "priority": 31,
+      "area": "interact",
+      "title": "对话历史压缩（history>N → 摘要 turn，控 LLM token）",
+      "user_visible_behavior": "多轮对话超过 N（默认 12）轮后，把最早的若干轮压缩成单条 system 摘要 turn 注入 LLM，避免 token 线性增长；摘要保留'用户偏好/已确认的事实/未完成话题'，丢弃寒暄。用户感觉不到中断，但长会话 LLM 输入稳定在 ≤N+1 轮。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-004",
+        "interact-008"
+      ],
+      "verification": [
+        "coco/interact/history_compactor.py：HistoryCompactor.maybe_compact(history) → 当 len>N 时调 LLM 做摘要，返回 [SystemSummary, last_k_turns]；fail-soft（摘要失败保留原历史，记 warning）。",
+        "对话历史接线：DialogStateMachine / LLM 调用前过一层 compactor；保留 raw history 给本地日志，注入 LLM 的用 compacted。",
+        "scripts/verify_interact_009.py：V1 history<N 不压缩；V2 history>N 触发压缩，注入长度 ≤N+1；V3 摘要 turn 内容含关键事实 fixture（mock LLM）；V4 LLM 摘要失败 fallback 原 history；V5 多次压缩幂等（再次过 compactor 不再叠加）；V6 regression interact-004/008 verify。",
+        "Reviewer fresh-context 评审：摘要丢失关键上下文风险、隐私（用户名/兴趣是否写入 system prompt）、token 计数估算误差、跨会话持久化是否需要（本期不做）。"
+      ],
+      "evidence": [],
+      "notes": "本期只做 in-session 压缩；跨会话长期记忆已有 companion-004 user-profile 承担。摘要 LLM 复用 interact-002 同一 client，prompt 走 yaml 模板。可加 COCO_HISTORY_COMPACT=0 关闭。"
+    },
+    {
+      "id": "vision-005",
+      "priority": 32,
+      "area": "vision",
+      "title": "简易手势识别（招手/竖大拇指 sim fixture）",
+      "user_visible_behavior": "镜头里出现明显手势（招手 waving / 竖大拇指 thumbs_up）时，Coco 触发对应回应：waving → glance + '你好' TTS；thumbs_up → ExpressionPlayer.play('praise')。手势检测在低帧率（~5fps）后台跑，不阻 vision 主线。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-vision-source",
+        "vision-002",
+        "robot-003"
+      ],
+      "verification": [
+        "coco/perception/gesture.py：GestureDetector（基于 mediapipe hands 或 opencv hand cascade，按依赖可用性 fallback）；输出 GestureEvent{type, confidence, ts}。",
+        "tests/fixtures/vision/gesture_waving.mp4 / gesture_thumbs_up.mp4：程序合成（参考 gen_vision_fixtures.py），含明确特征帧 + 空白帧；fixture 内置 ground truth json。",
+        "事件接线：EventBus 订阅 gesture.detected → waving 触发 glance+TTS，thumbs_up 触发 ExpressionPlayer.play('praise')；30s/手势 cooldown 防抖。",
+        "scripts/verify_vision_005.py：V1 waving fixture 检出；V2 thumbs_up fixture 检出；V3 空白 fixture 不误检；V4 cooldown 起作用（连续 2 次同手势第二次抑制）；V5 mediapipe 不可用时 fallback opencv（或 noop + warning）；V6 regression vision-001/002/004 verify。",
+        "Reviewer fresh-context 评审：检测置信度阈值、误检率（背景手势）、与 face attention 优先级、低帧率后台线程的 GIL 影响、依赖可选化策略。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：用程序合成 mp4 fixture 验。真机手势识别准确度归 uat-phase6。优先用 mediapipe（hand landmarks 鲁棒），不可用时 fallback 简化 hog/cascade。手势集本期只两种，扩展留 followup。"
+    },
+    {
+      "id": "companion-006",
+      "priority": 33,
+      "area": "companion",
+      "title": "多用户档案切换（face_id name → UserProfile 切换）",
+      "user_visible_behavior": "vision-003 识别到已知 face_id 切换后，Coco 自动切换到对应用户的 UserProfile（昵称/兴趣/历史），后续对话/主动话题/idle 行为均按该 profile 驱动；多个用户同时在视野时按 primary 用户切换；profile 切换通过短 TTS 致意（'欢迎回来 XXX'）告知。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-004",
+        "vision-003",
+        "vision-004"
+      ],
+      "verification": [
+        "coco/companion/profile_switcher.py：监听 face.identity_changed / attention.primary_changed → 加载对应 UserProfile（companion-004 ProfileStore） → 发 profile.switched 事件；含 5s 防抖（短暂切走不切回前不发新事件）。",
+        "DialogStateMachine / ProactiveTopicScheduler / IdleAnimator 订阅 profile.switched，按新 profile 取兴趣/历史 N 轮上下文。",
+        "TTS 致意：profile.switched 触发 '欢迎回来 <nickname>' 但 30min cooldown / 同一 profile 不重复致意；未识别脸（face_id=None）不切（保持上一个 profile 或 default）。",
+        "scripts/verify_companion_006.py：V1 face_id A→B 切换；V2 短暂遮挡（A→unknown→A）不切；V3 30min cooldown；V4 default profile 时未识别脸不触发；V5 切换后 ProactiveTopicScheduler 取新兴趣；V6 dialog history 隔离（A 的 history 不混入 B）；V7 regression companion-004/vision-003/004 verify。",
+        "Reviewer fresh-context 评审：多人同框时 primary 切换抖动、profile 隔离边界（history 是否需要 per-profile 持久化）、致意频率扰民、未识别脸 fallback 策略。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：用 vision-003 已有 face_id fixture + 模拟 attention 切换事件。真实环境多人切换流畅度归 uat-phase6。本期 dialog history 仅 in-session per-profile 隔离，跨会话持久化留 followup。"
+    },
+    {
+      "id": "robot-004",
+      "priority": 34,
+      "area": "robot",
+      "title": "心情驱动姿态（PowerState + emotion → 默认姿态 offset）",
+      "user_visible_behavior": "Coco 的默认 idle 姿态会因 emotion + PowerState 整体偏移：happy → 头略抬+天线展开；sad → 头略低+天线收；focused → 正视+微前倾；DROWSY → 进一步压低；SLEEP → goto_sleep。所有 idle micro-action / expression 在该 baseline 上叠加，整体观感'有性格'，不再机械居中。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-003",
+        "companion-005",
+        "interact-006",
+        "robot-003"
+      ],
+      "verification": [
+        "coco/robot/posture_baseline.py：PostureBaseline(emotion, power_state) → PostureOffset(pitch, yaw, antenna)；clamp 在 ±5° pitch / ±3° yaw / antenna [0,1]；emotion×power_state 表查找 + 默认值 fallback。",
+        "IdleAnimator / ExpressionPlayer 在每次下发 goto_target 前叠加 baseline_offset（不破坏 expression 序列绝对值，只调 idle 中心位）。",
+        "scripts/verify_robot_004.py：V1 happy → pitch_offset>0；V2 sad → pitch_offset<0；V3 SLEEP → 走 goto_sleep（不叠加）；V4 emotion 切换平滑过渡（不瞬切，2s linear ramp）；V5 与 companion-005 situational idle 叠加不超 MAX clamp；V6 expression 播放期 baseline 暂停叠加（避免与 expression 绝对帧冲突）；V7 regression companion-003/005 + interact-006 + robot-003 verify。",
+        "Reviewer fresh-context 评审：baseline ramp 与 expression 帧的协调时序、clamp 上限叠加新维度的总幅度、emotion 误判（interact-006）导致频繁姿态切换的抖动、SLEEP 状态边界。"
+      ],
+      "evidence": [],
+      "notes": "纯 sim 可验（mockup-sim daemon 收到 SetTarget 序列即可断言 offset）。真机过冲/电机噪声归 uat-phase6。emotion 来源 interact-006 已 passing；power_state 来源 companion-003。Known: emotion 误判可能导致 idle 姿态抖动，2s ramp + emotion 5s debounce 减缓。"
     },
     {
       "id": "uat-phase4",
