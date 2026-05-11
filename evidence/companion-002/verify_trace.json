@@ -1,13 +1,13 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.087630033493042,
-    "stop_dt_s": 0.0032377243041992188,
+    "elapsed_s": 8.006876230239868,
+    "stop_dt_s": 0.001026153564453125,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 40,
-      "hit_count": 40,
+      "detect_count": 39,
+      "hit_count": 39,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -23,14 +23,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 12,
-      "antenna_count": 7
+      "goto_count": 13,
+      "antenna_count": 6
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.07357120513916,
-    "stop_dt_s": 0.0006430149078369141,
+    "elapsed_s": 8.061021089553833,
+    "stop_dt_s": 0.0006079673767089844,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -43,7 +43,7 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 10,
+      "micro_count": 9,
       "glance_count": 1,
       "vision_glance_count": 0,
       "vision_biased_glance_count": 0,
@@ -51,14 +51,14 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 7,
+      "goto_count": 8,
       "antenna_count": 6
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.00013017654419,
-    "stop_dt_s": 0.0023467540740966797,
+    "elapsed_s": 12.061856985092163,
+    "stop_dt_s": 0.001379251480102539,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -79,8 +79,8 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 15,
-      "antenna_count": 15
+      "goto_count": 16,
+      "antenna_count": 13
     }
   }
 }

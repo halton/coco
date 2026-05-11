@@ -1004,3 +1004,17 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **vision-004b-wire (priority=26.6, deps: vision-004b + vision-004)**：跟踪 main.py 接线（MultiFaceAttention ← AttentionSelector/FaceTracker/ConvStateMachine/ProactiveScheduler）+ multi_face_*.mp4 真视频 fixture + Reviewer L1 提到的 primary 闪烁 race 验证（短暂遮挡不应重置 silence 计时；选型方案记入该 feature evidence 后再决定是否回写状态机）。
 - **merge & smoke**：`feat/vision-004b` → `main` no-ff merge；merge 后 `./init.sh` PASS。
 - **下一执行**：`vision-004b-wire`（priority=26.6）优先于 `infra-004`（30）——按 phase-6 priority 数字小先做的规则。
+
+---
+
+## Session — vision-004b-wire close-out (2026-05-11)
+
+- **vision-004b-wire → passing**：`coco/__main__.py` 接线 MultiFaceAttention（COCO_GREET_SECONDARY=1 启用），AttentionSelector.current() / FaceTracker snapshot / ConvStateMachine.current_state / ProactiveScheduler.last_proactive_ts 喂进 tick；on_action 回调挂 ExpressionPlayer.play('curious') + tts.say(action.utterance)。新增 **primary_stable_s debounce**（默认 2.0s）抑制短暂遮挡导致的 primary 切换；V9 9a 暴露 race，9b 确认 debounce 修复。
+- **verify**：`scripts/verify_vision_004b_wire.py` V1-V5 / V7-V12 PASS（V6 SKIP 因 ConvStateMachine 未暴露 AWAITING 状态）。downstream regression 三脚本独立运行均 PASS：`verify_interact_007.py` 76/76、`verify_interact_008.py` 59/59、`verify_companion004.py` 12/12。`evidence/vision-004b-wire/verify_summary.json` 更正：补 `downstream_verify_scripts` 字段明列三脚本计数（原稿误报为 "SKIP 无独立 verify 脚本"）。
+- **Reviewer (sub-agent)**：LGTM，无 L0/L1 阻塞。Known-debt 记于 vision-004b-wire.notes：
+  1. (L2/V6) `awaiting_response` 抑制路径待 ConvStateMachine 暴露 AWAITING 状态后补；
+  2. (L2) `tts.say` / `expression.play` 当前同步阻塞 tick 线程（3Hz 下可接受；未来若 tts 变长阻塞需迁队列 + 独立线程）；
+  3. (L3) `_SyntheticPrimary.__getattr__` 在 real=None 时的兜底行为注释待补；
+  4. (L3) mfa `utterance_template` `{name}` 占位符未真正格式化（属 mfa 内部，wire 透传 OK）。
+- **merge & smoke**：`feat/vision-004b-wire` → `main` no-ff merge；merge 后 `./init.sh` PASS。
+- **下一执行**：`infra-004`（priority=30）。
