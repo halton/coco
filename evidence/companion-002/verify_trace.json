@@ -1,8 +1,8 @@
 {
   "V1": {
     "label": "V1-single-face",
-    "elapsed_s": 8.07214903831482,
-    "stop_dt_s": 0.0006721019744873047,
+    "elapsed_s": 8.102044820785522,
+    "stop_dt_s": 0.06340503692626953,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -15,22 +15,22 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 15,
-      "glance_count": 1,
-      "vision_glance_count": 1,
-      "vision_biased_glance_count": 1,
+      "micro_count": 14,
+      "glance_count": 2,
+      "vision_glance_count": 2,
+      "vision_biased_glance_count": 2,
       "face_present_ticks": 16,
       "error_count": 0
     },
     "robot": {
       "goto_count": 12,
-      "antenna_count": 10
+      "antenna_count": 8
     }
   },
   "V2": {
     "label": "V2-no-one",
-    "elapsed_s": 8.068535089492798,
-    "stop_dt_s": 0.012554168701171875,
+    "elapsed_s": 8.102138996124268,
+    "stop_dt_s": 0.0006270408630371094,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
@@ -51,19 +51,19 @@
       "error_count": 0
     },
     "robot": {
-      "goto_count": 9,
-      "antenna_count": 5
+      "goto_count": 11,
+      "antenna_count": 2
     }
   },
   "V3": {
     "label": "V3-walk-away",
-    "elapsed_s": 12.084849119186401,
-    "stop_dt_s": 0.0012958049774169922,
+    "elapsed_s": 12.070564985275269,
+    "stop_dt_s": 0.00104522705078125,
     "animator_alive_after": false,
     "tracker_alive_after": false,
     "tracker": {
-      "detect_count": 60,
-      "hit_count": 60,
+      "detect_count": 59,
+      "hit_count": 59,
       "frames_dropped": 0,
       "error_count": 0,
       "last_present": true,
@@ -71,16 +71,16 @@
       "last_frame_h": 240
     },
     "idle": {
-      "micro_count": 19,
+      "micro_count": 20,
       "glance_count": 3,
       "vision_glance_count": 3,
       "vision_biased_glance_count": 3,
-      "face_present_ticks": 22,
+      "face_present_ticks": 23,
       "error_count": 0
     },
     "robot": {
-      "goto_count": 22,
-      "antenna_count": 6
+      "goto_count": 17,
+      "antenna_count": 10
     }
   }
 }

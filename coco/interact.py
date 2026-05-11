@@ -32,6 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from reachy_mini import ReachyMini
     from coco.idle import IdleAnimator
     from coco.emotion import EmotionDetector, EmotionTracker
+    from coco.profile import ProfileStore
 
 
 log = logging.getLogger(__name__)
@@ -113,6 +114,7 @@ class InteractSession:
         dialog_memory: Optional[DialogMemory] = None,
         emotion_detector: Optional["EmotionDetector"] = None,
         emotion_tracker: Optional["EmotionTracker"] = None,
+        profile_store: Optional["ProfileStore"] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -140,6 +142,14 @@ class InteractSession:
         # tracker.record → idle_animator.set_current_emotion(effective) → emit。
         self.emotion_detector = emotion_detector
         self.emotion_tracker = emotion_tracker
+        # companion-004: 可选 ProfileStore。注入后：
+        #   - handle_audio 抽取 transcript 中的 profile 信号写盘（set_name /
+        #     add_interest / add_goal），并 emit interact.profile_extracted。
+        #   - LLM 调用前 build_system_prompt(profile) 注入 system_prompt。
+        # None 时整段路径不走，完全等价 phase-3/interact-006 行为（向后兼容）。
+        self.profile_store = profile_store
+        # 探测 llm_reply_fn 是否接受 system_prompt kwarg（与 history 类似）。
+        self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
@@ -154,6 +164,11 @@ class InteractSession:
         - 否则 → False
         - inspect 失败（C 函数等）→ False（保守：不传 history，等价旧行为）
         """
+        return InteractSession._probe_kwarg(fn, "history")
+
+    @staticmethod
+    def _probe_kwarg(fn: Optional[Callable[..., str]], name: str) -> bool:
+        """通用 kwarg 探测；fn=None 或 inspect 失败 → False。"""
         if fn is None:
             return False
         try:
@@ -163,7 +178,7 @@ class InteractSession:
         for p in sig.parameters.values():
             if p.kind is inspect.Parameter.VAR_KEYWORD:
                 return True
-            if p.name == "history" and p.kind in (
+            if p.name == name and p.kind in (
                 inspect.Parameter.KEYWORD_ONLY,
                 inspect.Parameter.POSITIONAL_OR_KEYWORD,
             ):
@@ -251,6 +266,33 @@ class InteractSession:
                 except Exception as e:  # noqa: BLE001
                     log.warning("emotion detect failed: %s: %s", type(e).__name__, e)
 
+            # companion-004: profile 抽取（仅当 profile_store 注入且 transcript 非空）。
+            # 抽取在 emotion 之后、route_reply 之前；写盘失败一律吞掉不阻塞主流程。
+            if self.profile_store is not None and transcript:
+                try:
+                    from coco.profile import extract_profile_signals
+                    sig = extract_profile_signals(transcript)
+                    if sig:
+                        if "name" in sig:
+                            self.profile_store.set_name(sig["name"])
+                        for it in sig.get("interests", []) or []:
+                            self.profile_store.add_interest(it)
+                        for g in sig.get("goals", []) or []:
+                            self.profile_store.add_goal(g)
+                        try:
+                            from coco.logging_setup import emit as _emit
+                            _emit(
+                                "interact.profile_extracted",
+                                name=sig.get("name"),
+                                interests=list(sig.get("interests", []) or []),
+                                goals=list(sig.get("goals", []) or []),
+                            )
+                        except Exception:  # noqa: BLE001
+                            pass
+                        result["profile_extracted"] = sig
+                except Exception as e:  # noqa: BLE001
+                    log.warning("profile extract failed: %s: %s", type(e).__name__, e)
+
             # 3) 路由 reply + action
             reply, action = route_reply(transcript)
             # interact-002: 如果注入了 LLM，并且转写非空，用 LLM 覆盖 reply 文本；
@@ -269,9 +311,25 @@ class InteractSession:
                             history_msgs.append({"role": "user", "content": u})
                         if a:
                             history_msgs.append({"role": "assistant", "content": a})
+                # companion-004: 组装 system_prompt（含 profile 块）若 fn 接受
+                profile_sys_prompt: Optional[str] = None
+                if self.profile_store is not None and self._llm_accepts_system_prompt:
+                    try:
+                        from coco.profile import build_system_prompt
+                        from coco.llm import SYSTEM_PROMPT as _BASE_SYS
+                        prof = self.profile_store.load()
+                        profile_sys_prompt = build_system_prompt(prof, base=_BASE_SYS)
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("profile system_prompt build failed: %s: %s",
+                                    type(e).__name__, e)
                 try:
+                    kwargs: dict = {}
                     if history_msgs is not None:
-                        llm_text = self.llm_reply_fn(transcript, history=history_msgs)
+                        kwargs["history"] = history_msgs
+                    if profile_sys_prompt is not None:
+                        kwargs["system_prompt"] = profile_sys_prompt
+                    if kwargs:
+                        llm_text = self.llm_reply_fn(transcript, **kwargs)
                     else:
                         llm_text = self.llm_reply_fn(transcript)
                     if llm_text and llm_text.strip():
