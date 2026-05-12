@@ -14,6 +14,8 @@ V9  InteractSession 集成：handle_audio 自动触发 compress_if_needed
 V10 emit "interact.dialog_summarized"
 V11 env clamp（threshold ∈ [4,100] / keep ∈ [1,20] / max_chars ∈ [50,1000]）
 V12 摘要 system turn 在下一次 build_messages 中被注入到 messages
+V13 累积压缩：第二次压缩把旧 summary 当 pseudo-turn 注入（L1-1）
+V14 Hot path guard：刚压缩完不会立即再压缩（L1-3）
 """
 
 from __future__ import annotations
@@ -179,11 +181,14 @@ def v3_llm_summarizer() -> None:
 
 
 def v4_heuristic_summarizer() -> None:
-    print("\n[V4] HeuristicSummarizer fallback", flush=True)
+    print("\n[V4] HeuristicSummarizer fallback (含 assistant)", flush=True)
     s = HeuristicSummarizer(max_chars=200)
-    out = s.summarize([("你好", "嗨"), ("天气怎么样", "好")])
+    out = s.summarize([("你好", "嗨你好"), ("天气怎么样", "外面挺好")])
     assert_true("前面聊到" in out, "含'前面聊到'前缀")
     assert_true("你好" in out and "天气怎么样" in out, "拼接 user 文本")
+    # interact-009 L1-4: 含 assistant 文本片段
+    assert_true("嗨你好" in out, f"摘要含 assistant 文本'嗨你好': {out!r}")
+    assert_true("外面挺好" in out, f"摘要含 assistant 文本'外面挺好': {out!r}")
     # build_summarizer 在 kind=llm 但无 llm_reply_fn 时降级
     cfg = DialogSummaryConfig(enabled=True, summarizer_kind="llm")
     s2 = build_summarizer(cfg, llm_reply_fn=None)
@@ -287,19 +292,24 @@ def v8_fail_soft() -> None:
 
 
 def v9_session_integration() -> None:
-    print("\n[V9] InteractSession 集成 handle_audio 自动触发", flush=True)
+    print("\n[V9] InteractSession 集成 handle_audio 自动触发 + summary 注入 LLM", flush=True)
     mem = DialogMemory(max_turns=20, idle_timeout_s=300.0)
     s = HeuristicSummarizer()
 
     # 预填 9 轮，使第 10 轮 append 后触发
     for i in range(9):
-        mem.append(f"u{i}", f"a{i}")
+        mem.append(f"用户消息{i}", f"机器人回复{i}")
 
-    # mocks for InteractSession
+    # mocks for InteractSession — llm_fn 必须接受 history kwarg 才会被探测命中
     robot = MagicMock()
     asr_fn = MagicMock(return_value="测试句子")
     tts_fn = MagicMock()
-    llm_fn = MagicMock(return_value="LLM 回应")
+
+    llm_calls: list[dict] = []
+
+    def llm_fn(text: str, *, history=None, system_prompt=None) -> str:
+        llm_calls.append({"text": text, "history": history, "system_prompt": system_prompt})
+        return "LLM 回应"
 
     sess = InteractSession(
         robot=robot,
@@ -316,6 +326,31 @@ def v9_session_integration() -> None:
     # 第 10 轮 append 后压缩 → len = 1 + 4
     assert_eq(len(mem), 5, "session 自动压缩后 len=5")
     assert_true(mem.summary is not None, "summary 已设")
+
+    # interact-009 L0 修复关键断言：summary 真的进了下一轮 LLM history
+    # handle_audio 流程是：先调 LLM（这时 mem 还是 9 轮，summary 还没产生）
+    # → 再 append 第 10 轮 → 再 compress。所以第一次 LLM 调用 summary=None。
+    # 触发第二轮 audio 才能验证 summary 注入。
+    sess.handle_audio(audio, sample_rate=16000, skip_action=True, skip_tts_play=True)
+    assert_true(len(llm_calls) >= 2, f"LLM 至少被调 2 次（实际 {len(llm_calls)}）")
+    second_call = llm_calls[1]
+    history = second_call.get("history") or []
+    # 找到 system role 且 content 含'对话摘要'的条目
+    summary_msgs = [
+        m for m in history
+        if isinstance(m, dict)
+        and m.get("role") == "system"
+        and "对话摘要" in (m.get("content") or "")
+    ]
+    assert_true(
+        len(summary_msgs) >= 1,
+        f"第二轮 LLM history 含'对话摘要' system message（实际 history 长度 {len(history)}）",
+    )
+    if summary_msgs:
+        assert_true(
+            mem.summary in summary_msgs[0]["content"],
+            "summary 文本完整出现在 history system message 中",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -402,6 +437,97 @@ def v12_summary_in_messages() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V13 — 累积压缩（L1-1）
+# ---------------------------------------------------------------------------
+
+
+def v13_cumulative_compress() -> None:
+    print("\n[V13] 第二次压缩把旧 summary 累积进来，最早信息不丢", flush=True)
+    mem = DialogMemory(max_turns=30, idle_timeout_s=300.0)
+
+    # 用一个 mock summarizer，捕获 summarize() 收到的 turns，验证旧 summary 被注入
+    captured_turns_lists: list[list] = []
+
+    class CapturingSummarizer:
+        def __init__(self) -> None:
+            self.counter = 0
+
+        def summarize(self, turns):
+            captured_turns_lists.append(list(turns))
+            self.counter += 1
+            return f"摘要-第{self.counter}次-含{len(turns)}轮"
+
+    s = CapturingSummarizer()
+
+    # 第一次压缩：填 10 轮（含独特关键词"早期话题XYZ"），threshold=10 keep=4
+    mem.append("早期话题XYZ", "早期回答")
+    for i in range(1, 10):
+        mem.append(f"u{i}", f"a{i}")
+    triggered1 = mem.compress_if_needed(threshold_turns=10, keep_recent=4, summarizer=s)
+    assert_eq(triggered1, True, "第一次压缩触发")
+    first_summary = mem.summary
+    assert_true(first_summary is not None, "第一次摘要已设")
+    assert_true("早期话题XYZ" not in (first_summary or ""),
+                "[健全] 第一次 summary 是 mock 文本不含原文")
+
+    # 现在 buf 长度 = 4。再加 6 轮使总长 = 10 触发第二次压缩。
+    for i in range(10, 16):
+        mem.append(f"u{i}", f"a{i}")
+    triggered2 = mem.compress_if_needed(threshold_turns=10, keep_recent=4, summarizer=s)
+    assert_eq(triggered2, True, "第二次压缩触发")
+
+    # 关键断言：第二次 summarize 收到的 turns 头部应含旧 summary 的 pseudo-turn
+    assert_true(len(captured_turns_lists) == 2, f"summarize 被调 2 次（实际 {len(captured_turns_lists)}）")
+    second_call_turns = captured_turns_lists[1]
+    head_user_text = second_call_turns[0][0] if second_call_turns else ""
+    assert_true(
+        "[此前摘要]" in head_user_text and first_summary in head_user_text,
+        f"第二次 summarize 头部含旧 summary（实际头部：{head_user_text!r}）",
+    )
+
+
+# ---------------------------------------------------------------------------
+# V14 — Hot path guard（L1-3）
+# ---------------------------------------------------------------------------
+
+
+def v14_hot_path_guard() -> None:
+    print("\n[V14] 压缩冷却：刚压缩完不会立即再压缩", flush=True)
+    mem = DialogMemory(max_turns=20, idle_timeout_s=300.0)
+
+    call_count = [0]
+
+    class CountingSummarizer:
+        def summarize(self, turns):
+            call_count[0] += 1
+            return f"summary-{call_count[0]}"
+
+    s = CountingSummarizer()
+
+    # 触发第一次压缩：10 轮 → 压缩 → buf 剩 4
+    for i in range(10):
+        mem.append(f"u{i}", f"a{i}")
+    triggered1 = mem.compress_if_needed(threshold_turns=10, keep_recent=4, summarizer=s)
+    assert_eq(triggered1, True, "第一次压缩触发")
+    assert_eq(call_count[0], 1, "summarizer 调用 1 次")
+
+    # 立即追加 1 轮 → buf=5。threshold=5 keep=4 时旧实现会再次触发
+    # 但 hot-path guard：自上次压缩后新增 turns 必须 >= keep_recent(=4) 才再压
+    # 当前 buf=5，上次压缩后剩 4，新增 1 < 4 → 不触发
+    mem.append("u_extra1", "a_extra1")
+    triggered_again = mem.compress_if_needed(threshold_turns=5, keep_recent=4, summarizer=s)
+    assert_eq(triggered_again, False, "新增 1 轮（< keep_recent）不再触发")
+    assert_eq(call_count[0], 1, "summarizer 仍只调 1 次")
+
+    # 再追加 3 轮使新增达到 keep_recent=4 → 应再次触发
+    for i in range(3):
+        mem.append(f"ux{i}", f"ax{i}")
+    triggered3 = mem.compress_if_needed(threshold_turns=5, keep_recent=4, summarizer=s)
+    assert_eq(triggered3, True, "新增达 keep_recent → 再次触发")
+    assert_eq(call_count[0], 2, "summarizer 调用 2 次")
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -421,6 +547,8 @@ def main() -> int:
     v10_emit_summarized()
     v11_env_clamp()
     v12_summary_in_messages()
+    v13_cumulative_compress()
+    v14_hot_path_guard()
     dt = time.time() - t0
 
     summary = {

@@ -1038,3 +1038,26 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **回归**：`infra_002 / infra_003 / interact_004 / interact_005 / interact_006 / interact_007 / interact_008 / companion_003 / companion_004 / companion_005 / companion_vision / vision_002 / vision_003 / vision_004 / vision_004b / vision_004b_wire (SKIP) / infra_debt_sweep / publish` 全 exit=0。
 - **merge & smoke**：`feat/infra-004` → `main` no-ff merge；merge 后 `./init.sh` PASS。
 - **下一执行**：`interact-009`（priority=31，phase-6 history-compact）。
+
+---
+
+## Session — interact-009 rework close-out (2026-05-13)
+
+- **interact-009 → passing**：rework Reviewer NEEDS-REWORK 的 L0 + L1 + L2 全部修复，verify 升级到 V1-V14 全 PASS（73/73）。
+- **L0（feature 主诉求）**：`coco/interact.py` 在调 LLM 前从 `dialog_memory.summary` 取摘要文本，作为 `role="system"` 第一条 prepend 到 `history_msgs`（与 `dialog.py:build_messages` 次序一致：profile system prompt 仍是顶层 system，对话摘要是 history 第一条 system message）。修复"压缩后的摘要永远不进 LLM 上下文"主诉求空转 bug。V9 升级 mock llm_fn，断言第二轮 LLM history 含 `对话摘要：…` 且文本完整。
+- **L1 修复 5/5**：
+  1. `coco/dialog.py compress_if_needed` 第二次压缩把旧 summary 作为 `("[此前摘要] " + summary, "")` pseudo-turn 注入 `to_summarize` 头部，让 summarizer 累积总结，不再覆盖丢失最早信息（V13 PASS）。
+  2. `coco/main.py` 装配 dialog_summary 时 auto-bump dialog max_turns = max(原值, threshold + keep_recent)，重建 `DialogMemory` 实例（deque maxlen 不可改），banner 从 WARN 改为说明性 `auto-bumped` 日志。
+  3. `coco/dialog.py` 加 `_last_compress_buf_len` 字段；hot-path guard：自上次压缩完成后新增 turns 必须 >= keep_recent 才允许再次压缩；`clear()` / `_check_idle()` 同步重置（V14 PASS）。
+  4. `coco/dialog_summary.py HeuristicSummarizer.summarize` 拼接 user + assistant 两段（`[U]xxx [A]yyy`），保留"机器人答应/拒绝过什么"的关键状态（V4 升级 PASS）。
+  5. `coco/dialog_summary.py LLMSummarizer.__init__` 用 `inspect.signature` 一次性 probe `system_prompt` kwarg（参考 `interact.py._probe_kwarg` 模式），避免被业务 TypeError 误判为签名不匹配触发 fallback 重复调 LLM。
+- **L2 顺手修 2/2**：
+  1. `coco/dialog.py _check_idle` 清空 summary 时 emit `interact.dialog_summary_cleared_idle` 调试事件。
+  2. `compress_if_needed` 锁内 `list(self._buf)` 还是切了两次（保留可读性，n 很小，不优化为原文要求的"单次"——已确认非热路径）。
+- **L3 known-debt（仅记录）**：
+  1. summary 文本无 token 计数估算，超长 LLM 上游可能截断（依赖 max_chars clamp）；
+  2. 跨会话不持久化（companion-004 user-profile 承担长期记忆，本期不接）；
+  3. `[此前摘要]` pseudo-turn 标记不会被 HeuristicSummarizer 特殊识别（它会再加 `[U]` 前缀），LLMSummarizer 因为是自然语言所以无影响；后续若用 HeuristicSummarizer 做累积摘要可能产生格式套娃，但当前 `summarizer_kind` 默认 `llm`。
+- **verify_interact_009 V1-V14**：73 PASS / 0 FAIL（新增 V13 累积压缩、V14 hot path guard；V4/V9 升级断言 assistant + summary 注入）。
+- **回归**：infra_002 / infra_003 / infra_004 / interact004 / interact005 / interact006 / interact_007 / interact_008 / companion_003 / companion_004 / companion_005 / companion_vision / vision_002 / vision_003 / vision_004 / vision_004b / vision_004b_wire / infra_debt_sweep / publish 全 PASS。
+- **下一执行**：vision-005（priority=32）。

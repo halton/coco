@@ -903,7 +903,7 @@
       "area": "interact",
       "title": "对话历史压缩（history>N → 摘要 turn，控 LLM token）",
       "user_visible_behavior": "多轮对话超过 N（默认 12）轮后，把最早的若干轮压缩成单条 system 摘要 turn 注入 LLM，避免 token 线性增长；摘要保留'用户偏好/已确认的事实/未完成话题'，丢弃寒暄。用户感觉不到中断，但长会话 LLM 输入稳定在 ≤N+1 轮。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-004",
         "interact-008"
@@ -914,7 +914,18 @@
         "scripts/verify_interact_009.py：V1 history<N 不压缩；V2 history>N 触发压缩，注入长度 ≤N+1；V3 摘要 turn 内容含关键事实 fixture（mock LLM）；V4 LLM 摘要失败 fallback 原 history；V5 多次压缩幂等（再次过 compactor 不再叠加）；V6 regression interact-004/008 verify。",
         "Reviewer fresh-context 评审：摘要丢失关键上下文风险、隐私（用户名/兴趣是否写入 system prompt）、token 计数估算误差、跨会话持久化是否需要（本期不做）。"
       ],
-      "evidence": [],
+      "evidence": [
+        "scripts/verify_interact_009.py V1-V14 ALL PASS (73/73, 0 FAIL)",
+        "L0: coco/interact.py 把 dialog_memory.summary 作为 system role 第一条 prepend 到 history_msgs（行 ~436-453），LLM 真的看到摘要",
+        "L1-1: coco/dialog.py compress_if_needed 第二次压缩把旧 summary 作为 [此前摘要] pseudo-turn 注入待压缩列表，避免覆盖丢失最早信息（V13 PASS）",
+        "L1-2: coco/main.py 装配时 auto-bump dialog max_turns >= threshold + keep_recent，banner 输出调整记录",
+        "L1-3: coco/dialog.py hot-path guard 自上次压缩后新增 turns 必须 >= keep_recent 才再次压缩（V14 PASS）",
+        "L1-4: coco/dialog_summary.py HeuristicSummarizer 拼 user+assistant 两段（[U]xxx [A]yyy），保留对话状态（V4 升级 PASS）",
+        "L1-5: coco/dialog_summary.py LLMSummarizer 用 inspect.signature 一次性 probe system_prompt kwarg，不再被业务 TypeError 误判",
+        "L2: _check_idle 清空 summary 时 emit interact.dialog_summary_cleared_idle；clear() 同步重置 _last_compress_buf_len",
+        "回归: infra_002/003/004 + interact004-008 + companion_003-005 + companion_004 + companion_vision + vision_002-004 + vision_004b + vision_004b_wire + infra_debt_sweep + publish 全部 PASS",
+        "Reviewer NEEDS-REWORK 已修：L0 + L1 + L2 + L3 known-debt（评审清单全部对应实施）"
+      ],
       "notes": "本期只做 in-session 压缩；跨会话长期记忆已有 companion-004 user-profile 承担。摘要 LLM 复用 interact-002 同一 client，prompt 走 yaml 模板。可加 COCO_HISTORY_COMPACT=0 关闭。"
     },
     {

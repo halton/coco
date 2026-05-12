@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import logging
+import inspect
 import os
 from dataclasses import dataclass
 from typing import Callable, List, Mapping, Optional, Protocol, Tuple
@@ -127,11 +128,20 @@ class HeuristicSummarizer:
     def summarize(self, turns: List[Tuple[str, str]]) -> str:
         if not turns:
             return ""
+        # interact-009 L1-4: 拼 user + assistant 两段，保留"机器人答应/拒绝过什么"
+        # 的关键状态。格式：[U]xxx [A]yyy；[U]zzz [A]www
         parts: List[str] = []
-        for u, _a in turns:
+        for u, a in turns:
             u = (u or "").strip()
+            a = (a or "").strip()
+            if not u and not a:
+                continue
+            seg_pieces: List[str] = []
             if u:
-                parts.append(u)
+                seg_pieces.append(f"[U]{u}")
+            if a:
+                seg_pieces.append(f"[A]{a}")
+            parts.append(" ".join(seg_pieces))
         body = "；".join(parts) if parts else "（无内容）"
         text = f"前面聊到：{body}"
         if len(text) > self.max_chars:
@@ -161,6 +171,26 @@ class LLMSummarizer:
             raise ValueError("LLMSummarizer 需要 llm_reply_fn")
         self.llm_reply_fn = llm_reply_fn
         self.max_chars = max_chars
+        # interact-009 L1-5: 用 inspect.signature 一次性 probe 是否接受 system_prompt，
+        # 避免 try/except TypeError 把业务侧 TypeError 误判为签名不匹配 → 重复调 LLM。
+        self._accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
+
+    @staticmethod
+    def _probe_kwarg(fn: Callable[..., str], name: str) -> bool:
+        """探测 fn 是否接受 keyword 参数 name；inspect 失败时保守返回 False。"""
+        try:
+            sig = inspect.signature(fn)
+        except (TypeError, ValueError):
+            return False
+        for p in sig.parameters.values():
+            if p.kind is inspect.Parameter.VAR_KEYWORD:
+                return True
+            if p.name == name and p.kind in (
+                inspect.Parameter.KEYWORD_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            ):
+                return True
+        return False
 
     @staticmethod
     def _format_turns(turns: List[Tuple[str, str]]) -> str:
@@ -175,11 +205,10 @@ class LLMSummarizer:
             return ""
         body = self._format_turns(turns)
         sys_prompt = self.SYSTEM_PROMPT.format(n=self.max_chars)
-        # 调用 llm_reply_fn —— 任何异常都抛给上层 fail-soft 处理
-        try:
+        # interact-009 L1-5: 用 probe 结果决定签名，业务 TypeError 直接抛上层 fail-soft
+        if self._accepts_system_prompt:
             out = self.llm_reply_fn(body, system_prompt=sys_prompt)
-        except TypeError:
-            # 旧签名不接受 system_prompt
+        else:
             out = self.llm_reply_fn(body)
         text = (out or "").strip()
         if len(text) > self.max_chars:

@@ -684,16 +684,30 @@ class Coco(ReachyMiniApp):
                     _dialog_summarizer = _ds_build(_ds_cfg, llm_reply_fn=_llm.reply)
                     _dialog_summary_threshold = _ds_cfg.threshold_turns
                     _dialog_summary_keep_recent = _ds_cfg.keep_recent
-                    # dialog_memory 的 max_turns 必须 >= threshold，否则永远触发不到。
-                    # 已构造的实例不可改 maxlen，这里只 warn；用户侧应同步设
-                    # COCO_DIALOG_MAX_TURNS >= COCO_DIALOG_SUMMARY_THRESHOLD。
-                    if _dialog_memory.max_turns < _ds_cfg.threshold_turns:
-                        print(
-                            f"[coco][dialog_summary] WARN dialog max_turns={_dialog_memory.max_turns}"
-                            f" < threshold={_ds_cfg.threshold_turns}；压缩永远不会触发，"
-                            f"请同步设 COCO_DIALOG_MAX_TURNS",
-                            flush=True,
-                        )
+                    # interact-009 L1-2: auto-bump dialog max_turns >= threshold + keep_recent
+                    # （deque 必须能容纳触发压缩所需的 turns，否则永远跑不到 threshold）。
+                    # deque maxlen 不可改 → 重建 DialogMemory 实例。
+                    _required_max = _ds_cfg.threshold_turns + _ds_cfg.keep_recent
+                    if _dialog_memory.max_turns < _required_max:
+                        _orig_max = _dialog_memory.max_turns
+                        try:
+                            from coco.dialog import DialogMemory as _DM
+                            _dialog_memory = _DM(
+                                max_turns=_required_max,
+                                idle_timeout_s=_dialog_memory.idle_timeout_s,
+                            )
+                            print(
+                                f"[coco][dialog_summary] auto-bumped dialog max_turns "
+                                f"{_orig_max} -> {_required_max} "
+                                f"(threshold={_ds_cfg.threshold_turns} + keep={_ds_cfg.keep_recent})",
+                                flush=True,
+                            )
+                        except Exception as _e:  # noqa: BLE001
+                            print(
+                                f"[coco][dialog_summary] WARN auto-bump failed "
+                                f"({type(_e).__name__}: {_e}); 压缩可能不会触发",
+                                flush=True,
+                            )
                     print(
                         f"[coco][dialog_summary] enabled kind={_ds_cfg.summarizer_kind} "
                         f"threshold={_ds_cfg.threshold_turns} keep={_ds_cfg.keep_recent} "

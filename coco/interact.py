@@ -435,6 +435,16 @@ class InteractSession:
                 history_msgs: Optional[List[dict]] = None
                 if self.dialog_memory is not None and self._llm_accepts_history:
                     history_msgs = []
+                    # interact-009 L0: 把 dialog_memory.summary 作为 history 第一条
+                    # system message prepend（保留 profile system prompt 在顶层 system 不变）。
+                    # 与 dialog.py:build_messages 的次序一致：[system_prompt(profile)] +
+                    # [system(对话摘要)] + flatten(recent_turns)。
+                    _summary_text = getattr(self.dialog_memory, "summary", None)
+                    if _summary_text:
+                        history_msgs.append({
+                            "role": "system",
+                            "content": f"对话摘要：{_summary_text}",
+                        })
                     for u, a in self.dialog_memory.recent_turns():
                         if u:
                             history_msgs.append({"role": "user", "content": u})

@@ -69,6 +69,8 @@ class DialogMemory:
         self._last_append_ts: Optional[float] = None
         # interact-009: 压缩摘要（None 表示未压缩）。compress_if_needed 触发后填入。
         self._summary: Optional[str] = None
+        # interact-009 L1-3: 记录上次压缩完成后 deque 长度，用于 hot-path guard
+        self._last_compress_buf_len: Optional[int] = None
         # interact-009: 线程安全锁（compress_if_needed 可能跨线程触发）
         self._lock = threading.RLock()
 
@@ -78,10 +80,22 @@ class DialogMemory:
         if self._last_append_ts is None:
             return False
         if (self._clock() - self._last_append_ts) > self.idle_timeout_s:
+            had_summary = self._summary is not None
             self._buf.clear()
             self._last_append_ts = None
             self._summary = None
+            self._last_compress_buf_len = None
             log.info("[dialog] idle timeout (>%ss), memory cleared", self.idle_timeout_s)
+            # interact-009 L2: idle clear summary 时 emit 调试事件
+            if had_summary:
+                try:
+                    from coco.logging_setup import emit as _emit
+                    _emit(
+                        "interact.dialog_summary_cleared_idle",
+                        idle_timeout_s=self.idle_timeout_s,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
             return True
         return False
 
@@ -106,6 +120,7 @@ class DialogMemory:
             self._buf.clear()
             self._last_append_ts = None
             self._summary = None
+            self._last_compress_buf_len = None
 
     def __len__(self) -> int:
         # interact-009: 含 summary 时计 1 + 真实 turn 数（V6）
@@ -184,9 +199,22 @@ class DialogMemory:
             n = len(self._buf)
             if n < threshold_turns:
                 return False
+            # interact-009 L1-3: hot-path guard — 自上次压缩后新增 turns 必须
+            # >= keep_recent 才再次压缩，避免 max_turns ≈ threshold 时每轮都触发 LLM。
+            if self._last_compress_buf_len is not None:
+                # _last_compress_buf_len 记录"上次压缩完成后 deque 的长度"
+                # 例：keep_recent=4 → 压缩完 buf 长度=4 → 必须涨到 4+4=8 才允许再次压缩
+                if n - self._last_compress_buf_len < keep_recent:
+                    return False
             # 取出待压缩的最早 (n - keep_recent) 轮
             to_summarize: List[Tuple[str, str]] = list(self._buf)[: n - keep_recent]
             tail: List[Tuple[str, str]] = list(self._buf)[n - keep_recent:]
+            # interact-009 L1-1: 累积摘要 — 若已存在旧 summary，作为 pseudo-turn 注入
+            # 待压缩列表头部，让 summarizer 在"旧摘要 + 新中段"基础上再总结，
+            # 避免第二次压缩覆盖第一次摘要导致最早信息丢失。
+            prev_summary = self._summary
+        if prev_summary:
+            to_summarize = [("[此前摘要] " + prev_summary, "")] + to_summarize
 
         # 调 summarizer（不持锁，避免 LLM 慢路径阻塞 append）
         try:
@@ -215,6 +243,8 @@ class DialogMemory:
             for t in tail:
                 self._buf.append(t)
             self._summary = summary_text
+            # interact-009 L1-3: 记录压缩完成后 deque 长度
+            self._last_compress_buf_len = len(self._buf)
 
         try:
             emit_fn(
