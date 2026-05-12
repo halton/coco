@@ -1049,7 +1049,7 @@
       "area": "companion",
       "title": "情绪驱动 TTS prosody + 表情节律",
       "user_visible_behavior": "Coco 的语速、音高、表情叠加节律会随当前 emotion 变化：happy → 语速 +5% / 音高 +1 半音 / 微震表情 + 天线轻脉动；sad → 语速 -10% / 音高 -1 半音 / 静止表情。TTS backend 不支持 prosody 调节时优雅降级（fallback no-op + emit tts.prosody_unsupported），仍能播声不崩。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "interact-006",
         "robot-004",
@@ -1064,8 +1064,13 @@
         "scripts/verify_companion_007.py：V1 default OFF；V2 happy → tts_rate=+5%, pitch=+1, antenna_pulse=True；V3 sad → tts_rate=-10%, pitch=-1, no overlay；V4 不支持 backend fallback no-op + emit 'tts.prosody_unsupported'；V5 5s emotion debounce（连续 happy→happy→sad 在 1s 内只 emit 1 次 style 变更）；V6 emotion 同源 robot-004 PostureBaseline（断言两者读到同一 emotion 实例）；V7 ExpressionPlayer 主动播放期间 prosody pause/resume 与 baseline 协议一致；V8 env clamp（非法值 → OFF / clamp 在边界）；V9 回归 interact-006 + robot-004 + companion-005 verify。",
         "Reviewer fresh-context 评审：prosody 与 expression 时序协调、不支持 backend 的 fallback 策略是否完整（包含部分支持场景）、debounce 与 robot-004 是否真同源、emotion 误判（interact-006）的放大效应。"
       ],
-      "evidence": [],
-      "notes": "sim-first：fake TTS backend assert 接收到正确 style；真听感（人耳判断 happy/sad 是否听得出）归 uat-phase4 异步项。共享 emotion 源避免与 robot-004 出现两套独立 emotion 状态。"
+      "evidence": [
+        "scripts/verify_companion_007.py V1-V11 全 PASS（evidence/companion-007/verify_summary.json + verify.log）",
+        "回归 PASS：./init.sh smoke / verify_interact_006 / verify_robot_003 / verify_robot_004 / verify_companion_005 / verify_companion_006 / verify_interact_010",
+        "手测：posture_baseline 未启用 → warn skip；pitch_semitone=2.0 进程级 emit 'tts.prosody_unsupported' 仅 1 次；happy → sad → happy(busy) 序列 prosody+overlay 切换正确；player.is_busy 时 EmotionRenderer 跳过 antenna pulse",
+        "Reviewer (sub-agent, fresh-context): LGTM；L2 followup 不阻 merge — (1) reset_prosody_fallback_emit_flag 命名 (2) add_listener 锁外 snapshot 弱 race (3) pulse-vs-play 短窗口 race"
+      ],
+      "notes": "sim-first：fake TTS backend assert 接收到正确 style；真听感（人耳判断 happy/sad 是否听得出）归 uat-phase4 异步项。共享 emotion 源避免与 robot-004 出现两套独立 emotion 状态。L2 followup 见 evidence。"
     },
     {
       "id": "companion-008",

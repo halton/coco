@@ -1152,3 +1152,21 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **followup**：L1-2（inject 异常占 cooldown 槽）—— 待后续 feature 或单独 hotfix
 - **push**：feat/interact-010 push 成功（fa6af6f→bad93dc）；main push 待执行
 - **下一 candidate**：companion-007 (priority=36, 情绪驱动 TTS prosody + 表情节律)
+
+## Session 2026-05-13 — companion-007 closeout
+
+- **HEAD（main）**：merge commit `e2a7118` (`merge(companion-007): EmotionRenderer ...`)；feature commit `0928dff` on `feat/companion-007`
+- **关键改动**：
+  - `coco/companion/emotion_renderer.py` 新增 EmotionRenderer + EmotionStyle（happy/sad/neutral/focused 表 + clamp + 5s debounce + busy-skip pulse）
+  - `coco/tts.py` say_async 接 optional style；不支持 backend → fallback no-op + 进程级单次 emit `tts.prosody_unsupported`
+  - `coco/robot/posture_baseline.py` 暴露 emotion 共享源；未启用 baseline → warn skip
+  - `coco/main.py` wire EmotionRenderer 到 ExpressionPlayer + IdleAnimator
+  - `scripts/verify_companion_007.py` V1-V11
+- **Reviewer (sub-agent, fresh-context)**：LGTM；3 条 L2 followup 不阻 merge：
+  1. `reset_prosody_fallback_emit_flag` 命名（含混 reset/test 语义）
+  2. `add_listener` 锁外 snapshot 弱 race（高频订阅理论可丢一次回调）
+  3. pulse-vs-play 短窗口 race（is_busy check 与触发 pulse 之间存在 µs 级窗口）
+- **回归 PASS**：./init.sh smoke / verify_interact_006 / verify_robot_003 / verify_robot_004 / verify_companion_005 / verify_companion_006 / verify_interact_010
+- **手测**：posture_baseline 未启用 warn skip；pitch_semitone=2.0 → fallback emit 1 次；happy→sad→happy(busy) 序列正确；player.is_busy 期间跳 antenna pulse
+- **push**：commit 后 `git push origin main` 一次（按 sim-first push 策略，失败忽略）
+- **下一 candidate**：companion-008 (priority=37, 跨 session UserProfile 持久化)
