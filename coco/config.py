@@ -142,6 +142,7 @@ class CocoConfig:
     power_idle_enabled: bool = False  # COCO_POWER_IDLE；默认 False
     dialog: Any = None  # coco.dialog.DialogConfig
     dialog_memory_enabled: bool = False  # COCO_DIALOG_MEMORY；默认 False
+    dialog_summary: Any = None  # coco.dialog_summary.DialogSummaryConfig (interact-009)
     emotion: Any = None  # coco.emotion.EmotionConfig
     emotion_enabled: bool = False  # COCO_EMOTION；默认 False
     intent: Any = None  # coco.intent.IntentConfig
@@ -322,6 +323,15 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
     # env，业务路径都是 os.environ）。
     power_cfg = _safe_call("power", lambda: _power.config_from_env()) or _power.PowerConfig()
     dialog_cfg = _safe_call("dialog", lambda: _dialog.config_from_env()) or _dialog.DialogConfig()
+    # interact-009: dialog_summary（默认 enabled=False）
+    try:
+        from coco import dialog_summary as _dialog_summary
+        dialog_summary_cfg = _safe_call(
+            "dialog_summary", lambda: _dialog_summary.config_from_env(env)
+        ) or _dialog_summary.DialogSummaryConfig()
+    except Exception as ex:  # noqa: BLE001
+        log.warning("[config] dialog_summary import failed: %s: %s", type(ex).__name__, ex)
+        dialog_summary_cfg = None
     # emotion.config_from_env 接受 env 参数；env 注入即可生效（与 phase-4 known-debt L2-2 不同）
     emotion_cfg = _safe_call("emotion", lambda: _emotion.config_from_env(env)) or _emotion.EmotionConfig()
 
@@ -360,6 +370,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         power_idle_enabled=power_idle_enabled,
         dialog=dialog_cfg,
         dialog_memory_enabled=dialog_memory_enabled,
+        dialog_summary=dialog_summary_cfg,
         emotion=emotion_cfg,
         emotion_enabled=emotion_enabled,
         intent=intent_cfg,
@@ -508,6 +519,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
         "wake": {"enabled": cfg.wake_enabled, "config": _sub(cfg.wake)},
         "power": {"idle_enabled": cfg.power_idle_enabled, "config": _sub(cfg.power)},
         "dialog": {"memory_enabled": cfg.dialog_memory_enabled, "config": _sub(cfg.dialog)},
+        "dialog_summary": {"config": _sub(cfg.dialog_summary)},
         "emotion": {"enabled": cfg.emotion_enabled, "config": _sub(cfg.emotion)},
         "intent": {"enabled": cfg.intent_enabled, "config": _sub(cfg.intent)},
         "conversation": {"config": _sub(cfg.conversation)},

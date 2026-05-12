@@ -21,7 +21,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple
 
 import numpy as np
 
@@ -119,6 +119,9 @@ class InteractSession:
         profile_store: Optional["ProfileStore"] = None,
         intent_classifier: Optional["IntentClassifier"] = None,
         conv_state_machine: Optional["ConversationStateMachine"] = None,
+        dialog_summarizer: Optional[Any] = None,
+        dialog_summary_threshold: int = 10,
+        dialog_summary_keep_recent: int = 4,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -161,6 +164,10 @@ class InteractSession:
         # interact.state_transition。
         self.intent_classifier = intent_classifier
         self.conv_state_machine = conv_state_machine
+        # interact-009: 对话历史压缩。dialog_summarizer=None 时不压缩（向后兼容 interact-004/008）。
+        self.dialog_summarizer = dialog_summarizer
+        self.dialog_summary_threshold = int(dialog_summary_threshold)
+        self.dialog_summary_keep_recent = int(dialog_summary_keep_recent)
         # 状态机回调挂钩（emit interact.state_transition）
         if conv_state_machine is not None:
             try:
@@ -495,6 +502,17 @@ class InteractSession:
                     self.dialog_memory.append(transcript, reply)
                 except Exception as e:  # noqa: BLE001
                     log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
+                # interact-009: append 后尝试压缩（fail-soft，内部 try/except）
+                if self.dialog_summarizer is not None:
+                    try:
+                        self.dialog_memory.compress_if_needed(
+                            threshold_turns=self.dialog_summary_threshold,
+                            keep_recent=self.dialog_summary_keep_recent,
+                            summarizer=self.dialog_summarizer,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("dialog_memory.compress_if_needed crashed: %s: %s",
+                                    type(e).__name__, e)
 
             # 4) TTS（可与动作并行；这里串行简化）
             # interact-008 L1-2: repeat 路径无 on_llm_start/done，需手动 fire

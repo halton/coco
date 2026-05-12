@@ -669,6 +669,40 @@ class Coco(ReachyMiniApp):
                         print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
 
 
+            # interact-009: 可选对话历史压缩（默认 OFF）。
+            # 启用时若 dialog_memory 未启用，summarizer 也不构造（无 history 可压缩）。
+            _dialog_summarizer = None
+            _dialog_summary_threshold = 10
+            _dialog_summary_keep_recent = 4
+            try:
+                from coco.dialog_summary import (
+                    config_from_env as _ds_config_from_env,
+                    build_summarizer as _ds_build,
+                )
+                _ds_cfg = _ds_config_from_env()
+                if _ds_cfg.enabled and _dialog_memory is not None:
+                    _dialog_summarizer = _ds_build(_ds_cfg, llm_reply_fn=_llm.reply)
+                    _dialog_summary_threshold = _ds_cfg.threshold_turns
+                    _dialog_summary_keep_recent = _ds_cfg.keep_recent
+                    # dialog_memory 的 max_turns 必须 >= threshold，否则永远触发不到。
+                    # 已构造的实例不可改 maxlen，这里只 warn；用户侧应同步设
+                    # COCO_DIALOG_MAX_TURNS >= COCO_DIALOG_SUMMARY_THRESHOLD。
+                    if _dialog_memory.max_turns < _ds_cfg.threshold_turns:
+                        print(
+                            f"[coco][dialog_summary] WARN dialog max_turns={_dialog_memory.max_turns}"
+                            f" < threshold={_ds_cfg.threshold_turns}；压缩永远不会触发，"
+                            f"请同步设 COCO_DIALOG_MAX_TURNS",
+                            flush=True,
+                        )
+                    print(
+                        f"[coco][dialog_summary] enabled kind={_ds_cfg.summarizer_kind} "
+                        f"threshold={_ds_cfg.threshold_turns} keep={_ds_cfg.keep_recent} "
+                        f"max_chars={_ds_cfg.summary_max_chars}",
+                        flush=True,
+                    )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][dialog_summary] init failed: {type(e).__name__}: {e}", flush=True)
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -685,6 +719,9 @@ class Coco(ReachyMiniApp):
                 profile_store=_profile_store,
                 intent_classifier=_intent_classifier,
                 conv_state_machine=_conv_sm,
+                dialog_summarizer=_dialog_summarizer,
+                dialog_summary_threshold=_dialog_summary_threshold,
+                dialog_summary_keep_recent=_dialog_summary_keep_recent,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession

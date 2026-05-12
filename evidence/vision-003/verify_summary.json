@@ -1,6 +1,6 @@
 {
   "feature_id": "vision-003",
-  "ts": "2026-05-11 22:28:11",
+  "ts": "2026-05-13 00:50:15",
   "backend_selected": "histogram",
   "has_cv2_face": false,
   "results": {
