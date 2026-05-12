@@ -920,6 +920,33 @@ class Coco(ReachyMiniApp):
                 )
                 _profile_switcher = None
 
+            # companion-008: 可选跨 session UserProfile 持久化（默认 OFF）。
+            # COCO_PROFILE_PERSIST=1 → 启动时扫 ~/.coco/profiles/，emit profile.hydrated；
+            # default OFF 时本段完全不介入，行为与今天一致。
+            # 注意：本期只做"启动 hydrate 报告 + 接口可用"，与 ProfileSwitcher 的实际
+            # write-through 集成留待下游 caller 显式调用 _persistent_profile_store.save(...)。
+            _persistent_profile_store = None
+            try:
+                from coco.companion.profile_persist import (
+                    PersistentProfileStore as _PPStore,
+                    default_persist_root as _pp_root,
+                    profile_persist_enabled_from_env as _pp_enabled,
+                )
+                if _pp_enabled():
+                    _pp_path = _pp_root()
+                    _persistent_profile_store = _PPStore(root=_pp_path, emit_fn=emit)
+                    _hydrated = _persistent_profile_store.hydrate_all()
+                    print(
+                        f"[coco][profile_persist] enabled root={_pp_path} "
+                        f"hydrated={len(_hydrated)} profiles",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][profile_persist] disabled (COCO_PROFILE_PERSIST not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][profile_persist] init failed: {type(e).__name__}: {e}", flush=True)
+                _persistent_profile_store = None
+
             # interact-008: 可选 IntentClassifier + ConversationStateMachine（默认 OFF）。
             # COCO_INTENT=1 启用：handle_audio 内做 intent 分类 + state 机；
             # COMMAND="安静"/"重复"/TEACH 都按 ConvState 走特殊路径。
