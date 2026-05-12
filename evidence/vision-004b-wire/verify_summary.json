@@ -1,7 +1,7 @@
 {
   "feature": "vision-004b-wire",
   "outcome": "PASS",
-  "elapsed_s": 0.611,
+  "elapsed_s": 0.613,
   "results": {
     "V1": "PASS",
     "V2": "PASS",

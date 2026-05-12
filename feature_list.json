@@ -933,7 +933,7 @@
       "priority": 32,
       "area": "vision",
       "title": "简易手势识别（招手/竖大拇指 sim fixture）",
-      "user_visible_behavior": "镜头里出现明显手势（招手 waving / 竖大拇指 thumbs_up）时，Coco 触发对应回应：waving → glance + '你好' TTS；thumbs_up → ExpressionPlayer.play('praise')。手势检测在低帧率（~5fps）后台跑，不阻 vision 主线。",
+      "user_visible_behavior": "镜头里出现明显手势（招手 waving / 竖大拇指 thumbs_up）时，Coco 触发对应回应：waving → glance（look_left 一下）+ '你好' TTS；thumbs_up → ExpressionPlayer.play('excited')（库内无 'praise'，用语义近义 'excited' 替代）。手势检测在低帧率（~5fps）后台跑，不阻 vision 主线。NOD/SHAKE/HEART 仅记录事件不主动触发动作（避免误判扰民）。",
       "status": "not_started",
       "dependencies": [
         "infra-vision-source",
@@ -941,14 +941,14 @@
         "robot-003"
       ],
       "verification": [
-        "coco/perception/gesture.py：GestureDetector（基于 mediapipe hands 或 opencv hand cascade，按依赖可用性 fallback）；输出 GestureEvent{type, confidence, ts}。",
-        "tests/fixtures/vision/gesture_waving.mp4 / gesture_thumbs_up.mp4：程序合成（参考 gen_vision_fixtures.py），含明确特征帧 + 空白帧；fixture 内置 ground truth json。",
-        "事件接线：EventBus 订阅 gesture.detected → waving 触发 glance+TTS，thumbs_up 触发 ExpressionPlayer.play('praise')；30s/手势 cooldown 防抖。",
-        "scripts/verify_vision_005.py：V1 waving fixture 检出；V2 thumbs_up fixture 检出；V3 空白 fixture 不误检；V4 cooldown 起作用（连续 2 次同手势第二次抑制）；V5 mediapipe 不可用时 fallback opencv（或 noop + warning）；V6 regression vision-001/002/004 verify。",
-        "Reviewer fresh-context 评审：检测置信度阈值、误检率（背景手势）、与 face attention 优先级、低帧率后台线程的 GIL 影响、依赖可选化策略。"
+        "coco/perception/gesture.py：HeuristicGestureBackend（基于 cv2 + numpy 的启发式 hand/landmark proxy，sim-only，不依赖 mediapipe）+ GestureRecognizer 后台 daemon 线程；输出 GestureLabel{kind, confidence, ts, bbox}。kind ∈ {WAVE, THUMBS_UP, NOD, SHAKE, HEART}（HEART 为占位弱启发式）。",
+        "tests/fixtures/vision/gestures/wave_synthetic.mp4 / thumbs_up_synthetic.jpg / nod_synthetic.mp4 / shake_synthetic.mp4 / heart_synthetic.jpg / empty_synthetic.jpg：程序合成（参考 gen_vision_fixtures.py），含明确特征帧 + 空白帧；fixture README 描述 ground truth。",
+        "事件接线：main.py 内 GestureRecognizer.on_gesture 既 emit 'vision.gesture_detected'（component 'vision'）也调用本地 behavior handler 闭环：waving → coco.actions.look_left(0.4s glance) + coco.tts.say_async('你好')；thumbs_up → ExpressionPlayer.play('excited')；30s/手势 行为侧 cooldown 防抖（与 backend detect cooldown 解耦）。",
+        "scripts/verify_vision_005.py：V1 默认 OFF；V2 enabled+clamp；V3 WAVE fixture 检出；V4 THUMBS_UP fixture 检出；V5 启发式 backend 处理畸形 / 全黑帧不崩溃，confidence=0 不 emit；V6 NOD+SHAKE fixture 检出；V7 GestureRecognizer 后台线程 + emit；V8 cooldown 抑制（短 cooldown 测路径）；V9 conf<min 不 emit；V10 event 命名空间归属 vision；V11 stop+window clamp；V12 env clamp；V13 回归调用 verify_vision_002.py + verify_vision_004.py 子进程；V14 默认 30s cooldown 行为：连续两次同 kind 第二次被抑制；V15 HEART fixture 经 backend 不崩溃。",
+        "Reviewer fresh-context 评审：检测置信度阈值、误检率（背景手势）、与 face attention 优先级、低帧率后台线程的 GIL 影响、依赖可选化策略；闭环 handler 对 ExpressionPlayer 缺失/未启用的 fail-soft；行为 cooldown 与 backend cooldown 双层冷却的语义。"
       ],
       "evidence": [],
-      "notes": "sim-first：用程序合成 mp4 fixture 验。真机手势识别准确度归 uat-phase6。优先用 mediapipe（hand landmarks 鲁棒），不可用时 fallback 简化 hog/cascade。手势集本期只两种，扩展留 followup。"
+      "notes": "sim-first：用程序合成 fixture 验。真机手势识别准确度归 uat-phase6 异步项。手势集本期 5 类（WAVE/THUMBS_UP/NOD/SHAKE/HEART），HEART 为占位弱启发式留作未来 ML backend。mediapipe 不引入；如未来需要可加 backend 选择 (Heuristic vs MediaPipe)。"
     },
     {
       "id": "companion-006",

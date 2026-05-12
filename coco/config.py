@@ -150,6 +150,8 @@ class CocoConfig:
     conversation: Any = None  # coco.conversation.ConversationConfig
     # robot-003: ExpressionsConfig（默认 OFF）
     expressions: Any = None  # coco.robot.expressions.ExpressionsConfig
+    # vision-005: GestureConfig（默认 OFF）
+    gesture: Any = None  # coco.perception.gesture.GestureConfig
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +357,17 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         log.warning("[config] expressions module import failed: %s: %s", type(e).__name__, e)
         expr_cfg = None
 
+    # vision-005: GestureConfig（默认 OFF）
+    try:
+        from coco.perception.gesture import (
+            gesture_config_from_env as _gesture_from_env,
+            GestureConfig as _GestureConfig,
+        )
+        gesture_cfg = _safe_call("gesture", lambda: _gesture_from_env(env)) or _GestureConfig()
+    except Exception as e:  # noqa: BLE001
+        log.warning("[config] gesture module import failed: %s: %s", type(e).__name__, e)
+        gesture_cfg = None
+
     cfg = CocoConfig(
         log=_log_from_env(env),
         ptt=_ptt_from_env(env),
@@ -377,6 +390,7 @@ def load_config(env: Optional[Mapping[str, str]] = None) -> CocoConfig:
         intent_enabled=intent_enabled,
         conversation=conversation_cfg,
         expressions=expr_cfg,
+        gesture=gesture_cfg,
     )
     # infra-004: 跨字段 / 路径 / 不兼容组合校验。error 抛 ConfigValidationError；
     # warning / info 只写日志。
@@ -524,6 +538,7 @@ def config_summary(cfg: CocoConfig) -> Dict[str, Any]:
         "intent": {"enabled": cfg.intent_enabled, "config": _sub(cfg.intent)},
         "conversation": {"config": _sub(cfg.conversation)},
         "expressions": {"config": _sub(cfg.expressions)},
+        "gesture": {"config": _sub(cfg.gesture)},
     }
 
 

@@ -1,0 +1,42 @@
+{
+  "feature": "vision-005",
+  "ok": true,
+  "errors": [],
+  "fixtures": [
+    "tests/fixtures/vision/gestures/README.md",
+    "tests/fixtures/vision/gestures/empty_synthetic.jpg",
+    "tests/fixtures/vision/gestures/heart_synthetic.jpg",
+    "tests/fixtures/vision/gestures/nod_synthetic.mp4",
+    "tests/fixtures/vision/gestures/shake_synthetic.mp4",
+    "tests/fixtures/vision/gestures/thumbs_up_synthetic.jpg",
+    "tests/fixtures/vision/gestures/wave_synthetic.mp4"
+  ],
+  "v13_regression": {
+    "vision-002": {
+      "returncode": 0,
+      "stdout_tail": [
+        "  trace -> evidence/vision-002/verify_trace.json",
+        "",
+        "[vision-002] PASS"
+      ],
+      "stderr_tail": [
+        "2026-05-13 01:35:51,157 [INFO] coco.perception.face_tracker: FaceTracker presence ↑ TRUE (consecutive hits=2/J=2)",
+        "2026-05-13 01:35:51,158 [INFO] coco.perception.face_tracker: FaceTracker presence ↓ FALSE (consecutive misses=4/K=4)",
+        "2026-05-13 01:35:51,172 [INFO] coco.perception.face_tracker: FaceTracker presence ↑ TRUE (consecutive hits=2/J=2)"
+      ]
+    },
+    "vision-004": {
+      "returncode": 0,
+      "stdout_tail": [
+        "",
+        "=== summary ===",
+        "vision-004 verification: ALL PASS (V1..V13)"
+      ],
+      "stderr_tail": [
+        "2026-05-13 01:35:51,901 [WARNING] coco.config: [config] COCO_ATTENTION_INTERVAL_MS=9999 >2000，clamp 2000",
+        "2026-05-13 01:35:51,901 [WARNING] coco.config: [config] COCO_ATTENTION_INTERVAL_MS='not_int' 非整数，回退 200",
+        "2026-05-13 01:35:51,901 [WARNING] coco.perception.attention: AttentionSelector on_change callback failed: RuntimeError: boom"
+      ]
+    }
+  }
+}

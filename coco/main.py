@@ -326,6 +326,132 @@ class Coco(ReachyMiniApp):
             _attention_selector = None
             _attention_thread = None
 
+        # vision-005: GestureRecognizer — 简易手势识别（sim-only）。
+        # 默认 OFF；仅在 COCO_GESTURE=1 且 COCO_CAMERA 已设时启动。
+        # 命中（含 cooldown / min_confidence 过滤）时 emit "vision.gesture_detected"
+        # （component "vision"）；同时由本会话内的"行为侧 handler"按 kind 分发：
+        #   - WAVE       → look_left 一下（glance） + tts.say_async("你好")
+        #   - THUMBS_UP  → ExpressionPlayer.play("excited")（'praise' 的近义；库内无 praise）
+        #   - NOD/SHAKE/HEART → 仅记录，不主动发声/动作（避免误判扰民）
+        # 行为侧再加 per-kind 30s cooldown（与 backend 的 detect cooldown 解耦）。
+        # 先把 _expression_player 占位为 None；下方 robot-003 段落可能赋真实实例。
+        # 闭包按名字延迟解析（cellvar），handler 在运行时读最新值，因此这里仅
+        # 需保证名字存在，避免 NameError。
+        _expression_player = None
+        _gesture_recognizer = None
+        _gesture_behavior_last_ts: dict[str, float] = {}
+        _GESTURE_BEHAVIOR_COOLDOWN_S = 30.0
+        try:
+            if os.environ.get("COCO_GESTURE", "0") == "1":
+                from coco.perception.camera_source import open_camera as _open_cam
+                from coco.perception.gesture import (
+                    GestureRecognizer,
+                    HeuristicGestureBackend,
+                    gesture_config_from_env,
+                )
+
+                _gesture_cfg = gesture_config_from_env(os.environ)
+                _gesture_spec = os.environ.get("COCO_CAMERA")
+                if not _gesture_spec:
+                    print(
+                        "[coco][gesture] COCO_GESTURE=1 但 COCO_CAMERA 未设；GestureRecognizer 跳过构造",
+                        flush=True,
+                    )
+                else:
+                    _gesture_cam = _open_cam(_gesture_spec)
+
+                    def _gesture_behavior_handler(lbl, _r=reachy_mini):  # noqa: ANN001
+                        """vision-005 闭环：根据 kind 触发 tts/glance/expression。
+
+                        额外一层 30s/kind 行为冷却：backend cooldown 控"再次检出"，
+                        本 cooldown 控"再次发声/动头"，两者分离，避免 backend 调小时
+                        闭环行为被刷屏。
+                        """
+                        try:
+                            kind = lbl.kind.value
+                        except Exception:  # noqa: BLE001
+                            kind = "unknown"
+                        now = time.monotonic()
+                        last = _gesture_behavior_last_ts.get(kind)
+                        if last is not None and (now - last) < _GESTURE_BEHAVIOR_COOLDOWN_S:
+                            print(
+                                f"[coco][gesture] behavior suppressed (cooldown) kind={kind}",
+                                flush=True,
+                            )
+                            return
+                        _gesture_behavior_last_ts[kind] = now
+                        try:
+                            if kind == "wave":
+                                # 看一下 + 打招呼。glance 用 look_left（短促 0.4s 回中），
+                                # tts 用 say_async 不阻塞 main loop / event 线程。
+                                try:
+                                    from coco.actions import look_left as _look_left
+                                    _look_left(_r, duration=0.4, return_to_center=True)
+                                except Exception as e:  # noqa: BLE001
+                                    print(f"[coco][gesture] glance failed: {e!r}", flush=True)
+                                try:
+                                    coco_tts.say_async("你好")
+                                except Exception as e:  # noqa: BLE001
+                                    print(f"[coco][gesture] tts say_async failed: {e!r}", flush=True)
+                                print("[coco][gesture] WAVE → glance + 你好", flush=True)
+                            elif kind == "thumbs_up":
+                                # 库内无 'praise' expression（见 robot/expressions.py
+                                # EXPRESSION_LIBRARY），用语义近似的 'excited' 替代。
+                                if _expression_player is not None:
+                                    try:
+                                        _expression_player.play("excited")
+                                    except Exception as e:  # noqa: BLE001
+                                        print(
+                                            f"[coco][gesture] expression play(excited) failed: {e!r}",
+                                            flush=True,
+                                        )
+                                else:
+                                    print(
+                                        "[coco][gesture] THUMBS_UP detected but ExpressionPlayer 未启用 (COCO_EXPRESSIONS=1?)",
+                                        flush=True,
+                                    )
+                                print("[coco][gesture] THUMBS_UP → expression(excited)", flush=True)
+                            else:
+                                # NOD/SHAKE/HEART：仅记录
+                                print(f"[coco][gesture] {kind} detected (no behavior wired)", flush=True)
+                        except Exception as e:  # noqa: BLE001
+                            print(f"[coco][gesture] behavior handler crashed: {e!r}", flush=True)
+
+                    def _on_gesture(lbl):  # noqa: ANN001
+                        try:
+                            emit(
+                                "vision.gesture_detected",
+                                component="vision",
+                                kind=lbl.kind.value,
+                                confidence=float(lbl.confidence),
+                                bbox=list(lbl.bbox) if lbl.bbox is not None else None,
+                            )
+                        except Exception:  # noqa: BLE001
+                            pass
+                        # 闭环：emit 之后再触发行为，确保 evidence/事件先落
+                        _gesture_behavior_handler(lbl)
+
+                    _gesture_recognizer = GestureRecognizer(
+                        stop_event,
+                        camera=_gesture_cam,
+                        backend=HeuristicGestureBackend(),
+                        interval_ms=_gesture_cfg.interval_ms,
+                        min_confidence=_gesture_cfg.min_confidence,
+                        cooldown_per_kind_s=_gesture_cfg.cooldown_per_kind_s,
+                        window_frames=_gesture_cfg.window_frames,
+                        on_gesture=_on_gesture,
+                    )
+                    _gesture_recognizer.start()
+                    print(
+                        f"[coco][gesture] GestureRecognizer started camera={_gesture_spec!r} "
+                        f"interval_ms={_gesture_cfg.interval_ms} min_conf={_gesture_cfg.min_confidence} "
+                        f"cooldown_s={_gesture_cfg.cooldown_per_kind_s} window={_gesture_cfg.window_frames}",
+                        flush=True,
+                    )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][gesture] init failed: {exc!r}", flush=True)
+            _gesture_recognizer = None
+
         try:
             try:
                 reachy_mini.wake_up()
@@ -1025,6 +1151,17 @@ class Coco(ReachyMiniApp):
                     _greet_wire.stop(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][greet_wire] stop failed: {e!r}", flush=True)
+            # vision-005: 停 GestureRecognizer（与其他后台组件清理风格一致）
+            try:
+                if "_gesture_recognizer" in locals() and _gesture_recognizer is not None:
+                    _gesture_recognizer.stop()
+                    _gesture_recognizer.join(timeout=2.0)
+                    if _gesture_recognizer.is_alive():
+                        print("[coco][gesture] WARN: recognizer did not stop within 2s", flush=True)
+                    else:
+                        print(f"[coco][gesture] stopped stats={_gesture_recognizer.stats}", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][gesture] stop failed: {e!r}", flush=True)
 
 
 def main() -> None:

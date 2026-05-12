@@ -1,7 +1,7 @@
 {
   "feature": "vision-004b",
   "outcome": "PASS",
-  "elapsed_s": 0.0,
+  "elapsed_s": 0.001,
   "results": {
     "V1": "PASS",
     "V2": "PASS",
