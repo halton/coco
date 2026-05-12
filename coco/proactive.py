@@ -257,6 +257,34 @@ class ProactiveScheduler:
         with self._lock:
             self._last_interaction_ts = self.clock()
 
+    # interact-010: 共享 cooldown API
+    # ------------------------------------------------------------------
+    # 让外部 trigger 源（如 GestureDialogBridge）能把"我刚开口了"写穿
+    # _last_proactive_ts，下一轮 _should_trigger 自动遵守同一 cooldown 窗口。
+    # 反向：is_in_cooldown 让外部源在自己开口前先检查 proactive 是否刚发过。
+    def record_trigger(self, source: str = "external") -> None:
+        """外部触发源（如 gesture bridge）用来注册一次 trigger 进 cooldown 窗口。
+
+        与 maybe_trigger 内的预占逻辑一致：写 _last_proactive_ts +
+        _last_interaction_ts + recent_triggers，下一轮 _should_trigger 自动
+        识别为 "cooldown" / "rate_limit"。
+        """
+        with self._lock:
+            t = self.clock()
+            self._last_proactive_ts = t
+            self._last_interaction_ts = t
+            self._recent_triggers.append(t)
+            # 借 stats.history 留个调试痕迹（不动 triggered，避免污染 metrics）
+            self.stats.history.append(f"@{t:.2f}: <external:{source}>")
+
+    def is_in_cooldown(self, now: Optional[float] = None) -> bool:
+        """是否仍在 cooldown_s 窗口内（自上次 _last_proactive_ts 起算）。"""
+        with self._lock:
+            if self._last_proactive_ts <= 0:
+                return False
+            t = now if now is not None else self.clock()
+            return (t - self._last_proactive_ts) < self.config.cooldown_s
+
     def start(self, stop_event: threading.Event) -> None:
         if self._thread is not None and self._thread.is_alive():
             log.warning("[proactive] scheduler already running")

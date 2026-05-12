@@ -355,6 +355,10 @@ class Coco(ReachyMiniApp):
         _gesture_recognizer = None
         _gesture_behavior_last_ts: dict[str, float] = {}
         _GESTURE_BEHAVIOR_COOLDOWN_S = 30.0
+        # interact-010: GestureDialogBridge 引用（mutable 容器；
+        # bridge 实例在 InteractSession + _proactive 构造完成后才能 wire，
+        # 此处先占位，gesture handler 闭包按需读最新值）
+        _gesture_dialog_bridge_ref: list = [None]
         try:
             if os.environ.get("COCO_GESTURE", "0") == "1":
                 from coco.perception.camera_source import open_camera as _open_cam
@@ -444,6 +448,18 @@ class Coco(ReachyMiniApp):
                             pass
                         # 闭环：emit 之后再触发行为，确保 evidence/事件先落
                         _gesture_behavior_handler(lbl)
+                        # interact-010: 同时喂给 GestureDialogBridge（若启用）。
+                        # bridge 自身 fail-soft；vision-005 行为侧 handler
+                        # 与对话侧 bridge 解耦，独立 gate（COCO_GESTURE_DIALOG）。
+                        try:
+                            _bridge = _gesture_dialog_bridge_ref[0]
+                            if _bridge is not None:
+                                _bridge.on_gesture_event(lbl)
+                        except Exception as _exc:  # noqa: BLE001
+                            print(
+                                f"[coco][gesture_dialog] bridge dispatch failed: {_exc!r}",
+                                flush=True,
+                            )
 
                     _gesture_recognizer = GestureRecognizer(
                         stop_event,
@@ -1014,6 +1030,15 @@ class Coco(ReachyMiniApp):
                     _on_interaction_combined
                     if (power_state is not None or _proactive is not None) else None
                 ),
+                # interact-010: 把 assistant utterance 转发给 GestureDialogBridge
+                # （bridge 在下方 wire；此处闭包按引用读 _gesture_dialog_bridge_ref[0]，
+                # bridge 构造前调用方为 None 时安全 no-op）。
+                on_assistant_utterance=(
+                    lambda _t, _ref=_gesture_dialog_bridge_ref: (
+                        _ref[0].register_assistant_utterance(_t)
+                        if _ref[0] is not None else None
+                    )
+                ),
                 dialog_memory=_dialog_memory,
                 profile_store=_profile_store,
                 intent_classifier=_intent_classifier,
@@ -1036,6 +1061,43 @@ class Coco(ReachyMiniApp):
                     _proactive.start(stop_event)
                 except Exception as e:  # noqa: BLE001
                     print(f"[coco][proactive] start failed: {type(e).__name__}: {e}", flush=True)
+
+            # interact-010: 可选 GestureDialogBridge（默认 OFF；COCO_GESTURE_DIALOG=1 启用）。
+            # 把 gesture event 路由到 ConvStateMachine + DialogMemory，与
+            # vision-005 现有行为侧 handler 共存。需要 _conv_sm + _dialog_memory + _llm 都已构造。
+            try:
+                from coco.gesture_dialog import (
+                    GestureDialogBridge as _GDBridge,
+                    config_from_env as _gd_cfg_from_env,
+                )
+                _gdcfg = _gd_cfg_from_env()
+                if _gdcfg.enabled:
+                    _bridge = _GDBridge(
+                        config=_gdcfg,
+                        conv_state_machine=_conv_sm,
+                        dialog_memory=_dialog_memory,
+                        llm_reply_fn=_llm.reply,
+                        tts_say_fn=coco_tts.say,
+                        proactive_scheduler=_proactive,
+                        emit_fn=emit,
+                    )
+                    if _conv_sm is not None:
+                        try:
+                            _conv_sm.add_transition_listener(_bridge.on_conv_transition)
+                        except Exception as _e:  # noqa: BLE001
+                            print(f"[coco][gesture_dialog] listen transition failed: {_e!r}",
+                                  flush=True)
+                    _gesture_dialog_bridge_ref[0] = _bridge
+                    print(
+                        f"[coco][gesture_dialog] enabled awaiting={_gdcfg.awaiting_window_s:.1f}s "
+                        f"cooldown={_gdcfg.cooldown_s:.0f}s",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][gesture_dialog] disabled (COCO_GESTURE_DIALOG not set)",
+                          flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][gesture_dialog] init failed: {type(e).__name__}: {e}", flush=True)
 
             # infra-003: 可选 MetricsCollector（默认 OFF；COCO_METRICS=1 启用）。
             # 把已构造的 power/dialog/proactive/face 注入；缺谁就 skip 谁的 source。
