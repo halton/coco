@@ -305,15 +305,6 @@ class Coco(ReachyMiniApp):
                             snap = tracker.latest()
                             sel.select(list(snap.tracks))
                             # companion-006: 把当前 focus 的 name 喂给 switcher
-                            # （late lookup：profile_switcher 在本段之后才构造）。
-                            try:
-                                _pw_now = globals().get("_profile_switcher")
-                            except Exception:  # noqa: BLE001
-                                _pw_now = None
-                            if _pw_now is None:
-                                # locals 里的 _profile_switcher 在 main() 函数作用域，
-                                # 借助 sys._getframe 兜底（仅尝试，不保证拿到）。
-                                pass
                             cur = sel.current()
                             cur_name = (cur.name if cur else None)
                             # 通过 attribute on selector 上挂 switcher 引用（main 段
@@ -783,7 +774,9 @@ class Coco(ReachyMiniApp):
                     _profile_switcher = _build_pw(
                         store=_profile_store,
                         config=_mu_cfg_now,
-                        tts_say_fn=coco_tts.say,
+                        # L1-1 fix: say_async 不阻塞 attention tick 线程
+                        # （observe() 由 attention loop 调用，blocking say 会卡 2-5s）
+                        tts_say_fn=coco_tts.say_async,
                         emit_fn=emit,
                         on_switch=_on_profile_switch,
                     )
