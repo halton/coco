@@ -326,6 +326,63 @@ class Coco(ReachyMiniApp):
             _attention_selector = None
             _attention_thread = None
 
+        # vision-005: GestureRecognizer — 简易手势识别（sim-only）。
+        # 默认 OFF；仅在 COCO_GESTURE=1 且 COCO_CAMERA 已设时启动。
+        # 命中（含 cooldown / min_confidence 过滤）时 emit "vision.gesture_detected"
+        # （component "vision"）；不直接触发动作，留给上层订阅决策。
+        _gesture_recognizer = None
+        try:
+            if os.environ.get("COCO_GESTURE", "0") == "1":
+                from coco.perception.camera_source import open_camera as _open_cam
+                from coco.perception.gesture import (
+                    GestureRecognizer,
+                    HeuristicGestureBackend,
+                    gesture_config_from_env,
+                )
+
+                _gesture_cfg = gesture_config_from_env(os.environ)
+                _gesture_spec = os.environ.get("COCO_CAMERA")
+                if not _gesture_spec:
+                    print(
+                        "[coco][gesture] COCO_GESTURE=1 但 COCO_CAMERA 未设；GestureRecognizer 跳过构造",
+                        flush=True,
+                    )
+                else:
+                    _gesture_cam = _open_cam(_gesture_spec)
+
+                    def _on_gesture(lbl):  # noqa: ANN001
+                        try:
+                            emit(
+                                "vision.gesture_detected",
+                                component="vision",
+                                kind=lbl.kind.value,
+                                confidence=float(lbl.confidence),
+                                bbox=list(lbl.bbox) if lbl.bbox is not None else None,
+                            )
+                        except Exception:  # noqa: BLE001
+                            pass
+
+                    _gesture_recognizer = GestureRecognizer(
+                        stop_event,
+                        camera=_gesture_cam,
+                        backend=HeuristicGestureBackend(),
+                        interval_ms=_gesture_cfg.interval_ms,
+                        min_confidence=_gesture_cfg.min_confidence,
+                        cooldown_per_kind_s=_gesture_cfg.cooldown_per_kind_s,
+                        window_frames=_gesture_cfg.window_frames,
+                        on_gesture=_on_gesture,
+                    )
+                    _gesture_recognizer.start()
+                    print(
+                        f"[coco][gesture] GestureRecognizer started camera={_gesture_spec!r} "
+                        f"interval_ms={_gesture_cfg.interval_ms} min_conf={_gesture_cfg.min_confidence} "
+                        f"cooldown_s={_gesture_cfg.cooldown_per_kind_s} window={_gesture_cfg.window_frames}",
+                        flush=True,
+                    )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][gesture] init failed: {exc!r}", flush=True)
+            _gesture_recognizer = None
+
         try:
             try:
                 reachy_mini.wake_up()

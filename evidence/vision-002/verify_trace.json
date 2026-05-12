@@ -26,26 +26,26 @@
     "present": false
   },
   "V3": {
-    "detect_count": 111,
-    "hit_count": 111,
+    "detect_count": 110,
+    "hit_count": 110,
     "tracks_created": 3,
     "tracks_dropped": 2,
     "primary_switches_stat": 3,
     "primary_switches_observed": [
       {
-        "ts": 0.115,
+        "ts": 0.112,
         "from": null,
         "to": 1,
         "present": true
       },
       {
-        "ts": 3.482,
+        "ts": 3.487,
         "from": 1,
         "to": 2,
         "present": true
       },
       {
-        "ts": 6.701,
+        "ts": 6.802,
         "from": 2,
         "to": 3,
         "present": true
