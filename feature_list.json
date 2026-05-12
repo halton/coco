@@ -934,7 +934,7 @@
       "area": "vision",
       "title": "简易手势识别（招手/竖大拇指 sim fixture）",
       "user_visible_behavior": "镜头里出现明显手势（招手 waving / 竖大拇指 thumbs_up）时，Coco 触发对应回应：waving → glance（look_left 一下）+ '你好' TTS；thumbs_up → ExpressionPlayer.play('excited')（库内无 'praise'，用语义近义 'excited' 替代）。手势检测在低帧率（~5fps）后台跑，不阻 vision 主线。NOD/SHAKE/HEART 仅记录事件不主动触发动作（避免误判扰民）。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-vision-source",
         "vision-002",
@@ -947,7 +947,14 @@
         "scripts/verify_vision_005.py：V1 默认 OFF；V2 enabled+clamp；V3 WAVE fixture 检出；V4 THUMBS_UP fixture 检出；V5 启发式 backend 处理畸形 / 全黑帧不崩溃，confidence=0 不 emit；V6 NOD+SHAKE fixture 检出；V7 GestureRecognizer 后台线程 + emit；V8 cooldown 抑制（短 cooldown 测路径）；V9 conf<min 不 emit；V10 event 命名空间归属 vision；V11 stop+window clamp；V12 env clamp；V13 回归调用 verify_vision_002.py + verify_vision_004.py 子进程；V14 默认 30s cooldown 行为：连续两次同 kind 第二次被抑制；V15 HEART fixture 经 backend 不崩溃。",
         "Reviewer fresh-context 评审：检测置信度阈值、误检率（背景手势）、与 face attention 优先级、低帧率后台线程的 GIL 影响、依赖可选化策略；闭环 handler 对 ExpressionPlayer 缺失/未启用的 fail-soft；行为 cooldown 与 backend cooldown 双层冷却的语义。"
       ],
-      "evidence": [],
+      "evidence": [
+        "scripts/verify_vision_005.py V1-V15 全 PASS（默认 OFF / enabled+clamp / WAVE / THUMBS_UP / 畸形帧 fail-soft / NOD+SHAKE / 后台线程 emit / cooldown 抑制 / conf<min 不 emit / 事件归属 vision / stop+window clamp / env clamp / 子进程回归 vision-002+004 / 30s 默认 cooldown 抑制 / HEART fail-soft）",
+        "回归 PASS：smoke (./init.sh) + verify_vision_002 + verify_vision_004 + verify_vision_004b + verify_vision_004b_wire + verify_infra_002/003/004",
+        "手测：wave_synthetic.mp4 fixture emit {wave:26, shake:0}；shake_synthetic.mp4 fixture emit {shake:18}（互斥窗口生效，wave 期间不误判 shake）",
+        "main.py 闭环接线：GestureRecognizer.on_gesture → emit 'vision.gesture_detected' + 本地 behavior handler（waving→look_left+TTS '你好'；thumbs_up→ExpressionPlayer.play('excited')）；30s 行为侧 cooldown",
+        "Reviewer (sub-agent, fresh-context, round 2): LGTM；round 1 NEEDS-REWORK 4 个 L0（闭环未接线 / 回归门缺失 / WAVE-SHAKE 互斥 / 30s 默认 cooldown）已全部闭环",
+        "merge: feat/vision-005 → main @ e24c3a7 (--no-ff)"
+      ],
       "notes": "sim-first：用程序合成 fixture 验。真机手势识别准确度归 uat-phase6 异步项。手势集本期 5 类（WAVE/THUMBS_UP/NOD/SHAKE/HEART），HEART 为占位弱启发式留作未来 ML backend。mediapipe 不引入；如未来需要可加 backend 选择 (Heuristic vs MediaPipe)。"
     },
     {

@@ -1061,3 +1061,20 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **verify_interact_009 V1-V14**：73 PASS / 0 FAIL（新增 V13 累积压缩、V14 hot path guard；V4/V9 升级断言 assistant + summary 注入）。
 - **回归**：infra_002 / infra_003 / infra_004 / interact004 / interact005 / interact006 / interact_007 / interact_008 / companion_003 / companion_004 / companion_005 / companion_vision / vision_002 / vision_003 / vision_004 / vision_004b / vision_004b_wire / infra_debt_sweep / publish 全 PASS。
 - **下一执行**：vision-005（priority=32）。
+
+---
+
+## Session — vision-005 close-out (2026-05-13)
+
+- **vision-005 → passing**：merge `feat/vision-005` → `main` @ `e24c3a7` (`--no-ff`)，push origin main 成功。
+- **关键改动**：
+  - `coco/perception/gesture.py`：`HeuristicGestureBackend`（cv2+numpy 启发式 hand/landmark proxy，sim-only，不引 mediapipe）+ `GestureRecognizer` 后台 daemon 线程；输出 `GestureLabel{kind, confidence, ts, bbox}`，kind ∈ {WAVE, THUMBS_UP, NOD, SHAKE, HEART}。
+  - `coco/main.py` 闭环接线：`GestureRecognizer.on_gesture` 既 emit `vision.gesture_detected`，也调本地 behavior handler：`waving → look_left(0.4s glance) + tts.say_async('你好')`；`thumbs_up → ExpressionPlayer.play('excited')`；30s 行为侧 cooldown（与 backend detect cooldown 解耦）。
+  - `tests/fixtures/vision/gestures/`：程序合成 wave/thumbs_up/nod/shake/heart/empty 6 个 fixture（mp4/jpg），含 README ground truth。
+  - `scripts/verify_vision_005.py`：V1-V15 全 PASS（默认 OFF / enabled+clamp / WAVE / THUMBS_UP / 畸形帧 fail-soft / NOD+SHAKE / 后台线程 emit / cooldown 抑制 / conf<min 不 emit / 事件归属 vision / stop+window clamp / env clamp / 子进程回归 vision-002+004 / 30s 默认 cooldown 抑制 / HEART fail-soft）。
+- **手测**：wave fixture emit `{wave:26, shake:0}`；shake fixture emit `{shake:18}`（互斥窗口生效，wave 期间不误判 shake）。
+- **Reviewer 两轮**：
+  - **Round 1 NEEDS-REWORK 4 个 L0**：(1) 闭环 handler 未在 main.py 接线，feature 主诉求空转；(2) verify 缺回归门（不调 vision-002 / vision-004 子进程）；(3) WAVE 与 SHAKE 互斥未实现，wave fixture 误触发 SHAKE；(4) 30s 默认 cooldown 行为未验证。
+  - **Round 2 (sub-agent, fresh-context): LGTM**，4 个 L0 全部闭环，V1-V15 全 PASS。
+- **回归 PASS**：smoke (`./init.sh`) + `verify_vision_002` + `verify_vision_004` + `verify_vision_004b` + `verify_vision_004b_wire` + `verify_infra_002/003/004`。
+- **下一执行**：companion-006（priority=33，phase-6 多用户档案切换）。
