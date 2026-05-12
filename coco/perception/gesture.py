@@ -34,7 +34,7 @@
 - ``COCO_GESTURE``                      0/1，默认 OFF
 - ``COCO_GESTURE_INTERVAL_MS``          clamp [50, 2000]，默认 200
 - ``COCO_GESTURE_MIN_CONFIDENCE``       clamp [0.0, 1.0]，默认 0.5
-- ``COCO_GESTURE_COOLDOWN_S``           clamp [0.0, 60.0]，默认 2.0（per-kind）
+- ``COCO_GESTURE_COOLDOWN_S``           clamp [0.0, 60.0]，默认 30.0（per-kind）
 - ``COCO_GESTURE_WINDOW_FRAMES``        clamp [2, 60]，默认 8
 
 verify 见 ``scripts/verify_vision_005.py``。
@@ -306,12 +306,14 @@ class HeuristicGestureBackend:
         if amp_x >= self.shake_min_amplitude_ratio and amp_x > amp_y * 1.3:
             # WAVE 与 SHAKE 都基于 x 位移；区分点在 SHAKE 是脸的位移
             # （振幅相对小 + 较慢往复），WAVE 振幅更大且反转更频繁。
-            # 这里按"反转次数 < wave 阈值"判 SHAKE。
+            # L1-3: SHAKE 必须 (a) 反转次数 < wave 阈值 且 (b) 振幅不能像 wave
+            # 那样大；wave fixture 早期窗口可能只有 1 次反转但振幅已经 >0.3 → 必须排除。
             dx = np.diff(xs)
             signs = np.sign(dx)
             signs = signs[signs != 0]
             zero_crossings = int(np.count_nonzero(np.diff(signs) != 0)) if signs.size >= 2 else 0
-            if zero_crossings < self.wave_min_zero_crossings:
+            wave_like_amplitude = amp_x >= self.wave_min_amplitude_ratio * 1.5
+            if zero_crossings < self.wave_min_zero_crossings and not wave_like_amplitude:
                 conf = min(1.0, 0.4 + 0.6 * min(1.0, amp_x / 0.3))
                 return GestureLabel(
                     kind=GestureKind.SHAKE,
@@ -325,7 +327,17 @@ class HeuristicGestureBackend:
     def detect(self, frames: List[np.ndarray]) -> Optional[GestureLabel]:
         if not frames:
             return None
-        # 单帧形状先看（不依赖时序）
+        # L1-3: WAVE 优先 — wave fixture 同时可能触发 SHAKE 路径，
+        # WAVE 命中后直接返回，避免被同分 SHAKE 抢出。
+        if len(frames) >= 2:
+            try:
+                wave_lbl = self._detect_wave(frames)
+            except Exception as e:  # noqa: BLE001
+                log.debug("temporal detect _detect_wave failed: %s", e)
+                wave_lbl = None
+            if wave_lbl is not None:
+                return wave_lbl
+        # 单帧形状（不依赖时序）
         last = frames[-1]
         cand_static: List[GestureLabel] = []
         for fn in (self._detect_thumbs_up, self._detect_heart):
@@ -336,17 +348,16 @@ class HeuristicGestureBackend:
                 lbl = None
             if lbl is not None:
                 cand_static.append(lbl)
-        # 时序特征
+        # 时序特征（NOD/SHAKE）
         cand_temporal: List[GestureLabel] = []
         if len(frames) >= 2:
-            for fn in (self._detect_wave, self._detect_nod_or_shake):
-                try:
-                    lbl = fn(frames)
-                except Exception as e:  # noqa: BLE001
-                    log.debug("temporal detect %s failed: %s", fn.__name__, e)
-                    lbl = None
-                if lbl is not None:
-                    cand_temporal.append(lbl)
+            try:
+                lbl = self._detect_nod_or_shake(frames)
+            except Exception as e:  # noqa: BLE001
+                log.debug("temporal detect _detect_nod_or_shake failed: %s", e)
+                lbl = None
+            if lbl is not None:
+                cand_temporal.append(lbl)
         all_cands = cand_static + cand_temporal
         if not all_cands:
             return None
@@ -572,7 +583,7 @@ class GestureConfig:
     enabled: bool = False
     interval_ms: int = 200
     min_confidence: float = 0.5
-    cooldown_per_kind_s: float = 2.0
+    cooldown_per_kind_s: float = 30.0
     window_frames: int = 8
 
 
@@ -625,7 +636,7 @@ def gesture_config_from_env(env=None) -> GestureConfig:
         enabled=_bool_env(e, "COCO_GESTURE", False),
         interval_ms=_int_env(e, "COCO_GESTURE_INTERVAL_MS", 200, 50, 2000),
         min_confidence=_float_env(e, "COCO_GESTURE_MIN_CONFIDENCE", 0.5, 0.0, 1.0),
-        cooldown_per_kind_s=_float_env(e, "COCO_GESTURE_COOLDOWN_S", 2.0, 0.0, 60.0),
+        cooldown_per_kind_s=_float_env(e, "COCO_GESTURE_COOLDOWN_S", 30.0, 0.0, 60.0),
         window_frames=_int_env(e, "COCO_GESTURE_WINDOW_FRAMES", 8, 2, 60),
     )
 
