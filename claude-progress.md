@@ -1078,3 +1078,18 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
   - **Round 2 (sub-agent, fresh-context): LGTM**，4 个 L0 全部闭环，V1-V15 全 PASS。
 - **回归 PASS**：smoke (`./init.sh`) + `verify_vision_002` + `verify_vision_004` + `verify_vision_004b` + `verify_vision_004b_wire` + `verify_infra_002/003/004`。
 - **下一执行**：companion-006（priority=33，phase-6 多用户档案切换）。
+
+## Session — companion-006 closeout
+- **状态**：companion-006 → `passing`；merge `feat/companion-006` → main @ `1bda968` (--no-ff)。push origin main 成功。
+- **关键改动**：
+  - `coco/companion/profile_switcher.py`（新）：监听 face.identity_changed / attention.primary_changed → 切 UserProfile → emit profile.switched；2s 防抖、30min cooldown、face_id=None 保持、profile_id 路径 sanitize。
+  - `coco/companion/__init__.py`：暴露 ProfileSwitcher。
+  - `coco/main.py`：接线 ProfileSwitcher，订阅 dialog/proactive/idle，致意走 tts.say_async（非阻塞）。
+  - `scripts/verify_companion_006.py`：V1-V15（A→B 切换 / 防抖 / cooldown / None 保持 / 兴趣 / history 隔离 / 多人 primary / utterance / 并发 observe / 注入 sanitize 等）。
+- **Reviewer (sub-agent, fresh-context, round 1): LGTM** 主体，提 3 条 L1：
+  - L1-1 tts.say 同步阻塞主回路 → 改 say_async（已修，commit 51c3cfe）
+  - L1-2 attention loop dead code → 删除（已修，commit 51c3cfe）
+  - L1-3 profile_id hash 跨进程稳定性 → 留 followup（不影响本期 sim 验证，单开 fix-* feature）
+- **回归 PASS**：smoke + companion-004/005 + vision-003/004/004b/004b-wire/005 + infra-002/003/004 + interact-007/008/009 verify 全绿。
+- **手测**：[None, alice×2, None, bob×2] 触发 2 次切换 + 2 次致意；抖动 [alice,None,alice,None,alice]@0.5s/debounce=2s 0 切换；2 线程并发 observe 400 次无 race；profile 路径注入被 sanitize。
+- **下一候选**：robot-004（priority=34，phase-6 心情驱动姿态 PostureBaseline，纯 sim 可验）。

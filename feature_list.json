@@ -963,7 +963,7 @@
       "area": "companion",
       "title": "多用户档案切换（face_id name → UserProfile 切换）",
       "user_visible_behavior": "vision-003 识别到已知 face_id 切换后，Coco 自动切换到对应用户的 UserProfile（昵称/兴趣/历史），后续对话/主动话题/idle 行为均按该 profile 驱动；多个用户同时在视野时按 primary 用户切换；profile 切换通过短 TTS 致意（'欢迎回来 XXX'）告知。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-004",
         "vision-003",
@@ -976,8 +976,14 @@
         "scripts/verify_companion_006.py：V1 face_id A→B 切换；V2 短暂遮挡（A→unknown→A）不切；V3 30min cooldown；V4 default profile 时未识别脸不触发；V5 切换后 ProactiveTopicScheduler 取新兴趣；V6 dialog history 隔离（A 的 history 不混入 B）；V7 regression companion-004/vision-003/004 verify。",
         "Reviewer fresh-context 评审：多人同框时 primary 切换抖动、profile 隔离边界（history 是否需要 per-profile 持久化）、致意频率扰民、未识别脸 fallback 策略。"
       ],
-      "evidence": [],
-      "notes": "sim-first：用 vision-003 已有 face_id fixture + 模拟 attention 切换事件。真实环境多人切换流畅度归 uat-phase6。本期 dialog history 仅 in-session per-profile 隔离，跨会话持久化留 followup。"
+      "evidence": [
+        "scripts/verify_companion_006.py V1-V15 全 PASS（含 A→B 切换 / 短暂遮挡防抖 / 30min cooldown / face_id=None 保持 / 兴趣切换 / history 隔离 / 多人 primary 切换 / 致意 utterance 格式 / 并发 observe 安全 / 路径注入 sanitize）。",
+        "回归 PASS：./init.sh smoke + companion-004/005 + vision-003/004/004b/004b-wire/005 + infra-002/003/004 + interact-007/008/009 verify 全绿。",
+        "手测：[None, alice×2, None, bob×2] 序列 → 2 次 profile.switched + 2 次致意；抖动 [alice,None,alice,None,alice]@0.5s/debounce=2s → 0 切换；2 线程并发 observe 400 次无 race；profile 路径注入 ('../etc/passwd') 被 sanitize。",
+        "Reviewer (sub-agent, fresh-context): LGTM；L1-1 (tts say 阻塞主回路 → say_async) + L1-2 (attention loop dead code 删除) 已修复；L1-3 (profile_id hash 稳定性) 留 followup（不影响本期 sim 验证）。",
+        "merge: feat/companion-006 → main @ 1bda968 (--no-ff)，含 e0b5075 主实现 + 51c3cfe rework。"
+      ],
+      "notes": "sim-first：用 vision-003 已有 face_id fixture + 模拟 attention 切换事件。真实环境多人切换流畅度归 uat-phase6。本期 dialog history 仅 in-session per-profile 隔离，跨会话持久化留 followup。Followup: L1-3 profile_id hash 稳定性（跨进程一致性 / 字符集边界）单独立 fix-* feature。"
     },
     {
       "id": "robot-004",
