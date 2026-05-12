@@ -1114,3 +1114,19 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **手测**：emotion 序列 [neutral,happy,happy,sad] ACTIVE → 2 次 emit；SLEEP 10 ticks 不 dispatch antenna；ExpressionPlayer.play 期间 pause/resume；robot=None 1s 不崩。
 - **phase-6 整体收尾**：phase-6 全部 7 项完成 — vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004 全部 `passing`。
 - **下一步**：uat-phase4 milestone gate（真机），按 sim-first 原则**非阻塞**软件推进；主会话进入 phase-7 规划或 stop 等用户输入选择方向。
+
+## Session — phase-7 规划入库 (2026-05-13)
+
+- **写入 phase-7 候选 5 项**（status=not_started, priority 35-39, evidence=[]）：
+  - **interact-010** (priority=35, area=interact-companion) — 手势驱动对话回合：vision.gesture_detected → ConvStateMachine。env COCO_GESTURE_DIALOG=1 default OFF。WAVE@IDLE 起 turn / WAVE@AWAITING 抑制 / THUMBS_UP@AWAITING 5s 内 yes / NOD-SHAKE@AWAITING_yesno → 是/不是 / 30s gesture cooldown 与 ProactiveScheduler 共享窗口；dialog_memory tag kind="gesture"。verification V1-V9。依赖 vision-005 / interact-008 / interact-009 / companion-006。
+  - **companion-007** (priority=36, area=companion) — 情绪驱动 TTS prosody + 表情节律：env COCO_EMOTION_PROSODY=1 default OFF。EmotionRenderer → tts_rate/pitch/expr_overlay/antenna_pulse；happy +5%/+1半音/微震；sad -10%/-1/静止。TTS 不支持 fallback no-op + emit tts.prosody_unsupported。复用 robot-004 PostureBaseline 同源 emotion + pause/resume 协议。verification V1-V9。
+  - **companion-008** (priority=37, area=companion) — 跨 session UserProfile 持久化：env COCO_PROFILE_PERSIST=1 default OFF。profile_id=sha1(face_id+nickname)[:12]（companion-006 L1-3 收割）；持久化到 ~/.coco/profiles/<profile_id>.json；schema_version=1；atomic write (tmp+os.replace)；hydrate 损坏/不匹配 → _corrupt/ + _legacy_v0/ 并 emit；路径 sanitize 防注入。verification V1-V10。
+  - **infra-005** (priority=38, area=infra) — 健康观测 + daemon 自愈：env COCO_HEALTH=1 default OFF。HealthMonitor 5s tick：daemon Zenoh 心跳 / sounddevice 流活跃 / ASR/LLM p50p95 (ring buffer 200 条/component) / 主线程 watchdog。degraded → emit + banner WARN。sim 60s 无心跳 restart subprocess + cooldown 30s + max retry 3；真机仅告警。verification V1-V9。
+  - **interact-011** (priority=39, area=interact) — 离线降级回路：env COCO_OFFLINE_FALLBACK=1 **默认 OFF（保守降级，对原 planner 建议 default ON 改为 OFF，等 phase-8 验证后再提升）**。LLM 连续 3 次失败 → OfflineDialogFallback 模板回应 + ProactiveScheduler pause；恢复 emit interact.offline_recovered + "我回来了"。fallback turn 在 dialog_memory 打 kind="fallback"，summarizer / user-profile 跳过。verification V1-V10。
+- **写入 phase-8 backlog 3 项**（status=backlog，priority hint 40-42，verification=[]）：
+  - **vision-006** (priority=40) — 看图说话：CameraSource 抽样 → caption → ProactiveTopicScheduler 引用。
+  - **infra-006** (priority=41) — verify matrix CI：所有 verify_*.py 跑成 GitHub Actions 矩阵 (macOS / Linux)。
+  - **robot-005** (priority=42) — robot-004 followup 收割（L1+L2 6 项）。
+- **feature_list.json**：count=45（phase-7 5 项 + backlog 3 项 + uat-phase4 保留 priority=999）；last_updated=2026-05-13；_change_log 新增 phase-7 段。
+- **第一执行**：interact-010（priority=35），主会话可派 Engineer 进入实施。
+- **commit**：直接在 main（CLAUDE.md 允许 harness/规划类基础设施改动），尝试 push origin main 一次失败忽略。

@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
-  "last_updated": "2026-05-11",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。 2026-05-13: robot-004 → passing（V1-V17 全 PASS + Reviewer 一轮 LGTM；L1+L2 followup 不阻 merge）；phase-6 全部 7 项收尾完成（vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004），下一步 uat-phase4 milestone gate（真机），按 sim-first 原则非阻塞。",
+  "last_updated": "2026-05-13",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。 2026-05-13: robot-004 → passing（V1-V17 全 PASS + Reviewer 一轮 LGTM；L1+L2 followup 不阻 merge）；phase-6 全部 7 项收尾完成（vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004），下一步 uat-phase4 milestone gate（真机），按 sim-first 原则非阻塞。 2026-05-13: +phase-7 候选 5 个 (interact-010 gesture-driven dialog / companion-007 emotion prosody / companion-008 cross-session profile persist / infra-005 health monitor + daemon self-heal / interact-011 offline fallback default-OFF), priority 35-39；+phase-8 backlog 3 项 (vision-006 看图说话 / infra-006 verify matrix CI / robot-005 robot-004 followup)，priority hint 40-42 status=backlog。interact-011 对原 planner 默认 ON 做保守降级改为 default OFF，等 phase-8 验证后再考虑提升。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -1012,6 +1012,162 @@
         "HEAD: df18cf5 on feat/robot-004（merged into main 3723289）。"
       ],
       "notes": "纯 sim 可验（mockup-sim daemon 收到 SetTarget 序列即可断言 offset）。真机过冲/电机噪声归 uat-phase4 milestone gate。emotion 来源 interact-006 已 passing；power_state 来源 companion-003。Known: emotion 误判可能导致 idle 姿态抖动，2s ramp + emotion 5s debounce 减缓。Followup（不阻 merge）: L1-1 启动瞬切首帧无 ramp、L1-2 antenna SAD/NEUTRAL 同映射可微调区分、L1-3 pause/resume 无嵌套计数；L2-1 emotion history 无上限、L2-2 ExpressionPlayer.play 隐式 stop 语义、L2-3 emit fallback 每次 import 性能。"
+    },
+    {
+      "id": "interact-010",
+      "priority": 35,
+      "area": "interact-companion",
+      "title": "手势驱动对话回合（gesture-driven dialog turn）",
+      "user_visible_behavior": "看到 WAVE 手势在 IDLE 时，Coco 主动发起一次对话回合（'你想聊点什么？'）；AWAITING 用户回复时 WAVE 不打断（被抑制）；AWAITING 时 5s 内 THUMBS_UP 当作 yes 注入 dialog；NOD/SHAKE 在 AWAITING 且当前问题带 yes/no flag 时分别当作 yes / no；30s gesture cooldown 与 ProactiveScheduler 共享窗口避免叠加打扰；dialog_memory 中手势触发的 turn 带 tag '[手势:xxx]' 或 kind=\"gesture\"。",
+      "status": "not_started",
+      "dependencies": [
+        "vision-005",
+        "interact-008",
+        "interact-009",
+        "companion-006"
+      ],
+      "verification": [
+        "env COCO_GESTURE_DIALOG=1（默认 OFF）控制开关；env=0 时所有 gesture→dialog 路径无效（保持 vision-005 原 emit 但不入 ConvStateMachine）。",
+        "coco/interact/gesture_dialog.py：GestureDialogBridge 订阅 vision.gesture_detected → 根据 ConvStateMachine 当前 state（IDLE / AWAITING / SPEAKING）+ 手势 kind 路由：WAVE@IDLE → ConvStateMachine.start_turn(prompt='你想聊点什么？')；WAVE@AWAITING → 抑制；THUMBS_UP@AWAITING（5s 窗口）→ inject_user_text('好的')；NOD@AWAITING_yesno → inject_user_text('是')；SHAKE@AWAITING_yesno → inject_user_text('不是')；NOD/SHAKE@IDLE 不动作。",
+        "30s gesture cooldown 与 ProactiveScheduler 共享窗口（任一触发后另一方 30s 内不主动起 turn），避免双源叠加打扰。",
+        "dialog_memory.append(turn) 必带 tag kind=\"gesture\" 或 utterance prefix '[手势:WAVE]' 让 interact-009 summarizer 与 user-profile 处理时可识别来源。",
+        "scripts/verify_interact_010.py：V1 default OFF（env 未设/=0 时 bridge inactive）；V2 WAVE@IDLE → ConvStateMachine 进入 AWAITING；V3 WAVE@AWAITING 被抑制（state 不变，无新 turn）；V4 THUMBS_UP@AWAITING 5s 内当 yes 注入；V5 NOD@AWAITING_yesno → '是'，SHAKE@AWAITING_yesno → '不是'；V6 NOD/SHAKE@IDLE 不动作；V7 30s cooldown 与 ProactiveScheduler 共享（gesture 触发后 ProactiveScheduler 30s 内静默，反之亦然）；V8 env clamp（COCO_GESTURE_DIALOG 非法值 → OFF）；V9 回归 vision-005 + interact-008 + interact-009 verify 子进程。",
+        "Reviewer fresh-context 评审：state 机内 WAVE 重入语义、yes/no 与 yes/no flag 缺失时的 fallback、cooldown 共享窗口的实现耦合度、dialog_memory tag 是否会影响 interact-009 summarizer 行为、误检手势导致的对话噪声。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：vision-005 fixture + ConvStateMachine 注入路径全可 sim 验。真机手势触达对话的端到端体感归 uat-phase4 异步项（不阻 merge）。"
+    },
+    {
+      "id": "companion-007",
+      "priority": 36,
+      "area": "companion",
+      "title": "情绪驱动 TTS prosody + 表情节律",
+      "user_visible_behavior": "Coco 的语速、音高、表情叠加节律会随当前 emotion 变化：happy → 语速 +5% / 音高 +1 半音 / 微震表情 + 天线轻脉动；sad → 语速 -10% / 音高 -1 半音 / 静止表情。TTS backend 不支持 prosody 调节时优雅降级（fallback no-op + emit tts.prosody_unsupported），仍能播声不崩。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-006",
+        "robot-004",
+        "companion-005"
+      ],
+      "verification": [
+        "env COCO_EMOTION_PROSODY=1（默认 OFF）控制开关；env=0 → TTS / ExpressionPlayer 调用路径与今天完全一致（无 prosody 注入）。",
+        "coco/companion/emotion_renderer.py：EmotionRenderer(emotion) → EmotionStyle{tts_rate, tts_pitch_semitone, expr_overlay, antenna_pulse}；happy=(+5%, +1, 'micro_shake', True)；sad=(-10%, -1, None, False)；neutral=(0, 0, None, False)；focused=(0, 0, None, False)；clamp tts_rate ∈ [-30%, +30%]、pitch ∈ [-3, +3] 半音。",
+        "coco/audio/tts.py：say_async 接受 optional style；backend 不支持 → 调用 fallback no-op 并 emit 'tts.prosody_unsupported'，仍正常播放原声。",
+        "ExpressionPlayer / IdleAnimator：订阅 emotion.changed 叠加 antenna_pulse 与 expr_overlay；与 robot-004 PostureBaseline 共用 emotion 来源（避免 race）。",
+        "5s emotion debounce 与 robot-004 复用，避免高频抖动；ExpressionPlayer 播主动 expression 期间 prosody 调用 pause/resume 协议（与 robot-004 一致）。",
+        "scripts/verify_companion_007.py：V1 default OFF；V2 happy → tts_rate=+5%, pitch=+1, antenna_pulse=True；V3 sad → tts_rate=-10%, pitch=-1, no overlay；V4 不支持 backend fallback no-op + emit 'tts.prosody_unsupported'；V5 5s emotion debounce（连续 happy→happy→sad 在 1s 内只 emit 1 次 style 变更）；V6 emotion 同源 robot-004 PostureBaseline（断言两者读到同一 emotion 实例）；V7 ExpressionPlayer 主动播放期间 prosody pause/resume 与 baseline 协议一致；V8 env clamp（非法值 → OFF / clamp 在边界）；V9 回归 interact-006 + robot-004 + companion-005 verify。",
+        "Reviewer fresh-context 评审：prosody 与 expression 时序协调、不支持 backend 的 fallback 策略是否完整（包含部分支持场景）、debounce 与 robot-004 是否真同源、emotion 误判（interact-006）的放大效应。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：fake TTS backend assert 接收到正确 style；真听感（人耳判断 happy/sad 是否听得出）归 uat-phase4 异步项。共享 emotion 源避免与 robot-004 出现两套独立 emotion 状态。"
+    },
+    {
+      "id": "companion-008",
+      "priority": 37,
+      "area": "companion",
+      "title": "跨 session UserProfile 持久化",
+      "user_visible_behavior": "重启 Coco 后，已识别用户的昵称、兴趣、最近 N 轮对话摘要会自动 hydrate 回内存；新用户首次创建后下次进入仍能识出（face_id → profile_id 稳定）。损坏 / schema 不匹配的 profile 文件被备份并跳过，不阻塞启动。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-004",
+        "companion-006",
+        "interact-009"
+      ],
+      "verification": [
+        "env COCO_PROFILE_PERSIST=1（默认 OFF）控制开关；env=0 时 ProfileStore 行为与今天完全一致（纯内存）。",
+        "coco/companion/profile_store.py：profile_id = sha1(face_id + nickname_normalized) 取前 12 hex（companion-006 L1-3 跨进程稳定性收割）；持久化路径 ~/.coco/profiles/<profile_id>.json；schema_version=1。",
+        "持久化字段：profile_id / nickname / interests / created_ts / updated_ts / dialog_summary（最近 N 轮摘要，N=10，复用 interact-009 produce 的 summary）。",
+        "atomic write：tmp 文件 + os.replace；并发 save 序列化（asyncio.Lock 或线程 lock）。",
+        "hydrate 启动时扫 ~/.coco/profiles/*.json：JSON 解析失败 → 移到 ~/.coco/profiles/_corrupt/ 并 emit 'profile.corrupt'；schema_version 不匹配 → 移到 ~/.coco/profiles/_legacy_v<n>/ 并 emit 'profile.schema_mismatch'，启动继续。",
+        "路径 sanitize：profile_id 必须匹配 ^[0-9a-f]{12}$（防注入），否则拒绝 save/load。",
+        "scripts/verify_companion_008.py：V1 default OFF；V2 enabled → 创建 alice profile → 文件落盘；V3 hydrate → 重启 ProfileStore 读到 alice；V4 nickname 合并（同 face_id 改 nickname → 新 profile_id 还是同 face_id 优先合并）；V5 profile_id hash 跨进程一致（companion-006 L1-3 闭环）；V6 atomic write（tmp + replace 不留半截文件）；V7 损坏 JSON → 移到 _corrupt/ + emit + 启动不崩；V8 schema_version 不匹配 → _legacy_v0/ + emit；V9 路径注入 ('../etc/passwd' / 含 / \\ 字符) 拒绝；V10 回归 companion-004 / companion-006 / interact-009 verify。",
+        "Reviewer fresh-context 评审：hash 稳定性边界（unicode nickname）、并发 save 一致性、磁盘满 / 权限错误时的 graceful degradation、N=10 dialog summary 的存储膨胀上限、隐私（profile 文件含对话摘要）。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：tmp_path fixture 验持久化与 hydrate；隐私敏感（含对话摘要），文档需注明用户清理路径（rm ~/.coco/profiles/）。companion-006 L1-3 followup 在本 feature 闭环。"
+    },
+    {
+      "id": "infra-005",
+      "priority": 38,
+      "area": "infra",
+      "title": "健康观测 + daemon 自愈",
+      "user_visible_behavior": "Coco 运行时持续观测核心子系统健康（daemon Zenoh 心跳 / sounddevice 流活跃 / ASR / LLM p50/p95 延迟 / 主线程 watchdog），出现 degraded 时 banner WARN + emit 事件；sim 场景 daemon 60s 无心跳自动重启 subprocess（cooldown 30s + max retry 防放大故障），真机仅告警不重启。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-002",
+        "infra-003",
+        "infra-004"
+      ],
+      "verification": [
+        "env COCO_HEALTH=1（默认 OFF）控制开关；env=0 时 HealthMonitor 不启动。",
+        "coco/infra/health_monitor.py：HealthMonitor 5s tick；探针包括 (a) daemon Zenoh 心跳（最近一条 telemetry ts < 60s）(b) sounddevice 输入/输出流活跃（is_active）(c) ASR/LLM p50/p95（内存 ring buffer 聚合 metrics.jsonl 最近 N=200 条）(d) 主线程 watchdog（每 tick 自身 mark）。",
+        "degraded 判定：单项 fail → emit 'health.degraded'(component=...)；恢复 → emit 'health.recovered'。banner WARN 非阻塞输出。",
+        "daemon restart：sim mode 下 daemon 60s 无心跳 → subprocess restart；cooldown 30s + max retry=3；超过 max retry → emit 'health.daemon_giveup' 不再重试。真机模式（detect via env / config）只 emit 不 restart。",
+        "metrics ring buffer：上限 200 条 / component，超出 FIFO 丢旧；不无限增长内存。",
+        "scripts/verify_infra_005.py：V1 default OFF；V2 sim daemon 模拟 60s 无心跳 → restart 被触发 + cooldown 期内不重复触发；V3 ASR p95 超阈值 → emit degrade；恢复 → emit recover；V4 主线程 watchdog 卡 6s（模拟）→ emit degrade；V5 真机 mode（COCO_REAL_MACHINE=1）→ daemon 无心跳只 emit 不 restart；V6 max retry=3 后停止重启 + emit giveup；V7 stop() 清理 ring buffer + tick task；V8 ring buffer 上限断言（写入 300 条后只剩 200）；V9 回归 infra-002/003/004 verify。",
+        "Reviewer fresh-context 评审：restart 是否会与外层 Control.app 自带 daemon supervisor 打架、cooldown / retry 数学是否合理、watchdog 自身卡死的兜底、metrics 写入对延迟敏感路径的开销、健康事件风暴防抖。"
+      ],
+      "evidence": [],
+      "notes": "sim-first：用 fake daemon subprocess + 注入心跳静默来验 restart；真机 restart 风险高（与 Control.app supervisor 冲突），默认仅告警。"
+    },
+    {
+      "id": "interact-011",
+      "priority": 39,
+      "area": "interact",
+      "title": "离线降级回路（LLM 失败 fallback，default-OFF 保守降级）",
+      "user_visible_behavior": "LLM 客户端连续 3 次失败/超时 → 切到 OfflineDialogFallback 模板回应（'我现在有点连不上网，等一下再聊好吗？' 等），同时 ProactiveScheduler 暂停以免雪上加霜；任一次成功后退出 fallback，emit 'interact.offline_recovered' 并说 '我回来了'。fallback utterance 在 dialog_memory 打 tag kind=\"fallback\"，让 summarizer / user-profile 跳过，不污染长期偏好。",
+      "status": "not_started",
+      "dependencies": [
+        "interact-002",
+        "interact-009",
+        "companion-005"
+      ],
+      "verification": [
+        "env COCO_OFFLINE_FALLBACK=1（**默认 OFF**——保守降级，phase-7 仅作骨架接入与验证；提升到 default ON 留 phase-8 评估）；env=0 时 LLM 失败行为与今天一致（抛错 / 上层兼容）。",
+        "coco/interact/offline_fallback.py：OfflineDialogFallback 含 5+ 模板回应轮换；触发条件 = LLM client 连续失败计数 >= 3（短抖动 1-2 次失败不切）；恢复 = 任一次 LLM 成功立即清零并 emit 'interact.offline_recovered' + 主动说 '我回来了'。",
+        "ProactiveScheduler 订阅 'interact.offline_entered' / 'interact.offline_recovered' → 进入 fallback 时 pause；恢复后 resume。",
+        "dialog_memory.append(turn, kind=\"fallback\")；interact-009 summarizer 与 companion-004 user-profile interest extraction 必须显式跳过 kind=\"fallback\" 的 turn（不计入兴趣偏好 / summary）。",
+        "fallback 引用最近 1 轮上下文（'刚才你说的 X 我先记下了'）让回应不显得断片，但不调 LLM。",
+        "scripts/verify_interact_011.py：V1 env=0 LLM 失败抛错保持兼容；V2 env=1 连续 3 次失败 → 进入 fallback + emit 'interact.offline_entered'；V3 fallback 期 ProactiveScheduler 静默（不主动起 turn）；V4 fallback 期间 LLM 任一次成功 → emit 'interact.offline_recovered' + 说 '我回来了' + ProactiveScheduler resume；V5 fallback turn 在 dialog_memory 带 kind=\"fallback\"；V6 interact-009 summarizer 跳过 fallback turn（断言 summary 不含 fallback utterance）；V7 companion-004 user-profile 不更新偏好；V8 短抖动（失败 2 次后成功）不触发 fallback；V9 fallback 引用最近 1 轮上下文片段；V10 回归 interact-002 + interact-009 + companion-005 verify。",
+        "Reviewer fresh-context 评审：连续失败计数语义（按 wall-clock 还是按 call 数）、'我回来了' 是否打断当前用户输入、模板回应轮换避免重复扰民、ProactiveScheduler resume 与 fallback 状态切换的竞争、tag kind=\"fallback\" 是否真被所有下游消费者遵守。"
+      ],
+      "evidence": [],
+      "notes": "**default-OFF 保守降级**：原 planner 建议 default ON，本次写入按 sim-first + 谨慎策略改为 default OFF，phase-8 验证后再考虑提升。fallback 模板写死中文，无 LLM 依赖。"
+    },
+    {
+      "id": "vision-006",
+      "priority": 40,
+      "area": "vision",
+      "title": "（backlog / phase-8 候选）看图说话 — 视觉 caption → 主动话题",
+      "status": "backlog",
+      "dependencies": [],
+      "verification": [],
+      "evidence": [],
+      "notes": "phase-8 候选：CameraSource 当前帧抽样 → vision caption（本地小模型或可选云）→ ProactiveTopicScheduler 引用 ('你今天好像换了头发') 引发对话。priority hint 40。"
+    },
+    {
+      "id": "infra-006",
+      "priority": 41,
+      "area": "infra",
+      "title": "（backlog / phase-8 候选）verify matrix CI",
+      "status": "backlog",
+      "dependencies": [],
+      "verification": [],
+      "evidence": [],
+      "notes": "phase-8 候选：所有 verify_*.py 跑成 GitHub Actions 矩阵（macOS / Linux），smoke + per-feature verify 自动门禁。priority hint 41。"
+    },
+    {
+      "id": "robot-005",
+      "priority": 42,
+      "area": "robot",
+      "title": "（backlog / phase-8 候选）robot-004 followup 收割",
+      "status": "backlog",
+      "dependencies": [
+        "robot-004"
+      ],
+      "verification": [],
+      "evidence": [],
+      "notes": "phase-8 候选：robot-004 L1+L2 followup（启动瞬切首帧无 ramp / antenna SAD-NEUTRAL 区分 / pause-resume 嵌套计数 / emotion history 上限 / ExpressionPlayer.play 隐式 stop 文档化 / emit fallback import 微优化）。priority hint 42。"
     },
     {
       "id": "uat-phase4",
