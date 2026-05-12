@@ -396,6 +396,7 @@ class ExpressionPlayer:
         library: Optional[Dict[str, ExpressionSequence]] = None,
         emit_fn: Optional[Callable[..., None]] = None,
         clock: Optional[Callable[[], float]] = None,
+        posture_baseline: Any = None,
     ) -> None:
         self.robot = robot
         self.idle_animator = idle_animator
@@ -408,6 +409,9 @@ class ExpressionPlayer:
         # cooldown 记账：name -> 上次完成时刻
         self._last_play_ts: Dict[str, float] = {}
         self._stopped = False
+        # robot-004: 可选 posture baseline modulator；play 期间 pause 其天线下发，
+        # 避免与 expression 帧绝对值打架。
+        self.posture_baseline = posture_baseline
 
     # ---- 公开接口 ----
 
@@ -484,6 +488,12 @@ class ExpressionPlayer:
                 self.idle_animator.pause()
             except Exception as e:  # noqa: BLE001
                 log.warning("[robot.expr] idle.pause failed: %s: %s", type(e).__name__, e)
+        # robot-004: pause posture baseline antenna 下发（避免与 expression 帧 SetTarget 打架）
+        if self.posture_baseline is not None:
+            try:
+                self.posture_baseline.pause()
+            except Exception as e:  # noqa: BLE001
+                log.warning("[robot.expr] posture_baseline.pause failed: %s: %s", type(e).__name__, e)
 
         t0 = self.clock()
         frames_done = 0
@@ -512,6 +522,14 @@ class ExpressionPlayer:
                 except Exception as e:  # noqa: BLE001
                     log.warning(
                         "[robot.expr] idle.resume failed: %s: %s", type(e).__name__, e
+                    )
+            # robot-004: resume posture baseline 天线下发
+            if self.posture_baseline is not None:
+                try:
+                    self.posture_baseline.resume()
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "[robot.expr] posture_baseline.resume failed: %s: %s", type(e).__name__, e
                     )
 
         t1 = self.clock()

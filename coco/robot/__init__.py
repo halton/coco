@@ -1,6 +1,7 @@
 """coco.robot — robot 子系统聚合包。
 
 robot-003：表情序列编排（ExpressionSequence / ExpressionPlayer）。
+robot-004：心情驱动姿态（PostureBaseline / PostureBaselineModulator）。
 真正的 SDK 调用走 ``coco.actions``（goto_target / look_left / look_right）；
 本包负责把多步动作组合成"剧本"，并与 IdleAnimator 协调。
 """
@@ -13,6 +14,16 @@ from coco.robot.expressions import (
     EXPRESSION_LIBRARY,
     expressions_config_from_env,
 )
+from coco.robot.posture_baseline import (
+    PostureOffset,
+    PostureBaseline,
+    PostureBaselineConfig,
+    PostureBaselineModulator,
+    PostureBaselineStats,
+    ZERO_OFFSET,
+    posture_baseline_enabled_from_env,
+    posture_baseline_config_from_env,
+)
 
 __all__ = [
     "ExpressionFrame",
@@ -21,4 +32,12 @@ __all__ = [
     "ExpressionsConfig",
     "EXPRESSION_LIBRARY",
     "expressions_config_from_env",
+    "PostureOffset",
+    "PostureBaseline",
+    "PostureBaselineConfig",
+    "PostureBaselineModulator",
+    "PostureBaselineStats",
+    "ZERO_OFFSET",
+    "posture_baseline_enabled_from_env",
+    "posture_baseline_config_from_env",
 ]
