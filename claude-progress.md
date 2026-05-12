@@ -1093,3 +1093,24 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **回归 PASS**：smoke + companion-004/005 + vision-003/004/004b/004b-wire/005 + infra-002/003/004 + interact-007/008/009 verify 全绿。
 - **手测**：[None, alice×2, None, bob×2] 触发 2 次切换 + 2 次致意；抖动 [alice,None,alice,None,alice]@0.5s/debounce=2s 0 切换；2 线程并发 observe 400 次无 race；profile 路径注入被 sanitize。
 - **下一候选**：robot-004（priority=34，phase-6 心情驱动姿态 PostureBaseline，纯 sim 可验）。
+
+## Session — robot-004 closeout
+- **状态**：robot-004 → `passing`；merge `feat/robot-004` → main @ `3723289` (--no-ff)；push origin main 成功。feat/robot-004 HEAD=`df18cf5`。
+- **关键改动**：
+  - `coco/robot/posture_baseline.py`（新，572 行）：PostureBaseline(emotion, power_state) → PostureOffset(pitch, yaw, antenna)；emotion×power_state 表查找 + 默认 fallback；2s linear ramp 平滑过渡；clamp ±5° pitch / ±3° yaw / antenna [0,1]；emit posture.baseline.changed；ExpressionPlayer 期间 pause/resume；SLEEP 走 goto_sleep 不叠加 antenna dispatch。
+  - `coco/robot/expressions.py`：ExpressionPlayer.play 增加 baseline pause/resume hook。
+  - `coco/robot/__init__.py`：暴露 PostureBaseline / PostureOffset。
+  - `coco/idle.py`：IdleAnimator goto_target 前叠加 baseline_offset。
+  - `coco/main.py`：接线 PostureBaseline 订阅 emotion / power_state，挂到 IdleAnimator + ExpressionPlayer。
+  - `scripts/verify_robot_004.py`（新，658 行）：V1-V17 全 PASS。
+- **Reviewer (sub-agent, fresh-context, 一轮): LGTM**，仅留 L1+L2 followup 不阻 merge：
+  - L1-1 启动瞬切首帧无 ramp（首次设定无前一目标可插值）
+  - L1-2 antenna SAD 与 NEUTRAL 同 0.4 映射，可后续微调区分
+  - L1-3 pause/resume 无嵌套计数（嵌套 ExpressionPlayer 调用语义未定义）
+  - L2-1 emotion history 无上限（长跑内存累积）
+  - L2-2 ExpressionPlayer.play 隐式 stop 语义文档化
+  - L2-3 emit fallback 每次 import 性能微优化
+- **回归 PASS**：./init.sh smoke / robot-003 / companion-003 / companion-005 / companion-006 / interact-006 / interact-007 / interact-008 / interact-009。
+- **手测**：emotion 序列 [neutral,happy,happy,sad] ACTIVE → 2 次 emit；SLEEP 10 ticks 不 dispatch antenna；ExpressionPlayer.play 期间 pause/resume；robot=None 1s 不崩。
+- **phase-6 整体收尾**：phase-6 全部 7 项完成 — vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004 全部 `passing`。
+- **下一步**：uat-phase4 milestone gate（真机），按 sim-first 原则**非阻塞**软件推进；主会话进入 phase-7 规划或 stop 等用户输入选择方向。

@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-11",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。 2026-05-13: robot-004 → passing（V1-V17 全 PASS + Reviewer 一轮 LGTM；L1+L2 followup 不阻 merge）；phase-6 全部 7 项收尾完成（vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004），下一步 uat-phase4 milestone gate（真机），按 sim-first 原则非阻塞。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -991,7 +991,7 @@
       "area": "robot",
       "title": "心情驱动姿态（PowerState + emotion → 默认姿态 offset）",
       "user_visible_behavior": "Coco 的默认 idle 姿态会因 emotion + PowerState 整体偏移：happy → 头略抬+天线展开；sad → 头略低+天线收；focused → 正视+微前倾；DROWSY → 进一步压低；SLEEP → goto_sleep。所有 idle micro-action / expression 在该 baseline 上叠加，整体观感'有性格'，不再机械居中。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-003",
         "companion-005",
@@ -1004,8 +1004,14 @@
         "scripts/verify_robot_004.py：V1 happy → pitch_offset>0；V2 sad → pitch_offset<0；V3 SLEEP → 走 goto_sleep（不叠加）；V4 emotion 切换平滑过渡（不瞬切，2s linear ramp）；V5 与 companion-005 situational idle 叠加不超 MAX clamp；V6 expression 播放期 baseline 暂停叠加（避免与 expression 绝对帧冲突）；V7 regression companion-003/005 + interact-006 + robot-003 verify。",
         "Reviewer fresh-context 评审：baseline ramp 与 expression 帧的协调时序、clamp 上限叠加新维度的总幅度、emotion 误判（interact-006）导致频繁姿态切换的抖动、SLEEP 状态边界。"
       ],
-      "evidence": [],
-      "notes": "纯 sim 可验（mockup-sim daemon 收到 SetTarget 序列即可断言 offset）。真机过冲/电机噪声归 uat-phase6。emotion 来源 interact-006 已 passing；power_state 来源 companion-003。Known: emotion 误判可能导致 idle 姿态抖动，2s ramp + emotion 5s debounce 减缓。"
+      "evidence": [
+        "scripts/verify_robot_004.py V1-V17 全 PASS（happy pitch_offset>0 / sad pitch_offset<0 / SLEEP 走 goto_sleep 不叠加 / 2s linear ramp 平滑过渡 / 与 companion-005 situational idle 叠加 clamp 在 ±5° pitch / ±3° yaw / antenna [0,1] / expression 播放期 baseline pause）。",
+        "回归 PASS：./init.sh smoke / robot-003 / companion-003 / companion-005 / companion-006 / interact-006 / interact-007 / interact-008 / interact-009。",
+        "手测：emotion 序列 [neutral,happy,happy,sad] ACTIVE → 2 次 emit（happy debounce 后 emit + sad emit）；SLEEP 10 ticks 不 dispatch antenna；ExpressionPlayer.play 期间 pause/resume 正确恢复；robot=None 1s 不崩。",
+        "Reviewer (sub-agent, fresh-context): LGTM；L1（启动瞬切首帧无 ramp / antenna SAD 与 NEUTRAL 同 0.4 映射 / pause/resume 无嵌套计数）+ L2（emotion history 无上限 / ExpressionPlayer.play 隐式 stop / emit fallback 每次 import）作为 followup，不阻 merge。",
+        "HEAD: df18cf5 on feat/robot-004（merged into main 3723289）。"
+      ],
+      "notes": "纯 sim 可验（mockup-sim daemon 收到 SetTarget 序列即可断言 offset）。真机过冲/电机噪声归 uat-phase4 milestone gate。emotion 来源 interact-006 已 passing；power_state 来源 companion-003。Known: emotion 误判可能导致 idle 姿态抖动，2s ramp + emotion 5s debounce 减缓。Followup（不阻 merge）: L1-1 启动瞬切首帧无 ramp、L1-2 antenna SAD/NEUTRAL 同映射可微调区分、L1-3 pause/resume 无嵌套计数；L2-1 emotion history 无上限、L2-2 ExpressionPlayer.play 隐式 stop 语义、L2-3 emit fallback 每次 import 性能。"
     },
     {
       "id": "uat-phase4",
