@@ -1130,3 +1130,25 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **feature_list.json**：count=45（phase-7 5 项 + backlog 3 项 + uat-phase4 保留 priority=999）；last_updated=2026-05-13；_change_log 新增 phase-7 段。
 - **第一执行**：interact-010（priority=35），主会话可派 Engineer 进入实施。
 - **commit**：直接在 main（CLAUDE.md 允许 harness/规划类基础设施改动），尝试 push origin main 一次失败忽略。
+
+## Session — interact-010 closeout (2026-05-13)
+
+- **branch**：feat/interact-010 → merge --no-ff → main
+- **main HEAD**：4f1ab1c (merge interact-010)
+- **feat HEAD**：bad93dc (fix L2-1 嗯 误伤)
+- **关键改动**：
+  - `coco/gesture_dialog.py` 613 lines（GestureDialogBridge：WAVE/THUMBS_UP/NOD/SHAKE × IDLE/AWAITING 路由 + ProactiveScheduler 双向 cooldown 共享 + COCO_GESTURE_DIALOG env clamp default OFF）
+  - `coco/interact.py` +15 / `coco/main.py` +62 接线
+  - `coco/proactive.py` +28（共享 cooldown 接口）
+  - `scripts/verify_interact_010.py` 498 lines (V1-V9 + L2-1 误伤补测)
+  - L2-1 修正：`YESNO_HINTS` 移除单字 "嗯"，避免 "嗯，今天天气不错" 这类陈述句被误判为 yes/no 提问
+- **verification 字段路径同步**：原写 `coco/interact/gesture_dialog.py`，实际落地 `coco/gesture_dialog.py`（Reviewer L1-1 要求 closeout 同步而非搬文件）
+- **Reviewer (sub-agent, fresh-context)**：LGTM
+  - L1-1 路径偏离：closeout 同步 verification（已修 feature_list.json）
+  - L1-2 inject 异常仍占 cooldown 槽：followup（不阻 merge）
+  - L2-1 "嗯" 误伤：已修（commit bad93dc）
+- **回归范围**：smoke / vision-005 / interact-006/007/008/009 / companion-005/006 / robot-003 / proactive 全 PASS（V9 子进程 + 各自 verify）
+- **手测 7 场景**：拼音 yes/no NOD 注入 / wh-question NOD 不触发 / WAVE@IDLE proactive cooldown 双向 / WAVE@AWAITING 抑制 / enabled=False / inject 抛错 fail-soft / LISTENING 清状态
+- **followup**：L1-2（inject 异常占 cooldown 槽）—— 待后续 feature 或单独 hotfix
+- **push**：feat/interact-010 push 成功（fa6af6f→bad93dc）；main push 待执行
+- **下一 candidate**：companion-007 (priority=36, 情绪驱动 TTS prosody + 表情节律)

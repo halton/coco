@@ -1019,7 +1019,7 @@
       "area": "interact-companion",
       "title": "手势驱动对话回合（gesture-driven dialog turn）",
       "user_visible_behavior": "看到 WAVE 手势在 IDLE 时，Coco 主动发起一次对话回合（'你想聊点什么？'）；AWAITING 用户回复时 WAVE 不打断（被抑制）；AWAITING 时 5s 内 THUMBS_UP 当作 yes 注入 dialog；NOD/SHAKE 在 AWAITING 且当前问题带 yes/no flag 时分别当作 yes / no；30s gesture cooldown 与 ProactiveScheduler 共享窗口避免叠加打扰；dialog_memory 中手势触发的 turn 带 tag '[手势:xxx]' 或 kind=\"gesture\"。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "vision-005",
         "interact-008",
@@ -1028,13 +1028,19 @@
       ],
       "verification": [
         "env COCO_GESTURE_DIALOG=1（默认 OFF）控制开关；env=0 时所有 gesture→dialog 路径无效（保持 vision-005 原 emit 但不入 ConvStateMachine）。",
-        "coco/interact/gesture_dialog.py：GestureDialogBridge 订阅 vision.gesture_detected → 根据 ConvStateMachine 当前 state（IDLE / AWAITING / SPEAKING）+ 手势 kind 路由：WAVE@IDLE → ConvStateMachine.start_turn(prompt='你想聊点什么？')；WAVE@AWAITING → 抑制；THUMBS_UP@AWAITING（5s 窗口）→ inject_user_text('好的')；NOD@AWAITING_yesno → inject_user_text('是')；SHAKE@AWAITING_yesno → inject_user_text('不是')；NOD/SHAKE@IDLE 不动作。",
+        "coco/gesture_dialog.py：GestureDialogBridge 订阅 vision.gesture_detected → 根据 ConvStateMachine 当前 state（IDLE / AWAITING / SPEAKING）+ 手势 kind 路由：WAVE@IDLE → ConvStateMachine.start_turn(prompt='你想聊点什么？')；WAVE@AWAITING → 抑制；THUMBS_UP@AWAITING（5s 窗口）→ inject_user_text('好的')；NOD@AWAITING_yesno → inject_user_text('是')；SHAKE@AWAITING_yesno → inject_user_text('不是')；NOD/SHAKE@IDLE 不动作。",
         "30s gesture cooldown 与 ProactiveScheduler 共享窗口（任一触发后另一方 30s 内不主动起 turn），避免双源叠加打扰。",
         "dialog_memory.append(turn) 必带 tag kind=\"gesture\" 或 utterance prefix '[手势:WAVE]' 让 interact-009 summarizer 与 user-profile 处理时可识别来源。",
         "scripts/verify_interact_010.py：V1 default OFF（env 未设/=0 时 bridge inactive）；V2 WAVE@IDLE → ConvStateMachine 进入 AWAITING；V3 WAVE@AWAITING 被抑制（state 不变，无新 turn）；V4 THUMBS_UP@AWAITING 5s 内当 yes 注入；V5 NOD@AWAITING_yesno → '是'，SHAKE@AWAITING_yesno → '不是'；V6 NOD/SHAKE@IDLE 不动作；V7 30s cooldown 与 ProactiveScheduler 共享（gesture 触发后 ProactiveScheduler 30s 内静默，反之亦然）；V8 env clamp（COCO_GESTURE_DIALOG 非法值 → OFF）；V9 回归 vision-005 + interact-008 + interact-009 verify 子进程。",
         "Reviewer fresh-context 评审：state 机内 WAVE 重入语义、yes/no 与 yes/no flag 缺失时的 fallback、cooldown 共享窗口的实现耦合度、dialog_memory tag 是否会影响 interact-009 summarizer 行为、误检手势导致的对话噪声。"
       ],
-      "evidence": [],
+      "evidence": [
+        "verify_interact_010.py V1-V9 + L2-1 误伤补测全 PASS（65 PASS / 0 FAIL）",
+        "回归 PASS：smoke / vision-005 / interact-006/007/008/009 / companion-005/006 / robot-003 / proactive",
+        "手测 7 场景：拼音 yes/no NOD 注入；wh-question NOD 不触发；WAVE@IDLE proactive cooldown 共享双向；WAVE@AWAITING 抑制；enabled=False；inject 抛错 fail-soft；LISTENING 清状态",
+        "Reviewer (sub-agent, fresh-context): LGTM；L1-1 文件路径偏离（落地为 coco/gesture_dialog.py 而非 coco/interact/gesture_dialog.py）已在 closeout 同步 verification 字段；L1-2 inject 异常仍占 cooldown 槽留 followup；L2-1 \"嗯\" 误伤已修（commit bad93dc）",
+        "main HEAD: 4f1ab1c (merge --no-ff feat/interact-010); feat HEAD: bad93dc"
+      ],
       "notes": "sim-first：vision-005 fixture + ConvStateMachine 注入路径全可 sim 验。真机手势触达对话的端到端体感归 uat-phase4 异步项（不阻 merge）。"
     },
     {
