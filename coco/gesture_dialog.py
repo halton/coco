@@ -145,7 +145,6 @@ YESNO_HINTS = (
     "是吗",
     "吗？",
     "吗?",
-    "嗯",
 )
 
 QUESTION_PUNCT_PATTERN = re.compile(r"[?？]\s*$")

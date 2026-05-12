@@ -325,6 +325,23 @@ def v6_nod_shake_idle_or_no_yesno_flag() -> None:
     assert_true(not is_yes_no_question("今天天气不错。"), "陈述句 → False")
     assert_true(not is_yes_no_question("你叫什么名字？"), "wh-question → False")
 
+    # L2-1 误伤补测：含 "嗯" 的陈述句不应触发 yes/no 注入
+    assert_true(
+        not is_yes_no_question("嗯，今天天气不错"),
+        "L2-1: '嗯，今天天气不错' → False（修复 \"嗯\" 误伤）",
+    )
+    clk2 = FakeClock()
+    sm2 = ConversationStateMachine(clock=clk2)
+    dm2 = DialogMemory(clock=clk2)
+    bridge2, injected2 = make_bridge(conv_sm=sm2, dialog_memory=dm2, clock=clk2)
+    bridge2.register_assistant_utterance("嗯，今天天气不错")
+    assert_true(bridge2._is_awaiting_now(), "L2-1: is_awaiting_now=True")
+    res_l2 = bridge2.on_gesture_event(make_label(GestureKind.NOD))
+    assert_true(res_l2 is None, "L2-1: NOD@AWAITING + '嗯…' assistant → 不注入")
+    assert_eq(len(injected2), 0, "L2-1: 无 inject_user_text 调用")
+    assert_eq(bridge2.stats.triggered_nod_yes, 0, "L2-1: triggered_nod_yes=0")
+    assert_eq(bridge2.stats.skipped_yesno, 1, "L2-1: skipped_yesno=1")
+
 
 # --------------------------------------------------------------------------- V7
 
