@@ -113,6 +113,7 @@ class InteractSession:
         idle_animator: Optional["IdleAnimator"] = None,
         llm_reply_fn: Optional[Callable[..., str]] = None,
         on_interaction: Optional[Callable[[str], None]] = None,
+        on_assistant_utterance: Optional[Callable[[str], None]] = None,
         dialog_memory: Optional[DialogMemory] = None,
         emotion_detector: Optional["EmotionDetector"] = None,
         emotion_tracker: Optional["EmotionTracker"] = None,
@@ -140,6 +141,11 @@ class InteractSession:
         # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
         # 默认 None 不影响 interact-001/004/005 等历史 verify。
         self.on_interaction = on_interaction
+        # interact-010: 可选回调；assistant 实际「说出」一句话后调用（reply 非空 +
+        # tts 已发出）。下游（GestureDialogBridge.register_assistant_utterance）
+        # 用它判断 yes/no 提问与 awaiting 窗口。fail-soft 由调用方自己保证；
+        # 这里捕异常，不影响 handle_audio。
+        self.on_assistant_utterance = on_assistant_utterance
         # interact-004: 多轮对话 ring buffer。None 时退化为单轮模式（向后兼容）。
         # 即使 LLM 走 fallback，append 仍记录（保持 KEYWORD_ROUTES 路径"看似"多轮，
         # 但 history 仅在调用 llm_reply_fn 时实际注入）。
@@ -564,6 +570,15 @@ class InteractSession:
                     result["tts_ok"] = True
             else:
                 result["tts_ok"] = True
+
+            # interact-010: 通知 bridge "assistant 刚说完一句"。
+            # 即使 TTS 失败也算「assistant 已尝试发声」（reply 已落到 dialog_memory），
+            # 让 yes/no 检测窗口仍然激活；UI/物理 TTS 失败不阻塞 gesture 后续路径。
+            if self.on_assistant_utterance is not None and reply:
+                try:
+                    self.on_assistant_utterance(reply)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("on_assistant_utterance failed: %s: %s", type(e).__name__, e)
 
             # 5) 动作
             if not skip_action:
