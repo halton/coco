@@ -614,6 +614,66 @@ class Coco(ReachyMiniApp):
             print(f"[coco][expr] init failed: {exc!r}", flush=True)
             _expression_player = None
 
+        # robot-004: 可选 PostureBaselineModulator（COCO_POSTURE_BASELINE=1 启用，默认 OFF）。
+        # 必须在 IdleAnimator + ExpressionPlayer 构造之后；通过 setattr 反向注入引用。
+        # 需要一个 EmotionTracker 实例 — 若 COCO_EMOTION 启用且尚未构造则共享一个，
+        # 同时把同一 tracker 也传给后面的 InteractSession（见下方 _shared_emotion_tracker）。
+        _posture_baseline = None
+        _shared_emotion_tracker = None
+        try:
+            from coco.robot.posture_baseline import (
+                PostureBaselineModulator as _PostureBM,
+                posture_baseline_config_from_env as _pb_cfg_from_env,
+            )
+            from coco.emotion import (
+                EmotionTracker as _EmotionTracker,
+                emotion_enabled_from_env as _emo_enabled,
+                config_from_env as _emo_cfg_from_env,
+            )
+            _pb_cfg = _pb_cfg_from_env()
+            if _pb_cfg.enabled and reachy_mini is not None:
+                # baseline 启用 → 必须有 EmotionTracker（即使 COCO_EMOTION 未设也构造一个）
+                _emo_cfg = _emo_cfg_from_env()
+                _shared_emotion_tracker = _EmotionTracker(decay_s=_emo_cfg.decay_s)
+                _posture_baseline = _PostureBM(
+                    robot=reachy_mini,
+                    emotion_tracker=_shared_emotion_tracker,
+                    power_state=power_state,
+                    config=_pb_cfg,
+                    emit_fn=emit,
+                )
+                # 反向注入：让 IdleAnimator 在 _micro_head/_breathe 中叠加 baseline，
+                # 让 ExpressionPlayer 在 play 期间 pause baseline 天线下发。
+                if idle_animator is not None:
+                    idle_animator.posture_baseline = _posture_baseline
+                if _expression_player is not None:
+                    _expression_player.posture_baseline = _posture_baseline
+                _posture_baseline.start(stop_event)
+                print(
+                    f"[coco][posture] PostureBaselineModulator enabled "
+                    f"ramp={_pb_cfg.ramp_s:.1f}s tick={_pb_cfg.tick_interval_s:.2f}s "
+                    f"debounce={_pb_cfg.debounce_s:.1f}s",
+                    flush=True,
+                )
+            else:
+                print("[coco][posture] disabled (COCO_POSTURE_BASELINE not set)", flush=True)
+                # 若 baseline 关但 COCO_EMOTION 启用，仍构造 tracker 给 InteractSession
+                if _emo_enabled():
+                    _emo_cfg = _emo_cfg_from_env()
+                    _shared_emotion_tracker = _EmotionTracker(decay_s=_emo_cfg.decay_s)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][posture] init failed: {exc!r}", flush=True)
+            _posture_baseline = None
+
+        # robot-004 helper: 共享 emotion tracker 时也按需构造 detector（feed transcript）。
+        def _build_emotion_detector_for_session():  # noqa: ANN202
+            try:
+                from coco.emotion import EmotionDetector as _ED
+                return _ED()
+            except Exception as exc:  # noqa: BLE001
+                print(f"[coco][emotion] detector build failed: {exc!r}", flush=True)
+                return None
+
         # interact-001：起 InteractSession + push-to-talk stdin 后台线程
         # interact-002：注入 LLM client（环境变量未配则自动 fallback 到 KEYWORD_ROUTES）
         # interact-003：默认改用 VAD trigger 替代 stdin Enter；COCO_VAD_DISABLE=1 回退 PTT
@@ -961,6 +1021,12 @@ class Coco(ReachyMiniApp):
                 dialog_summarizer=_dialog_summarizer,
                 dialog_summary_threshold=_dialog_summary_threshold,
                 dialog_summary_keep_recent=_dialog_summary_keep_recent,
+                # robot-004: 共享 EmotionTracker（若 robot-004 / interact-006 启用之一构造了它）
+                emotion_detector=(
+                    _build_emotion_detector_for_session()
+                    if _shared_emotion_tracker is not None else None
+                ),
+                emotion_tracker=_shared_emotion_tracker,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession
@@ -1206,6 +1272,16 @@ class Coco(ReachyMiniApp):
                     coco_tts.set_expression_player(None)
                 except Exception:  # noqa: BLE001
                     pass
+            # robot-004: 停 PostureBaselineModulator
+            if _posture_baseline is not None:
+                try:
+                    _posture_baseline.join(timeout=2.0)
+                    if _posture_baseline.is_alive():
+                        print("[coco][posture] WARN: modulator did not stop within 2s", flush=True)
+                    else:
+                        print(f"[coco][posture] stopped stats={_posture_baseline.stats}", flush=True)
+                except Exception as e:  # noqa: BLE001
+                    print(f"[coco][posture] stop failed: {e!r}", flush=True)
             # ptt_thread 是 daemon，stop_event 一 set 它的下一次 readline 返回前可能还在阻塞，
             # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
             if ptt_thread is not None:

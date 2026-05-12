@@ -39,6 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from coco.power_state import PowerStateMachine
     from coco.emotion import Emotion
     from coco.companion.situational_idle import SituationalIdleModulator
+    from coco.robot.posture_baseline import PostureBaselineModulator
 
 
 log = logging.getLogger(__name__)
@@ -169,6 +170,7 @@ class IdleAnimator:
         face_tracker: Optional["FaceTracker"] = None,
         power_state: Optional["PowerStateMachine"] = None,
         situational_modulator: Optional["SituationalIdleModulator"] = None,
+        posture_baseline: Optional["PostureBaselineModulator"] = None,
     ) -> None:
         self.robot = robot
         self.stop_event = stop_event
@@ -179,6 +181,7 @@ class IdleAnimator:
         self.face_tracker = face_tracker
         self.power_state = power_state
         self.situational_modulator = situational_modulator
+        self.posture_baseline = posture_baseline
         self._thread: Optional[threading.Thread] = None
         self._next_glance_at: float = 0.0
         # idle/interact 互斥：interact 占用机器人时 set，IdleAnimator 在每次
@@ -238,6 +241,21 @@ class IdleAnimator:
         except Exception as exc:  # noqa: BLE001
             log.warning("situational modulator failed: %s: %s", type(exc).__name__, exc)
             return (1.0, 1.0, 1.0)
+
+    # --- robot-004: posture baseline offset（心情驱动姿态）---
+    def _posture_baseline_offset(self):
+        """返回当前 baseline (pitch_deg, yaw_deg)；未注入 / 异常 / SLEEP 返回 (0, 0)。
+
+        天线由 PostureBaselineModulator 自己周期性下发，IdleAnimator 不重复管。
+        """
+        if self.posture_baseline is None:
+            return (0.0, 0.0)
+        try:
+            off = self.posture_baseline.current_offset()
+            return (float(off.pitch_deg), float(off.yaw_deg))
+        except Exception as exc:  # noqa: BLE001
+            log.warning("posture baseline failed: %s: %s", type(exc).__name__, exc)
+            return (0.0, 0.0)
 
     # --- idle/interact 互斥 ---
     def pause(self) -> None:
@@ -394,6 +412,10 @@ class IdleAnimator:
         scale *= sit_micro
         yaw = self.rng.uniform(-cfg.micro_yaw_amp_deg * scale, cfg.micro_yaw_amp_deg * scale)
         pitch = self.rng.uniform(-cfg.micro_pitch_amp_deg * scale, cfg.micro_pitch_amp_deg * scale)
+        # robot-004: 叠加 posture baseline offset（心情驱动姿态）
+        bp_pitch, bp_yaw = self._posture_baseline_offset()
+        yaw = max(-MAX_YAW_DEG, min(MAX_YAW_DEG, yaw + bp_yaw))
+        pitch = max(-MAX_PITCH_DEG, min(MAX_PITCH_DEG, pitch + bp_pitch))
         target = euler_pose(pitch_deg=pitch, yaw_deg=yaw)
         self._safe("micro_head", lambda: self.robot.goto_target(head=target, duration=cfg.micro_duration))
         # 不立刻回中位；下一次 micro 会自然带回附近
@@ -410,9 +432,22 @@ class IdleAnimator:
         )
 
     def _breathe(self) -> None:
-        """呼吸感：回中位的 head + antenna 归零。"""
+        """呼吸感：回中位的 head + antenna 归零。
+
+        robot-004: 若 posture_baseline 启用，"中位"以 baseline offset 为中心
+        （而非纯 INIT_HEAD_POSE）；天线由 PostureBaselineModulator 周期下发，
+        breathe 的天线归零会被下一次 baseline tick 覆盖（这是有意的：
+        baseline 才是"中位"的真相）。
+        """
         cfg = self.config
-        self._safe("breathe_head", lambda: self.robot.goto_target(head=INIT_HEAD_POSE, duration=cfg.micro_duration))
+        bp_pitch, bp_yaw = self._posture_baseline_offset()
+        if bp_pitch == 0.0 and bp_yaw == 0.0:
+            target = INIT_HEAD_POSE
+        else:
+            yaw = max(-MAX_YAW_DEG, min(MAX_YAW_DEG, bp_yaw))
+            pitch = max(-MAX_PITCH_DEG, min(MAX_PITCH_DEG, bp_pitch))
+            target = euler_pose(pitch_deg=pitch, yaw_deg=yaw)
+        self._safe("breathe_head", lambda: self.robot.goto_target(head=target, duration=cfg.micro_duration))
         self._safe("breathe_antenna", lambda: self.robot.set_target_antenna_joint_positions([0.0, 0.0]))
 
     def _do_glance(self) -> None:
