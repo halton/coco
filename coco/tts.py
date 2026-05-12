@@ -25,6 +25,15 @@ from typing import Literal, Optional
 import numpy as np
 import sherpa_onnx
 
+# companion-007: backend 的 prosody 能力声明。
+# Kokoro v1.1（sherpa-onnx）只有 ``speed``，没有原生 pitch；pitch 调节走 fallback no-op。
+# 真要做 pitch shift 需要外接 librosa/pyrubberband 后处理；当前 phase 不引入。
+_BACKEND_SUPPORTS_RATE = True
+_BACKEND_SUPPORTS_PITCH = False
+
+# 进程级 fallback emit 一次 flag；避免每次 say 都刷屏 'tts.prosody_unsupported'
+_PROSODY_FALLBACK_EMITTED = False
+
 DEFAULT_CACHE = Path(
     os.environ.get("COCO_TTS_CACHE", str(Path.home() / ".cache" / "coco" / "tts"))
 )
@@ -200,6 +209,39 @@ def synthesize_edge(
         return np.zeros(0, dtype=np.float32), 0
 
 
+def _emit_prosody_unsupported_once(rate: Optional[float], pitch: Optional[float], reason: str) -> None:
+    """companion-007: 当 backend 不支持 rate / pitch 时，进程内仅 emit 一次。
+
+    用于 verify 抓 'tts.prosody_unsupported' 而不刷屏 jsonl。
+    """
+    global _PROSODY_FALLBACK_EMITTED
+    if _PROSODY_FALLBACK_EMITTED:
+        return
+    _PROSODY_FALLBACK_EMITTED = True
+    try:
+        from coco.logging_setup import emit as _emit
+        _emit(
+            "tts.prosody_unsupported",
+            message=f"backend prosody unsupported: {reason}",
+            rate=rate,
+            pitch_semitone=pitch,
+            backend="kokoro-sherpa-onnx",
+            supports_rate=_BACKEND_SUPPORTS_RATE,
+            supports_pitch=_BACKEND_SUPPORTS_PITCH,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger("tts").warning(
+            "[tts] emit tts.prosody_unsupported failed: %s: %s",
+            type(exc).__name__, exc,
+        )
+
+
+def reset_prosody_fallback_emit_flag() -> None:
+    """测试用：重置 _PROSODY_FALLBACK_EMITTED 让下次 emit 再次触发。"""
+    global _PROSODY_FALLBACK_EMITTED
+    _PROSODY_FALLBACK_EMITTED = False
+
+
 def say(
     text: str,
     prefer: Literal["local", "edge"] = "local",
@@ -208,6 +250,8 @@ def say(
     blocking: bool = True,
     emotion: Optional[str] = None,
     expression: Optional[str] = None,
+    rate: Optional[float] = None,
+    pitch_semitone: Optional[float] = None,
 ) -> None:
     """合成并通过本机扬声器播放（**默认阻塞，整段播完才返回**）。
 
@@ -220,6 +264,14 @@ def say(
     robot-003: ``expression`` 参数语义化触发 ExpressionPlayer.play(expression)。
     与 emotion 等价共用同一触发路径（expression 显式胜过 emotion）。两者都未传则
     完全不走 expression 链路。
+
+    companion-007 prosody:
+    - ``rate`` (None | float)：速率偏移（0.05 = +5%；负数 = 减速）。
+      非 None 且 ``_BACKEND_SUPPORTS_RATE`` → 把 ``speed`` 乘以 (1+rate)；
+      否则 fallback no-op + emit ``tts.prosody_unsupported``（每进程一次）。
+    - ``pitch_semitone`` (None | float)：音高偏移（半音）。Kokoro 不原生支持 →
+      fallback no-op + emit ``tts.prosody_unsupported``。
+    fallback 不阻塞 / 不抛 / 仍然正常播放原声（行为与 phase-3 等价）。
 
     注意：player.play(expression) 在 say() 内**同步阻塞**（典型 ~1s，依 sequence
     帧数与 duration），随后才进入 synthesize/play 音频环节。在 ReachyMiniApp.run()
@@ -246,6 +298,24 @@ def say(
                     "expression_player.play(%r) failed: %s: %s",
                     trigger_label, type(e).__name__, e,
                 )
+
+    # companion-007: rate / pitch_semitone 应用 + fallback emit
+    effective_speed = float(speed)
+    if rate is not None:
+        if _BACKEND_SUPPORTS_RATE:
+            # rate 视作偏移：rate=0.05 → speed *= 1.05
+            effective_speed = float(speed) * (1.0 + float(rate))
+            # 安全 clamp 到 sherpa speed 合法区间 [0.5, 2.0]
+            if effective_speed < 0.5:
+                effective_speed = 0.5
+            elif effective_speed > 2.0:
+                effective_speed = 2.0
+        else:
+            _emit_prosody_unsupported_once(rate, pitch_semitone, "rate not supported")
+    if pitch_semitone is not None and pitch_semitone != 0.0:
+        if not _BACKEND_SUPPORTS_PITCH:
+            _emit_prosody_unsupported_once(rate, pitch_semitone, "pitch_semitone not supported")
+
     if prefer == "edge":
         try:
             samples, sr = synthesize_edge(text)
@@ -255,7 +325,7 @@ def say(
         except Exception as e:
             print(f"[coco.tts] edge-tts 失败回退本地: {type(e).__name__}: {e}")
 
-    samples, sr = synthesize(text, sid=sid, speed=speed)
+    samples, sr = synthesize(text, sid=sid, speed=effective_speed)
     play(samples, sr, blocking=blocking)
 
 
@@ -276,6 +346,8 @@ def say_async(
     *,
     expression: Optional[str] = None,
     emotion: Optional[str] = None,
+    rate: Optional[float] = None,
+    pitch_semitone: Optional[float] = None,
 ):
     """非阻塞版 say()。返回一个 daemon Thread，调用方可决定是否 join。
 
@@ -285,6 +357,8 @@ def say_async(
     robot-003: ``expression`` / ``emotion`` 透传到 say()，让异步路径同样能触发
     ExpressionPlayer.play(expression)；与同步 say() 行为等价（player.play 同步
     在 worker 线程内调用，~1s 阻塞不影响主线程心跳）。
+
+    companion-007: ``rate`` / ``pitch_semitone`` 透传到 say()；详见 say() docstring。
     """
     import threading
 
@@ -298,6 +372,8 @@ def say_async(
                 blocking=True,
                 expression=expression,
                 emotion=emotion,
+                rate=rate,
+                pitch_semitone=pitch_semitone,
             )
         except Exception as e:  # noqa: BLE001
             print(f"[coco.tts] say_async 失败: {type(e).__name__}: {e}", flush=True)
@@ -321,4 +397,5 @@ __all__ = [
     "has_edge_tts",
     "set_expression_player",
     "get_expression_player",
+    "reset_prosody_fallback_emit_flag",
 ]

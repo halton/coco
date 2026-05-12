@@ -681,6 +681,41 @@ class Coco(ReachyMiniApp):
             print(f"[coco][posture] init failed: {exc!r}", flush=True)
             _posture_baseline = None
 
+        # companion-007: 可选 EmotionRenderer (COCO_EMOTION_PROSODY=1，默认 OFF)。
+        # 依赖 PostureBaselineModulator 已启用（同源 debounce）；未启用则 warn + skip。
+        _emotion_renderer = None
+        try:
+            from coco.companion.emotion_renderer import (
+                EmotionRenderer as _EmotionRenderer,
+                emotion_renderer_config_from_env as _er_cfg_from_env,
+            )
+            _er_cfg = _er_cfg_from_env()
+            if _er_cfg.enabled:
+                if _posture_baseline is None:
+                    print(
+                        "[coco][emotion_renderer] WARN: COCO_EMOTION_PROSODY=1 但 "
+                        "COCO_POSTURE_BASELINE 未启用；EmotionRenderer 需要 baseline 同源 debounce，skip",
+                        flush=True,
+                    )
+                else:
+                    _emotion_renderer = _EmotionRenderer(
+                        posture_baseline=_posture_baseline,
+                        expression_player=_expression_player,
+                        robot=reachy_mini,
+                        config=_er_cfg,
+                        emit_fn=emit,
+                    )
+                    _emotion_renderer.start()
+                    print(
+                        f"[coco][emotion_renderer] enabled pulse_s={_er_cfg.pulse_s:.2f}",
+                        flush=True,
+                    )
+            else:
+                print("[coco][emotion_renderer] disabled (COCO_EMOTION_PROSODY not set)", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][emotion_renderer] init failed: {exc!r}", flush=True)
+            _emotion_renderer = None
+
         # robot-004 helper: 共享 emotion tracker 时也按需构造 detector（feed transcript）。
         def _build_emotion_detector_for_session():  # noqa: ANN202
             try:
@@ -1344,6 +1379,13 @@ class Coco(ReachyMiniApp):
                         print(f"[coco][posture] stopped stats={_posture_baseline.stats}", flush=True)
                 except Exception as e:  # noqa: BLE001
                     print(f"[coco][posture] stop failed: {e!r}", flush=True)
+            # companion-007: 停 EmotionRenderer（不持有线程，stop() 仅置 flag）
+            if _emotion_renderer is not None:
+                try:
+                    _emotion_renderer.stop()
+                    print(f"[coco][emotion_renderer] stopped stats={_emotion_renderer.stats}", flush=True)
+                except Exception as e:  # noqa: BLE001
+                    print(f"[coco][emotion_renderer] stop failed: {e!r}", flush=True)
             # ptt_thread 是 daemon，stop_event 一 set 它的下一次 readline 返回前可能还在阻塞，
             # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
             if ptt_thread is not None:

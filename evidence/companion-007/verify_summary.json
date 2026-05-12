@@ -1,0 +1,60 @@
+{
+  "feature": "companion-007",
+  "title": "情绪驱动 TTS prosody + 表情节律",
+  "branch": "feat/companion-007",
+  "verify_script": "scripts/verify_companion_007.py",
+  "result": "PASS",
+  "elapsed_s": 12.78,
+  "v_summary": {
+    "V1_default_off": "PASS — disabled 时不订阅 listener / 不注入 tts kwargs；say signature 向后兼容",
+    "V2_happy": "PASS — rate=+0.05, pitch=+1, overlay='excited', pulse=True",
+    "V3_sad": "PASS — rate=-0.10, pitch=-1, overlay=None, pulse=False；neutral/focused/None/未知 → NEUTRAL",
+    "V4_pitch_unsupported_fallback": "PASS — emit 'tts.prosody_unsupported' 进程内仅一次；synthesize/play 仍正常调用；rate=+0.05 → 等效 speed=1.05",
+    "V5_5s_debounce_shared": "PASS — 复用 PostureBaselineModulator 的 5s debounce；连续相同 emotion 仅 1 次 emit；5s 后再变化触发新 emit",
+    "V6_same_emotion_instance": "PASS — listener 收到的 Emotion 对象与 PostureBaseline.compute 收到的对象 'is' 同一实例",
+    "V7_player_busy_skip": "PASS — player.is_busy()=True 时 antenna_pulse / overlay 双双 short-circuit；overlays_skipped_busy 累加",
+    "V8_clamp_and_invalid_env": "PASS — tts_rate clamp ±0.30；pitch clamp ±3；非法 env 'abc' → enabled=False；pulse_s clamp [0.05, 1.0]；say speed clamp [0.5, 2.0]",
+    "V9_regression": "PASS — interact-006 / robot-004 / companion-005 / companion-003 / companion-006 verify 全 exit==0",
+    "V10_emit_payload": "PASS — companion.emotion_render_changed payload 含 emotion / tts_rate / tts_pitch_semitone / expr_overlay / antenna_pulse / fallback",
+    "V11_pause_resume_protocol": "PASS — pulse 期间 baseline.is_paused=True；pulse 后 resume；pause/resume 计数对称"
+  },
+  "key_design": {
+    "same_source_debounce": "EmotionRenderer 通过 PostureBaselineModulator.add_listener 订阅 — 不自建 5s 计时器，emotion / power_state snapshot 与 baseline 完全同源（同一次 _snapshot_target）。这要求 COCO_EMOTION_PROSODY=1 时 COCO_POSTURE_BASELINE 必须启用，否则 main.py warn + skip 装配。",
+    "tts_prosody_path": "rate → 转换为 sherpa Kokoro speed (speed *= (1+rate))；pitch_semitone 当前 backend 不支持 → emit fallback no-op（进程内仅一次）。两者均向后兼容（默认 None 时行为完全等价 phase-3）。",
+    "antenna_pulse_protocol": "EmotionRenderer 在新 emotion 触发时起一根 daemon 线程：pause baseline → set_target_antenna_joint_positions → sleep(pulse_s) → resume baseline。与 robot-004 的 pause/resume 协议一致；ExpressionPlayer 主动播放期间被 player 自己的 baseline.pause 接管，EmotionRenderer 通过 player.is_busy() 检测后跳过避免互踩。",
+    "expr_overlay": "通过 ExpressionPlayer.play(overlay_name) 触发；happy → 'excited'。异步 daemon thread fire-and-forget；player 忙 / 不存在 / 未注入 → 跳过。",
+    "default_off_safety": "COCO_EMOTION_PROSODY 默认 OFF；env=0 时 EmotionRenderer 不装配，TTS 调用 rate=None / pitch_semitone=None 走 phase-3 等价路径，ExpressionPlayer 不受影响。"
+  },
+  "files_changed": {
+    "new": [
+      "coco/companion/emotion_renderer.py",
+      "scripts/verify_companion_007.py",
+      "evidence/companion-007/verify.log",
+      "evidence/companion-007/verify_summary.json"
+    ],
+    "modified": [
+      "coco/companion/__init__.py (export EmotionRenderer / EmotionStyle / config helpers)",
+      "coco/tts.py (say + say_async 加 rate / pitch_semitone；pitch fallback emit；reset helper)",
+      "coco/robot/posture_baseline.py (新增 add_listener API；_begin_ramp 末尾 fire listener；_snapshot_target 缓存原始对象)",
+      "coco/main.py (装配 EmotionRenderer in robot-004 段后；finally cleanup)"
+    ]
+  },
+  "regression_runs": [
+    "smoke (init.sh smoke 全段) PASS",
+    "verify_interact_010.py PASS (65/65)",
+    "verify_robot_003.py PASS (V1-V14)",
+    "verify_interact006.py PASS (子进程内)",
+    "verify_robot_004.py PASS (子进程内)",
+    "verify_companion_005.py PASS (子进程内)",
+    "verify_companion_003.py PASS (子进程内)",
+    "verify_companion_006.py PASS (子进程内)"
+  ],
+  "open_items_for_reviewer": [
+    "Reviewer 需 fresh-context 评审：(1) EmotionRenderer 与 ExpressionPlayer 时序协调（pulse / overlay 的并发安全）；(2) pitch 的 fallback 策略是否完整 — 当前所有 pitch != 0 都 fallback；若未来引入支持 pitch 的 backend 需开 _BACKEND_SUPPORTS_PITCH；(3) listener 模式下 baseline._lock 释放后 fire（避免死锁），但 listener 内若再调 modulator API 仍可能 race — 当前 EmotionRenderer 不调用 modulator，仅 pause/resume 以独立 _paused Event；(4) emotion 误判（interact-006）的放大效应：每次 emotion 切换都会触发 antenna pulse + overlay；debounce 5s 已抑制最差情况，但若用户连续输出强情绪文本，会高频切换 — 是否应叠加 hysteresis？"
+  ],
+  "real_machine_uat_pending": [
+    "真听感：人耳是否能区分 happy(rate+5%/pitch+1) vs sad(rate-10%/pitch-1) — pitch fallback 后只有 rate 生效，听感差异减弱（happy ~ 加快 5%，sad ~ 减慢 10%）",
+    "真天线脉冲：sounddevice 与 Reachy Mini 真硬件 antenna SetTarget 的实际响应延迟 / 抖动",
+    "Excited overlay 在真机上的视觉表现"
+  ]
+}

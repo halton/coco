@@ -336,6 +336,11 @@ class PostureBaselineModulator:
         self._last_target_change_at: float = float("-inf")
         # 上次成功 snapshot 的 (emotion_str, power_str)；None 表示尚未 snapshot
         self._last_snapshot_key: Optional[Tuple[str, str]] = None
+        # companion-007: target 变更监听器；每次 _begin_ramp 调用所有 listener
+        # 签名 fn(emotion, power_state) — 与 PostureBaseline.compute 同源 snapshot
+        self._listeners: list = []
+        self._last_target_emotion_obj: Any = None
+        self._last_target_power_obj: Any = None
 
     # ------------------------------------------------------------------
     # 公开 API
@@ -355,6 +360,19 @@ class PostureBaselineModulator:
 
     def is_paused(self) -> bool:
         return self._paused.is_set()
+
+    def add_listener(self, fn: Callable[[Any, Any], None]) -> None:
+        """注册 target 变更监听器（companion-007）。
+
+        每次 ``_begin_ramp`` 决定切换 target 时（已通过 5s debounce）调用所有
+        listener，签名 ``fn(emotion, power_state)`` —— 与本 modulator 计算 baseline
+        同源（同一次 ``_snapshot_target``）。listener 抛错被吞，不影响 baseline。
+        """
+        if not callable(fn):
+            return
+        with self._lock:
+            if fn not in self._listeners:
+                self._listeners.append(fn)
 
     def pause(self) -> None:
         """暂停天线下发（与 expression / talk gesture 协调）。ramp 内部插值仍在推进。"""
@@ -438,7 +456,12 @@ class PostureBaselineModulator:
         self._dispatch_antenna()
 
     def _snapshot_target(self) -> PostureOffset:
-        """从 emotion_tracker / power_state 拼出新 target offset。失败 fail-soft → ZERO/中位。"""
+        """从 emotion_tracker / power_state 拼出新 target offset。失败 fail-soft → ZERO/中位。
+
+        副作用：把本次 snapshot 的原始 emotion / power_state 对象缓存到
+        ``self._last_target_emotion_obj`` / ``self._last_target_power_obj``，
+        供 listener / log 使用（保证 listener 拿到的对象与计算 baseline 同源）。
+        """
         emo: Any = None
         psv: Any = None
         if self.emotion_tracker is not None:
@@ -454,6 +477,8 @@ class PostureBaselineModulator:
             except Exception as exc:  # noqa: BLE001
                 log.debug("[posture_baseline] power snapshot failed: %s", exc)
                 psv = None
+        self._last_target_emotion_obj = emo
+        self._last_target_power_obj = psv
         return self.baseline.compute(emo, psv)
 
     def _begin_ramp(self, new_target: PostureOffset, now: float) -> None:
@@ -488,6 +513,18 @@ class PostureBaselineModulator:
                 power_state=pk,
                 ramp_s=float(self.config.ramp_s),
             )
+        # companion-007: fire listeners（在锁外，避免 listener 重新进 modulator API 死锁）
+        listeners = list(self._listeners)
+        emo_obj = self._last_target_emotion_obj
+        pwr_obj = self._last_target_power_obj
+        for fn in listeners:
+            try:
+                fn(emo_obj, pwr_obj)
+            except Exception as exc:  # noqa: BLE001
+                log.warning(
+                    "[posture_baseline] listener %r failed: %s: %s",
+                    fn, type(exc).__name__, exc,
+                )
 
     def _advance_ramp(self, now: float) -> None:
         ramp = max(0.001, float(self.config.ramp_s))
