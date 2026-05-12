@@ -1,0 +1,97 @@
+[emotion_renderer] COCO_EMOTION_PROSODY_PULSE_S=100.000 >1.000，clamp
+[emotion_renderer] COCO_EMOTION_PROSODY_PULSE_S=0.001 <0.050，clamp
+[emotion_renderer] COCO_EMOTION_PROSODY_PULSE_S='abc' 非数字，回退默认 0.20
+V1: 默认 OFF
+  [PASS] 默认 enabled=False
+  [PASS] emotion_prosody_enabled_from_env=False
+  [PASS] disabled 时未注册 listener
+  [PASS] disabled 时 current_style == NEUTRAL
+  [PASS] disabled 时 apply_to_tts_kwargs 不注入 rate/pitch
+  [PASS] say() 签名含 rate / pitch_semitone（向后兼容默认 None）
+  [PASS] say_async() 签名含 rate / pitch_semitone
+V2: happy → rate=+0.05 / pitch=+1 / overlay='excited' / pulse=True
+  [PASS] happy.tts_rate == +0.05: got 0.05
+  [PASS] happy.tts_pitch_semitone == +1: got 1.0
+  [PASS] happy.expr_overlay == 'excited': got 'excited'
+  [PASS] happy.antenna_pulse == True
+V3: sad → rate=-0.10 / pitch=-1 / overlay=None / pulse=False
+  [PASS] sad.tts_rate == -0.10: got -0.1
+  [PASS] sad.tts_pitch_semitone == -1: got -1.0
+  [PASS] sad.expr_overlay is None
+  [PASS] sad.antenna_pulse is False
+  [PASS] neutral == NEUTRAL_STYLE
+  [PASS] 未知字符串 → NEUTRAL_STYLE
+  [PASS] None → NEUTRAL_STYLE
+  [PASS] 'focused' → NEUTRAL_STYLE
+V4: pitch_semitone unsupported → emit tts.prosody_unsupported (一次)
+  [PASS] emit 'tts.prosody_unsupported' 至少一次: got 1
+  [PASS] emit 仅一次（进程级 dedup）: got 1
+  [PASS] synthesize 仍被调用 2 次（fallback 不阻塞）: got [('你好', 50, 1.05), ('你好', 50, 1.05)]
+  [PASS] play 仍被调用 2 次
+  [PASS] rate=+0.05 → 等效 speed=1.05: got speed=1.05
+  [PASS] payload 含 supports_pitch=False
+  [PASS] payload 含 backend 字段
+V5: 5s debounce 复用 baseline（连续相同 emotion 在 debounce 内只触发 1 次）
+  [PASS] renderer.start 注册到 baseline.add_listener
+  [PASS] debounce 内仅 1 次 emotion_render_changed: got 1
+  [PASS] baseline.stats.debounce_skipped >= 1: got 1
+  [PASS] 5s 后 sad 触发新 emotion_render_changed: got 2
+V6: EmotionRenderer 与 PostureBaseline 同源（同一 emotion 对象）
+  [PASS] baseline.compute 被调用至少一次
+  [PASS] listener 收到 emotion 至少一次
+  [PASS] listener 收到的 emotion 与 baseline.compute 是同一对象 (is): listener=<Emotion.HAPPY: 'happy'> baseline=<Emotion.HAPPY: 'happy'>
+V7: ExpressionPlayer 主动播放期间 EmotionRenderer 不抢 antenna / overlay
+  [PASS] player.is_busy=True 时 antenna_pulse 跳过 → robot.set_target_antenna_joint_positions 未被 EmotionRenderer 调用: got 0
+  [PASS] player.is_busy=True 时 overlay 跳过 → player.play 未被调用
+  [PASS] stats.overlays_skipped_busy >= 1
+  [PASS] player.is_busy=False 时 overlay play 被调用: got 1
+V8: env clamp + 非法值
+  [PASS] tts_rate clamp 上限 +0.30: got 0.3
+  [PASS] pitch clamp 上限 +3
+  [PASS] tts_rate clamp 下限 -0.30
+  [PASS] pitch clamp 下限 -3
+  [PASS] 非法 env 'abc' → enabled=False
+  [PASS] 空 env → enabled=False
+  [PASS] pulse_s clamp 上限 1.0: got 1.0
+  [PASS] pulse_s clamp 下限 0.05: got 0.05
+  [PASS] 非数字 pulse_s → 默认 0.2
+  [PASS] say rate=+10 → speed clamp 到 2.0: got [2.0]
+  [PASS] say rate=-10 → speed clamp 到 0.5: got [2.0, 0.5]
+V10: emit 'companion.emotion_render_changed' payload 完整
+  [PASS] emit at least once
+  [PASS] payload 含 emotion: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload 含 tts_rate: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload 含 tts_pitch_semitone: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload 含 expr_overlay: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload 含 antenna_pulse: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload 含 fallback: keys=['emotion', 'tts_rate', 'tts_pitch_semitone', 'expr_overlay', 'antenna_pulse', 'fallback']
+  [PASS] payload.emotion == 'happy'
+  [PASS] payload.antenna_pulse == True
+  [PASS] payload.expr_overlay == 'excited'
+V11: antenna pulse 与 baseline pause/resume 协议一致
+  [PASS] pulse 期间 baseline.is_paused() == True
+  [PASS] pulse 结束后 baseline 已 resume: pause=1 resume=1
+  [PASS] renderer.stats.pulses_dispatched >= 1
+V9: 回归 interact-006 / robot-004 / companion-005
+  [PASS] interact_006 verify exit==0: rc=0 stderr_tail=5-13 03:15:59,340 [WARNING] coco.emotion: [emotion] COCO_EMOTION_DECAY_S=0.50 <1，clamp 到 1.0
+2026-05-13 03:15:59,340 [WARNING] coco.emotion: [emotion] COCO_EMOTION_DECAY_S=9999.00 >3600，clamp 到 3600.0
+2026-05-13 03:15:59,340 [WARNING] coco.emotion: [emotion] COCO_EMOTION_DECAY_S='abc' 非数字，回退默认 60.0
+
+  [PASS] robot_004 verify exit==0: rc=0 stderr_tail=[posture_baseline] COCO_POSTURE_BASELINE_RAMP_S=100.00 >10.00，clamp
+[posture_baseline] COCO_POSTURE_BASELINE_TICK_S=0.00 <0.05，clamp
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+
+  [PASS] companion_005 verify exit==0: rc=0 stderr_tail=situational modulator failed: RuntimeError: boom
+[sit_idle] compute failed: RuntimeError: snap boom — fallback 1.0×1.0
+
+  [PASS] companion_003 verify exit==0: rc=0 stderr_tail=<= drowsy_after(100.0); bumping sleep_after to 101.0
+[power] COCO_POWER_DROWSY_AFTER='abc' invalid float; fallback default=60.0
+[power] sleep_after(50.0) <= drowsy_after(60.0); bumping sleep_after to 61.0
+[power] COCO_POWER_DROWSY_MINUTES='abc' invalid float; falling back to COCO_POWER_DROWSY_AFTER
+
+  [PASS] companion_006 verify exit==0: rc=0 stderr_tail=[profile_switcher] greet tts failed: RuntimeError: tts boom
+[profile_switcher] greet tts failed: RuntimeError: tts boom
+
+
+PASS elapsed=11.72s

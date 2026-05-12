@@ -17,6 +17,16 @@ from coco.companion.profile_switcher import (
     multi_user_config_from_env,
     multi_user_enabled_from_env,
 )
+from coco.companion.emotion_renderer import (
+    EmotionRenderer,
+    EmotionRendererConfig,
+    EmotionRendererStats,
+    EmotionStyle,
+    NEUTRAL_STYLE,
+    style_for_emotion,
+    emotion_prosody_enabled_from_env,
+    emotion_renderer_config_from_env,
+)
 
 __all__ = [
     "IdleBias",
@@ -32,4 +42,12 @@ __all__ = [
     "build_profile_switcher",
     "multi_user_config_from_env",
     "multi_user_enabled_from_env",
+    "EmotionRenderer",
+    "EmotionRendererConfig",
+    "EmotionRendererStats",
+    "EmotionStyle",
+    "NEUTRAL_STYLE",
+    "style_for_emotion",
+    "emotion_prosody_enabled_from_env",
+    "emotion_renderer_config_from_env",
 ]
