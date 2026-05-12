@@ -304,6 +304,20 @@ class Coco(ReachyMiniApp):
                         try:
                             snap = tracker.latest()
                             sel.select(list(snap.tracks))
+                            # companion-006: 把当前 focus 的 name 喂给 switcher
+                            cur = sel.current()
+                            cur_name = (cur.name if cur else None)
+                            # 通过 attribute on selector 上挂 switcher 引用（main 段
+                            # 装配后会 set），避免 closure 早绑定问题。
+                            pw = getattr(sel, "_coco_profile_switcher", None)
+                            if pw is not None:
+                                try:
+                                    pw.observe(cur_name)
+                                except Exception as _e:  # noqa: BLE001
+                                    print(
+                                        f"[coco][attention] switcher.observe failed: {_e!r}",
+                                        flush=True,
+                                    )
                         except Exception as e:  # noqa: BLE001
                             print(f"[coco][attention] tick failed: {e!r}", flush=True)
                         if stop_evt.wait(timeout=interval_s):
@@ -639,21 +653,44 @@ class Coco(ReachyMiniApp):
 
             # companion-004: 可选 ProfileStore（默认 OFF，向后兼容）。
             # COCO_PROFILE_DISABLE=1 即使代码侧构造了 store，store 内部 load/save 也会 no-op。
+            # companion-006: 若 COCO_MULTI_USER=1，把 _profile_store 替换成 MultiProfileStore，
+            # 下游 InteractSession / ProactiveScheduler 接口不变（duck-typing：load/save/...）。
             _profile_store = None
+            _profile_switcher = None  # companion-006
             try:
                 from coco.profile import (
                     ProfileStore as _ProfileStore,
                     profile_store_disabled_from_env as _profile_disabled,
                     default_profile_path as _default_profile_path,
                 )
+                from coco.companion.profile_switcher import (
+                    MultiProfileStore as _MultiProfileStore,
+                    multi_user_config_from_env as _mu_cfg_from_env,
+                )
                 if not _profile_disabled():
-                    _profile_store = _ProfileStore()
-                    _p = _profile_store.load()
-                    print(
-                        f"[coco][profile] enabled path={_default_profile_path()} "
-                        f"name={_p.name!r} interests={_p.interests} goals={_p.goals}",
-                        flush=True,
-                    )
+                    _mu_cfg = _mu_cfg_from_env()
+                    if _mu_cfg.enabled:
+                        # companion-006: per-user profile 路由
+                        _profile_store = _MultiProfileStore(
+                            root=_default_profile_path().parent,
+                            active_user_id=None,
+                        )
+                        _p = _profile_store.load()
+                        print(
+                            f"[coco][profile] enabled multi-user root="
+                            f"{_default_profile_path().parent} "
+                            f"active=None debounce_s={_mu_cfg.debounce_s:.1f} "
+                            f"greet_cooldown_s={_mu_cfg.greet_cooldown_s:.0f}",
+                            flush=True,
+                        )
+                    else:
+                        _profile_store = _ProfileStore()
+                        _p = _profile_store.load()
+                        print(
+                            f"[coco][profile] enabled path={_default_profile_path()} "
+                            f"name={_p.name!r} interests={_p.interests} goals={_p.goals}",
+                            flush=True,
+                        )
                     try:
                         emit(
                             "interact.profile_loaded",
@@ -709,6 +746,68 @@ class Coco(ReachyMiniApp):
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][face_id] init failed: {type(e).__name__}: {e}", flush=True)
                 _face_id_classifier = None
+
+            # companion-006: 多用户 ProfileSwitcher（COCO_MULTI_USER=1）。
+            # 必须在 _profile_store(MultiProfileStore) 与 _dialog_memory 都构造完之后。
+            # on_switch 回调里 clear DialogMemory，确保 per-profile 隔离（V6）。
+            try:
+                from coco.companion.profile_switcher import (
+                    build_profile_switcher as _build_pw,
+                    multi_user_config_from_env as _mu_cfg2,
+                )
+                _mu_cfg_now = _mu_cfg2()
+                if (
+                    _mu_cfg_now.enabled
+                    and _profile_store is not None
+                    and type(_profile_store).__name__ == "MultiProfileStore"
+                ):
+                    def _on_profile_switch(prev, curr, _dm=_dialog_memory):
+                        if _dm is not None:
+                            try:
+                                _dm.clear()
+                            except Exception as _e:  # noqa: BLE001
+                                print(
+                                    f"[coco][profile_switcher] dialog clear failed: "
+                                    f"{type(_e).__name__}: {_e}",
+                                    flush=True,
+                                )
+                    _profile_switcher = _build_pw(
+                        store=_profile_store,
+                        config=_mu_cfg_now,
+                        # L1-1 fix: say_async 不阻塞 attention tick 线程
+                        # （observe() 由 attention loop 调用，blocking say 会卡 2-5s）
+                        tts_say_fn=coco_tts.say_async,
+                        emit_fn=emit,
+                        on_switch=_on_profile_switch,
+                    )
+                    if _profile_switcher is not None:
+                        # late-binding wire 到 attention loop（loop 通过 selector 上的
+                        # _coco_profile_switcher attribute 取 switcher，避免 closure
+                        # 早绑定 None）。
+                        if _attention_selector is not None:
+                            try:
+                                setattr(_attention_selector, "_coco_profile_switcher", _profile_switcher)
+                            except Exception:  # noqa: BLE001
+                                pass
+                        print(
+                            f"[coco][profile_switcher] enabled debounce_s={_mu_cfg_now.debounce_s:.1f} "
+                            f"greet_cooldown_s={_mu_cfg_now.greet_cooldown_s:.0f} "
+                            f"greet_enabled={_mu_cfg_now.greet_enabled}",
+                            flush=True,
+                        )
+                else:
+                    if _mu_cfg_now.enabled:
+                        print(
+                            "[coco][profile_switcher] disabled: requires "
+                            "MultiProfileStore (set COCO_MULTI_USER=1 上面已生效)",
+                            flush=True,
+                        )
+            except Exception as e:  # noqa: BLE001
+                print(
+                    f"[coco][profile_switcher] init failed: {type(e).__name__}: {e}",
+                    flush=True,
+                )
+                _profile_switcher = None
 
             # interact-008: 可选 IntentClassifier + ConversationStateMachine（默认 OFF）。
             # COCO_INTENT=1 启用：handle_audio 内做 intent 分类 + state 机；
@@ -1139,6 +1238,13 @@ class Coco(ReachyMiniApp):
                     _attention_thread.join(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][attention] stop failed: {e!r}", flush=True)
+            # companion-006: 解绑 selector 上的 switcher 引用（避免残留状态）
+            try:
+                if _attention_selector is not None:
+                    if hasattr(_attention_selector, "_coco_profile_switcher"):
+                        delattr(_attention_selector, "_coco_profile_switcher")
+            except Exception:  # noqa: BLE001
+                pass
             # infra-003: 停 MetricsCollector
             try:
                 if "_metrics" in locals() and _metrics is not None:
