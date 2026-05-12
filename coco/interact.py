@@ -21,7 +21,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple
 
 import numpy as np
 
@@ -119,6 +119,9 @@ class InteractSession:
         profile_store: Optional["ProfileStore"] = None,
         intent_classifier: Optional["IntentClassifier"] = None,
         conv_state_machine: Optional["ConversationStateMachine"] = None,
+        dialog_summarizer: Optional[Any] = None,
+        dialog_summary_threshold: int = 10,
+        dialog_summary_keep_recent: int = 4,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -161,6 +164,10 @@ class InteractSession:
         # interact.state_transition。
         self.intent_classifier = intent_classifier
         self.conv_state_machine = conv_state_machine
+        # interact-009: 对话历史压缩。dialog_summarizer=None 时不压缩（向后兼容 interact-004/008）。
+        self.dialog_summarizer = dialog_summarizer
+        self.dialog_summary_threshold = int(dialog_summary_threshold)
+        self.dialog_summary_keep_recent = int(dialog_summary_keep_recent)
         # 状态机回调挂钩（emit interact.state_transition）
         if conv_state_machine is not None:
             try:
@@ -428,6 +435,16 @@ class InteractSession:
                 history_msgs: Optional[List[dict]] = None
                 if self.dialog_memory is not None and self._llm_accepts_history:
                     history_msgs = []
+                    # interact-009 L0: 把 dialog_memory.summary 作为 history 第一条
+                    # system message prepend（保留 profile system prompt 在顶层 system 不变）。
+                    # 与 dialog.py:build_messages 的次序一致：[system_prompt(profile)] +
+                    # [system(对话摘要)] + flatten(recent_turns)。
+                    _summary_text = getattr(self.dialog_memory, "summary", None)
+                    if _summary_text:
+                        history_msgs.append({
+                            "role": "system",
+                            "content": f"对话摘要：{_summary_text}",
+                        })
                     for u, a in self.dialog_memory.recent_turns():
                         if u:
                             history_msgs.append({"role": "user", "content": u})
@@ -495,6 +512,17 @@ class InteractSession:
                     self.dialog_memory.append(transcript, reply)
                 except Exception as e:  # noqa: BLE001
                     log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
+                # interact-009: append 后尝试压缩（fail-soft，内部 try/except）
+                if self.dialog_summarizer is not None:
+                    try:
+                        self.dialog_memory.compress_if_needed(
+                            threshold_turns=self.dialog_summary_threshold,
+                            keep_recent=self.dialog_summary_keep_recent,
+                            summarizer=self.dialog_summarizer,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("dialog_memory.compress_if_needed crashed: %s: %s",
+                                    type(e).__name__, e)
 
             # 4) TTS（可与动作并行；这里串行简化）
             # interact-008 L1-2: repeat 路径无 on_llm_start/done，需手动 fire

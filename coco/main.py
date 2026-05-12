@@ -669,6 +669,54 @@ class Coco(ReachyMiniApp):
                         print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
 
 
+            # interact-009: 可选对话历史压缩（默认 OFF）。
+            # 启用时若 dialog_memory 未启用，summarizer 也不构造（无 history 可压缩）。
+            _dialog_summarizer = None
+            _dialog_summary_threshold = 10
+            _dialog_summary_keep_recent = 4
+            try:
+                from coco.dialog_summary import (
+                    config_from_env as _ds_config_from_env,
+                    build_summarizer as _ds_build,
+                )
+                _ds_cfg = _ds_config_from_env()
+                if _ds_cfg.enabled and _dialog_memory is not None:
+                    _dialog_summarizer = _ds_build(_ds_cfg, llm_reply_fn=_llm.reply)
+                    _dialog_summary_threshold = _ds_cfg.threshold_turns
+                    _dialog_summary_keep_recent = _ds_cfg.keep_recent
+                    # interact-009 L1-2: auto-bump dialog max_turns >= threshold + keep_recent
+                    # （deque 必须能容纳触发压缩所需的 turns，否则永远跑不到 threshold）。
+                    # deque maxlen 不可改 → 重建 DialogMemory 实例。
+                    _required_max = _ds_cfg.threshold_turns + _ds_cfg.keep_recent
+                    if _dialog_memory.max_turns < _required_max:
+                        _orig_max = _dialog_memory.max_turns
+                        try:
+                            from coco.dialog import DialogMemory as _DM
+                            _dialog_memory = _DM(
+                                max_turns=_required_max,
+                                idle_timeout_s=_dialog_memory.idle_timeout_s,
+                            )
+                            print(
+                                f"[coco][dialog_summary] auto-bumped dialog max_turns "
+                                f"{_orig_max} -> {_required_max} "
+                                f"(threshold={_ds_cfg.threshold_turns} + keep={_ds_cfg.keep_recent})",
+                                flush=True,
+                            )
+                        except Exception as _e:  # noqa: BLE001
+                            print(
+                                f"[coco][dialog_summary] WARN auto-bump failed "
+                                f"({type(_e).__name__}: {_e}); 压缩可能不会触发",
+                                flush=True,
+                            )
+                    print(
+                        f"[coco][dialog_summary] enabled kind={_ds_cfg.summarizer_kind} "
+                        f"threshold={_ds_cfg.threshold_turns} keep={_ds_cfg.keep_recent} "
+                        f"max_chars={_ds_cfg.summary_max_chars}",
+                        flush=True,
+                    )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][dialog_summary] init failed: {type(e).__name__}: {e}", flush=True)
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
@@ -685,6 +733,9 @@ class Coco(ReachyMiniApp):
                 profile_store=_profile_store,
                 intent_classifier=_intent_classifier,
                 conv_state_machine=_conv_sm,
+                dialog_summarizer=_dialog_summarizer,
+                dialog_summary_threshold=_dialog_summary_threshold,
+                dialog_summary_keep_recent=_dialog_summary_keep_recent,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession
