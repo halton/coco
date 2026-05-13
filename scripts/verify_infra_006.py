@@ -2,19 +2,22 @@
 """infra-006 verify: GitHub Actions verify matrix CI 配置自检.
 
 V1 .github/workflows/verify-matrix.yml 存在且合法 YAML
-V2 workflow 包含 smoke / verify-vision / verify-interact / verify-companion / verify-robot / verify-infra 全 6 个 job 名
+V2 workflow 包含 smoke / verify-vision / verify-interact / verify-companion /
+   verify-robot / verify-infra / verify-audio / verify-publish 全 8 个 job 名
 V3 matrix python 含 3.13
 V4 scripts/run_verify_all.py 存在可执行且 import 不抛
-V5 run_verify_all.py --list 输出含全部 verify_*.py 文件名
+V5 run_verify_all.py --list 输出含全部 verify_*.py 文件名（除 EXCLUDED）
 V6 init.sh 支持 COCO_CI=1 环境变量（grep 检测）
 V7 run_verify_all.py --dry-run 输出预期任务列表
 V8 workflow 包含 actions/upload-artifact 步骤上传 evidence
+V9 每个 verify-XXX job 在 run 中调用 run_verify_all.py 且 --area 与 job 名匹配
+   （抓 phase-1 矩阵覆盖盲点）
 """
 
 from __future__ import annotations
 
 import importlib.util
-import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -51,10 +54,11 @@ def v1_workflow_yaml() -> None:
 
 
 def v2_jobs_present() -> None:
-    print("V2: 6 个 job 名齐")
+    print("V2: 8 个 job 名齐")
     text = WORKFLOW.read_text()
     needed = ["smoke:", "verify-vision:", "verify-interact:",
-              "verify-companion:", "verify-robot:", "verify-infra:"]
+              "verify-companion:", "verify-robot:", "verify-infra:",
+              "verify-audio:", "verify-publish:"]
     missing = [j for j in needed if j not in text]
     assert not missing, f"workflow 缺 job: {missing}"
     print(f"  ok: jobs = {[j.rstrip(':') for j in needed]}")
@@ -80,10 +84,18 @@ def v4_runner_importable() -> None:
 
 
 def v5_list_covers_all() -> None:
-    print("V5: --list 含全部 verify_*.py")
+    print("V5: --list 含全部 verify_*.py（除 EXCLUDED）")
+    # 从 runner 模块 import EXCLUDED，保证两边共用同一份
+    spec = importlib.util.spec_from_file_location("run_verify_all", RUNNER)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    excluded: frozenset[str] = getattr(mod, "EXCLUDED")
+    assert "verify_infra_006.py" in excluded, \
+        "EXCLUDED 必须含 verify_infra_006.py（避免矩阵自检递归）"
     on_disk = sorted(
         p.name for p in (REPO_ROOT / "scripts").glob("verify_*.py")
-        if p.name != "verify_infra_006.py"
+        if p.name not in excluded
     )
     proc = subprocess.run(
         [sys.executable, str(RUNNER), "--list"],
@@ -93,7 +105,7 @@ def v5_list_covers_all() -> None:
     out = proc.stdout
     missing = [n for n in on_disk if n not in out]
     assert not missing, f"--list 漏掉: {missing}"
-    print(f"  ok: --list 覆盖 {len(on_disk)} 个 verify_*.py")
+    print(f"  ok: --list 覆盖 {len(on_disk)} 个 verify_*.py（EXCLUDED={sorted(excluded)}）")
 
 
 def v6_init_sh_ci() -> None:
@@ -125,10 +137,63 @@ def v8_upload_artifact() -> None:
     print("  ok: upload-artifact 步骤 + evidence/** 路径出现")
 
 
+def v9_jobs_call_runner_with_matching_area() -> None:
+    """每个 verify-XXX job 必须在 run 段调用 run_verify_all.py 且 --area 与
+    job 名匹配。phase-1 矩阵覆盖盲点正是因为 run 段用了 ``--filter NNN`` 把
+    area 内大量 verify 静默筛掉，本检查直接卡这个。
+    """
+    print("V9: 每个 verify-XXX job 调 run_verify_all.py 且 --area 匹配 job 名")
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        print("  SKIP: PyYAML 未装；V9 需结构化解析")
+        return
+    with open(WORKFLOW) as f:
+        data = yaml.safe_load(f)
+    jobs = data.get("jobs", {})
+    # 期待映射：job 名 → expected --area 值
+    expected = {
+        "verify-vision": "vision",
+        "verify-interact": "interact",
+        "verify-companion": "companion",
+        "verify-robot": "robot",
+        "verify-infra": "infra",
+        "verify-audio": "audio",
+        "verify-publish": "publish",
+    }
+    failed: list[str] = []
+    for job_name, area in expected.items():
+        if job_name not in jobs:
+            failed.append(f"{job_name}: 缺 job")
+            continue
+        steps = jobs[job_name].get("steps") or []
+        runs = " \n".join(
+            str(s.get("run", "")) for s in steps if isinstance(s, dict)
+        )
+        if "run_verify_all.py" not in runs:
+            failed.append(f"{job_name}: run 段未调 run_verify_all.py")
+            continue
+        # 必须显式 --area <area>，否则可能误用 --filter
+        if not re.search(rf"--area\s+{re.escape(area)}\b", runs):
+            failed.append(f"{job_name}: run 段缺 '--area {area}'")
+            continue
+        # 禁止 --filter NNN 这种硬编码列表（rework L0-1 要求）
+        if re.search(r"--filter\s+\S", runs):
+            failed.append(f"{job_name}: 不允许 --filter（参考 rework L0-1）")
+            continue
+        # robot job 不允许 continue-on-error: true（L0-2 要求）
+        if job_name == "verify-robot":
+            if jobs[job_name].get("continue-on-error") is True:
+                failed.append("verify-robot: 仍带 continue-on-error: true (L0-2)")
+    assert not failed, "V9 失败:\n  - " + "\n  - ".join(failed)
+    print(f"  ok: {len(expected)} 个 verify-XXX job 全部调 runner --area 且匹配 job 名")
+
+
 def main() -> int:
     checks = [v1_workflow_yaml, v2_jobs_present, v3_python_313,
               v4_runner_importable, v5_list_covers_all, v6_init_sh_ci,
-              v7_dry_run, v8_upload_artifact]
+              v7_dry_run, v8_upload_artifact,
+              v9_jobs_call_runner_with_matching_area]
     failed = []
     for fn in checks:
         try:

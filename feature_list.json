@@ -1208,8 +1208,20 @@
         "scripts/verify_infra_006.py：V1 workflow yaml 存在且 schema 合理；V2 verify 选择脚本能正确列出全部 sim verify；V3 workflow 不引入新依赖；V4 markdown 中 README 注明 CI 状态徽章。",
         "Reviewer fresh-context 评审：Actions 矩阵稳定性（macOS runner 偶发慢/失败）；缓存策略；audio/robot 子系统在 CI 中的硬件可选化；并发取消策略；secret 管理（本期无 secret 即可）。"
       ],
-      "evidence": [],
-      "notes": "phase-8 第二发；不引入私服依赖；不动现有 verify 脚本内容，仅汇编入 CI。本期不开启自动 deploy / release。priority 41。"
+      "evidence": [
+        "verify_infra_006.py V1-V9 全 PASS (9/9)。V9 强制每个 verify-XXX job 在 run 段调用 run_verify_all.py 且 --area 匹配 job 名，并禁止 --filter（覆盖 phase-1 矩阵盲点根因）。evidence/infra-006/verify_infra_006_round2.txt。",
+        "workflow 实际 job 列表 (8 个)：smoke / verify-vision / verify-interact / verify-companion / verify-audio (new) / verify-robot / verify-infra / verify-publish (new)。",
+        "每个 verify-XXX job 调用 run_verify_all.py --area <X> --skip-list（无 --filter）。area 全跑，避免 phase-1 静默漏 26 个 verify 的盲点。",
+        "scripts/run_verify_all.py：(a) 模块级常量 EXCLUDED={verify_infra_006.py}，discover() 与 verify_infra_006.v5/v9 共用；(b) 新增 --skip-list 标志 + 模块级 SKIP_LIST 常量（脚本名/原因/uat-跟踪三元组），CI 默认开本地默认关。",
+        "SKIP_LIST 共 9 项（CI ubuntu-latest 跑不动，原因仅限真硬件 / 真 daemon / 远超 60s budget）：verify_asr_microphone (USB 麦克), verify_audio003_app_integration / verify_companion001_app_integration / verify_companion001_idle / verify_interact001 / verify_interact001_app_integration / verify_robot001_daemon / verify_robot002_actions (mockup-sim daemon 物理通路，uat-phase4 跟踪), verify_publish (reachy_mini.apps.app check 临时 venv 远超 60s budget，uat-phase8 跟踪)。完整理由列表见 evidence/infra-006/runner_dryrun_skiplist.txt。",
+        "verify 覆盖：磁盘 44 个 verify_*.py（不含 verify_infra_006 自身）；CI 实跑 35 个（44 - 9 skip）。evidence/infra-006/runner_list.txt 列全部 44 个，evidence/infra-006/runner_dryrun_skiplist.txt 列 CI 实跑 35 个。",
+        "verify-robot job 已去掉 continue-on-error: true（rework L0-2）；剩 verify_robot_003 / verify_robot_004 纯逻辑 sim 必须 PASS，需 daemon 的 robot/audio verify 全在 SKIP_LIST 内 uat-phase4 跟踪。",
+        "uv 安装改用 astral-sh/setup-uv@v3 with enable-cache: true（替换原 pipx install uv || pip install --user uv + actions/cache@v4 ~/.cache/pip 的二段式，rework L1-3 + L1-4）。",
+        "on.push.branches 增加 'feat/**'（rework L2-7），让 feature 分支 push 也触发矩阵。",
+        "回归：COCO_CI=1 ./init.sh PASS（11 项 smoke 子检查全 PASS，evidence/infra-006/init_sh_COCO_CI=1.log）；verify_vision_006 10/10 PASS；verify_infra_005 38/38 PASS；verify_interact_011 V1-V10 PASS。默认 ./init.sh 在 sub-agent headless 环境会卡 sounddevice 等麦克（macOS 后台进程固有，与本改动无关；CI ubuntu-latest 走 COCO_CI=1 通路同样跳过真麦克）。",
+        "Reviewer (sub-agent, fresh-context, round 2): PENDING — round 2 评审待 Reviewer 入场。"
+      ],
+      "notes": "phase-8 第二发；rework round 2：修 L0-1（矩阵覆盖不全：改 --area X 全跑 + 集中 SKIP_LIST）+ L0-2（去掉 verify-robot continue-on-error）+ L1-3/L1-4（setup-uv@v3 自带缓存）+ L1-5（EXCLUDED 模块常量共用）+ L1-6（不再 per-area --filter）+ L2-7（feat/** 触发）+ L2-8（verify_infra_006 V9 卡 job-area 匹配）。SKIP_LIST 内容与原因诚实写进 evidence；uat-phase4 / uat-phase8 跟踪真硬件 / 真 daemon / 大执行项。"
     },
     {
       "id": "robot-005",

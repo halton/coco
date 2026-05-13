@@ -1,0 +1,58 @@
+==> Repo: /Users/halton/work/coco
+==> COCO_CI=1（CI 模式：跳过真麦克 / daemon 等真硬件子检查）
+==> uv sync
+Resolved 107 packages in 5ms
+Checked 81 packages in 36ms
+==> TTS 模型 (kokoro-zh) 检查
+[skip] Kokoro 已就绪：/Users/halton/.cache/coco/tts/kokoro-int8-multi-lang-v1_1 (model=114299010B voices=53790720B)
+[ok] Kokoro：model.int8.onnx (114299010B), voices.bin (53790720B), dict/, espeak-ng-data/, tokens.txt
+
+全部就绪。缓存目录：/Users/halton/.cache/coco/tts
+==> Smoke
+==> 环境基线
+  python: 3.13.12
+  platform: Darwin 25.4.0 arm64
+  reachy-mini: 1.4.0
+  sounddevice: 0.5.5
+  numpy: 2.4.4
+==> Smoke: audio (sounddevice 0.3s)
+  SKIP: COCO_CI=1，跳过真麦克录音（CI 无声卡）
+==> Smoke: ASR (sense-voice wav)
+/Users/halton/work/coco/scripts/verify_asr_wav.py:55: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, data = wavfile.read(str(path))
+/Users/halton/work/coco/coco/asr.py:211: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, audio = wavfile.read(path)
+WAV : zh-001-walk-park.wav  (3.78s)
+REF : 今天天气真好，我们一起去公园散步。
+HYP : 今天天气真好我们一起去公园散步
+NORM HYP: 今天天气真好我们一起去公园散步
+NORM REF: 今天天气真好我们一起去公园散步
+CER : 0.0000  (阈值 < 0.1)
+耗时: 0.68s   RTF: 0.181
+V3 PASS
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.
+/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓
+/Users/halton/work/coco/scripts/smoke.py:235: WavFileWarning: Chunk (non-data) not understood, skipping it.
+  sr, a = wavfile.read(str(fix_wav))
+==> Smoke: TTS (kokoro-zh)
+  ok: samples=22188 sr=24000 dt=1.35s
+==> Smoke: vision (face detect on single_face.jpg)
+  ok: detected 1 face(s) in single_face.jpg
+==> Smoke: companion-vision (FaceTracker 2s)
+  ok: detect=10 hit=10 present=True
+==> Smoke: face-tracker (primary stability 5 frames)
+  ok: tracks=1 primary_id=1 hits=15 switches=1
+==> Smoke: VAD trigger (fixture wav)
+  ok: VAD trigger fired 1 time(s) on fixture
+==> Smoke: wake-word (KWS on wake_keke fixture)
+  ok: wake hits=['可可']
+==> Smoke: power-state (companion-003)
+  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1
+==> Smoke: config (CocoConfig + jsonl logging)
+  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe
+==> Smoke: publish (entry_points + Coco class import)
+  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp
+
+==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json
+--- ENVIRONMENT NOTE ---
+默认 ./init.sh 在 sub-agent headless 环境跑会卡在 smoke_audio (sounddevice sd.rec) — macOS 后台进程无麦克权限/默认设备时的固有阻塞，与本次改动无关。本仓库设计上 COCO_CI=1 模式覆盖这种环境（CI ubuntu-latest 同样无声卡）。
