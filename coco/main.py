@@ -491,7 +491,9 @@ class Coco(ReachyMiniApp):
         # 启用时通过 on_caption 调 record_caption_trigger 做"主动话题候选"
         # 计数（caption_proactive），不立即触发 LLM/TTS（保持最小改动 + default-OFF）。
         # _proactive 在下方更晚构造；用 mutable 容器引用，闭包按需读最新值
-        _proactive_ref: list = [None]
+        # vision-007: MultimodalFusion 引用容器，主线在 _proactive 构造完后注入。
+        # caption 回调内同时调 _mm_fusion_ref[0].on_scene_caption（如果启用）。
+        _mm_fusion_ref: list = [None]
         _scene_caption_emitter = None
         try:
             if os.environ.get("COCO_SCENE_CAPTION", "0") == "1":
@@ -515,15 +517,24 @@ class Coco(ReachyMiniApp):
 
                     def _on_caption(cap):  # noqa: ANN001
                         _p = _proactive_ref[0]
-                        if _p is None:
-                            return
-                        try:
-                            _p.record_caption_trigger(cap.text)
-                        except Exception as _exc:  # noqa: BLE001
-                            print(
-                                f"[coco][scene_caption] proactive.record_caption_trigger failed: {_exc!r}",
-                                flush=True,
-                            )
+                        if _p is not None:
+                            try:
+                                _p.record_caption_trigger(cap.text)
+                            except Exception as _exc:  # noqa: BLE001
+                                print(
+                                    f"[coco][scene_caption] proactive.record_caption_trigger failed: {_exc!r}",
+                                    flush=True,
+                                )
+                        # vision-007: 把 caption 同步给 MultimodalFusion（若启用）
+                        _mm = _mm_fusion_ref[0]
+                        if _mm is not None:
+                            try:
+                                _mm.on_scene_caption(cap.text, getattr(cap, "features", None) or {})
+                            except Exception as _exc:  # noqa: BLE001
+                                print(
+                                    f"[coco][mm_fusion] on_scene_caption failed: {_exc!r}",
+                                    flush=True,
+                                )
 
                     _scene_caption_emitter = SceneCaptionEmitter(
                         stop_event,
@@ -1165,6 +1176,47 @@ class Coco(ReachyMiniApp):
             except Exception:  # noqa: BLE001
                 pass
 
+            # vision-007: MultimodalFusion（默认 OFF via COCO_MM_PROACTIVE=1）。
+            # 仅在 scene_caption + proactive 都启用时构造；任一缺失则 print WARN
+            # 不构造，保持 default-OFF + 零开销。
+            _mm_fusion = None
+            try:
+                if os.environ.get("COCO_MM_PROACTIVE", "0") == "1":
+                    if _scene_caption_emitter is None:
+                        print(
+                            "[coco][mm_fusion] COCO_MM_PROACTIVE=1 但 SceneCaptionEmitter 未启用；"
+                            "MultimodalFusion 跳过构造",
+                            flush=True,
+                        )
+                    elif _proactive is None:
+                        print(
+                            "[coco][mm_fusion] COCO_MM_PROACTIVE=1 但 ProactiveScheduler 未启用；"
+                            "MultimodalFusion 跳过构造",
+                            flush=True,
+                        )
+                    else:
+                        from coco.multimodal_fusion import (
+                            MultimodalFusion as _MMFusion,
+                            config_from_env as _mm_config_from_env,
+                        )
+                        _mm_cfg = _mm_config_from_env()
+                        _mm_fusion = _MMFusion(
+                            config=_mm_cfg,
+                            proactive=_proactive,
+                        )
+                        _mm_fusion_ref[0] = _mm_fusion
+                        print(
+                            f"[coco][mm_fusion] enabled silence_window={_mm_cfg.silence_window_s:.0f}s "
+                            f"idle_window={_mm_cfg.idle_window_s:.0f}s "
+                            f"rule_cooldown={_mm_cfg.rule_cooldown_s:.0f}s "
+                            f"rate_limit={_mm_cfg.rate_limit_per_min}/min",
+                            flush=True,
+                        )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][mm_fusion] init failed: {type(e).__name__}: {e}", flush=True)
+                _mm_fusion = None
+                _mm_fusion_ref[0] = None
+
             def _on_interaction_combined(src: str, _ps=power_state, _pa=_proactive) -> None:
                 if _ps is not None:
                     try:
@@ -1176,6 +1228,15 @@ class Coco(ReachyMiniApp):
                         _pa.record_interaction(source=src)
                     except Exception as e:  # noqa: BLE001
                         print(f"[coco][proactive] record_interaction failed: {e!r}", flush=True)
+                # vision-007: 把交互信号也喂给 MultimodalFusion（asr final 兜底）。
+                # 若 mm_fusion 未启用即 no-op；启用时刷新 last_user_activity_ts，
+                # 让 R2 motion_greet 的『N 秒无交互』窗口能正确计时。
+                _mm = _mm_fusion_ref[0]
+                if _mm is not None:
+                    try:
+                        _mm.on_asr_event("final", "")
+                    except Exception as e:  # noqa: BLE001
+                        print(f"[coco][mm_fusion] on_asr_event failed: {e!r}", flush=True)
 
 
             # interact-009: 可选对话历史压缩（默认 OFF）。
@@ -1728,6 +1789,16 @@ class Coco(ReachyMiniApp):
                         )
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][scene_caption] stop failed: {e!r}", flush=True)
+            # vision-007: MultimodalFusion 是事件驱动无独立线程，仅清理引用与打印 stats
+            try:
+                if "_mm_fusion" in locals() and _mm_fusion is not None:
+                    print(f"[coco][mm_fusion] stopped stats={_mm_fusion.stats}", flush=True)
+                    try:
+                        _mm_fusion_ref[0] = None
+                    except Exception:  # noqa: BLE001
+                        pass
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][mm_fusion] stop failed: {e!r}", flush=True)
 
 
 def main() -> None:

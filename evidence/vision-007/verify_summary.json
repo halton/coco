@@ -1,0 +1,56 @@
+{
+  "feature": "vision-007",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 dark_silence rule fires",
+      "ok": true,
+      "detail": "triggered=1 mm_triggered=1"
+    },
+    {
+      "name": "V2 motion_greet rule fires",
+      "ok": true,
+      "detail": "per_rule={'motion_greet': 1}"
+    },
+    {
+      "name": "V3 per-rule cooldown",
+      "ok": true,
+      "detail": "first=1 after_skip=1 third=2 cd_skip=1"
+    },
+    {
+      "name": "V4 global rate limit 1/min",
+      "ok": true,
+      "detail": "triggered=1 rate_skip=1"
+    },
+    {
+      "name": "V5 independent per-rule cooldown",
+      "ok": true,
+      "detail": "per_rule={'dark_silence': 1, 'motion_greet': 1}"
+    },
+    {
+      "name": "V6 default-OFF cfg + disabled no-op",
+      "ok": true,
+      "detail": "cfg.enabled=False triggered=0 emits=0"
+    },
+    {
+      "name": "V7 stats counters consistent",
+      "ok": true,
+      "detail": "fusion={'dark_silence': 2, 'motion_greet': 1} proactive={'dark_silence': 2, 'motion_greet': 1}"
+    },
+    {
+      "name": "V8 priority_boost written + counted",
+      "ok": true,
+      "detail": "boost_flag=True count=1"
+    },
+    {
+      "name": "V9 stop+join clean",
+      "ok": true,
+      "detail": "elapsed=0.000s mm=1"
+    },
+    {
+      "name": "V10 coexist with vision-006 caption_proactive",
+      "ok": true,
+      "detail": "caption_proactive=3 mm=2 mm_per_rule={'dark_silence': 1, 'motion_greet': 1}"
+    }
+  ]
+}

@@ -101,6 +101,9 @@ class ProactiveStats:
     tts_errors: int = 0
     # vision-006: scene caption 作为外部触发源时的累计
     caption_proactive: int = 0
+    # vision-007: multimodal fusion 触发记账
+    mm_triggered: int = 0
+    mm_per_rule: dict = field(default_factory=dict)
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -310,6 +313,38 @@ class ProactiveScheduler:
                 )
             except Exception:  # noqa: BLE001
                 pass
+
+    # vision-007: multimodal fusion 作为外部触发源
+    # ------------------------------------------------------------------
+    # MultimodalFusion 命中规则后调本方法。仅记账（mm_triggered + mm_per_rule
+    # + history）并 emit ``proactive.multimodal_triggered``；不立即驱动 LLM/TTS，
+    # 保持单一调度入口（与 record_caption_trigger 同模式）。priority boost
+    # 由 MultimodalFusion 自己写 _next_priority_boost 标志位，本方法不动 cooldown，
+    # 让 ProactiveScheduler 的 idle / cooldown 规则继续生效。
+    def record_multimodal_trigger(self, rule_id: str, hint: str = "") -> None:
+        with self._lock:
+            self.stats.mm_triggered += 1
+            self.stats.mm_per_rule[rule_id] = self.stats.mm_per_rule.get(rule_id, 0) + 1
+            t = self.clock()
+            try:
+                self.stats.history.append(
+                    f"@{t:.2f}: <mm:{rule_id}:{(hint or '')[:40]}>"
+                )
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            emit_fn = self._emit
+            if emit_fn is None:
+                from coco.logging_setup import emit as _emit
+                emit_fn = _emit
+            emit_fn(
+                "proactive.multimodal_triggered",
+                rule_id=rule_id,
+                hint=(hint or "")[:200],
+                subtype=f"mm_{rule_id}",
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("[proactive] mm emit failed: %s: %s", type(e).__name__, e)
 
     # interact-011: pause / resume —— 让 OfflineDialogFallback 在离线降级期间静默
     # ProactiveScheduler，避免雪上加霜。pause/resume 幂等；线程 loop 不停（继续 tick
