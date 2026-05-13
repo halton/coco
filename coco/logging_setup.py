@@ -69,6 +69,9 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "robot",
     "startup",
     "health",
+    # companion-009: PreferenceLearner emit 命名空间（虽然当前实现未 emit，
+    # 预留 schema 防 sub-agent 未来 emit 时被 warn 噪声淹没）
+    "preference_learner",
 })
 
 _UNKNOWN_COMPONENTS_WARNED: set = set()

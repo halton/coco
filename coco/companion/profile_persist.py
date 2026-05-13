@@ -144,13 +144,33 @@ class PersistedProfile:
     created_ts: float = 0.0
     updated_ts: float = 0.0
     dialog_summary: List[str] = field(default_factory=list)  # 最近 N 条 summary 文本
+    # companion-009: 偏好关键词 → weight（归一化到 [0,1]）。
+    # default-OFF（COCO_PREFER_LEARN）；空 dict 视为"未学过"。
+    # 向后兼容：旧 v1 文件无该字段时 from_dict 自动补 {}，schema_version 不变。
+    prefer_topics: Dict[str, float] = field(default_factory=dict)
     schema_version: int = SCHEMA_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        # companion-009: prefer_topics 为空 dict 时不落盘 (向后兼容 + V6
+        # "default-OFF 时 profile 文件不含 prefer_topics 字段")
+        if not self.prefer_topics:
+            d.pop("prefer_topics", None)
+        return d
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "PersistedProfile":
+        # companion-009: 兼容旧 v1 文件——prefer_topics 缺失视为 {}
+        pt_raw = d.get("prefer_topics") or {}
+        if isinstance(pt_raw, dict):
+            pt: Dict[str, float] = {}
+            for k, v in pt_raw.items():
+                try:
+                    pt[str(k)] = float(v)
+                except (TypeError, ValueError):
+                    continue
+        else:
+            pt = {}
         return cls(
             profile_id=str(d.get("profile_id") or ""),
             nickname=(d.get("nickname") or None),
@@ -159,6 +179,7 @@ class PersistedProfile:
             created_ts=float(d.get("created_ts") or 0.0),
             updated_ts=float(d.get("updated_ts") or 0.0),
             dialog_summary=[str(s) for s in (d.get("dialog_summary") or [])],
+            prefer_topics=pt,
             schema_version=int(d.get("schema_version") or 0),
         )
 
