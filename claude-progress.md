@@ -1285,3 +1285,25 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **verify**：verify_infra_006.py V1-V9 全 PASS (9/9)，evidence/infra-006/verify_infra_006_round2.txt。回归 `COCO_CI=1 ./init.sh` 11 项 smoke 全 PASS（evidence/infra-006/init_sh_COCO_CI=1.log）；verify_vision_006 10/10 / verify_infra_005 38/38 / verify_interact_011 V1-V10 全 PASS。
 - **closeout**：merge `feat/infra-006` → main（merge --no-ff，Reviewer round 2 LGTM 与 3 条 L2 备注全部写入 merge commit）；feature_list.json status → passing + Reviewer round 2 evidence；本日志同步追加。
 - **phase-8 软件进度 2/3**，下一候选：**robot-005**（robot-004 followup 收割 — L1+L2 残项整理：首帧无 ramp / antenna SAD≠NEUTRAL / pause-resume 嵌套计数 / history maxlen / play 隐式 stop 文档 / emit fallback import 微优化）。
+
+---
+
+## Session 2026-05-14 — robot-005 close-out（phase-8 软件 3/3 全部完成）
+
+**feature**: robot-005「robot-004 followup 收割 — L1+L2 残项整理」
+
+- **范围**：robot-004 评审遗留 followup 一次性收割（纯软件）：
+  - (a) `PostureBaselineModulator._begin_ramp` 首次 ramp 且 `_current == ZERO_OFFSET` 时 snap 到 target；新增 `_first_ramp_done` flag
+  - (b) `PostureOffset.antenna_joint_rad` 改为整段 `[0,1]` 单调可区分：SAD(0.0) → (-0.3, +0.3) / NEUTRAL(0.5) → (0,0) / HAPPY(1.0) → (+0.5,-0.5)
+  - (c) `pause/resume` 改为 `threading.Lock + int _pause_count` 嵌套计数，多余 resume 幂等不抛
+  - (d) `PostureBaselineStats.history` `list → collections.deque(maxlen=200)`
+  - (e) `ExpressionPlayer.play()` docstring 显式说明不会隐式中断正在执行的 play；并发 play 通过非阻塞 `_play_lock.acquire` 立即拒绝
+  - (f) `_emit_event` 模块顶 `_DEFAULT_EMIT`，避免每次调用闭包 import
+- **verify**：scripts/verify_robot_005.py V1-V8 全 PASS（V1 首帧 snap / V2 antenna 三档区分 / V3 pause 嵌套计数 / V4 history deque maxlen / V5 play docstring / V6 emit fallback 模块顶 / V7 回归 / V8 综合）
+- **回归 PASS**：robot-004 / robot-003 / vision-006 / interact-011 / companion-008
+- **Reviewer (sub-agent, fresh-context)**: LGTM（L0/L1 = 0, L2 = 3 条记录级）：
+  1. V6 failure detail 文案 OK（Reviewer 自撤回）
+  2. resume() 多余调用建议走 log.debug；未来如发现 unbalanced resume 真有 bug 模式再升 warning + stats
+  3. emit fallback `_DEFAULT_EMIT` 失败时 None → return 吞事件；default-OFF 路径不受影响
+- **closeout**：merge `feat/robot-005` → main（HEAD=d329b66，merge --no-ff，Reviewer LGTM + 3 条 L2 写入 merge commit）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
+- **phase-8 软件 3/3 全部完成**（vision-006 / infra-006 / robot-005）。下一步：**phase-9 规划** 或 **uat-phase4 / uat-phase8 异步真机 UAT**（sim-first 原则：UAT 不阻 phase 推进，可与 phase-9 软件并行）。
