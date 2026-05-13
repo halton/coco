@@ -1215,3 +1215,31 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **回归 PASS**：./init.sh smoke / infra-002 / infra-003 / infra-004 / robot-003 / robot-004 / companion-005 / companion-006 / companion-007 / companion-008 / interact-009 / interact-010
 - **push**：commit 后 `git push origin main` 一次失败（GitHub HTTPS 连接超时），按 sim-first push 策略忽略继续
 - **下一 candidate**：interact-011 (priority=39, 离线降级回路 LLM 失败 fallback)（phase-7 最后一个 software feature）
+
+## Session 2026-05-13 — interact-011 closeout + phase-7 软件 5/5 完成
+
+- **interact-011 → passing**：OfflineDialogFallback 离线降级回路，default-OFF 保守降级
+- **main HEAD**：871f933（merge --no-ff feat/interact-011，feat HEAD=eeb8abf）
+- **verify**：scripts/verify_interact_011.py V1-V10 全 PASS
+  - V1 env=0 LLM 失败抛错保持兼容
+  - V2 env=1 连续 3 次失败 → 进入 fallback + emit 'interact.offline_entered'
+  - V3 fallback 期 ProactiveScheduler 静默
+  - V4 任一次 LLM 成功 → emit 'interact.offline_recovered' + 说 '我回来了' + Proactive resume
+  - V5 fallback turn 在 dialog_memory 带 kind='fallback'
+  - V6 interact-009 summarizer 跳过 fallback turn
+  - V7 companion-004 user-profile 不更新偏好
+  - V8 短抖动（2 次失败后成功）不触发 fallback
+  - V9 fallback 引用最近 1 轮上下文片段
+  - V10 回归 interact-002 + interact-009 + companion-005
+- **回归 PASS**：./init.sh smoke / verify_interact002 / verify_interact_007 (76) / verify_interact_009 (73) / verify_interact_010 (65) / verify_companion_005 / verify_companion_008 (17) / verify_infra_005 (38)
+- **Reviewer (sub-agent, fresh-context)**: LGTM；L2 备注 3 条（非阻塞）：
+  1. 实现路径 `coco/offline_fallback.py` 与 spec `coco/interact/offline_fallback.py` 不同（功能等价）
+  2. `probe_interval_s=20s` 节流是 spec 未提的设计补充
+  3. `skipped_paused` counter 通过 `_should_trigger` 动态 setattr 实现
+- **phase-7 软件 feature 5/5 全部完成**：
+  - interact-010 gesture-driven dialog ✅
+  - companion-007 emotion prosody ✅
+  - companion-008 cross-session profile persist ✅
+  - infra-005 health monitor + daemon self-heal ✅
+  - interact-011 offline fallback default-OFF ✅
+- **下一候选建议**：uat-phase4 异步真机 UAT（不阻塞）或 phase-8 规划（BACKLOG 中 vision-006 看图说话 / infra-006 verify matrix CI / robot-005 robot-004 followup 提升）
