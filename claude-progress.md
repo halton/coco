@@ -1418,3 +1418,27 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **Reviewer (sub-agent, fresh-context)**：pending（主会话将派 Reviewer，feature_list.json evidence.reviewer=pending）。
 - **closeout**：feat/infra-008 分支已建 + commit + push；merge 回 main 由主会话/Reviewer 通过后执行。
 - **phase-9 软件 5/5 完成**。后续：异步真机 UAT（`uat-*` 项）；phase-10 候选规划。
+
+
+## Session 2026-05-14 — infra-008 closeout finalize（phase-9 milestone 软件 5/5 ✅）
+
+- **Reviewer fresh-context 结论**：**LGTM with caveats**（merge 已执行）。
+- **L1-1 follow-up（重要，已登记 feature_list.json followups）**：`scripts/precommit_impact.py --max 10` 字母序截断在 hot file（如 coco/main.py）触发 `full_fan_out=True` 时仅跑前 10 个（字母序），41 个 runnable 覆盖率 ~24%；当前仅 stdout print 警告，evidence 无痕迹。改进三选一：
+  - (a) `full_fan_out=True` 时跳过 `--max` 截断；
+  - (b) 要求 `COCO_PRECOMMIT_MAX_OVERRIDE=1` 显式确认才允许截断；
+  - (c) 截断写 `evidence/infra-008/last_run.json` 留痕。
+- **L2 非阻塞备注**：
+  - L2-1: `evidence/infra-008/paths-filter.yml` 已生成但未实际接入 `.github/workflows/verify-matrix.yml`，后续 feature wire-in；
+  - L2-2: feature_list.json verification 字段 `verify_robot_001.py` → 修正为 `verify_robot_003.py`（仓库实际存在的脚本名）；
+  - L2-3: `DIR_TO_AREA` / `MODULE_TO_AREA` 新增子目录漏登记会 fallback 全量；建议加自检；
+  - L2-4: `_IMPORT_RE` 不识别 `from . import X` 相对 import；当前仓库无相对 import；docstring 已注明。
+- **closeout 动作**：`git checkout main` → `git merge --no-ff feat/infra-008`（含 Reviewer LGTM with caveats + L1-1 + L2-1..4 摘要 + Co-Authored-By Claude）；feature_list.json `evidence.reviewer` 由 "pending" 改为 "LGTM with caveats: L1-1...；L2-1..4 非阻塞"，并新增 `followups` 字段记 L1-1 三选一 + L2-1..4；verification 字段 verify_robot_001.py → verify_robot_003.py；_change_log 追加 infra-008 closeout 一条。
+- **phase-9 milestone 总结（软件 5/5 ✅）**：
+  - vision-007 多模态融合（priority 50）→ passing
+  - companion-009 偏好学习（priority 51）→ passing
+  - companion-010 情绪记忆（priority 52）→ passing
+  - infra-007 自愈策略库（priority 53）→ passing（含 reopen_fn 占位 follow-up 跟 audio/vision/asr 接线）
+  - infra-008 pre-commit hook + 影响面分析（priority 54）→ passing（含 L1-1 --max 截断盲点 follow-up）
+- **push**：commit 后将一次性尝试 `git push origin main` + `git push origin feat/infra-008`，失败忽略不阻塞。
+- **下一步**：phase-10 候选规划 或 uat-phase4 / uat-phase8 异步真机 UAT（按 sim-first 原则非阻塞）。
+
