@@ -1487,3 +1487,34 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 
 ### 下一步
 - **infra-010**（priority=61，phase-10）— `SelfHealRegistry.reopen_fn` 真实接线（audio / camera / asr 三策略），消化 infra-009 caveat (1)；sim-first，default-OFF (`COCO_SELFHEAL_WIRE=1`)。
+
+---
+
+## Session 2026-05-14 — infra-010 close-out：self_heal reopen_fn wire-through LGTM-with-caveats merge
+
+### 实做摘要
+- `coco/infra/self_heal_wire.py` 新增 wire-through 层：把 SelfHealRegistry 内置 3 条 strategy 的占位 lambda 替换为真实 reopen 路径（audio sounddevice stream close+reopen / camera open_camera() handle close+reopen / asr 在线 client → OfflineDialogFallback 双向切换）。
+- `coco/main.py` 启动时按 `COCO_SELFHEAL_WIRE=1`（继承 `COCO_SELFHEAL=1 + COCO_HEALTH=1`）gate 调用 wire-through，default-OFF。
+- `scripts/verify_infra_010.py` V1-V8 共 32 checks 全 PASS：reopen 成功 / reopen 失败指数退避不消耗真实 giveup 配额 / camera handle close+reopen 后新 handle 可读 frame / ASR 在线 fail → offline fallback 接管 → 恢复自动切回 / default-OFF gate / self_heal.success+giveup emit 含 component 字段 / 回归 infra-005 + 007 + interact-011 + vision-007。
+- 回归：verify_infra_007 56/56 + verify_infra_009 10/10 + `COCO_CI=1 ./init.sh` smoke 全 PASS。
+- Reviewer fresh-context: **LGTM-with-caveats**，建议 merge + status=passing。
+
+### Reviewer 4 条 caveat（不阻 merge）
+1. main.py 启动日志 'self_heal handles wired (audio/camera/asr)' 未反映实际 wire 数 → 改 `N/3 (audio=<bool>, camera=<bool>, asr=<bool>)`
+2. CameraReopenStrategy.reopen_fn 真机路径需 wire `camera_handle_ref` 并保证 USB 独占（同时只允许一个 handle 活跃）
+3. verify_infra_010.V2.c 表达式（real_attempts vs attempts 嵌套判断）建议拆 helper + docstring
+4. AudioStreamHealStrategy / ASRFallbackStrategy 的真实 handle 仍待 surface 给 SelfHealRegistry，让真机 self_heal emit component 字段是真句柄事件
+
+### Followup 登记（phase-10 backlog）
+- `infra-010-fu-1` startup log handles=N/3 (priority 65, area=infra)
+- `infra-010-fu-2` camera_handle_ref 真 wire + USB 独占 (priority 66, area=vision)
+- `infra-010-fu-3` verify_infra_010.V2.c 表达式 helper 化 (priority 67, area=infra)
+- `infra-010-fu-4` audio/asr handle 真 surface (priority 68, area=audio)
+
+### Commit / merge
+- merge commit：`9606bba` (`Merge branch 'feat/infra-010' into main`)
+- closeout commit：本提交 (`chore(infra-010): close-out — self_heal reopen_fn wire-through merged + 4 caveats logged as fu-1..fu-4`)
+- main HEAD：closeout commit（push 结果见日志）
+
+### 下一步
+- **companion-011**（priority=62，phase-10）— 多用户共处 group_mode（vision/companion），default-OFF (`COCO_MULTI_USER=1`)，sim-first 用多 face_id fixture 驱动。
