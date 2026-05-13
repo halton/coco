@@ -1272,6 +1272,31 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][metrics] init failed: {type(e).__name__}: {e}", flush=True)
                 _metrics = None
 
+            # infra-005: 可选 HealthMonitor（默认 OFF；COCO_HEALTH=1 启用）。
+            # daemon 自愈：sim 模式 daemon 60s 无心跳自动重启 subprocess；真机仅告警。
+            # 探针通过注入；默认实现走 pgrep `desktop-app-daemon` / `reachy_mini.daemon`。
+            _health = None
+            try:
+                from coco.infra.health_monitor import (
+                    build_health_monitor as _build_health,
+                    health_enabled_from_env as _health_enabled,
+                )
+                if _health_enabled():
+                    _health = _build_health()
+                    _health.start(stop_event)
+                    print(
+                        f"[coco][health] enabled tick={_health.tick_s:.1f}s "
+                        f"daemon_silence={_health.daemon_silence_threshold_s:.0f}s "
+                        f"restart_cooldown={_health.restart_cooldown_s:.0f}s "
+                        f"max_retries={_health.max_restart_retries}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][health] disabled (COCO_HEALTH not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][health] init failed: {type(e).__name__}: {e}", flush=True)
+                _health = None
+
             # vision-004b-wire: 可选 MultiFaceAttention 接线（COCO_GREET_SECONDARY=1 启用，默认 OFF）。
             # 把 AttentionSelector / FaceTracker / ConvSM / Proactive 喂进状态机；
             # 触发 GreetAction 时调 ExpressionPlayer.play("greet") + tts.say(utterance)。
@@ -1551,6 +1576,12 @@ class Coco(ReachyMiniApp):
                     _metrics.stop(timeout=2.0)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][metrics] stop failed: {e!r}", flush=True)
+            # infra-005: 停 HealthMonitor
+            try:
+                if "_health" in locals() and _health is not None:
+                    _health.stop(timeout=2.0)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][health] stop failed: {e!r}", flush=True)
             # vision-004b-wire: 停 GreetSecondaryWire
             try:
                 if "_greet_wire" in locals() and _greet_wire is not None:

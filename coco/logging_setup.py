@@ -65,6 +65,7 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "companion",
     "robot",
     "startup",
+    "health",
 })
 
 _UNKNOWN_COMPONENTS_WARNED: set = set()
