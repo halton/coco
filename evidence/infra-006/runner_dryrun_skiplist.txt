@@ -1,0 +1,47 @@
+[run_verify_all] --skip-list 启用，跳过 9 个脚本：
+    SKIP verify_asr_microphone.py  (真硬件 USB 麦克录音 + 真人开口说话，CI 无声卡; 跟踪 uat-phase4)
+    SKIP verify_audio003_app_integration.py  (ReachyMini 客户端连 mockup-sim daemon (Zenoh 7447) + 真音频回环; 跟踪 uat-phase4)
+    SKIP verify_companion001_app_integration.py  (ReachyMini 客户端连 mockup-sim daemon + 完整 Coco.run() 心跳协议; 跟踪 uat-phase4)
+    SKIP verify_companion001_idle.py  (ReachyMini 客户端连 mockup-sim daemon + IdleAnimator 实时心跳; 跟踪 uat-phase4)
+    SKIP verify_interact001.py  (ReachyMini 客户端连 mockup-sim daemon + 完整 wake/listen/think/speak 闭环; 跟踪 uat-phase4)
+    SKIP verify_interact001_app_integration.py  (ReachyMini 客户端连 mockup-sim daemon + Coco.run() 集成; 跟踪 uat-phase4)
+    SKIP verify_robot001_daemon.py  (spawn_daemon=False 直连 mockup-sim daemon 物理通路; 跟踪 uat-phase4)
+    SKIP verify_robot002_actions.py  (mockup-sim daemon + 真 motion API 调用; 跟踪 uat-phase4)
+    SKIP verify_publish.py  (reachy_mini.apps.app check . 会创建临时 venv 装包，远超 CI 60s/job budget; 跟踪 uat-phase8)
+[run_verify_all] DRY-RUN: would run 35 script(s) (jobs=1, timeout=600.0s):
+  [ 1/35]      audio  verify_asr_vad_offline.py
+  [ 2/35]      audio  verify_asr_wav.py
+  [ 3/35]      audio  verify_audio003_tts.py
+  [ 4/35]  companion  verify_companion004.py
+  [ 5/35]  companion  verify_companion_003.py
+  [ 6/35]  companion  verify_companion_005.py
+  [ 7/35]  companion  verify_companion_006.py
+  [ 8/35]  companion  verify_companion_007.py
+  [ 9/35]  companion  verify_companion_008.py
+  [10/35]  companion  verify_companion_vision.py
+  [11/35]      infra  verify_infra_002.py
+  [12/35]      infra  verify_infra_003.py
+  [13/35]      infra  verify_infra_004.py
+  [14/35]      infra  verify_infra_005.py
+  [15/35]      infra  verify_infra_debt_sweep.py
+  [16/35]   interact  verify_interact002.py
+  [17/35]   interact  verify_interact003.py
+  [18/35]   interact  verify_interact004.py
+  [19/35]   interact  verify_interact005.py
+  [20/35]   interact  verify_interact006.py
+  [21/35]   interact  verify_interact_007.py
+  [22/35]   interact  verify_interact_008.py
+  [23/35]   interact  verify_interact_009.py
+  [24/35]   interact  verify_interact_010.py
+  [25/35]   interact  verify_interact_011.py
+  [26/35]      robot  verify_robot_003.py
+  [27/35]      robot  verify_robot_004.py
+  [28/35]     vision  verify_vision.py
+  [29/35]     vision  verify_vision_002.py
+  [30/35]     vision  verify_vision_003.py
+  [31/35]     vision  verify_vision_004.py
+  [32/35]     vision  verify_vision_004b.py
+  [33/35]     vision  verify_vision_004b_wire.py
+  [34/35]     vision  verify_vision_005.py
+  [35/35]     vision  verify_vision_006.py
+[run_verify_all] DRY-RUN OK — no scripts executed

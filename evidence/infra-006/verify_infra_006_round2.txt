@@ -1,0 +1,20 @@
+V1: workflow yaml 存在 + 合法
+  ok: .github/workflows/verify-matrix.yml yaml 合法
+V2: 8 个 job 名齐
+  ok: jobs = ['smoke', 'verify-vision', 'verify-interact', 'verify-companion', 'verify-robot', 'verify-infra', 'verify-audio', 'verify-publish']
+V3: matrix python 含 3.13
+  ok: '3.13' 出现于 workflow
+V4: scripts/run_verify_all.py 存在 + import 不抛
+  ok: runner import + discover/classify 可用
+V5: --list 含全部 verify_*.py（除 EXCLUDED）
+  ok: --list 覆盖 44 个 verify_*.py（EXCLUDED=['verify_infra_006.py']）
+V6: init.sh 支持 COCO_CI=1
+  ok: init.sh 含 COCO_CI 分支
+V7: --dry-run 输出预期任务列表
+  ok: --dry-run 列出任务且未实际执行
+V8: workflow 含 actions/upload-artifact 上传 evidence
+  ok: upload-artifact 步骤 + evidence/** 路径出现
+V9: 每个 verify-XXX job 调 run_verify_all.py 且 --area 匹配 job 名
+  ok: 7 个 verify-XXX job 全部调 runner --area 且匹配 job 名
+
+PASS: 9/9 (infra-006 verify matrix CI)

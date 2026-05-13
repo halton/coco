@@ -14,11 +14,20 @@ from __future__ import annotations
 
 import argparse
 import importlib.metadata as md
+import os
 import platform
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+def _ci_mode() -> bool:
+    """CI 模式：跳过需要真硬件（麦克 / 扬声器 / Zenoh daemon）的子检查。
+
+    通过 `COCO_CI=1` 环境变量开启。保持默认行为不变。
+    """
+    return os.environ.get("COCO_CI", "").strip() in ("1", "true", "yes")
 
 
 def print_env_baseline() -> None:
@@ -36,6 +45,9 @@ def print_env_baseline() -> None:
 def smoke_audio() -> None:
     """采 0.3s 麦克数据，确认 sounddevice 可读。"""
     print("==> Smoke: audio (sounddevice 0.3s)")
+    if _ci_mode():
+        print("  SKIP: COCO_CI=1，跳过真麦克录音（CI 无声卡）")
+        return
     try:
         import numpy as np
         import sounddevice as sd
