@@ -1078,7 +1078,7 @@
       "area": "companion",
       "title": "跨 session UserProfile 持久化",
       "user_visible_behavior": "重启 Coco 后，已识别用户的昵称、兴趣、最近 N 轮对话摘要会自动 hydrate 回内存；新用户首次创建后下次进入仍能识出（face_id → profile_id 稳定）。损坏 / schema 不匹配的 profile 文件被备份并跳过，不阻塞启动。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "companion-004",
         "companion-006",
@@ -1094,8 +1094,15 @@
         "scripts/verify_companion_008.py：V1 default OFF；V2 enabled → 创建 alice profile → 文件落盘；V3 hydrate → 重启 ProfileStore 读到 alice；V4 nickname 合并（同 face_id 改 nickname → 新 profile_id 还是同 face_id 优先合并）；V5 profile_id hash 跨进程一致（companion-006 L1-3 闭环）；V6 atomic write（tmp + replace 不留半截文件）；V7 损坏 JSON → 移到 _corrupt/ + emit + 启动不崩；V8 schema_version 不匹配 → _legacy_v0/ + emit；V9 路径注入 ('../etc/passwd' / 含 / \\ 字符) 拒绝；V10 回归 companion-004 / companion-006 / interact-009 verify。",
         "Reviewer fresh-context 评审：hash 稳定性边界（unicode nickname）、并发 save 一致性、磁盘满 / 权限错误时的 graceful degradation、N=10 dialog summary 的存储膨胀上限、隐私（profile 文件含对话摘要）。"
       ],
-      "evidence": [],
-      "notes": "sim-first：tmp_path fixture 验持久化与 hydrate；隐私敏感（含对话摘要），文档需注明用户清理路径（rm ~/.coco/profiles/）。companion-006 L1-3 followup 在本 feature 闭环。"
+      "evidence": [
+        "scripts/verify_companion_008.py: 17/17 PASS（端到端 V1-V10 + 单元 V2a/V3a 覆盖 default OFF / enabled save / hydrate / nickname 合并 / sha1 跨进程稳定 / atomic write / 损坏 JSON 隔离 / schema_version 不匹配 / 路径注入拒绝 / 回归 companion-004+006+interact-009）",
+        "回归 PASS：smoke / companion-005 / companion-006 / companion-007 / interact-009 / interact-010",
+        "端到端手测：Session1 multi.add_interest → ProfileSwitcher.on_switch → disk ~/.coco/profiles/<sha1>.json 真有文件含 interests/goals/dialog_summary；Session2 全新 MultiProfileStore + hydrate_into_multi_store → load() 真回灌内存",
+        "Reviewer round 1 (sub-agent, fresh-context): NEEDS-REWORK 3 L0 — (a) ProfileSwitcher.on_switch + finally flush 未接 save (b) verify 缺 V2/V3 端到端 (c) bridge 桥接 MultiProfileStore 与 PersistentProfileStore 缺失",
+        "Reviewer round 2 (sub-agent, fresh-context): LGTM；3 L0 全部闭环（profile_persist_bridge.py 模块 + main.py 接线 + V2/V3 端到端验证补齐）",
+        "L2 followup（不阻 merge）：(1) _quarantine_legacy 未显式 chmod 0o600（atomic save 已 0o600，隔离路径可后续补齐）(2) main.py L984 locals() 检查可简化为显式属性 None 检查"
+      ],
+      "notes": "sim-first：tmp_path fixture 验持久化与 hydrate；隐私敏感（含对话摘要），文档需注明用户清理路径（rm ~/.coco/profiles/）。companion-006 L1-3 followup（sha1 跨进程稳定）在本 feature 闭环。closeout Session: main HEAD=8609974 (merge --no-ff feat/companion-008)。"
     },
     {
       "id": "infra-005",

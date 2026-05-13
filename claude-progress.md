@@ -1170,3 +1170,24 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **手测**：posture_baseline 未启用 warn skip；pitch_semitone=2.0 → fallback emit 1 次；happy→sad→happy(busy) 序列正确；player.is_busy 期间跳 antenna pulse
 - **push**：commit 后 `git push origin main` 一次（按 sim-first push 策略，失败忽略）
 - **下一 candidate**：companion-008 (priority=37, 跨 session UserProfile 持久化)
+
+## Session 2026-05-13 — companion-008 closeout
+
+- **HEAD（main）**：merge commit `8609974` (`merge(companion-008): cross-session UserProfile persistence`)；feature commits on `feat/companion-008`：`c3d46aa` (核心 persist 模块 + verify V1-V10) → `de216be` (bridge end-to-end wire — ProfileSwitcher → PersistentProfileStore + V2/V3 端到端)
+- **关键改动**：
+  - `coco/companion/profile_persist.py` 新增 PersistentProfileStore（sha1(face_id+nickname)[:12] → ~/.coco/profiles/<id>.json）+ atomic write（tmp + os.replace + chmod 0o600）+ asyncio.Lock 序列化 + schema_version=1 + 路径 sanitize（^[0-9a-f]{12}$）+ 损坏 JSON 隔离 `_corrupt/` + schema mismatch 隔离 `_legacy_v<n>/`
+  - `coco/companion/profile_persist_bridge.py` 新增桥接层 — `hydrate_into_multi_store()`（启动扫盘回灌 MultiProfileStore）+ `wire_profile_switcher_save()`（ProfileSwitcher.on_switch + finally flush 接 PersistentProfileStore.save）
+  - `coco/main.py` wire — COCO_PROFILE_PERSIST=1 时启动 hydrate + 装配 bridge 到 ProfileSwitcher
+  - `scripts/verify_companion_008.py` 17/17 PASS（端到端 V1-V10 + 单元 V2a/V3a）
+- **两轮 Reviewer (sub-agent, fresh-context)**：
+  - Round 1: **NEEDS-REWORK** 3 L0 — (a) ProfileSwitcher.on_switch + finally flush 未接 save (b) verify 缺 V2/V3 端到端断言（只验单元，未验"切 profile → 磁盘真有文件"）(c) bridge 桥接 MultiProfileStore 与 PersistentProfileStore 缺失
+  - Round 2: **LGTM**；3 L0 全部闭环（新增 profile_persist_bridge.py + main.py 接线 + V2/V3 端到端补齐）
+- **bridge 接线**：`hydrate_into_multi_store(persistent_store, multi_store)` 启动期回灌；`wire_profile_switcher_save(switcher, persistent_store)` 让 on_switch 与 finally flush 都走 save → 端到端"切 profile 即落盘"
+- **回归 PASS**：./init.sh smoke / verify_companion_005 / verify_companion_006 / verify_companion_007 / verify_interact_009 / verify_interact_010
+- **端到端手测**：Session1 multi.add_interest → bridge.on_switch → disk ~/.coco/profiles/<sha1>.json 真有文件含 interests/goals/dialog_summary；Session2 全新 MultiProfileStore + hydrate_into_multi_store → load() 真回灌内存
+- **followup（不阻 merge）**：
+  1. `_quarantine_legacy` 未显式 chmod 0o600（atomic save 已 0o600，隔离路径可后续补齐）
+  2. main.py L984 `locals()` 检查可简化为显式属性 None 检查
+- **companion-006 L1-3 闭环**：sha1(face_id+nickname_normalized)[:12] 实现了跨进程稳定 profile_id（V5 PASS）
+- **push**：commit 后 `git push origin main` 一次（按 sim-first push 策略，失败忽略）
+- **下一 candidate**：infra-005 (priority=38, 健康观测 + daemon 自愈)
