@@ -1356,3 +1356,23 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/companion-009` 各一次，失败忽略。
 - **phase-9 软件进度 2/5 完成**（剩 companion-010 / infra-007 / infra-008）。下一候选：**companion-010 情绪记忆窗口**（priority 52，依赖 companion-007/008/interact-009 均 passing，sim-first 友好；与本 feature 同 area=companion，profile schema 已有 v2 升级路径可复用）。
 
+
+## Session 2026-05-14 — companion-010 closeout（phase-9 软件 3/5）
+
+- **目标**：情绪记忆窗口 — N 轮情绪滑窗 → `emotion_alert` → 主动安慰；持续 sad 比例 ≥ 阈值触发 `companion.emotion_alert(kind='persistent_sad')` → ProactiveScheduler 插入安慰话题模板 + 写入 `ProfilePersist.emotion_alerts` 跨会话跟进。default-OFF via `COCO_EMO_MEMORY=1`。
+- **结果**：companion-010 → **passing**。`scripts/verify_companion_010.py` V1-V10 全 PASS。
+- **实现**：
+  - `coco/companion/emotion_memory.py`（503 行）：`EmotionMemoryWindow`（deque maxlen=20 + 比例统计 + K/ratio 阈值可配 + cooldown 默认 30 分钟）；`EmotionMemoryCoordinator`（emit `companion.emotion_alert` + 写入 ProfilePersist + bump prefer 安慰话题 + 到期还原）。
+  - `coco/companion/profile_persist.py`：schema 加 optional `emotion_alerts: [{kind, ts, ratio}]` 字段（v1 兼容：旧文件读时不补字段、to_dict 不写）。
+  - `coco/emotion.py`：`EmotionTracker._listeners` 钩子；`set(label)` 触发回调供 window 累计样本。
+  - `coco/proactive.py`：alert 命中时 `_bump_comfort_prefer` 临时提升 ["低落","做菜","安慰","心情","聊聊","陪伴"] 偏好（`_original_prefer` 首次保存，到期 `_restore_prefer` 还原）；不抢断 vision-007 dark_silence/motion_greet 但 select_topic_seed 倾向安慰种子。
+  - `coco/main.py`：default-OFF gate（`COCO_EMO_MEMORY != "1"` 时 Coordinator 不构造、`EmotionTracker._listeners=[]`）+ 启停绑定/解绑。
+  - `coco/logging_setup.py`：AUTHORITATIVE_COMPONENTS 加 `"emotion_memory"`。
+- **回归 PASS**：companion-005/006/007/008/009 + vision-007 + interact-011（与 prosody / profile-switch / cross-session persist / preference learner / multimodal fusion / offline fallback 全部共存不互相干扰）。
+- **Reviewer (sub-agent, fresh-context)**：LGTM。L0/L1 无；3 条 L2 非阻塞：
+  1. ProactiveScheduler 主循环 `tick` 可顺带调 `coord.tick(now=...)` 让运行期到期还原不再依赖新 emotion 事件抵达。
+  2. V6 可补端到端 fake 装配验证（未设 env 时 Coordinator 不构造、`EmotionTracker._listeners=[]`），当前仅以环境语义证。
+  3. `_bump_comfort_prefer` 多次 alert 间 `_original_prefer` 仅首次保存；用户中途改 prefer 会被首次还原回滚（待文档化或每次还原后重 capture）。
+- **closeout**：merge `feat/companion-010` → main（HEAD=`c1674ac`，merge --no-ff，Reviewer LGTM + 3 条 L2 写入 merge commit）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
+- **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/companion-010` 各一次，失败忽略。
+- **phase-9 软件进度 3/5 完成**（剩 infra-007 / infra-008）。下一候选：**infra-007 自愈策略库**（priority 53，infra area，把现有 daemon 自愈/降级动作抽成策略库，与 companion area 切换换 Researcher+Reviewer 组合）。
