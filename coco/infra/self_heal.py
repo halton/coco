@@ -36,6 +36,16 @@ SelfHealRegistry.dispatch 在 sim 模式下默认 dry-run（emit `self_heal.dry_
 COCO_REAL_MACHINE=1 或 COCO_BACKEND=robot 才真调 strategy.apply()。
 这与 infra-005 daemon restart 真机不动的策略对称。
 
+**计数语义（infra-007 rework L1-b）**：
+
+- `StrategyStats.attempts`：观测计数，含 dry-run 与真机；用于统计 / 告警 / 可视化。
+- `StrategyStats.real_attempts`：真机实际尝试次数；giveup latch 与 backoff index 的真理来源。
+- `StrategyStats.last_attempt_ts`：dry-run 也推进，保留 cooldown 抑流；避免 sim 暴风。
+
+意味着 sim 下任意次 dry-run 都 **不会** 让 strategy 进 giveup latch；切到真机时
+（`COCO_REAL_MACHINE=1` 或 backend 切换）strategy 仍可正常尝试 `max_attempts` 次，
+不需要外部 `reset_strategy()`。
+
 线程安全
 ========
 
@@ -167,7 +177,8 @@ class CameraReopenStrategy(BaseSelfHealStrategy):
 
 @dataclass
 class StrategyStats:
-    attempts: int = 0
+    attempts: int = 0  # 观测计数（含 dry-run + 真机 attempt），仅用于统计与告警
+    real_attempts: int = 0  # 真机实际尝试次数（giveup latch 与 backoff index 的真理来源）
     succeeded: int = 0
     failed: int = 0
     cooldown_skipped: int = 0
@@ -293,6 +304,7 @@ class SelfHealRegistry:
             if st is None:
                 return False
             st.attempts = 0
+            st.real_attempts = 0
             st.succeeded = 0
             st.failed = 0
             st.cooldown_skipped = 0
@@ -333,7 +345,7 @@ class SelfHealRegistry:
                 st = self._state.setdefault(strat.name, StrategyStats())
                 self.stats.per_strategy.setdefault(strat.name, st)
 
-                # giveup latch
+                # giveup latch（基于 real_attempts；dry-run 不会推进 real_attempts，因此 sim 永远不进 latch）
                 if st.giveup:
                     self._emit(
                         "self_heal.giveup_skip",
@@ -344,7 +356,7 @@ class SelfHealRegistry:
 
                 now = self._now()
 
-                # cooldown
+                # cooldown（dry-run 也推进 last_attempt_ts，避免 sim 暴风）
                 if st.last_attempt_ts > 0 and (now - st.last_attempt_ts) < float(strat.cooldown_s):
                     st.cooldown_skipped += 1
                     self.stats.cooldown_skipped_total += 1
@@ -357,22 +369,31 @@ class SelfHealRegistry:
                     )
                     continue
 
-                # max_attempts → giveup latch
-                if st.attempts >= int(strat.max_attempts):
+                # real-machine gate（提前判定，决定是否推进 real_attempts / giveup）
+                try:
+                    real = bool(self._is_real_machine_fn())
+                except Exception:  # noqa: BLE001
+                    real = False
+
+                # max_attempts → giveup latch（仅基于 real_attempts；sim dry-run 不会触发）
+                if real and st.real_attempts >= int(strat.max_attempts):
                     st.giveup = True
                     self.stats.giveup_after_max += 1
                     self._emit(
                         "self_heal.giveup",
                         strategy=strat.name,
                         failure_kind=failure_kind,
-                        attempts=st.attempts,
+                        attempts=st.real_attempts,
                         max_attempts=int(strat.max_attempts),
                     )
                     continue
 
-                # 进入 attempt
-                attempt_idx = st.attempts  # 0-based for backoff
+                # 进入 attempt：observed attempts 总是 +1；real_attempts 仅真机 +1
+                # backoff index 用 real_attempts（sim 下保持 0 → 始终是首次 backoff，避免被 sim 把 idx 推到 cap）
+                attempt_idx = st.real_attempts if real else 0
                 st.attempts += 1
+                if real:
+                    st.real_attempts += 1
                 st.last_attempt_ts = now
                 self.stats.attempts_total += 1
 
@@ -388,24 +409,18 @@ class SelfHealRegistry:
                 attempt=attempt_idx + 1,
                 max_attempts=int(strat.max_attempts),
                 backoff_s=round(backoff_s, 3),
+                mode="real" if real else "sim",
             )
 
-            # real-machine gate
-            try:
-                real = bool(self._is_real_machine_fn())
-            except Exception:  # noqa: BLE001
-                real = False
-
             if not real:
-                # sim 模式：dry-run
+                # sim 模式：dry-run（不动 real_attempts / giveup，attempts 已 +1 作为观测）
                 self.stats.dry_run_total += 1
                 self._emit(
                     "self_heal.dry_run",
                     strategy=strat.name,
                     failure_kind=failure_kind,
-                    attempt=attempt_idx + 1,
+                    attempt=st.attempts,
                 )
-                # dry-run 不视为 success/failed，不动 succeeded/failed 计数
                 continue
 
             # 真机：调 apply

@@ -10,8 +10,9 @@ V7   CameraReopenStrategy fake 连续 None → reopen 计数
 V8   与 infra-005 daemon restart 不冲突（daemon failure_kind 不被 dispatch）
 V9   default-OFF 时 selfheal_enabled_from_env=False
 V10  COCO_SELFHEAL=1 才注入 — env helper
-V11  真机模式（COCO_REAL_MACHINE=1）真调 apply；sim 模式 dry-run
+V11  真机模式（COCO_REAL_MACHINE=1）真调 apply；sim 模式 dry-run（且不消耗 giveup 配额）
 V12  回归 infra-005 V1-V12 全 PASS （由 init.sh 之外的 verify_infra_005.py 跑；这里仅 import 不冲突 + 行为不退化的烟囱）
+V13  sim → 真机切换：sim N 次 dry-run 不进 latch；切真机仍可正常 attempt max_attempts 次（L1-b rework gate）
 """
 
 from __future__ import annotations
@@ -155,7 +156,8 @@ def v3_v4_attempts_giveup() -> None:
         reg.dispatch("fk1", {})
 
     _check("apply 实际被调 3 次", calls["n"] == 3, f"got={calls['n']}")
-    _check("attempts 计数 = 3", reg.stats.per_strategy["t1"].attempts == 3)
+    _check("attempts (observed) 计数 = 3", reg.stats.per_strategy["t1"].attempts == 3)
+    _check("real_attempts 计数 = 3（真机路径推进）", reg.stats.per_strategy["t1"].real_attempts == 3)
     _check("failed 计数 = 3", reg.stats.per_strategy["t1"].failed == 3)
     _check("giveup latch 已置位", reg.stats.per_strategy["t1"].giveup is True)
     _check("giveup_after_max stat +1", reg.stats.giveup_after_max >= 1)
@@ -166,6 +168,7 @@ def v3_v4_attempts_giveup() -> None:
     # reset_strategy 解锁
     _check("reset_strategy 返回 True", reg.reset_strategy("t1") is True)
     _check("reset 后 giveup=False", reg.stats.per_strategy["t1"].giveup is False)
+    _check("reset 后 real_attempts=0", reg.stats.per_strategy["t1"].real_attempts == 0)
 
 
 # ---------------------------------------------------------------------------
@@ -346,8 +349,12 @@ def v11_real_machine_gate() -> None:
     _check("sim 模式 apply 不被真调", calls["n"] == 0)
     _check("sim 模式 emit self_heal.dry_run", len(rec_sim.by_topic("self_heal.dry_run")) == 1)
     _check("sim 模式 dry_run_total += 1", reg_sim.stats.dry_run_total == 1)
-    # attempt 仍计数（用于退避状态机）
-    _check("sim 模式 attempts +1", reg_sim.stats.per_strategy["audio_reopen"].attempts == 1)
+    # attempts (observed) 仍计数；real_attempts 不动
+    _check("sim 模式 attempts (observed) +1", reg_sim.stats.per_strategy["audio_reopen"].attempts == 1)
+    _check("sim 模式 real_attempts = 0（不消耗 giveup 配额）",
+           reg_sim.stats.per_strategy["audio_reopen"].real_attempts == 0)
+    _check("sim 模式不进 giveup latch",
+           reg_sim.stats.per_strategy["audio_reopen"].giveup is False)
 
     # 真机
     calls["n"] = 0
@@ -412,6 +419,70 @@ def v12_regression_infra005() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V13: sim → 真机切换（L1-b rework gate）
+# ---------------------------------------------------------------------------
+
+def v13_sim_dryrun_does_not_starve_real() -> None:
+    _section("V13: sim N 次 dry-run 不进 latch；切真机仍可 attempt max_attempts 次")
+    calls = {"n": 0}
+
+    def fake_fn(**kw: Any) -> bool:
+        calls["n"] += 1
+        return True
+
+    rec = _Recorder()
+    clk = _FakeClock()
+    # is_real 可切换：先 False（sim），后续翻 True
+    mode = {"real": False}
+    reg = SelfHealRegistry(
+        is_real_machine_fn=lambda: mode["real"],
+        emit_fn=rec,
+        now_fn=clk,
+    )
+    strat = BaseSelfHealStrategy(
+        name="t13",
+        failure_kinds={"fk13"},
+        cooldown_s=0.0,  # 不被 cooldown 拦
+        max_attempts=DEFAULT_MAX_ATTEMPTS,  # 5
+        reopen_fn=fake_fn,
+    )
+    reg.register(strat)
+
+    # 1) sim 模式跑 10 次（远超 max_attempts）
+    for _ in range(10):
+        clk.advance(1.0)
+        reg.dispatch("fk13", {})
+
+    st = reg.stats.per_strategy["t13"]
+    _check("sim 跑 10 次 apply 未被真调", calls["n"] == 0)
+    _check("sim 跑 10 次 dry_run_total = 10", reg.stats.dry_run_total == 10)
+    _check("sim 跑 10 次 attempts (observed) = 10", st.attempts == 10)
+    _check("sim 跑 10 次 real_attempts = 0", st.real_attempts == 0)
+    _check("sim 跑 10 次 giveup 仍为 False（未消耗配额）", st.giveup is False)
+    _check("sim 跑 10 次 giveup_after_max = 0", reg.stats.giveup_after_max == 0)
+
+    # 2) 切到真机模式（运维场景：env 切换 / 部署到真机）
+    mode["real"] = True
+    # 跨 cooldown（cooldown_s=0 ⇒ 立即可行）
+    clk.advance(1.0)
+
+    # 真机模式应能 attempt 5 次（max_attempts）后才进 latch
+    for _ in range(DEFAULT_MAX_ATTEMPTS + 2):
+        clk.advance(1.0)
+        reg.dispatch("fk13", {})
+
+    _check(
+        f"切真机后 apply 被真调 {DEFAULT_MAX_ATTEMPTS} 次",
+        calls["n"] == DEFAULT_MAX_ATTEMPTS,
+        f"got={calls['n']}",
+    )
+    _check("切真机后 real_attempts = max_attempts",
+           st.real_attempts == DEFAULT_MAX_ATTEMPTS)
+    _check("切真机后 giveup 置位", st.giveup is True)
+    _check("切真机后 giveup_after_max += 1", reg.stats.giveup_after_max >= 1)
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -428,6 +499,7 @@ def main() -> int:
     v9_v10_env_default_off()
     v11_real_machine_gate()
     v12_regression_infra005()
+    v13_sim_dryrun_does_not_starve_real()
 
     print(f"\n== summary: PASS={len(PASSES)} FAIL={len(FAILURES)} ==", flush=True)
     if FAILURES:

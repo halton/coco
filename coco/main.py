@@ -1660,6 +1660,14 @@ class Coco(ReachyMiniApp):
                     )
                 else:
                     print("[coco][health] disabled (COCO_HEALTH not set)", flush=True)
+                    if _self_heal_registry is not None:
+                        # L2-a: SELFHEAL 启用但 HEALTH 未启用 → 没有 dispatch sink，策略永远不会被触发
+                        print(
+                            "[coco][self_heal] WARN: self_heal enabled but health disabled — "
+                            "no dispatch sink; strategies will not be triggered. "
+                            "Set COCO_HEALTH=1 to enable health-driven self-heal dispatch.",
+                            flush=True,
+                        )
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][health] init failed: {type(e).__name__}: {e}", flush=True)
                 _health = None
