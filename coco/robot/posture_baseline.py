@@ -66,10 +66,23 @@ import math
 import os
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple
+from typing import Any, Callable, Deque, Dict, Mapping, Optional, Tuple
 
 log = logging.getLogger(__name__)
+
+
+# robot-005 followup (f): emit fallback import 提到模块顶，避免热路径每 tick 一次
+# from coco.logging_setup import emit。失败时置 None，hot path fallback 到 log.warning。
+try:
+    from coco.logging_setup import emit as _DEFAULT_EMIT  # type: ignore[assignment]
+except Exception:  # noqa: BLE001
+    _DEFAULT_EMIT = None  # type: ignore[assignment]
+
+
+# robot-005 followup (d): history maxlen 上限，与 health monitor 量级相近
+_HISTORY_MAXLEN: int = 200
 
 
 # ---------------------------------------------------------------------------
@@ -110,18 +123,26 @@ class PostureOffset:
     def antenna_joint_rad(self) -> Tuple[float, float]:
         """把 antenna [0,1] 映射成 ``set_target_antenna_joint_positions([right, left])``。
 
-        antenna=0     → 收（[0, 0]）
-        antenna=0.5   → 中位（[0, 0]，与收一致；中位即静默）
+        antenna=0.0   → 收/下垂（[-0.3, +0.3]，对称内合，表达 SAD 的"耷拉"）
+        antenna=0.5   → 中位/静默（[0, 0]）
         antenna=1.0   → 完全展开（[+0.5, -0.5]，对称外展）
 
-        注：天线 SDK 单位是 rad，正负方向真机经验值；ramp 期间 0..1 线性映射。
+        注：天线 SDK 单位是 rad，正负方向真机经验值。
+
+        robot-005 followup (b): 之前的实现下 ``antenna <= 0.5`` 一律返回 (0, 0)，
+        导致 SAD (antenna=0.0) 与 NEUTRAL (antenna=0.5) 真机表现完全相同。
+        改为整段 [0,1] 单调可区分：低端表示"内合下垂"，中位静默，高端外展。
         """
-        # 0..0.5 视为"未展开"段（保持中性，避免微抖动）；> 0.5 才开始外展
-        if self.antenna <= 0.5:
-            return (0.0, 0.0)
-        scale = (self.antenna - 0.5) * 2.0  # 0.5..1.0 → 0..1
-        amp = 0.5 * scale  # 最大 0.5 rad（与 IdleAnimator micro_antenna_amp_rad=0.15 同量级但更大）
-        return (+amp, -amp)
+        # 整段映射：0.0 -> (-0.3, +0.3)（内合），0.5 -> (0,0)，1.0 -> (+0.5, -0.5)（外展）
+        a = self.antenna
+        if a >= 0.5:
+            scale = (a - 0.5) * 2.0  # 0..1
+            amp = 0.5 * scale
+            return (+amp, -amp)
+        # < 0.5：内合（负幅度），最大 0.3 rad
+        scale = (0.5 - a) * 2.0  # 0..1
+        amp = 0.3 * scale
+        return (-amp, +amp)
 
 
 ZERO_OFFSET = PostureOffset(pitch_deg=0.0, yaw_deg=0.0, antenna=0.5)
@@ -275,7 +296,11 @@ class PostureBaselineStats:
     last_target_emotion: Optional[str] = None
     last_target_power: Optional[str] = None
     last_change_at: float = 0.0
-    history: list = field(default_factory=list)  # ["happy/active@12.34", ...]
+    # robot-005 followup (d): history 用 deque(maxlen=_HISTORY_MAXLEN) 上限，
+    # 防止长跑会话内存无界增长（与 health monitor 同 pattern）。
+    history: Deque[str] = field(
+        default_factory=lambda: deque(maxlen=_HISTORY_MAXLEN)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +349,16 @@ class PostureBaselineModulator:
         self._lock = threading.RLock()
         self._stop: Optional[threading.Event] = None
         self._thread: Optional[threading.Thread] = None
-        self._paused = threading.Event()  # set = paused
+        # robot-005 followup (c): pause/resume 嵌套引用计数（RLock 保护）。
+        # 之前用 threading.Event：嵌套 pause 后第一次 resume 就解锁，违反"配对"语义。
+        # 现在 _pause_count 跟踪挂起次数；只有 count 回到 0 才真正 resume。
+        # 对外 API ``pause()/resume()/is_paused()`` 行为：单层情况下与原 Event 一致。
+        self._pause_lock = threading.Lock()
+        self._pause_count: int = 0
+
+        # robot-005 followup (a): 首次 _begin_ramp 不走 ramp（snap 到目标，避免视觉抖动）；
+        # 后续才使用 config.ramp_s 线性 ramp。
+        self._first_ramp_done: bool = False
 
         # 三段 offset：起点（ramp 起始）/ 目标（ramp 终点）/ 当前（in-flight 插值）
         self._ramp_from: PostureOffset = ZERO_OFFSET
@@ -359,7 +393,9 @@ class PostureBaselineModulator:
         return self._current
 
     def is_paused(self) -> bool:
-        return self._paused.is_set()
+        """是否处于暂停态（嵌套计数 > 0）。"""
+        with self._pause_lock:
+            return self._pause_count > 0
 
     def add_listener(self, fn: Callable[[Any, Any], None]) -> None:
         """注册 target 变更监听器（companion-007）。
@@ -375,11 +411,28 @@ class PostureBaselineModulator:
                 self._listeners.append(fn)
 
     def pause(self) -> None:
-        """暂停天线下发（与 expression / talk gesture 协调）。ramp 内部插值仍在推进。"""
-        self._paused.set()
+        """暂停天线下发（与 expression / talk gesture 协调）。
+
+        robot-005 followup (c): 嵌套引用计数语义 —— 每次 ``pause()`` 增计数 1；
+        只有匹配数量的 ``resume()`` 把 count 回到 0 才会真正 resume。在嵌套
+        ``A.pause -> B.pause -> B.resume -> A.resume`` 场景下，B.resume 时计数=1
+        仍处暂停态，A.resume 才真正恢复。ramp 内部插值始终推进。
+        """
+        with self._pause_lock:
+            self._pause_count += 1
 
     def resume(self) -> None:
-        self._paused.clear()
+        """配对 ``pause()``；只有最后一对 resume 把计数减到 0 才真正恢复天线下发。
+
+        多余的 resume（计数已为 0 时再调）幂等保持 0，不为负，并发出 debug log。
+        """
+        with self._pause_lock:
+            if self._pause_count <= 0:
+                # 多余的 resume —— 调用方契约错误；不抛，保持 0
+                log.debug("[posture_baseline] resume() called with pause_count=0 (unbalanced)")
+                self._pause_count = 0
+                return
+            self._pause_count -= 1
 
     def start(self, stop_event: threading.Event) -> None:
         if not self.config.enabled:
@@ -450,7 +503,7 @@ class PostureBaselineModulator:
         # 推进 ramp（插值）
         self._advance_ramp(now)
         # 下发天线（pause 期间 skip）
-        if self._paused.is_set():
+        if self.is_paused():
             self.stats.paused_skipped += 1
             return
         self._dispatch_antenna()
@@ -483,9 +536,21 @@ class PostureBaselineModulator:
 
     def _begin_ramp(self, new_target: PostureOffset, now: float) -> None:
         with self._lock:
-            self._ramp_from = self._current
+            # robot-005 followup (a): 首次 ramp 且 baseline 尚处于"未初始化"中位
+            # (_current == ZERO_OFFSET) 时不走线性插值（snap 到目标），避免启动瞬间
+            # 从 ZERO 到首个 emotion target 的 2s 视觉抖动。
+            # 已被外部手工 init 到非 ZERO（如 verify_robot_004 V7 路径）则正常 ramp。
+            snap_first = (not self._first_ramp_done) and (self._current == ZERO_OFFSET)
+            if snap_first:
+                self._ramp_from = new_target
+                self._current = new_target
+                # _advance_ramp 用 (now - _ramp_started_at) 判定 elapsed；让它直接 >= ramp_s
+                self._ramp_started_at = now - max(float(self.config.ramp_s), 0.001) - 1.0
+            else:
+                self._ramp_from = self._current
+                self._ramp_started_at = now
+            self._first_ramp_done = True
             self._target = new_target
-            self._ramp_started_at = now
             self._last_target_change_at = now
             self.stats.ramps_started += 1
             self.stats.target_changes += 1
@@ -582,8 +647,11 @@ class PostureBaselineModulator:
         try:
             fn = self._emit
             if fn is None:
-                from coco.logging_setup import emit as _emit
-                fn = _emit
+                # robot-005 followup (f): 用模块顶级 _DEFAULT_EMIT，
+                # 避免 hot path 每次 begin_ramp/emit 都 import logging_setup.emit。
+                fn = _DEFAULT_EMIT
+            if fn is None:
+                return
             fn(component_event, message, **payload)
         except Exception as exc:  # noqa: BLE001
             log.warning("[posture_baseline] emit failed: %s: %s", type(exc).__name__, exc)

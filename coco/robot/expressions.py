@@ -52,6 +52,14 @@ from coco.actions import (
 log = logging.getLogger(__name__)
 
 
+# robot-005 followup (f): emit fallback import 提到模块顶，避免 play 热路径每帧
+# 一次 `from coco.logging_setup import emit`。失败时置 None（_emit_event fallback）。
+try:
+    from coco.logging_setup import emit as _DEFAULT_EMIT  # type: ignore[assignment]
+except Exception:  # noqa: BLE001
+    _DEFAULT_EMIT = None  # type: ignore[assignment]
+
+
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
@@ -427,8 +435,19 @@ class ExpressionPlayer:
     def play(self, name: str) -> bool:
         """同步播放命名 expression。
 
+        并发与 stop 语义（robot-005 followup (e) 显式文档化）：
+          - **不会隐式中断** 正在执行的 play —— 并发 play 调用通过非阻塞
+            ``_play_lock.acquire(blocking=False)`` 立即被拒，返回 ``False`` 并
+            emit ``robot.expression_busy``。要"打断"当前 play，调用方必须先调
+            ``self.stop()`` 把 ``_stopped`` 标志置 True；正在执行的 play 会在
+            **下一帧** 前检查标志并提前 return（已分发的 SDK ``goto_target`` 阻塞
+            调用不会被强制中断）。
+          - 因此 "play 隐式 stop 前任" 的说法**不成立**：play 不调用 stop()。
+            调用方如果想串行播放（A 中断 → B 立即开始），需要自己 ``stop() ->
+            等 is_busy() 转 False -> play(B)``。
+
         Returns:
-            True：播放完成（或开始播放并自然结束）
+            True：播放完成（或开始播放并自然结束，至少 1 帧成功 dispatch）
             False：被 cooldown / busy / not_found / stopped 跳过
         """
         if self._stopped:
@@ -576,8 +595,10 @@ class ExpressionPlayer:
         try:
             fn = self._emit
             if fn is None:
-                from coco.logging_setup import emit as _emit
-                fn = _emit
+                # robot-005 followup (f): 用模块顶级 _DEFAULT_EMIT；hot path 不再 lazy import
+                fn = _DEFAULT_EMIT
+            if fn is None:
+                return
             fn(component_event, message, **payload)
         except Exception as e:  # noqa: BLE001
             log.warning("[robot.expr] emit failed: %s: %s", type(e).__name__, e)

@@ -1,0 +1,81 @@
+[posture_baseline] COCO_POSTURE_BASELINE_RAMP_S=100.00 >10.00，clamp
+[posture_baseline] COCO_POSTURE_BASELINE_TICK_S=0.00 <0.05，clamp
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+V1: 默认 OFF
+  [PASS] 默认 enabled=False
+  [PASS] posture_baseline_enabled_from_env=False
+  [PASS] disabled 时 thread 未启动
+  [PASS] disabled 时 current_offset == ZERO
+V2: COCO_POSTURE_BASELINE=1 → enabled=True，配置 clamp 生效
+  [PASS] enabled=True
+  [PASS] ramp_s clamp 上限 10.0: got 10.0
+  [PASS] tick_interval_s clamp 下限 0.05: got 0.05
+  [PASS] debounce_s=0 OK
+V3: happy + ACTIVE → pitch_offset < 0（抬头）
+  [PASS] happy/ACTIVE pitch < 0: got -3.0
+  [PASS] happy/ACTIVE antenna 大（>=0.6）: got 1.0
+V4: sad + ACTIVE → pitch_offset > 0（低头）
+  [PASS] sad/ACTIVE pitch > 0: got 3.0
+  [PASS] sad/ACTIVE antenna 小（<=0.2）: got 0.0
+V5: SLEEP → ZERO_OFFSET（外层 short-circuit）
+  [PASS] SLEEP 表查 ZERO_OFFSET
+  [PASS] SLEEP current_offset == ZERO: got PostureOffset(pitch_deg=0.0, yaw_deg=0.0, antenna=0.5)
+V6: PostureOffset.clamped() 严格在 ±5° / ±3° / [0,1]
+  [PASS] pitch clamp 5.0
+  [PASS] yaw clamp -3.0
+  [PASS] antenna clamp 1.0
+  [PASS] pitch clamp -5.0
+  [PASS] yaw clamp 3.0
+  [PASS] antenna clamp 0.0
+V7: emotion 切换 → 2s linear ramp（中段在 from..to 之间）
+  [PASS] 初始 happy pitch=-3
+  [PASS] ramp 中段 pitch 在 happy(-3) 与 sad(+3) 之间: got 0.000
+  [PASS] ramp 结束 pitch == sad(+3): got 3.000
+V8: SLEEP 下 current_offset == ZERO，sleep_skipped 累加，无天线下发
+  [PASS] SLEEP current_offset == ZERO
+  [PASS] SLEEP sleep_skipped >= 2: got 2
+  [PASS] SLEEP 期间无天线下发: got 0
+V9: pause/resume — pause 期间停止天线下发，ramp 仍在内部推进
+  [PASS] pause 期间天线 0 下发: before=1 after=1
+  [PASS] pause 期间 paused_skipped 累加: got 5
+  [PASS] resume 后天线下发恢复
+V10: emit robot.posture_baseline_changed payload 含 from/to/emotion/power
+  [PASS] 至少一次 robot.posture_baseline_changed
+  [PASS] payload 含 from_pitch: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 to_pitch: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 from_yaw: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 to_yaw: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 from_antenna: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 to_antenna: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 emotion: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 power_state: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] payload 含 ramp_s: got keys ['emotion', 'from_antenna', 'from_pitch', 'from_yaw', 'power_state', 'ramp_s', 'to_antenna', 'to_pitch', 'to_yaw']
+  [PASS] emotion=happy: got happy
+  [PASS] power_state=active: got active
+V11: emotion 误判抖动被 debounce 抑制
+  [PASS] SAD 切换（debounce 外）触发一次 target_change: init=1 after=2
+  [PASS] debounce 内重切 target_change 不增: got changes=2
+  [PASS] debounce_skipped >= 1: got 1
+  [PASS] 越过 debounce 后切换被接受: got 3
+V12: IdleAnimator._micro_head 叠加 baseline offset
+  [PASS] baseline 叠加后 micro_head 目标 = euler_pose(baseline_pitch, baseline_yaw): head[:3,:3]=[[0.9992386149554826, 0.01745240643728351, 0.03489418134011368], [-0.017441774902830158, 0.9998476951563913, -0.0006090802009086826], [-0.03489949670250097, 0.0, 0.9993908270190958]] expected[:3,:3]=[[0.9992386149554826, 0.01745240643728351, 0.03489418134011368], [-0.017441774902830158, 0.9998476951563913, -0.0006090802009086826], [-0.03489949670250097, 0.0, 0.9993908270190958]]
+V13: IdleAnimator._breathe 在 baseline 启用时回的中位是 baseline pose
+  [PASS] breathe head 调用 1 次
+  [PASS] breathe head pose = baseline pose（非 INIT_HEAD_POSE）
+  [PASS] baseline=ZERO 时 breathe head = INIT_HEAD_POSE
+V14: ExpressionPlayer.play 调 baseline.pause / resume
+  [PASS] play 成功
+  [PASS] baseline.pause 被调用
+  [PASS] baseline.resume 被调用
+  [PASS] pause 在 resume 之前
+V15: 与 SituationalIdleModulator 叠加后总幅度 clamp 在 actions.MAX_PITCH/YAW 内
+  [PASS] 叠加后 pitch_abs <= MAX_PITCH_DEG(30.0): got 9.000
+  [PASS] 叠加后 yaw_abs <= MAX_YAW_DEG(45.0): got 8.000
+V16: SDK 异常 fail-soft
+  [PASS] SDK 抛但 tick 不冒泡
+  [PASS] stats.sdk_errors >= 2: got 2
+V17: emotion_tracker / power_state = None → (neutral, active) → 中位 baseline
+  [PASS] None 输入 current_offset == ZERO_OFFSET: got PostureOffset(pitch_deg=0.0, yaw_deg=0.0, antenna=0.5)
+
+PASS: 0.26s

@@ -1,0 +1,52 @@
+{
+  "feature_id": "robot-005",
+  "status": "passing_pending_review",
+  "branch": "feat/robot-005",
+  "files_changed": [
+    "coco/robot/posture_baseline.py",
+    "coco/robot/expressions.py",
+    "scripts/verify_robot_005.py",
+    "feature_list.json"
+  ],
+  "followups_done": {
+    "a_first_frame_no_ramp": {
+      "location": "coco/robot/posture_baseline.py PostureBaselineModulator._begin_ramp",
+      "summary": "首次 _begin_ramp 且 _current == ZERO_OFFSET 时 snap 到 target；后续走线性 ramp。新增 _first_ramp_done flag。"
+    },
+    "b_antenna_sad_vs_neutral": {
+      "location": "coco/robot/posture_baseline.py PostureOffset.antenna_joint_rad",
+      "summary": "改为整段 [0,1] 单调可区分：antenna<0.5 内合下垂（最大 -0.3 rad），=0.5 中位 (0,0)，>0.5 外展（最大 +0.5 rad）。SAD(0.0) → (-0.3, +0.3) ≠ NEUTRAL(0.5) → (0, 0) ≠ HAPPY(1.0) → (+0.5, -0.5)。"
+    },
+    "c_pause_resume_nested_count": {
+      "location": "coco/robot/posture_baseline.py PostureBaselineModulator.pause/resume/is_paused",
+      "summary": "threading.Event → threading.Lock + int _pause_count；嵌套 pause 多次需对应数量 resume 才解锁；多余 resume 幂等不抛。"
+    },
+    "d_history_maxlen": {
+      "location": "coco/robot/posture_baseline.py PostureBaselineStats.history",
+      "summary": "list → collections.deque(maxlen=200)；模块顶级常量 _HISTORY_MAXLEN=200。超出后旧条目自动丢弃。"
+    },
+    "e_play_implicit_stop_doc": {
+      "location": "coco/robot/expressions.py ExpressionPlayer.play",
+      "summary": "docstring 显式说明：play 不会隐式中断正在执行的 play；并发 play 通过非阻塞 _play_lock.acquire 立即拒绝；要打断需调用方先调 stop() 后再 play(B)。"
+    },
+    "f_emit_fallback_module_top": {
+      "location": "coco/robot/posture_baseline.py + coco/robot/expressions.py 模块顶",
+      "summary": "try-import logging_setup.emit 提到模块顶 _DEFAULT_EMIT；_emit_event hot path 不再 lazy import；fallback 失败置 None 后 return（不抛）。"
+    }
+  },
+  "verify_robot_005": {
+    "rc": 0,
+    "v_passes": "V1-V8 ALL PASS"
+  },
+  "regression": {
+    "verify_robot_003": "PASS V1-V14",
+    "verify_robot_004": "PASS V1-V17",
+    "verify_vision_006": "PASS 10/10",
+    "verify_interact_011": "PASS V1-V10",
+    "verify_companion_008": "PASS 17/17"
+  },
+  "init_sh_smoke": "PASS (COCO_CI=1，跳过真麦录音；audio/ASR/TTS/vision/face-tracker/VAD/wake-word/power-state/config/publish 全 PASS)",
+  "real_machine_uat": "pending (uat-phase8 异步项)",
+  "reviewer_lgtm": "pending",
+  "notes": "纯软件 followup 收割；改动覆盖 posture_baseline.py + expressions.py；与 vision-006 / interact-011 / companion-008 / robot-003 / robot-004 全回归 PASS。首帧 snap 仅在 _current==ZERO_OFFSET 时触发，避免破坏 verify_robot_004 V7 的手工 init 路径。"
+}
