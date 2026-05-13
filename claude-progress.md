@@ -1320,3 +1320,19 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **启动**：**vision-007**（in_progress）。理由：用户可见价值最高（"它会看会听会主动说话"），无前置依赖（vision-006/interact-009/vision-005 已 passing），sim-first 完全友好（程序合成 caption 序列 + ASR partial fixture）。
 - **commit**：feature_list.json 入库 + 本日志 → 主分支直接 commit（按 CLAUDE.md sub-agent commit 例外 + 持续开发模式，本会话 phase 规划属基础设施改动可直接 main）；push origin main 一次（按 sim-first push 策略，失败忽略）。
 - **下一步**：派 sub-agent 实现 vision-007 — coco/proactive/multimodal_fusion.py + main.py 接线 + scripts/verify_vision_007.py V1-V10 + Reviewer fresh-context 评审。
+
+## Session 2026-05-14 — vision-007 closeout（phase-9 软件 1/5）
+
+- **目标**：多模态主动话题融合 (scene_caption × ASR partial × proactive)，default-OFF via `COCO_MM_PROACTIVE=1`。
+- **结果**：vision-007 → **passing**。`scripts/verify_vision_007.py` V1-V10 全 PASS。
+- **实现**：`coco/multimodal_fusion.py`（MultiModalFusionRule + MultiModalProactiveBridge，订阅 vision.scene_caption 与 ASR partial 事件，按 dark_silence / motion_greet 规则合成增强 trigger 转给 ProactiveScheduler；cooldown + priority_boost）；`coco/proactive.py` 增加 `_next_priority_boost` 标志位接口；`coco/main.py` lazy import + default-OFF gate；`coco/logging_setup.py` 增日志桥。
+- **回归 PASS**：vision-006 scene_caption / interact-011 offline_fallback / companion-008 cross-session profile / infra-005 health monitor。
+- **Reviewer (sub-agent, fresh-context)**：LGTM（一轮）。1 条 L1 文档级 + 4 条 L2 记录级，均不阻 merge：
+  - **L1（文档化即可，必须显式标注）**：`priority_boost` 暂为标志位记账 —— MultimodalFusion 写 `proactive._next_priority_boost = True`，但 ProactiveScheduler 当前 **未消费** 该字段；后续 phase 拓展消费（e.g. companion-009 加权采样 / companion-010 alert 优先级会顺带读取）。
+  - L2-1：V6 仅断言 `cfg.enabled=False` 时 bridge no-op，未端到端断言 main.py 完全不构造（gate 已清晰，verification 文本描述充分，非阻塞）。
+  - L2-2：`inject_asr_event` 与 `on_asr_event` 等价别名，future cleanup 可删一个。
+  - L2-3：R1 `dark_silence` 启动后首个 dark caption 即触发的边界已文档化（按设计预期：用户开机黑屋立即被关心）。
+  - L2-4：`_DARK_KEYWORDS` 元组缺误触发反例覆盖（如「夜光涂料」「暗号」「暗恋」），后续可加 negative fixture / 语义模型升级。
+- **closeout**：merge `feat/vision-007` → main（HEAD=`542da65`，merge --no-ff，Reviewer LGTM + L1 + 4 条 L2 写入 merge commit）；feature_list.json status → passing + evidence（含 L1 显式标注）；本日志同步追加。
+- **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/vision-007` 各一次，失败忽略（见下一节结果）。
+- **phase-9 软件进度 1/5 完成**（剩 companion-009 / companion-010 / infra-007 / infra-008）。下一候选：**companion-009 偏好学习**（priority 51，依赖 companion-005/008/interact-009 均 passing，sim-first 友好）。
