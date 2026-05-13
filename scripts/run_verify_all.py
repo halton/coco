@@ -14,6 +14,11 @@
 
 infra-006：被 GitHub Actions verify-matrix workflow 调用，也可本地手跑。
 
+## EXCLUDED 提醒（infra-009 / infra-006 L2-C）
+模块级 ``EXCLUDED`` 常量列出 discover() 必须排除的 verify 脚本（避免矩阵自检递归）。
+新增/重命名 verify_infra_006* 时同步更新本常量；``verify_infra_006`` 的 v5/v9
+等价校验依赖与此处一致的集合。
+
 ## SKIP_LIST 维护
 本仓库 sim-first：默认所有 verify_*.py 必须在 ./init.sh smoke 通过的 sim 环境内
 PASS。SKIP_LIST 列出在 GitHub Actions ubuntu-latest 上**确实跑不动**的脚本，

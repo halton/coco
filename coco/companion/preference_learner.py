@@ -43,6 +43,7 @@ import re
 import threading
 import time
 from dataclasses import dataclass, field
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 log = logging.getLogger(__name__)
@@ -226,6 +227,9 @@ class PreferenceLearner:
         self._extra_stop = frozenset(s.strip().lower() for s in (extra_stopwords or []) if s)
         # 自上次 rebuild 后累计的 on_turn 计数（用于 persist_every_n_turns 节流）
         self._pending_turns = 0
+        # infra-009 / companion-009 L2-2：异步 rebuild executor（懒构造，单 worker）；
+        # 主回调线程把 rebuild_for_profile_async 提交进来，不被 fsync 阻塞。
+        self._executor: Optional[ThreadPoolExecutor] = None
 
     # ---------------------------------------------------------------- helpers
     def _decay_weight(self, ts: float, *, now: float) -> float:
@@ -446,6 +450,39 @@ class PreferenceLearner:
             self.stats.last_input_summaries = n_summaries
             self._pending_turns = 0
         return kw
+
+    # infra-009 / companion-009 L2-2：异步版本，main 主回调线程提交后立即返回
+    # Future，不被 persist_store.save 的 fsync 阻塞。
+    def rebuild_for_profile_async(
+        self,
+        *,
+        persist_store: Any,
+        profile_id: str,
+        dialog_memory: Any = None,
+        now: Optional[float] = None,
+    ) -> "Future[Optional[Dict[str, float]]]":
+        with self._lock:
+            if self._executor is None:
+                self._executor = ThreadPoolExecutor(
+                    max_workers=1,
+                    thread_name_prefix="coco-pref-learner",
+                )
+            ex = self._executor
+        return ex.submit(
+            self.rebuild_for_profile,
+            persist_store=persist_store,
+            profile_id=profile_id,
+            dialog_memory=dialog_memory,
+            now=now,
+        )
+
+    def shutdown_executor(self, wait: bool = True) -> None:
+        """关闭后台 executor（main 退出时调；test 末尾用）。"""
+        with self._lock:
+            ex = self._executor
+            self._executor = None
+        if ex is not None:
+            ex.shutdown(wait=wait)
 
     # ----------------------------------------------------- on_turn (lightweight)
     def on_turn(

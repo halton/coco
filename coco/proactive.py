@@ -109,6 +109,8 @@ class ProactiveStats:
     # companion-010: 情绪记忆触发的 alert 计数 + 按 kind 拆分
     emotion_alert_triggered: int = 0
     emotion_alert_per_kind: dict = field(default_factory=dict)
+    # vision-007 / infra-009: priority_boost 被 _should_trigger 消费的次数
+    priority_boost_consumed: int = 0
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -243,6 +245,15 @@ class ProactiveScheduler:
         # companion-009: 偏好关键词 {keyword: weight}（归一化）。default-OFF 时
         # 维持空 dict —— _select_topic_seed / _build_system_prompt 行为不变。
         self._topic_preferences: dict = {}
+
+        # vision-007 / infra-009: multimodal_fusion 命中规则后写 True；
+        # 下一次 _should_trigger 命中时 idle_threshold 减半 + cooldown 减半
+        # 视作"优先调度一次"，consume 后立即清回 False。MultimodalFusion 通过
+        # hasattr 检测后写本字段。
+        self._next_priority_boost: bool = False
+        # companion-010: 可选 EmotionAlertCoordinator 注入；scheduler tick 时
+        # 顺带调一次 coord.tick() 让到期 prefer 自动还原（不再依赖新 emotion 事件触发）。
+        self._emotion_alert_coord: Any = None
 
         # 探测 llm_reply_fn 是否接受 system_prompt
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
@@ -442,6 +453,11 @@ class ProactiveScheduler:
         with self._lock:
             return dict(self._topic_preferences)
 
+    # companion-010 / infra-009: 让 scheduler tick 顺手调一次 coord.tick()，
+    # 这样 alert 过期 prefer 还原不再依赖"再来一个 emotion 事件触发 on_emotion 的内部 tick"。
+    def set_emotion_alert_coord(self, coord: Any) -> None:
+        self._emotion_alert_coord = coord
+
     def select_topic_seed(
         self,
         candidates: Optional[Sequence[str]] = None,
@@ -544,12 +560,19 @@ class ProactiveScheduler:
             return "no_face"
         # 3) idle threshold
         idle_for = max(0.0, t - self._last_interaction_ts)
-        if idle_for < self.config.idle_threshold_s:
+        # vision-007 / infra-009: priority_boost 减半 idle threshold
+        idle_threshold = self.config.idle_threshold_s
+        if self._next_priority_boost:
+            idle_threshold = max(0.0, idle_threshold * 0.5)
+        if idle_for < idle_threshold:
             return "idle"
         # 4) cooldown since last proactive
         if self._last_proactive_ts > 0:
             since = max(0.0, t - self._last_proactive_ts)
-            if since < self.config.cooldown_s:
+            cooldown = self.config.cooldown_s
+            if self._next_priority_boost:
+                cooldown = max(0.0, cooldown * 0.5)
+            if since < cooldown:
                 return "cooldown"
         # 5) rate limit
         # 清理 1h 之外的旧条目
@@ -585,6 +608,11 @@ class ProactiveScheduler:
             self._last_interaction_ts = t
             self._recent_triggers.append(t)
             self.stats.triggered += 1
+            # vision-007 / infra-009: consume priority_boost（无论本次是否真因
+            # boost 命中——只要 boost 标志为 True 且本次成功 trigger，就视为已消耗）
+            if self._next_priority_boost:
+                self.stats.priority_boost_consumed += 1
+                self._next_priority_boost = False
             system_prompt = self._build_system_prompt()
             seed = self.config.topic_seed
         # ---- 锁外：实际 LLM + TTS + emit + on_interaction（耗时操作）----
@@ -697,6 +725,17 @@ class ProactiveScheduler:
         try:
             while not ev.wait(timeout=self.config.tick_s):
                 try:
+                    # companion-010 / infra-009: 先 tick coordinator（到期还原 prefer），
+                    # 再 maybe_trigger，让本轮选 seed 看到最新的 prefer。
+                    coord = self._emotion_alert_coord
+                    if coord is not None:
+                        try:
+                            tick_fn = getattr(coord, "tick", None)
+                            if callable(tick_fn):
+                                tick_fn(now=self.clock())
+                        except Exception as e:  # noqa: BLE001
+                            log.warning("[proactive] emotion_alert_coord.tick failed: %s: %s",
+                                        type(e).__name__, e)
                     self.maybe_trigger()
                 except Exception as e:  # noqa: BLE001
                     log.warning("[proactive] tick error: %s", e)

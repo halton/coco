@@ -273,7 +273,17 @@ class MultimodalFusion:
     # ------------------------------------------------------------------
 
     def inject_asr_event(self, kind: str, text: str = "") -> None:
-        """test-only 别名，等价 on_asr_event。"""
+        """test-only 别名，等价 on_asr_event。
+
+        .. deprecated:: infra-009
+           直接调 ``on_asr_event``；本别名仅为兼容旧 verify，下一个 phase 会移除。
+        """
+        import warnings as _w
+        _w.warn(
+            "MultimodalFusion.inject_asr_event is deprecated; use on_asr_event instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.on_asr_event(kind, text)
 
     def inject_user_activity(self, ts: Optional[float] = None) -> None:

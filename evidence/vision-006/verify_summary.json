@@ -15,7 +15,7 @@
     {
       "name": "V3 periodic tick (background thread)",
       "ok": true,
-      "detail": "started_at=1778633778.25 ticks=3 emits=3"
+      "detail": "started_at=1778704838.95 ticks=3 emits=3"
     },
     {
       "name": "V4 min_change_threshold suppress",
