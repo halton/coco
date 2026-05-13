@@ -1,0 +1,22 @@
+{
+  "ts": 1778704646.501,
+  "staged": [
+    "coco/main.py"
+  ],
+  "affected_count": 3,
+  "affected": [
+    "verify_a.py",
+    "verify_b.py",
+    "verify_c.py"
+  ],
+  "runnable_count": 3,
+  "runnable": [
+    "verify_a.py",
+    "verify_b.py",
+    "verify_c.py"
+  ],
+  "full_fan_out": true,
+  "truncated": false,
+  "max_arg": 10,
+  "skipped": []
+}

@@ -438,12 +438,28 @@ class EmotionAlertCoordinator:
         if not callable(sett):
             return
         with self._lock:
-            # 首次 bump：保存原 prefer
-            if self._original_prefer is None and callable(get):
+            # infra-009 / companion-010 L2-3：每次 bump 都重新 capture 当前 prefer
+            # （去掉 comfort 关键词），这样用户在两次 alert 之间手动 set 的偏好不会被
+            # 首次 capture 时的快照覆盖。首次（_original is None）直接 capture；
+            # 后续 bump 把当前 prefer 减去 comfort keys 当作"用户真实意图"重 capture。
+            if callable(get):
                 try:
-                    self._original_prefer = dict(get() or {})
+                    current = dict(get() or {})
                 except Exception:  # noqa: BLE001
-                    self._original_prefer = {}
+                    current = {}
+            else:
+                current = {}
+            if self._original_prefer is None:
+                self._original_prefer = current
+            else:
+                # 把 comfort keys 从 current 里剥掉再 capture（comfort 是我们上一次 bump 加的）
+                stripped = {
+                    k: v for k, v in current.items()
+                    if k not in self.comfort_prefer
+                }
+                # 合并：保留 stripped 中的 key，且对同 key 取用户最新值（即 stripped[k]）
+                # 用户可能新增 key，也可能改了 weight
+                self._original_prefer = stripped
             # 合并：comfort 优先，但不抹去用户原偏好（取 max）
             merged: Dict[str, float] = dict(self._original_prefer or {})
             for k, w in self.comfort_prefer.items():

@@ -31,9 +31,12 @@ skip-list：复用 `run_verify_all.SKIP_LIST`，`--run` 默认跳过这些（与
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -271,6 +274,90 @@ def compute_impact(
     return affected, notes, False
 
 
+def _write_last_run(
+    *,
+    files: list[str],
+    affected: set[str],
+    runnable: list[str],
+    full_fan_out: bool,
+    truncated: bool,
+    max_arg: int,
+) -> None:
+    """infra-009 / infra-008 L1-1：把本次 --run 的入参 / 选中 / 截断信息留痕到
+    evidence/infra-008/last_run.json，方便 Reviewer / 事后定位 hot-file 截断盲点。
+    """
+    payload = {
+        "ts": round(time.time(), 3),
+        "staged": list(files),
+        "affected_count": len(affected),
+        "affected": sorted(affected),
+        "runnable_count": len(runnable),
+        "runnable": list(runnable),
+        "full_fan_out": bool(full_fan_out),
+        "truncated": bool(truncated),
+        "max_arg": int(max_arg),
+        "skipped": sorted(set(affected) - set(runnable)),
+    }
+    try:
+        out_dir = REPO_ROOT / "evidence" / "infra-008"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / "last_run.json"
+        out_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except OSError as e:
+        # 留痕失败不阻断 hook；只在 stderr 提示一下
+        print(f"[precommit_impact] last_run.json write failed: {e}", file=sys.stderr)
+
+
+def validate_mapping() -> list[str]:
+    """infra-009 / infra-008 L2-3：DIR_TO_AREA / MODULE_TO_AREA 自检。
+
+    返回不一致项的描述列表；空列表表示一致。
+
+    检查规则：
+    - 所有 ``coco/<subdir>/`` 都应在 ``DIR_TO_AREA`` 出现（豁免：``__pycache__``、
+      以 ``_`` 开头的隐藏目录）。
+    - 所有顶层 ``coco/<name>.py`` 都应在 ``MODULE_TO_AREA`` 出现（豁免：
+      ``__init__.py`` / ``__main__.py`` / ``main.py``（hot-path 全量）/ 子目录
+      已覆盖的模块如 ``perception.*``）。
+    """
+    issues: list[str] = []
+    if not COCO_DIR.is_dir():
+        issues.append(f"COCO_DIR 不存在: {COCO_DIR}")
+        return issues
+
+    # 子目录
+    actual_subdirs = {
+        p.name for p in COCO_DIR.iterdir()
+        if p.is_dir() and not p.name.startswith("_") and p.name != "__pycache__"
+    }
+    for sub in sorted(actual_subdirs):
+        if sub not in DIR_TO_AREA:
+            issues.append(f"DIR_TO_AREA 漏登记子目录: coco/{sub}/")
+    for sub in sorted(DIR_TO_AREA):
+        if sub not in actual_subdirs:
+            issues.append(f"DIR_TO_AREA 残留废弃 key: coco/{sub}/ 已不存在")
+
+    # 顶层模块
+    hot_exempt = {"main", "__init__", "__main__"}
+    actual_modules = {
+        p.stem for p in COCO_DIR.glob("*.py")
+        if p.is_file() and p.stem not in hot_exempt
+    }
+    for mod in sorted(actual_modules):
+        if mod not in MODULE_TO_AREA:
+            issues.append(f"MODULE_TO_AREA 漏登记顶层模块: coco/{mod}.py")
+    for mod in sorted(MODULE_TO_AREA):
+        # 允许 MODULE_TO_AREA 保留历史模块（被搬到子目录后 stub 还在），但
+        # 不允许指向不存在文件
+        if mod not in actual_modules:
+            issues.append(f"MODULE_TO_AREA 残留废弃 key: coco/{mod}.py 已不存在")
+
+    return issues
+
+
 def _paths_filter_yaml() -> str:
     """生成 GitHub Actions paths-filter YAML 片段（供 infra-006 矩阵参考）。
 
@@ -375,10 +462,27 @@ def main() -> int:
         n for n in affected
         if not (apply_skip and n in SKIP_NAMES)
     )
-    if len(runnable) > args.max:
+    truncated = False
+    # infra-009 / infra-008 L1-1：full_fan_out=True 时跳过 --max 截断（hot-file
+    # 如 coco/main.py 改动必须保留全量覆盖率，不能被 hook 时长护栏吃掉）。
+    if not full_fan_out and len(runnable) > args.max:
         print(f"[precommit_impact] affected={len(runnable)} > --max={args.max}；"
               f"截断至前 {args.max} 个（按文件名排序）。完整列表用 --list 查看。")
         runnable = runnable[:args.max]
+        truncated = True
+    elif full_fan_out and len(runnable) > args.max:
+        print(f"[precommit_impact] full_fan_out=True；--max={args.max} 截断豁免，"
+              f"全量跑 {len(runnable)} 个 verify。")
+
+    # infra-009 / infra-008 L1-1：留痕到 evidence/infra-008/last_run.json
+    _write_last_run(
+        files=files,
+        affected=affected,
+        runnable=runnable,
+        full_fan_out=full_fan_out,
+        truncated=truncated,
+        max_arg=args.max,
+    )
 
     if not runnable:
         print("[precommit_impact] no runnable verify after skip-list；OK")

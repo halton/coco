@@ -50,7 +50,13 @@ def v1_perception_to_vision() -> None:
     ], cwd=str(REPO_ROOT))
     names = [ln for ln in out.splitlines() if ln.startswith("verify_")]
     has_v6 = "verify_vision_006.py" in names
-    all_vision = all(n.startswith("verify_vision") or n.startswith("verify_robot_005") for n in names)
+    # infra-009 verifies vision-006 follow-ups, so its verify also import 反向命中
+    all_vision = all(
+        n.startswith("verify_vision")
+        or n.startswith("verify_robot_005")
+        or n == "verify_infra_009.py"
+        for n in names
+    )
     _record(
         "V1 perception → verify_vision_*",
         rc == 0 and has_v6 and len(names) >= 3 and all_vision,

@@ -242,19 +242,15 @@ class LLMCaptionBackend:
     1. 单独立 feature（`vision-007` 等）；
     2. 评估推理延迟 vs interval_s（避免后台线程内调超过周期的 LLM）；
     3. 评估 token 成本与失败回退（fail-soft 退到 Heuristic）。
+
+    infra-009 / vision-006 L2-4：删除冗余的 caption() 占位方法（__init__ 已经
+    raise NotImplementedError，到不了 caption；保留 caption 反而误导 IDE 类型推导）。
     """
 
     def __init__(self, *args, **kwargs):  # noqa: ANN002, ANN003
         raise NotImplementedError(
             "LLMCaptionBackend is a stub — see docstring for future plan"
         )
-
-    def caption(
-        self,
-        frame: Optional[np.ndarray],
-        prev_frame: Optional[np.ndarray] = None,
-    ) -> Optional[SceneCaption]:
-        raise NotImplementedError
 
 
 # ---------------------------------------------------------------------------
@@ -460,8 +456,15 @@ class SceneCaptionEmitter:
                         type(e).__name__, e)
             cap = None
         # 更新 prev_frame（无论 backend 是否返回，都推进窗口）
+        # infra-009 / vision-006 L2-1: copy 防 buffer 复用 —— 外部相机驱动
+        # 常常复用同一块底层 ndarray buffer 反复填，下次 cam.read() 会就地改写
+        # 我们手上的引用；不 copy 就会导致下一轮 _frame_diff_metrics 拿到
+        # 跟当前帧"一模一样"的 prev，运动检测整段失效。
         try:
-            self._prev_frame = frame
+            if isinstance(frame, np.ndarray):
+                self._prev_frame = frame.copy()
+            else:
+                self._prev_frame = frame
         except Exception:  # noqa: BLE001
             pass
         if cap is None:

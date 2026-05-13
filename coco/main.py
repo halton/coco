@@ -1624,10 +1624,17 @@ class Coco(ReachyMiniApp):
                     _default_is_real_machine as _self_heal_is_real,
                 )
                 if _selfheal_enabled():
-                    # real-machine 下绑真 reopen_fn；sim 下用占位 True
+                    # real-machine 下绑真 reopen_fn；sim 下用占位 True。
+                    # infra-009 / infra-007 L1-a：真机 reopen_fn 实接（重开 USB 麦克 /
+                    # 重启 ASR 进程 / 重开 USB 相机）涉及具体子系统句柄 + 错误恢复路径，
+                    # 显式 **defer 到 infra-010**（real-machine wire-through 专项）。
+                    # 当前阶段保留占位 lambda True，仅在 sim 下走 dry-run 验抑流 + emit；
+                    # 真机模式下也用同一占位，不会触发真硬件副作用（占位返回 True
+                    # 等价于 "假装 reopen 成功"，避免误以为 self_heal 在真机已生效）。
                     _is_real = bool(_self_heal_is_real())
                     if _is_real:
-                        # 真机 reopen_fn 由后续 wire 注入；当前阶段先用占位（保持 main.py 不依赖具体子系统）
+                        # TODO(infra-010): 真机 reopen_fn 接 USB audio re-init / ASR
+                        # restart / CameraSource.reopen()；目前占位
                         _audio_fn = lambda **kw: True
                         _asr_fn = lambda **kw: True
                         _cam_fn = lambda **kw: True

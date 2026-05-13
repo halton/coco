@@ -420,6 +420,7 @@ class SelfHealRegistry:
                     strategy=strat.name,
                     failure_kind=failure_kind,
                     attempt=st.attempts,
+                    real_attempts=st.real_attempts,
                 )
                 continue
 
