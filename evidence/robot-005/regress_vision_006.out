@@ -1,0 +1,15 @@
+[verify_vision_006] PASS V1 dark caption mentions 暗/夜: '画面整体偏暗，主体大致居中静止'
+[verify_vision_006] PASS V2 motion caption: '画面亮度适中，有一个移动物体在左侧'
+[verify_vision_006] PASS V3 periodic tick (background thread): started_at=1778694872.69 ticks=3 emits=3
+[verify_vision_006] PASS V4 min_change_threshold suppress: suppressed_similar=1
+[verify_vision_006] PASS V5 cooldown suppress: suppressed_cooldown=1 resume=True
+[verify_vision_006] PASS V6 default-OFF: cfg.enabled=False
+[scene_caption] COCO_SCENE_CAPTION_INTERVAL_S=1.00 <5.00，clamp 5.00
+[scene_caption] COCO_SCENE_CAPTION_COOLDOWN_S=99999.00 >3600.00，clamp 3600.00
+[scene_caption] COCO_SCENE_CAPTION_MIN_CHANGE=2.00 >1.00，clamp 1.00
+[verify_vision_006] PASS V7 env clamp: interval_s=5.0 cooldown_s=3600.0 min_change=1.0
+[verify_vision_006] PASS V8 stop+join clean: alive=False elapsed=0.000s
+[verify_vision_006] PASS V9 proactive caption_proactive count: caption_proactive=3
+[verify_vision_006] PASS V10 coexist with gesture: gesture.frames_read=30 caption.emitted=3 caption.err=0 gesture.err=0
+
+[verify_vision_006] ALL PASS 10/10

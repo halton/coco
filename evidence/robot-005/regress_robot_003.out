@@ -1,0 +1,93 @@
+[robot.expr] expression '__no_such_expression__' not found
+[robot.expr] frame[0] of thinking SDK failed: RuntimeError: simulated SDK fail
+[robot.expr] frame[1] of thinking SDK failed: RuntimeError: simulated SDK fail
+[robot.expr] return_to_center failed: RuntimeError: simulated SDK fail
+[robot.expr] COCO_EXPRESSIONS_SPEED=999.00 >4.00，clamp 到 4.00
+[robot.expr] COCO_EXPRESSIONS_SPEED=0.01 <0.25，clamp 到 0.25
+[robot.expr] COCO_EXPRESSIONS_SPEED='abc' 非数字，回退 1.00
+[robot.expr] COCO_EXPRESSIONS_COOLDOWN_S=99999.00 >30.00，clamp 到 30.00
+[robot.expr] COCO_EXPRESSIONS_SPEED='abc' 非数字，回退 1.00
+V1: 默认 OFF（COCO_EXPRESSIONS 未设）
+  [PASS] 默认 enabled=False: got enabled=False
+  [PASS] 默认 cooldown=1.0
+  [PASS] 默认 speed=1.0
+V2: COCO_EXPRESSIONS=1 构造成功
+  [PASS] enabled=True
+  [PASS] ExpressionPlayer 实例化
+  [PASS] 初始 stats.plays_started=0
+V3: EXPRESSION_LIBRARY 含 5 个预设
+  [PASS] welcome/thinking/praise/confused/shy 都在库内: missing=set()
+  [PASS] 库总数 >= 5: got 9
+V4: play('welcome') 按帧顺序下发 goto_target
+  [PASS] play 返回 True
+  [PASS] goto_target 调用次数 = frames + return_to_center(4): got 4
+  [PASS] frame[0] yaw>0 (welcome 首帧右摆，+yaw): yaw1=8.00
+  [PASS] frame[1] yaw<0 (welcome 次帧左摆，-yaw): yaw2=-8.00
+  [PASS] stats.frames_dispatched == frames: got 3
+  [PASS] stats.plays_completed=1
+V5: play('unknown') fail-soft + emit not_found
+  [PASS] unknown play 返回 False
+  [PASS] 不抛异常
+  [PASS] goto_target 未被调用
+  [PASS] stats.plays_not_found=1
+  [PASS] emit robot.expression_not_found: emits=['robot.expression_not_found']
+V6: cooldown 内重复 play 同名被跳过
+  [PASS] 第 1 次 play OK
+  [PASS] 第 2 次 play 立即返回 False (cooldown)
+  [PASS] stats.plays_skipped_cooldown=1
+  [PASS] emit robot.expression_cooldown_skip: emits=['robot.expression_played', 'robot.expression_cooldown_skip']
+  [PASS] 不同 name 不受 cooldown 影响
+V7: 并发 play 立即拒绝 + busy 事件
+  [PASS] 线程 1 play 成功
+  [PASS] 线程 2 并发 play 被拒: got False
+  [PASS] stats.plays_rejected_busy=1
+  [PASS] emit robot.expression_busy: emits=['robot.expression_busy', 'robot.expression_played']
+V8: IdleAnimator pause/resume 钩子被调用
+  [PASS] play 成功
+  [PASS] idle.pause() 被调 1 次: got 1
+  [PASS] idle.resume() 被调 1 次: got 1
+  [PASS] SDK 异常路径 idle.resume() 仍被调: got 1
+  [PASS] SDK 异常计入 stats.sdk_errors: got 3
+V9: tts.say(expression='welcome') 触发 player.play
+[coco.tts] tts say emotion=welcome text='你好'
+  [PASS] expression='welcome' 触发 player.play: got 1
+  [PASS] player.play 参数 = 'welcome': got ('welcome',)
+[coco.tts] tts say emotion=praise text='你好'
+  [PASS] emotion='praise' 也触发 player.play
+[coco.tts] tts say emotion=thinking text='你好'
+  [PASS] expression 优先级 > emotion: got ('thinking',)
+V10: emit robot.expression_played + 'robot' 在 AUTHORITATIVE_COMPONENTS
+  [PASS] 'robot' 在 AUTHORITATIVE_COMPONENTS: set=['asr', 'companion', 'dialog', 'face', 'health', 'idle', 'interact', 'llm', 'metrics', 'power', 'robot', 'scene_caption', 'startup', 'vad', 'vision', 'wake']
+  [PASS] emit robot.expression_played: events=['robot.expression_played']
+  [PASS] emit payload 含 expression name
+  [PASS] emit payload 含 frames count: frames=4
+V11: env clamp（speed/cooldown 越界被 clamp）
+  [PASS] speed > 4.0 被 clamp 到 4.0: got 4.0
+  [PASS] speed < 0.25 被 clamp 到 0.25: got 0.25
+  [PASS] speed=非数字 回退 1.0: got 1.0
+  [PASS] cooldown 越界 clamp 到 30.0: got 30.0
+  [PASS] 所有 duration 在 [0.1, 5.0]: out_of_range=[]
+V12: stop() 干净退出 + ProactiveScheduler 可注入
+  [PASS] stop() 后 play 返回 False
+  [PASS] stop() 后 goto_target 不再被调: got 0
+[coco.tts] tts say emotion=thinking text='我们聊点什么吧'
+  [PASS] ProactiveScheduler tts_say_fn 包一层后 expression 链路通: got 1
+  [PASS] 触发的 expression name=thinking
+V13: tts.say_async(expression=...) 透传 expression 到 say()
+[coco.tts] tts say emotion=excited text='你好'
+  [PASS] say_async 线程在 5s 内退出
+  [PASS] say_async expression='excited' 透传后 player.play 被调: got 1
+  [PASS] player.play 参数 = 'excited': got ('excited',)
+[coco.tts] tts say emotion=praise text='你好'
+  [PASS] say_async emotion='praise' 也触发 player.play: got 1
+  [PASS] say_async 不传 expression/emotion → player.play 不被调: got 0
+V14: SDK 全失败 (frames_done=0) 不记 cooldown，下次 play 同名仍尝试
+  [PASS] SDK 全失败时 play 返回 False (frames_done=0): got False
+  [PASS] _last_play_ts 未记录 'welcome' (cooldown 未触发): _last_play_ts keys=[]
+  [PASS] stats.plays_completed=0 (frames_done==0 不计完成): got 0
+  [PASS] 第二次 play 'welcome' 未被 cooldown skip: got True
+  [PASS] 第二次 play 实际 dispatch 了帧: dispatched=[('welcome', 0), ('welcome', 1), ('welcome', 2)]
+  [PASS] 第二次 play 后 stats.plays_skipped_cooldown 未增长: got 0
+
+verify_robot_003 done in 1.52s
+ALL PASS V1-V14

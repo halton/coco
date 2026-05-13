@@ -1230,7 +1230,7 @@
       "area": "robot",
       "title": "robot-004 followup 收割 — L1+L2 残项整理",
       "user_visible_behavior": "对 robot-004（表情编排）的 L1+L2 followup 一次性收割：启动瞬切首帧无 ramp / antenna SAD vs NEUTRAL 区分 / pause-resume 嵌套计数 / emotion history 上限 / ExpressionPlayer.play 隐式 stop 文档化 / emit fallback import 微优化。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "robot-004"
       ],
