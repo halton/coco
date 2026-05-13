@@ -872,7 +872,23 @@ class Coco(ReachyMiniApp):
                     and _profile_store is not None
                     and type(_profile_store).__name__ == "MultiProfileStore"
                 ):
-                    def _on_profile_switch(prev, curr, _dm=_dialog_memory):
+                    # companion-008: bridge holder（late-bound：bridge 在本块之后
+                    # 构造，回调运行期才会读这个 list 的 [0]）。
+                    _persist_bridge_ref: list = []
+                    def _on_profile_switch(prev, curr, _dm=_dialog_memory, _br=_persist_bridge_ref):
+                        # companion-008 bridge：先持久化 prev 的最终 profile（含
+                        # 此时的 DialogMemory._summary），再 clear DialogMemory。
+                        # 顺序：clear 之后 summary 就没了，必须先 persist。
+                        _pb = _br[0] if _br else None
+                        if _pb is not None:
+                            try:
+                                _pb.on_switch(prev, curr)
+                            except Exception as _e:  # noqa: BLE001
+                                print(
+                                    f"[coco][profile_persist_bridge] on_switch failed: "
+                                    f"{type(_e).__name__}: {_e}",
+                                    flush=True,
+                                )
                         if _dm is not None:
                             try:
                                 _dm.clear()
@@ -919,6 +935,92 @@ class Coco(ReachyMiniApp):
                     flush=True,
                 )
                 _profile_switcher = None
+
+            # companion-008: 可选跨 session UserProfile 持久化（默认 OFF）。
+            # COCO_PROFILE_PERSIST=1 → 启动时扫 ~/.coco/profiles/，emit profile.hydrated；
+            # default OFF 时本段完全不介入，行为与今天一致。
+            # 端到端 wire（L0 rework）：
+            #   - 构造 ProfilePersistBridge（PersistentProfileStore + MultiProfileStore +
+            #     DialogMemory.summary() 回调）
+            #   - hydrate 后通过 bridge 回灌到 MultiProfileStore（set_name + add_interest）
+            #   - 把 bridge 塞进 _persist_bridge_ref（上面 _on_profile_switch 用到）
+            #   - finally 段对 active profile 再 flush 一次
+            _persistent_profile_store = None
+            _persist_bridge = None
+            try:
+                from coco.companion.profile_persist import (
+                    PersistentProfileStore as _PPStore,
+                    default_persist_root as _pp_root,
+                    profile_persist_enabled_from_env as _pp_enabled,
+                )
+                if _pp_enabled():
+                    _pp_path = _pp_root()
+                    _persistent_profile_store = _PPStore(root=_pp_path, emit_fn=emit)
+                    # 仅当 MultiProfileStore 真在用时才构造 bridge（默认 ProfileStore
+                    # 没有 active_user_id / set_active_user 接口，bridge 用不上）
+                    if (
+                        _profile_store is not None
+                        and type(_profile_store).__name__ == "MultiProfileStore"
+                    ):
+                        try:
+                            from coco.companion.profile_persist_bridge import (
+                                ProfilePersistBridge as _PPBridge,
+                            )
+                            def _summary_provider(_dm=_dialog_memory):
+                                if _dm is None:
+                                    return None
+                                try:
+                                    return _dm.summary()
+                                except Exception:  # noqa: BLE001
+                                    return None
+                            _persist_bridge = _PPBridge(
+                                persist_store=_persistent_profile_store,
+                                multi_store=_profile_store,
+                                dialog_summary_fn=_summary_provider,
+                                face_id_for_user_fn=None,  # 当前 face_id 退化为 user_id
+                            )
+                            # 让上面 _on_profile_switch 看见
+                            try:
+                                if "_persist_bridge_ref" in locals():
+                                    _persist_bridge_ref.clear()
+                                    _persist_bridge_ref.append(_persist_bridge)
+                            except Exception:  # noqa: BLE001
+                                pass
+                            # 启动 hydrate：回灌到 MultiProfileStore
+                            _n_hyd = _persist_bridge.hydrate_into_multi_store()
+                            print(
+                                f"[coco][profile_persist] enabled root={_pp_path} "
+                                f"hydrated={_n_hyd} profiles (via bridge)",
+                                flush=True,
+                            )
+                        except Exception as _be:  # noqa: BLE001
+                            print(
+                                f"[coco][profile_persist_bridge] init failed: "
+                                f"{type(_be).__name__}: {_be}",
+                                flush=True,
+                            )
+                            _persist_bridge = None
+                            # fallback：仍 hydrate 出来报数，不影响 PersistentProfileStore 可用
+                            _hydrated = _persistent_profile_store.hydrate_all()
+                            print(
+                                f"[coco][profile_persist] enabled root={_pp_path} "
+                                f"hydrated={len(_hydrated)} profiles (bridge disabled)",
+                                flush=True,
+                            )
+                    else:
+                        # 非 MultiProfileStore 路径：只做老的 hydrate 报数，不接 bridge
+                        _hydrated = _persistent_profile_store.hydrate_all()
+                        print(
+                            f"[coco][profile_persist] enabled root={_pp_path} "
+                            f"hydrated={len(_hydrated)} profiles (single-user mode)",
+                            flush=True,
+                        )
+                else:
+                    print("[coco][profile_persist] disabled (COCO_PROFILE_PERSIST not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][profile_persist] init failed: {type(e).__name__}: {e}", flush=True)
+                _persistent_profile_store = None
+                _persist_bridge = None
 
             # interact-008: 可选 IntentClassifier + ConversationStateMachine（默认 OFF）。
             # COCO_INTENT=1 启用：handle_audio 内做 intent 分类 + state 机；
@@ -1425,6 +1527,24 @@ class Coco(ReachyMiniApp):
                         delattr(_attention_selector, "_coco_profile_switcher")
             except Exception:  # noqa: BLE001
                 pass
+            # companion-008: 退出前 flush 一次当前 active profile（保最后状态落盘）
+            try:
+                _pb_final = locals().get("_persist_bridge")
+                if _pb_final is not None and _profile_store is not None:
+                    _active_uid = getattr(_profile_store, "active_user_id", None)
+                    if _active_uid:
+                        _flushed_pid = _pb_final.persist_for_user(_active_uid)
+                        print(
+                            f"[coco][profile_persist] final flush user={_active_uid!r} "
+                            f"pid={_flushed_pid}",
+                            flush=True,
+                        )
+            except Exception as _e:  # noqa: BLE001
+                print(
+                    f"[coco][profile_persist] final flush failed: "
+                    f"{type(_e).__name__}: {_e}",
+                    flush=True,
+                )
             # infra-003: 停 MetricsCollector
             try:
                 if "_metrics" in locals() and _metrics is not None:
