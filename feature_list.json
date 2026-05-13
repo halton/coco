@@ -1408,7 +1408,7 @@
       "area": "infra",
       "title": "自愈策略库 — SelfHealStrategy 注册表 + 指数退避（基于 infra-005）",
       "user_visible_behavior": "在 infra-005 HealthMonitor 之上抽出 SelfHealStrategy 注册表，统一指数退避 + jitter；新增 3 条策略：(a) audio 流卡死 → 重开 sounddevice stream (b) ASR 连续失败 → 切 fallback engine（与 interact-011 OfflineDialogFallback 协作）(c) 视觉源 read 连续 None → 重打开 CameraSource。每条策略 attempts/cap/cooldown 独立可配，giveup latch 后不再重 emit。default-OFF（COCO_SELFHEAL=1，与 COCO_HEALTH=1 协同），未启用时维持 infra-005 现有的 daemon-only 自愈。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "infra-005",
         "interact-011"

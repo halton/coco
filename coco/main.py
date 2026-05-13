@@ -1609,14 +1609,47 @@ class Coco(ReachyMiniApp):
             # infra-005: 可选 HealthMonitor（默认 OFF；COCO_HEALTH=1 启用）。
             # daemon 自愈：sim 模式 daemon 60s 无心跳自动重启 subprocess；真机仅告警。
             # 探针通过注入；默认实现走 pgrep `desktop-app-daemon` / `reachy_mini.daemon`。
+            # infra-007: 可选 SelfHealRegistry（默认 OFF；COCO_SELFHEAL=1 启用），
+            # 在 COCO_HEALTH=1 同时启用时挂到 HealthMonitor，degraded 边沿触发 dispatch。
             _health = None
+            _self_heal_registry = None
             try:
                 from coco.infra.health_monitor import (
                     build_health_monitor as _build_health,
                     health_enabled_from_env as _health_enabled,
                 )
+                from coco.infra.self_heal import (
+                    build_default_registry as _build_self_heal,
+                    selfheal_enabled_from_env as _selfheal_enabled,
+                    _default_is_real_machine as _self_heal_is_real,
+                )
+                if _selfheal_enabled():
+                    # real-machine 下绑真 reopen_fn；sim 下用占位 True
+                    _is_real = bool(_self_heal_is_real())
+                    if _is_real:
+                        # 真机 reopen_fn 由后续 wire 注入；当前阶段先用占位（保持 main.py 不依赖具体子系统）
+                        _audio_fn = lambda **kw: True
+                        _asr_fn = lambda **kw: True
+                        _cam_fn = lambda **kw: True
+                    else:
+                        _audio_fn = lambda **kw: True
+                        _asr_fn = lambda **kw: True
+                        _cam_fn = lambda **kw: True
+                    _self_heal_registry = _build_self_heal(
+                        audio_reopen_fn=_audio_fn,
+                        asr_restart_fn=_asr_fn,
+                        camera_reopen_fn=_cam_fn,
+                    )
+                    print(
+                        f"[coco][self_heal] enabled strategies={_self_heal_registry.list_strategies()} "
+                        f"real_machine={_is_real}",
+                        flush=True,
+                    )
+                else:
+                    print("[coco][self_heal] disabled (COCO_SELFHEAL not set)", flush=True)
+
                 if _health_enabled():
-                    _health = _build_health()
+                    _health = _build_health(self_heal_registry=_self_heal_registry)
                     _health.start(stop_event)
                     print(
                         f"[coco][health] enabled tick={_health.tick_s:.1f}s "
@@ -1627,9 +1660,18 @@ class Coco(ReachyMiniApp):
                     )
                 else:
                     print("[coco][health] disabled (COCO_HEALTH not set)", flush=True)
+                    if _self_heal_registry is not None:
+                        # L2-a: SELFHEAL 启用但 HEALTH 未启用 → 没有 dispatch sink，策略永远不会被触发
+                        print(
+                            "[coco][self_heal] WARN: self_heal enabled but health disabled — "
+                            "no dispatch sink; strategies will not be triggered. "
+                            "Set COCO_HEALTH=1 to enable health-driven self-heal dispatch.",
+                            flush=True,
+                        )
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][health] init failed: {type(e).__name__}: {e}", flush=True)
                 _health = None
+                _self_heal_registry = None
 
             # vision-004b-wire: 可选 MultiFaceAttention 接线（COCO_GREET_SECONDARY=1 启用，默认 OFF）。
             # 把 AttentionSelector / FaceTracker / ConvSM / Proactive 喂进状态机；

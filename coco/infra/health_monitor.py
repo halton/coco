@@ -177,6 +177,7 @@ class HealthMonitor:
         is_real_machine_fn: Optional[Callable[[], bool]] = None,
         emit_fn: Optional[Callable[..., None]] = None,
         now_fn: Optional[Callable[[], float]] = None,
+        self_heal_registry: Optional[Any] = None,
     ) -> None:
         # 参数 clamp，防呆
         self.tick_s = max(TICK_LO, min(TICK_HI, float(tick_s)))
@@ -194,6 +195,9 @@ class HealthMonitor:
         self._is_real_machine_fn = is_real_machine_fn or _default_is_real_machine
         self._emit = emit_fn or _safe_emit
         self._now = now_fn or time.time
+        # infra-007: 可选 SelfHealRegistry；degraded 边沿触发时 dispatch
+        # failure_kind。未注入时行为完全等同 infra-005（仅 daemon 占位重启）。
+        self._self_heal_registry = self_heal_registry
 
         # 状态
         self._components: Dict[str, _ComponentState] = {
@@ -395,6 +399,16 @@ class HealthMonitor:
             self.stats.degraded_emits += 1
         except Exception:  # noqa: BLE001
             self.stats.errors += 1
+        # infra-007: 边沿触发 SelfHealRegistry.dispatch
+        reg = self._self_heal_registry
+        if reg is not None:
+            failure_kind = _component_to_failure_kind(component, reason)
+            if failure_kind:
+                try:
+                    reg.dispatch(failure_kind, {"component": component, "reason": reason})
+                except Exception as e:  # noqa: BLE001
+                    log.debug("[health] self_heal dispatch failed: %r", e)
+                    self.stats.errors += 1
 
     def _mark_recovered(self, component: str) -> None:
         st = self._components.setdefault(component, _ComponentState())
@@ -598,6 +612,21 @@ def _safe_emit(component_event: str, **payload: Any) -> None:
         log.debug("[health] emit %s failed: %r", component_event, e)
 
 
+def _component_to_failure_kind(component: str, reason: str) -> Optional[str]:
+    """infra-007: HealthMonitor component+reason → SelfHealStrategy failure_kind.
+
+    没有匹配返回 None（不 dispatch）。daemon 类不走 SelfHealRegistry（仍由 infra-005
+    daemon restart 路径处理，避免双自愈互踩）。
+    """
+    if component == "sounddevice":
+        return "audio_stream_lost"
+    if component == "asr_latency":
+        return "asr_latency_high"
+    if component == "camera":
+        return "camera_dead"
+    return None
+
+
 # ---------------------------------------------------------------------------
 # 工厂
 # ---------------------------------------------------------------------------
@@ -612,6 +641,7 @@ def build_health_monitor(
     is_real_machine_fn: Optional[Callable[[], bool]] = None,
     emit_fn: Optional[Callable[..., None]] = None,
     now_fn: Optional[Callable[[], float]] = None,
+    self_heal_registry: Optional[Any] = None,
 ) -> HealthMonitor:
     """读 env 构造默认 HealthMonitor（不会自动 start）。"""
     return HealthMonitor(
@@ -624,6 +654,7 @@ def build_health_monitor(
         is_real_machine_fn=is_real_machine_fn or (lambda: _default_is_real_machine(env)),
         emit_fn=emit_fn,
         now_fn=now_fn,
+        self_heal_registry=self_heal_registry,
     )
 
 
