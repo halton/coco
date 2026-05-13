@@ -1199,7 +1199,7 @@
       "area": "infra",
       "title": "verify matrix CI — GitHub Actions 全量 verify 矩阵",
       "user_visible_behavior": "Push / PR 自动跑 ./init.sh smoke + 全部 scripts/verify_*.py（含历史 passing feature 与当前 in_progress feature），多 OS 矩阵（macOS / Linux），任何一个 verify 失败即红灯。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [],
       "verification": [
         ".github/workflows/verify-matrix.yml：os=[macos-latest, ubuntu-latest] × python=[3.13] 矩阵；checkout + setup-python + pip install -e . + 缓存；步骤包含 ./init.sh smoke 与 `python scripts/verify_*.py` 全量轮询；失败任一即 job 红灯。",

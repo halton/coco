@@ -5,6 +5,7 @@
 # 用法：
 #   ./init.sh              # 同步依赖 + 跑 audio smoke
 #   ./init.sh --daemon     # 额外验 mockup-sim daemon
+#   COCO_CI=1 ./init.sh    # CI 模式：跳过真麦克录音等真硬件子检查（infra-006）
 
 set -euo pipefail
 
@@ -12,6 +13,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
 echo "==> Repo: $PWD"
+if [ "${COCO_CI:-}" = "1" ]; then
+  echo "==> COCO_CI=1（CI 模式：跳过真麦克 / daemon 等真硬件子检查）"
+fi
 
 echo "==> uv sync"
 uv sync
