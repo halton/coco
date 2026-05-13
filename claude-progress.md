@@ -1268,3 +1268,20 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
     4. LLMCaptionBackend stub.caption() 抛 NotImplementedError 在当前路径永走不到，冗余可清
 - **closeout**：merge `feat/vision-006` → main（HEAD=f26c988，merge --no-ff）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
 - **phase-8 软件进度 1/3**，下一候选：**infra-006**（verify matrix CI — GitHub Actions 全量 verify 矩阵）。
+
+---
+
+## Session 2026-05-14 — infra-006 close-out（phase-8 软件 2/3）
+
+**feature**: infra-006「verify matrix CI — GitHub Actions 全量 verify 矩阵」
+
+- **范围**：`.github/workflows/verify-matrix.yml` 8 jobs（smoke / verify-vision / verify-interact / verify-companion / verify-audio / verify-robot / verify-infra / verify-publish）× os=[macos-latest, ubuntu-latest] × python=3.13；每个 verify-XXX job 调 `scripts/run_verify_all.py --area X --skip-list`，禁止 --filter，避免 phase-1 静默漏 26 个 verify 的盲点。
+- **覆盖**：磁盘 44 个 `verify_*.py`（不含 verify_infra_006 自身），CI 实跑 35 个（44 − 9 SKIP_LIST）。SKIP_LIST 9 条全部带 uat-* 跟踪：8 条 uat-phase4（真硬件麦克 / mockup-sim daemon 物理通路），1 条 uat-phase8（verify_publish 的 reachy_mini.apps.app check 临时 venv 远超 60s budget）。
+- **关键设计**：模块级常量 `EXCLUDED={verify_infra_006.py}` + `SKIP_LIST` 三元组（脚本名/原因/uat-跟踪），discover() 与 verify_infra_006.V5/V9 共用，CI 默认开 --skip-list 本地默认关。V9 强制每个 verify-XXX job 在 run 段调用 run_verify_all.py 且 --area 匹配 job 名（覆盖 phase-1 根因）。uv 安装统一改 `astral-sh/setup-uv@v3` with `enable-cache: true`（替换原 pipx + actions/cache 二段式）。on.push.branches 含 `feat/**`。
+- **review 经过（共 2 轮）**：
+  - round 1 Reviewer 报：L0-1 矩阵覆盖不全（per-area --filter 漏脚本）/ L0-2 verify-robot continue-on-error 掩盖失败 / L1-3..L1-6 uv 二段式 + per-area --filter + EXCLUDED 散落 / L2-7 feat/** 不触发 / L2-8 缺少 job-area 匹配自检
+  - rework：改 --area 全跑 + 集中 SKIP_LIST；去掉 continue-on-error；setup-uv@v3；EXCLUDED 模块常量共用；feat/** 触发；V9 卡 job-area 匹配
+  - round 2 LGTM — L0/L1 无；L2 备注 3 条非阻塞：(L2-A) verify-publish 当前 CI 跑 0 脚本（占位），未来 publish phase 真有静态 verify 时再释放 SKIP_LIST；(L2-B) on.push.branches feat/** + pull_request:[main] 仍可能 PR 双触发，未来省 CI 分钟时再调；(L2-C) EXCLUDED frozenset 当前一个元素，加新 verify_*_self_check 记得追加，建议 runner docstring 顶部加提醒
+- **verify**：verify_infra_006.py V1-V9 全 PASS (9/9)，evidence/infra-006/verify_infra_006_round2.txt。回归 `COCO_CI=1 ./init.sh` 11 项 smoke 全 PASS（evidence/infra-006/init_sh_COCO_CI=1.log）；verify_vision_006 10/10 / verify_infra_005 38/38 / verify_interact_011 V1-V10 全 PASS。
+- **closeout**：merge `feat/infra-006` → main（merge --no-ff，Reviewer round 2 LGTM 与 3 条 L2 备注全部写入 merge commit）；feature_list.json status → passing + Reviewer round 2 evidence；本日志同步追加。
+- **phase-8 软件进度 2/3**，下一候选：**robot-005**（robot-004 followup 收割 — L1+L2 残项整理：首帧无 ramp / antenna SAD≠NEUTRAL / pause-resume 嵌套计数 / history maxlen / play 隐式 stop 文档 / emit fallback import 微优化）。
