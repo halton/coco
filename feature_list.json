@@ -1110,7 +1110,7 @@
       "area": "infra",
       "title": "健康观测 + daemon 自愈",
       "user_visible_behavior": "Coco 运行时持续观测核心子系统健康（daemon Zenoh 心跳 / sounddevice 流活跃 / ASR / LLM p50/p95 延迟 / 主线程 watchdog），出现 degraded 时 banner WARN + emit 事件；sim 场景 daemon 60s 无心跳自动重启 subprocess（cooldown 30s + max retry 防放大故障），真机仅告警不重启。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-002",
         "infra-003",
@@ -1125,8 +1125,13 @@
         "scripts/verify_infra_005.py：V1 default OFF；V2 sim daemon 模拟 60s 无心跳 → restart 被触发 + cooldown 期内不重复触发；V3 ASR p95 超阈值 → emit degrade；恢复 → emit recover；V4 主线程 watchdog 卡 6s（模拟）→ emit degrade；V5 真机 mode（COCO_REAL_MACHINE=1）→ daemon 无心跳只 emit 不 restart；V6 max retry=3 后停止重启 + emit giveup；V7 stop() 清理 ring buffer + tick task；V8 ring buffer 上限断言（写入 300 条后只剩 200）；V9 回归 infra-002/003/004 verify。",
         "Reviewer fresh-context 评审：restart 是否会与外层 Control.app 自带 daemon supervisor 打架、cooldown / retry 数学是否合理、watchdog 自身卡死的兜底、metrics 写入对延迟敏感路径的开销、健康事件风暴防抖。"
       ],
-      "evidence": [],
-      "notes": "sim-first：用 fake daemon subprocess + 注入心跳静默来验 restart；真机 restart 风险高（与 Control.app supervisor 冲突），默认仅告警。"
+      "evidence": [
+        "verify_infra_005.py V1-V12 38/0 PASS（main HEAD merge commit）。",
+        "回归 PASS：smoke / infra-002 / infra-003 / infra-004 / robot-003 / robot-004 / companion-005 / companion-006 / companion-007 / companion-008 / interact-009 / interact-010。",
+        "手测：cooldown+max retry latch (attempts=1→2→3→giveup@T+105s，giveup 后不重 emit)；真机模式 COCO_REAL_MACHINE=1 degraded emit 但 restart 计数=0；ring buffer 写入 201 条后仍只剩 200，p95 反映新值；watchdog 真线程 sleep 5s 阻塞 → emit health.tick_lag。",
+        "Reviewer (sub-agent, fresh-context): LGTM；L2 followup：watchdog 自身 hang 无 external supervisor 兜底；pgrep 慢路径阻塞 tick；_daemon_child 只保存最后一个 Popen 句柄；tick_lag 不走 latch；giveup emit 受 cooldown 顺序影响。"
+      ],
+      "notes": "sim-first：用 fake daemon subprocess + 注入心跳静默来验 restart；真机 restart 风险高（与 Control.app supervisor 冲突），默认仅告警。closeout Session: main HEAD=346215b (merge --no-ff feat/infra-005)。"
     },
     {
       "id": "interact-011",

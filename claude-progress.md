@@ -1191,3 +1191,27 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **companion-006 L1-3 闭环**：sha1(face_id+nickname_normalized)[:12] 实现了跨进程稳定 profile_id（V5 PASS）
 - **push**：commit 后 `git push origin main` 一次（按 sim-first push 策略，失败忽略）
 - **下一 candidate**：infra-005 (priority=38, 健康观测 + daemon 自愈)
+
+## Session 2026-05-13 — infra-005 closeout
+
+- **HEAD（main）**：merge commit `346215b` (`Merge branch 'feat/infra-005' into main`)；feature commit on `feat/infra-005`：`f71f15a` (HealthMonitor 多源观测 + daemon 自愈)
+- **关键改动**：
+  - `coco/infra/health_monitor.py` 新增 HealthMonitor（5s tick 异步循环）+ 5 类探针：(a) daemon Zenoh 心跳 telemetry ts < 60s (b) sounddevice 输入/输出流 is_active (c) ASR/LLM p50/p95 ring buffer 聚合最近 200 条 metrics (d) 主线程 watchdog 自 mark + tick_lag 检测 (e) sim 模式 daemon 60s 无心跳 → subprocess restart（cooldown 30s + max retry=3 + giveup latch）
+  - `coco/infra/__init__.py` 导出 HealthMonitor
+  - `coco/main.py` wire — COCO_HEALTH=1（默认 OFF）+ COCO_REAL_MACHINE 区分 sim/真机（真机仅 emit 不 restart）
+  - `coco/logging_setup.py` 接入 health.* 事件 banner WARN
+  - `scripts/verify_infra_005.py` V1-V12 38/0 PASS
+- **Reviewer (sub-agent, fresh-context)**：**LGTM**；L2 followup（不阻 merge）：
+  1. watchdog 自身 hang 无 external supervisor 兜底
+  2. pgrep 慢路径阻塞 tick（同步 subprocess 调用在 5s tick 上）
+  3. `_daemon_child` 只保存最后一个 Popen 句柄（多次 restart 旧句柄丢失）
+  4. tick_lag 事件不走 latch（可能短时间内重复 emit）
+  5. giveup emit 受 cooldown 顺序影响（边界情况）
+- **手测**：
+  - cooldown+max retry latch：attempts=1→2→3→giveup@T+105s，giveup 后不再重 emit
+  - 真机模式 COCO_REAL_MACHINE=1：daemon degraded emit 但 restart 计数=0
+  - ring buffer 上限：写入 201 条后仍只剩 200，p95 反映新值
+  - watchdog 真线程：sleep 5s 阻塞 → 触发 emit health.tick_lag
+- **回归 PASS**：./init.sh smoke / infra-002 / infra-003 / infra-004 / robot-003 / robot-004 / companion-005 / companion-006 / companion-007 / companion-008 / interact-009 / interact-010
+- **push**：commit 后 `git push origin main` 一次失败（GitHub HTTPS 连接超时），按 sim-first push 策略忽略继续
+- **下一 candidate**：interact-011 (priority=39, 离线降级回路 LLM 失败 fallback)（phase-7 最后一个 software feature）
