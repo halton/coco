@@ -322,6 +322,11 @@ class PersistentProfileStore:
             target = target_dir / f"{profile_id}.json.bak"
             # 多次 corrupt：覆盖同名 bak（最新错误优先）
             shutil.move(str(src), str(target))
+            # L1: quarantine 后限制权限（与正常 profile 同 0o600）
+            try:
+                os.chmod(str(target), 0o600)
+            except Exception:  # noqa: BLE001
+                pass
         except Exception as e:  # noqa: BLE001
             log.warning("[profile_persist] quarantine corrupt %s failed: %s: %s — leaving in place",
                         src, type(e).__name__, e)

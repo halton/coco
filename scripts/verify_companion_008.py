@@ -111,12 +111,136 @@ def v1_default_off(_tmp: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# V2 create + persist
+# V2 (end-to-end) bridge persist：模拟 ProfileSwitcher.observe → bridge.on_switch
+# → 实际文件落盘 <HOME>/.coco/profiles/<sha1>.json（HOME=tempdir）
 # ---------------------------------------------------------------------------
 
 
-def v2_create_persist(tmp: Path) -> None:
-    name = "V2_create_persist"
+def v2_endtoend_bridge_persist(tmp: Path) -> None:
+    name = "V2_endtoend_bridge_persist"
+    try:
+        from coco.companion.profile_switcher import MultiProfileStore
+        from coco.companion.profile_persist_bridge import ProfilePersistBridge
+
+        # 用 HOME=tmp 走真实路径计算
+        old_home = os.environ.get("HOME")
+        os.environ["HOME"] = str(tmp)
+        try:
+            pp_root = default_persist_root()
+            assert str(pp_root).startswith(str(tmp)), f"persist root 应在 tmp 下: {pp_root}"
+            pp_root.mkdir(parents=True, exist_ok=True)
+
+            multi_root = tmp / "multi"
+            multi_root.mkdir(parents=True, exist_ok=True)
+            multi = MultiProfileStore(root=multi_root)
+            store = PersistentProfileStore(root=pp_root)
+            bridge = ProfilePersistBridge(
+                persist_store=store,
+                multi_store=multi,
+                dialog_summary_fn=lambda: "alice 喜欢音乐和画画",
+            )
+
+            # 模拟 ProfileSwitcher.observe：切到 alice 用户、add interests
+            multi.set_active_user("alice")
+            multi.set_name("Alice")
+            multi.add_interest("音乐")
+            multi.add_interest("画画")
+            multi.add_goal("学钢琴")
+
+            # 模拟 switch out：bridge.on_switch(prev='alice', curr=None)
+            bridge.on_switch("alice", None)
+
+            # 验：文件确实落盘
+            face_id = "alice"  # face_id_for_user_fn=None 时退化为 user_id
+            pid = compute_profile_id(face_id, "Alice")
+            disk_path = pp_root / f"{pid}.json"
+            assert disk_path.exists(), f"端到端落盘失败: {disk_path}; 现有: {list(pp_root.iterdir())}"
+            on_disk = json.loads(disk_path.read_text(encoding="utf-8"))
+            assert on_disk["nickname"] == "Alice"
+            assert "音乐" in on_disk["interests"], f"interests 漏: {on_disk['interests']}"
+            assert "画画" in on_disk["interests"]
+            assert "学钢琴" in on_disk["goals"]
+            # dialog_summary 也被拷贝
+            assert any("音乐" in s for s in on_disk.get("dialog_summary", [])), \
+                f"dialog_summary 漏: {on_disk.get('dialog_summary')}"
+            _ok(name, f"pid={pid} path={disk_path.name}")
+        finally:
+            if old_home is None:
+                os.environ.pop("HOME", None)
+            else:
+                os.environ["HOME"] = old_home
+    except Exception as e:
+        _bad(name, f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+
+
+# ---------------------------------------------------------------------------
+# V3 (end-to-end) bridge hydrate：第二次启动 → hydrate → MultiProfileStore.load()
+# 读到的 UserProfile.interests 含上次写入项
+# ---------------------------------------------------------------------------
+
+
+def v3_endtoend_bridge_hydrate(tmp: Path) -> None:
+    name = "V3_endtoend_bridge_hydrate"
+    try:
+        from coco.companion.profile_switcher import MultiProfileStore
+        from coco.companion.profile_persist_bridge import ProfilePersistBridge
+
+        old_home = os.environ.get("HOME")
+        os.environ["HOME"] = str(tmp)
+        try:
+            pp_root = default_persist_root()
+            pp_root.mkdir(parents=True, exist_ok=True)
+
+            # —— Session 1：写入 alice profile 到磁盘 ——
+            multi_root_1 = tmp / "multi1"
+            multi_root_1.mkdir(parents=True, exist_ok=True)
+            multi1 = MultiProfileStore(root=multi_root_1)
+            store1 = PersistentProfileStore(root=pp_root)
+            bridge1 = ProfilePersistBridge(
+                persist_store=store1, multi_store=multi1,
+            )
+            multi1.set_active_user("alice")
+            multi1.set_name("Alice")
+            multi1.add_interest("音乐")
+            multi1.add_interest("画画")
+            bridge1.on_switch("alice", None)
+            del bridge1, store1, multi1  # 模拟进程退出
+
+            # —— Session 2：新进程 → hydrate → 回灌 ——
+            multi_root_2 = tmp / "multi2"
+            multi_root_2.mkdir(parents=True, exist_ok=True)
+            multi2 = MultiProfileStore(root=multi_root_2)
+            store2 = PersistentProfileStore(root=pp_root)
+            bridge2 = ProfilePersistBridge(
+                persist_store=store2, multi_store=multi2,
+            )
+            n_hyd = bridge2.hydrate_into_multi_store()
+            assert n_hyd >= 1, f"hydrate 数应 >=1: {n_hyd}"
+
+            # 第二次启动后 MultiProfileStore.load() 应能读到 Alice 的 interests
+            multi2.set_active_user("Alice")  # bridge 用 nickname 作 active_user
+            up = multi2.load()
+            assert up.name == "Alice", f"name 漏: {up.name}"
+            assert "音乐" in (up.interests or []), \
+                f"hydrate 后 interests 漏: {up.interests}"
+            assert "画画" in (up.interests or [])
+            _ok(name, f"hydrated={n_hyd} interests={up.interests}")
+        finally:
+            if old_home is None:
+                os.environ.pop("HOME", None)
+            else:
+                os.environ["HOME"] = old_home
+    except Exception as e:
+        _bad(name, f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+
+
+# ---------------------------------------------------------------------------
+# V2a (unit) create + persist —— 原 V2，保留作为 PersistentProfileStore 单元层
+# ---------------------------------------------------------------------------
+
+
+def v2a_create_persist(tmp: Path) -> None:
+    name = "V2a_create_persist_unit"
     try:
         cap = _EmitCapture()
         store = _new_store(tmp, cap)
@@ -149,12 +273,12 @@ def v2_create_persist(tmp: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3 hydrate
+# V3a (unit) hydrate —— 原 V3，保留作为 PersistentProfileStore 单元层
 # ---------------------------------------------------------------------------
 
 
-def v3_hydrate(tmp: Path) -> None:
-    name = "V3_hydrate"
+def v3a_hydrate(tmp: Path) -> None:
+    name = "V3a_hydrate_unit"
     try:
         store1 = _new_store(tmp)
         pid = compute_profile_id("face_alice", "Alice")
@@ -604,8 +728,10 @@ def main() -> int:
 
     cases = [
         v1_default_off,
-        v2_create_persist,
-        v3_hydrate,
+        v2_endtoend_bridge_persist,
+        v3_endtoend_bridge_hydrate,
+        v2a_create_persist,
+        v3a_hydrate,
         v4_nickname_change_merge,
         v5_cross_process_stable,
         v6_atomic_concurrent,
