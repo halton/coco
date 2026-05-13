@@ -1623,22 +1623,43 @@ class Coco(ReachyMiniApp):
                     selfheal_enabled_from_env as _selfheal_enabled,
                     _default_is_real_machine as _self_heal_is_real,
                 )
+                from coco.infra.self_heal_wire import (
+                    selfheal_wire_enabled_from_env as _selfheal_wire_enabled,
+                    build_real_reopen_callbacks as _build_wire_callbacks,
+                )
                 if _selfheal_enabled():
-                    # real-machine 下绑真 reopen_fn；sim 下用占位 True。
-                    # infra-009 / infra-007 L1-a：真机 reopen_fn 实接（重开 USB 麦克 /
-                    # 重启 ASR 进程 / 重开 USB 相机）涉及具体子系统句柄 + 错误恢复路径，
-                    # 显式 **defer 到 infra-010**（real-machine wire-through 专项）。
-                    # 当前阶段保留占位 lambda True，仅在 sim 下走 dry-run 验抑流 + emit；
-                    # 真机模式下也用同一占位，不会触发真硬件副作用（占位返回 True
-                    # 等价于 "假装 reopen 成功"，避免误以为 self_heal 在真机已生效）。
                     _is_real = bool(_self_heal_is_real())
-                    if _is_real:
-                        # TODO(infra-010): 真机 reopen_fn 接 USB audio re-init / ASR
-                        # restart / CameraSource.reopen()；目前占位
-                        _audio_fn = lambda **kw: True
-                        _asr_fn = lambda **kw: True
-                        _cam_fn = lambda **kw: True
+                    _wire_on = bool(_selfheal_wire_enabled())
+                    if _wire_on:
+                        # infra-010: 真实接线工厂；audio/asr/camera handle 当前在 main.py
+                        # 作用域内仍未全部 surface（audio 子系统是 sounddevice 直连无统一
+                        # handle；ASR 在 InteractSession 内部）。这里传当前已有的引用：
+                        # - audio_handle: None（caveat — 未来 audio-driver 接 surface 时填）
+                        # - asr_handle: None（同上）
+                        # - offline_fallback: 后续 InteractSession 构造时 register；这里
+                        #   先 None，回调走 stub
+                        # - camera_handle_ref: 未持久 ref（face_tracker 内部管理），传 None
+                        # 因此当前 wire ON 的回调路径基本走 stub + WARN 一次，但调用链路
+                        # 已经真实存在；future-feature 可逐项把 handle 填进来。
+                        _wire = _build_wire_callbacks(
+                            audio_handle=None,
+                            asr_handle=None,
+                            camera_handle_ref=None,
+                            camera_spec=os.environ.get("COCO_CAMERA"),
+                            offline_fallback=None,
+                        )
+                        _audio_fn = _wire.audio
+                        _asr_fn = _wire.asr
+                        _cam_fn = _wire.camera
                     else:
+                        # OFF: 占位 lambda + 一次性 WARN（消化 infra-009 L1-1 caveat）
+                        print(
+                            "[coco][self_heal] WARN: COCO_SELFHEAL_WIRE not set — "
+                            "reopen_fn are placeholder lambdas returning True. "
+                            "Set COCO_SELFHEAL_WIRE=1 to enable infra-010 real wiring "
+                            "(audio/asr/camera reopen callbacks).",
+                            flush=True,
+                        )
                         _audio_fn = lambda **kw: True
                         _asr_fn = lambda **kw: True
                         _cam_fn = lambda **kw: True
@@ -1649,7 +1670,7 @@ class Coco(ReachyMiniApp):
                     )
                     print(
                         f"[coco][self_heal] enabled strategies={_self_heal_registry.list_strategies()} "
-                        f"real_machine={_is_real}",
+                        f"real_machine={_is_real} wire={_wire_on}",
                         flush=True,
                     )
                 else:
