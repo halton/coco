@@ -63,6 +63,8 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "metrics",
     "vision",
     "scene_caption",
+    "multimodal_fusion",
+    "proactive",
     "companion",
     "robot",
     "startup",
