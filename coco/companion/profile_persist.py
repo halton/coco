@@ -152,6 +152,10 @@ class PersistedProfile:
     # （COCO_EMO_MEMORY）；空列表视为"未告警过"。向后兼容：旧文件无该字段
     # 时 from_dict 自动补 []，schema_version 不变。
     emotion_alerts: List[Dict[str, Any]] = field(default_factory=list)
+    # companion-011: group_mode 跨会话历史 [{ts, reason, members}]。default-OFF
+    # （COCO_MULTI_USER + COCO_GROUP_MODE）；空列表视为"未进过 group_mode"。
+    # 向后兼容：旧文件无该字段时 from_dict 自动补 []，schema_version 不变。
+    group_sessions: List[Dict[str, Any]] = field(default_factory=list)
     schema_version: int = SCHEMA_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
@@ -163,6 +167,9 @@ class PersistedProfile:
         # companion-010: 同上，emotion_alerts 空列表不落盘
         if not self.emotion_alerts:
             d.pop("emotion_alerts", None)
+        # companion-011: 同上，group_sessions 空列表不落盘
+        if not self.group_sessions:
+            d.pop("group_sessions", None)
         return d
 
     @classmethod
@@ -198,6 +205,26 @@ class PersistedProfile:
                     })
                 except (TypeError, ValueError):
                     continue
+        # companion-011: 兼容旧文件——group_sessions 缺失或非 list 视为 []
+        gs_raw = d.get("group_sessions") or []
+        gs: List[Dict[str, Any]] = []
+        if isinstance(gs_raw, list):
+            for item in gs_raw:
+                if not isinstance(item, dict):
+                    continue
+                ts = item.get("ts")
+                reason = item.get("reason")
+                members = item.get("members") or []
+                if not isinstance(members, list):
+                    continue
+                try:
+                    gs.append({
+                        "ts": float(ts) if ts is not None else 0.0,
+                        "reason": str(reason or ""),
+                        "members": [str(m) for m in members if m],
+                    })
+                except (TypeError, ValueError):
+                    continue
         return cls(
             profile_id=str(d.get("profile_id") or ""),
             nickname=(d.get("nickname") or None),
@@ -208,6 +235,7 @@ class PersistedProfile:
             dialog_summary=[str(s) for s in (d.get("dialog_summary") or [])],
             prefer_topics=pt,
             emotion_alerts=ea,
+            group_sessions=gs,
             schema_version=int(d.get("schema_version") or 0),
         )
 
