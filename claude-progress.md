@@ -1403,3 +1403,18 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
   - CameraReopenStrategy.reopen_fn — 由 vision 子系统 feature（`coco.perception.open_camera()` 句柄 close+reopen）落地；
   - ASRFallbackStrategy — 与 interact-011 OfflineDialogFallback 状态机接线时同步落地。
 - **phase-9 软件进度 4/5 完成**（剩 infra-008）。下一候选：**infra-008 pre-commit hook + verify 影响面分析**（priority 54，依赖 infra-006，sim-first 友好；本地 staged 文件 → import 反向图 → 仅跑相关 verify 子集 + GitHub Actions paths-filter 建议片段）。
+
+
+## Session 2026-05-14 — infra-008 closeout（phase-9 软件 5/5 完成）
+
+- **目标**：pre-commit hook + verify 影响面分析 — 本地 staged 文件 → 简易 import 反向图 → 命中 `scripts/verify_<area>_*.py` 子集；可选 `--run`；可选输出 GitHub Actions paths-filter YAML 片段供 infra-006 矩阵 PR 时参考。default-OFF via `COCO_PRECOMMIT_HOOK=1`（且 hook 安装本身亦为 opt-in，`bash scripts/install_pre_commit.sh`）。
+- **结果**：infra-008 → **passing**。`scripts/verify_infra_008.py` V1-V10（含 V6b）全 PASS。
+- **实现**：
+  - `scripts/precommit_impact.py`：CLI `--staged|--files` + `--list|--run|--paths-filter` + `--strict` + `--max` + `--no-skip-list`；映射规则：`coco/<area>/X.py` → area verify、`scripts/verify_*.py` 改动 → 自身、`coco/main.py` / `coco/__init__.py` / `coco/__main__.py` → 全量 hot-path、其它无法定位文件默认 fallback 全量（`--strict` 关闭 fallback 返回空集）；import 反向图静态扫 `from coco.<mod> import` / `import coco.<mod>` 不解析动态/条件 import；复用 `run_verify_all` 的 `EXCLUDED` / `SKIP_NAMES` / `classify` / `discover` / `run_one`。
+  - `scripts/pre-commit-hook.sh`：模板，default-OFF（未设 `COCO_PRECOMMIT_HOOK=1` 直接 exit 0）；启用后调 `precommit_impact.py --staged --run --max 10`；提供 `COCO_PRECOMMIT_SKIP=1` 与 `git commit --no-verify` 两条 bypass 通道。
+  - `scripts/install_pre_commit.sh`：opt-in 安装入口（`bash scripts/install_pre_commit.sh`）；已有 `pre-commit` 自动备份为 `.bak.<ts>`，cp + chmod +x。
+  - `evidence/infra-008/paths-filter.yml`：自动生成的 GitHub Actions paths-filter 建议片段（7 area），供 infra-006 verify-matrix PR 时参考接入，不强制接。
+- **回归 PASS**：`COCO_CI=1 ./init.sh` PASS；`verify_infra_005` PASS=38/38；`verify_infra_006` PASS=9/9；`verify_infra_007` PASS=56/56。共用 `EXCLUDED`/`SKIP_NAMES` 与 infra-006 无冲突。
+- **Reviewer (sub-agent, fresh-context)**：pending（主会话将派 Reviewer，feature_list.json evidence.reviewer=pending）。
+- **closeout**：feat/infra-008 分支已建 + commit + push；merge 回 main 由主会话/Reviewer 通过后执行。
+- **phase-9 软件 5/5 完成**。后续：异步真机 UAT（`uat-*` 项）；phase-10 候选规划。
