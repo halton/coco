@@ -1,7 +1,7 @@
 {
   "project": "coco-reachy-mini",
   "last_updated": "2026-05-14",
-  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。 2026-05-13: robot-004 → passing（V1-V17 全 PASS + Reviewer 一轮 LGTM；L1+L2 followup 不阻 merge）；phase-6 全部 7 项收尾完成（vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004），下一步 uat-phase4 milestone gate（真机），按 sim-first 原则非阻塞。 2026-05-13: +phase-7 候选 5 个 (interact-010 gesture-driven dialog / companion-007 emotion prosody / companion-008 cross-session profile persist / infra-005 health monitor + daemon self-heal / interact-011 offline fallback default-OFF), priority 35-39；+phase-8 backlog 3 项 (vision-006 看图说话 / infra-006 verify matrix CI / robot-005 robot-004 followup)，priority hint 40-42 status=backlog。interact-011 对原 planner 默认 ON 做保守降级改为 default OFF，等 phase-8 验证后再考虑提升。 2026-05-13: interact-011 → passing（V1-V10 全 PASS + Reviewer LGTM；L2 备注 3 条非阻塞：实现路径/probe_interval_s/skipped_paused 动态 setattr）；phase-7 软件 feature 5/5 全部完成（interact-010 / companion-007 / companion-008 / infra-005 / interact-011），下一步 uat-phase4 异步真机 UAT 或 phase-8 规划（BACKLOG 中 vision-006 / infra-006 / robot-005 提升）。 2026-05-13: phase-8 启动；vision-006 → passing（V1-V10 全 PASS + Reviewer LGTM；4 条 L2 非阻塞：_prev_frame 未 copy / 'scene_caption' 短名未实际 emit / V6 未端到端 / LLMBackend stub 冗余）；phase-8 软件进度 1/3，剩 infra-006 / robot-005。 2026-05-14: infra-006 → passing（V1-V9 全 PASS + Reviewer 2 轮 LGTM；round 1 报 L0-1/L0-2 + L1-3..L1-6 + L2-7/L2-8 → rework round 2 LGTM；3 条 L2 非阻塞：verify-publish 占位 / PR feat-branch 双触发 / EXCLUDED 加新自检脚本提醒）；8 jobs CI 实跑 35/44，SKIP_LIST 9 条 uat-* 跟踪。phase-8 软件进度 2/3（剩 robot-005）。 2026-05-14: robot-005 → passing（V1-V8 全 PASS + Reviewer 一轮 LGTM；3 条 L2 非阻塞：V6 文案 Reviewer 自撤回 / resume() 多余调用 log.debug / emit fallback None 吞事件）；phase-8 软件 3/3 全部完成（vision-006 / infra-006 / robot-005），下一步 phase-9 规划 或 uat-phase4 / uat-phase8 异步真机 UAT。",
+  "_change_log": "2026-05-09: +infra-vision-source（CameraSource 抽象 + fixture 三档），依据 research/sim-vs-real-gaps.md。 2026-05-10: +phase-2 backlog 5 个 feature (interact-002 / vision-001 / companion-002 / interact-003 / infra-publish-flow), priority 9-13, dependencies 字段进入 schema。 2026-05-10: +phase-3 candidate 5 个 (interact-004 multi-turn / interact-005 wake-word / companion-003 power-idle / vision-002 face-tracking / infra-debt-sweep), priority 14-18。 2026-05-10: phase-3 软件层全 passing；+phase-4 candidate 5 个 (infra-002 config-center / interact-006 emotion / companion-004 user-profile / vision-003 face-id / interact-007 proactive-topic), priority 19-23。phase-4 全部 sim/fixture 可验，真机 UAT 留 phase-4 末 milestone gate（一次性 gate，不在 feature 内部停）。 2026-05-11: interact-006 → passing (closeout Session 031)；L1-1 glance_prob 缩放 + L1-2 半衰期术语修复。phase-4 进度 2/5 (infra-002 / interact-006)。 2026-05-11: phase-5 全部 passing (infra-003 / interact-008 / vision-004 / companion-005 / robot-003)；vision-004 拆出 vision-004b (greet_secondary 状态机) 留 phase-6 起点。 2026-05-11: +phase-6 候选 5 个 (infra-004 config schema+rotate / interact-009 history-compact / vision-005 gestures / companion-006 profile-switch / robot-004 posture-baseline)，priority 30-34；phase-6 起点为已有的 vision-004b (26.5)。全部 sim-first，真机统一并入 uat-phase4 milestone gate。 2026-05-11: vision-004b → passing（V1-V12 全 PASS + Reviewer LGTM；L2 修了 docstring/utterance-rstrip/_is_eligible_secondary helper；L3 known-debt 记于 notes）；+vision-004b-wire (priority=26.6) 跟踪 main.py 接线 + 真视频 fixture + primary 闪烁 race 验证。 2026-05-13: robot-004 → passing（V1-V17 全 PASS + Reviewer 一轮 LGTM；L1+L2 followup 不阻 merge）；phase-6 全部 7 项收尾完成（vision-004b / vision-004b-wire / infra-004 / interact-009 / vision-005 / companion-006 / robot-004），下一步 uat-phase4 milestone gate（真机），按 sim-first 原则非阻塞。 2026-05-13: +phase-7 候选 5 个 (interact-010 gesture-driven dialog / companion-007 emotion prosody / companion-008 cross-session profile persist / infra-005 health monitor + daemon self-heal / interact-011 offline fallback default-OFF), priority 35-39；+phase-8 backlog 3 项 (vision-006 看图说话 / infra-006 verify matrix CI / robot-005 robot-004 followup)，priority hint 40-42 status=backlog。interact-011 对原 planner 默认 ON 做保守降级改为 default OFF，等 phase-8 验证后再考虑提升。 2026-05-13: interact-011 → passing（V1-V10 全 PASS + Reviewer LGTM；L2 备注 3 条非阻塞：实现路径/probe_interval_s/skipped_paused 动态 setattr）；phase-7 软件 feature 5/5 全部完成（interact-010 / companion-007 / companion-008 / infra-005 / interact-011），下一步 uat-phase4 异步真机 UAT 或 phase-8 规划（BACKLOG 中 vision-006 / infra-006 / robot-005 提升）。 2026-05-13: phase-8 启动；vision-006 → passing（V1-V10 全 PASS + Reviewer LGTM；4 条 L2 非阻塞：_prev_frame 未 copy / 'scene_caption' 短名未实际 emit / V6 未端到端 / LLMBackend stub 冗余）；phase-8 软件进度 1/3，剩 infra-006 / robot-005。 2026-05-14: infra-006 → passing（V1-V9 全 PASS + Reviewer 2 轮 LGTM；round 1 报 L0-1/L0-2 + L1-3..L1-6 + L2-7/L2-8 → rework round 2 LGTM；3 条 L2 非阻塞：verify-publish 占位 / PR feat-branch 双触发 / EXCLUDED 加新自检脚本提醒）；8 jobs CI 实跑 35/44，SKIP_LIST 9 条 uat-* 跟踪。phase-8 软件进度 2/3（剩 robot-005）。 2026-05-14: robot-005 → passing（V1-V8 全 PASS + Reviewer 一轮 LGTM；3 条 L2 非阻塞：V6 文案 Reviewer 自撤回 / resume() 多余调用 log.debug / emit fallback None 吞事件）；phase-8 软件 3/3 全部完成（vision-006 / infra-006 / robot-005），下一步 phase-9 规划 或 uat-phase4 / uat-phase8 异步真机 UAT。 2026-05-14: phase-9 启动 — 入库 5 候选（vision-007 多模态融合 prio 50 / companion-009 偏好学习 prio 51 / companion-010 情绪记忆 prio 52 / infra-007 自愈策略库 prio 53 / infra-008 pre-commit 影响面 prio 54），按 sim-first 推进；启动第一个 vision-007（in_progress），主分支直接 commit。",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -18,7 +18,7 @@
     "blocked": "因为已记录的阻塞问题，当前无法继续推进。",
     "passing": "要求的验证已经通过，证据已经记录，且经过一次 Reviewer sub-agent fresh-context 评审（evidence 格式见 AGENTS.md 角色段）。"
   },
-  "milestone": "phase-8 看图说话 + CI 矩阵 + robot 收割",
+  "milestone": "phase-9 多模态融合 + 偏好学习 + 情绪记忆 + 自愈策略 + 本地影响面",
   "features": [
     {
       "id": "infra-001",
@@ -1272,6 +1272,118 @@
       ],
       "evidence": [],
       "notes": "异步项，不阻 phase-5 软件推进；用户在方便时执行；可拆成多次 session。Reviewer 不强制（真机操作本身就是 fresh evidence）。"
+    },
+    {
+      "id": "vision-007",
+      "phase": 9,
+      "priority": 50,
+      "area": "vision-companion",
+      "title": "多模态主动话题融合 — scene_caption × ASR partial × proactive",
+      "user_visible_behavior": "Coco 同时听到/看到时会更自然地主动开口：当摄像头描述出现『暗/夜』且最近 N 秒无 ASR 活动 → 主动建议『要不要开灯？』；当 caption 出现『移动』且最近一句 ASR 含问候/呼名 → 增强 ProactiveScheduler 触发优先级。default-OFF（COCO_MM_PROACTIVE=1），与 vision-006 scene_caption / interact-009 dialog_summary / proactive 互相独立、共存不干扰；未启用时多模态融合路径完全不感知。",
+      "status": "in_progress",
+      "dependencies": [
+        "vision-006",
+        "interact-009",
+        "vision-005"
+      ],
+      "default_off_env": "COCO_MM_PROACTIVE",
+      "verification": [
+        "coco/proactive/multimodal_fusion.py：MultiModalFusionRule 数据类（trigger_kind ∈ {dark_silence, motion_greet} / cooldown_s / priority_boost / topic_template）；MultiModalProactiveBridge 订阅 vision.scene_caption 与 dialog/ASR partial 事件，按规则合成『增强 trigger』转给 ProactiveScheduler。",
+        "main.py 接线：default-OFF via COCO_MM_PROACTIVE=1；仅在 vision-006 SceneCaptionEmitter 启用且 ProactiveScheduler 启用时构造 bridge；未启用时 import 也不发生（lazy import）。",
+        "scripts/verify_vision_007.py V1-V10：V1 dark_silence 规则—— 喂含『暗』caption + 喂 N+1 秒无 ASR partial → bridge emit dark_silence trigger 一次；V2 motion_greet 规则—— 喂含『移动』caption + 最近 ASR partial 含『你好/可可』→ bridge emit motion_greet trigger 一次；V3 cooldown 生效（同 trigger_kind 窗口内不重复）；V4 priority_boost 真的进 ProactiveScheduler 队列；V5 caption 启用但 ASR/dialog 关闭 → bridge 不抛、no-op；V6 COCO_MM_PROACTIVE=0/未设 → bridge 不构造（main 不引用），AUTHORITATIVE 不感知；V7 COCO_MM_PROACTIVE=1 才注入；V8 fixture 序列（caption 序列 + ASR partial 序列，mock clock）端到端跑 1 分钟 → 计数 dark_silence/motion_greet 命中数符合预期；V9 与 vision-006 caption_proactive / vision-005 gesture / interact-011 offline_fallback 共存不互相干扰；V10 stop+join(timeout=2) 干净退出。",
+        "Reviewer fresh-context 评审：caption 文本匹配的稳定性（『暗/夜』『移动』关键词 vs 启发式描述变体）；ASR partial 事件源在不同后端（fake/local）下的事件名稳定；trigger merge 后 ProactiveScheduler 仍保持单一调度入口（不要旁路）；与 interact-011 offline_fallback 静默期的协作（fallback 期 bridge 应跟着静默）；emit fail-soft；fixture 时钟假设（monotonic vs wall clock）。"
+      ],
+      "notes": "phase-9 第一发，sim-first；用程序合成 caption 文本 + ASR partial fixture 验证；真机多模态体感归 uat-phase9 异步项。priority 50。"
+    },
+    {
+      "id": "companion-009",
+      "phase": 9,
+      "priority": 51,
+      "area": "companion",
+      "title": "偏好学习 — dialog_summary/dialog_memory → prefer_topics 写入 ProfilePersist",
+      "user_visible_behavior": "Coco 跨会话『记住』用户偏好话题：从 dialog_summary（companion-005）与 dialog_memory 提取 TopK 关键词（频次 + 时间衰减），写入 PersistentProfileStore 的 prefer_topics 字段。ProactiveScheduler 选话题时优先用 prefer_topics（按 weight 加权），让主动开口更贴近用户兴趣。default-OFF（COCO_PREFER_LEARN=1），不启用时 profile 不写新字段，原有 companion-008 行为不变。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-005",
+        "companion-008",
+        "interact-009"
+      ],
+      "default_off_env": "COCO_PREFER_LEARN",
+      "verification": [
+        "coco/companion/preference_learner.py：PreferenceLearner（TopK=10 / decay_half_life_s 默认 86400 / 中文 jieba 可选 fallback 简易 bigram + 停用词表）；输入 dialog_summary 文本 + dialog_memory 列表，输出 [{topic, weight, last_seen}]。",
+        "PersistentProfileStore.save() schema 兼容：新增 optional prefer_topics 字段（schema_version 升级 1→2 + 旧 v1 文件读时自动补 prefer_topics=[]，避免破坏 companion-008 兼容）。",
+        "main.py 接线：default-OFF via COCO_PREFER_LEARN=1；每 N 轮对话或 dialog_summary 更新时触发 learner.update(profile)；ProactiveScheduler.choose_topic() 在 prefer_topics 非空时按 weight 加权采样。",
+        "scripts/verify_companion_009.py V1-V10：V1 TopK 关键词频次正确；V2 decay 衰减按 half_life 收敛；V3 中文 fallback bigram + 停用词；V4 PersistentProfileStore 写入 prefer_topics 并能读回；V5 schema v1 → v2 迁移（旧文件自动补字段）；V6 default-OFF 时 profile 文件不含 prefer_topics 字段；V7 COCO_PREFER_LEARN=1 才注入；V8 ProactiveScheduler 加权采样在 prefer_topics 非空时偏向高权重 topic；V9 回归 companion-005/008；V10 与 vision-006/vision-007 共存不互相干扰。",
+        "Reviewer fresh-context 评审：jieba 可选依赖（不安装时 fallback 行为）；schema 迁移幂等性（多次启动不重复迁移）；prefer_topics 上限（10）与 disk 大小；decay 在长时间未上线的 profile 上的算术稳定（可能 underflow）；ProactiveScheduler 选 topic 时不破坏既有触发源优先级；写 profile 频率不应过高（节流 + 与 companion-008 atomic save 合并）。"
+      ],
+      "notes": "纯启发式可 sim 完整证明；真机长期用 prefer_topics 实际质量归 uat-phase9 异步项。priority 51。"
+    },
+    {
+      "id": "companion-010",
+      "phase": 9,
+      "priority": 52,
+      "area": "companion",
+      "title": "情绪记忆窗口 — N 轮情绪滑窗 → emotion_alert → 主动安慰",
+      "user_visible_behavior": "Coco 短期记得用户情绪：最近 N(=20) 次对话的情绪标签（companion-007/emotion_renderer 已有源）滚动滑窗，连续 K(=10) 次 sad 比例 ≥ 0.6 → emit companion.emotion_alert(kind='persistent_sad') → ProactiveScheduler 触发安慰话题模板（『最近你有点低落，我陪你聊聊』），并把告警写入 ProfilePersist 让跨会话也能跟进。default-OFF（COCO_EMO_MEMORY=1）。",
+      "status": "not_started",
+      "dependencies": [
+        "companion-007",
+        "companion-008",
+        "interact-009"
+      ],
+      "default_off_env": "COCO_EMO_MEMORY",
+      "verification": [
+        "coco/companion/emotion_memory.py：EmotionMemoryWindow（deque maxlen=20 + 比例统计 + 触发条件 K/ratio 阈值可配）；emit companion.emotion_alert(kind, ratio, window_size, ts)；alert cooldown（默认 30 分钟，避免循环触发）。",
+        "ProfilePersist schema：新增 optional emotion_alerts: [{kind, ts, ratio}] 字段（schema_version 沿用 companion-009 升级路径或单独升）。",
+        "ProactiveScheduler：alert 命中时插入安慰话题（高优先级 trigger），不被 vision-007 dark_silence/motion_greet 抢断。",
+        "scripts/verify_companion_010.py V1-V10：V1 滑窗维护正确（deque 上限）；V2 连续 sad 比例 ≥ 0.6 → 触发 alert；V3 cooldown 内不重复 emit；V4 alert 写入 ProfilePersist；V5 ProactiveScheduler 命中安慰话题；V6 default-OFF 不触发；V7 COCO_EMO_MEMORY=1 才注入；V8 与 companion-007 prosody 共存（alert 触发同时仍能 prosody 渲染）；V9 回归 companion-007/008；V10 与 vision-007 多模态融合优先级正确（alert > motion_greet）。",
+        "Reviewer fresh-context 评审：情绪源稳定性（emotion_renderer.set 事件流是否 lossless）；窗口长度 vs 触发延迟权衡；连续 sad 是否会误报（用户讨论『难过的电影』也会被标 sad）；alert 与 vision-007 motion_greet 同时命中时的话题选择优先级；profile 落盘合并节流；alert 后用户回应『没事』如何快速 reset 窗口。"
+      ],
+      "notes": "纯启发式 sim 可证；真机长期陪伴下 alert 实际有用性归 uat-phase9 异步项。priority 52。"
+    },
+    {
+      "id": "infra-007",
+      "phase": 9,
+      "priority": 53,
+      "area": "infra",
+      "title": "自愈策略库 — SelfHealStrategy 注册表 + 指数退避（基于 infra-005）",
+      "user_visible_behavior": "在 infra-005 HealthMonitor 之上抽出 SelfHealStrategy 注册表，统一指数退避 + jitter；新增 3 条策略：(a) audio 流卡死 → 重开 sounddevice stream (b) ASR 连续失败 → 切 fallback engine（与 interact-011 OfflineDialogFallback 协作）(c) 视觉源 read 连续 None → 重打开 CameraSource。每条策略 attempts/cap/cooldown 独立可配，giveup latch 后不再重 emit。default-OFF（COCO_SELFHEAL=1，与 COCO_HEALTH=1 协同），未启用时维持 infra-005 现有的 daemon-only 自愈。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-005",
+        "interact-011"
+      ],
+      "default_off_env": "COCO_SELFHEAL",
+      "verification": [
+        "coco/infra/self_heal.py：SelfHealStrategy Protocol（name / probe(metrics) -> bool / heal() -> bool / on_giveup()）；SelfHealRegistry（注册 + 调度 + 指数退避：base=5s, cap=120s, jitter=±10%, attempts=5）+ 与 HealthMonitor tick 集成。",
+        "策略实现：AudioStreamHealStrategy（sounddevice 流状态 + reopen）/ ASRFallbackStrategy（连续失败计数 → 切 OfflineDialogFallback 模式，与 interact-011 协作）/ CameraReopenStrategy（CameraSource 连续 None → close+reopen）。",
+        "main.py 接线：default-OFF via COCO_SELFHEAL=1；策略注入注册表；emit self_heal.* 事件（attempt/success/giveup）。",
+        "scripts/verify_infra_007.py V1-V12：V1 指数退避数列正确（5/10/20/40/80, cap 120）；V2 jitter 在 ±10% 内；V3 attempts 上限 → giveup latch；V4 giveup 后不再重试；V5 AudioStreamHealStrategy fake stream → reopen 计数；V6 ASRFallbackStrategy 连续失败 N → 切 fallback；V7 CameraReopenStrategy fake 连续 None → reopen；V8 与 infra-005 daemon restart 不冲突（两路独立）；V9 default-OFF 时注册表为空；V10 COCO_SELFHEAL=1 才注入；V11 真机模式（COCO_REAL_MACHINE=1）某些策略只 emit 不 heal；V12 回归 infra-005 V1-V12 全 PASS。",
+        "Reviewer fresh-context 评审：probe() 同步调用阻塞 tick 风险；reopen 操作的原子性（旧句柄要不要 close）；ASRFallbackStrategy 与 interact-011 OfflineDialogFallback 的状态机协作（双方都不要重复进入 fallback）；jitter 随机源（seed / 测试可重现）；giveup latch 跨 restart 是否需要持久化；真机 vs sim 分支的覆盖。"
+      ],
+      "notes": "纯软件抽象 + sim 完整可证；真机长期跑下策略命中频率归 uat-phase9 异步项。priority 53。"
+    },
+    {
+      "id": "infra-008",
+      "phase": 9,
+      "priority": 54,
+      "area": "infra",
+      "title": "pre-commit hook + verify 影响面分析 — 本地只跑相关 verify",
+      "user_visible_behavior": "开发者在本地 commit 前自动跑相关 verify 子集而非全量。`scripts/precommit_impact.py` 解析 staged python 文件，通过简易 import graph + `coco/<area>/...` → `scripts/verify_<area>_*.py` 映射反推影响面，只跑相关 verify。`.git/hooks/pre-commit` 可选启用（COCO_PRECOMMIT_HOOK=1）。同时输出 GitHub Actions paths-filter 建议片段供 infra-006 矩阵 PR 时跳过无关 job 用。",
+      "status": "not_started",
+      "dependencies": [
+        "infra-006"
+      ],
+      "default_off_env": "COCO_PRECOMMIT_HOOK",
+      "verification": [
+        "scripts/precommit_impact.py：输入 staged 文件列表（git diff --cached --name-only），输出 affected verify 脚本列表；映射规则：coco/<area>/X.py → verify_<area>_*.py；scripts/verify_*.py 本身改动 → 自身；coco/main.py 改动 → 全量。",
+        "import 反向图（简易静态扫描，不引入新依赖）：仅扫 from coco.<mod> import / import coco.<mod>，build module→verify 反向 map；不解析动态 import。",
+        ".git/hooks/pre-commit 脚本（template）：COCO_PRECOMMIT_HOOK=1 才生效；否则正常 commit；hook 跑 precommit_impact + 影响面 verify，任一失败 abort commit。",
+        "GitHub Actions paths-filter YAML 片段生成器（输出到 evidence/infra-008/paths-filter.yml）：为 infra-006 verify-matrix.yml 各 job 提供 paths 子集建议（不强制接，先生成供后续 review 接入）。",
+        "scripts/verify_infra_008.py V1-V10：V1 staged 文件 coco/perception/X.py → 命中 verify_vision_*；V2 staged scripts/verify_robot_001.py → 命中自身；V3 coco/main.py → 全量；V4 多文件并集去重；V5 无相关 staged → 空列表；V6 hook template 在 COCO_PRECOMMIT_HOOK=0 时短路；V7 COCO_PRECOMMIT_HOOK=1 时调用 impact + verify；V8 失败 verify 时 hook 返回非零；V9 paths-filter YAML 片段语法合法（PyYAML load）；V10 回归 infra-006 V1-V9。",
+        "Reviewer fresh-context 评审：映射规则与现实漂移（新增子模块未在表里）；import graph 不解析条件 import 的盲点；hook 默认 OFF 避免打扰未启用的开发者；hook 失败时如何让开发者临时 bypass（COCO_PRECOMMIT_SKIP=1 或 --no-verify 说明）；paths-filter 与 infra-006 SKIP_LIST 的语义不冲突。"
+      ],
+      "notes": "纯本地 + CI 辅助；完全 sim 可证（构造 staged 改动 fixture）。priority 54。"
     }
   ]
 }

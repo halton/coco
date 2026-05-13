@@ -1307,3 +1307,16 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
   3. emit fallback `_DEFAULT_EMIT` 失败时 None → return 吞事件；default-OFF 路径不受影响
 - **closeout**：merge `feat/robot-005` → main（HEAD=d329b66，merge --no-ff，Reviewer LGTM + 3 条 L2 写入 merge commit）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
 - **phase-8 软件 3/3 全部完成**（vision-006 / infra-006 / robot-005）。下一步：**phase-9 规划** 或 **uat-phase4 / uat-phase8 异步真机 UAT**（sim-first 原则：UAT 不阻 phase 推进，可与 phase-9 软件并行）。
+
+## Session 2026-05-14 — phase-9 启动（入库 5 候选 + 启动 vision-007）
+
+- **现状**：phase-7 软件 5/5 + phase-8 软件 3/3 全部 passing；main HEAD=8a876f6；uat-phase4/uat-phase8 异步真机 UAT 待用户方便时执行（不阻塞）。
+- **phase-9 候选（5 个，priority 50-54，全部 sim-first 友好，全部 default-OFF）**：
+  1. **vision-007** (prio 50, area=vision-companion, env=COCO_MM_PROACTIVE) — 多模态主动话题融合：scene_caption(vision-006) × ASR partial × ProactiveScheduler；规则 dark_silence / motion_greet；cooldown + priority_boost；不抢断 ProactiveScheduler 单入口。
+  2. **companion-009** (prio 51, area=companion, env=COCO_PREFER_LEARN) — 偏好学习：从 dialog_summary/dialog_memory 提取 TopK 关键词（频次 + 时间衰减） → PersistentProfileStore.prefer_topics（schema v1→v2 兼容）→ ProactiveScheduler 加权选 topic。
+  3. **companion-010** (prio 52, area=companion, env=COCO_EMO_MEMORY) — 情绪记忆窗口：最近 20 次对话情绪 deque + 比例统计 + alert cooldown 30min；连续 sad ≥ 0.6 → emit companion.emotion_alert → 安慰话题 + 写 ProfilePersist。
+  4. **infra-007** (prio 53, area=infra, env=COCO_SELFHEAL) — 自愈策略库：基于 infra-005 抽 SelfHealStrategy 注册表 + 指数退避（base=5/cap=120/attempts=5/jitter ±10%）+ 3 策略（audio reopen / ASR fallback 与 interact-011 协作 / camera reopen）；giveup latch。
+  5. **infra-008** (prio 54, area=infra, env=COCO_PRECOMMIT_HOOK) — 本地 verify 影响面：scripts/precommit_impact.py + 简易 import 反向图 + .git/hooks/pre-commit template + paths-filter 片段生成器，commit 前只跑相关 verify 子集。
+- **启动**：**vision-007**（in_progress）。理由：用户可见价值最高（"它会看会听会主动说话"），无前置依赖（vision-006/interact-009/vision-005 已 passing），sim-first 完全友好（程序合成 caption 序列 + ASR partial fixture）。
+- **commit**：feature_list.json 入库 + 本日志 → 主分支直接 commit（按 CLAUDE.md sub-agent commit 例外 + 持续开发模式，本会话 phase 规划属基础设施改动可直接 main）；push origin main 一次（按 sim-first push 策略，失败忽略）。
+- **下一步**：派 sub-agent 实现 vision-007 — coco/proactive/multimodal_fusion.py + main.py 接线 + scripts/verify_vision_007.py V1-V10 + Reviewer fresh-context 评审。
