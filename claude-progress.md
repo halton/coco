@@ -1336,3 +1336,23 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **closeout**：merge `feat/vision-007` → main（HEAD=`542da65`，merge --no-ff，Reviewer LGTM + L1 + 4 条 L2 写入 merge commit）；feature_list.json status → passing + evidence（含 L1 显式标注）；本日志同步追加。
 - **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/vision-007` 各一次，失败忽略（见下一节结果）。
 - **phase-9 软件进度 1/5 完成**（剩 companion-009 / companion-010 / infra-007 / infra-008）。下一候选：**companion-009 偏好学习**（priority 51，依赖 companion-005/008/interact-009 均 passing，sim-first 友好）。
+
+## Session 2026-05-14 — companion-009 closeout（phase-9 软件 2/5）
+
+- **目标**：偏好学习 — `dialog_summary` / `dialog_memory` → `prefer_topics` 写入 `ProfilePersist`；ProactiveScheduler 选话题加权偏向用户高频/近期话题。default-OFF via `COCO_PREFER_LEARN=1`。
+- **结果**：companion-009 → **passing**。`scripts/verify_companion_009.py` V1-V10 全 PASS。
+- **实现**：
+  - `coco/companion/preference_learner.py`（528 行）：`PreferenceLearner`（TopK=10 + decay_half_life_s + 中文 bigram fallback + 停用词表 + stats 计数 + on_turn 节流）；`set_topic_preferences()` 给 ProactiveScheduler 注入加权候选。
+  - `coco/companion/profile_persist.py`：schema v1 → v2 兼容（旧文件读时自动补 `prefer_topics={}`，不破坏 companion-008 跨会话兼容性）。
+  - `coco/proactive.py`：新增 `select_topic_seed(candidates=..., prefer_topics=...)` 公开 API + 后台 `_do_trigger_unlocked` 仅经 system_prompt 注入 prefer（不在 candidates 维度加权）。
+  - `coco/main.py`：default-OFF gate + 接线 PreferenceLearner + 注册 dialog 事件钩子 + on_interaction_combined rebuild_for_profile（主回调线程同步）。
+  - `coco/logging_setup.py`：AUTHORITATIVE_COMPONENTS 加 "preference_learner"（暂未实际 emit）。
+- **回归 PASS**：vision-006 / vision-007 / interact-011 / companion-008（与 ProfilePersist / ProactiveScheduler / scene caption / multimodal fusion / offline fallback 全部共存不互相干扰）。
+- **Reviewer (sub-agent, fresh-context)**：LGTM。L0/L1 无；3 条 L2 非阻塞：
+  1. `select_topic_seed(candidates=...)` 是公开 API；scheduler 后台 `_do_trigger_unlocked` 不调用 candidates 路径，prefer 仅通过 system_prompt 注入 LLM（docstring 待补明示「scheduler 自身不在 candidates 维度加权」）。
+  2. `_on_interaction_combined` 中 `rebuild_for_profile` 在主交互回调线程同步执行（含 `persist.save` fsync），未来可丢 `ThreadPoolExecutor.submit` 异步化，避免主线程被磁盘 IO 阻塞。
+  3. `AUTHORITATIVE_COMPONENTS` 加了 `"preference_learner"` 但当前一次 emit 都没有；未来真 emit 时记得加 `component` 字段。
+- **closeout**：merge `feat/companion-009` → main（HEAD=`6bb1362`，merge --no-ff，Reviewer LGTM + 3 条 L2 写入 merge commit）；feature_list.json status → passing + 完整 evidence；本日志同步追加；脏文件 `evidence/vision-006/verify_summary.json` 在 closeout 前 stash 保留，不入 commit。
+- **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/companion-009` 各一次，失败忽略。
+- **phase-9 软件进度 2/5 完成**（剩 companion-010 / infra-007 / infra-008）。下一候选：**companion-010 情绪记忆窗口**（priority 52，依赖 companion-007/008/interact-009 均 passing，sim-first 友好；与本 feature 同 area=companion，profile schema 已有 v2 升级路径可复用）。
+
