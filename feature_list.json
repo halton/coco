@@ -18,7 +18,7 @@
     "blocked": "因为已记录的阻塞问题，当前无法继续推进。",
     "passing": "要求的验证已经通过，证据已经记录，且经过一次 Reviewer sub-agent fresh-context 评审（evidence 格式见 AGENTS.md 角色段）。"
   },
-  "milestone": "phase-5 体验深化（多目标视觉 + 对话状态机 + 情境化陪伴 + 表情编排）",
+  "milestone": "phase-8 看图说话 + CI 矩阵 + robot 收割",
   "features": [
     {
       "id": "infra-001",
@@ -1165,38 +1165,66 @@
     },
     {
       "id": "vision-006",
+      "phase": 8,
       "priority": 40,
       "area": "vision",
-      "title": "（backlog / phase-8 候选）看图说话 — 视觉 caption → 主动话题",
-      "status": "backlog",
-      "dependencies": [],
-      "verification": [],
+      "title": "看图说话 — 视觉 caption（scene_caption）→ 主动话题源",
+      "user_visible_behavior": "Coco 在后台对摄像头当前帧做周期性场景描述，例如『画面整体偏暗，左侧有一个移动物体』或『画面偏亮，主体居中静止』。描述以 vision.scene_caption 事件发出；当 ProactiveScheduler 启用时，可作为额外的『主动开口』话题源（caption_proactive 计数）。默认 OFF（COCO_SCENE_CAPTION=1 才启动），与 vision-005 gesture 互相独立、共存不干扰；视觉链路其他子系统不感知 caption 是否启用。",
+      "status": "in_progress",
+      "dependencies": [
+        "infra-vision-source",
+        "vision-002",
+        "vision-005"
+      ],
+      "verification": [
+        "coco/perception/scene_caption.py：SceneCaption{text, ts, features:dict} 数据类 + HeuristicCaptionBackend（cv2/numpy 提取颜色直方图、亮度均值、运动剪影/帧差等启发式特征，组合生成中文描述模板，例如『画面整体偏暗，有一个移动物体在左侧』/『画面偏亮，主体大致居中静止』）；LLMCaptionBackend 仅留 docstring stub（不实现，标注 future work）。",
+        "SceneCaptionEmitter daemon 线程：周期采样（interval_s 默认 60s，clamp [5, 3600]），cooldown_s（默认 60s，clamp [0, 3600]），min_change_threshold（默认 0.8，clamp [0.0, 1.0]，描述文本相似度 >threshold 视为重复，不重复 emit）；命中后 emit 'vision.scene_caption'（component='vision'）。on_caption 回调让外部接管（ProactiveScheduler 可订阅）。",
+        "main.py 接线：default-OFF via COCO_SCENE_CAPTION=1；COCO_CAMERA 未设时跳过；用 _open_cam() 复用 vision 链路；finally 中 stop_event.set()+join(timeout=2)。AUTHORITATIVE_COMPONENTS 中新增 'scene_caption' 短名（保留 component='vision' emit；新增便于未来子系统升级）。",
+        "ProactiveScheduler 可选订阅：caption 启用且 proactive 启用时，scene_caption.on_caption 调 proactive.record_caption_trigger()（新增方法）—— 把 caption 作为额外触发源；命中后 caption_proactive 计数 +1（stats 新增 caption_proactive 字段）。caption 不启用时 proactive 完全不感知（保持 default-OFF）。",
+        "scripts/verify_vision_006.py V1-V10：V1 HeuristicCaptionBackend 暗图描述含『暗』或『夜』；V2 移动物体被检出（前后帧差，描述含『移动』）；V3 SceneCaptionEmitter 周期触发（mock clock）；V4 min_change_threshold 抑制重复（相似描述不重复 emit）；V5 cooldown 生效（窗口内同描述不重复 emit）；V6 default-OFF 时 main 不构造 emitter，无 emit；V7 COCO_SCENE_CAPTION=1 才注入；V8 stop+join 干净退出（线程在 timeout 内消亡）；V9 ProactiveScheduler 集成 caption_proactive 计数；V10 与 vision-005 gesture 共存不互相干扰（同 main 进程内 emitter + recognizer 都启用 100 tick 后互不影响）。",
+        "Reviewer fresh-context 评审：HeuristicBackend 在边界帧（全黑/全白/极小尺寸/非 BGR3）的 fail-soft；emitter 周期化的时钟假设（monotonic vs wall clock）；caption 文本相似度算法的稳定性；与 gesture/face_tracker 在同 cap 上的读争用；proactive 集成在 default-OFF 时绝对 no-op；emit fail-soft（component 短名加入 AUTHORITATIVE 后兼容旧 jsonl）。"
+      ],
       "evidence": [],
-      "notes": "phase-8 候选：CameraSource 当前帧抽样 → vision caption（本地小模型或可选云）→ ProactiveTopicScheduler 引用 ('你今天好像换了头发') 引发对话。priority hint 40。"
+      "notes": "phase-8 第一发，sim-first；用程序合成 fixture 与 backend 启发式特征验证；真机摄像头下的描述质量归 uat-phase8 异步项。LLMCaptionBackend 仅占位，未来若引入云/本地 VLM 再单独立 feature。priority 40。"
     },
     {
       "id": "infra-006",
+      "phase": 8,
       "priority": 41,
       "area": "infra",
-      "title": "（backlog / phase-8 候选）verify matrix CI",
-      "status": "backlog",
+      "title": "verify matrix CI — GitHub Actions 全量 verify 矩阵",
+      "user_visible_behavior": "Push / PR 自动跑 ./init.sh smoke + 全部 scripts/verify_*.py（含历史 passing feature 与当前 in_progress feature），多 OS 矩阵（macOS / Linux），任何一个 verify 失败即红灯。",
+      "status": "not_started",
       "dependencies": [],
-      "verification": [],
+      "verification": [
+        ".github/workflows/verify-matrix.yml：os=[macos-latest, ubuntu-latest] × python=[3.13] 矩阵；checkout + setup-python + pip install -e . + 缓存；步骤包含 ./init.sh smoke 与 `python scripts/verify_*.py` 全量轮询；失败任一即 job 红灯。",
+        "verify 选择策略：自动扫描 scripts/verify_*.py，跳过明确标注 'requires_real_hardware' 的（用文件顶部 docstring marker）。sim-first 项目默认全跑。",
+        "verify 顺序：先 smoke → 后 per-feature；per-feature 内按文件名排序（稳定可复现）；任一 fail 立刻 exit 1。",
+        "scripts/verify_infra_006.py：V1 workflow yaml 存在且 schema 合理；V2 verify 选择脚本能正确列出全部 sim verify；V3 workflow 不引入新依赖；V4 markdown 中 README 注明 CI 状态徽章。",
+        "Reviewer fresh-context 评审：Actions 矩阵稳定性（macOS runner 偶发慢/失败）；缓存策略；audio/robot 子系统在 CI 中的硬件可选化；并发取消策略；secret 管理（本期无 secret 即可）。"
+      ],
       "evidence": [],
-      "notes": "phase-8 候选：所有 verify_*.py 跑成 GitHub Actions 矩阵（macOS / Linux），smoke + per-feature verify 自动门禁。priority hint 41。"
+      "notes": "phase-8 第二发；不引入私服依赖；不动现有 verify 脚本内容，仅汇编入 CI。本期不开启自动 deploy / release。priority 41。"
     },
     {
       "id": "robot-005",
+      "phase": 8,
       "priority": 42,
       "area": "robot",
-      "title": "（backlog / phase-8 候选）robot-004 followup 收割",
-      "status": "backlog",
+      "title": "robot-004 followup 收割 — L1+L2 残项整理",
+      "user_visible_behavior": "对 robot-004（表情编排）的 L1+L2 followup 一次性收割：启动瞬切首帧无 ramp / antenna SAD vs NEUTRAL 区分 / pause-resume 嵌套计数 / emotion history 上限 / ExpressionPlayer.play 隐式 stop 文档化 / emit fallback import 微优化。",
+      "status": "not_started",
       "dependencies": [
         "robot-004"
       ],
-      "verification": [],
+      "verification": [
+        "coco/robot/expression_player.py：(a) 启动瞬切首帧不再走 ramp（直跳目标值，避免视觉抖动）；(b) antenna 在 SAD 与 NEUTRAL 表情下输出可区分（不同 amplitude/offset）；(c) pause/resume 改为嵌套引用计数（多次 pause 需对应多次 resume 才真正恢复）；(d) emotion history 用 deque(maxlen=N) 上限；(e) play() 隐式 stop 前任在 docstring + 行为侧注释中明确；(f) emit fallback import 提到模块顶以避热路径每次 import logging_setup.emit。",
+        "scripts/verify_robot_005.py：V1 首帧无 ramp；V2 antenna SAD≠NEUTRAL；V3 pause/resume 嵌套；V4 history maxlen；V5 play 隐式 stop 文档化；V6 emit fallback import 路径。",
+        "回归 verify_robot_004 / verify_robot_002 / verify_robot_003 必须全 PASS。",
+        "Reviewer fresh-context 评审：嵌套 pause 引用计数与外部调用方契约；首帧瞬切对真机硬件抖动的影响（仅记录，sim-first）；history maxlen 选择对调试的影响。"
+      ],
       "evidence": [],
-      "notes": "phase-8 候选：robot-004 L1+L2 followup（启动瞬切首帧无 ramp / antenna SAD-NEUTRAL 区分 / pause-resume 嵌套计数 / emotion history 上限 / ExpressionPlayer.play 隐式 stop 文档化 / emit fallback import 微优化）。priority hint 42。"
+      "notes": "phase-8 收尾发；纯软件 followup；真机硬件相关行为归 uat-phase8 异步项。priority 42。"
     },
     {
       "id": "uat-phase4",
