@@ -1376,3 +1376,30 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **closeout**：merge `feat/companion-010` → main（HEAD=`c1674ac`，merge --no-ff，Reviewer LGTM + 3 条 L2 写入 merge commit）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
 - **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/companion-010` 各一次，失败忽略。
 - **phase-9 软件进度 3/5 完成**（剩 infra-007 / infra-008）。下一候选：**infra-007 自愈策略库**（priority 53，infra area，把现有 daemon 自愈/降级动作抽成策略库，与 companion area 切换换 Researcher+Reviewer 组合）。
+
+
+## Session 2026-05-14 — infra-007 closeout（phase-9 软件 4/5）
+
+- **目标**：自愈策略库 — 在 infra-005 HealthMonitor 之上抽出 `SelfHealStrategy` Protocol + `SelfHealRegistry`，统一指数退避（base=5s, cap=120s, jitter=±10%, attempts=5）+ giveup latch；新增 3 条内置策略（AudioStreamHealStrategy / ASRFallbackStrategy / CameraReopenStrategy）。default-OFF via `COCO_SELFHEAL=1`（与 `COCO_HEALTH=1` 协同）。
+- **结果**：infra-007 → **passing**。`scripts/verify_infra_007.py` V1-V13 共 56 checks 全 PASS（含 round 2 新增 V13）。
+- **实现**：
+  - `coco/infra/self_heal.py`（553 行）：`SelfHealStrategy` Protocol + `SelfHealRegistry`（注册 + 调度 + 指数退避 + jitter + attempts/real_attempts 拆分 + giveup latch）+ 3 内置策略骨架 + dispatch 路径 + sim dry-run 不消耗 giveup 配额。
+  - `coco/infra/health_monitor.py`：tick 集成 SelfHealRegistry（+31 行）。
+  - `coco/main.py`：default-OFF gate（`COCO_SELFHEAL=1` 才注入注册表）；`COCO_SELFHEAL=1` 但 `COCO_HEALTH` 未启用时 WARN 提示依赖关系（修 round 1 L2-a）；emit `self_heal.{attempt,success,giveup,dry_run}` 事件。
+  - `coco/logging_setup.py`：AUTHORITATIVE_COMPONENTS 加 `"self_heal"`。
+- **回归 PASS**：infra-005 / vision-007 / companion-010 / interact-011 全 PASS（与 HealthMonitor / multimodal fusion / emotion memory / offline fallback 共存不互相干扰）。
+- **Reviewer (sub-agent, fresh-context) round 1 NEEDS-REWORK → round 2 LGTM**：
+  - round 1 报 2 个 L1 + 1 个 L2：
+    - **L1-a**：3 条内置策略的 `reopen_fn` 全部为占位 lambda（`lambda **kw: True`）；infra-007 实际只交付了「框架 + 策略骨架 + dispatch 路径」。**文档项 follow-up**，infra-007 范围内不实接，待后续 audio/vision/asr feature 提供真 `reopen_fn` 时接线。**不阻 merge**。
+    - **L1-b**：sim dry-run 也会消耗 `attempts` 计数 → 到上限即 giveup latch，污染真实重试预算 → Engineer 修：拆 `attempts`（总）/ `real_attempts`（真机），`giveup` 仅在 `real_attempts` 达上限时 latch；新增 V13 覆盖此路径。
+    - **L2-a**：`COCO_SELFHEAL=1` 但 `COCO_HEALTH` 未启用时静默注册无效 → main.py 加 WARN 提示依赖。
+  - round 2 LGTM，仅 2 条非阻塞 L2 收尾建议：
+    1. V11 后续可加 sim dry-run 推进 `last_attempt_ts` 断言，覆盖 cooldown 抑流路径。
+    2. `self_heal.dry_run` emit 中目前已有 `attempt=st.attempts`；未来可补 `real_attempts` 字段方便可视化对账。
+- **closeout**：merge `feat/infra-007` → main（HEAD=`3dac799`，merge --no-ff，含 round 1 NEEDS-REWORK → round 2 LGTM 经过 + L1-a 文档项 + L2 摘要写入 merge commit）；feature_list.json status → passing + 完整 evidence + `followups.L1_a_reopen_fn_doc` 字段显式记 L1-a 接线 follow-up；本日志同步追加。
+- **push 策略**：commit 后尝试 `git push origin main` + `git push origin feat/infra-007` 各一次，失败忽略。
+- **L1-a reopen_fn 接线 follow-up**（重要，记此处以免遗忘）：infra-007 交付的 3 条策略 `reopen_fn` 均为占位 lambda；真正接线落在：
+  - AudioStreamHealStrategy.reopen_fn — 由 audio 子系统 feature（sounddevice stream 句柄管理）落地；
+  - CameraReopenStrategy.reopen_fn — 由 vision 子系统 feature（`coco.perception.open_camera()` 句柄 close+reopen）落地；
+  - ASRFallbackStrategy — 与 interact-011 OfflineDialogFallback 状态机接线时同步落地。
+- **phase-9 软件进度 4/5 完成**（剩 infra-008）。下一候选：**infra-008 pre-commit hook + verify 影响面分析**（priority 54，依赖 infra-006，sim-first 友好；本地 staged 文件 → import 反向图 → 仅跑相关 verify 子集 + GitHub Actions paths-filter 建议片段）。
