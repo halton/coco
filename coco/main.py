@@ -1217,6 +1217,73 @@ class Coco(ReachyMiniApp):
                 _mm_fusion = None
                 _mm_fusion_ref[0] = None
 
+            # companion-009: 可选 PreferenceLearner（默认 OFF via COCO_PREFER_LEARN=1）。
+            # 把 dialog_memory + PersistedProfile.dialog_summary 抽 TopK 关键词，写入
+            # PersistedProfile.prefer_topics；ProactiveScheduler 选 topic 时按 prefer 加权。
+            # 装配前置依赖：dialog_memory + profile_persist + proactive。任一缺失 print WARN，
+            # 不构造 learner，保持 default-OFF 零开销。
+            _preference_learner = None
+            try:
+                from coco.companion.preference_learner import (
+                    PreferenceLearner as _PrefLearner,
+                    preference_learn_enabled_from_env as _pl_enabled,
+                )
+                if _pl_enabled():
+                    _missing = []
+                    if _dialog_memory is None:
+                        _missing.append("dialog_memory(COCO_DIALOG_MEMORY)")
+                    if _persistent_profile_store is None:
+                        _missing.append("profile_persist(COCO_PROFILE_PERSIST)")
+                    if _proactive is None:
+                        _missing.append("proactive(COCO_PROACTIVE)")
+                    if _missing:
+                        print(
+                            "[coco][preference_learner] COCO_PREFER_LEARN=1 但缺依赖："
+                            + ", ".join(_missing) + "；不构造 learner",
+                            flush=True,
+                        )
+                    else:
+                        _preference_learner = _PrefLearner()
+                        # 初始化时即对当前 active profile rebuild 一次（如已 hydrate）
+                        try:
+                            _active_uid_init = None
+                            try:
+                                _active_uid_init = getattr(_profile_store, "active_user_id", None)
+                            except Exception:  # noqa: BLE001
+                                _active_uid_init = None
+                            if _active_uid_init and _persist_bridge is not None:
+                                try:
+                                    from coco.companion.profile_persist import (
+                                        compute_profile_id as _cpid,
+                                    )
+                                    _pid_init = _cpid(_active_uid_init, _active_uid_init)
+                                    _kw_init = _preference_learner.rebuild_for_profile(
+                                        persist_store=_persistent_profile_store,
+                                        profile_id=_pid_init,
+                                        dialog_memory=_dialog_memory,
+                                    )
+                                    if _kw_init:
+                                        _proactive.set_topic_preferences(_kw_init)
+                                except Exception as _re:  # noqa: BLE001
+                                    print(
+                                        f"[coco][preference_learner] initial rebuild failed: "
+                                        f"{type(_re).__name__}: {_re}",
+                                        flush=True,
+                                    )
+                        except Exception:  # noqa: BLE001
+                            pass
+                        print(
+                            f"[coco][preference_learner] enabled topk={_preference_learner.topk} "
+                            f"half_life={_preference_learner.half_life_s:.0f}s "
+                            f"persist_every={_preference_learner.persist_every_n_turns}",
+                            flush=True,
+                        )
+                else:
+                    print("[coco][preference_learner] disabled (COCO_PREFER_LEARN not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][preference_learner] init failed: {type(e).__name__}: {e}", flush=True)
+                _preference_learner = None
+
             def _on_interaction_combined(src: str, _ps=power_state, _pa=_proactive) -> None:
                 if _ps is not None:
                     try:
@@ -1237,6 +1304,34 @@ class Coco(ReachyMiniApp):
                         _mm.on_asr_event("final", "")
                     except Exception as e:  # noqa: BLE001
                         print(f"[coco][mm_fusion] on_asr_event failed: {e!r}", flush=True)
+                # companion-009: 把交互节奏喂给 PreferenceLearner.on_turn；
+                # 达到 persist_every_n_turns 阈值时 trigger rebuild + 写 prefer_topics。
+                # 失败完全吞掉（fail-soft，不影响主路径）。
+                if _preference_learner is not None and _persistent_profile_store is not None:
+                    try:
+                        if _preference_learner.on_turn(user_text=src or ""):
+                            _active_uid = None
+                            try:
+                                _active_uid = getattr(_profile_store, "active_user_id", None)
+                            except Exception:  # noqa: BLE001
+                                _active_uid = None
+                            if _active_uid:
+                                from coco.companion.profile_persist import (
+                                    compute_profile_id as _cpid,
+                                )
+                                _pid = _cpid(_active_uid, _active_uid)
+                                _kw = _preference_learner.rebuild_for_profile(
+                                    persist_store=_persistent_profile_store,
+                                    profile_id=_pid,
+                                    dialog_memory=_dialog_memory,
+                                )
+                                if _kw is not None and _pa is not None:
+                                    try:
+                                        _pa.set_topic_preferences(_kw)
+                                    except Exception:  # noqa: BLE001
+                                        pass
+                    except Exception as e:  # noqa: BLE001
+                        print(f"[coco][preference_learner] on_turn failed: {e!r}", flush=True)
 
 
             # interact-009: 可选对话历史压缩（默认 OFF）。

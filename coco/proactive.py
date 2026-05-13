@@ -50,7 +50,7 @@ import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Deque, List, Optional
+from typing import Any, Callable, Deque, Dict, List, Mapping, Optional, Sequence
 
 
 log = logging.getLogger(__name__)
@@ -104,6 +104,8 @@ class ProactiveStats:
     # vision-007: multimodal fusion 触发记账
     mm_triggered: int = 0
     mm_per_rule: dict = field(default_factory=dict)
+    # companion-009: 偏好加权选 topic 命中计数
+    prefer_weighted_select_count: int = 0
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -234,6 +236,10 @@ class ProactiveScheduler:
         # interact-011: 离线降级时 pause()，恢复时 resume()。
         # _paused=True 时 _should_trigger 返回 "paused"。pause/resume 是幂等的。
         self._paused: bool = False
+
+        # companion-009: 偏好关键词 {keyword: weight}（归一化）。default-OFF 时
+        # 维持空 dict —— _select_topic_seed / _build_system_prompt 行为不变。
+        self._topic_preferences: dict = {}
 
         # 探测 llm_reply_fn 是否接受 system_prompt
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
@@ -368,6 +374,71 @@ class ProactiveScheduler:
     def is_paused(self) -> bool:
         with self._lock:
             return self._paused
+
+    # companion-009: 偏好加权 API
+    # ------------------------------------------------------------------
+    # 由 PreferenceLearner / main.py 在每次 rebuild 完成后调一次。
+    # prefer 是归一化的 {keyword: weight in [0,1]}；空 dict 视为"未学过" → 维持原 seed 行为。
+    def set_topic_preferences(self, prefer: Optional[Mapping[str, float]]) -> None:
+        with self._lock:
+            if not prefer:
+                self._topic_preferences = {}
+                return
+            cleaned: Dict[str, float] = {}
+            for k, v in dict(prefer).items():
+                try:
+                    if not k:
+                        continue
+                    w = float(v)
+                    if w <= 0:
+                        continue
+                    cleaned[str(k)] = w
+                except (TypeError, ValueError):
+                    continue
+            self._topic_preferences = cleaned
+
+    def get_topic_preferences(self) -> Dict[str, float]:
+        with self._lock:
+            return dict(self._topic_preferences)
+
+    def select_topic_seed(
+        self,
+        candidates: Optional[Sequence[str]] = None,
+        *,
+        default: Optional[str] = None,
+    ) -> str:
+        """从 candidates 里按 prefer overlap 加权选一个 topic seed。
+
+        - 没 prefer：返回 default 或 config.topic_seed。
+        - 有 prefer 但 candidates 空：返回 default 或 config.topic_seed。
+        - candidates 非空 + prefer 非空：每个 candidate 算 ``sum(prefer[k]
+          for k in prefer if k in candidate)`` 作为分数；分数最高者胜（同分取首位）；
+          所有分数 0 则回退 default / config.topic_seed。
+
+        命中（即真的按 prefer 选了一条而非回退默认）时 stats.prefer_weighted_select_count++。
+        """
+        fallback = default if default is not None else self.config.topic_seed
+        with self._lock:
+            prefer = dict(self._topic_preferences)
+        if not candidates or not prefer:
+            return fallback
+        best_score = 0.0
+        best_idx = -1
+        for i, c in enumerate(candidates):
+            if not c:
+                continue
+            score = 0.0
+            for k, w in prefer.items():
+                if k and k in c:
+                    score += w
+            if score > best_score:
+                best_score = score
+                best_idx = i
+        if best_idx < 0 or best_score <= 0:
+            return fallback
+        with self._lock:
+            self.stats.prefer_weighted_select_count += 1
+        return candidates[best_idx]
 
     def start(self, stop_event: threading.Event) -> None:
         if self._thread is not None and self._thread.is_alive():
@@ -551,16 +622,29 @@ class ProactiveScheduler:
         log.info("[proactive] triggered topic=%r", topic_text[:80])
 
     def _build_system_prompt(self) -> Optional[str]:
+        # companion-009: 即使没 profile_store，只要 set_topic_preferences 被调过，
+        # 也把 prefer_topics 拼进一个轻量 system_prompt 让 LLM 偏向用户兴趣。
+        with self._lock:
+            prefer = dict(self._topic_preferences)
+        prefer_hint = ""
+        if prefer:
+            top = sorted(prefer.items(), key=lambda kv: kv[1], reverse=True)[:5]
+            keys = "、".join(k for k, _ in top)
+            prefer_hint = f"用户感兴趣的话题包括：{keys}。优先围绕这些聊。"
+
         if self.profile_store is None:
-            return None
+            return prefer_hint or None
         try:
             from coco.profile import build_system_prompt
             from coco.llm import SYSTEM_PROMPT as _BASE
             prof = self.profile_store.load()
-            return build_system_prompt(prof, base=_BASE)
+            sp = build_system_prompt(prof, base=_BASE)
+            if prefer_hint:
+                sp = f"{sp}\n{prefer_hint}" if sp else prefer_hint
+            return sp
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] build_system_prompt failed: %s: %s", type(e).__name__, e)
-            return None
+            return prefer_hint or None
 
     # ------------------------------------------------------------------
     # 后台线程

@@ -1318,7 +1318,7 @@
       "area": "companion",
       "title": "偏好学习 — dialog_summary/dialog_memory → prefer_topics 写入 ProfilePersist",
       "user_visible_behavior": "Coco 跨会话『记住』用户偏好话题：从 dialog_summary（companion-005）与 dialog_memory 提取 TopK 关键词（频次 + 时间衰减），写入 PersistentProfileStore 的 prefer_topics 字段。ProactiveScheduler 选话题时优先用 prefer_topics（按 weight 加权），让主动开口更贴近用户兴趣。default-OFF（COCO_PREFER_LEARN=1），不启用时 profile 不写新字段，原有 companion-008 行为不变。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "companion-005",
         "companion-008",

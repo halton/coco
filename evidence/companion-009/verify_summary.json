@@ -1,0 +1,56 @@
+{
+  "feature": "companion-009",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 bigram topk + 重复词高权重",
+      "ok": true,
+      "detail": "kw={'做菜': 1.0, '喜欢': 0.5, '菜很': 0.5, '跑步': 0.5, '我喜': 0.25}"
+    },
+    {
+      "name": "V2 time decay 旧 turn 权重低于新 turn",
+      "ok": true,
+      "detail": "new=1.000 old=0.500"
+    },
+    {
+      "name": "V3 prefer_topics 写入并跨会话读回",
+      "ok": true,
+      "detail": "kw={'做菜': 1.0, '前面': 0.333333, '面聊': 0.333333, '聊到': 0.333333, '跑步': 0.333333} loaded.prefer_topics={'做菜': 1.0, '前面': 0.333333, '面聊': 0.333333, '聊到': 0.333333, '跑步': 0.333333}"
+    },
+    {
+      "name": "V4 ProactiveScheduler.set_topic_preferences 影响选择 + stats",
+      "ok": true,
+      "detail": "default_pick=default? True pick1='A 聊聊跑步' pick2='B 聊聊编程' select_count=2 sp_has_prefer=True"
+    },
+    {
+      "name": "V5 default-OFF env semantics",
+      "ok": true,
+      "detail": "unset=False =1=True =0=False"
+    },
+    {
+      "name": "V6 旧 v1 schema 兼容（无 prefer_topics 字段不报错 + 默认 empty）",
+      "ok": true,
+      "detail": "loaded=True prefer_topics={} to_dict_has_field=False"
+    },
+    {
+      "name": "V7 多 profile 独立更新 prefer_topics 不串扰",
+      "ok": true,
+      "detail": "a={'做菜': 1.0} b={'跑步': 1.0}"
+    },
+    {
+      "name": "V8 停用词过滤生效",
+      "ok": true,
+      "detail": "kw_keys=['阅读']"
+    },
+    {
+      "name": "V9 stats 计数（updated_count / extracted_total / on_turn / persist_skipped）",
+      "ok": true,
+      "detail": "updated=2 extracted=2 skipped=1 on_turn=3 due=True"
+    },
+    {
+      "name": "V10 共存（vision-006/-007/interact-011/companion-008）",
+      "ok": true,
+      "detail": "ps.stats(caption=1 mm=1 prefer_sel=1) profile_persist_ok=True"
+    }
+  ]
+}
