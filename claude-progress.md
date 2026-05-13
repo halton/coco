@@ -1243,3 +1243,28 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
   - infra-005 health monitor + daemon self-heal ✅
   - interact-011 offline fallback default-OFF ✅
 - **下一候选建议**：uat-phase4 异步真机 UAT（不阻塞）或 phase-8 规划（BACKLOG 中 vision-006 看图说话 / infra-006 verify matrix CI / robot-005 robot-004 followup 提升）
+
+## Session — phase-8 启动 + vision-006 closeout（2026-05-13）
+
+- **phase-8 启动**：BACKLOG 中 vision-006 / infra-006 / robot-005 提升为 phase-8 候选（priority 40-42），sim-first 推进；真机相关归 uat-phase8 异步项。
+- **vision-006 → passing**：SceneCaption 看图说话 + ProactiveScheduler 集成（default-OFF）
+  - 实现：`coco/perception/scene_caption.py`（HeuristicCaptionBackend 颜色/亮度/运动启发式 + SceneCaptionEmitter 周期 daemon 线程 + LLMBackend stub 占位），`coco/proactive.py` 新增 `record_caption_trigger()` + stats.caption_proactive，`coco/main.py` 接线 COCO_SCENE_CAPTION=1 才注入。
+  - **V1-V10 全 PASS**：
+    - V1 暗图描述含『暗』或『夜』
+    - V2 移动物体（前后帧差）描述含『移动』
+    - V3 mock clock 周期触发
+    - V4 min_change_threshold 抑制相似重复
+    - V5 cooldown 窗口内不重复 emit
+    - V6 cfg.enabled=False 时 emitter 不构造
+    - V7 COCO_SCENE_CAPTION=1 才注入
+    - V8 stop+join(timeout=2) 干净退出
+    - V9 ProactiveScheduler.caption_proactive 计数
+    - V10 vision-005 gesture 与 scene_caption 共存不互相干扰
+  - **回归 PASS**：./init.sh smoke / verify_vision_005 / verify_interact_011 / verify_companion_008
+  - **Reviewer (sub-agent, fresh-context)**: LGTM；L0/L1 无；4 条 L2 备注（非阻塞）：
+    1. `scene_caption.py:464` `_prev_frame = frame` 未 copy，cv2.VideoCapture buffer 可能复用同一 ndarray，真机 UAT 时观察 frame diff 是否受影响
+    2. AUTHORITATIVE_COMPONENTS 中 `'scene_caption'` 短名实际未被 emit 使用（统一 component='vision'），保留作未来子系统升级抓手或后续 cleanup 二选一
+    3. verify V6 仅断言 cfg.enabled=False 路径短路，未端到端验证 main.py 无 env 不启线程
+    4. LLMCaptionBackend stub.caption() 抛 NotImplementedError 在当前路径永走不到，冗余可清
+- **closeout**：merge `feat/vision-006` → main（HEAD=f26c988，merge --no-ff）；feature_list.json status → passing + 完整 evidence；本日志同步追加。
+- **phase-8 软件进度 1/3**，下一候选：**infra-006**（verify matrix CI — GitHub Actions 全量 verify 矩阵）。
