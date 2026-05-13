@@ -123,6 +123,7 @@ class InteractSession:
         dialog_summarizer: Optional[Any] = None,
         dialog_summary_threshold: int = 10,
         dialog_summary_keep_recent: int = 4,
+        offline_fallback: Optional[Any] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -174,6 +175,11 @@ class InteractSession:
         self.dialog_summarizer = dialog_summarizer
         self.dialog_summary_threshold = int(dialog_summary_threshold)
         self.dialog_summary_keep_recent = int(dialog_summary_keep_recent)
+        # interact-011: 离线降级回路（OfflineDialogFallback）。None 时整段路径不走，
+        # 与今天行为一致。注入后：fallback 模式时跳过 profile.extract、跳过 LLM 调用、
+        # 用 fallback.compose_fallback_reply 出 utterance、dialog_memory.append 的
+        # user 端加 [fallback] 前缀（summarizer / profile 据此跳过）。
+        self.offline_fallback = offline_fallback
         # 状态机回调挂钩（emit interact.state_transition）
         if conv_state_machine is not None:
             try:
@@ -341,7 +347,17 @@ class InteractSession:
 
             # companion-004: profile 抽取（仅当 profile_store 注入且 transcript 非空）。
             # 抽取在 emotion 之后、route_reply 之前；写盘失败一律吞掉不阻塞主流程。
-            if self.profile_store is not None and transcript:
+            # interact-011: fallback 模式下跳过 profile 抽取，避免离线降级期间的
+            # 不可靠 transcript（用户可能说"喂喂喂网怎么了"等抱怨网络的话）污染长期偏好。
+            _in_offline_fallback_pre = False
+            if self.offline_fallback is not None:
+                try:
+                    if self.offline_fallback.is_enabled() and self.offline_fallback.is_in_fallback():
+                        _in_offline_fallback_pre = True
+                except Exception:  # noqa: BLE001
+                    _in_offline_fallback_pre = False
+            if (self.profile_store is not None and transcript
+                    and not _in_offline_fallback_pre):
                 try:
                     from coco.profile import extract_profile_signals
                     sig = extract_profile_signals(transcript)
@@ -491,7 +507,27 @@ class InteractSession:
                         llm_text = self.llm_reply_fn(transcript, **kwargs)
                     else:
                         llm_text = self.llm_reply_fn(transcript)
-                    if llm_text and llm_text.strip():
+                    # interact-011: 调用后看 fallback 是否激活（wrapped llm_reply_fn 内部
+                    # 已根据 backend_ok 增量更新 in_fallback 状态）。in_fallback=True 时
+                    # 用模板替代 LLM 输出（弃 llm_text，可能是 KEYWORD_ROUTES 兜底或空字符串）。
+                    _use_fallback_now = False
+                    if self.offline_fallback is not None:
+                        try:
+                            if (self.offline_fallback.is_enabled()
+                                    and self.offline_fallback.is_in_fallback()):
+                                _use_fallback_now = True
+                        except Exception:  # noqa: BLE001
+                            _use_fallback_now = False
+                    if _use_fallback_now:
+                        try:
+                            fb_reply = self.offline_fallback.compose_fallback_reply(transcript)
+                            if fb_reply and fb_reply.strip():
+                                reply = fb_reply.strip()
+                                result["fallback_used"] = True
+                        except Exception as e:  # noqa: BLE001
+                            log.warning("[interact] offline_fallback compose failed: %s: %s",
+                                        type(e).__name__, e)
+                    elif llm_text and llm_text.strip():
                         reply = llm_text.strip()
                     if self.conv_state_machine is not None:
                         try:
@@ -513,9 +549,19 @@ class InteractSession:
             # interact-004: 记一轮到 ring buffer。即使走 KEYWORD_ROUTES（无 LLM）
             # 也 append —— 保持"对话发生过"的事实，下一次若 LLM 上线可立即接续。
             # transcript 为空（ASR 失败/静音）时不记，避免污染上下文。
+            # interact-011: fallback 模式产出的轮，user_text 加 [fallback] 前缀
+            # （与 interact-010 [手势:xxx] 风格统一），下游 summarizer / profile
+            # extractor 据此跳过整轮。
             if self.dialog_memory is not None and transcript:
+                _user_for_dm = transcript
+                if result.get("fallback_used"):
+                    try:
+                        from coco.offline_fallback import USER_FALLBACK_TAG as _FBTAG
+                        _user_for_dm = f"{_FBTAG} {transcript}"
+                    except Exception:  # noqa: BLE001
+                        _user_for_dm = f"[fallback] {transcript}"
                 try:
-                    self.dialog_memory.append(transcript, reply)
+                    self.dialog_memory.append(_user_for_dm, reply)
                 except Exception as e:  # noqa: BLE001
                     log.warning("dialog_memory.append failed: %s: %s", type(e).__name__, e)
                 # interact-009: append 后尝试压缩（fail-soft，内部 try/except）

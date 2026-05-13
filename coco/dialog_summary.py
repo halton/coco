@@ -115,6 +115,32 @@ class DialogSummarizer(Protocol):
         ...
 
 
+def _skip_turn(user_text: str) -> bool:
+    """interact-011: 跳过 fallback / 手势-only 等"非主线"轮。
+
+    与 dialog_memory.append 时的标记约定一致：
+      - ``[fallback] xxx``: OfflineDialogFallback 产出，离线降级期间的 placeholder turn
+      - 仅手势触发（无 user 文本）的轮 user_text 为 ``[手势:xxx]``（interact-010）—— 这些
+        是机器人侧的状态记录而非用户对话内容，summary 也不应总结。
+
+    其他前缀（如 ``[手势:nod] 你好``）保留：因为后面有真实的用户原文。
+    """
+    if not user_text:
+        return False
+    t = user_text.lstrip()
+    if t.startswith("[fallback]"):
+        return True
+    # [手势:xxx]（且 ] 之后无其它文本）= 仅手势 turn
+    if t.startswith("[手势:"):
+        # 找到 "]"，看其后是否还有非空字符
+        idx = t.find("]")
+        if idx >= 0:
+            rest = t[idx + 1:].strip()
+            if not rest:
+                return True
+    return False
+
+
 class HeuristicSummarizer:
     """无 LLM 时的 fallback：直接拼接 user 文本，截断到 max_chars。
 
@@ -130,8 +156,11 @@ class HeuristicSummarizer:
             return ""
         # interact-009 L1-4: 拼 user + assistant 两段，保留"机器人答应/拒绝过什么"
         # 的关键状态。格式：[U]xxx [A]yyy；[U]zzz [A]www
+        # interact-011: 跳过 [fallback] / 仅 [手势:xxx] 的 turn（_skip_turn）
         parts: List[str] = []
         for u, a in turns:
+            if _skip_turn(u):
+                continue
             u = (u or "").strip()
             a = (a or "").strip()
             if not u and not a:
@@ -194,9 +223,14 @@ class LLMSummarizer:
 
     @staticmethod
     def _format_turns(turns: List[Tuple[str, str]]) -> str:
+        # interact-011: 跳过 [fallback] / 仅 [手势:xxx] 的 turn
         lines: List[str] = []
-        for i, (u, a) in enumerate(turns, 1):
-            lines.append(f"{i}. 用户：{(u or '').strip()}")
+        idx = 0
+        for (u, a) in turns:
+            if _skip_turn(u):
+                continue
+            idx += 1
+            lines.append(f"{idx}. 用户：{(u or '').strip()}")
             lines.append(f"   助手：{(a or '').strip()}")
         return "\n".join(lines)
 

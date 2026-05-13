@@ -1155,12 +1155,49 @@ class Coco(ReachyMiniApp):
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][dialog_summary] init failed: {type(e).__name__}: {e}", flush=True)
 
+            # interact-011: 可选 OfflineDialogFallback（默认 OFF；COCO_OFFLINE_FALLBACK=1 启用）。
+            # 注入后：(a) 包装 _llm.reply 让 InteractSession 调用时由 fallback 接管失败计数；
+            # (b) 把 fallback 实例传给 InteractSession 与下游，让其在 in_fallback 时跳 profile/
+            # 用模板 utterance/打 [fallback] 前缀；(c) 切入时 pause ProactiveScheduler 避免雪上加霜。
+            _offline_fallback = None
+            _wrapped_llm_reply = _llm.reply
+            try:
+                from coco.offline_fallback import (
+                    OfflineDialogFallback as _OFB,
+                    config_from_env as _ofb_cfg_from_env,
+                )
+                _ofbcfg = _ofb_cfg_from_env()
+                if _ofbcfg.enabled:
+                    _dm_for_fb = _dialog_memory  # late-bind 通过 lambda
+                    _offline_fallback = _OFB(
+                        config=_ofbcfg,
+                        proactive_scheduler=_proactive,
+                        emit_fn=emit,
+                        tts_say_fn=coco_tts.say,
+                        dialog_memory_ref=(lambda: _dm_for_fb),
+                    )
+                    _wrapped_llm_reply = _offline_fallback.wrap_llm_reply(_llm)
+                    print(
+                        f"[coco][offline_fallback] enabled threshold={_ofbcfg.fail_threshold} "
+                        f"probe_interval={_ofbcfg.probe_interval_s:.1f}s",
+                        flush=True,
+                    )
+                else:
+                    print(
+                        "[coco][offline_fallback] disabled (COCO_OFFLINE_FALLBACK not set)",
+                        flush=True,
+                    )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][offline_fallback] init failed: {type(e).__name__}: {e}", flush=True)
+                _offline_fallback = None
+                _wrapped_llm_reply = _llm.reply
+
             session = InteractSession(
                 robot=reachy_mini,
                 asr_fn=_asr_int16_fn,
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
-                llm_reply_fn=_llm.reply,
+                llm_reply_fn=_wrapped_llm_reply,
                 # companion-003 L0-2 + interact-007: 统一交互钩子，同时通知 power_state
                 # 与 ProactiveScheduler，避免 phase-3 双计数 / phase-4 主动话题误发。
                 on_interaction=(
@@ -1189,6 +1226,7 @@ class Coco(ReachyMiniApp):
                     if _shared_emotion_tracker is not None else None
                 ),
                 emotion_tracker=_shared_emotion_tracker,
+                offline_fallback=_offline_fallback,
             )
 
             # interact-007: 启动 scheduler（必须在 session 构造之后，因为 InteractSession

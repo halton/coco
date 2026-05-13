@@ -96,6 +96,7 @@ class ProactiveStats:
     skipped_cooldown: int = 0
     skipped_rate_limit: int = 0
     skipped_quiet_state: int = 0
+    skipped_paused: int = 0
     llm_errors: int = 0
     tts_errors: int = 0
     last_topic: str = ""
@@ -225,6 +226,9 @@ class ProactiveScheduler:
 
         self._thread: Optional[threading.Thread] = None
         self._stop_event: Optional[threading.Event] = None
+        # interact-011: 离线降级时 pause()，恢复时 resume()。
+        # _paused=True 时 _should_trigger 返回 "paused"。pause/resume 是幂等的。
+        self._paused: bool = False
 
         # 探测 llm_reply_fn 是否接受 system_prompt
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
@@ -285,6 +289,29 @@ class ProactiveScheduler:
             t = now if now is not None else self.clock()
             return (t - self._last_proactive_ts) < self.config.cooldown_s
 
+    # interact-011: pause / resume —— 让 OfflineDialogFallback 在离线降级期间静默
+    # ProactiveScheduler，避免雪上加霜。pause/resume 幂等；线程 loop 不停（继续 tick
+    # 但 _should_trigger 因 paused 返回 "paused"），便于恢复后立即可用。
+    def pause(self, source: str = "external") -> None:
+        with self._lock:
+            if self._paused:
+                return
+            self._paused = True
+        log.info("[proactive] paused by %s", source)
+
+    def resume(self, source: str = "external") -> None:
+        with self._lock:
+            if not self._paused:
+                return
+            self._paused = False
+            # 防止 resume 后秒发：刷新 last_interaction_ts，让 idle_threshold 重新计时
+            self._last_interaction_ts = self.clock()
+        log.info("[proactive] resumed by %s", source)
+
+    def is_paused(self) -> bool:
+        with self._lock:
+            return self._paused
+
     def start(self, stop_event: threading.Event) -> None:
         if self._thread is not None and self._thread.is_alive():
             log.warning("[proactive] scheduler already running")
@@ -314,6 +341,9 @@ class ProactiveScheduler:
         """检查是否该触发；返回 None 表示触发，否则返回 skip 原因字符串。"""
         if not self.config.enabled:
             return "disabled"
+        # interact-011: 被 OfflineDialogFallback 暂停 → "paused"
+        if self._paused:
+            return "paused"
         t = now if now is not None else self.clock()
         # interact-008 L1-1: 如果对话状态机在 QUIET，跳过（用户明确要求安静）
         if self.conv_state_machine is not None:
