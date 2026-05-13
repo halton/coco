@@ -1442,3 +1442,16 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **push**：commit 后将一次性尝试 `git push origin main` + `git push origin feat/infra-008`，失败忽略不阻塞。
 - **下一步**：phase-10 候选规划 或 uat-phase4 / uat-phase8 异步真机 UAT（按 sim-first 原则非阻塞）。
 
+
+## Session 2026-05-14 — phase-10 启动（入库 5 候选 + 启动 infra-009）
+
+- **现状**：phase-7 软件 5/5 + phase-8 软件 3/3 + phase-9 软件 5/5 全 passing；main HEAD=2a76898；uat-phase4/uat-phase8 异步真机 UAT 待用户方便时（不阻塞）。followup 累积：infra-007 reopen_fn 占位、infra-008 --max 截断盲点、vision-006/007/companion-009/010/infra-006 各若干 L2。
+- **phase-10 候选（5 个，priority 60-64，全部 sim-first 友好，全部 default-OFF 或 CI-only）**：
+  1. **infra-009** (prio 60, area=infra) — phase-7/8/9 followup sweep — 一次性收割 9 项 L1/L2（infra-008 L1-1 --max 截断 + L2-3 自检 / vision-006 L2-1 _prev_frame copy + L2-4 stub 清理 / vision-007 L2-2 别名 cleanup / companion-009 L2-2 rebuild 异步化 / companion-010 L2-1 tick 路径 + L2-3 prefer 重 capture / infra-007 L2-1/L2-2 cooldown + real_attempts emit / infra-006 L2-C docstring 提醒）。robot-005 模式。
+  2. **infra-010** (prio 61, area=infra-audio-vision-asr, env=COCO_SELFHEAL_WIRE) — infra-007 reopen_fn 真实接线（audio sounddevice / camera open_camera / asr offline_fallback 三路落地占位 lambda）。
+  3. **companion-011** (prio 62, area=vision-companion, env=COCO_MULTI_USER) — 多用户共处（同帧 ≥2 face_id → group_mode + prefer 并集/交集加权 + group 句式模板 + ProfilePersist.group_sessions schema v3）。
+  4. **interact-012** (prio 63, area=interact-companion, env=COCO_MM_PROACTIVE_LLM) — 主动话题 LLM 化（vision-007 fusion trigger 真调 LLM 拼专用 system_prompt + emotion + prefer，TTS 直播；离线 fallback 退化模板）。
+  5. **infra-011** (prio 64, area=infra) — paths-filter 接入 verify-matrix CI（dorny/paths-filter@v3 wire；push main/feat 强制全量；infra-008 L2-1 升级版）。
+- **启动**：**infra-009**（in_progress）。理由：followup 收割最低风险/最高价值比（robot-005 已验证模式）；清账后 phase-10 后续 feature 站在更干净的代码上；不引入新概念，纯软件、sim-first 完全友好。
+- **commit**：feature_list.json 入库 + 本日志 → 主分支直接 commit（按 CLAUDE.md sub-agent commit 例外 + 持续开发模式 + phase 规划属基础设施改动可直接 main）；push origin main 一次，失败忽略。
+- **下一步**：派 sub-agent 实现 infra-009 — 改动跨 coco/perception/scene_caption.py / coco/multimodal_fusion.py / coco/companion/preference_learner.py / coco/companion/emotion_memory.py / coco/proactive.py / coco/infra/self_heal.py / scripts/precommit_impact.py / scripts/run_verify_all.py 等；新建 scripts/verify_infra_009.py V1-V10；Reviewer fresh-context 评审；feat/infra-009 分支。
