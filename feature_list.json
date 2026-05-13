@@ -1353,7 +1353,7 @@
       "area": "companion",
       "title": "情绪记忆窗口 — N 轮情绪滑窗 → emotion_alert → 主动安慰",
       "user_visible_behavior": "Coco 短期记得用户情绪：最近 N(=20) 次对话的情绪标签（companion-007/emotion_renderer 已有源）滚动滑窗，连续 K(=10) 次 sad 比例 ≥ 0.6 → emit companion.emotion_alert(kind='persistent_sad') → ProactiveScheduler 触发安慰话题模板（『最近你有点低落，我陪你聊聊』），并把告警写入 ProfilePersist 让跨会话也能跟进。default-OFF（COCO_EMO_MEMORY=1）。",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "companion-007",
         "companion-008",

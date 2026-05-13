@@ -1,0 +1,56 @@
+{
+  "feature": "companion-010",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 deque maxlen 超出旧条目被丢",
+      "ok": true,
+      "detail": "len=5 first.ts=1002.0 last.ts=1006.0"
+    },
+    {
+      "name": "V2 ratio 正确 + sad ratio ≥ 0.6 触发 alert",
+      "ok": true,
+      "detail": "r_sad=0.667 r_happy=0.333 fire=True kind=persistent_sad"
+    },
+    {
+      "name": "V3 cooldown 抑制重复 + 时间到再次触发",
+      "ok": true,
+      "detail": "fire1=True fire2=False fire3=True skipped=1"
+    },
+    {
+      "name": "V4 alert 写入 ProfilePersist.emotion_alerts + ProactiveScheduler 记账",
+      "ok": true,
+      "detail": "alerts=[{'kind': 'persistent_sad', 'ts': 4005.0, 'ratio': 1.0}] ps.alert_triggered=1 window.alerts=1"
+    },
+    {
+      "name": "V5 prefer bump + select_topic_seed 选安慰 + 到期还原",
+      "ok": true,
+      "detail": "bumped_keys=['低落', '做菜', '安慰', '心情', '聊聊', '陪伴'] pick='B 安慰你一下' restored_keys=['做菜'] prefer_bumps=1 prefer_restores=1"
+    },
+    {
+      "name": "V6 default-OFF env semantics",
+      "ok": true,
+      "detail": "unset=False =1=True =0=False"
+    },
+    {
+      "name": "V7 旧 v1 schema 兼容（无 emotion_alerts 字段 + 默认 empty）",
+      "ok": true,
+      "detail": "loaded=True emotion_alerts=[] to_dict_has_field=False"
+    },
+    {
+      "name": "V8 stats samples/alerts/per_kind/cooldown_skipped",
+      "ok": true,
+      "detail": "samples=10 alerts=1 per_kind={'persistent_sad': 1} skipped=5"
+    },
+    {
+      "name": "V9 共存 companion-007/-009 + vision-006/-007 + interact-011",
+      "ok": true,
+      "detail": "after_keys=['低落', '做菜', '安慰', '心情', '聊聊', '陪伴'] after2={'做菜': 1.0} caption=1 mm=1 alert=1"
+    },
+    {
+      "name": "V10 start/stop clean（listener bind/unbind + prefer 还原）",
+      "ok": true,
+      "detail": "bound=True window=6 alert=1 bumped=True unbound_ok=True restored={'做菜': 0.5}"
+    }
+  ]
+}

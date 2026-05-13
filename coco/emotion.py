@@ -246,6 +246,23 @@ class EmotionTracker:
         self._last_emotion: Emotion = Emotion.NEUTRAL
         self._last_at: float = 0.0
         self._last_score: float = 0.0
+        # companion-010: 让 EmotionMemoryWindow / 其他下游订阅每次 record() 的事件。
+        # 回调签名：fn(emotion: Emotion, score: float, ts: float) -> None
+        # 任何异常一律吞掉（不阻塞主对话流）。
+        self._listeners: list = []
+
+    def add_listener(self, fn: Callable[[Emotion, float, float], None]) -> None:
+        """companion-010: 注册 record() 触发后的回调。NEUTRAL 不回调。"""
+        if fn is None:
+            return
+        if fn not in self._listeners:
+            self._listeners.append(fn)
+
+    def remove_listener(self, fn: Callable[[Emotion, float, float], None]) -> None:
+        try:
+            self._listeners.remove(fn)
+        except ValueError:
+            pass
 
     def record(self, label: EmotionLabel, now: Optional[float] = None) -> None:
         if label is None or label.name == Emotion.NEUTRAL:
@@ -255,6 +272,12 @@ class EmotionTracker:
         self._last_emotion = label.name
         self._last_at = float(now)
         self._last_score = float(label.score)
+        for fn in list(self._listeners):
+            try:
+                fn(label.name, float(label.score), float(now))
+            except Exception as e:  # noqa: BLE001
+                log.warning("[emotion] listener %r raised: %s: %s",
+                            getattr(fn, "__name__", fn), type(e).__name__, e)
 
     def effective(self, now: Optional[float] = None) -> Emotion:
         if self._last_emotion == Emotion.NEUTRAL:
