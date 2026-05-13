@@ -1455,7 +1455,7 @@
       "area": "infra",
       "title": "pre-commit hook + verify 影响面分析 — 本地只跑相关 verify",
       "user_visible_behavior": "开发者在本地 commit 前自动跑相关 verify 子集而非全量。`scripts/precommit_impact.py` 解析 staged python 文件，通过简易 import graph + `coco/<area>/...` → `scripts/verify_<area>_*.py` 映射反推影响面，只跑相关 verify。`.git/hooks/pre-commit` 可选启用（COCO_PRECOMMIT_HOOK=1）。同时输出 GitHub Actions paths-filter 建议片段供 infra-006 矩阵 PR 时跳过无关 job 用。",
-      "status": "not_started",
+      "status": "passing",
       "dependencies": [
         "infra-006"
       ],
@@ -1468,7 +1468,23 @@
         "scripts/verify_infra_008.py V1-V10：V1 staged 文件 coco/perception/X.py → 命中 verify_vision_*；V2 staged scripts/verify_robot_001.py → 命中自身；V3 coco/main.py → 全量；V4 多文件并集去重；V5 无相关 staged → 空列表；V6 hook template 在 COCO_PRECOMMIT_HOOK=0 时短路；V7 COCO_PRECOMMIT_HOOK=1 时调用 impact + verify；V8 失败 verify 时 hook 返回非零；V9 paths-filter YAML 片段语法合法（PyYAML load）；V10 回归 infra-006 V1-V9。",
         "Reviewer fresh-context 评审：映射规则与现实漂移（新增子模块未在表里）；import graph 不解析条件 import 的盲点；hook 默认 OFF 避免打扰未启用的开发者；hook 失败时如何让开发者临时 bypass（COCO_PRECOMMIT_SKIP=1 或 --no-verify 说明）；paths-filter 与 infra-006 SKIP_LIST 的语义不冲突。"
       ],
-      "notes": "纯本地 + CI 辅助；完全 sim 可证（构造 staged 改动 fixture）。priority 54。"
+      "notes": "纯本地 + CI 辅助；完全 sim 可证（构造 staged 改动 fixture）。priority 54。",
+      "evidence": {
+        "verify_script": "scripts/verify_infra_008.py",
+        "verify_result": "V1-V10 all PASS (V6 含 V6b 子项)",
+        "main_artifacts": [
+          "scripts/precommit_impact.py",
+          "scripts/pre-commit-hook.sh",
+          "scripts/install_pre_commit.sh",
+          "scripts/verify_infra_008.py",
+          "evidence/infra-008/paths-filter.yml"
+        ],
+        "default_off_env": "COCO_PRECOMMIT_HOOK (hook 内部)，安装本身亦为 opt-in (bash scripts/install_pre_commit.sh)",
+        "bypass": "COCO_PRECOMMIT_SKIP=1 git commit  或  git commit --no-verify",
+        "regression": "infra-005 PASS=38/38, infra-006 9/9, infra-007 PASS=56/56",
+        "smoke": "COCO_CI=1 ./init.sh PASS",
+        "reviewer": "pending"
+      }
     }
   ]
 }

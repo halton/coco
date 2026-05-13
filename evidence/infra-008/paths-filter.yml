@@ -1,0 +1,46 @@
+# infra-008: paths-filter 建议片段（供 infra-006 verify-matrix 参考）
+audio:
+  - 'coco/asr.py'
+  - 'coco/llm.py'
+  - 'coco/tts.py'
+  - 'coco/vad_trigger.py'
+  - 'coco/wake_word.py'
+  - 'scripts/verify_audio_*.py'
+companion:
+  - 'coco/companion/**'
+  - 'coco/emotion.py'
+  - 'coco/idle.py'
+  - 'coco/multimodal_fusion.py'
+  - 'coco/power_state.py'
+  - 'coco/proactive.py'
+  - 'coco/profile.py'
+  - 'scripts/verify_companion_*.py'
+infra:
+  - 'coco/__init__.py'
+  - 'coco/banner.py'
+  - 'coco/config.py'
+  - 'coco/infra/**'
+  - 'coco/logging_setup.py'
+  - 'coco/main.py'
+  - 'coco/metrics.py'
+  - 'scripts/precommit_impact.py'
+  - 'scripts/run_verify_all.py'
+  - 'scripts/verify_infra_*.py'
+interact:
+  - 'coco/conversation.py'
+  - 'coco/dialog.py'
+  - 'coco/dialog_summary.py'
+  - 'coco/gesture_dialog.py'
+  - 'coco/intent.py'
+  - 'coco/interact.py'
+  - 'coco/offline_fallback.py'
+  - 'scripts/verify_interact_*.py'
+publish:
+  - 'scripts/verify_publish_*.py'
+robot:
+  - 'coco/actions.py'
+  - 'coco/robot/**'
+  - 'scripts/verify_robot_*.py'
+vision:
+  - 'coco/perception/**'
+  - 'scripts/verify_vision_*.py'
