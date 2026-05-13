@@ -1497,7 +1497,7 @@
       "phase": 10,
       "area": "infra",
       "priority": 60,
-      "status": "in_progress",
+      "status": "passing",
       "default_off_env": "N/A (followup sweep, 改动随各原 feature 范围)",
       "description": "phase-7/8/9 累积 followup sweep — 把 vision-006/infra-006/robot-005/vision-007/companion-009/companion-010/infra-007/infra-008 评审遗留的非阻塞 L1/L2 残项一次性收割：(a) infra-008 L1-1：--max 截断盲点 → full_fan_out=True 时跳过截断 + 写 evidence/infra-008/last_run.json 留痕；(b) infra-008 L2-3：DIR_TO_AREA/MODULE_TO_AREA 子目录自检；(c) vision-006 L2-1：_prev_frame copy 防 buffer 复用；(d) vision-006 L2-4：LLMCaptionBackend stub 冗余清理；(e) vision-007 L2-2：inject_asr_event / on_asr_event 别名 cleanup；(f) companion-009 L2-2：rebuild_for_profile 异步化（ThreadPoolExecutor.submit）；(g) companion-010 L2-1：ProactiveScheduler.tick 调 coord.tick(now=...) 到期还原；(h) companion-010 L2-3：_bump_comfort_prefer 每次还原后重 capture 修首次回滚；(i) infra-007 L2-1/L2-2：V11 cooldown 抑流 + self_heal.dry_run emit 补 real_attempts 字段；(j) infra-006 L2-C：runner docstring 顶部加 EXCLUDED 提醒。纯软件、sim-first、低风险；按 robot-005 模式集中收割。",
       "verification": [
@@ -1524,8 +1524,32 @@
         "infra-007",
         "infra-008"
       ],
-      "evidence": "in_progress",
-      "_started": "2026-05-14"
+      "evidence": {
+        "status": "Reviewer (sub-agent): LGTM-with-caveats",
+        "smoke": "COCO_CI=1 ./init.sh PASS",
+        "verify": "scripts/verify_infra_009.py 10/10 PASS；scripts/verify_infra_008.py V1-V10 PASS（回归未破）",
+        "followups_completed": [
+          "vision-006 L2-1: scene_caption.py _prev_frame copy 防 buffer 复用",
+          "vision-007 L2-2: multimodal_fusion.py inject_asr_event / on_asr_event 别名 deprecate",
+          "companion-009 L2-a: select_topic_seed(candidates=...) 公开 API 注：N/A（保留）",
+          "companion-009 L2-b: rebuild_for_profile 异步化（ThreadPoolExecutor.submit）",
+          "companion-010 L2-1: ProactiveScheduler.tick 调 coord.tick(now=...) 到期自动还原",
+          "companion-010 L2-3: _bump_comfort_prefer 每次还原后重 capture（首次回滚修复）",
+          "infra-007 L1-a: reopen_fn 真实接线 defer 至 infra-010（占位 lambda 保留）",
+          "infra-008 L1-1: precommit_impact.py full_fan_out=True 时 --max 截断不生效 + 写 evidence/infra-008/last_run.json",
+          "infra-008 L2-3: DIR_TO_AREA / MODULE_TO_AREA 子目录自检",
+          "vision-007 L2-2: on_asr_event 别名 DeprecationWarning",
+          "infra-006 L2-C: runner docstring 顶部加 EXCLUDED 提醒"
+        ],
+        "caveats": [
+          "(1) infra-007 L1-a self_heal real reopen 占位 lambda 无 WARN → 写入 infra-010 接线",
+          "(2) companion-009 L2-b 单 worker ThreadPoolExecutor 在高频 profile 切换下可能排队",
+          "(3) companion-010 L2-3 comfort key 与用户 prefer 重名罕见 case 仍可能丢首值",
+          "(4) infra-007 self_heal boost flag 在持续失败下永留（无自动 clear）"
+        ]
+      },
+      "_started": "2026-05-14",
+      "_passed": "2026-05-14"
     },
     {
       "id": "infra-010",

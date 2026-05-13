@@ -1455,3 +1455,35 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 - **启动**：**infra-009**（in_progress）。理由：followup 收割最低风险/最高价值比（robot-005 已验证模式）；清账后 phase-10 后续 feature 站在更干净的代码上；不引入新概念，纯软件、sim-first 完全友好。
 - **commit**：feature_list.json 入库 + 本日志 → 主分支直接 commit（按 CLAUDE.md sub-agent commit 例外 + 持续开发模式 + phase 规划属基础设施改动可直接 main）；push origin main 一次，失败忽略。
 - **下一步**：派 sub-agent 实现 infra-009 — 改动跨 coco/perception/scene_caption.py / coco/multimodal_fusion.py / coco/companion/preference_learner.py / coco/companion/emotion_memory.py / coco/proactive.py / coco/infra/self_heal.py / scripts/precommit_impact.py / scripts/run_verify_all.py 等；新建 scripts/verify_infra_009.py V1-V10；Reviewer fresh-context 评审；feat/infra-009 分支。
+
+## Session — 2026-05-14 — infra-009 close-out：phase-7/8/9 followup sweep 全过 + LGTM-with-caveats merge
+
+- **状态切换**：`infra-009` in_progress → **passing**（main HEAD merge commit `d3a71a2`，feat 分支 tip `56302ad`）
+- **验证**：smoke `COCO_CI=1 ./init.sh` PASS；`scripts/verify_infra_009.py` V1-V10 10/10 PASS；`scripts/verify_infra_008.py` V1-V10 PASS（回归未破）
+- **Reviewer**：sub-agent fresh-context 一轮 **LGTM-with-caveats**（建议 merge + status=passing）
+
+### 11 项 followup 完成
+1. **vision-006 L2-1**：`scene_caption.py` `_prev_frame` copy 防 buffer 复用
+2. **vision-007 L1**：`multimodal_fusion.py` `inject_asr_event` / `on_asr_event` 别名 cleanup
+3. **companion-009 L2-a**：`select_topic_seed(candidates=...)` 公开 API — N/A（保留）
+4. **companion-009 L2-b**：`rebuild_for_profile` 异步化（ThreadPoolExecutor.submit，单 worker）
+5. **companion-010 L2-1**：`ProactiveScheduler.tick` 路径调 `coord.tick(now=...)` alert 过期自动还原（无需新 emotion 事件）
+6. **companion-010 L2-3**：`_bump_comfort_prefer` 多次 alert 间每次还原后重 capture（修首次回滚 bug）
+7. **infra-007 L1-a**：`reopen_fn` 真实接线 defer 至 infra-010（占位 lambda 保留 + 文档项）
+8. **infra-008 L1-1**：`precommit_impact.py` `full_fan_out=True` 时 `--max` 截断不生效 + 写 `evidence/infra-008/last_run.json` 留痕
+9. **infra-008 L2-3**：`DIR_TO_AREA` / `MODULE_TO_AREA` 子目录自检（漏登记报错）
+10. **vision-007 L2-2**：`on_asr_event` 别名 `DeprecationWarning`
+11. **infra-006 L2-C**：runner docstring 顶部加 `EXCLUDED` 提醒
+
+### 4 条 caveat（不阻 merge，已登记 follow-up）
+1. **infra-007 L1-a**：`self_heal` real reopen 占位 lambda 无 `WARN` 提示 → 写入 **infra-010** 接线
+2. **companion-009 L2-b**：单 worker `ThreadPoolExecutor` 在高频 profile 切换下可能排队
+3. **companion-010 L2-3**：comfort key 与用户 `prefer` 重名罕见 case 仍可能丢首值
+4. **infra-007**：`self_heal` boost flag 在持续失败下永留（无自动 clear）
+
+### main HEAD
+- merge commit：`d3a71a2`
+- closeout commit：本提交（chore close-out + status=passing + caveats）
+
+### 下一步
+- **infra-010**（priority=61，phase-10）— `SelfHealRegistry.reopen_fn` 真实接线（audio / camera / asr 三策略），消化 infra-009 caveat (1)；sim-first，default-OFF (`COCO_SELFHEAL_WIRE=1`)。
