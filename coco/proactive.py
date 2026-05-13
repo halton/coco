@@ -99,6 +99,8 @@ class ProactiveStats:
     skipped_paused: int = 0
     llm_errors: int = 0
     tts_errors: int = 0
+    # vision-006: scene caption 作为外部触发源时的累计
+    caption_proactive: int = 0
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -288,6 +290,26 @@ class ProactiveScheduler:
                 return False
             t = now if now is not None else self.clock()
             return (t - self._last_proactive_ts) < self.config.cooldown_s
+
+    # vision-006: scene caption 作为外部触发源
+    # ------------------------------------------------------------------
+    # SceneCaptionEmitter 在 caption 命中时调本方法。把 caption 当作"主动开口
+    # 候选信号"记账：自增 stats.caption_proactive；同时复用 record_trigger 写
+    # _last_proactive_ts，让常规 cooldown 窗口对 caption 也生效，避免与 idle 路径
+    # 双发。后续若需要让 caption 真正驱动一次 LLM/TTS（"你今天好像换了头发"），
+    # 在这里把 caption.text 作为 seed 直接调 _do_trigger_unlocked 即可；本期先
+    # 只记账，保持最小改动。
+    def record_caption_trigger(self, caption_text: str = "") -> None:
+        with self._lock:
+            self.stats.caption_proactive += 1
+            t = self.clock()
+            # 借 history 留个调试痕迹（不动 triggered，避免污染 metrics）
+            try:
+                self.stats.history.append(
+                    f"@{t:.2f}: <caption:{(caption_text or '')[:60]}>"
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
     # interact-011: pause / resume —— 让 OfflineDialogFallback 在离线降级期间静默
     # ProactiveScheduler，避免雪上加霜。pause/resume 幂等；线程 loop 不停（继续 tick
