@@ -148,6 +148,10 @@ class PersistedProfile:
     # default-OFF（COCO_PREFER_LEARN）；空 dict 视为"未学过"。
     # 向后兼容：旧 v1 文件无该字段时 from_dict 自动补 {}，schema_version 不变。
     prefer_topics: Dict[str, float] = field(default_factory=dict)
+    # companion-010: 情绪告警历史 [{kind, ts, ratio}]。default-OFF
+    # （COCO_EMO_MEMORY）；空列表视为"未告警过"。向后兼容：旧文件无该字段
+    # 时 from_dict 自动补 []，schema_version 不变。
+    emotion_alerts: List[Dict[str, Any]] = field(default_factory=list)
     schema_version: int = SCHEMA_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
@@ -156,6 +160,9 @@ class PersistedProfile:
         # "default-OFF 时 profile 文件不含 prefer_topics 字段")
         if not self.prefer_topics:
             d.pop("prefer_topics", None)
+        # companion-010: 同上，emotion_alerts 空列表不落盘
+        if not self.emotion_alerts:
+            d.pop("emotion_alerts", None)
         return d
 
     @classmethod
@@ -171,6 +178,26 @@ class PersistedProfile:
                     continue
         else:
             pt = {}
+        # companion-010: 兼容旧文件——emotion_alerts 缺失或非 list 视为 []
+        ea_raw = d.get("emotion_alerts") or []
+        ea: List[Dict[str, Any]] = []
+        if isinstance(ea_raw, list):
+            for item in ea_raw:
+                if not isinstance(item, dict):
+                    continue
+                kind = item.get("kind")
+                ts = item.get("ts")
+                ratio = item.get("ratio")
+                if not kind:
+                    continue
+                try:
+                    ea.append({
+                        "kind": str(kind),
+                        "ts": float(ts) if ts is not None else 0.0,
+                        "ratio": float(ratio) if ratio is not None else 0.0,
+                    })
+                except (TypeError, ValueError):
+                    continue
         return cls(
             profile_id=str(d.get("profile_id") or ""),
             nickname=(d.get("nickname") or None),
@@ -180,6 +207,7 @@ class PersistedProfile:
             updated_ts=float(d.get("updated_ts") or 0.0),
             dialog_summary=[str(s) for s in (d.get("dialog_summary") or [])],
             prefer_topics=pt,
+            emotion_alerts=ea,
             schema_version=int(d.get("schema_version") or 0),
         )
 

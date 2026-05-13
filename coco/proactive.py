@@ -106,6 +106,9 @@ class ProactiveStats:
     mm_per_rule: dict = field(default_factory=dict)
     # companion-009: 偏好加权选 topic 命中计数
     prefer_weighted_select_count: int = 0
+    # companion-010: 情绪记忆触发的 alert 计数 + 按 kind 拆分
+    emotion_alert_triggered: int = 0
+    emotion_alert_per_kind: dict = field(default_factory=dict)
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -351,6 +354,44 @@ class ProactiveScheduler:
             )
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] mm emit failed: %s: %s", type(e).__name__, e)
+
+    # companion-010: 情绪记忆告警作为外部触发源
+    # ------------------------------------------------------------------
+    # EmotionAlertCoordinator 在连续 sad 比例阈值触发后调本方法。记账（
+    # emotion_alert_triggered + per_kind + history）+ emit
+    # ``proactive.emotion_alert``，同时把告警视为一次主动开口契机：
+    # - 不动 cooldown：alert 由 EmotionMemoryWindow 自带 30 分钟 cooldown，
+    #   不再叠加 ProactiveScheduler 的 cooldown；
+    # - 安慰类 prefer 由调用方（Coordinator）通过 set_topic_preferences 注入
+    #   并在 cooldown 过后还原。
+    def record_emotion_alert_trigger(self, kind: str, ratio: float = 0.0,
+                                     window_size: int = 0) -> None:
+        with self._lock:
+            self.stats.emotion_alert_triggered += 1
+            self.stats.emotion_alert_per_kind[kind] = (
+                self.stats.emotion_alert_per_kind.get(kind, 0) + 1
+            )
+            t = self.clock()
+            try:
+                self.stats.history.append(
+                    f"@{t:.2f}: <emotion_alert:{kind}:r={ratio:.2f}>"
+                )
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            emit_fn = self._emit
+            if emit_fn is None:
+                from coco.logging_setup import emit as _emit
+                emit_fn = _emit
+            emit_fn(
+                "proactive.emotion_alert",
+                kind=str(kind),
+                ratio=float(ratio),
+                window_size=int(window_size),
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("[proactive] emotion_alert emit failed: %s: %s",
+                        type(e).__name__, e)
 
     # interact-011: pause / resume —— 让 OfflineDialogFallback 在离线降级期间静默
     # ProactiveScheduler，避免雪上加霜。pause/resume 幂等；线程 loop 不停（继续 tick

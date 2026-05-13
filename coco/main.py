@@ -1284,6 +1284,75 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][preference_learner] init failed: {type(e).__name__}: {e}", flush=True)
                 _preference_learner = None
 
+            # companion-010: 可选 EmotionAlertCoordinator（默认 OFF via COCO_EMO_MEMORY=1）。
+            # 把 EmotionTracker 流出的强情绪样本入 N 轮滑窗，连续 sad 比例阈值触发
+            # alert → record_emotion_alert_trigger + bump 安慰类 prefer + 写 ProfilePersist。
+            # 装配前置依赖：emotion_tracker + proactive。任一缺失 print WARN，不构造，
+            # 保持 default-OFF 零开销。profile_store 可选（缺失则不落盘 alert，仍触发
+            # ProactiveScheduler 安慰话题）。
+            _emotion_memory_window = None
+            _emotion_alert_coord = None
+            try:
+                from coco.companion.emotion_memory import (
+                    EmotionMemoryWindow as _EmoWin,
+                    EmotionAlertCoordinator as _EmoCoord,
+                    emotion_memory_enabled_from_env as _emm_enabled,
+                )
+                if _emm_enabled():
+                    _missing = []
+                    if _shared_emotion_tracker is None:
+                        _missing.append("emotion_tracker(COCO_EMOTION)")
+                    if _proactive is None:
+                        _missing.append("proactive(COCO_PROACTIVE)")
+                    if _missing:
+                        print(
+                            "[coco][emotion_memory] COCO_EMO_MEMORY=1 但缺依赖："
+                            + ", ".join(_missing) + "；不构造 coordinator",
+                            flush=True,
+                        )
+                    else:
+                        _emotion_memory_window = _EmoWin()
+
+                        def _profile_provider(_pp_store=_persistent_profile_store,
+                                              _pp_pstore=_profile_store):
+                            if _pp_store is None or _pp_pstore is None:
+                                return (None, "")
+                            try:
+                                _uid = getattr(_pp_pstore, "active_user_id", None)
+                            except Exception:  # noqa: BLE001
+                                _uid = None
+                            if not _uid:
+                                return (None, "")
+                            try:
+                                from coco.companion.profile_persist import (
+                                    compute_profile_id as _cpid,
+                                )
+                                return (_pp_store, _cpid(_uid, _uid))
+                            except Exception:  # noqa: BLE001
+                                return (None, "")
+
+                        _emotion_alert_coord = _EmoCoord(
+                            _emotion_memory_window,
+                            proactive_scheduler=_proactive,
+                            profile_store_provider=(_profile_provider
+                                                    if _persistent_profile_store is not None
+                                                    else None),
+                        )
+                        _emotion_alert_coord.start(_shared_emotion_tracker)
+                        print(
+                            f"[coco][emotion_memory] enabled window={_emotion_memory_window.window_size} "
+                            f"K={_emotion_memory_window.min_samples_k} "
+                            f"ratio={_emotion_memory_window.ratio_threshold:.2f} "
+                            f"cooldown={_emotion_memory_window.alert_cooldown_s:.0f}s",
+                            flush=True,
+                        )
+                else:
+                    print("[coco][emotion_memory] disabled (COCO_EMO_MEMORY not set)", flush=True)
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][emotion_memory] init failed: {type(e).__name__}: {e}", flush=True)
+                _emotion_memory_window = None
+                _emotion_alert_coord = None
+
             def _on_interaction_combined(src: str, _ps=power_state, _pa=_proactive) -> None:
                 if _ps is not None:
                     try:
@@ -1778,6 +1847,17 @@ class Coco(ReachyMiniApp):
                     print(f"[coco][emotion_renderer] stopped stats={_emotion_renderer.stats}", flush=True)
                 except Exception as e:  # noqa: BLE001
                     print(f"[coco][emotion_renderer] stop failed: {e!r}", flush=True)
+            # companion-010: 停 EmotionAlertCoordinator（解绑 listener + 还原 prefer）
+            try:
+                if "_emotion_alert_coord" in locals() and _emotion_alert_coord is not None:
+                    _emotion_alert_coord.stop()
+                    print(
+                        f"[coco][emotion_memory] stopped stats={_emotion_alert_coord.stats} "
+                        f"window_stats={_emotion_memory_window.stats if _emotion_memory_window else None}",
+                        flush=True,
+                    )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][emotion_memory] stop failed: {e!r}", flush=True)
             # ptt_thread 是 daemon，stop_event 一 set 它的下一次 readline 返回前可能还在阻塞，
             # 但它是 daemon 线程，进程退出时会被回收；最多等 1s 让它响应 stop_event。
             if ptt_thread is not None:
