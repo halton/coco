@@ -482,6 +482,69 @@ class Coco(ReachyMiniApp):
             print(f"[coco][gesture] init failed: {exc!r}", flush=True)
             _gesture_recognizer = None
 
+        # vision-006: SceneCaptionEmitter — 周期场景描述（看图说话）。
+        # 默认 OFF；仅在 COCO_SCENE_CAPTION=1 且 COCO_CAMERA 已设时启动。
+        # 命中（含 cooldown / min_change_threshold 过滤）时 emit
+        # "vision.scene_caption"（component "vision"）。
+        # 与 gesture 解耦：用独立 CameraSource，避免与 GestureRecognizer 在
+        # 同一 cap 上的 read 争用；与 ProactiveScheduler 解耦：仅在 proactive
+        # 启用时通过 on_caption 调 record_caption_trigger 做"主动话题候选"
+        # 计数（caption_proactive），不立即触发 LLM/TTS（保持最小改动 + default-OFF）。
+        # _proactive 在下方更晚构造；用 mutable 容器引用，闭包按需读最新值
+        _proactive_ref: list = [None]
+        _scene_caption_emitter = None
+        try:
+            if os.environ.get("COCO_SCENE_CAPTION", "0") == "1":
+                from coco.perception.camera_source import open_camera as _open_cam_sc
+                from coco.perception.scene_caption import (
+                    HeuristicCaptionBackend,
+                    SceneCaptionEmitter,
+                    scene_caption_config_from_env,
+                )
+
+                _sc_cfg = scene_caption_config_from_env(os.environ)
+                _sc_spec = os.environ.get("COCO_CAMERA")
+                if not _sc_spec:
+                    print(
+                        "[coco][scene_caption] COCO_SCENE_CAPTION=1 但 COCO_CAMERA 未设；"
+                        "SceneCaptionEmitter 跳过构造",
+                        flush=True,
+                    )
+                else:
+                    _sc_cam = _open_cam_sc(_sc_spec)
+
+                    def _on_caption(cap):  # noqa: ANN001
+                        _p = _proactive_ref[0]
+                        if _p is None:
+                            return
+                        try:
+                            _p.record_caption_trigger(cap.text)
+                        except Exception as _exc:  # noqa: BLE001
+                            print(
+                                f"[coco][scene_caption] proactive.record_caption_trigger failed: {_exc!r}",
+                                flush=True,
+                            )
+
+                    _scene_caption_emitter = SceneCaptionEmitter(
+                        stop_event,
+                        camera=_sc_cam,
+                        backend=HeuristicCaptionBackend(),
+                        interval_s=_sc_cfg.interval_s,
+                        cooldown_s=_sc_cfg.cooldown_s,
+                        min_change_threshold=_sc_cfg.min_change_threshold,
+                        on_caption=_on_caption,
+                    )
+                    _scene_caption_emitter.start()
+                    print(
+                        f"[coco][scene_caption] SceneCaptionEmitter started camera={_sc_spec!r} "
+                        f"interval_s={_sc_cfg.interval_s} cooldown_s={_sc_cfg.cooldown_s} "
+                        f"min_change={_sc_cfg.min_change_threshold}",
+                        flush=True,
+                    )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][scene_caption] init failed: {exc!r}", flush=True)
+            _scene_caption_emitter = None
+
         try:
             try:
                 reachy_mini.wake_up()
@@ -1094,6 +1157,14 @@ class Coco(ReachyMiniApp):
                 print(f"[coco][proactive] init failed: {type(e).__name__}: {e}", flush=True)
                 _proactive = None
 
+            # vision-006: 把 _proactive 写进上方 caption emitter 的 mutable 引用，
+            # 让 on_caption 回调能在 caption 启用 + proactive 启用时找到对象。
+            # _proactive 未启用（None）时容器值仍为 None，caption 回调 no-op。
+            try:
+                _proactive_ref[0] = _proactive
+            except Exception:  # noqa: BLE001
+                pass
+
             def _on_interaction_combined(src: str, _ps=power_state, _pa=_proactive) -> None:
                 if _ps is not None:
                     try:
@@ -1637,6 +1708,26 @@ class Coco(ReachyMiniApp):
                         print(f"[coco][gesture] stopped stats={_gesture_recognizer.stats}", flush=True)
             except Exception as e:  # noqa: BLE001
                 print(f"[coco][gesture] stop failed: {e!r}", flush=True)
+            # vision-006: 停 SceneCaptionEmitter（与 gesture 同风格）
+            try:
+                if (
+                    "_scene_caption_emitter" in locals()
+                    and _scene_caption_emitter is not None
+                ):
+                    _scene_caption_emitter.stop()
+                    _scene_caption_emitter.join(timeout=2.0)
+                    if _scene_caption_emitter.is_alive():
+                        print(
+                            "[coco][scene_caption] WARN: emitter did not stop within 2s",
+                            flush=True,
+                        )
+                    else:
+                        print(
+                            f"[coco][scene_caption] stopped stats={_scene_caption_emitter.stats}",
+                            flush=True,
+                        )
+            except Exception as e:  # noqa: BLE001
+                print(f"[coco][scene_caption] stop failed: {e!r}", flush=True)
 
 
 def main() -> None:

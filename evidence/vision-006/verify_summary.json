@@ -1,0 +1,56 @@
+{
+  "feature": "vision-006",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 dark caption mentions 暗/夜",
+      "ok": true,
+      "detail": "'画面整体偏暗，主体大致居中静止'"
+    },
+    {
+      "name": "V2 motion caption",
+      "ok": true,
+      "detail": "'画面亮度适中，有一个移动物体在左侧'"
+    },
+    {
+      "name": "V3 periodic tick (background thread)",
+      "ok": true,
+      "detail": "started_at=1778633778.25 ticks=3 emits=3"
+    },
+    {
+      "name": "V4 min_change_threshold suppress",
+      "ok": true,
+      "detail": "suppressed_similar=1"
+    },
+    {
+      "name": "V5 cooldown suppress",
+      "ok": true,
+      "detail": "suppressed_cooldown=1 resume=True"
+    },
+    {
+      "name": "V6 default-OFF",
+      "ok": true,
+      "detail": "cfg.enabled=False"
+    },
+    {
+      "name": "V7 env clamp",
+      "ok": true,
+      "detail": "interval_s=5.0 cooldown_s=3600.0 min_change=1.0"
+    },
+    {
+      "name": "V8 stop+join clean",
+      "ok": true,
+      "detail": "alive=False elapsed=0.000s"
+    },
+    {
+      "name": "V9 proactive caption_proactive count",
+      "ok": true,
+      "detail": "caption_proactive=3"
+    },
+    {
+      "name": "V10 coexist with gesture",
+      "ok": true,
+      "detail": "gesture.frames_read=30 caption.emitted=3 caption.err=0 gesture.err=0"
+    }
+  ]
+}
