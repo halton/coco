@@ -1,6 +1,9 @@
 name: verify-matrix
 
 # infra-006: 全量 verify 矩阵 CI。
+# infra-011: wire paths-filter（dorny/paths-filter@v3）→ PR 上仅跑 affected area，
+#            非 PR（push main / feat/** / workflow_dispatch）仍跑全量。
+#            smoke 永远跑。详见 .github/paths-filter.yml。
 #
 # - smoke 跑 ./init.sh（COCO_CI=1，跳过真硬件子检查）
 # - per-area verify jobs 跑 run_verify_all.py --area X --skip-list
@@ -31,6 +34,27 @@ env:
   COCO_CI: "1"
 
 jobs:
+  # infra-011: paths-filter gate。
+  # 在 PR 上检测 area diff，输出 7 个 boolean；非 PR event 下游 job 用
+  # github.event_name != 'pull_request' 强制全量。
+  changes:
+    name: paths-filter (infra-011)
+    runs-on: ubuntu-latest
+    outputs:
+      vision: ${{ steps.filter.outputs.vision }}
+      interact: ${{ steps.filter.outputs.interact }}
+      companion: ${{ steps.filter.outputs.companion }}
+      audio: ${{ steps.filter.outputs.audio }}
+      robot: ${{ steps.filter.outputs.robot }}
+      infra: ${{ steps.filter.outputs.infra }}
+      publish: ${{ steps.filter.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: .github/paths-filter.yml
+
   smoke:
     name: smoke (init.sh)
     runs-on: ubuntu-latest
@@ -64,7 +88,8 @@ jobs:
   verify-vision:
     name: verify vision
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.vision == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +116,8 @@ jobs:
   verify-interact:
     name: verify interact
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.interact == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -118,7 +144,8 @@ jobs:
   verify-companion:
     name: verify companion
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.companion == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -145,7 +172,8 @@ jobs:
   verify-audio:
     name: verify audio
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.audio == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -174,7 +202,8 @@ jobs:
   verify-robot:
     name: verify robot
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.robot == 'true'
     # rework L0-2：去掉 continue-on-error。SKIP_LIST 里的 robot verify
     # （verify_robot001_daemon / verify_robot002_actions /
     # verify_companion001_* / verify_interact001 / verify_audio003_app_integration）
@@ -207,7 +236,8 @@ jobs:
   verify-infra:
     name: verify infra
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.infra == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -234,7 +264,8 @@ jobs:
   verify-publish:
     name: verify publish
     runs-on: ubuntu-latest
-    needs: smoke
+    needs: [smoke, changes]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.publish == 'true'
     strategy:
       fail-fast: false
       matrix:
