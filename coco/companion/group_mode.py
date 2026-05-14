@@ -74,6 +74,16 @@ DEFAULT_GROUP_PHRASES: Tuple[str, ...] = (
 EmitFn = Callable[..., None]
 
 
+def _bool_env_face_id_arbit_for_group(env: Mapping[str, str]) -> bool:
+    """vision-010-fu-1: GroupModeCoordinator 是否订阅 ``vision.face_id_arbit``.
+
+    与 face_tracker 同 gate（``COCO_FACE_ID_ARBIT=1``）；default-OFF 时
+    on_face_id_arbit no-op，确保 V5 / V6 bytewise 等价。
+    """
+    raw = (env.get("COCO_FACE_ID_ARBIT") or "").strip().lower()
+    return raw in ("1", "true", "yes", "on")
+
+
 # ---------------------------------------------------------------------------
 # Env
 # ---------------------------------------------------------------------------
@@ -241,6 +251,14 @@ class GroupModeCoordinator:
         # template override 是否安装（用于 stop 时清理）
         self._template_overridden: bool = False
 
+        # vision-010-fu-1: 多脸仲裁订阅 state
+        # gate = COCO_FACE_ID_ARBIT；ARBIT OFF 时 on_face_id_arbit() no-op，
+        # _arbit_primary_face_id 永远是 None（V5 / V6 bytewise 等价）。
+        self._arbit_enabled: bool = _bool_env_face_id_arbit_for_group(os.environ)
+        self._arbit_primary_face_id: Optional[str] = None
+        self._arbit_primary_name: Optional[str] = None
+        self._arbit_last_ts: Optional[float] = None
+
         self.stats = GroupModeStats()
 
     # ------------------------------------------------------------------
@@ -254,6 +272,59 @@ class GroupModeCoordinator:
     def current_members(self) -> Tuple[str, ...]:
         with self._lock:
             return self._current_members
+
+    # ------------------------------------------------------------------
+    # vision-010-fu-1: 多脸仲裁订阅入口
+    # ------------------------------------------------------------------
+
+    def on_face_id_arbit(
+        self,
+        *,
+        primary: Optional[str] = None,
+        primary_name: Optional[str] = None,
+        ts: Optional[float] = None,
+        **kwargs: Any,
+    ) -> None:
+        """订阅 ``vision.face_id_arbit`` emit：把 primary face_id 写入内部 state.
+
+        ARBIT OFF（``COCO_FACE_ID_ARBIT`` 未设）时 no-op，state 永远是 None
+        （V5 / V6 bytewise 等价保证）。
+
+        Parameters
+        ----------
+        primary : str
+            FaceTracker arbitrate emit 的 primary face_id（12 hex）。
+        primary_name : str
+            primary 对应的 face name（可选，便于调试 / 日志）。
+        ts : float
+            emit ts；仅记录最新一次（lock-once 已由 FaceTracker 保证）。
+        kwargs : Any
+            兼容未来 emit payload 扩展（candidates / rule 等当前忽略）。
+        """
+        if not self._arbit_enabled:
+            return
+        if not isinstance(primary, str) or not primary:
+            return
+        with self._lock:
+            self._arbit_primary_face_id = primary
+            self._arbit_primary_name = (
+                primary_name if isinstance(primary_name, str) and primary_name else None
+            )
+            if ts is not None:
+                try:
+                    self._arbit_last_ts = float(ts)
+                except (TypeError, ValueError):
+                    pass
+
+    def current_arbit_primary(self) -> Optional[str]:
+        """返回最近一次 arbitrate 的 primary face_id（ARBIT OFF → 永远 None）."""
+        with self._lock:
+            return self._arbit_primary_face_id
+
+    def current_arbit_primary_name(self) -> Optional[str]:
+        """返回最近一次 arbitrate 的 primary face name（ARBIT OFF → 永远 None）."""
+        with self._lock:
+            return self._arbit_primary_name
 
     # ------------------------------------------------------------------
     # 主输入：observe(snapshot)

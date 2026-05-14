@@ -2285,3 +2285,67 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **下一候选**: `vision-010-fu-1` (priority=89.5)，关闭 C1 dead-code；备选 `companion-015` (priority=91)。建议先做 vision-010-fu-1。
 
 **真机 UAT 异步项**: vision-010 real_machine_uat=pending（face_id 真摄像头跨进程持久化 + 多脸真机仲裁），不阻软件主线。
+
+---
+
+## Session — vision-010-fu-1 in_progress (Engineer)
+
+**目标**: 关闭 vision-010 caveat C1 — `arbitrate_faces` 公开但 `_tick` 未挂入的 dead-code。
+
+**改动**:
+- `coco/perception/face_tracker.py`: `_tick` 末尾新增 `_maybe_auto_arbitrate(frame_w, frame_h, ts)` — gate OFF 立即 return（cheap path），gate ON 时从最新 snapshot.tracks 收集 `(box, name)` 列表喂给已有 `arbitrate_faces`（复用其 lock-once + ≥2 known face 判断）。
+- `coco/companion/group_mode.py`: 新增 `_bool_env_face_id_arbit_for_group()` env helper + `GroupModeCoordinator._arbit_enabled / _arbit_primary_face_id / _arbit_primary_name / _arbit_last_ts` state + `on_face_id_arbit(*, primary, primary_name=None, ts=None, **kwargs)` 订阅入口 + `current_arbit_primary() / current_arbit_primary_name()` getter。ARBIT OFF 时 on_face_id_arbit no-op，state 永远 None。
+- `scripts/verify_vision_010_fu_1.py`: 新增 V1-V8 verify。
+
+**verify**: V1-V8 全 8/8 PASS（V1 _tick 自动 emit / V2 _tick 路径 lock-once / V3 单脸/0脸/未知不 emit / V4 GroupMode 写 primary state / V5 ARBIT OFF 订阅 no-op / V6 default-OFF bytewise 等价 / V7 回归 vision-010 10/10 / V8 回归 vision-008 10/10 + 009 9/9）。
+
+**smoke**: `./init.sh` 全部 PASS（TTS / vision / face-tracker / VAD / wake / power-state / config / publish）。
+
+**default-OFF 等价证据 (V6)**: ARBIT 未设时，FaceTracker `_tick` 多脸路径 emit_fn 0 calls；GroupModeCoordinator.on_face_id_arbit 收到 emit 后内部 state 仍为 None — 双重 gate 保证 bytewise 等价。
+
+**branch / commit**: `feat/vision-010-fu-1`（从 main HEAD=c027d5b 起），等 Engineer commit。
+
+**下一步**: Reviewer sub-agent fresh-context 评审（硬规则）→ LGTM → status in_progress→passing → merge feat→main。Engineer **未 merge** feat/vision-010-fu-1 → main。
+
+**caveats (engineer 自评)**:
+- C-A [LOW] `_maybe_auto_arbitrate` 从 `snapshot.tracks` 读 name 而非当前帧 detect 结果，依赖 `_maybe_identify` 已先把 primary name 写回；非 primary 的 known name 须由历史 _maybe_identify（更换 primary 时）逐帧累积，单帧 multi-known 触发可能比 vision-010 公开 API 直接传入慢一两帧。fix-forward 可在 `_maybe_identify` 扩到 top-K faces。
+- C-B [LOW] GroupModeCoordinator.on_face_id_arbit 仅写 primary face_id 到 state；group decision（enter/exit/members）尚未消费此 primary（仅暴露 getter）。下游 ProactiveScheduler / template 选择如何用 arbit primary 是后续 feature。
+- C-C [LOW] 真机端到端 _tick 路径（真摄像头 + 真 classifier + 真 multi-face）尚未跑过，登记 real_machine_uat=pending。
+
+
+---
+
+## Session — vision-010-fu-1 round-2 (Engineer fix-forward)
+
+**触发**: Reviewer round-1 NEEDS-CHANGES。R-1 HIGH (必修) + R-2 MED (顺手)。
+
+**关键架构澄清** (Reviewer 指出): `coco/logging_setup.emit` 是单向 logging sink（写 jsonl），不是 pub/sub bus；FaceTracker emit("vision.face_id_arbit", ...) 只落 jsonl，不会自动到任何 GroupModeCoord 实例。round-1 V4 只验单元接口未验生产 wire。
+
+**改动 round-2**:
+- `coco/perception/face_tracker.py`:
+  - 新增 `self._arbit_callback: Optional[Callable]` 字段（默认 None）。
+  - 新增公开 API `set_arbit_callback(callback)` — 业务侧（main.py）显式注入 in-process callback。
+  - `_maybe_auto_arbitrate` 在 `arbitrate_faces` 返回非 None payload 后，若 callback 已 set 则同步 invoke `cb(primary=, primary_name=, candidates=, rule=, ts=)`；callback=None / payload=None 任一成立则跳过。
+- `coco/main.py`: GroupModeCoord 构造完成后追加 `_face_tracker_shared.set_arbit_callback(_group_mode_coord.on_face_id_arbit)`，wire 失败 try/except print WARN 不阻 startup。
+- `scripts/verify_vision_010_fu_1.py`:
+  - 新增 V9 `e2e_set_arbit_callback_wire`：case A 未 wire callback → emit 但 coord state None；case B set_arbit_callback 后再驱一帧 → coord state 与 emit primary 一致。
+  - V6 强化：新增 case C `set_arbit_callback(_spy_cb)` 但 ARBIT OFF → spy callback 永不被调，证明 set_arbit_callback 调用本身不打破 default-OFF 等价。
+
+**verify**: V1-V9 全 9/9 PASS。
+- V9 实测：before_wire=None / after_wire='fid_48181acd' / emit_primary='fid_48181acd' (相等) / emits=2。
+- V6 实测：emits_no_cb=0 / coord_pid_direct=None / cb_calls_when_off=0。
+
+**回归**: vision-010 10/10 + vision-008 10/10 + vision-009 9/9 (V7+V8 子进程实跑) + smoke 全 PASS。
+
+**default-OFF 等价证据 (callback=None 路径)**:
+1. FaceTracker `__init__` 默认 `_arbit_callback = None`，未 wire 时 `_maybe_auto_arbitrate` 走 `cb is None` 早 return（即使 ARBIT ON）。
+2. ARBIT OFF 时 `_maybe_auto_arbitrate` 在 `_face_id_arbit_enabled` 检查就 return，根本走不到 callback 行（V6 case C 实证 callback set 也 0 calls）。
+3. 三重保证：`_face_id_arbit_enabled` ∧ `_arbit_callback is not None` ∧ payload 非 None 才会触发业务侧 side-effect。
+
+**branch / commit**: feat/vision-010-fu-1，等 commit。
+
+**caveats round-2**:
+- 仍保留 round-1 C-A (snapshot.tracks 读 name 滞后一两帧) / C-C (真机端到端 UAT pending)。
+- C-B 已部分修复：现 main.py 真 wire callback；GroupMode 收到 primary 后存 state，但 group decision 仍未消费此 primary，留给后续 ProactiveScheduler/template 选择 feature。
+- 新 caveat C-E [LOW]：set_arbit_callback 单 callback 设计（非 list of subscribers），后续若多 subscriber 需要 fan-out 需改为 list/composite；当前 GroupMode 是唯一业务订阅方足够。
+

@@ -2152,11 +2152,12 @@
       "phase": 13,
       "area": "vision",
       "priority": 89.5,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "vision-010 caveat C1 (MED) 关闭 — _tick 主循环自动调 arbitrate_faces + GroupMode 订阅 vision.face_id_arbit 端到端 wire：(a) FaceTracker._tick 在多脸 (>=2 tracks) 帧自动调用 arbitrate_faces，按 center_area_v1 选 winner，emit vision.face_id_arbit{winner_face_id, candidates, rule, ts}（lock-once per frame, default-OFF gate 沿用 COCO_FACE_ID_ARBIT=1）；(b) GroupMode / ProactiveScheduler / 业务侧订阅 vision.face_id_arbit 作为 active speaker / current user 的事实信号源（替代/优先于 face_id_resolved）；(c) verify 含主循环自动 emit 验证（无需手动调 arbitrate_faces）+ 业务订阅 wire 验证（GroupMode 收到 winner 后切换 current_face_id）+ 默认 OFF 不 emit + 回归 vision-010 V1-V10。default-OFF gate：COCO_FACE_ID_ARBIT=1。sim-first：fixture two_faces.mp4 复用，主循环 tick 计数验证。followed_from: vision-010",
       "followed_from": "vision-010",
-      "evidence": ""
+      "verification": "scripts/verify_vision_010_fu_1.py 9/9 PASS (V1 _tick 自动 emit / V2 _tick 路径 lock-once / V3 单脸/0脸/未知不 emit / V4 GroupMode on_face_id_arbit 写 primary state / V5 ARBIT OFF 订阅 no-op / V6 default-OFF bytewise 等价（含 callback wired 仍 no-op）/ V7 回归 vision-010 10/10 / V8 回归 vision-008 10/10 + 009 9/9 / V9 R-2 端到端 FaceTracker.set_arbit_callback wire → coord state 与 emit primary 一致)。Reviewer (sub-agent): round-1 NEEDS-CHANGES (R-1 HIGH wire 缺失 / R-2 MED 缺端到端验证) → round-2 修复待复核.",
+      "evidence": "evidence/vision-010-fu-1/verify_summary.json — verify_vision_010_fu_1 9/9 PASS；smoke 全 PASS。改点 round-1：FaceTracker._tick 末尾新增 _maybe_auto_arbitrate(frame_w, frame_h, ts) 复用 arbitrate_faces 内部 lock-once + ≥2 known face 判断；GroupModeCoordinator 新增 on_face_id_arbit + current_arbit_primary/_name() 公开 getter。改点 round-2 (R-1)：FaceTracker 新增 set_arbit_callback(callback) 公开 API，logging emit 之外再 invoke 业务侧 callback（in-process pub/sub 弥补 logging_setup.emit 单向 sink），main.py 在 GroupModeCoord 构造完成后 face_tracker.set_arbit_callback(coord.on_face_id_arbit) 显式 wire；新增 V9 端到端 catch 未来 main.py 误改解 wire。default-OFF 三重保证：FaceTracker._face_id_arbit_enabled + GroupMode._arbit_enabled + callback=None 任一成立则零 side-effect；ARBIT OFF 时 _maybe_auto_arbitrate 早 return → callback 即使 set 也永不被调（V6 case C 实证）。real_machine_uat: pending（真摄像头多脸 _tick 自动 arbit + main 真 wire 端到端）。"
     },
     {
       "id": "companion-015",

@@ -1264,6 +1264,27 @@ class Coco(ReachyMiniApp):
                             _group_mode_ref[0] = _group_mode_coord
                         except Exception:  # noqa: BLE001
                             pass
+                        # vision-010-fu-1 R-1: wire FaceTracker arbitrate → GroupMode.on_face_id_arbit。
+                        # logging_setup.emit 是单向 jsonl sink；业务侧需显式 callback 注入。
+                        # ARBIT OFF 时 _maybe_auto_arbitrate 根本不调 callback，bytewise 等价。
+                        try:
+                            if _face_tracker_shared is not None and hasattr(
+                                _face_tracker_shared, "set_arbit_callback"
+                            ):
+                                _face_tracker_shared.set_arbit_callback(
+                                    _group_mode_coord.on_face_id_arbit
+                                )
+                                print(
+                                    "[main] group_mode arbit callback wired "
+                                    "(face_tracker → coord.on_face_id_arbit)",
+                                    flush=True,
+                                )
+                        except Exception as _ce:  # noqa: BLE001
+                            print(
+                                f"[coco][group_mode] arbit callback wire failed: "
+                                f"{type(_ce).__name__}: {_ce}",
+                                flush=True,
+                            )
                         print(
                             f"[main] group_mode wired (coord={_group_mode_coord!r})",
                             flush=True,

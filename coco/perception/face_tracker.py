@@ -509,6 +509,12 @@ class FaceTracker:
         self._face_id_arbit_enabled: bool = _bool_env_face_id_arbit(os.environ)
         # lock-once per-frame：用 ts 去重，避免同帧多次 emit
         self._last_arbit_emit_ts: Optional[float] = None
+        # vision-010-fu-1 R-1: arbit callback (业务侧 in-process wire 点)
+        # logging_setup.emit 是单向 logging sink（写 jsonl），不是 pub/sub bus；
+        # 业务侧（GroupModeCoordinator.on_face_id_arbit 等）需要由 main.py 显式
+        # 调用 set_arbit_callback(...) 注入回调。默认 None：未 wire / ARBIT OFF
+        # 时 _maybe_auto_arbitrate 不调任何 callback，bytewise 等价继续成立。
+        self._arbit_callback: Optional[Callable[..., None]] = None
 
     # --- public ---
     def start(self) -> None:
@@ -917,9 +923,86 @@ class FaceTracker:
             return
 
         h, w = frame.shape[:2]
-        self._process_detections(list(faces), int(w), int(h), time.monotonic())
+        ts = time.monotonic()
+        self._process_detections(list(faces), int(w), int(h), ts)
         # vision-003: primary face → identify
         self._maybe_identify(frame, faces)
+        # vision-010-fu-1: 自动 multi-face arbitrate（关闭 vision-010 C1 dead-code）
+        # default-OFF：未设 COCO_FACE_ID_ARBIT=1 → arbitrate_faces 内部 short-circuit 返回 None。
+        # lock-once policy: 同帧 ts 去重，已由 arbitrate_faces 内部保证。
+        self._maybe_auto_arbitrate(int(w), int(h), ts)
+
+    def _maybe_auto_arbitrate(self, frame_w: int, frame_h: int, ts: float) -> None:
+        """vision-010-fu-1: _tick 末尾尝试一次多脸仲裁（default-OFF cheap path）.
+
+        gate OFF 时立即 return（避免任何 snapshot 读取 / 列表构建开销）；
+        gate ON 时从最新 snapshot.tracks 收集 (box, name) 列表喂给
+        ``arbitrate_faces``。后者自带 lock-once + 至少 2 known face 的判断。
+
+        R-1 wire: arbitrate_faces 返回非 None payload（即真正 emit 了一次）后，
+        若 set_arbit_callback 注入了业务侧回调，则同步调一次（in-process pub/sub）。
+        callback=None / ARBIT OFF / payload=None 任一成立 → 不调。
+        """
+        if not self._face_id_arbit_enabled:
+            return
+        with self._lock:
+            snap = self._snapshot
+        tracks = snap.tracks if snap is not None else ()
+        if len(tracks) < 2:
+            return
+        boxes: List[FaceBox] = []
+        names: List[Optional[str]] = []
+        for t in tracks:
+            boxes.append(t.box)
+            names.append(t.name if isinstance(t.name, str) and t.name else None)
+        try:
+            payload = self.arbitrate_faces(boxes, names, frame_w, frame_h, ts=ts)
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "FaceTracker auto arbitrate failed: %s: %s",
+                type(e).__name__, e,
+            )
+            return
+        # R-1 wire: emit 已发到 logging sink 后，再投递给业务侧 callback
+        cb = self._arbit_callback
+        if cb is None or payload is None:
+            return
+        try:
+            cb(
+                primary=payload.get("primary"),
+                primary_name=payload.get("primary_name"),
+                candidates=payload.get("candidates"),
+                rule=payload.get("rule"),
+                ts=payload.get("ts"),
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "FaceTracker arbit callback failed: %s: %s",
+                type(e).__name__, e,
+            )
+
+    def set_arbit_callback(
+        self,
+        callback: Optional[Callable[..., None]],
+    ) -> None:
+        """vision-010-fu-1 R-1: 注入 vision.face_id_arbit 业务侧回调.
+
+        ``logging_setup.emit`` 是单向 jsonl sink，不会自动 fan-out 到任何
+        in-process subscriber。业务侧（如 ``GroupModeCoordinator.on_face_id_arbit``）
+        需要由 main.py 显式调本方法把 bound method 注入进来：
+
+            face_tracker.set_arbit_callback(group_mode_coord.on_face_id_arbit)
+
+        callback 签名（关键字参数；与 emit payload 字段对齐）::
+
+            cb(*, primary, primary_name, candidates, rule, ts)
+
+        - 默认 None：``_maybe_auto_arbitrate`` 完全跳过 callback 路径。
+        - ARBIT OFF（``COCO_FACE_ID_ARBIT`` 未设）：``_maybe_auto_arbitrate``
+          根本不会跑到 callback 行；callback 即使被 set 也永远不会被调。
+        - 因此 ``set_arbit_callback`` 调用本身不打破 default-OFF bytewise 等价。
+        """
+        self._arbit_callback = callback
 
     def _maybe_identify(self, frame, faces) -> None:
         """对 primary face 跑一次 face-id；patch snapshot.primary_track.name/confidence。"""

@@ -1,0 +1,51 @@
+{
+  "feature": "vision-010-fu-1",
+  "ok": true,
+  "results": [
+    {
+      "name": "v1_tick_auto_arbit_on",
+      "ok": true,
+      "detail": "emits=1 primary='fid_48181acd'"
+    },
+    {
+      "name": "v2_tick_auto_arbit_lock_once",
+      "ok": true,
+      "detail": "first=1 same_ts=1 advanced=2"
+    },
+    {
+      "name": "v3_tick_auto_arbit_no_multi_known",
+      "ok": true,
+      "detail": "zero=0 one_known=0 two_unknown=0"
+    },
+    {
+      "name": "v4_group_mode_subscribe_hits",
+      "ok": true,
+      "detail": "before=None after_pid='abcdef012345' after_name='alice'"
+    },
+    {
+      "name": "v5_group_mode_subscribe_off_noop",
+      "ok": true,
+      "detail": "pid=None name=None"
+    },
+    {
+      "name": "v6_default_off_bytewise_equiv",
+      "ok": true,
+      "detail": "emits_no_cb=0 coord_pid_direct=None cb_calls_when_off=0"
+    },
+    {
+      "name": "v7_regress_vision_010",
+      "ok": true,
+      "detail": "[PASS] V10 regress vision-008 / 009 still PASS — results={'verify_vision_008.py': ('ok', 0), 'verify_vision_009.py': ('ok', 0)} |  | [vision-010] 10/10 PASS"
+    },
+    {
+      "name": "v8_regress_vision_008_009",
+      "ok": true,
+      "detail": "008: [PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9' |  | [verify_vision_008] ALL PASS 10/10 || 009: [PASS] V9 regress verify_vision_008 (10/10) — rc=0 tail=[\"[PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9'\", '', '[verify_vision_008] ALL PASS 10/10'] |  | [vision-009] 9/9 PASS"
+    },
+    {
+      "name": "v9_e2e_set_arbit_callback_wire",
+      "ok": true,
+      "detail": "before_wire=None after_wire='fid_48181acd' name='bob' emit_primary='fid_48181acd' emits=2"
+    }
+  ]
+}
