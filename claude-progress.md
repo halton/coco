@@ -1744,3 +1744,21 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - **phase-11 第 4 个** infra-013 (priority=78, area=infra) — 吸收 infra-011-fu-1/2，paths-filter 兜底段补 pyproject.toml / tests/** / conftest.py + workflow_dispatch 静态校验 + cross-area regression mitigation 文档化
 - 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
+
+## Session — 2026-05-14 infra-013 close-out
+
+### 完成
+- **infra-013** → `passing`（phase-11 第 4 个，priority=78，area=infra）
+- paths-filter 兜底段补 pyproject.toml / tests/** / conftest.py — 三类改动一律全量 fan-out
+- workflow_dispatch 触发路径静态校验
+- cross-area regression mitigation 文档化（docs/regression-policy.md + paths-filter.yml 注释）
+- verify_infra_013 V1-V8 共 8/8 PASS
+- 回归 verify_infra_011 10/10 + verify_infra_008 all PASS + verify_infra_006 9/9 + COCO_CI=1 ./init.sh smoke 全 PASS
+- Reviewer (sub-agent, fresh-context)：LGTM-with-caveats
+- Engineer caveats 3 条 + Reviewer caveat 1 条均不阻 merge，详见 feature_list.json infra-013 evidence
+- merge feat/infra-013 → main（--no-ff）；push origin main 成功；push origin feat/infra-013 already up-to-date
+- main HEAD（merge 后）：b94c09236977caebdcb826e0b1c7fcf655519a04
+
+### 下一步
+- **phase-11 第 5 个** vision-008 (priority=79, area=vision) — face_id 真接入 GroupModeCoordinator，default-OFF COCO_FACE_ID_REAL=1 gate，多 face_id 合成 mp4 fixture
+- 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
