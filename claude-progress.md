@@ -2676,3 +2676,36 @@ audio-009 PHASE-13 #8 PASSING — merge sha **4671932**（feat/audio-009 → mai
 
 **push 结果**（commit 后填）：见下文 push 段。
 
+
+---
+
+## Session 2026-05-14 (interact-015 closeout / phase-13 #9 PASSING)
+
+interact-015 PHASE-13 #9 PASSING — merge sha **d325f88**（feat/interact-015 → main，--no-ff，Engineer→Reviewer→Closeout 全链路完成）。
+
+**env**（与 spec 一致，default-OFF 双 gate）：
+- `COCO_PROACTIVE_TRACE=1` — proactive 仲裁链全节点 emit `proactive.trace{stage, candidate_id, decision, reason, ts}`（stages: emotion_alert / fusion_boost / mm_proactive / 普通 / cooldown_hit / arbit_winner），仅观测不改决策
+- `COCO_LLM_USAGE_LOG=1` — emit `llm.usage{component=mm_proactive, prompt_tokens, completion_tokens, ts}` + `~/.coco/llm_usage_<date>.jsonl` 滚动落盘
+- 与现有 `COCO_PROACTIVE_ARBIT` 独立
+
+**summary CLI**：`scripts/proactive_trace_summary.py` — 从 jsonl 重建 admit/reject 计数 + 按 stage rejection 占比 + LLM 日均用量。
+
+**新增 backlog**：`interact-015-backlog-trace-followup` priority=999 status=backlog — 合并 6 条 Reviewer caveat 为单一 fix-forward 条目（不开 fu chain）：
+1. C-1 token chars//2 启发式估算精度（接入真 backend 时改用 LLMReply usage hook）
+2. C-2 summary CLI 不存在文件应 warn 到 stderr
+3. C-3 跨日界 jsonl 与并发写防御
+4. C-4 `emit_trace` reserved kwarg 规范化
+5. C-5 `cooldown_hit` stage 语义文档化
+6. C-6 修 `coco/proactive.py:855` stage 标签反转（`_next_priority_boost True/False` 时 stage 名应对调，仅影响 trace 字段语义不影响决策）
+
+**Reviewer LGTM-with-caveats 6 条 caveat 摘要**：全 LOW/INFO 无 BLOCKER，已聚合入上述 backlog：
+- C-1 [LOW] token 估算 chars//2 启发式精度
+- C-2 [LOW] summary CLI 输入文件不存在静默
+- C-3 [LOW] 跨日界 jsonl rollover + 并发写
+- C-4 [INFO] `emit_trace` reserved kwarg 命名
+- C-5 [INFO] `cooldown_hit` stage 语义
+- C-6 [LOW] `coco/proactive.py:855` stage 标签反转 bug（trace 字段语义反但决策不受影响）
+
+**phase-13 软件进度**：9/N PASS（interact-015 完成），下一候选 **infra-016** priority=94（observability — verify/smoke 历史趋势 + summary CLI）。
+
+**push 结果**（commit 后填）：见下文 push 段。

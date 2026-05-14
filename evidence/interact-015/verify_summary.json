@@ -1,7 +1,7 @@
 {
   "feature": "interact-015",
   "overall_ok": true,
-  "ts": 1778753869.90848,
+  "ts": 1778754076.915433,
   "results": [
     {
       "name": "V1 default-OFF: no proactive.trace / llm.usage emit; behaviour bytewise equiv",
