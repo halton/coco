@@ -1,0 +1,56 @@
+{
+  "feature": "vision-010",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 PERSIST=1 first resolve writes face_id_map.json",
+      "ok": true,
+      "detail": "path=/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/tmpg5atd8x6/face_id_map.json entries=[{'name': 'alice', 'face_id': 'fid_522b276a', 'first_seen': 1778747495.534998, 'last_seen': 1778747495.534998}]"
+    },
+    {
+      "name": "V2 hydrate across process (same face_id)",
+      "ok": true,
+      "detail": "fid1='fid_522b276a' fid2='fid_522b276a' rc=0"
+    },
+    {
+      "name": "V3 corrupt file -> warn + empty map + no crash",
+      "ok": true,
+      "detail": "fid='fid_522b276a'"
+    },
+    {
+      "name": "V4 PERSIST off: no file IO + meta empty (bytewise eq)",
+      "ok": true,
+      "detail": "fid='fid_522b276a' no_file=True no_meta=True"
+    },
+    {
+      "name": "V5 ARBIT on: emits vision.face_id_arbit",
+      "ok": true,
+      "detail": "payload_primary=fid_48181acd events=1"
+    },
+    {
+      "name": "V6 rule center_area_v1: bob (center+large) wins",
+      "ok": true,
+      "detail": "primary_name='bob' candidates_scores=[0.0, 62.34413965087282]"
+    },
+    {
+      "name": "V7 lock-once per-frame (same ts only emits once)",
+      "ok": true,
+      "detail": "p1=True p2=False p3=True events=2"
+    },
+    {
+      "name": "V8 single/zero known faces: no emit",
+      "ok": true,
+      "detail": "zero=None one=None one_unk=None captured=0"
+    },
+    {
+      "name": "V9 ARBIT off (default): no emit",
+      "ok": true,
+      "detail": "payload=None captured=0"
+    },
+    {
+      "name": "V10 regress vision-008 / 009 still PASS",
+      "ok": true,
+      "detail": "results={'verify_vision_008.py': ('ok', 0), 'verify_vision_009.py': ('ok', 0)}"
+    }
+  ]
+}

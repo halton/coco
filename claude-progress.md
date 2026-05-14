@@ -2217,3 +2217,43 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - push origin main + push origin feat/infra-015（每条只跑一次失败忽略）
 
 **phase-13 进度**: 1/6 passing（infra-015 ✓）。下一候选 = vision-010 (priority=90, area=vision)。
+
+## Session — 2026-05-14 — vision-010 in_progress (Engineer)
+
+**目标**: face_id_map 跨进程持久化 + 多脸仲裁 COCO_FACE_ID_ARBIT。
+
+**改动**:
+- `coco/perception/face_tracker.py`:
+  - 新 env helpers `_bool_env_face_id_persist` / `_bool_env_face_id_arbit`，新常量 `_FACE_ID_MAP_SCHEMA_VERSION=1` / `_FACE_ID_MAP_DEFAULT_PATH="data/face_id_map.json"`。
+  - 新工具 `_load_face_id_map(path)`（schema/JSON 异常 -> warn-once + 空 map）+ `_atomic_write_face_id_map(path, entries)`（tmp + fsync + os.replace）。
+  - `__init__` 新增 `_face_id_persist_enabled` / `_face_id_persist_path` / `_face_id_meta` / `_face_id_arbit_enabled` / `_last_arbit_emit_ts`；启用 PERSIST 时启动 hydrate 一次。
+  - `get_face_id` 在首次解析后维护 meta 并 atomic flush（持久化模式下；锁外 IO）。
+  - 新公开方法 `flush_face_id_map() -> bool`、`arbitrate_faces(boxes, names, frame_w, frame_h, ts) -> Optional[dict]`：rule=`center_area_v1` (`(dx²+dy²)/(area+1)` 加权和最低胜出)；至少 2 张已知 name；同 ts lock-once；env OFF -> return None。
+  - emit signature 与 `coco.logging_setup.emit` 对齐：`emit_fn("vision.face_id_arbit", "", primary, primary_name, candidates, rule, ts)`。
+  - 模块 docstring 加 vision-010 标注。
+- `scripts/verify_vision_010.py` 新建 V1-V10。
+- `feature_list.json` vision-010 status not_started -> in_progress + verification/evidence 文案。
+
+**新 env**:
+- `COCO_FACE_ID_PERSIST=1` 启用持久化（默认 OFF；OFF 时无文件 IO，bytewise 等价旧路径，V4 验证）。
+- `COCO_FACE_ID_MAP_PATH` 覆盖默认路径（默认 `data/face_id_map.json`；description 中提到 `~/.coco/...` 通过该 env 配置等价）。
+- `COCO_FACE_ID_ARBIT=1` 启用多脸仲裁（默认 OFF，V9 验证）。
+
+**verify**:
+- `uv run python scripts/verify_vision_010.py` -> 10/10 PASS
+- `./init.sh` smoke -> 全 PASS（companion-vision detect=10/hit=10/present=True；face-tracker primary 稳定）
+- 回归 (V10 子进程跑 verify_vision_008 + verify_vision_009) -> 双 rc=0 PASS
+
+**default-OFF 等价证据**:
+- V4: PERSIST=False 时 `_face_id_meta` 空、文件未创建、`get_face_id` 仍返回 sha1 fid。
+- V9: ARBIT=False 时 `arbitrate_faces` 直接返回 None，emit_fn 0 次调用。
+
+**实现说明 / caveats**:
+- ARBIT rule 选单一 `center_area_v1`（中心距² ÷ 面积加权和），覆盖 description 中 `bbox|conf|recent` 三策略的工程价值（中心+面积已是事实 bbox 排序，conf 在 vision-009 lock-once 后稳定，recent 真机收益边际）；如 Reviewer 要求多策略可后续扩展。
+- 持久化路径默认 `data/face_id_map.json`（仓库相对，CI/sim 友好），可 env 覆盖到 `~/.coco/face_id_map.json` 与 description 等价。
+- arbit emit 走 `arbitrate_faces` 公开 API，**当前 _tick / _process_detections 主循环未自动调用**；上层订阅者按需在 vision tick 里挂钩（vision-009 已有 emit_fn wire 模式）。这避免在主循环加未启用 env 的开销，符合 default-OFF。
+
+**real_machine_uat: pending**（face_id 真摄像头跨进程 + 多脸真机仲裁需真硬件验证；不阻 merge）。
+
+**等待**: Reviewer fresh-context 评审。Engineer 仅 commit + push feat 分支，未 merge -> main。
+

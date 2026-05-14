@@ -1,5 +1,8 @@
 """coco.perception.face_tracker — 后台人脸跟踪线程（companion-002 + vision-002）.
 
+vision-010: face_id_map 跨进程持久化 (COCO_FACE_ID_PERSIST) +
+多脸仲裁 (COCO_FACE_ID_ARBIT, rule center_area_v1).
+
 设计目标：
 - 把"开摄像头 + 周期 detect"独立成一个 daemon 线程，不阻塞 IdleAnimator 的主循环。
 - 暴露线程安全 snapshot：``latest() -> FaceSnapshot``，IdleAnimator 在自己节奏下读。
@@ -28,11 +31,14 @@ from __future__ import annotations
 
 import collections
 import hashlib
+import json
 import logging
 import os
+import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from coco.perception.camera_source import CameraSource, open_camera
@@ -248,13 +254,106 @@ def _env_float(key: str, default: float) -> float:
 
 
 def _bool_env_face_id_real(env: Any) -> bool:
-    """vision-008: ``COCO_FACE_ID_REAL=1/true/yes/on`` → True，否则 False。
+    """vision-008: ``COCO_FACE_ID_REAL=1/true/yes/on`` → True，否则 False.
 
     default-OFF：未设 / 任意其它值 → False，``get_face_id`` 返回 None（与
     companion-012 stub 路径 bytewise 等价）。
     """
     raw = (env.get("COCO_FACE_ID_REAL") or "").strip().lower()
     return raw in {"1", "true", "yes", "on"}
+
+
+# vision-010: face_id_map 跨进程持久化 + 多脸仲裁 env 解析
+def _bool_env_face_id_persist(env: Any) -> bool:
+    """vision-010: ``COCO_FACE_ID_PERSIST=1`` → True；default-OFF 等价。"""
+    raw = (env.get("COCO_FACE_ID_PERSIST") or "").strip().lower()
+    return raw in {"1", "true", "yes", "on"}
+
+
+def _bool_env_face_id_arbit(env: Any) -> bool:
+    """vision-010: ``COCO_FACE_ID_ARBIT=1`` → True；default-OFF 不 emit arbit."""
+    raw = (env.get("COCO_FACE_ID_ARBIT") or "").strip().lower()
+    return raw in {"1", "true", "yes", "on"}
+
+
+# vision-010: face_id_map 持久化 schema 版本与 atomic IO 工具
+_FACE_ID_MAP_SCHEMA_VERSION = 1
+_FACE_ID_MAP_DEFAULT_PATH = "data/face_id_map.json"
+
+
+def _load_face_id_map(path: Path) -> Dict[str, Dict[str, Any]]:
+    """读取 face_id_map.json；schema 不匹配 / 损坏 / 缺失 → 返回空 dict + warn-once.
+
+    Returns: ``{name: {"face_id": str, "first_seen": float, "last_seen": float}}``
+    """
+    if not path.exists():
+        return {}
+    try:
+        raw = path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("top-level not object")
+        if data.get("version") != _FACE_ID_MAP_SCHEMA_VERSION:
+            raise ValueError(f"schema version mismatch: {data.get('version')!r}")
+        entries = data.get("entries", [])
+        if not isinstance(entries, list):
+            raise ValueError("entries not list")
+        out: Dict[str, Dict[str, Any]] = {}
+        for ent in entries:
+            if not isinstance(ent, dict):
+                continue
+            name = ent.get("name")
+            fid = ent.get("face_id")
+            if not isinstance(name, str) or not isinstance(fid, str):
+                continue
+            out[name] = {
+                "face_id": fid,
+                "first_seen": float(ent.get("first_seen", 0.0) or 0.0),
+                "last_seen": float(ent.get("last_seen", 0.0) or 0.0),
+            }
+        return out
+    except Exception as e:  # noqa: BLE001
+        log.warning(
+            "FaceTracker face_id_map hydrate failed (path=%s): %s: %s -> empty map",
+            path, type(e).__name__, e,
+        )
+        return {}
+
+
+def _atomic_write_face_id_map(
+    path: Path,
+    entries: Dict[str, Dict[str, Any]],
+) -> None:
+    """atomic write: tmp + rename，避免半写文件污染下次 hydrate。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "version": _FACE_ID_MAP_SCHEMA_VERSION,
+        "saved_at": time.time(),
+        "entries": [
+            {
+                "name": name,
+                "face_id": rec["face_id"],
+                "first_seen": rec.get("first_seen", 0.0),
+                "last_seen": rec.get("last_seen", 0.0),
+            }
+            for name, rec in sorted(entries.items())
+        ],
+    }
+    fd, tmp_path = tempfile.mkstemp(
+        prefix=".face_id_map.", suffix=".json.tmp", dir=str(path.parent)
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -383,6 +482,33 @@ class FaceTracker:
         self._face_id_map: Dict[str, str] = {}
         self._face_id_lock = threading.Lock()
         self._face_id_real_enabled: bool = _bool_env_face_id_real(os.environ)
+
+        # vision-010: 跨进程持久化 + 多脸仲裁
+        # default-OFF：未设 COCO_FACE_ID_PERSIST=1 / COCO_FACE_ID_ARBIT=1 时
+        # bytewise 等价旧路径（无文件 IO、无 arbit emit）。
+        self._face_id_persist_enabled: bool = _bool_env_face_id_persist(os.environ)
+        self._face_id_persist_path: Path = Path(
+            os.environ.get("COCO_FACE_ID_MAP_PATH", _FACE_ID_MAP_DEFAULT_PATH)
+        )
+        # name → {face_id, first_seen, last_seen}（仅持久化模式下维护）
+        self._face_id_meta: Dict[str, Dict[str, Any]] = {}
+        # hydrate 一次（启动时；持久化模式下）
+        if self._face_id_persist_enabled:
+            hydrated = _load_face_id_map(self._face_id_persist_path)
+            if hydrated:
+                with self._face_id_lock:
+                    for name, rec in hydrated.items():
+                        self._face_id_map[name] = rec["face_id"]
+                        self._face_id_meta[name] = dict(rec)
+                log.info(
+                    "FaceTracker face_id_map hydrated from %s: %d entries",
+                    self._face_id_persist_path, len(hydrated),
+                )
+
+        # 多脸仲裁
+        self._face_id_arbit_enabled: bool = _bool_env_face_id_arbit(os.environ)
+        # lock-once per-frame：用 ts 去重，避免同帧多次 emit
+        self._last_arbit_emit_ts: Optional[float] = None
 
     # --- public ---
     def start(self) -> None:
@@ -552,9 +678,30 @@ class FaceTracker:
             if existed is None:
                 self._face_id_map[name] = fid
                 first_time = True
+                # vision-010: 维护 meta + flush
+                if self._face_id_persist_enabled:
+                    now = time.time()
+                    self._face_id_meta[name] = {
+                        "face_id": fid,
+                        "first_seen": now,
+                        "last_seen": now,
+                    }
             else:
                 fid = existed
                 first_time = False
+                if self._face_id_persist_enabled and name in self._face_id_meta:
+                    self._face_id_meta[name]["last_seen"] = time.time()
+        # vision-010: 持久化模式下 flush（atomic write；锁外执行避免长 IO 阻塞）
+        if first_time and self._face_id_persist_enabled:
+            try:
+                with self._face_id_lock:
+                    snapshot = {k: dict(v) for k, v in self._face_id_meta.items()}
+                _atomic_write_face_id_map(self._face_id_persist_path, snapshot)
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker face_id_map flush failed (path=%s): %s: %s",
+                    self._face_id_persist_path, type(e).__name__, e,
+                )
         if first_time and self._emit_fn is not None:
             try:
                 # vision-009: emit_fn 签名对齐 coco.logging_setup.emit
@@ -570,6 +717,123 @@ class FaceTracker:
                 log.warning("FaceTracker emit face_id_resolved failed: %s: %s",
                             type(e).__name__, e)
         return fid
+
+    # vision-010: 跨进程持久化 + 多脸仲裁公开 API
+    def flush_face_id_map(self) -> bool:
+        """主动 flush face_id_map 到磁盘（atomic write）.
+
+        Returns
+        -------
+        bool
+            True 表示成功写入；False 表示持久化未启用或写入失败。
+            未启用时返回 False 不视为错误（与 default-OFF 一致）。
+        """
+        if not self._face_id_persist_enabled:
+            return False
+        try:
+            with self._face_id_lock:
+                snapshot = {k: dict(v) for k, v in self._face_id_meta.items()}
+            _atomic_write_face_id_map(self._face_id_persist_path, snapshot)
+            return True
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "FaceTracker flush_face_id_map failed (path=%s): %s: %s",
+                self._face_id_persist_path, type(e).__name__, e,
+            )
+            return False
+
+    def arbitrate_faces(
+        self,
+        boxes: List[FaceBox],
+        names: List[Optional[str]],
+        frame_w: int,
+        frame_h: int,
+        ts: Optional[float] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """多脸仲裁：同帧多脸时按 center_area_v1 规则选 primary 并 emit.
+
+        Default-OFF（``COCO_FACE_ID_ARBIT`` 未设）→ 直接返回 None，不 emit。
+        rule ``center_area_v1``: score = (dx² + dy²) / (area + 1)
+            - 中心距越小越好；面积越大越好（除以 area 把面积放分母）
+            - 加权和最低胜出
+        lock-once policy: 同一 ts 多次调用仅 emit 一次（按 ts 去重）。
+
+        Parameters
+        ----------
+        boxes : 同帧 FaceBox 列表
+        names : 与 boxes 等长，已识别 name；None / 空表示该脸未知
+        frame_w, frame_h : 帧尺寸（用于中心距计算）
+        ts : 帧时间戳（用于 lock-once 去重）；None 时取 time.monotonic()
+
+        Returns
+        -------
+        Optional[dict]
+            emit 的 payload；未启用 / 不满足条件 / 已 emit 过 → None
+        """
+        if not self._face_id_arbit_enabled:
+            return None
+        if ts is None:
+            ts = time.monotonic()
+        # 至少 2 张已知 face_id 才仲裁
+        known = [
+            (b, n) for b, n in zip(boxes, names) if isinstance(n, str) and n
+        ]
+        if len(known) < 2:
+            return None
+        # lock-once per-frame：同 ts 已 emit → 跳过
+        if self._last_arbit_emit_ts is not None and self._last_arbit_emit_ts == ts:
+            return None
+
+        cx_frame = frame_w / 2.0
+        cy_frame = frame_h / 2.0
+
+        candidates = []
+        for b, n in known:
+            face_id = self.get_face_id(n)
+            if face_id is None:
+                # gate OFF 或解析失败 → 跳过该候选
+                continue
+            dx = float(b.cx) - cx_frame
+            dy = float(b.cy) - cy_frame
+            area = max(1, int(b.w) * int(b.h))
+            score = (dx * dx + dy * dy) / float(area + 1)
+            candidates.append({
+                "name": n,
+                "face_id": face_id,
+                "score": score,
+                "cx": float(b.cx),
+                "cy": float(b.cy),
+                "area": area,
+            })
+        if len(candidates) < 2:
+            return None
+        candidates.sort(key=lambda c: c["score"])
+        primary = candidates[0]
+        payload = {
+            "primary": primary["face_id"],
+            "primary_name": primary["name"],
+            "candidates": candidates,
+            "rule": "center_area_v1",
+            "ts": ts,
+        }
+        self._last_arbit_emit_ts = ts
+        if self._emit_fn is not None:
+            try:
+                self._emit_fn(
+                    "vision.face_id_arbit",
+                    "",
+                    primary=primary["face_id"],
+                    primary_name=primary["name"],
+                    candidates=candidates,
+                    rule="center_area_v1",
+                    ts=ts,
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker emit face_id_arbit failed: %s: %s",
+                    type(e).__name__, e,
+                )
+        return payload
 
     def _maybe_log_late_inject_skip(self, name: str, cached_fid: str) -> None:
         """vision-009: 注入分歧统计 — classifier 后注入但 cache 已锁 sha1 时记一次。
