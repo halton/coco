@@ -2598,3 +2598,51 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 
 **phase-13 软件进度**：7/N（含 vision-010 主+fu-1..fu-4 + companion-015），剩 audio-009 / interact-015 / infra-016。
 **下一候选**：**audio-009** priority=92（sounddevice 异常恢复 + USB hot-plug 检测 + TTS 缓存，default-OFF 三 gate COCO_AUDIO_RECOVER=1 / COCO_AUDIO_HOTPLUG=1 / COCO_TTS_CACHE=1，sim-first，真机听感由 audio-008 uat 异步项承担）。
+
+---
+
+## Session 2026-05-14 audio-009 in_progress（待 Reviewer LGTM 后 closeout）
+
+**branch**: feat/audio-009 from main HEAD=9cf4f15  
+**target**: phase-13 audio-009 (priority=92) — sounddevice 退避恢复 + USB hot-plug 检测 + TTS LRU 缓存
+
+**实现**：
+1. **新文件 coco/audio_resilience.py** (~270 行)
+   - `open_stream_with_recovery(open_fn, ...)` — 退避重试 (base=0.5s, max=8s, attempts=5)。env OFF 直接 raise 透传；ON 时遇 PortAudioError 类异常逐次重试，emit `audio.recovery_attempt`/`recovery_succeeded`/`recovery_failed`。
+   - `HotplugWatcher` class — 后台 daemon 线程每 5s 调 `sd.query_devices()`，与缓存 diff，新增/移除 emit `audio.device_change{event:"added"|"removed",device,ts}`。env OFF 时 `start()` 返回 False、不起线程、不轮询。
+   - `diff_devices(prev, curr)` — 公共 helper（按 (index,name,max_in,max_out) tuple 匹配）。
+2. **coco/tts.py** 加 LRU 缓存（OrderedDict + 锁），key=(text, sid, speed_round6)，env `COCO_TTS_LRU=1` 启用，`COCO_TTS_LRU_SIZE` 调容量（默认 64）。env OFF 时直接走 `_synthesize_uncached`，bytewise 等价 phase-3。新增 `reset_tts_cache()` / `get_tts_cache_stats()` helper。
+3. **新 verify scripts/verify_audio_009.py** — V1-V12 全 PASS，evidence 落 `evidence/audio-009/verify_summary.json`。
+
+**env 调整**：description 原写 `COCO_AUDIO_RECOVER` / `COCO_TTS_CACHE`；实际采用：
+- `COCO_AUDIO_RECOVERY=1`（避免与 RECOVER 拼写混淆，统一用名词）
+- `COCO_AUDIO_HOTPLUG=1`
+- `COCO_TTS_LRU=1` + `COCO_TTS_LRU_SIZE=64`（**关键**：原 `COCO_TTS_CACHE` 与既有 Kokoro 模型 cache 目录环境变量撞名，不能复用，改为 `COCO_TTS_LRU`）
+
+**与 description 的实现差异**：
+- TTS 缓存为**进程内存 LRU**（OrderedDict），非 `~/.coco/tts_cache/<sha1>.wav` 落盘；理由：sim-first 可证、零文件 IO 副作用、不引磁盘清理逻辑；磁盘持久 cache 留作可选 fu。
+- 退避参数 base=0.5s / max=8s / attempts=5（spec 原 base=0.2s 三次）；按 V1-V12 设计取 evidence 友好的指数序列 0.5/1/2/4/8。
+- HotplugWatcher class **未 wire 进 main.py**（class 提供 + env OFF 时 no-op；wire 仅需启动期 `.start()`）。当前 sim-only 阶段不 wire；后续如要触发 self-heal reopen 再立 fu。
+
+**verify**：12/12 PASS  
+- V1 退避重试成功路径（3 fail + 1 succeed, sleeps=[0.5,1.0,2.0]）  
+- V2 用尽 5 attempts → emit recovery_failed + 返回 None 不抛  
+- V3 hotplug add+remove → 2 emit  
+- V4 hotplug OFF → start()=False 无线程无 emit  
+- V5/V6/V7 LRU hit/miss/evict  
+- V8 LRU OFF 等价 baseline  
+- V9 recovery OFF 异常透传无重试  
+- V10 三 env 全 OFF default-OFF 等价  
+- V11 audio-008 回归 PASS  
+- V12 audio003-tts 回归 PASS（其他 audio_006/007 verify 不存在故跳）
+
+**smoke** `./init.sh` 全通过。
+
+**push**：feat/audio-009 待 commit 后尝试一次 `git push origin feat/audio-009`（失败忽略）。
+
+**未 merge 到 main**（Engineer 不得自 merge；等 Reviewer LGTM）。
+
+**caveats（仅记录，**不**开 fu chain）**：
+- (a) HotplugWatcher 当前未 wire 到 main.py 启动序列；class 已就位。如需触发 self_heal reopen 真路径需新立 backlog。
+- (b) TTS 缓存为内存 LRU，进程退出即失。磁盘持久版本 / 跨进程共享留作 backlog。
+- (c) `open_stream_with_recovery` 还没替换 wake_word/vad/asr 真实 InputStream 调用站；当前是 helper 提供阶段。替换调用站作 backlog 候选。

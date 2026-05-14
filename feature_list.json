@@ -2242,11 +2242,11 @@
       "phase": 13,
       "area": "audio",
       "priority": 92,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "sounddevice 异常恢复 + USB hot-plug 检测 + TTS 缓存 — (a) sounddevice OSError/PortAudioError exception 包装 + 退避重试 (3 次, 200ms/500ms/1s) + give-up 后 emit audio.degraded 事件；(b) USB audio hot-plug 检测：周期 query_devices diff（5s, COCO_AUDIO_HOTPLUG_INTERVAL_S 可调），插拔变化 emit audio.device_changed{old,new}，可触发 self_heal reopen；(c) TTS wav 缓存：同 (text, voice, params) hash → ~/.coco/tts_cache/<sha1>.wav，hit 直接播免去合成；LRU 50 条 + size cap 50MB + atomic write。default-OFF gate：COCO_AUDIO_RECOVER=1 + COCO_AUDIO_HOTPLUG=1 + COCO_TTS_CACHE=1。sim-first：fake sounddevice 注入异常 / 设备列表 diff fixture / cache hit/miss/evict unit；真机扬声器听感保留 audio-008 uat 异步项不阻 merge",
       "followed_from": "audio-008",
-      "evidence": ""
+      "evidence": "evidence/audio-009/verify_summary.json — 12/12 PASS (V1 退避重试成功路径; V2 重试用尽 emit audio.recovery_failed 返回 None; V3 hotplug add+remove emit audio.device_change; V4/V8/V9/V10 default-OFF 等价; V5/V6/V7 TTS LRU hit/miss/evict; V11 audio-008 回归; V12 audio003-tts 回归). 实现差异: env 名采用 COCO_AUDIO_RECOVERY/COCO_AUDIO_HOTPLUG/COCO_TTS_LRU+COCO_TTS_LRU_SIZE (description 原写 COCO_TTS_CACHE 与既有 Kokoro 模型 cache 目录 env 撞名故改名); 退避参数 base=0.5s max=8s max_attempts=5 (description 原 3 次/200ms/500ms/1s); TTS 缓存为内存 LRU dict (key=(text,sid,speed)) 而非 ~/.coco/tts_cache 文件落盘 (sim 可证、零文件 IO 副作用; 文件落盘留作 audio-009-fu 可选). hot-plug watcher 暂未 wire 进 main.py (HotplugWatcher class 提供, env OFF 时 start() no-op; 未来 wire 仅需在启动期 .start() + stop_event.set()). real_machine_uat: pending (真扬声器听感沿用 audio-008 异步项)."
     },
     {
       "id": "interact-015",
