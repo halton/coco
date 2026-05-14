@@ -59,6 +59,11 @@ DEFAULT_ENTER_HOLD_S = 3.0  # 连续 3s 看到 ≥2 known face → 进入
 DEFAULT_EXIT_HOLD_S = 7.0   # 连续 7s 只剩 ≤1 known face → 退出
 DEFAULT_INTERSECT_BONUS = 0.5  # 交集 keyword 每多一个 member 加权 +0.5
 DEFAULT_MAX_GROUP_SESSIONS_PER_PROFILE = 50
+# vision-010-fu-2: primary（多脸仲裁选出的主目标）prefer weight multiplier。
+# 仅在 COCO_FACE_ID_ARBIT=1 且 arbit emit 已写入 primary_name 且 primary_name
+# 在 group members 内时生效；ARBIT OFF 时 primary 永远 None → 此 boost 永不触发，
+# bytewise 等价。
+DEFAULT_PRIMARY_PREFER_BOOST = 2.0
 
 # group 句式前缀（避免单 profile 称呼）。ProactiveScheduler 通过
 # set_group_template_override 注入；本模块只提供 default。
@@ -223,6 +228,7 @@ class GroupModeCoordinator:
         enter_hold_s: float = DEFAULT_ENTER_HOLD_S,
         exit_hold_s: float = DEFAULT_EXIT_HOLD_S,
         intersect_bonus: float = DEFAULT_INTERSECT_BONUS,
+        primary_prefer_boost: float = DEFAULT_PRIMARY_PREFER_BOOST,
         group_phrases: Optional[Sequence[str]] = None,
         max_group_sessions: int = DEFAULT_MAX_GROUP_SESSIONS_PER_PROFILE,
         clock: Optional[Callable[[], float]] = None,
@@ -234,6 +240,7 @@ class GroupModeCoordinator:
         self.enter_hold_s = max(0.0, float(enter_hold_s))
         self.exit_hold_s = max(0.0, float(exit_hold_s))
         self.intersect_bonus = max(0.0, float(intersect_bonus))
+        self.primary_prefer_boost = max(1.0, float(primary_prefer_boost))
         self.group_phrases: Tuple[str, ...] = tuple(group_phrases or DEFAULT_GROUP_PHRASES)
         self.max_group_sessions = max(1, int(max_group_sessions))
         self._clock = clock or time.monotonic
@@ -514,6 +521,14 @@ class GroupModeCoordinator:
     def _merge_member_prefer(self, members: Sequence[str]) -> Dict[str, float]:
         if not members or self.persist_store is None or self.profile_id_resolver is None:
             return {}
+        # vision-010-fu-2: ARBIT 有 primary_name 且在 members 中 → 给 primary
+        # 的 prefer dict 整体 weight 乘 primary_prefer_boost。ARBIT OFF 时
+        # _arbit_primary_name 永远 None → 所有 weight 不变（V3 bytewise 等价）。
+        with self._lock:
+            primary_name = self._arbit_primary_name
+        boost = self.primary_prefer_boost if (
+            primary_name and primary_name in members and self.primary_prefer_boost > 1.0
+        ) else 1.0
         per_member: List[Mapping[str, float]] = []
         for name in members:
             try:
@@ -534,7 +549,11 @@ class GroupModeCoordinator:
                 continue
             pt = getattr(rec, "prefer_topics", None) or {}
             if pt:
-                per_member.append(dict(pt))
+                if boost > 1.0 and name == primary_name:
+                    # 仅放大 primary 的 weight；其他 member 原样
+                    per_member.append({k: float(v) * boost for k, v in pt.items()})
+                else:
+                    per_member.append(dict(pt))
         if not per_member:
             return {}
         return merge_prefer_union_intersect(
@@ -616,6 +635,7 @@ __all__ = [
     "DEFAULT_INTERSECT_BONUS",
     "DEFAULT_GROUP_PHRASES",
     "DEFAULT_MAX_GROUP_SESSIONS_PER_PROFILE",
+    "DEFAULT_PRIMARY_PREFER_BOOST",
     "GroupModeCoordinator",
     "GroupModeStats",
     "group_mode_enabled_from_env",

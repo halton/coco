@@ -1,0 +1,41 @@
+{
+  "feature": "vision-010-fu-2",
+  "ok": true,
+  "results": [
+    {
+      "name": "v1_arbit_wire_state_update",
+      "ok": true,
+      "detail": "before=None pid='aaaaaaaaaaaa' name='alice'"
+    },
+    {
+      "name": "v2_decision_consumes_primary",
+      "ok": true,
+      "detail": "diff=True cats(a)=1.000>cats(b)=0.063 && gaming(b)=0.381>gaming(a)=0.060"
+    },
+    {
+      "name": "v3_default_off_bytewise_equiv",
+      "ok": true,
+      "detail": "eq=True primary_a=None primary_b=None size=4"
+    },
+    {
+      "name": "v4_arbit_on_primary_unwired_fallback",
+      "ok": true,
+      "detail": "eq_baseline=True size=4"
+    },
+    {
+      "name": "v5_primary_switch_followed",
+      "ok": true,
+      "detail": "diff=True cats r1=1.000>r2=0.063 && gaming r2=0.381>r1=0.060"
+    },
+    {
+      "name": "v6_regress_vision_010_and_fu1",
+      "ok": true,
+      "detail": "010: [PASS] V10 regress vision-008 / 009 still PASS — results={'verify_vision_008.py': ('ok', 0), 'verify_vision_009.py': ('ok', 0)} |  | [vision-010] 10/10 PASS || 010-fu-1: [PASS] v9_e2e_set_arbit_callback_wire — before_wire=None after_wire='fid_48181acd' name='bob' emit_primary='fid_48181acd' emits=2 |  | [vision-010-fu-1] 9/9 PASS"
+    },
+    {
+      "name": "v7_regress_vision_008_009",
+      "ok": true,
+      "detail": "008: [PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9' |  | [verify_vision_008] ALL PASS 10/10 || 009: [PASS] V9 regress verify_vision_008 (10/10) — rc=0 tail=[\"[PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9'\", '', '[verify_vision_008] ALL PASS 10/10'] |  | [vision-009] 9/9 PASS"
+    }
+  ]
+}
