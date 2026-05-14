@@ -30,7 +30,7 @@
     {
       "name": "v6_default_off_bytewise_equiv",
       "ok": true,
-      "detail": "arbit_emits=0 coord_pid=None"
+      "detail": "emits_no_cb=0 coord_pid_direct=None cb_calls_when_off=0"
     },
     {
       "name": "v7_regress_vision_010",
@@ -41,6 +41,11 @@
       "name": "v8_regress_vision_008_009",
       "ok": true,
       "detail": "008: [PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9' |  | [verify_vision_008] ALL PASS 10/10 || 009: [PASS] V9 regress verify_vision_008 (10/10) — rc=0 tail=[\"[PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9'\", '', '[verify_vision_008] ALL PASS 10/10'] |  | [vision-009] 9/9 PASS"
+    },
+    {
+      "name": "v9_e2e_set_arbit_callback_wire",
+      "ok": true,
+      "detail": "before_wire=None after_wire='fid_48181acd' name='bob' emit_primary='fid_48181acd' emits=2"
     }
   ]
 }

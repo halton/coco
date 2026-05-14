@@ -309,7 +309,11 @@ def v5_group_mode_subscribe_off_noop() -> None:
 def v6_default_off_bytewise_equiv() -> None:
     """V6 ARBIT 默认 OFF → _tick 路径 emit_fn 0 calls；coord state 保持 None.
 
-    跑两个 case：face_tracker._tick 多脸 + group coord 收 emit。两者都应零副作用。
+    跑三个 case：
+    A. face_tracker._tick 多脸（无 callback wired）→ 零 emit
+    B. group coord 收 on_face_id_arbit 直调 → state 仍 None
+    C. R-1 callback 已 wire 但 ARBIT OFF → callback 永远不会被调（state 仍 None）
+       证明 set_arbit_callback 调用本身不打破 default-OFF 等价
     """
     os.environ.pop("COCO_FACE_ID_ARBIT", None)
     captured: List[Dict[str, Any]] = []
@@ -323,18 +327,32 @@ def v6_default_off_bytewise_equiv() -> None:
     _seed_track_names(ft, {0: "alice", 1: "bob"})
     ft._tick()
     ft._tick()
-    arbit_emits = sum(1 for e in captured if e.get("ce") == "vision.face_id_arbit")
+    arbit_emits_no_cb = sum(1 for e in captured if e.get("ce") == "vision.face_id_arbit")
 
     from coco.companion.group_mode import GroupModeCoordinator
     coord = GroupModeCoordinator()
     coord.on_face_id_arbit(primary="deadbeef0001", primary_name="x", ts=1.0)
-    coord_pid = coord.current_arbit_primary()
+    coord_pid_direct = coord.current_arbit_primary()
 
-    ok = arbit_emits == 0 and coord_pid is None
+    # Case C: 即使 callback 已 wire，ARBIT OFF 时 _maybe_auto_arbitrate 早 return
+    # → callback 永不触发 → coord state 不变（仍 None）
+    cb_calls: List[Dict[str, Any]] = []
+    def _spy_cb(**kw: Any) -> None:
+        cb_calls.append(kw)
+    ft.set_arbit_callback(_spy_cb)
+    ft._tick()
+    ft._maybe_auto_arbitrate(320, 240, ts=time.monotonic() + 5.0)
+
+    ok = (
+        arbit_emits_no_cb == 0
+        and coord_pid_direct is None
+        and len(cb_calls) == 0
+    )
     _record(
         "v6_default_off_bytewise_equiv",
         ok,
-        f"arbit_emits={arbit_emits} coord_pid={coord_pid!r}",
+        f"emits_no_cb={arbit_emits_no_cb} coord_pid_direct={coord_pid_direct!r} "
+        f"cb_calls_when_off={len(cb_calls)}",
     )
 
 
@@ -369,6 +387,61 @@ def v8_regress_vision_008_009() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V9: end-to-end set_arbit_callback wire (R-2)
+# ---------------------------------------------------------------------------
+
+
+def v9_e2e_set_arbit_callback_wire() -> None:
+    """V9 R-2 端到端：FaceTracker.set_arbit_callback(coord.on_face_id_arbit) 真投递.
+
+    模拟 main.py 的 wire 路径（catch 未来误改解 wire）：
+    case A: 未 wire callback → arbitrate emit 但 coord state 仍为 None
+    case B: wire callback 后再驱一帧（推进 ts 避免 lock-once）→ coord state 与
+            emit primary 一致
+    """
+    captured: List[Dict[str, Any]] = []
+
+    def emit(ce: str, _e: str = "", **kw: Any) -> None:
+        captured.append({"ce": ce, **kw})
+
+    boxes = [_make_box(20, 20, 60, 60), _make_box(200, 100, 80, 80)]
+    ft = _build_tracker_with_fake_cam(arbit=True, boxes=boxes, emit_fn=emit)
+
+    os.environ["COCO_FACE_ID_ARBIT"] = "1"
+    from coco.companion.group_mode import GroupModeCoordinator
+    coord = GroupModeCoordinator()
+
+    # case A: 未 wire callback → coord state 应保持 None
+    ft._tick()
+    _seed_track_names(ft, {0: "alice", 1: "bob"})
+    ft._maybe_auto_arbitrate(320, 240, ts=time.monotonic() + 0.5)
+    pid_before_wire = coord.current_arbit_primary()
+
+    # case B: wire callback 后再驱一帧（推进 ts 避免 lock-once 撞前一次）
+    ft.set_arbit_callback(coord.on_face_id_arbit)
+    ft._maybe_auto_arbitrate(320, 240, ts=time.monotonic() + 1.5)
+    pid_after_wire = coord.current_arbit_primary()
+    name_after_wire = coord.current_arbit_primary_name()
+
+    arbit_events = [e for e in captured if e.get("ce") == "vision.face_id_arbit"]
+    emit_primary = arbit_events[-1].get("primary") if arbit_events else None
+
+    ok = (
+        pid_before_wire is None
+        and isinstance(pid_after_wire, str)
+        and pid_after_wire == emit_primary
+        and isinstance(name_after_wire, str)
+        and len(arbit_events) >= 2
+    )
+    _record(
+        "v9_e2e_set_arbit_callback_wire",
+        ok,
+        f"before_wire={pid_before_wire!r} after_wire={pid_after_wire!r} "
+        f"name={name_after_wire!r} emit_primary={emit_primary!r} emits={len(arbit_events)}",
+    )
+
+
+# ---------------------------------------------------------------------------
 
 
 def main() -> int:
@@ -381,6 +454,7 @@ def main() -> int:
         v6_default_off_bytewise_equiv,
         v7_regress_vision_010,
         v8_regress_vision_008_009,
+        v9_e2e_set_arbit_callback_wire,
     ):
         try:
             fn()
