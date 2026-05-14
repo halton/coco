@@ -1,0 +1,62 @@
+{
+  "ts": 1778734201.824307,
+  "total": 11,
+  "passed": 11,
+  "items": [
+    {
+      "name": "V1 default-OFF: mm_llm_proactive_count 不递增",
+      "ok": true,
+      "detail": "fired=True count=0 mm_ctx_after=None"
+    },
+    {
+      "name": "V2 AUTHORITATIVE_COMPONENTS 含 'mm_proactive_llm'",
+      "ok": true,
+      "detail": "set sample=['asr', 'companion', 'dialog', 'emotion_memory', 'face', 'group_mode', 'health', 'idle']"
+    },
+    {
+      "name": "V3 ProactiveStats 新增字段",
+      "ok": true,
+      "detail": "count=0 err=0 fb=0"
+    },
+    {
+      "name": "V4 ON MM prompt 注入场景+emotion+prefer",
+      "ok": true,
+      "detail": "fired=True prompt_len=202 sample='用户感兴趣的话题包括：音乐、游戏。优先围绕这些聊。\\n\\n[MM 主动话题上下文]\\n触发规则：dark_silence（环境偏暗且用户已经一段时间没有说话，可能需要灯光提示或轻松开口。）\\n当前场景描述：外面很暗，房间夜色浓\\n建议参考开口意图：要'"
+    },
+    {
+      "name": "V4b mm_llm_proactive_count==1",
+      "ok": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "V5 fusion 在 ON 时调入 set_mm_llm_context",
+      "ok": true,
+      "detail": "calls=[('record', 'dark_silence', '要不要开灯？'), ('set_mm', {'rule_id': 'dark_silence', 'hint': '要不要开灯？', 'caption': '外面很暗', 'ts': 1000.0})]"
+    },
+    {
+      "name": "V6 ProactiveScheduler 公开 MM-LLM API",
+      "ok": true,
+      "detail": "missing=[]"
+    },
+    {
+      "name": "V7 OFF 时 fusion 不调 set_mm_llm_context",
+      "ok": true,
+      "detail": "set_calls=[] record_calls_n=1"
+    },
+    {
+      "name": "V8 LLM 异常兜底不 crash + mm_llm_errors 递增",
+      "ok": true,
+      "detail": "crashed=False fired=True err=1 count=0"
+    },
+    {
+      "name": "V9 离线 fallback 走模板不调 LLM + 计数正确",
+      "ok": true,
+      "detail": "fired=True llm_n=0 fb=1 count=0 tts='要不要开灯？'"
+    },
+    {
+      "name": "V10 main.py wire (informational)",
+      "ok": true,
+      "detail": "hits=[] note=fusion 已内置 setter 调入，main.py wire 仅为 emotion/offline 增益"
+    }
+  ]
+}
