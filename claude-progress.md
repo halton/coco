@@ -2257,3 +2257,31 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 
 **等待**: Reviewer fresh-context 评审。Engineer 仅 commit + push feat 分支，未 merge -> main。
 
+
+---
+
+## Session: vision-010 closeout (2026-05-14)
+
+**结论**: vision-010 → passing；Reviewer LGTM-with-caveats；merge 回 main HEAD=7486803。
+
+**Reviewer (sub-agent) verdict**: LGTM-with-caveats — 不阻 merge，转 fix-forward。
+- C1 [MED] `arbitrate_faces` 是 dead code：公开 API 但 `_tick` 主循环未挂入，业务侧零 call site → 单独 follow-up `vision-010-fu-1` (priority=89.5) 关闭。
+- C2 [LOW] schema v2 升级路径未预案（当前 schema_version=1，未来字段扩展时需补 hydrate 兼容矩阵）。
+- C3 [LOW] arbitrate rule 三策略 (`bbox|conf|recent`) 简化为单一 `center_area_v1` 未在 feature_list 标注 → 已在 evidence 加 `arbitrate_rule_scope: "center_area_v1 only (conf/recent deferred to vision-010-fu-1+)"`。
+
+**main merge**: `git merge --no-ff feat/vision-010` → main HEAD `fd2c1cb` → `7486803`。
+
+**feature_list.json 改动**:
+- vision-010 status `in_progress` → `passing`，verification 字段补 Reviewer LGTM-with-caveats + 3 caveats 摘要，evidence 加 `arbitrate_rule_scope` / `dead_code_followup` / `real_machine_uat: pending` 注解。
+- 新增 vision-010-fu-1 候选（phase=13, area=vision, priority=89.5, status=not_started, owner=engineer, followed_from=vision-010）：`_tick` 主循环自动调 `arbitrate_faces` + GroupMode 订阅 `vision.face_id_arbit` 端到端 wire；verify 含主循环自动 emit + 业务订阅 wire + default-OFF 不 emit + 回归 vision-010 V1-V10。
+- _change_log 追加 vision-010 closeout 行 + vision-010-fu-1 注入说明。
+
+**push 策略** (commit-后单次尝试，失败忽略):
+- `git push origin main`
+- `git push origin feat/vision-010`
+
+**phase-13 进度**: 2/6（infra-015 / vision-010 done；剩 vision-010-fu-1 / companion-015 / audio-009 / interact-015 / infra-016）。
+
+**下一候选**: `vision-010-fu-1` (priority=89.5)，关闭 C1 dead-code；备选 `companion-015` (priority=91)。建议先做 vision-010-fu-1。
+
+**真机 UAT 异步项**: vision-010 real_machine_uat=pending（face_id 真摄像头跨进程持久化 + 多脸真机仲裁），不阻软件主线。
