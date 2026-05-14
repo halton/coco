@@ -136,6 +136,49 @@ def gen_face_id_fixtures() -> list[Path]:
     return all_paths
 
 
+def gen_two_faces(seconds: float = 4.0, fps: float = 10.0) -> Path:
+    """vision-008: 合成 2 张人脸同时在场的视频。
+
+    左右两张几何"脸"，分别有不同肤色 / 眼色 / 嘴位置，在画面里轻微位移，
+    模拟两个不同用户同时被看到的场景。FaceDetector cascade 在这种合成几何
+    上检出率不高，但本 fixture 主要用于：
+
+    - 上层 ``feed_detections`` 注入 + 手工指定 name 时的 face_id 区分测试
+    - VideoFileSource 可正常解码（与 user_walks_away.mp4 同 codec）
+    """
+    p = OUT / "two_faces.mp4"
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    vw = cv2.VideoWriter(str(p), fourcc, fps, (W, H))
+    if not vw.isOpened():
+        raise RuntimeError(f"VideoWriter 打不开：{p}")
+    n = int(seconds * fps)
+    color_skin_a = (200, 215, 230)
+    color_eye_a = (20, 20, 20)
+    color_skin_b = (150, 180, 200)
+    color_eye_b = (40, 60, 100)
+    for i in range(n):
+        img = _bg()
+        # left face (alice-like)
+        cx_a = 90 + int(5 * np.sin(i * 0.3))
+        cy_a = H // 2
+        cv2.ellipse(img, (cx_a, cy_a), (35, 45), 0, 0, 360, color_skin_a, -1)
+        cv2.circle(img, (cx_a - 12, cy_a - 12), 4, color_eye_a, -1)
+        cv2.circle(img, (cx_a + 12, cy_a - 12), 4, color_eye_a, -1)
+        cv2.ellipse(img, (cx_a, cy_a + 18), (12, 5), 0, 0, 180, (40, 40, 120), 2)
+        # right face (bob-like)
+        cx_b = 230 + int(5 * np.cos(i * 0.3))
+        cy_b = H // 2
+        cv2.ellipse(img, (cx_b, cy_b), (35, 45), 0, 0, 360, color_skin_b, -1)
+        cv2.circle(img, (cx_b - 12, cy_b - 12), 4, color_eye_b, -1)
+        cv2.circle(img, (cx_b + 12, cy_b - 12), 4, color_eye_b, -1)
+        cv2.ellipse(img, (cx_b, cy_b + 10), (12, 5), 0, 0, 180, (40, 40, 120), 2)
+        cv2.putText(img, f"two_faces {i+1}/{n}", (8, H - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+        vw.write(img)
+    vw.release()
+    return p
+
+
 def gen_user_walks_away(seconds: float = 3.0, fps: float = 15.0) -> Path:
     """合成"用户从画面中央走向远处"短视频。"""
     p = OUT / "user_walks_away.mp4"
@@ -167,6 +210,7 @@ README = """# vision fixtures
 - `single_face.jpg` — 320×240 BGR JPG，画面中央一张几何"人脸"（椭圆+双眼+嘴）。用于测试 ImageLoopSource 与未来"画面中有一个人"语义。
 - `no_one.jpg` — 320×240 BGR JPG，空房间示意（地平线 + 椅子轮廓）。用于测试"画面中没人"。
 - `user_walks_away.mp4` — 320×240 mp4v 编码，约 3 秒 @ 15fps。"人脸"从画面中央由近到远缩小同时上移。用于测试 VideoFileSource 与未来"用户走开"语义。
+- `two_faces.mp4` — 320×240 mp4v 编码，约 4 秒 @ 10fps。画面左右各一张几何"人脸"，肤色 / 眼色 / 嘴位置不同。用于 vision-008 multi face_id 场景（fixture VideoFileSource 解码 + 上层注入 name → face_id 区分）。
 
 ## 编码注意
 
@@ -189,7 +233,7 @@ uv run python scripts/gen_vision_fixtures.py
 
 
 def main() -> int:
-    paths = [gen_single_face(), gen_no_one(), gen_user_walks_away()]
+    paths = [gen_single_face(), gen_no_one(), gen_user_walks_away(), gen_two_faces()]
     face_id_paths = gen_face_id_fixtures()
     (OUT / "README.md").write_text(README, encoding="utf-8")
     for p in paths:

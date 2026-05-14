@@ -1,0 +1,56 @@
+{
+  "feature": "vision-008",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 default-OFF get_face_id('alice') is None",
+      "ok": true,
+      "detail": "got=None"
+    },
+    {
+      "name": "V2 stable face_id for same name",
+      "ok": true,
+      "detail": "a1='fid_522b276a' a2='fid_522b276a'"
+    },
+    {
+      "name": "V3 distinct face_id for distinct names + idempotent",
+      "ok": true,
+      "detail": "a='fid_522b276a' b='fid_48181acd' c='fid_d8cd10b9' same_repeat=True"
+    },
+    {
+      "name": "V4 GroupMode resolver 走 face_id 路径",
+      "ok": true,
+      "detail": "captured={'alice': 'fid_522b276a', 'bob': 'fid_48181acd'} active=True"
+    },
+    {
+      "name": "V5 gate-OFF resolver 走 sha1(name) fallback",
+      "ok": true,
+      "detail": "pid='5ef8529017a0' expected='5ef8529017a0'"
+    },
+    {
+      "name": "V6 emit vision.face_id_resolved schema + once-per-name",
+      "ok": true,
+      "detail": "captured=[{'component': 'vision', 'event': 'face_id_resolved', 'name': 'alice', 'face_id': 'fid_522b276a'}, {'component': 'vision', 'event': 'face_id_resolved', 'name': 'bob', 'face_id': 'fid_48181acd'}] fid1='fid_522b276a' fid2='fid_522b276a' fid3='fid_48181acd'"
+    },
+    {
+      "name": "V7 FaceTracker / TrackedFace schema 向后兼容",
+      "ok": true,
+      "detail": "missing=set()"
+    },
+    {
+      "name": "V8 face_tracker.py vision-008 marker + env + emit",
+      "ok": true,
+      "detail": "marker=True env=True emit=True"
+    },
+    {
+      "name": "V9 fixture two_faces.mp4 存在且可解码",
+      "ok": true,
+      "detail": "exists=True frames=40 size=37930"
+    },
+    {
+      "name": "V10 classifier-aware face_id 来自 store user_id",
+      "ok": true,
+      "detail": "a='fid_7' b='fid_42' c='fid_d8cd10b9'"
+    }
+  ]
+}

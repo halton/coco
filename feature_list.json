@@ -1900,7 +1900,7 @@
       "phase": 11,
       "area": "vision",
       "priority": 79,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "face_id 真接入 GroupModeCoordinator：当前 GroupModeCoordinator.observe 在 face_id 通路未启用时使用 sha1(name) fallback 当 pid；本 feature 把 vision FaceTracker 的真 face_id 出口标准化（FaceTracker → face_id event payload schema 固定）并真接入 GroupModeCoordinator.observe 与 profile_id_resolver。default-OFF：复用 COCO_MULTI_USER + 新增 COCO_FACE_ID_REAL=1 gate（OFF 时保持 sha1(name) 兼容路径）。fixture 多 face_id 视频需在 tests/fixtures/vision/ 加合成 mp4。",
       "verification": [
@@ -1909,7 +1909,7 @@
         "Reviewer (sub-agent, fresh-context) LGTM"
       ],
       "dependencies": ["vision-003", "vision-007", "companion-011", "companion-012"],
-      "evidence": "not_started"
+      "evidence": "Engineer 实现完成（feat/vision-008 分支）：FaceTracker.get_face_id 真接 + COCO_FACE_ID_REAL=1 default-OFF gate + name→stable face_id 缓存（同 name 同 face_id；classifier 注入时用 fid_<user_id>，否则 fid_<sha1(name)[:8]>）+ emit vision.face_id_resolved 首次解析事件 + 合成 two_faces.mp4 fixture。verify_vision_008 V1-V10 10/10 PASS。回归 verify_companion_011 / verify_companion_012 / verify_vision_003 / verify_vision_005 / verify_vision_007 全 PASS + ./init.sh smoke PASS。Reviewer fresh-context 评审待办。"
     },
     {
       "id": "audio-008",
