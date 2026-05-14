@@ -111,6 +111,11 @@ class ProactiveStats:
     emotion_alert_per_kind: dict = field(default_factory=dict)
     # vision-007 / infra-009: priority_boost 被 _should_trigger 消费的次数
     priority_boost_consumed: int = 0
+    # companion-011: group_mode 状态统计
+    # - group_mode_trigger_count: 累计进入 group_mode 的次数（False→True 边沿）
+    # - group_mode_active_total: 累计在 group_mode 内的 tick / observe 次数（驻留时长代理）
+    group_mode_trigger_count: int = 0
+    group_mode_active_total: int = 0
     last_topic: str = ""
     last_topic_ts: float = 0.0
     # interact-007 L2: history 用 deque(maxlen=200)，避免长跑会话内存无界增长
@@ -254,6 +259,12 @@ class ProactiveScheduler:
         # companion-010: 可选 EmotionAlertCoordinator 注入；scheduler tick 时
         # 顺带调一次 coord.tick() 让到期 prefer 自动还原（不再依赖新 emotion 事件触发）。
         self._emotion_alert_coord: Any = None
+
+        # companion-011: group_mode 句式 override；GroupModeCoordinator 进入
+        # group_mode 时 set_group_template_override((...))，退出时清 None。
+        # 非空时 _build_system_prompt 追加 group 句式指令，_do_trigger_unlocked
+        # 在 LLM 兜底前缀用 group_phrases[0]。
+        self._group_template_override: Optional[tuple] = None
 
         # 探测 llm_reply_fn 是否接受 system_prompt
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
@@ -453,6 +464,20 @@ class ProactiveScheduler:
         with self._lock:
             return dict(self._topic_preferences)
 
+    # companion-011: GroupModeCoordinator 注入 group 句式 override。
+    # ``phrases=None`` 清除（退出 group_mode）；非空 tuple/list 注入 group 句式。
+    def set_group_template_override(self, phrases: Optional[Sequence[str]]) -> None:
+        with self._lock:
+            if phrases is None:
+                self._group_template_override = None
+            else:
+                cleaned = tuple(str(p).strip() for p in phrases if p and str(p).strip())
+                self._group_template_override = cleaned or None
+
+    def get_group_template_override(self) -> Optional[tuple]:
+        with self._lock:
+            return self._group_template_override
+
     # companion-010 / infra-009: 让 scheduler tick 顺手调一次 coord.tick()，
     # 这样 alert 过期 prefer 还原不再依赖"再来一个 emotion 事件触发 on_emotion 的内部 tick"。
     def set_emotion_alert_coord(self, coord: Any) -> None:
@@ -642,6 +667,17 @@ class ProactiveScheduler:
         if not topic_text:
             # fail-soft：用一句兜底，仍走 TTS（保证"主动开口"这件事 happen）
             topic_text = "我们聊点什么吧？"
+            # companion-011: group_mode override → 兜底句子前缀拼 group lead，
+            # 即便 LLM 失败也保持群体场景口吻。
+            with self._lock:
+                _gov = self._group_template_override
+            if _gov:
+                try:
+                    _lead = str(_gov[0]).strip()
+                except Exception:  # noqa: BLE001
+                    _lead = ""
+                if _lead:
+                    topic_text = f"{_lead}，{topic_text}"
 
         # 2) TTS
         tts_ok = True
@@ -695,25 +731,38 @@ class ProactiveScheduler:
         # 也把 prefer_topics 拼进一个轻量 system_prompt 让 LLM 偏向用户兴趣。
         with self._lock:
             prefer = dict(self._topic_preferences)
+            group_override = self._group_template_override
         prefer_hint = ""
         if prefer:
             top = sorted(prefer.items(), key=lambda kv: kv[1], reverse=True)[:5]
             keys = "、".join(k for k, _ in top)
             prefer_hint = f"用户感兴趣的话题包括：{keys}。优先围绕这些聊。"
 
+        # companion-011: group_mode override → 注入群体场景偏好（用第一个 phrase 作为开场暗示）
+        group_hint = ""
+        if group_override:
+            try:
+                lead = str(group_override[0]).strip()
+            except Exception:  # noqa: BLE001
+                lead = ""
+            if lead:
+                group_hint = f"群体场景偏好：现在有多位用户在场，用 \"{lead}\" 这类群体口吻开口，不要单独称呼某个 profile。"
+
+        def _join(*parts: str) -> Optional[str]:
+            xs = [p for p in parts if p]
+            return "\n".join(xs) if xs else None
+
         if self.profile_store is None:
-            return prefer_hint or None
+            return _join(prefer_hint, group_hint)
         try:
             from coco.profile import build_system_prompt
             from coco.llm import SYSTEM_PROMPT as _BASE
             prof = self.profile_store.load()
             sp = build_system_prompt(prof, base=_BASE)
-            if prefer_hint:
-                sp = f"{sp}\n{prefer_hint}" if sp else prefer_hint
-            return sp
+            return _join(sp or "", prefer_hint, group_hint)
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] build_system_prompt failed: %s: %s", type(e).__name__, e)
-            return prefer_hint or None
+            return _join(prefer_hint, group_hint)
 
     # ------------------------------------------------------------------
     # 后台线程

@@ -74,6 +74,8 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "preference_learner",
     # companion-010: EmotionAlertCoordinator emit emotion_memory.*
     "emotion_memory",
+    # companion-011: GroupModeCoordinator emit group_mode.* / companion.group_present
+    "group_mode",
     # infra-007: SelfHealRegistry emit self_heal.*
     "self_heal",
 })

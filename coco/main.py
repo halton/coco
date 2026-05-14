@@ -304,6 +304,17 @@ class Coco(ReachyMiniApp):
                         try:
                             snap = tracker.latest()
                             sel.select(list(snap.tracks))
+                            # companion-011: 顺手喂给 GroupModeCoordinator（若启用）
+                            _gmc = _group_mode_ref[0]
+                            if _gmc is not None:
+                                try:
+                                    _gmc.observe(snap)
+                                    _gmc.tick(now=time.monotonic())
+                                except Exception as _ge:  # noqa: BLE001
+                                    print(
+                                        f"[coco][group_mode] observe/tick failed: {_ge!r}",
+                                        flush=True,
+                                    )
                             # companion-006: 把当前 focus 的 name 喂给 switcher
                             cur = sel.current()
                             cur_name = (cur.name if cur else None)
@@ -494,6 +505,9 @@ class Coco(ReachyMiniApp):
         # vision-007: MultimodalFusion 引用容器，主线在 _proactive 构造完后注入。
         # caption 回调内同时调 _mm_fusion_ref[0].on_scene_caption（如果启用）。
         _mm_fusion_ref: list = [None]
+        # companion-011: GroupModeCoordinator 引用容器，attention loop 闭包按需读
+        # 最新值（main 段落把 coord 构造完后写入 [0]）。default OFF。
+        _group_mode_ref: list = [None]
         _scene_caption_emitter = None
         try:
             if os.environ.get("COCO_SCENE_CAPTION", "0") == "1":
@@ -1175,6 +1189,65 @@ class Coco(ReachyMiniApp):
                 _proactive_ref[0] = _proactive
             except Exception:  # noqa: BLE001
                 pass
+
+            # companion-011: GroupModeCoordinator（COCO_MULTI_USER=1 且
+            # COCO_GROUP_MODE≠0 启用）。observe/tick 在 attention loop 里调；
+            # 需 _persistent_profile_store + _profile_store(MultiProfileStore)
+            # 都在用（profile_id_resolver 依赖之）。任何前置缺失则不构造。
+            _group_mode_coord = None
+            try:
+                from coco.companion.group_mode import (
+                    GroupModeCoordinator as _GroupModeCoord,
+                    group_mode_enabled_from_env as _gm_enabled,
+                )
+                if _gm_enabled():
+                    if (
+                        _persistent_profile_store is None
+                        or _profile_store is None
+                        or type(_profile_store).__name__ != "MultiProfileStore"
+                    ):
+                        print(
+                            "[coco][group_mode] enabled flag set 但 persistent_profile_store/"
+                            "MultiProfileStore 未就绪；GroupModeCoordinator 跳过构造",
+                            flush=True,
+                        )
+                    else:
+                        from coco.companion.profile_persist import (
+                            compute_profile_id as _compute_pid,
+                        )
+                        def _profile_id_resolver(name: str):
+                            # 与 profile_persist_bridge 同步：face_id 退化为 user_id（name）
+                            if not name:
+                                return None
+                            try:
+                                return _compute_pid(name, name)
+                            except Exception:  # noqa: BLE001
+                                return None
+                        _group_mode_coord = _GroupModeCoord(
+                            proactive_scheduler=_proactive,
+                            persist_store=_persistent_profile_store,
+                            profile_id_resolver=_profile_id_resolver,
+                            emit_fn=emit,
+                        )
+                        try:
+                            _group_mode_ref[0] = _group_mode_coord
+                        except Exception:  # noqa: BLE001
+                            pass
+                        print(
+                            f"[main] group_mode wired (coord={_group_mode_coord!r})",
+                            flush=True,
+                        )
+                else:
+                    print(
+                        "[coco][group_mode] disabled (COCO_MULTI_USER!=1 or COCO_GROUP_MODE=0)",
+                        flush=True,
+                    )
+            except Exception as _ge:  # noqa: BLE001
+                print(
+                    f"[coco][group_mode] init failed: {type(_ge).__name__}: {_ge}",
+                    flush=True,
+                )
+                _group_mode_coord = None
 
             # vision-007: MultimodalFusion（默认 OFF via COCO_MM_PROACTIVE=1）。
             # 仅在 scene_caption + proactive 都启用时构造；任一缺失则 print WARN
