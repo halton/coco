@@ -44,3 +44,16 @@ robot:
 vision:
   - 'coco/perception/**'
   - 'scripts/verify_vision_*.py'
+# infra-013 fu-2: meta 兜底段。
+# 跨 area 改动（pyproject 依赖、test fixture、conftest、CI 自身、verify runner）
+# 在 PR 上必须触发全 7 个 verify-XXX job，避免 paths-filter 误判 cross-area
+# regression。verify-matrix.yml 7 个 verify-XXX job 的 if 均含
+# `needs.changes.outputs.meta == 'true'`。
+meta:
+  - 'pyproject.toml'
+  - 'uv.lock'
+  - 'conftest.py'
+  - 'tests/**'
+  - '.github/**'
+  - 'scripts/run_verify_all.py'
+  - 'scripts/precommit_impact.py'
