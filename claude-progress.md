@@ -2471,3 +2471,30 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **Evidence 副作用**: V7 子进程跑 010 改了 evidence/vision-010/verify_summary.json，已用 `uv run python scripts/restore_unrelated_evidence.py --target vision-010-fu-3` 还原；目前 `git status evidence/` 仅剩 untracked `evidence/vision-010-fu-3/`.
 
 **未 merge**: 仍在 feat/vision-010-fu-3 分支，等 Reviewer LGTM 后 closeout merge → main.
+
+---
+
+## Session N+1 — 2026/05/14 — vision-010-fu-3 closeout
+
+**Reviewer verdict**: LGTM-with-caveats（5 caveats 全不阻 merge）.
+
+**Caveat 摘要**:
+- C-1 [low] env 解析漏过 NaN（注入 NaN 软 fail 不 crash 但语义可疑）→ 转 fu-4
+- C-2 [low] env 解析允许 inf（同上）→ 转 fu-4
+- C-3 [trivial] evidence/vision-010/verify_summary.json 被 V7 子进程回归副作用覆写 → closeout 前 `git checkout HEAD -- evidence/vision-010/verify_summary.json` 还原，未进 commit
+- C-4 [trivial] print vs logging.warning（与 main.py 风格一致接受）
+- C-5 [trivial] 极端配置 phrases 全含占位 + primary 未注入 → 空 tuple → 回退 default（行为合理）
+
+**Closeout 动作**:
+1. caveat-3 清理：feat 分支 `git checkout HEAD -- evidence/vision-010/verify_summary.json`，确认 `git status evidence/` 干净（仅 untracked `evidence/vision-010-fu-3/` 在 commit 内）.
+2. `git checkout main && git pull --ff-only origin main`（HEAD=58febb3）.
+3. `git merge --no-ff feat/vision-010-fu-3`（merge commit HEAD=af66908）.
+4. feature_list.json：vision-010-fu-3 → passing + 完整 verification + evidence 字段；real_machine_uat=pending.
+5. **注入 vision-010-fu-4** (priority=89.95, phase=13, area=vision, status=not_started, followed_from=vision-010-fu-3)：env boost NaN/Inf 防御 + 解析层硬上限（建议 100.0），关闭 C-1/C-2.
+6. _change_log 追加 fu-3 closeout 摘要 + fu-4 注入说明.
+7. commit closeout 改动到 main（chore(vision-010-fu-3): closeout）.
+8. push origin main + push origin feat/vision-010-fu-3（每条单次，失败忽略）.
+
+**Phase-13 进度**: 5/7（infra-015 / vision-010 / vision-010-fu-1 / vision-010-fu-2 / vision-010-fu-3 done + 注入 fu-4），剩 vision-010-fu-4 / companion-015 / audio-009 / interact-015 / infra-016.
+
+**下一候选**: vision-010-fu-4 (89.95) 或直接 companion-015 (91).
