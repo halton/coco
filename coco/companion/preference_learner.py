@@ -212,6 +212,7 @@ class PreferenceLearner:
         persist_every_n_turns: int = DEFAULT_PERSIST_EVERY_N_TURNS,
         clock: Callable[[], float] = time.time,
         extra_stopwords: Optional[Iterable[str]] = None,
+        emit_fn: Optional[Callable[..., None]] = None,
     ) -> None:
         if topk < 1:
             raise ValueError(f"topk 必须 ≥1，got {topk}")
@@ -230,6 +231,9 @@ class PreferenceLearner:
         # infra-009 / companion-009 L2-2：异步 rebuild executor（懒构造，单 worker）；
         # 主回调线程把 rebuild_for_profile_async 提交进来，不被 fsync 阻塞。
         self._executor: Optional[ThreadPoolExecutor] = None
+        # companion-014: 真 emit `companion.preference_updated` 事件（schema 见 rebuild_for_profile）。
+        # default-OFF：emit_fn 为 None 时完全 no-op，行为与 companion-009 bytewise 等价。
+        self._emit_fn: Optional[Callable[..., None]] = emit_fn
 
     # ---------------------------------------------------------------- helpers
     def _decay_weight(self, ts: float, *, now: float) -> float:
@@ -428,6 +432,13 @@ class PreferenceLearner:
 
         kw = self.extract_keywords(entries, now=now)
 
+        # companion-014: 计算 delta（去抖：仅当真发生变化才 emit）。
+        # 旧值取自 record 既有 prefer_topics（dict 或 None）。
+        try:
+            prev_kw = dict(getattr(rec, "prefer_topics", None) or {})
+        except Exception:  # noqa: BLE001
+            prev_kw = {}
+
         # 把 dict 写回 record.prefer_topics（schema 已新增字段）
         try:
             setattr(rec, "prefer_topics", dict(kw))
@@ -442,6 +453,20 @@ class PreferenceLearner:
                         profile_id, type(e).__name__, e)
             return None
 
+        # companion-014: 真 emit `companion.preference_updated` 事件（去抖）。
+        # default-OFF：_emit_fn 为 None 时完全 no-op；亦在 prev==new 时跳过 emit。
+        if self._emit_fn is not None:
+            try:
+                self._maybe_emit_preference_updated(
+                    profile_id=profile_id,
+                    prev_kw=prev_kw,
+                    new_kw=kw,
+                )
+            except Exception as e:  # noqa: BLE001
+                # emit 不能影响 rebuild 主路径
+                log.warning("[preference_learner] emit preference_updated failed: %s: %s",
+                            type(e).__name__, e)
+
         with self._lock:
             self.stats.updated_count += 1
             self.stats.extracted_keywords_total += len(kw)
@@ -450,6 +475,42 @@ class PreferenceLearner:
             self.stats.last_input_summaries = n_summaries
             self._pending_turns = 0
         return kw
+
+    # companion-014: 计算 prev/new 的 delta，按 topic 维度 emit。
+    # schema：每个发生变化的 topic（包括新增/移除/分数变更）发一条
+    # `companion.preference_updated`，payload 含 topic / delta / new_score / old_score / profile_id。
+    def _maybe_emit_preference_updated(
+        self,
+        *,
+        profile_id: str,
+        prev_kw: Dict[str, float],
+        new_kw: Dict[str, float],
+    ) -> None:
+        if self._emit_fn is None:
+            return
+        if prev_kw == new_kw:
+            # 去抖：完全相同（含 key 集合 + 分数）则不 emit
+            return
+        keys = set(prev_kw.keys()) | set(new_kw.keys())
+        for topic in sorted(keys):
+            old = float(prev_kw.get(topic, 0.0))
+            new = float(new_kw.get(topic, 0.0))
+            if abs(new - old) < 1e-6:
+                continue
+            try:
+                self._emit_fn(
+                    "companion.preference_updated",
+                    f"preference_updated topic={topic} delta={new - old:+.4f} new_score={new:.4f}",
+                    topic=topic,
+                    delta=round(new - old, 6),
+                    new_score=round(new, 6),
+                    old_score=round(old, 6),
+                    profile_id=profile_id,
+                )
+            except Exception as e:  # noqa: BLE001
+                # 单 topic emit 失败不影响其他
+                log.warning("[preference_learner] emit per-topic failed: %s: %s",
+                            type(e).__name__, e)
 
     # infra-009 / companion-009 L2-2：异步版本，main 主回调线程提交后立即返回
     # Future，不被 persist_store.save 的 fsync 阻塞。
@@ -531,6 +592,15 @@ def preference_learn_enabled_from_env(env: Optional[Mapping[str, str]] = None) -
     return (e.get("COCO_PREFER_LEARN") or "0").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def async_rebuild_enabled_from_env(env: Optional[Mapping[str, str]] = None) -> bool:
+    """companion-014: ``COCO_COMPANION_ASYNC_REBUILD=1`` 时
+    ``_on_interaction_combined`` 主回调线程改用 ``rebuild_for_profile_async``，
+    避免被 persist_store.save 的 fsync 阻塞。default-OFF：维持同步行为，
+    与 companion-009 bytewise 等价。"""
+    e = env if env is not None else os.environ
+    return (e.get("COCO_COMPANION_ASYNC_REBUILD") or "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
 # ---------------------------------------------------------------------------
 # Stub: LLM-backed preference backend (future work)
 # ---------------------------------------------------------------------------
@@ -560,6 +630,7 @@ __all__ = [
     "DEFAULT_MIN_TOKEN_LEN",
     "DEFAULT_PERSIST_EVERY_N_TURNS",
     "preference_learn_enabled_from_env",
+    "async_rebuild_enabled_from_env",
     "tokenize",
     "LLMPreferenceBackend",
 ]

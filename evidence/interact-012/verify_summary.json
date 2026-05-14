@@ -1,5 +1,5 @@
 {
-  "ts": 1778734201.824307,
+  "ts": 1778744002.4598122,
   "total": 11,
   "passed": 11,
   "items": [
@@ -11,7 +11,7 @@
     {
       "name": "V2 AUTHORITATIVE_COMPONENTS 含 'mm_proactive_llm'",
       "ok": true,
-      "detail": "set sample=['asr', 'companion', 'dialog', 'emotion_memory', 'face', 'group_mode', 'health', 'idle']"
+      "detail": "set sample=['asr', 'camera', 'companion', 'dialog', 'emotion_memory', 'face', 'group_mode', 'health']"
     },
     {
       "name": "V3 ProactiveStats 新增字段",

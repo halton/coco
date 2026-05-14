@@ -1347,7 +1347,14 @@ class Coco(ReachyMiniApp):
                             flush=True,
                         )
                     else:
-                        _preference_learner = _PrefLearner()
+                        # companion-014: 真 emit `companion.preference_updated`。
+                        # default-OFF 路径：emit_fn 为 logging_setup.emit；调用本身廉价，
+                        # 仅当 prev/new 不同时 emit（去抖在 learner 内部）。
+                        try:
+                            from coco.logging_setup import emit as _emit
+                        except Exception:  # noqa: BLE001
+                            _emit = None
+                        _preference_learner = _PrefLearner(emit_fn=_emit)
                         # 初始化时即对当前 active profile rebuild 一次（如已 hydrate）
                         try:
                             _active_uid_init = None
@@ -1382,6 +1389,34 @@ class Coco(ReachyMiniApp):
                             f"persist_every={_preference_learner.persist_every_n_turns}",
                             flush=True,
                         )
+                        # companion-014: 把 select_topic_seed candidates 注入 hook
+                        # 显式 wire 到 ProactiveScheduler 后台 _do_trigger_unlocked 路径。
+                        # provider 从 ProactiveScheduler.get_topic_preferences() 拿 TopK keys
+                        # 作为候选；scheduler 内部再调 select_topic_seed(candidates=...) 加权挑。
+                        # 没 prefer / 空 → provider 返 ()，scheduler 维持 config.topic_seed。
+                        try:
+                            def _coco_topic_seed_provider(_pa=_proactive) -> "list[str]":
+                                try:
+                                    pref = _pa.get_topic_preferences() if _pa is not None else {}
+                                except Exception:  # noqa: BLE001
+                                    return []
+                                if not pref:
+                                    return []
+                                # 按 weight 降序，取 keys
+                                return [k for k, _ in sorted(
+                                    pref.items(), key=lambda kv: kv[1], reverse=True,
+                                )]
+                            _proactive.set_topic_seed_provider(_coco_topic_seed_provider)
+                            print(
+                                "[coco][preference_learner] topic_seed_provider wired -> proactive",
+                                flush=True,
+                            )
+                        except Exception as _wpe:  # noqa: BLE001
+                            print(
+                                f"[coco][preference_learner] set_topic_seed_provider failed: "
+                                f"{type(_wpe).__name__}: {_wpe}",
+                                flush=True,
+                            )
                 else:
                     print("[coco][preference_learner] disabled (COCO_PREFER_LEARN not set)", flush=True)
             except Exception as e:  # noqa: BLE001
@@ -1506,16 +1541,41 @@ class Coco(ReachyMiniApp):
                                     compute_profile_id as _cpid,
                                 )
                                 _pid = _cpid(_active_uid, _active_uid)
-                                _kw = _preference_learner.rebuild_for_profile(
-                                    persist_store=_persistent_profile_store,
-                                    profile_id=_pid,
-                                    dialog_memory=_dialog_memory,
+                                # companion-014: COCO_COMPANION_ASYNC_REBUILD=1 走 async 版，
+                                # 不阻塞主回调线程的 fsync；default-OFF 保持同步行为
+                                # （bytewise 等价 companion-009）。set_topic_preferences
+                                # 在 async 路径上由 future done 回调完成，避免主线程拿 prefer。
+                                from coco.companion.preference_learner import (
+                                    async_rebuild_enabled_from_env as _async_on,
                                 )
-                                if _kw is not None and _pa is not None:
-                                    try:
-                                        _pa.set_topic_preferences(_kw)
-                                    except Exception:  # noqa: BLE001
-                                        pass
+                                if _async_on():
+                                    _fut = _preference_learner.rebuild_for_profile_async(
+                                        persist_store=_persistent_profile_store,
+                                        profile_id=_pid,
+                                        dialog_memory=_dialog_memory,
+                                    )
+                                    def _on_done(f, _pa=_pa):
+                                        try:
+                                            _kw = f.result()
+                                        except Exception:  # noqa: BLE001
+                                            return
+                                        if _kw is not None and _pa is not None:
+                                            try:
+                                                _pa.set_topic_preferences(_kw)
+                                            except Exception:  # noqa: BLE001
+                                                pass
+                                    _fut.add_done_callback(_on_done)
+                                else:
+                                    _kw = _preference_learner.rebuild_for_profile(
+                                        persist_store=_persistent_profile_store,
+                                        profile_id=_pid,
+                                        dialog_memory=_dialog_memory,
+                                    )
+                                    if _kw is not None and _pa is not None:
+                                        try:
+                                            _pa.set_topic_preferences(_kw)
+                                        except Exception:  # noqa: BLE001
+                                            pass
                     except Exception as e:  # noqa: BLE001
                         print(f"[coco][preference_learner] on_turn failed: {e!r}", flush=True)
 

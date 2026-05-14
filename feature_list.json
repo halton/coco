@@ -2095,7 +2095,7 @@
       "phase": 12,
       "area": "companion",
       "priority": 86,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "preference_learner 真 emit + select_topic_seed scheduler 后台路径 wire（消化 companion-009 L2 3 条）：(a) AUTHORITATIVE_COMPONENTS 中 preference_learner 真 emit companion.preference_updated 事件（含 topic / delta / new_score 字段），当前已列但未实际 emit；(b) ProactiveScheduler 后台 _do_trigger_unlocked 调用 select_topic_seed(candidates=...) 显式注入候选池（当前仅 system_prompt 间接注入，公开 API 闲置）；(c) _on_interaction_combined 中 rebuild_for_profile 当前主回调线程同步执行，加 async/defer 选项（不强切，默认同步保持现行为）。default-OFF：复用 COCO_PROACTIVE=1；async defer 选项 COCO_COMPANION_ASYNC_REBUILD=1 default-OFF。",
       "verification": [
@@ -2108,7 +2108,7 @@
         "interact-013"
       ],
       "followed_from": "companion-009 L2 3 条非阻塞",
-      "evidence": "not_started"
+      "evidence": "in_progress on feat/companion-014; verify_companion_014.py 8/8 PASS; regress companion-009/-010/-011/-012/-013 + interact-013 PASS; smoke PASS"
     }
   ]
 }

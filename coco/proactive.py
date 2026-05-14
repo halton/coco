@@ -332,6 +332,13 @@ class ProactiveScheduler:
         # 维持空 dict —— _select_topic_seed / _build_system_prompt 行为不变。
         self._topic_preferences: dict = {}
 
+        # companion-014: 后台 _do_trigger_unlocked 路径上的 candidates 注入 hook。
+        # provider() 返回 Sequence[str]（topic 候选池）；非空时由 select_topic_seed
+        # 按 prefer overlap 加权挑选；None / 空 / 异常 → 维持 config.topic_seed 现行为。
+        # default-OFF：未 set 即 None；与 companion-009 select_topic_seed 仅 system_prompt
+        # 间接注入路径 bytewise 等价。
+        self._topic_seed_provider: Optional[Callable[[], Sequence[str]]] = None
+
         # vision-007 / infra-009: multimodal_fusion 命中规则后写 True；
         # 下一次 _should_trigger 命中时 idle_threshold 减半 + cooldown 减半
         # 视作"优先调度一次"，consume 后立即清回 False。MultimodalFusion 通过
@@ -567,6 +574,21 @@ class ProactiveScheduler:
     def get_topic_preferences(self) -> Dict[str, float]:
         with self._lock:
             return dict(self._topic_preferences)
+
+    # companion-014: 公开 select_topic_seed candidates 注入 hook。
+    # provider 为零参 callable，返回 Sequence[str] 候选话题；scheduler 后台
+    # _do_trigger_unlocked 路径上若 provider 非 None，会调用并将结果作为
+    # select_topic_seed(candidates=...) 的 candidates。default-OFF（None）。
+    def set_topic_seed_provider(
+        self,
+        provider: Optional[Callable[[], Sequence[str]]],
+    ) -> None:
+        with self._lock:
+            self._topic_seed_provider = provider
+
+    def get_topic_seed_provider(self) -> Optional[Callable[[], Sequence[str]]]:
+        with self._lock:
+            return self._topic_seed_provider
 
     # companion-011: GroupModeCoordinator 注入 group 句式 override。
     # ``phrases=None`` 清除（退出 group_mode）；非空 tuple/list 注入 group 句式。
@@ -835,6 +857,28 @@ class ProactiveScheduler:
             mm_ctx = self._mm_llm_context
             mm_offline_fallback = False
             seed = self.config.topic_seed
+            # companion-014: 后台 _do_trigger_unlocked 路径上调 select_topic_seed(candidates=...)
+            # 显式注入候选池（公开 API wire）。provider 为 None / 异常 / 空候选 →
+            # 维持 config.topic_seed 现行为（与 companion-009 bytewise 等价）。
+            # 注：mm_ctx.hint 优先级仍最高（下方 if mm_llm_on 分支覆盖 seed），
+            # 这里只影响普通后台路径。
+            _seed_provider = self._topic_seed_provider
+            if _seed_provider is not None:
+                try:
+                    _candidates = _seed_provider()
+                except Exception as e:  # noqa: BLE001
+                    log.warning("[proactive] topic_seed_provider failed: %s: %s",
+                                type(e).__name__, e)
+                    _candidates = None
+                if _candidates:
+                    try:
+                        seed = self.select_topic_seed(
+                            candidates=_candidates,
+                            default=seed,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("[proactive] select_topic_seed(candidates=...) failed: %s: %s",
+                                    type(e).__name__, e)
             # interact-013: 锁内只 snapshot；不在锁内调 profile_store.load / _build_system_prompt
             mm_snapshot: Optional[MmPromptSnapshot] = None
             base_prompt_needed = False
