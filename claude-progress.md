@@ -2578,3 +2578,23 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **Reviewer**: PENDING（fresh-context 评审待开）
 
 **未 merge feat/companion-015 → main**（Engineer sub-agent 守硬规则，等 Reviewer LGTM 后由 closeout sub-agent merge）
+
+---
+
+## Session 2026-05-14 (closeout sub-agent — companion-015)
+
+**Reviewer**: LGTM-with-caveats（3 caveats，全不阻 merge）。
+- caveat-1 [MED] `companion.preference_persisted` emit 自报"lock-once 节流"实为误报：`_persisted_emit_lock` 仅 thread-safety lock 不去重 emit。每次 flush_state → 一次 save emit，每次 rebuild_for_profile → flush_state 一次。开 PERSIST 后 save emit 与 preference_updated 同频，可能噪声。**入 backlog `companion-015-backlog-emit-throttle` priority=999，不开 fu chain**。
+- caveat-2 [LOW] evidence dirty（companion-014 / interact-012 / interact-013 / vision-010 verify_summary.json 4 个被回归子进程刷 ts）→ closeout 前已 `git checkout HEAD -- evidence/...` restore，git status evidence/ 干净。
+- caveat-3 [LOW] saved_at 未参与 hydrate validation（信息性，忽略）。
+
+**Closeout 步骤**：
+1. feat/companion-015 上 restore 4 个 dirty evidence；evidence/companion-015/verify_summary.json 修正字段（`evidence_side_effects_clean` → `"regress_subprocess_only_ts_refresh; restored on closeout"`，caveats 写入 3 项摘要，`merged_to_main`=true，`reviewer_lgtm`=LGTM-with-caveats）；commit 到 feat 分支。
+2. checkout main → `git merge --no-ff feat/companion-015` → main HEAD=`2471224`（base 旧 dacaa5b）。
+3. feature_list.json：companion-015 status `in_progress` → `passing`，verification.notes 加 Reviewer LGTM-with-caveats 摘要 + real_machine_uat=pending。
+4. 注入 backlog `companion-015-backlog-emit-throttle` (phase=null, area=companion, priority=999, status=backlog, followed_from=companion-015 caveat-1)。
+5. claude-progress.md 追加本 Session。
+6. main 上 `chore(companion-015): closeout` commit + 尝试 push（每条只跑一次失败忽略）。
+
+**phase-13 软件进度**：7/N（含 vision-010 主+fu-1..fu-4 + companion-015），剩 audio-009 / interact-015 / infra-016。
+**下一候选**：**audio-009** priority=92（sounddevice 异常恢复 + USB hot-plug 检测 + TTS 缓存，default-OFF 三 gate COCO_AUDIO_RECOVER=1 / COCO_AUDIO_HOTPLUG=1 / COCO_TTS_CACHE=1，sim-first，真机听感由 audio-008 uat 异步项承担）。
