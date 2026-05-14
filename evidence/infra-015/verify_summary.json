@@ -1,0 +1,63 @@
+{
+  "feature_id": "infra-015",
+  "title": "verify-matrix.yml lint pre-job 落地 + CI runner setup actionlint binary",
+  "phase": 13,
+  "status": "in_progress",
+  "branch": "feat/infra-015",
+  "verify_script": "scripts/verify_infra_015.py",
+  "checks": {
+    "V1_lint_job_present": "PASS",
+    "V2_actionlint_setup": "PASS",
+    "V3_lint_paths_call": "PASS",
+    "V4_lint_workflows_call": "PASS",
+    "V5_needs_chain": "PASS",
+    "V6_local_lint_paths_rc0": "PASS",
+    "V7_local_lint_workflows_strict_rc0": "PASS",
+    "V8_actionlint_verify_matrix_rc0": "PASS",
+    "V9_yaml_still_valid": "PASS"
+  },
+  "totals": "9/9 PASS",
+  "smoke": {
+    "cmd": "COCO_CI=1 ./init.sh",
+    "result": "PASS"
+  },
+  "local_env": {
+    "actionlint_path": "/opt/homebrew/bin/actionlint",
+    "actionlint_version": "1.7.12",
+    "python": "uv run python (3.13)",
+    "platform": "darwin/arm64"
+  },
+  "ci_setup": {
+    "actionlint_action": "rhysd/actionlint@v1",
+    "pinned_version": "1.7.12",
+    "binary_inject": "ln -sf $PATH_TO_ACTIONLINT /usr/local/bin/actionlint",
+    "lint_job_steps": [
+      "actions/checkout@v4",
+      "actions/setup-python@v5 (3.13)",
+      "rhysd/actionlint@v1 with version 1.7.12",
+      "show actionlint -version",
+      "python scripts/lint_paths_filter.py",
+      "python scripts/lint_workflows.py --strict (with PATH inject)"
+    ],
+    "needs_chain": "lint -> {changes, smoke} -> verify-* (transitive)"
+  },
+  "files_changed": [
+    ".github/workflows/verify-matrix.yml (新增 lint job + smoke/changes needs lint)",
+    "scripts/verify_infra_015.py (新增 9 V check)",
+    "evidence/infra-015/* (verify log + 各 lint log + workflow diff)"
+  ],
+  "evidence_files": [
+    "evidence/infra-015/verify_infra_015.log",
+    "evidence/infra-015/lint_paths_filter.log",
+    "evidence/infra-015/lint_workflows_strict.log",
+    "evidence/infra-015/actionlint_verify_matrix.log",
+    "evidence/infra-015/verify_matrix_diff.patch"
+  ],
+  "default_off": "N/A — CI workflow 改动，纯静态 lint pre-job，运行期无副作用",
+  "real_machine_uat": "N/A — 纯 CI / lint 改动",
+  "reviewer_subagent": "pending",
+  "caveats": [
+    "rhysd/actionlint@v1 step 输出 binary 落到 step output；用 ln -sf 注入 /usr/local/bin/actionlint 让 lint_workflows.py 的 shutil.which 找到，避免改业务脚本签名。",
+    "lint job 真红效果首次到 CI 才能完全验证（本地仅模拟 actionlint 行为）；预期下次 push 触发 verify-matrix workflow 后看到 lint job 出现并 PASS。"
+  ]
+}

@@ -1,0 +1,60 @@
+diff --git a/.github/workflows/verify-matrix.yml b/.github/workflows/verify-matrix.yml
+index b2dba3b..74a5331 100644
+--- a/.github/workflows/verify-matrix.yml
++++ b/.github/workflows/verify-matrix.yml
+@@ -34,6 +34,39 @@ env:
+   COCO_CI: "1"
+ 
+ jobs:
++  # infra-015: lint pre-job。把 phase-12 落地的 lint_paths_filter.py /
++  # lint_workflows.py（actionlint dry-run hook）真接入 CI。
++  # - actionlint 通过 rhysd/actionlint@v1 action 安装官方 binary
++  # - lint_paths_filter.py 校验 .github/paths-filter.yml schema / 兜底
++  # - lint_workflows.py --strict 对所有 .github/workflows/*.yml 跑 actionlint
++  # 后续 verify-* matrix job 走 needs: [smoke, changes, lint]，lint 红即整个
++  # matrix fail-fast，避免 workflow 自身坏掉时再消耗 CI 跑业务 verify。
++  lint:
++    name: lint workflows + paths-filter (infra-015)
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-python@v5
++        with:
++          python-version: "3.13"
++      - name: Install actionlint
++        uses: rhysd/actionlint@v1
++        id: actionlint
++        with:
++          version: "1.7.12"
++      - name: Show actionlint version
++        run: ${{ steps.actionlint.outputs.executable }} -version
++      - name: Lint paths-filter (infra-011/013/015)
++        run: python scripts/lint_paths_filter.py
++      - name: Lint workflows (actionlint --strict, infra-015)
++        env:
++          PATH_TO_ACTIONLINT: ${{ steps.actionlint.outputs.executable }}
++        run: |
++          # rhysd/actionlint@v1 把 binary 落到 step output，注入 PATH 让
++          # lint_workflows.py 的 shutil.which("actionlint") 找得到。
++          ln -sf "$PATH_TO_ACTIONLINT" /usr/local/bin/actionlint
++          python scripts/lint_workflows.py --strict
++
+   # infra-011: paths-filter gate。
+   # 在 PR 上检测 area diff，输出 7 个 boolean；非 PR event 下游 job 用
+   # github.event_name != 'pull_request' 强制全量。
+@@ -43,6 +76,7 @@ jobs:
+   changes:
+     name: paths-filter (infra-011)
+     runs-on: ubuntu-latest
++    needs: lint
+     outputs:
+       vision: ${{ steps.filter.outputs.vision }}
+       interact: ${{ steps.filter.outputs.interact }}
+@@ -62,6 +96,7 @@ jobs:
+   smoke:
+     name: smoke (init.sh)
+     runs-on: ubuntu-latest
++    needs: lint
+     strategy:
+       fail-fast: false
+       matrix:

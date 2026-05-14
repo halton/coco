@@ -2164,3 +2164,22 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - phase-11（6/6） + phase-12（8/8） 软件主线已收官
 - phase-13 入库：6 not_started + uat-phase4（异步）
 - 持续开发模式继续：close-out 后直接派下一候选，不询问用户
+
+## Session — 2026-05-14 — infra-015 in_progress (Engineer round 1)
+
+**Feature**: infra-015 (phase-13, priority=89, area=infra) — verify-matrix.yml lint pre-job + actionlint binary CI setup.
+
+**Branch**: feat/infra-015 (off main HEAD=8b22d8e)
+
+**改动**:
+- `.github/workflows/verify-matrix.yml`: 新增顶层 `lint` job（runs-on ubuntu-latest），步骤 = checkout + setup-python 3.13 + rhysd/actionlint@v1 (pinned 1.7.12) + show version + `python scripts/lint_paths_filter.py` + `python scripts/lint_workflows.py --strict`（前置 `ln -sf $PATH_TO_ACTIONLINT /usr/local/bin/actionlint` 让 lint_workflows.py 的 shutil.which 找到 binary）。`changes` 与 `smoke` job 加 `needs: lint`，verify-* matrix job 通过 `needs: [smoke, changes]` 传递依赖 lint，工作流自身坏掉时 fail-fast。
+- `scripts/verify_infra_015.py`: 新增 9 V check（V1 lint job 存在 / V2 actionlint setup / V3 lint_paths_filter call / V4 lint_workflows --strict call / V5 needs 链 / V6 V7 V8 本机 dry-run rc=0 / V9 yaml 整体仍合法 + lint 已被 needs）。
+- `evidence/infra-015/{verify_summary.json, verify_infra_015.log, lint_paths_filter.log, lint_workflows_strict.log, actionlint_verify_matrix.log, verify_matrix_diff.patch}`: evidence 落盘。
+- `feature_list.json`: infra-015 status not_started→in_progress + verification + evidence 字段。
+
+**verify**:
+- `uv run python scripts/verify_infra_015.py` → 9/9 PASS
+- `COCO_CI=1 ./init.sh` smoke → PASS
+- 本地 actionlint 1.7.12 (brew) 直接 dry-run verify-matrix.yml → rc=0
+
+**等待**: Reviewer fresh-context 评审。Engineer 不 merge，按硬规则只 commit + push feat 分支。
