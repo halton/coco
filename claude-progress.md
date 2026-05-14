@@ -2349,3 +2349,27 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - C-B 已部分修复：现 main.py 真 wire callback；GroupMode 收到 primary 后存 state，但 group decision 仍未消费此 primary，留给后续 ProactiveScheduler/template 选择 feature。
 - 新 caveat C-E [LOW]：set_arbit_callback 单 callback 设计（非 list of subscribers），后续若多 subscriber 需要 fan-out 需改为 list/composite；当前 GroupMode 是唯一业务订阅方足够。
 
+
+## Session: 2026-05-14 closeout vision-010-fu-1
+
+**Reviewer round-2 verdict**: LGTM (5 LOW caveats，全不阻 merge)
+- R-A snapshot.tracks 读 name 首帧滞后（sim 掩盖；真机异步识别可能更明显）
+- R-B GroupMode group_decision 仍未真消费 `_arbit_primary_*`（仅 wire+state，未 act）→ 单独 follow-up vision-010-fu-2 priority=89.7 关闭
+- R-C V9 in-process 非 subprocess 端到端（性价比不高，不上 subprocess）
+- R-D real_machine_uat=pending（真摄像头多脸 _tick 自动 arbit + main 真 wire）
+- R-E set_arbit_callback wire 失败仅 print WARN 未 emit 系统事件
+
+**Merge**: `git merge --no-ff feat/vision-010-fu-1` → main HEAD=**57da70d** (Merge commit)
+
+**feature_list.json 改动**:
+- `vision-010-fu-1` status `in_progress` → `passing`，verification.notes 加 round-2 LGTM + 5 caveats 摘要
+- 注入新 follow-up `vision-010-fu-2` (priority=89.7, phase=13, area=vision, status=not_started, followed_from=vision-010-fu-1) — 关闭 R-B：GroupMode group_decision 真消费 `_arbit_primary_*`，observe / enter-exit 句式 override 真用 primary face_id 影响 group decision；verify 含 ARBIT primary 注入前后 group decision 行为差异 fixture
+- `_change_log` 追加 closeout 一行
+
+**异步 UAT 项**: `uat-vision-010-fu-1` real_machine_uat=pending（继承自 vision-010 + fu-1 wire 端到端）
+
+**phase-13 软件进度**: 3/6（vision-010 / vision-010-fu-1 done；剩 vision-010-fu-2 / companion-015 / audio-009 / interact-015 / infra-016）
+
+**push 策略**: closeout commit 后 `git push origin main` + `git push origin feat/vision-010-fu-1` 各一次失败忽略。
+
+**下一候选**: vision-010-fu-2 (priority=89.7) 关闭 R-B，或 companion-015 (priority=91)。建议先 vision-010-fu-2 把 R-B 闭环。
