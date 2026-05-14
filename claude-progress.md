@@ -2041,3 +2041,23 @@ phase-11 软件全部完成：
 ### 下一步
 - 主会话派 Reviewer fresh-context 评审：默认 OFF gate / --max-strategy 三选一语义 / lint L5 文本扫描健壮性 / 008 V9 overwrite evidence 行为变化
 - LGTM 后 closeout sub-agent merge + push main + 切 status=passing
+
+## Session 2026-05-14 — infra-014 close-out + phase-12 5/7 + 注入 infra-014-fu-1
+
+### infra-014 close-out
+- Reviewer (sub-agent, fresh-context) LGTM with 6 caveats accepted（含 #6 行为变化已消解）+ 1 轻微瑕疵 lint_paths_filter.py:130 raw-string SyntaxWarning（待 fu-1）
+- merge feat/infra-014 → main（--no-ff），main HEAD=ac50468
+- push origin main + feat/infra-014 一次（均成功）
+- feature_list.json: infra-014 status not_started→passing（含完整 evidence 行）
+- evidence: verify_infra_014 8/8（含 V4b/V5b 共 10 records）+ 回归 infra-008 10/10 + infra-011 10/10 + infra-013 8/8 + smoke PASS
+
+### phase-12 推进
+- phase-12 累计 passing 计数 +1（详见 feature_list.json 当前 phase-12 各 feature status）
+
+### 注入 infra-014-fu-1
+- id=infra-014-fu-1, priority=87, phase=12, area=infra, status=not_started
+- description: actionlint dry-run hook 落地 + lint_paths_filter.py:130 docstring raw-string 修复（infra-014 caveat #5 + 1 轻微瑕疵 SyntaxWarning）
+- followed_from: infra-014
+
+### 下一 candidate
+- companion-014（priority=86, phase=12, not_started）
