@@ -1,0 +1,48 @@
+{
+  "feature": "audio-008",
+  "results": [
+    {
+      "name": "V1 gate OFF short-circuit (no query_devices call, no evidence)",
+      "ok": true,
+      "detail": "enabled=False qd_calls=0 evidence_exists=False"
+    },
+    {
+      "name": "V2 gate ON probe matches USB output devices",
+      "ok": true,
+      "detail": "enabled=True ok=True matched=4 names=['Anker PowerConf Speaker (USB)', 'MacBook Pro Speakers', 'Jabra Speak 510 USB', 'USB Audio Device']"
+    },
+    {
+      "name": "V3 evidence probe.json written with required schema",
+      "ok": true,
+      "detail": "exists=True keys=['enabled', 'ok', 'device_count', 'matched_devices', 'matched_count', 'latency_ms', 'patterns', 'error']"
+    },
+    {
+      "name": "V4 query_devices raises → graceful ok=False, evidence still written",
+      "ok": true,
+      "detail": "raised=False ok_attr=False error='RuntimeError: synthetic backend failure'"
+    },
+    {
+      "name": "V5 custom regex patterns filter precisely",
+      "ok": true,
+      "detail": "matched_count=2 names=['Anker PowerConf Speaker (USB)', 'Jabra Speak 510 USB']"
+    },
+    {
+      "name": "V6 sounddevice missing → graceful degrade ok=False",
+      "ok": true,
+      "detail": "ok_attr=False error=\"ImportError: No module named 'sounddevice'\""
+    },
+    {
+      "name": "V7 ProbeResult schema + stable sort",
+      "ok": true,
+      "detail": "device_count=6 matched_count=4 latency_ms=0.011 sorted=True"
+    },
+    {
+      "name": "V8 source markers (audio-008 / ENV_GATE / wire)",
+      "ok": true,
+      "detail": "probe_ok=True main_ok=True"
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "ok": true
+}
