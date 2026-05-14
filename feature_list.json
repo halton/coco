@@ -2164,7 +2164,7 @@
       "phase": 13,
       "area": "vision",
       "priority": 89.7,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "vision-010-fu-1 caveat R-B (LOW) 关闭 — GroupMode group_decision 真消费 _arbit_primary_*：(a) GroupModeCoordinator.group_decision()/_choose_target() 在 _arbit_primary_face_id 非 None 且 ARBIT enabled 时优先用 arbit primary 作为 active speaker / current user，覆盖原 face_id_resolved 路径；observe / enter-exit 句式 override 真用 primary face_id 与 name 影响群体 decision（例如选谁打招呼、对谁说话、prefer 注入用谁的 profile）。(b) verify 含 ARBIT primary 注入前后 group decision 行为差异 fixture：相同 multi-face 场景，启用 arbit 后 decision target 切换到 winner，未启用走旧路径。(c) verify 含 primary 切换（A→B）后 group decision 在下一轮立即跟进。default-OFF gate：复用 COCO_FACE_ID_ARBIT=1。sim-first：fixture two_faces.mp4 复用 + 直接喂 on_face_id_arbit 注入。followed_from: vision-010-fu-1 (caveat R-B)",
       "followed_from": "vision-010-fu-1",
