@@ -2646,3 +2646,33 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - (a) HotplugWatcher 当前未 wire 到 main.py 启动序列；class 已就位。如需触发 self_heal reopen 真路径需新立 backlog。
 - (b) TTS 缓存为内存 LRU，进程退出即失。磁盘持久版本 / 跨进程共享留作 backlog。
 - (c) `open_stream_with_recovery` 还没替换 wake_word/vad/asr 真实 InputStream 调用站；当前是 helper 提供阶段。替换调用站作 backlog 候选。
+
+---
+
+## Session 2026-05-14 (audio-009 closeout / phase-13 #8 PASSING)
+
+audio-009 PHASE-13 #8 PASSING — merge sha **4671932**（feat/audio-009 → main，--no-ff，Engineer→Reviewer→Closeout 全链路完成）。
+
+**env 命名偏离 spec 显式记录**（已写入 feature_list.json _change_log）：
+- `COCO_AUDIO_RECOVERY` （spec 原写 `COCO_AUDIO_RECOVER`）
+- `COCO_TTS_LRU` + `COCO_TTS_LRU_SIZE` （spec 原写 `COCO_TTS_CACHE`，与既有 Kokoro 模型 cache 目录 env 撞名，不能复用，故改名）
+- `COCO_AUDIO_HOTPLUG`（与 spec 一致）
+
+**新增 backlog**：`audio-009-backlog-wire-to-main` priority=999 status=backlog —
+聚合 4 项 fix-forward：(1) wire HotplugWatcher 到 main.py（含 atexit stop+join(timeout=2)）；
+(2) `open_stream_with_recovery` 收紧 error_types 仅 `sd.PortAudioError` 让 OSError 透传；
+(3) 替换 wake_word / vad / asr 真实 `InputStream` 调用点；
+(4) TTS LRU 跨进程持久化（独立评估，磁盘版 vs IPC 版）。
+该项独立条目，**不开 fu chain**。
+
+**Reviewer LGTM-with-caveats 5 条 caveat 摘要**：全 LOW/INFO 无 BLOCKER：
+1. [LOW] env 命名偏 spec — 已显式记录
+2. [LOW] HotplugWatcher 未 wire main.py — backlog 已入
+3. [LOW] open_stream_with_recovery error_types 过宽 — backlog 已入
+4. [LOW] TTS LRU 进程内存版（非磁盘）— backlog 已入
+5. [INFO] 退避参数与 spec 数值差异（0.5/1/2/4/8 五次 vs 0.2/0.5/1 三次）— evidence 友好取舍，记录归档
+
+**phase-13 软件进度**：8/N PASS（audio-009 完成），下一候选 **interact-015**（按 priority 最低未完成）。
+
+**push 结果**（commit 后填）：见下文 push 段。
+
