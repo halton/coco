@@ -2136,3 +2136,31 @@ phase-11 软件全部完成：
 
 ### 下一步
 - phase-13 planner 待启动（软件 candidate 已清空，需新规划）
+
+
+## Session — 2026-05-14 — phase-13 planner 启动 + 注入 6 候选
+
+### scope
+phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_started 仅剩 uat-phase4。phase-13 planner sub-agent 入库 6 候选，覆盖 phase-12 polish 收割 + 多子系统稳定性深化方向。
+
+### 注入清单（priority 89 起递增）
+- **infra-015** (prio=89, area=infra, followed_from=infra-014-fu-1) — verify-matrix.yml lint pre-job 落地（actionlint + lint_paths_filter）+ CI runner setup actionlint binary（pinned 1.7.12 + checksum + cache）。种自 phase-12 polish 留项。
+- **vision-010** (prio=90, area=vision, followed_from=vision-009) — face_id 跨进程持久化（face_id_map serialize + hydrate）+ 多脸场景仲裁（COCO_FACE_ID_ARBIT={bbox|conf|recent}）。default-OFF。新方向。
+- **companion-015** (prio=91, area=companion, followed_from=companion-013) — companion-010 inherited caveat 真修：_bump_comfort_prefer 首次 capture 剥 comfort keys + preference_learner state 跨进程持久化（COCO_PREFER_PERSIST=1）。种自 phase-12 inherited caveat。
+- **audio-009** (prio=92, area=audio, followed_from=audio-008) — sounddevice 异常恢复 + 退避重试 + audio.degraded emit；USB hot-plug 检测 + audio.device_changed emit；TTS wav LRU 缓存（50 条 / 50MB）。default-OFF。新方向。
+- **interact-015** (prio=93, area=interact, followed_from=interact-014) — proactive 仲裁链全节点 trace event + mm_proactive LLM 用量计量 jsonl + summary CLI。default-OFF。新方向。
+- **infra-016** (prio=94, area=infra, followed_from=infra-014-fu-2) — observability：verify/smoke 历史趋势 jsonl + health_summary CLI + restore_unrelated_evidence 保护 _history。新方向，dogfood phase-12 evidence policy。
+
+### 设计原则
+- 全部 sim-first 可推进；真机部分继承 uat-* 异步，不阻 phase 推进
+- default-OFF gate 复用既有 env 命名风格（COCO_<DOMAIN>_<FUNC>=1）
+- 充分消化 phase-12 polish/caveats 池：infra-015（lint pre-job + actionlint setup）/ companion-015（comfort_prefer baseline 真修）/ infra-016（dogfood evidence policy）
+- area 分布：infra×2 / vision×1 / audio×1 / companion×1 / interact×1，覆盖均衡
+
+### 下一 candidate
+- **infra-015** (priority=89, phase=13, not_started) —— phase-13 起点
+
+### 主线推进总览
+- phase-11（6/6） + phase-12（8/8） 软件主线已收官
+- phase-13 入库：6 not_started + uat-phase4（异步）
+- 持续开发模式继续：close-out 后直接派下一候选，不询问用户
