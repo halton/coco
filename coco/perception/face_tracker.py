@@ -420,6 +420,42 @@ class FaceTracker:
         with self._lock:
             return self._snapshot
 
+    # infra-012-fu-1: 真共享 camera ref API。
+    #
+    # 背景：infra-012 用 mutable list[0] write-back 让 self_heal reopen 后把新
+    # CameraSource 透回 FaceTracker；但 FaceTracker 内部 _tick 读的是
+    # ``self._camera`` 属性，list 与属性并不是 alias —— sim 通过是因为同进程
+    # 内 fake CameraSource 复用了同一对象 id，真机 USB 路径下 release 老
+    # handle 再 open 新 handle 时，FaceTracker 仍读旧 ref（已释放）就会崩。
+    #
+    # 修复：暴露公开 API ``swap_camera(new_cam)``，在 ``self._lock`` 内原子
+    # 替换 ``self._camera``；旧 handle 关闭的责任由调用方决定（self_heal_wire
+    # 已在 swap 前 release 老 handle，详见 coco/infra/self_heal_wire.py
+    # _camera_reopen 路径）。``new_cam`` 允许 None（用于 teardown 路径）。
+    #
+    # 线程安全：``_tick`` 读取 ``self._camera`` 不持锁 —— Python 属性赋值是
+    # 原子的（PEP 8 / CPython 实现），所以即使 swap 与 read 并发，最坏只是
+    # _tick 这一帧拿到旧 ref（已 release）触发一次 read 失败被
+    # FaceTracker 自己的 ``stats.error_count`` 兜底，下一帧自然切到新 ref。
+    # 我们仍走 ``self._lock`` 防御多线程并发 swap。
+    def swap_camera(self, new_camera: Optional[CameraSource]) -> Optional[CameraSource]:
+        """原子替换内部 camera 引用。
+
+        Returns
+        -------
+        Optional[CameraSource]
+            原先持有的 camera 实例（调用方据此决定是否 release；
+            self_heal_wire 已先 release 老 handle，本方法不重复 release）。
+        """
+        with self._lock:
+            old = self._camera
+            self._camera = new_camera
+            # swap 后 external 语义保留：外部注入 handle 时，FaceTracker
+            # 之前是不负责 release 的；swap 进来的新 handle 同样视为外部
+            # 持有（self_heal_wire 持有 ref 并负责生命周期）。
+            self._camera_external = True
+        return old
+
     # vision-008: face_id 真接接口 + default-OFF gate。
     #
     # 设计：

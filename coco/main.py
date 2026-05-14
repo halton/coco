@@ -1736,9 +1736,12 @@ class Coco(ReachyMiniApp):
                         #   切换（在线 LLM/ASR 失败 → 进入离线 fallback；recover →
                         #   退出）——这是当前真有效的 ASR self-heal 形态。
                         # - offline_fallback: _offline_fallback 实例（可能为 None）。
-                        # - camera_handle_ref: mutable list ref，与 face_tracker 共享
-                        #   当前 camera 句柄；reopen 时 release 老 → open 新 → 写回
-                        #   ref[0]，避免 USB 独占冲突。
+                        # - camera_handle_ref: 真共享 adapter（infra-012-fu-1），
+                        #   既暴露 mutable list 语义（向下兼容 verify_infra_012
+                        #   V3.c marker）又暴露 swap_camera(new_cam) 调用
+                        #   face_tracker.swap_camera 完成 self._camera 原子换入；
+                        #   self_heal_wire 优先走 swap_camera 路径，避免 list ref
+                        #   假共享（infra-012 Reviewer C-1）。
                         _camera_ref_list: list = [None]
                         try:
                             if _face_tracker_shared is not None:
@@ -1747,7 +1750,42 @@ class Coco(ReachyMiniApp):
                                 _camera_ref_list[0] = getattr(_face_tracker_shared, "_camera", None)
                         except Exception:  # noqa: BLE001
                             _camera_ref_list = [None]
-                        _camera_ref_arg = _camera_ref_list if _camera_ref_list[0] is not None else None
+
+                        class _CameraHandleAdapter:
+                            """infra-012-fu-1: face_tracker 真共享 ref adapter.
+
+                            list[0] 路径保留供 verify_infra_012 V3.c marker /
+                            stub 兼容；swap_camera 路径优先，self_heal_wire
+                            reopen 走该路径时 face_tracker._camera 被原子替换。
+                            """
+
+                            def __init__(self, backing: list, tracker: Any) -> None:
+                                self._backing = backing
+                                self._tracker = tracker
+
+                            def __getitem__(self, idx):
+                                return self._backing[idx]
+
+                            def __setitem__(self, idx, value):
+                                self._backing[idx] = value
+
+                            def swap_camera(self, new_cam):
+                                # 真共享 API：face_tracker.swap_camera 原子换入。
+                                tr = self._tracker
+                                if tr is not None and hasattr(tr, "swap_camera"):
+                                    tr.swap_camera(new_cam)
+                                # 同步 backing list 以兼容 list[0] 读路径
+                                try:
+                                    self._backing[0] = new_cam
+                                except Exception:  # noqa: BLE001
+                                    pass
+
+                        if _camera_ref_list[0] is not None and _face_tracker_shared is not None:
+                            _camera_ref_arg = _CameraHandleAdapter(
+                                _camera_ref_list, _face_tracker_shared
+                            )
+                        else:
+                            _camera_ref_arg = _camera_ref_list if _camera_ref_list[0] is not None else None
                         _handle_status = _compute_handle_status(
                             audio_handle=None,
                             asr_handle=None,

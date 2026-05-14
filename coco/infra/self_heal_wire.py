@@ -103,7 +103,14 @@ def compute_handle_status(
     def _camera_ok() -> bool:
         if camera_handle_ref is None:
             return False
-        return callable(camera_handle_ref) or hasattr(camera_handle_ref, "__getitem__")
+        if callable(camera_handle_ref):
+            return True
+        if hasattr(camera_handle_ref, "__getitem__"):
+            return True
+        # infra-012-fu-1: 真共享 ref adapter（暴露 swap_camera）
+        if hasattr(camera_handle_ref, "swap_camera"):
+            return True
+        return False
 
     return {
         "audio": "ok" if _audio_ok() else "stub",
@@ -335,13 +342,24 @@ def build_real_reopen_callbacks(
     def _camera_reopen(**ctx: Any) -> bool:
         component = "camera"
         # infra-012: 解决 USB 独占 + ref 回写。
-        # camera_handle_ref 支持两种形态：
+        # camera_handle_ref 支持三种形态（infra-012-fu-1 起新增 swap_camera）:
+        #   0) swap_camera(new_cam) callable：face_tracker 直接公开的真共享 API
+        #      （infra-012-fu-1）。release 老 handle → open 新 handle →
+        #      face_tracker.swap_camera(new_cam) 原子换入。同时也兼容
+        #      list-like __getitem__ 读旧 handle（调用方可同时实现两者，
+        #      detect 时优先 swap_camera）。
         #   1) callable() -> CameraSource | None   （只读 ref，不能回写新 handle；
         #      这种情况下我们不能持有新 handle，必须 release 再让上游重新构造，
         #      所以走 read-probe 验活后 release 临时 handle）
         #   2) mutable container（list/dict）：传 list 时 ref[0] 是当前 handle；
         #      我们 release 老 → open 新 → 写回 ref[0]，保持 USB 独占被一个 handle
         #      持有，避免每次 reopen 都临时多开一个 (USB camera 真机会撞)。
+        has_swap_api = (
+            camera_handle_ref is not None
+            and not callable(camera_handle_ref)
+            and hasattr(camera_handle_ref, "swap_camera")
+            and callable(getattr(camera_handle_ref, "swap_camera", None))
+        )
         is_mutable_ref = (
             camera_handle_ref is not None
             and not callable(camera_handle_ref)
@@ -352,7 +370,13 @@ def build_real_reopen_callbacks(
         h = None
         if camera_handle_ref is not None:
             try:
-                if is_mutable_ref:
+                if has_swap_api and hasattr(camera_handle_ref, "__getitem__"):
+                    # adapter 同时实现 __getitem__ → 通过 [0] 读旧 handle
+                    h = camera_handle_ref[0]
+                elif has_swap_api and hasattr(camera_handle_ref, "current"):
+                    # adapter 也可暴露 current() 取旧 handle
+                    h = camera_handle_ref.current() if callable(camera_handle_ref.current) else camera_handle_ref.current
+                elif is_mutable_ref:
                     h = camera_handle_ref[0]
                 else:
                     h = camera_handle_ref()
@@ -361,6 +385,7 @@ def build_real_reopen_callbacks(
                 emit("self_heal.component_attempt", component=component, path="ref_raised",
                      error=type(e).__name__)
                 return False
+        old_id = id(h) if h is not None else None
         # 先 release 老 handle —— 否则 USB 独占下 open 新 handle 会失败
         if h is not None:
             try:
@@ -387,6 +412,33 @@ def build_real_reopen_callbacks(
                 except Exception:  # noqa: BLE001
                     pass
                 return False
+            new_id = id(new_cam)
+            if has_swap_api:
+                # 真共享路径（infra-012-fu-1）：face_tracker.swap_camera 原子换入。
+                try:
+                    camera_handle_ref.swap_camera(new_cam)
+                except Exception as e:  # noqa: BLE001
+                    log.debug("[self_heal_wire] swap_camera raised: %r", e)
+                    # 失败 → 释放新 handle 避免 USB 泄漏
+                    try:
+                        if hasattr(new_cam, "release"):
+                            new_cam.release()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    emit("self_heal.component_attempt", component=component,
+                         path="swap_raised", error=type(e).__name__)
+                    return False
+                # 兼容：若同时实现 __setitem__，同步写回 [0]（兜底 / 老 verify
+                # 仍按 list 路径判断）
+                try:
+                    if hasattr(camera_handle_ref, "__setitem__"):
+                        camera_handle_ref[0] = new_cam
+                except Exception:  # noqa: BLE001
+                    pass
+                emit("camera.swap", old_id=old_id, new_id=new_id, path="swap_camera")
+                emit("self_heal.component_attempt", component=component,
+                     path="reopened_swap_camera", read_ok=bool(ok))
+                return bool(ok)
             if is_mutable_ref:
                 # 写回 ref；保留新 handle，由 ref 持有方负责后续 release。
                 try:
@@ -402,10 +454,12 @@ def build_real_reopen_callbacks(
                     emit("self_heal.component_attempt", component=component,
                          path="ref_writeback_raised", error=type(e).__name__)
                     return False
+                emit("camera.swap", old_id=old_id, new_id=new_id, path="ref_writeback")
                 emit("self_heal.component_attempt", component=component,
                      path="reopened_ref_writeback", read_ok=bool(ok))
                 return bool(ok)
             # callable / None ref：临时 handle，释放避免 USB 泄漏
+            emit("camera.swap", old_id=old_id, new_id=new_id, path="probe_release")
             emit("self_heal.component_attempt", component=component,
                  path="reopened_probe_release", read_ok=bool(ok))
             try:

@@ -1873,3 +1873,25 @@ phase-11 软件全部完成：
 ### 下一步
 - 持续开发模式：主会话直接派下一个 candidate（**infra-012-fu-1** priority=81）进入 in_progress
 - phase-12 软件全过后进入 phase-13 规划或 uat-phase4 / uat-phase8 / uat-phase11 异步真机 UAT
+
+## Session — 2026-05-14 — infra-012-fu-1 → passing
+
+### 完成
+- **infra-012-fu-1**: face_tracker.swap_camera 真共享 camera ref API + self_heal_wire 优先走 swap 路径（消化 infra-012 Reviewer C-1）
+  - `coco/perception/face_tracker.py` 加公开 API `FaceTracker.swap_camera(new_camera) -> old`：在 `self._lock` 内原子替换 `self._camera`；swap 后 `_camera_external=True`（外部接管生命周期，self_heal_wire 已 release 老 handle 在 swap 之前）
+  - `coco/infra/self_heal_wire.py` `_camera_reopen` 新增 `has_swap_api` 检测分支（attr `swap_camera` 优先于 `__getitem__/__setitem__` mutable list 路径），命中后 emit `camera.swap{old_id,new_id,path=swap_camera}` + `self_heal.component_attempt path=reopened_swap_camera`；保留 list ref / callable read-probe 双兜底兼容老调用方
+  - `coco/main.py` 改造为 `_CameraHandleAdapter`（同时实现 `__getitem__/__setitem__` 和 `swap_camera`）作为传入 wire 的 ref；保留 `_camera_ref_list: list = [None]` marker 以保 verify_infra_012 V3.c 通过
+  - `coco/logging_setup.py` `AUTHORITATIVE_COMPONENTS` 加 `"camera"` 注册 camera.swap topic
+  - `scripts/verify_infra_012_fu_1.py` 新增 V1-V11 共 37/37 PASS
+
+### 验证
+- verify_infra_012_fu_1 37/37 PASS
+- 回归：verify_infra_010 32/32 PASS / verify_infra_012 27/27 PASS / verify_vision_002 PASS / verify_vision_008 10/10 PASS / `COCO_CI=1 ./init.sh` smoke 全 PASS
+
+### caveat / followup
+- **real_machine_uat: pending** — 同进程 fake CameraSource 已验 V4 (swap 后 _tick 切到新 handle)；真机 USB 路径下 face_tracker 与 self_heal_wire 协作仍需 UAT
+- `_camera_external=True` 在 swap 后被强制置位：FaceTracker.join 路径下不再 release 内置 camera；这是预期（self_heal_wire / adapter 持有 ref），但若调用方原本依赖 join 自动 release，需注意 lifecycle 转移
+- `compute_handle_status` 现也认 swap-only adapter（仅暴露 `swap_camera`）为 camera=ok，确保新 wire 路径在 startup log 正确计入 handles=N/3
+
+### 下一步
+- 持续开发模式：继续 phase-12 下一候选（priority 82 vision-009）
