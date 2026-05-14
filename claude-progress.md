@@ -2285,3 +2285,30 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **下一候选**: `vision-010-fu-1` (priority=89.5)，关闭 C1 dead-code；备选 `companion-015` (priority=91)。建议先做 vision-010-fu-1。
 
 **真机 UAT 异步项**: vision-010 real_machine_uat=pending（face_id 真摄像头跨进程持久化 + 多脸真机仲裁），不阻软件主线。
+
+---
+
+## Session — vision-010-fu-1 in_progress (Engineer)
+
+**目标**: 关闭 vision-010 caveat C1 — `arbitrate_faces` 公开但 `_tick` 未挂入的 dead-code。
+
+**改动**:
+- `coco/perception/face_tracker.py`: `_tick` 末尾新增 `_maybe_auto_arbitrate(frame_w, frame_h, ts)` — gate OFF 立即 return（cheap path），gate ON 时从最新 snapshot.tracks 收集 `(box, name)` 列表喂给已有 `arbitrate_faces`（复用其 lock-once + ≥2 known face 判断）。
+- `coco/companion/group_mode.py`: 新增 `_bool_env_face_id_arbit_for_group()` env helper + `GroupModeCoordinator._arbit_enabled / _arbit_primary_face_id / _arbit_primary_name / _arbit_last_ts` state + `on_face_id_arbit(*, primary, primary_name=None, ts=None, **kwargs)` 订阅入口 + `current_arbit_primary() / current_arbit_primary_name()` getter。ARBIT OFF 时 on_face_id_arbit no-op，state 永远 None。
+- `scripts/verify_vision_010_fu_1.py`: 新增 V1-V8 verify。
+
+**verify**: V1-V8 全 8/8 PASS（V1 _tick 自动 emit / V2 _tick 路径 lock-once / V3 单脸/0脸/未知不 emit / V4 GroupMode 写 primary state / V5 ARBIT OFF 订阅 no-op / V6 default-OFF bytewise 等价 / V7 回归 vision-010 10/10 / V8 回归 vision-008 10/10 + 009 9/9）。
+
+**smoke**: `./init.sh` 全部 PASS（TTS / vision / face-tracker / VAD / wake / power-state / config / publish）。
+
+**default-OFF 等价证据 (V6)**: ARBIT 未设时，FaceTracker `_tick` 多脸路径 emit_fn 0 calls；GroupModeCoordinator.on_face_id_arbit 收到 emit 后内部 state 仍为 None — 双重 gate 保证 bytewise 等价。
+
+**branch / commit**: `feat/vision-010-fu-1`（从 main HEAD=c027d5b 起），等 Engineer commit。
+
+**下一步**: Reviewer sub-agent fresh-context 评审（硬规则）→ LGTM → status in_progress→passing → merge feat→main。Engineer **未 merge** feat/vision-010-fu-1 → main。
+
+**caveats (engineer 自评)**:
+- C-A [LOW] `_maybe_auto_arbitrate` 从 `snapshot.tracks` 读 name 而非当前帧 detect 结果，依赖 `_maybe_identify` 已先把 primary name 写回；非 primary 的 known name 须由历史 _maybe_identify（更换 primary 时）逐帧累积，单帧 multi-known 触发可能比 vision-010 公开 API 直接传入慢一两帧。fix-forward 可在 `_maybe_identify` 扩到 top-K faces。
+- C-B [LOW] GroupModeCoordinator.on_face_id_arbit 仅写 primary face_id 到 state；group decision（enter/exit/members）尚未消费此 primary（仅暴露 getter）。下游 ProactiveScheduler / template 选择如何用 arbit primary 是后续 feature。
+- C-C [LOW] 真机端到端 _tick 路径（真摄像头 + 真 classifier + 真 multi-face）尚未跑过，登记 real_machine_uat=pending。
+

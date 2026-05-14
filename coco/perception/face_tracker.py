@@ -917,9 +917,41 @@ class FaceTracker:
             return
 
         h, w = frame.shape[:2]
-        self._process_detections(list(faces), int(w), int(h), time.monotonic())
+        ts = time.monotonic()
+        self._process_detections(list(faces), int(w), int(h), ts)
         # vision-003: primary face → identify
         self._maybe_identify(frame, faces)
+        # vision-010-fu-1: 自动 multi-face arbitrate（关闭 vision-010 C1 dead-code）
+        # default-OFF：未设 COCO_FACE_ID_ARBIT=1 → arbitrate_faces 内部 short-circuit 返回 None。
+        # lock-once policy: 同帧 ts 去重，已由 arbitrate_faces 内部保证。
+        self._maybe_auto_arbitrate(int(w), int(h), ts)
+
+    def _maybe_auto_arbitrate(self, frame_w: int, frame_h: int, ts: float) -> None:
+        """vision-010-fu-1: _tick 末尾尝试一次多脸仲裁（default-OFF cheap path）.
+
+        gate OFF 时立即 return（避免任何 snapshot 读取 / 列表构建开销）；
+        gate ON 时从最新 snapshot.tracks 收集 (box, name) 列表喂给
+        ``arbitrate_faces``。后者自带 lock-once + 至少 2 known face 的判断。
+        """
+        if not self._face_id_arbit_enabled:
+            return
+        with self._lock:
+            snap = self._snapshot
+        tracks = snap.tracks if snap is not None else ()
+        if len(tracks) < 2:
+            return
+        boxes: List[FaceBox] = []
+        names: List[Optional[str]] = []
+        for t in tracks:
+            boxes.append(t.box)
+            names.append(t.name if isinstance(t.name, str) and t.name else None)
+        try:
+            self.arbitrate_faces(boxes, names, frame_w, frame_h, ts=ts)
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "FaceTracker auto arbitrate failed: %s: %s",
+                type(e).__name__, e,
+            )
 
     def _maybe_identify(self, frame, faces) -> None:
         """对 primary face 跑一次 face-id；patch snapshot.primary_track.name/confidence。"""
