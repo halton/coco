@@ -370,24 +370,55 @@ class EmotionAlertCoordinator:
     # ------------------------------------------------------------------
 
     def tick(self, now: Optional[float] = None) -> None:
-        """到期还原 prefer（main.py 也可在主循环里定期 tick；on_emotion 内部已 tick）。"""
+        """到期还原 prefer（main.py 也可在主循环里定期 tick；on_emotion 内部已 tick）。
+
+        companion-013 (b) 语义：
+        - 还原不是"无脑回到 baseline 快照"，而是"撤回 comfort 注入"。
+        - 流程：读当前 prefer → 剥掉 comfort keys（这些是我们 bump 时加的）
+          → 把 baseline 中"用户原有的 comfort 之外的 key"补回来（兜底，
+          防止用户在 alert 期间删除了某些原 key 导致还原后丢失）
+          → set 回 scheduler。
+        - 这样用户在 alert 期间手动改的非 comfort prefer 不会被 baseline 回滚。
+        - 还原后 _original_prefer 清空；下一次 alert 进 _bump_comfort_prefer
+          时会按"当前 prefer 减 comfort keys"重新 capture baseline。
+        """
         with self._lock:
             if self._original_prefer is None:
                 return
             t = float(now) if now is not None else float(self._clock())
             if t < self._restore_at:
                 return
-            saved = self._original_prefer
+            saved_baseline = dict(self._original_prefer)
             self._original_prefer = None
             self._restore_at = 0.0
-        if self.proactive is not None:
-            try:
-                self.proactive.set_topic_preferences(saved)
-                with self._lock:
-                    self.stats.prefer_restores += 1
-            except Exception as e:  # noqa: BLE001
-                log.warning("[emotion_memory] restore prefer failed: %s: %s",
-                            type(e).__name__, e)
+        if self.proactive is None:
+            return
+        get = getattr(self.proactive, "get_topic_preferences", None)
+        sett = getattr(self.proactive, "set_topic_preferences", None)
+        if not callable(sett):
+            return
+        # 1) 读当前 prefer（含 comfort 残留 + 用户在 alert 期间手动改的 keys）
+        try:
+            current = dict(get() or {}) if callable(get) else {}
+        except Exception:  # noqa: BLE001
+            current = {}
+        # 2) 剥掉 comfort keys（这是我们 bump 时注入的）
+        restored: Dict[str, float] = {
+            k: v for k, v in current.items() if k not in self.comfort_prefer
+        }
+        # 3) baseline 兜底：baseline 中的非 comfort key 若不在 current 里则补回
+        for k, v in saved_baseline.items():
+            if k in self.comfort_prefer:
+                continue
+            if k not in restored:
+                restored[k] = v
+        try:
+            sett(restored)
+            with self._lock:
+                self.stats.prefer_restores += 1
+        except Exception as e:  # noqa: BLE001
+            log.warning("[emotion_memory] restore prefer failed: %s: %s",
+                        type(e).__name__, e)
 
     # ------------------------------------------------------------------
     # 触发分支
