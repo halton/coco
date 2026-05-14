@@ -1443,6 +1443,19 @@ class Coco(ReachyMiniApp):
                                                     else None),
                         )
                         _emotion_alert_coord.start(_shared_emotion_tracker)
+                        # companion-013 (a): wire coord → ProactiveScheduler._loop，
+                        # 让 scheduler tick 顺手调 coord.tick(now=)；这样 alert 到期
+                        # prefer 还原不再依赖"再来一个 emotion 事件触发 on_emotion 内部 tick"。
+                        try:
+                            _setter = getattr(_proactive, "set_emotion_alert_coord", None)
+                            if callable(_setter):
+                                _setter(_emotion_alert_coord)
+                        except Exception as _e:  # noqa: BLE001
+                            print(
+                                f"[coco][emotion_memory] wire coord→proactive failed: "
+                                f"{type(_e).__name__}: {_e}",
+                                flush=True,
+                            )
                         print(
                             f"[coco][emotion_memory] enabled window={_emotion_memory_window.window_size} "
                             f"K={_emotion_memory_window.min_samples_k} "
