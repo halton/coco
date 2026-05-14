@@ -2183,3 +2183,21 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - 本地 actionlint 1.7.12 (brew) 直接 dry-run verify-matrix.yml → rc=0
 
 **等待**: Reviewer fresh-context 评审。Engineer 不 merge，按硬规则只 commit + push feat 分支。
+
+## Session — 2026-05-14 — infra-015 round 2 (Engineer rework)
+
+**Reviewer round 1 NEEDS-CHANGES**: C1 HIGH blocker (rhysd/actionlint@v1 不是合法 GitHub Action — 仓库无 action.yml 且无 v1 tag，CI 首跑必崩) + C2 MED (本机 V check 全文本子串无法捕远程引用错误) + C3 LOW (ln -sf /usr/local/bin/ 系统污染) + C5 LOW (subprocess 无 cmd+rc log)。
+
+**改动**:
+- `.github/workflows/verify-matrix.yml` lint job: 删 `rhysd/actionlint@v1` action 引用，改 `bash <(curl -sSL .../v1.7.12/scripts/download-actionlint.bash) 1.7.12` 官方安装；PATH 注入改 `pwd >> "$GITHUB_PATH"`（含 SC2005 修复 — 不用 `echo "$(pwd)"`）；删 `ln -sf /usr/local/bin/actionlint` 与 `PATH_TO_ACTIONLINT` env。
+- `scripts/verify_infra_015.py`: V2 重写为 download-actionlint.bash + 伪 action `uses:` 守护（注释行豁免）；新增 V10 `gh api repos/rhysd/actionlint/git/refs/tags/v1.7.12` 联网校验（gh 未装/限流降级 warn-only，404 必 fail）；新增 V11 `$GITHUB_PATH` 注入 + 不再 `/usr/local/bin/actionlint` 守护；新增 `_run_logged()` helper 包 subprocess 调用（C5），所有 V6/V7/V8/V10 复用。
+- `evidence/infra-015/`: 全部 refresh + 新增 `gh_api_actionlint_tag.json` (sha=914e7df21a07ef503a81201c76d2b11c789d3fca)。
+- `feature_list.json`: infra-015 verification 字段更新为 11/11 + round 2 fix 摘要；status 仍 in_progress。
+
+**verify**:
+- `uv run python scripts/verify_infra_015.py` → 11/11 PASS
+- `COCO_CI=1 ./init.sh` smoke → PASS
+- 本地 actionlint 1.7.12 (brew) dry-run verify-matrix.yml → rc=0
+- gh api rhysd/actionlint v1.7.12 tag → sha=914e7df21a07
+
+**等待**: Reviewer round 2。Engineer 仍不 merge，按硬规则只 commit + push feat 分支。

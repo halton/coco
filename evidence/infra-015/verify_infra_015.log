@@ -1,7 +1,7 @@
 V1: verify-matrix.yml 含 lint: job
   ok: lint job 已落地
-V2: lint job 含 actionlint setup step
-  ok: rhysd/actionlint@v1 binary 接入
+V2: lint job 含 actionlint 安装 step（download-actionlint.bash, pin v1.7.12）
+  ok: download-actionlint.bash + pin v1.7.12 + 无伪 action uses
 V3: lint job 含 lint_paths_filter.py 调用
   ok: lint_paths_filter.py 已接入
 V4: lint job 含 lint_workflows.py --strict 调用
@@ -9,13 +9,24 @@ V4: lint job 含 lint_workflows.py --strict 调用
 V5: changes / smoke / verify-* job 通过 needs 链依赖 lint
   ok: needs 链 lint → smoke/changes → verify-* 完整
 V6: 本机跑 lint_paths_filter.py rc=0
-  ok: rc=0
+  $ /Users/halton/work/coco/.venv/bin/python3 /Users/halton/work/coco/scripts/lint_paths_filter.py
+    rc=0
     [lint_paths_filter] OK 5/5
 V7: 本机跑 lint_workflows.py --strict rc=0（要求 actionlint 已装）
-  ok: rc=0 (/opt/homebrew/bin/actionlint)
+  $ /Users/halton/work/coco/.venv/bin/python3 /Users/halton/work/coco/scripts/lint_workflows.py --strict
+    rc=0
+    actionlint at /opt/homebrew/bin/actionlint
 V8: actionlint 直接对 verify-matrix.yml dry-run rc=0（本 feature 改动自校验）
-  ok: rc=0 (/opt/homebrew/bin/actionlint .github/workflows/verify-matrix.yml)
+  $ /opt/homebrew/bin/actionlint /Users/halton/work/coco/.github/workflows/verify-matrix.yml
+    rc=0
+    OK: rc=0 (.github/workflows/verify-matrix.yml)
 V9: verify-matrix.yml 整体仍合法 YAML
   ok: yaml 合法，jobs=10，lint 已被 changes/smoke needs
+V10: gh api 联网校验 rhysd/actionlint v1.7.12 tag 存在（C2）
+  $ gh api repos/rhysd/actionlint/git/refs/tags/v1.7.12 --jq .object.sha
+    rc=0
+  ok: tag v1.7.12 存在，sha=914e7df21a07
+V11: lint job PATH 注入走 $GITHUB_PATH，不再写系统路径（C3 守护）
+  ok: GITHUB_PATH 注入，无 /usr/local/bin/actionlint 系统污染
 
-infra-015 verify PASS (9/9)
+infra-015 verify PASS (11/11)

@@ -2132,8 +2132,8 @@
       "owner": "engineer",
       "description": "verify-matrix.yml lint pre-job 落地 — 在 verify-matrix CI 入口前加一个 lint pre-job，跑 actionlint（workflow YAML 校验）+ scripts/lint_paths_filter.py（paths-filter 一致性 + meta 段顺序）；CI runner 一次性 setup actionlint binary（download pinned 1.7.12 + checksum 校验 + cache）。失败时 fail-fast 阻 CI，不再让坏 workflow / 漂移 paths-filter 进入 area jobs。sim-first：本地 act/job runner dry-run + workflow_dispatch 静态校验；default-OFF 不适用（CI 流水线 always-on）。followed_from: infra-014-fu-1 polish + infra-014-fu-2 polish",
       "followed_from": "infra-014-fu-1",
-      "verification": "scripts/verify_infra_015.py 9/9 PASS (V1 lint job present / V2 actionlint setup / V3 lint_paths_filter call / V4 lint_workflows --strict call / V5 needs chain / V6 local lint_paths_filter rc=0 / V7 local lint_workflows --strict rc=0 / V8 actionlint dry-run verify-matrix.yml rc=0 / V9 yaml still valid)",
-      "evidence": "evidence/infra-015/{verify_summary.json, verify_infra_015.log, lint_paths_filter.log, lint_workflows_strict.log, actionlint_verify_matrix.log, verify_matrix_diff.patch}"
+      "verification": "scripts/verify_infra_015.py 11/11 PASS (V1 lint job / V2 download-actionlint.bash + pin v1.7.12 / V3 lint_paths_filter call / V4 lint_workflows --strict call / V5 needs chain / V6 local lint_paths rc=0 / V7 local lint_workflows --strict rc=0 / V8 actionlint dry-run rc=0 / V9 yaml valid / V10 gh api 联网校验 actionlint tag / V11 GITHUB_PATH 注入守护) — round 2 修 C1 (rhysd/actionlint@v1 不是合法 action 改 download-actionlint.bash) + C2 (V10 gh api) + C3 (GITHUB_PATH) + C5 (_run_logged helper)",
+      "evidence": "evidence/infra-015/{verify_summary.json, verify_infra_015.log, lint_paths_filter.log, lint_workflows_strict.log, actionlint_verify_matrix.log, gh_api_actionlint_tag.json, verify_matrix_diff.patch}"
     },
     {
       "id": "vision-010",
