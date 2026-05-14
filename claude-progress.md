@@ -1974,3 +1974,15 @@ phase-11 软件全部完成：
 - 实现要点：ProactiveScheduler 真消费 vision-007 priority_boost，三级强度（dark_silence / motion_greet / curious_idle）映射 cooldown 缩放，仲裁顺序 emotion_alert > fusion_boost > mm_proactive > 普通，boost 仅作权重不绕 cooldown；default-OFF（COCO_PROACTIVE_ARBIT + COCO_FUSION + COCO_MM_PROACTIVE 三级 gate）
 - phase-12 软件 3/7 done（infra-012-fu-1 / vision-009 / interact-014），剩 companion-013 / infra-014 / companion-014 + uat-* 异步
 - 下一候选：companion-013 priority=84（companion-010 L2 收尾 — emotion tick / baseline re-capture / V6 e2e fixture）
+
+## Session: 2026-05-14 companion-013 close-out + phase-12 推进 4/7
+
+- companion-013 fresh-context Reviewer LGTM-with-caveats（1 inherited caveat）
+- merge feat/companion-013 → main（--no-ff），main HEAD=5ea0766
+- push origin main + origin feat/companion-013 一次成功（feat 分支 up-to-date）
+- feature_list.json：companion-013 status not_started→passing，evidence 补 verify_companion_013 V1-V8 12/12 + 回归 companion-010/011/012 + interact-013 + smoke + Reviewer LGTM-with-caveats + main HEAD=5ea0766 + 1 inherited caveat + env gate COCO_EMOTION_MEMORY+COCO_COMFORT_PREFER
+- 实现要点：(a) ProactiveScheduler 主 tick 顺带 emotion_coord.tick(now=) 兜底到期还原；(b) _bump_comfort_prefer 每次还原后重 capture baseline，用户 alert 期间手改 prefer 不被首次 baseline 回滚；(c) V6 端到端 fake 装配断言（env OFF 不构造 Coordinator / tracker._listeners=[]）
+- Inherited caveat（不阻 merge）：_bump_comfort_prefer 首次 capture 不剥 comfort keys（companion-010 残留），013 未恶化，极小概率边缘场景，建议未来 companion-fu 修复
+- phase-12 软件 4/7 done（infra-012-fu-1 / vision-009 / interact-014 / companion-013），剩 infra-014 / companion-014 + uat-* 异步
+- 下一候选：infra-014 priority=85（verify 影响面 + paths-filter 自检深化）
+

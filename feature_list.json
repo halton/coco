@@ -2044,7 +2044,7 @@
       "phase": 12,
       "area": "companion",
       "priority": 84,
-      "status": "not_started",
+      "status": "passing",
       "owner": "engineer",
       "description": "companion-010 L2 收尾：(a) ProactiveScheduler 主 tick 顺带 coord.tick(now=) — emotion 到期还原不再依赖新 emotion 事件触发，主循环周期内 emotion_coord.tick 兜底；(b) _bump_comfort_prefer 多次 alert 跨段重 capture _original_prefer — 当前实现首次 capture 后续 alert 不更新 baseline，用户在 alert 期间手动改 prefer 会被首次还原回滚；改为每次还原后重 capture 下次 alert baseline，并文档化语义；(c) V6 端到端 fake 装配（未设 env Coordinator 不构造 / EmotionTracker._listeners=[]）补一条 e2e fixture 断言。default-OFF：复用 COCO_EMOTION_MEMORY=1 + COCO_COMFORT_PREFER=1 gate。",
       "verification": [
@@ -2057,7 +2057,7 @@
         "interact-013"
       ],
       "followed_from": "companion-010 L2 3 条非阻塞",
-      "evidence": "not_started"
+      "evidence": "scripts/verify_companion_013.py V1-V8 12/12 PASS (sim-only); 回归 verify_companion_010/011/012 + verify_interact_013 + smoke PASS; Reviewer (sub-agent, fresh-context): LGTM-with-caveats (1 inherited caveat: _bump_comfort_prefer 首次 capture 不剥 comfort keys，companion-010 残留，013 未恶化，极小概率边缘场景，建议未来 companion-fu 修复); env gate COCO_EMOTION_MEMORY=1 + COCO_COMFORT_PREFER=1 default-OFF; main HEAD=5ea0766"
     },
     {
       "id": "infra-014",
