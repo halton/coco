@@ -2061,3 +2061,26 @@ phase-11 软件全部完成：
 
 ### 下一 candidate
 - companion-014（priority=86, phase=12, not_started）
+
+## Session 2026-05-14 — companion-014 close-out + phase-12 软件主线 6 done + 注入 infra-014-fu-2
+
+### companion-014 close-out
+- Reviewer (sub-agent, fresh-context) LGTM-with-caveats — 5 Engineer caveats accepted，含 #5 evidence 污染建议未来 policy 改进 → 派生 infra-014-fu-2
+- merge feat/companion-014 → main（--no-ff），main HEAD=e34395fc541d21847fa34f1034c2881cfe1197db
+- push origin main + feat/companion-014 一次（均成功）
+- feature_list.json: companion-014 status in_progress→passing（含完整 evidence 行）
+- evidence: verify_companion_014 8/8 PASS + 回归 companion-009/-010/-011/-012/-013 + interact-013/-014 PASS + smoke PASS
+- env gate：COCO_PROACTIVE=1（主）/ COCO_PREFER_LEARN=1 / COCO_COMPANION_ASYNC_REBUILD=1（async rebuild defer，default-OFF）
+- 工作树 caveat #5 处理：合并前先 git restore 了非本 feature 的回归副作用（interact-012/-013/-014 evidence），companion-014 自己的 verify_summary 重发 commit 入 feat 分支
+
+### phase-12 软件主线 6 done
+- 已 passing：infra-012-fu-1 / vision-009 / interact-014 / companion-013 / infra-014 / companion-014
+- 剩余：infra-014-fu-1（priority=87, evidence cleanup + actionlint hook）+ infra-014-fu-2（priority=88, evidence policy 改进）两 followups
+
+### 注入 infra-014-fu-2
+- id=infra-014-fu-2, priority=88, phase=12, area=infra, status=not_started
+- description: evidence policy 改进 — 回归 verify 跑完后自动 git restore 非本 feature 的 evidence 文件，避免副作用入 commit（companion-014 caveat #5 派生）
+- followed_from: companion-014
+
+### 下一 candidate
+- infra-014-fu-1（priority=87, phase=12, not_started）
