@@ -2498,3 +2498,33 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **Phase-13 进度**: 5/7（infra-015 / vision-010 / vision-010-fu-1 / vision-010-fu-2 / vision-010-fu-3 done + 注入 fu-4），剩 vision-010-fu-4 / companion-015 / audio-009 / interact-015 / infra-016.
 
 **下一候选**: vision-010-fu-4 (89.95) 或直接 companion-015 (91).
+
+---
+
+## Session N+2 — 2026/05/14 — vision-010-fu-4 实现
+
+**目标**: 关闭 vision-010-fu-3 caveat C-1 (NaN) + C-2 (Inf) — read_primary_prefer_boost_from_env 加 NaN/Inf/超上限拦截.
+
+**改动**（< 30 行核心）:
+- `coco/companion/group_mode.py`:
+  - import math
+  - 新增模块常量 `MAX_PRIMARY_PREFER_BOOST: float = 100.0`（同模块导出）
+  - `read_primary_prefer_boost_from_env` 增加三类拦截：`math.isnan(val)` / `math.isinf(val)` / `val > MAX_PRIMARY_PREFER_BOOST`，命中即 raise ValueError 走原 except 路径 → warn-once + return None
+  - 维持原有 `<=0` / 非数字 / 空白 路径不变
+- `scripts/verify_vision_010_fu_4.py` 新建（V1-V6）
+
+**Verify 结果**: 6/6 PASS
+- V1 nan/NaN/NAN → warn + None → coord 走 default=2.0
+- V2 inf/-inf/Infinity/-Infinity → warn + None → default
+- V3 100.5 / 1e6 / 999999 → warn + None → default（MAX=100.0 校验通过）
+- V4 100.0 边界 → accept = 100.0
+- V5 50.0 合法范围 → accept = 50.0
+- V6 回归 verify_vision_010 / fu-1 / fu-2 / fu-3 全 PASS
+
+**Smoke**: `./init.sh` 全 PASS（TTS / vision / face-tracker / VAD / wake-word / power-state / config / publish）.
+
+**Evidence 副作用**: V6 子进程跑 010 改了 evidence/vision-010/verify_summary.json，已用 `uv run python scripts/restore_unrelated_evidence.py --target vision-010-fu-4` 还原；`git status evidence/` 干净（仅 untracked `evidence/vision-010-fu-4/`）.
+
+**未 merge**: 仍在 feat/vision-010-fu-4 分支，待 Reviewer LGTM 后由主会话 closeout merge → main.
+
+**新 caveat**: 实现期未发现新 caveat。按硬规则即使发现也只入 backlog 注释，**不再衍生 fu-5**；phase-13 closeout 后直接转 companion-015.

@@ -1,0 +1,36 @@
+{
+  "feature": "vision-010-fu-4",
+  "ok": true,
+  "results": [
+    {
+      "name": "v1_env_nan_rejected",
+      "ok": true,
+      "detail": "bad=[] warns=3/3 default_ok=True"
+    },
+    {
+      "name": "v2_env_inf_rejected",
+      "ok": true,
+      "detail": "bad=[] warns=4/4 default_ok=True"
+    },
+    {
+      "name": "v3_env_above_upper_limit_rejected",
+      "ok": true,
+      "detail": "bad=[] warns=3/3 default_ok=True MAX=100.0"
+    },
+    {
+      "name": "v4_env_at_boundary_accepted",
+      "ok": true,
+      "detail": "val=100.0 coord.boost=100.0 warns=[]"
+    },
+    {
+      "name": "v5_env_legal_mid_range_accepted",
+      "ok": true,
+      "detail": "val=50.0 coord.boost=50.0 warns=[]"
+    },
+    {
+      "name": "v6_regress_010_chain",
+      "ok": true,
+      "detail": "010:True fu1:True fu2:True fu3:True"
+    }
+  ]
+}
