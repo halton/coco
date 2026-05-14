@@ -1847,3 +1847,29 @@ phase-11 软件全部完成：
 - **需要 phase-12 planner 注入新候选**（vision / companion / interact / robot 方向，按 sim-first）
 - 推荐下一个 candidate：`infra-012-fu-1`（priority=81）启动，但同时建议主会话调用 phase-12 planner 扩充 candidate 池
 - main HEAD=933b7ff33b4fa49d1c006185dbc83b99ed7e56e6
+
+## Session — 2026-05-14 phase-12 planner：注入 6 候选
+
+### 注入清单（全部 phase=12, status=not_started, sim-first, default-OFF 复用既有 env gate）
+| # | id | priority | area | 一句话 goal |
+|---|----|----------|------|-------------|
+| 1 | vision-009 | 82 | vision | emit_fn wire 到 main.py（vision-008 C-3）+ classifier vs sha1 注入分歧 stable 锁定（vision-008 C-2） |
+| 2 | interact-014 | 83 | interact | ProactiveScheduler 真消费 vision-007 priority_boost（emotion_alert > fusion_boost > mm_proactive > 普通仲裁） |
+| 3 | companion-013 | 84 | companion | emotion_coord.tick 主循环兜底 + comfort_prefer baseline 每次还原后重 capture（companion-010 L2） |
+| 4 | infra-014 | 85 | infra | verify_impact --max 策略三选一 + paths-filter.yml 自检 lint（infra-008 L1-1 + infra-013 EC-2） |
+| 5 | companion-014 | 86 | companion | preference_learner 真 emit + select_topic_seed scheduler 后台公开 API wire（companion-009 L2） |
+
+外加保留：infra-012-fu-1 (priority=81, phase=11) face_tracker.swap_camera 真共享 camera ref 仍为 phase-12 起点最低 priority。
+
+### phase-12 起点
+- **infra-012-fu-1** (priority=81, area=infra, status=not_started) — phase-11 followup，消化 infra-012 Reviewer C-1，face_tracker.swap_camera + 真共享 camera ref（sim 通过假 list ref，本 feature 引入显式公开 API；真机 USB 路径 UAT 异步跟踪 real_machine_uat=pending）
+
+### 设计要点
+- 全部 sim-first 可推进，无真机依赖；真机部分由各自 real_machine_uat=pending 与 uat-phase4 / uat-phase8 跟踪
+- 6 候选覆盖 area 分布：vision×1 / interact×1 / companion×2 / infra×2，结构均衡
+- default-OFF gate 全部复用现有 env 变量（COCO_FACE_ID_REAL / COCO_FUSION / COCO_MM_PROACTIVE / COCO_EMOTION_MEMORY / COCO_COMFORT_PREFER / COCO_PROACTIVE），不引入新 OS 顶层 env，最小化主路径副作用
+- 5 个候选均显式记 followed_from 字段指向 phase-11 caveat 源头，便于 reviewer 反查
+
+### 下一步
+- 持续开发模式：主会话直接派下一个 candidate（**infra-012-fu-1** priority=81）进入 in_progress
+- phase-12 软件全过后进入 phase-13 规划或 uat-phase4 / uat-phase8 / uat-phase11 异步真机 UAT
