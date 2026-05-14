@@ -210,6 +210,16 @@ class Coco(ReachyMiniApp):
 
         block_frames = int(SAMPLE_RATE * BLOCK_SECONDS)
 
+        # audio-008: USB 扬声器 sim 前置自检。default-OFF（COCO_AUDIO_USB_PROBE=1 启用）。
+        # 启动期一次性枚举 sounddevice 输出设备 + name 匹配，写 evidence/audio-008/probe.json。
+        # OFF 时 short-circuit，不调用 query_devices、不写文件，主路径零副作用。
+        # 真机听感 UAT 异步项，不在本 wire 范围。
+        try:
+            from coco.audio_usb_probe import probe_and_log_once as _audio_usb_probe_once
+            _audio_usb_probe_once(emit_fn=emit)
+        except Exception as _aupe:  # noqa: BLE001 — 兜底
+            print(f"[coco][audio] usb probe wire failed: {_aupe!r}", flush=True)
+
         # audio-002 V6：把 ASR 一次性 fixture 验证放后台线程，避免阻塞心跳/stop_event
         asr_thread = threading.Thread(
             target=_run_fixture_asr_once,
