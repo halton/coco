@@ -1954,3 +1954,13 @@ phase-11 软件全部完成：
 ### 下一步
 - 主会话派 Reviewer fresh-context 评审：默认 OFF gate / lock-once 语义 / 跨子系统 face_id 稳定性 / vision-008 V6 测试签名变更兼容
 - LGTM 后 closeout sub-agent merge + push main + 切 status=passing
+
+## Session: 2026-05-14 vision-009 close-out + phase-12 推进 2/6
+
+- vision-009 fresh-context Reviewer LGTM no-caveats（4 Engineer self-caveats 全 accepted）
+- merge feat/vision-009 → main（--no-ff），main HEAD=5595f4e
+- push origin main + origin feat/vision-009 一次成功（feat 分支 up-to-date）
+- feature_list.json：vision-009 status not_started→passing，evidence 补 Reviewer LGTM + main HEAD + 4 caveats accepted
+- _change_log 追加 phase-12 软件进度 2/6 条目
+- phase-12 软件 2/6 done（infra-012-fu-1 / vision-009），剩 interact-014 / companion-013 / infra-014 / companion-014
+- 下一候选：interact-014 priority=83（ProactiveScheduler 真消费 vision-007 priority_boost）
