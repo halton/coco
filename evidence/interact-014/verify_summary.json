@@ -1,0 +1,48 @@
+{
+  "feature": "interact-014",
+  "ts": 1778741687.517264,
+  "n_pass": 8,
+  "n_total": 8,
+  "results": [
+    {
+      "name": "V1 default-OFF: equivalent to vision-007 (no boost_level emit, no arbit stats, cooldown*0.5)",
+      "ok": true,
+      "detail": "fired1=True emit_keys=['topic', 'source'] fired2=False arbit_emotion=0 arbit_cd=0 lvl_consumed={}"
+    },
+    {
+      "name": "V2 arbit ON: emotion_alert preempts fusion same-frame (boost cleared)",
+      "ok": true,
+      "detail": "fired=True boost_after=False level_after=None arbit_emotion=1 emit_keys=['topic', 'source']"
+    },
+    {
+      "name": "V3 arbit ON: boost level scales cooldown (dark=0.3 / motion=0.5 / curious=0.7)",
+      "ok": true,
+      "detail": "fired dark/curious/motion=True/False/True lvl_consumed={'dark_silence': 1, 'motion_greet': 1} arbit_cd_with_boost=1"
+    },
+    {
+      "name": "V4 arbit ON: no boost no emotion -> normal path (no boost_level emit)",
+      "ok": true,
+      "detail": "fired=True emit_keys=['topic', 'source'] arbit_emotion=0"
+    },
+    {
+      "name": "V5 arbit ON: boost does NOT bypass global cooldown (still skip when since<scaled_cd)",
+      "ok": true,
+      "detail": "fired=False arbit_cd_with_boost=1 boost_flag_after=True"
+    },
+    {
+      "name": "V6 arbit ON: emit interact.proactive_topic carries boost_level",
+      "ok": true,
+      "detail": "fired=True emit_payload={'topic': 'reply<用一句温柔好奇的话主>', 'source': 'scheduler', 'boost_level': 'motion_greet'}"
+    },
+    {
+      "name": "V7 AST/grep markers present in proactive.py / multimodal_fusion.py",
+      "ok": true,
+      "detail": "missing=[]"
+    },
+    {
+      "name": "V8 arbit ON: same-frame emotion + boost + mm_ctx -> all suppressed for fusion/mm path",
+      "ok": true,
+      "detail": "fired=True arbit_emotion=1 boost=False lvl=None mm_ctx=None"
+    }
+  ]
+}
