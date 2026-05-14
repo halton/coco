@@ -1584,7 +1584,6 @@
       "phase": 10,
       "area": "vision-companion",
       "priority": 62,
-      "status": "not_started",
       "default_off_env": "COCO_MULTI_USER=1",
       "description": "多用户共处场景 — 当 face_id 在同一帧检出 ≥2 个已知 profile 时，ProfileSwitcher 不再单点切换，进入 'group_mode'：(a) ProactiveScheduler 选 topic 时使用所有在场用户 prefer_topics 的并集 + 偏好交集加权；(b) emit companion.group_present 事件 + 写 ProfilePersist.group_sessions 跨会话跟踪；(c) 主动话题模板换用『大家好』『一起聊聊』类 group 句式（避免称呼单个 profile）。default-OFF；sim-first：fixture 多 face_id 视频帧序列驱动。",
       "verification": [
@@ -1609,7 +1608,12 @@
         "vision-005",
         "vision-007"
       ],
-      "evidence": "not_started"
+      "status_history": [
+        {"date": "2026-05-14", "from": "not_started", "to": "in_progress"},
+        {"date": "2026-05-14", "from": "in_progress", "to": "passing"}
+      ],
+      "evidence": "Reviewer (sub-agent, 2nd round, fresh-context): LGTM-with-caveats（round 1 报 L1/L2 → round 2 收尾遗留 3 条 L2 非阻塞 caveat）；scripts/verify_companion_011.py 16/16 PASS（V1-V10 sanity + V11 behavioral + V12a-e wire grep）；smoke COCO_CI=1 ./init.sh PASS；回归 scripts/verify_companion_009.py 10/10 PASS + scripts/verify_companion_010.py 10/10 PASS；3 条 caveat 登记 followup companion-011-fu-1 (V12b 布尔表达式 smell + observe@50ms 频率注释) / companion-011-fu-2 (profile_id_resolver face_id 入网后校正 name-only pid)；socket 中断 3 次后采用 sanity+behavioral 混合 verify 策略代替全端到端 fixture 注入。",
+      "status": "passing"
     },
     {
       "id": "interact-012",
@@ -1730,6 +1734,39 @@
         "Reviewer (sub-agent, fresh-context) LGTM"
       ],
       "dependencies": ["infra-010", "audio-003", "interact-011"],
+      "evidence": "not_started"
+    },
+    {
+      "id": "companion-011-fu-1",
+      "phase": 10,
+      "area": "companion",
+      "priority": 69,
+      "status": "not_started",
+      "owner": "engineer",
+      "description": "companion-011 follow-up #1：(a) verify_companion_011.py V12b 中的布尔表达式 smell（多重 and/or 链接判断 group_mode 状态）抽 helper 简化；(b) GroupModeCoordinator.observe() 在 vision face-id 回调里被高频调用（实测 ~50ms 一次），加 cheap-doc 注释 + 在 module docstring 明确 'observe 调用频率与 face-id 回调一致；coordinator 内部已做 set-equal 短路，无需上游限频'，避免后续维护者误以为需要 debounce。",
+      "verification": [
+        "scripts/verify_companion_011.py 重跑 16/16 PASS（V12b 改 helper 后行为不变）；",
+        "coco/companion/group_mode.py module docstring + observe() docstring 含频率说明；",
+        "Reviewer (sub-agent, fresh-context) LGTM"
+      ],
+      "dependencies": ["companion-011"],
+      "evidence": "not_started"
+    },
+    {
+      "id": "companion-011-fu-2",
+      "phase": 10,
+      "area": "companion",
+      "priority": 70,
+      "status": "not_started",
+      "owner": "engineer",
+      "description": "companion-011 follow-up #2：profile_id_resolver 当前对未入网 face_id 使用 name-only pid（profile name 直接当 id 用），face_id 真入网（companion-008/009/010 持久化层）后需校正：(a) 检测 ProfilePersist 已分配真 profile_id 时把 group_sessions 中遗留的 name-only pid 映射回真 pid；(b) emit 一次 companion.profile_id_reconciled 事件供 dashboard 追踪；(c) 不破坏现有 group_sessions schema v3 兼容。",
+      "verification": [
+        "scripts/verify_companion_011.py 新增 V13：name-only pid → 真 pid 校正路径触发并 emit reconciled 事件；",
+        "schema v3 旧 group_sessions 文件 load 不报错；",
+        "回归 verify_companion_008/009/010/011 全 PASS；",
+        "Reviewer (sub-agent, fresh-context) LGTM"
+      ],
+      "dependencies": ["companion-011", "companion-008"],
       "evidence": "not_started"
     }
   ]

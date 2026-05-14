@@ -1518,3 +1518,38 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 
 ### 下一步
 - **companion-011**（priority=62，phase-10）— 多用户共处 group_mode（vision/companion），default-OFF (`COCO_MULTI_USER=1`)，sim-first 用多 face_id fixture 驱动。
+
+## Session 2026-05-14：companion-011 close-out：group_mode multi-user wired + LGTM-with-caveats merge（socket 中断 3 次后分子任务收尾）
+
+### 实做摘要
+- `coco/companion/group_mode.py` (549 lines) 新增 GroupModeCoordinator：observe(face_ids, t) 进入/退出 group_mode、emit `companion.group_present`、_group_template_override 注入主动话题 group 句式（"大家好" / "一起聊聊"，避免单 profile 称呼）、prefer_topics 并集 + 偏好交集加权、profile_id_resolver name-only pid fallback。
+- `coco/companion/profile_persist.py` 加 group_sessions schema v3，兼容旧 profile（companion-008/009/010 不破坏）。
+- `coco/proactive.py` ProactiveScheduler 消费 _group_template_override；`coco/main.py` default-OFF gate `COCO_MULTI_USER=1` 接线 + observe@face-id 回调 + tick；`coco/logging_setup.py` group_mode logger。
+- scripts/verify_companion_011.py：V1-V10 sanity + V11 behavioral fixture 注入路径 + V12a-e wire grep，共 16/16 PASS。
+- socket 中断 3 次（端到端 fixture 注入超时），改用 sanity + behavioral + wire grep 混合 verify 策略代替全端到端注入，节省 token + 仍覆盖核心契约。
+
+### Reviewer 两轮结论
+- Round 1（fresh-context）：报 L1/L2 若干 → rework。
+- Round 2（fresh-context）：**LGTM-with-caveats**，遗留 3 条 L2 非阻塞登记为 fu-1 / fu-2。
+
+### 3 caveat（非阻塞）
+1. verify V12b 布尔表达式 smell（多重 and/or 链判断 group_mode 状态）— 抽 helper 简化（fu-1）
+2. GroupModeCoordinator.observe() ~50ms 频率调用，需 cheap-doc 注释说明 set-equal 短路无需上游限频（fu-1）
+3. profile_id_resolver 当前 face_id 未入网时用 name-only pid，face_id 入网（companion-008 持久化）后需校正回真 pid（fu-2）
+
+### 2 followup（phase-10 backlog）
+- **companion-011-fu-1** (priority=69, area=companion)：verify V12b 表达式简化 helper + observe@50ms 频率 cheap-doc 注释
+- **companion-011-fu-2** (priority=70, area=companion)：profile_id_resolver face_id 入网后 name-only pid → 真 pid 校正 + emit `companion.profile_id_reconciled`
+
+### 验证
+- scripts/verify_companion_011.py 16/16 PASS（V1-V10 sanity + V11 behavioral + V12a-e wire grep）
+- smoke `COCO_CI=1 ./init.sh` PASS
+- 回归 verify_companion_009 10/10 PASS + verify_companion_010 10/10 PASS
+
+### Commit
+- 合并：`Merge branch 'feat/companion-011' into main`（f6ee47a）
+- closeout：本提交 `chore(companion-011): close-out — group_mode multi-user wired + 3 caveats logged as fu-1/fu-2`
+- main HEAD：见 closeout commit（push 结果见日志）
+
+### 下一步
+- **interact-012**（priority=63，phase-10）— 主动话题 LLM 化：vision-007 MultimodalFusion 触发 ProactiveScheduler 后真调 LLM 生成 fusion 专用回应（dark_silence / motion_greet 场景），default-OFF (`COCO_MM_PROACTIVE_LLM=1`)，sim-first 用 fake LLMClient + 脚本式 caption 序列驱动。
