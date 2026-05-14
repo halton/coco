@@ -1921,3 +1921,36 @@ phase-11 软件全部完成：
 
 ### push
 - main HEAD 在本 commit 后由 closeout 子代理执行 `git push origin main` 一次，失败忽略不重试（per CLAUDE.md push 策略）
+
+## Session — 2026-05-14 — vision-009 Engineer 实现完成（待 Reviewer LGTM）
+
+### scope
+- vision-009 (priority=82, phase=12, area=vision) — vision-008 polish：
+  - (caveat #3) emit_fn wire 到 main.py：FaceTracker 构造期注入 `emit_fn=emit`，签名对齐 `coco.logging_setup.emit(component_event, message="", **payload)`
+  - (caveat #2) classifier vs sha1 注入分歧统一：**选择方案 A — lock-once policy**
+    - 一旦某 name 已绑 face_id（无论 sha1 还是 classifier 路径），后续 classifier 注入 / 替换 / 失效都不重绑
+    - 注入分歧（cache 已锁 sha1 但 classifier 后注入查得到 user_id）→ `stats.face_id_classifier_late_inject_skipped++` + warn log（每个 name 仅 warn 一次）
+    - 理由：face_id 是跨子系统稳定 id（GroupMode/preference/memory key），重绑会让历史绑定 silent 错配；运行期 swap 是异常路径，不应让下游处理 id 迁移
+  - (caveat #1 备注) docstring 强化：TrackedFace.name_confidence 与 face_id 正交语义写入 get_face_id docstring（不强行写回 schema）
+- payload 新增 `source: "classifier"|"sha1"` 字段（向后兼容：vision-008 V6 fake_emit 已同步适配新签名）
+
+### verify
+- `scripts/verify_vision_009.py` V1-V9 全 PASS（9/9）
+  - V1 main.py FaceTracker(emit_fn=emit) wire 标记
+  - V2 gate ON 首次解析 emit schema 正确（component=vision, event=face_id_resolved, name/face_id/source）
+  - V3 emit_fn=None gate ON 静默 fallback 不抛
+  - V4 sha1 已绑后 classifier 注入 lock-once + 计数 skipped>=2
+  - V5 fid_<user_id> 已绑 classifier 失效不退到 sha1
+  - V6 emit once-per-name 重复抑制
+  - V7 docstring 正交语义 + vision-009 marker
+  - V8 gate OFF 主路径零开销 (get_face_id=None + emit_fn 0 calls)
+  - V9 回归 verify_vision_008 10/10 PASS（subprocess 子进程 clean env）
+- 回归：verify_companion_011 全 PASS / verify_companion_012 PASS=9 FAIL=0 / `./init.sh` smoke 全通过
+- evidence：`evidence/vision-009/verify_summary.json` ok=true 9/9
+
+### 流程合规
+- 本次 Engineer **遵守 feat/ 分支约束，不自 merge**：仅 commit + push feat/vision-009，待 Reviewer fresh-context LGTM 后由 closeout sub-agent merge → main（按 infra-012-fu-1 closeout 时新增约束）
+
+### 下一步
+- 主会话派 Reviewer fresh-context 评审：默认 OFF gate / lock-once 语义 / 跨子系统 face_id 稳定性 / vision-008 V6 测试签名变更兼容
+- LGTM 后 closeout sub-agent merge + push main + 切 status=passing

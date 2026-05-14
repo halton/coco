@@ -134,6 +134,8 @@ class FaceTrackerStats:
     tracks_created: int = 0       # 累计新建 track 数
     tracks_dropped: int = 0       # 累计销毁 track 数（连续 miss 超阈值）
     primary_switches: int = 0     # primary track_id 实际切换次数
+    # vision-009: classifier 后注入 / 替换时被 lock-once 跳过的累计次数
+    face_id_classifier_late_inject_skipped: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -457,18 +459,40 @@ class FaceTracker:
         return old
 
     # vision-008: face_id 真接接口 + default-OFF gate。
+    # vision-009: classifier vs sha1 分歧 lock-once policy + emit 注入分歧统计。
     #
     # 设计：
     #   - default-OFF：未设 ``COCO_FACE_ID_REAL=1`` → 返回 None（与 companion-012
     #     fu-2 stub 路径 bytewise 等价；上层 resolver 仍走 fallback to name）。
     #   - 启用后：维护 name → stable face_id 字符串映射。
-    #     * 若注入了 ``face_id_classifier`` 且 store 中能查到该 name → 返回
-    #       ``"fid_<user_id>"`` （跨进程稳定 by FaceIDStore）。
-    #     * 否则在本进程内为该 name 生成 ``"fid_<sha1(name)[:8]>"`` 并缓存
+    #     * 若**首次**为 ``name`` 解析时 ``face_id_classifier`` 已注入且 store 中
+    #       能查到该 name → 缓存 ``"fid_<user_id>"`` （跨进程稳定 by FaceIDStore）。
+    #     * 否则首次解析时为该 name 生成 ``"fid_<sha1(name)[:8]>"`` 并缓存
     #       （进程内确定、跨进程也确定，因为只依赖 name）。
     #     * 同一 ``name`` 在同一进程内始终返回同一 face_id。
-    #   - 首次为某 name 解析出 face_id 时 emit ``vision.face_id_resolved``
-    #     （emit_fn 为 None 时 fail-soft 不 emit，不破坏 sim path）。
+    #
+    # vision-009 lock-once policy（caveat #2 polish）：
+    #   一旦某 ``name`` 已绑定 face_id（无论 classifier 还是 sha1 路径），后续
+    #   classifier **注入 / 替换 / 失效**都**不再重新绑定**。理由：
+    #     1. face_id 是跨子系统的稳定 id（GroupMode / preference / memory 都会
+    #        以它为 key 持久化），重绑会导致历史绑定失效或被 silent 错配；
+    #     2. 真机典型场景里 classifier store 在构造前 hydrate 完毕，运行期 swap
+    #        是异常路径，与其重发 ``vision.face_id_resolved`` event 让下游处理
+    #        id 迁移，不如硬锁；
+    #     3. 想要刷新 → 重启进程或清空 ``_face_id_map``（不暴露公开 API，
+    #        避免被业务层误用）。
+    #   注入分歧（即 classifier 后注入但 cache 已有 sha1）发生时记一次
+    #   ``stats.face_id_classifier_late_inject_skipped`` 计数 + warn log 一次，
+    #   便于运维发现配置异常。
+    #
+    # vision-009 emit_fn wire（caveat #3 polish）：
+    #   - emit_fn 的签名约定为 ``emit_fn(component_event: str, message: str = "",
+    #     **payload) -> None``，与 ``coco.logging_setup.emit`` 完全对齐。
+    #     调用方（``coco/main.py``）直接把 ``logging_setup.emit`` 透传即可。
+    #   - 首次为某 name 解析出 face_id 时 emit
+    #     ``"vision.face_id_resolved"``（component=vision, event=face_id_resolved,
+    #     payload: name=<str>, face_id=<str>, source=<"classifier"|"sha1">）。
+    #     emit_fn 为 None 时 fail-soft 不 emit，不破坏 sim / 默认路径。
     #
     # schema (face_id payload)：
     #   - ``face_id``: str，形如 ``"fid_<token>"``；同 name 多次解析稳定不变
@@ -478,18 +502,33 @@ class FaceTracker:
 
         Default-OFF（``COCO_FACE_ID_REAL`` 未设）→ 始终返回 None，
         与 companion-012 fu-2 stub 路径 bytewise 等价。
+
+        ``name_confidence`` (TrackedFace 字段) 与 ``face_id`` **正交**：
+        前者是 classifier 给出该帧识别 name 的置信度（vision-003），仅影响
+        是否把 name 写回 snapshot；后者是基于已经写回的 name 计算的稳定 id，
+        一旦绑定 lock-once。两者读路径独立——下游想看置信度看 TrackedFace.name_confidence，
+        想看稳定 id 调 face_tracker.get_face_id(name)。
         """
         if not name:
             return None
         if not self._face_id_real_enabled:
             return None
-        # 已缓存直接返回
+        # vision-009 lock-once：已缓存直接返回，不论 classifier 状态如何变更
         with self._face_id_lock:
             cached = self._face_id_map.get(name)
             if cached is not None:
+                # 注入分歧检测：如果 cached 是 sha1 路径，且现在 classifier 已能
+                # 查到该 name，记一次跳过事件（不重绑，仅 stats + warn 一次）
+                if (
+                    cached.startswith("fid_")
+                    and not cached[4:].isdigit()  # sha1 hex；fid_<user_id> 是数字
+                    and self._face_id_classifier is not None
+                ):
+                    self._maybe_log_late_inject_skip(name, cached)
                 return cached
-        # 计算 face_id
+        # 计算 face_id（首次解析）
         fid: Optional[str] = None
+        source: str = "sha1"
         clf = self._face_id_classifier
         if clf is not None:
             try:
@@ -498,6 +537,7 @@ class FaceTracker:
                 for uid, rec in recs.items():
                     if getattr(rec, "name", None) == name:
                         fid = f"fid_{int(uid)}"
+                        source = "classifier"
                         break
             except Exception as e:  # noqa: BLE001
                 log.warning("FaceTracker get_face_id store lookup failed: %s: %s",
@@ -505,7 +545,8 @@ class FaceTracker:
         if fid is None:
             # fallback：sha1(name)[:8] —— 进程内 / 跨进程都确定，与 classifier 解耦
             fid = "fid_" + hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
-        # 写入缓存 + emit
+            source = "sha1"
+        # 写入缓存 + emit (lock-once：极少数并发首解析竞态时以已存在的为准)
         with self._face_id_lock:
             existed = self._face_id_map.get(name)
             if existed is None:
@@ -516,16 +557,40 @@ class FaceTracker:
                 first_time = False
         if first_time and self._emit_fn is not None:
             try:
+                # vision-009: emit_fn 签名对齐 coco.logging_setup.emit
+                #   emit("vision.face_id_resolved", message="", **payload)
                 self._emit_fn(
-                    "vision",
-                    "face_id_resolved",
+                    "vision.face_id_resolved",
+                    "",
                     name=name,
                     face_id=fid,
+                    source=source,
                 )
             except Exception as e:  # noqa: BLE001
                 log.warning("FaceTracker emit face_id_resolved failed: %s: %s",
                             type(e).__name__, e)
         return fid
+
+    def _maybe_log_late_inject_skip(self, name: str, cached_fid: str) -> None:
+        """vision-009: 注入分歧统计 — classifier 后注入但 cache 已锁 sha1 时记一次。
+
+        每个 name 仅 warn 一次（用 stats set），避免日志风暴。stats 计数
+        会持续累加（便于运维监控）。
+        """
+        if not hasattr(self.stats, "face_id_classifier_late_inject_skipped"):
+            return
+        seen = getattr(self, "_late_inject_warned_names", None)
+        if seen is None:
+            seen = set()
+            self._late_inject_warned_names = seen
+        self.stats.face_id_classifier_late_inject_skipped += 1
+        if name not in seen:
+            seen.add(name)
+            log.warning(
+                "FaceTracker classifier late-inject ignored for name=%r "
+                "(cached=%s, lock-once policy)",
+                name, cached_fid,
+            )
 
     # --- 测试钩子：纯函数地喂 detections，便于合成测试不依赖摄像头 ---
     def feed_detections(

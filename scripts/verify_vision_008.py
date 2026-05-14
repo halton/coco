@@ -185,11 +185,20 @@ def v5_gate_off_compat() -> None:
 
 
 def v6_emit_face_id_resolved() -> None:
-    """V6 首次解析 emit vision.face_id_resolved。"""
+    """V6 首次解析 emit vision.face_id_resolved。
+
+    vision-009 后 emit_fn 签名对齐 ``coco.logging_setup.emit``，即
+    ``(component_event: str, message: str = "", **payload)``。
+    """
     captured: List[Dict[str, Any]] = []
 
-    def fake_emit(component: str, event: str, **payload: Any) -> None:
-        captured.append({"component": component, "event": event, **payload})
+    def fake_emit(component_event: str, message: str = "", **payload: Any) -> None:
+        # 兼容 vision-009 后签名（component_event="vision.face_id_resolved"）
+        if "." in component_event:
+            comp, ev = component_event.split(".", 1)
+        else:
+            comp, ev = component_event, "event"
+        captured.append({"component": comp, "event": ev, **payload})
 
     ft = _fresh_face_tracker(real=True, emit_fn=fake_emit)
     fid1 = ft.get_face_id("alice")
