@@ -2097,10 +2097,11 @@
       "phase": 12,
       "area": "infra",
       "priority": 88,
-      "status": "not_started",
+      "status": "passing",
       "owner": "engineer",
       "description": "evidence policy 改进 — 回归 verify 跑完后自动 git restore 非本 feature 的 evidence 文件，避免副作用入 commit（companion-014 caveat #5 派生）",
-      "followed_from": "companion-014"
+      "followed_from": "companion-014",
+      "evidence": "passing on main HEAD=b60882190396536d228693484c6ce7a0bb2f477a; verify_infra_014_fu_2.py 8/8 PASS (V1 helper script restore_unrelated_evidence.py / V2 dry-run mode / V3 actually restore non-feature evidence / V4 protect target feature evidence / V5 docs/regression-policy.md updated / V6 run_verify_all.py auto-cleanup integration / V7 lint_paths_filter PASS / V8 smoke). 回归: verify_infra_014 + verify_infra_014_fu_1 + verify_infra_011 + verify_infra_013 + verify_infra_008 全 PASS; lint_paths_filter PASS; COCO_CI=1 ./init.sh smoke 全 PASS. Reviewer (sub-agent, fresh-context): LGTM-no-caveats — 5 caveats accepted（dogfood 自清理 / dry-run 默认 / regression-policy 文档化 / run_verify_all 集成 / 边界 case：保护本 feature evidence 不被误删）; polish 留后续 fu（verify-matrix.yml lint pre-job + CI runner setup actionlint，从 infra-014-fu-1 继承）."
     },
     {
       "id": "companion-014",

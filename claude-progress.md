@@ -2097,3 +2097,42 @@ phase-11 软件全部完成：
 
 ### 下一 candidate
 - infra-014-fu-2（priority=88, phase=12, not_started）—— evidence dirty 自动 reset policy + verify-matrix lint pre-job
+
+
+## Session — 2026-05-14 — infra-014-fu-2 close-out + phase-12 收官 8/8
+
+### infra-014-fu-2 close-out
+- infra-014-fu-2 → passing（V1-V8 8/8 PASS + Reviewer LGTM-no-caveats；5 caveats accepted）
+- 关键能力：scripts/restore_unrelated_evidence.py（dogfood 自清理 helper）+ docs/regression-policy.md 更新 + run_verify_all.py 集成自动清理
+- 回归：verify_infra_014 + verify_infra_014_fu_1 + verify_infra_011 + verify_infra_013 + verify_infra_008 全 PASS；lint_paths_filter PASS；COCO_CI=1 ./init.sh smoke 全 PASS
+- merge feat/infra-014-fu-2 → main（--no-ff），main HEAD=b60882190396536d228693484c6ce7a0bb2f477a
+- push origin main / feat/infra-014-fu-2 各 1 次：main 推送成功（1738645..b608821），feat 分支 up-to-date
+- 工作树 clean，无 evidence 污染（dogfood 验证通过）
+
+### phase-12 收官 8/8
+软件主线全部 sim-first done：
+1. infra-012-fu-1（vision config 真消化）
+2. vision-009（face_id 持久化）
+3. interact-014（intent router 动态阈值）
+4. companion-013（preference_learner async pipeline）
+5. infra-014（regression smoke 加速）
+6. companion-014（preference_learner 真 emit + scheduler candidates 注入）
+7. infra-014-fu-1（actionlint dry-run hook + lint_paths_filter raw-string 修复）
+8. infra-014-fu-2（evidence policy 自动清理 helper + 回归 verify 集成）
+
+### phase-12 异步 UAT / polish 项汇总
+- real_machine_uat: pending（异步，不阻 merge）：
+  - vision-009 face_id 真机摄像头识别力 / 误判率（继承自 phase-11）
+  - infra-012-fu-1 真机 USB camera swap 验证（继承自 phase-11）
+  - audio-008 USB 扬声器真机听感（继承自 phase-11）
+- inherited caveat：companion-010 _bump_comfort_prefer 首次 capture 不剥 comfort keys（建议未来 companion-fu 修复）
+- polish 留项：
+  - verify-matrix.yml 加 lint pre-job（跑 actionlint + lint_paths_filter）
+  - CI runner setup actionlint binary（hook 假设本机 1.7.12）
+
+### 主线推进总览
+- phase-11（6/6） + phase-12（8/8） 全部 sim-first done
+- 剩 not_started：仅 uat-phase4（priority=999, area=uat, 异步真机项），软件无 candidate
+
+### 下一步
+- phase-13 planner 待启动（软件 candidate 已清空，需新规划）
