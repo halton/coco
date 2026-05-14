@@ -1,0 +1,86 @@
+{
+  "feature_id": "infra-015",
+  "title": "verify-matrix.yml lint pre-job 落地 + CI runner setup actionlint binary",
+  "phase": 13,
+  "status": "in_progress",
+  "round": 2,
+  "branch": "feat/infra-015",
+  "verify_script": "scripts/verify_infra_015.py",
+  "checks": {
+    "V1_lint_job_present": "PASS",
+    "V2_actionlint_setup_via_download_script": "PASS",
+    "V3_lint_paths_call": "PASS",
+    "V4_lint_workflows_call": "PASS",
+    "V5_needs_chain": "PASS",
+    "V6_local_lint_paths_rc0": "PASS",
+    "V7_local_lint_workflows_strict_rc0": "PASS",
+    "V8_actionlint_verify_matrix_rc0": "PASS",
+    "V9_yaml_still_valid": "PASS",
+    "V10_remote_actionlint_tag_exists_via_gh_api": "PASS (sha=914e7df21a07)",
+    "V11_path_injection_via_github_path": "PASS"
+  },
+  "totals": "11/11 PASS",
+  "smoke": {
+    "cmd": "COCO_CI=1 ./init.sh",
+    "result": "PASS"
+  },
+  "round_2_fixes": {
+    "C1_HIGH_blocker": {
+      "issue": "rhysd/actionlint@v1 不是合法 GitHub Action（仓库无 action.yml，CI 第一次跑必崩）",
+      "fix": "改用 rhysd 官方 download-actionlint.bash + pin tag v1.7.12（curl + bash 安装，binary 落到 $(pwd)）"
+    },
+    "C2_MED": {
+      "issue": "本机 V check 全文本子串无法捕远程引用错误（round 1 教训）",
+      "fix": "新增 V10 用 gh api 联网校验 rhysd/actionlint v1.7.12 tag 真存在；gh 未装/限流降级 warn-only，404 必 fail"
+    },
+    "C3_LOW": {
+      "issue": "ln -sf /usr/local/bin/actionlint 污染系统路径",
+      "fix": "改用 $GITHUB_PATH 注入 (pwd >> $GITHUB_PATH)；新增 V11 守护回归"
+    },
+    "C5_LOW": {
+      "issue": "actionlint subprocess 不 log，evidence 0 字节奇怪",
+      "fix": "_run_logged() helper 包 subprocess 调用，echo cmd+rc 到 stdout，所有 subprocess V check (V6/V7/V8/V10) 复用"
+    }
+  },
+  "local_env": {
+    "actionlint_path": "/opt/homebrew/bin/actionlint",
+    "actionlint_version": "1.7.12",
+    "python": "uv run python (3.13)",
+    "platform": "darwin/arm64",
+    "gh_cli": "available + authed"
+  },
+  "ci_setup": {
+    "actionlint_install": "bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12",
+    "pinned_version": "1.7.12",
+    "path_inject": "pwd >> $GITHUB_PATH",
+    "lint_job_steps": [
+      "actions/checkout@v4",
+      "actions/setup-python@v5 (3.13)",
+      "Install actionlint (download-actionlint.bash, pin v1.7.12)",
+      "actionlint -version (smoke)",
+      "python scripts/lint_paths_filter.py",
+      "python scripts/lint_workflows.py --strict"
+    ],
+    "needs_chain": "lint -> {changes, smoke} -> verify-* (transitive)"
+  },
+  "files_changed": [
+    ".github/workflows/verify-matrix.yml (lint job 改 download-actionlint.bash + GITHUB_PATH 注入)",
+    "scripts/verify_infra_015.py (V2 重写 + 新增 V10/V11 + _run_logged helper)",
+    "evidence/infra-015/* (refresh + 新增 gh_api_actionlint_tag.json)"
+  ],
+  "evidence_files": [
+    "evidence/infra-015/verify_infra_015.log",
+    "evidence/infra-015/lint_paths_filter.log",
+    "evidence/infra-015/lint_workflows_strict.log",
+    "evidence/infra-015/actionlint_verify_matrix.log",
+    "evidence/infra-015/gh_api_actionlint_tag.json",
+    "evidence/infra-015/verify_matrix_diff.patch"
+  ],
+  "default_off": "N/A — CI workflow 改动，纯静态 lint pre-job，运行期无副作用",
+  "real_machine_uat": "N/A — 纯 CI / lint 改动",
+  "reviewer_subagent": "round 1 NEEDS-CHANGES C1+C2+C3+C5 → round 2 全部修复，等 round 2 review",
+  "caveats": [
+    "首次到 CI 才能完全验证 download-actionlint.bash 在 ubuntu-latest runner 上行为；本地仅模拟。",
+    "V10 gh api 在本机 gh 已 authed 时实跑；CI 内不重复跑（runner 默认无 gh authed token），靠 V8 actionlint 自检 + V10 本机 gate。"
+  ]
+}

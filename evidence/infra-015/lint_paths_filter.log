@@ -1,0 +1,6 @@
+L1 OK byte-identical 1854B
+L2 OK YAML 合法（顶层 8 keys）
+L3 OK areas 7 + meta 齐全
+L4 OK 共 53 pattern 非空
+L5 OK meta(line=54) 在所有 area 段之后；兜底 hint hits=['pyproject.toml', 'tests/', 'conftest.py']
+[lint_paths_filter] OK 5/5
