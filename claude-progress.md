@@ -1553,3 +1553,39 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 
 ### 下一步
 - **interact-012**（priority=63，phase-10）— 主动话题 LLM 化：vision-007 MultimodalFusion 触发 ProactiveScheduler 后真调 LLM 生成 fusion 专用回应（dark_silence / motion_greet 场景），default-OFF (`COCO_MM_PROACTIVE_LLM=1`)，sim-first 用 fake LLMClient + 脚本式 caption 序列驱动。
+
+---
+
+## Session 2026-05-14 — interact-012 close-out：MM proactive LLM wire + LGTM-with-caveats merge
+
+### 实做摘要
+- vision-007 MultimodalFusion 触发 ProactiveScheduler 后接通真 LLM 调用：fusion `dark_silence` / `motion_greet` 命中时 `_build_mm_system_prompt` 拼专用 system_prompt（注入场景描述 + 当前 emotion_label + prefer_topics TopK） → fake LLMClient 接收 → TTS sink 直播
+- default-OFF gate `COCO_MM_PROACTIVE_LLM=1`（继承 `COCO_MM_PROACTIVE=1`）；未设维持 vision-007 record_trigger only 行为
+- interact-011 OfflineDialogFallback 激活路径退化为离线模板（不调 LLM）
+- cooldown 60s 抑流（同 trigger kind 60s 内不重复调 LLM）；LLM 异常退化为普通 system_prompt 不卡死
+- 与 companion-010 emotion alert 安慰模板、companion-009 prefer 加权共存：优先级 emotion alert > fusion > 普通
+- 文件：`coco/proactive.py`（+196 行 fusion prompt path / cooldown / fallback 集成）/ `coco/multimodal_fusion.py`（+19 行 trigger payload 上报）/ `coco/logging_setup.py`（+2 行 logger）/ `scripts/verify_interact_012.py`（新增 406 行 V1-V10）
+
+### 验证
+- `scripts/verify_interact_012.py` V1-V10 共 11/11 PASS
+- smoke `COCO_CI=1 ./init.sh` PASS
+- 回归 `verify_vision_007.py` 10/10 PASS + `verify_interact_011.py` V1-V10 PASS
+- Reviewer (sub-agent, fresh-context): **LGTM-with-caveats** — merge OK
+
+### Caveat（5 条，全部不阻 merge）
+1. `_build_mm_system_prompt_unlocked` 在 `_lock` 持有期间访问 profile_store / preference_learner / emotion 读路径，critical section 偏长 → 登记 followup `interact-012-fu-1`（priority 71）拆 snapshot+渲染
+2. fake LLMClient 序列化 prompt 时未做断言型 schema 校验（验证靠关键词匹配）
+3. cooldown 计时器与 ProactiveScheduler 主 tick 共用 monotonic，未独立可注入 clock（V6 通过 mock 全局时钟通过）
+4. emotion alert > fusion 优先级靠源代码顺序保证而非显式优先级常量
+5. fusion trigger 与普通 proactive trigger 在 record 计数上同表，dashboard 区分需依靠 trigger_kind 字段
+
+### Followup
+- `interact-012-fu-1`（phase-10, area=interact, priority=71, status=not_started）：拆 `_build_mm_system_prompt_unlocked` 锁内 profile_store IO 为锁外 snapshot + 锁内纯渲染
+
+### Commit
+- 合并：`Merge branch 'feat/interact-012' into main`（7468e3d）
+- closeout：本提交 `chore(interact-012): close-out — MM proactive LLM merged + 5 caveats logged as fu-1`
+- main HEAD：见 closeout commit（push 结果见日志）
+
+### 下一步
+- **infra-011**（priority=64，phase-10）— 把 infra-008 生成的 `evidence/infra-008/paths-filter.yml` wire 到 `.github/workflows/verify-matrix.yml`，PR 路径检测 → 仅触发受影响 area job，加速 CI（hot path / 全量改动仍 fan out 全部 job）。dorny/paths-filter@v3 + verify-XXX job if 条件 + push event 强制全量。
