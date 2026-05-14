@@ -1,0 +1,70 @@
+{
+  "feature_id": "audio-009",
+  "phase": 13,
+  "generated_at": "2026-05-14T18:00:52+0800",
+  "results": [
+    {
+      "name": "V1 recovery: 3 fails then 4th success → emits + returns stream",
+      "ok": true,
+      "detail": "attempts=4 attempt_evs=3 succ=1 fails=0 sleeps=[0.5, 1.0, 2.0]"
+    },
+    {
+      "name": "V2 recovery: max_attempts exhausted → recovery_failed + returns None",
+      "ok": true,
+      "detail": "attempt_evs=5 fail_evs=1 result=None"
+    },
+    {
+      "name": "V3 hotplug: device add then remove → 2x device_change emits",
+      "ok": true,
+      "detail": "added_ev=1 removed_ev=1"
+    },
+    {
+      "name": "V4 hotplug OFF: start() returns False, no thread, no emits",
+      "ok": true,
+      "detail": "started=False thread=None q_calls=0 events=0"
+    },
+    {
+      "name": "V5 TTS LRU ON: same key twice → 2nd is cache hit",
+      "ok": true,
+      "detail": "call_count=1 stats={'hits': 1, 'misses': 1, 'evictions': 0, 'size': 1}"
+    },
+    {
+      "name": "V6 TTS LRU ON: distinct keys → all miss",
+      "ok": true,
+      "detail": "call_count=4 stats={'hits': 0, 'misses': 4, 'evictions': 0, 'size': 4}"
+    },
+    {
+      "name": "V7 TTS LRU ON, SIZE=2: 3rd insert evicts oldest",
+      "ok": true,
+      "detail": "after3={'hits': 0, 'misses': 3, 'evictions': 1, 'size': 2} final={'hits': 0, 'misses': 4, 'evictions': 2, 'size': 2} calls=4"
+    },
+    {
+      "name": "V8 TTS LRU OFF: same key twice → both call underlying (no cache)",
+      "ok": true,
+      "detail": "call_count=2 stats={'hits': 0, 'misses': 0, 'evictions': 0, 'size': 0}"
+    },
+    {
+      "name": "V9 recovery OFF: exception raises through, no retry",
+      "ok": true,
+      "detail": "raised=True calls=1"
+    },
+    {
+      "name": "V10 default OFF: no emits, no threads, baseline equivalent",
+      "ok": true,
+      "detail": "recovery_ok=True hotplug_ok=True tts_ok=True events=0 stats={'hits': 0, 'misses': 0, 'evictions': 0, 'size': 0}"
+    },
+    {
+      "name": "V11 regression: verify_audio_008.py PASS",
+      "ok": true,
+      "detail": "rc=0 tail=[PASS] V8 source markers (audio-008 / ENV_GATE / wire) — probe_ok=True main_ok=True |  | audio-008 verify: 8/8 PASS"
+    },
+    {
+      "name": "V12 regression: core audio + tts smoke verifies PASS",
+      "ok": true,
+      "detail": "ran=1 all PASS"
+    }
+  ],
+  "passed": 12,
+  "failed": 0,
+  "total": 12
+}

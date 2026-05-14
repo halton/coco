@@ -16,14 +16,62 @@ from __future__ import annotations
 
 import os
 import shutil
+import threading
 import time
 import wave
 import logging
+from collections import OrderedDict
 from pathlib import Path
 from typing import Literal, Optional
 
 import numpy as np
 import sherpa_onnx
+
+# audio-009: TTS LRU 缓存。default-OFF（``COCO_TTS_LRU=1`` 启用）。
+# 注意 env 名不沿用 ``COCO_TTS_CACHE`` —— 后者历史上指 Kokoro 模型 cache 目录路径，
+# 语义冲突。故新增 ``COCO_TTS_LRU`` (开关) + ``COCO_TTS_LRU_SIZE`` (maxsize) 两个 env。
+ENV_TTS_LRU = "COCO_TTS_LRU"
+ENV_TTS_LRU_SIZE = "COCO_TTS_LRU_SIZE"
+DEFAULT_TTS_LRU_SIZE = 64
+
+_synth_cache_lock = threading.Lock()
+_synth_cache: "OrderedDict[tuple, tuple[np.ndarray, int]]" = OrderedDict()
+_synth_cache_stats: dict[str, int] = {"hits": 0, "misses": 0, "evictions": 0}
+
+
+def _tts_lru_on() -> bool:
+    return os.environ.get(ENV_TTS_LRU, "0") == "1"
+
+
+def _tts_lru_size() -> int:
+    raw = os.environ.get(ENV_TTS_LRU_SIZE, "")
+    if not raw:
+        return DEFAULT_TTS_LRU_SIZE
+    try:
+        v = int(raw)
+        return v if v > 0 else DEFAULT_TTS_LRU_SIZE
+    except (ValueError, TypeError):
+        return DEFAULT_TTS_LRU_SIZE
+
+
+def reset_tts_cache() -> None:
+    """测试 / 调试 helper：清空 LRU 缓存与 stats。"""
+    with _synth_cache_lock:
+        _synth_cache.clear()
+        _synth_cache_stats["hits"] = 0
+        _synth_cache_stats["misses"] = 0
+        _synth_cache_stats["evictions"] = 0
+
+
+def get_tts_cache_stats() -> dict[str, int]:
+    """返回 cache stats 的浅拷贝（hits/misses/evictions/size）。"""
+    with _synth_cache_lock:
+        return {
+            "hits": _synth_cache_stats["hits"],
+            "misses": _synth_cache_stats["misses"],
+            "evictions": _synth_cache_stats["evictions"],
+            "size": len(_synth_cache),
+        }
 
 # companion-007: backend 的 prosody 能力声明。
 # Kokoro v1.1（sherpa-onnx）只有 ``speed``，没有原生 pitch；pitch 调节走 fallback no-op。
@@ -126,20 +174,57 @@ def _check_text(text: str) -> str:
     return text
 
 
+def _synthesize_uncached(
+    text: str,
+    sid: int,
+    speed: float,
+) -> tuple[np.ndarray, int]:
+    """裸合成路径（无 cache）。便于测试 mock + 让 cache 包装层解耦。"""
+    tts = _get_tts()
+    audio = tts.generate(text, sid=sid, speed=speed)
+    samples = np.asarray(audio.samples, dtype=np.float32)
+    return samples, int(audio.sample_rate)
+
+
 def synthesize(
     text: str,
     sid: int = DEFAULT_SID,
     speed: float = DEFAULT_SPEED,
 ) -> tuple[np.ndarray, int]:
-    """本地 Kokoro 合成。返回 (samples float32 [-1,1], sample_rate)."""
+    """本地 Kokoro 合成。返回 (samples float32 [-1,1], sample_rate).
+
+    audio-009: ``COCO_TTS_LRU=1`` 时启用 LRU 缓存，key 为 ``(text, sid, speed)``。
+    cache OFF 时（默认）行为与 phase-3 完全等价：每次直接调底层合成，无 dict 查找、无锁。
+    """
     text = _check_text(text)
     if not (0.5 <= speed <= 2.0):
         raise ValueError(f"speed={speed} out of range [0.5, 2.0]")
 
-    tts = _get_tts()
-    audio = tts.generate(text, sid=sid, speed=speed)
-    samples = np.asarray(audio.samples, dtype=np.float32)
-    return samples, int(audio.sample_rate)
+    if not _tts_lru_on():
+        return _synthesize_uncached(text, sid, speed)
+
+    key = (text, int(sid), round(float(speed), 6))
+    with _synth_cache_lock:
+        hit = _synth_cache.get(key)
+        if hit is not None:
+            # LRU: move-to-end 标记为最新使用
+            _synth_cache.move_to_end(key)
+            _synth_cache_stats["hits"] += 1
+            samples, sr = hit
+            # 返回拷贝避免上游 in-place 修改污染缓存
+            return np.array(samples, copy=True), int(sr)
+
+    samples, sr = _synthesize_uncached(text, sid, speed)
+    with _synth_cache_lock:
+        _synth_cache_stats["misses"] += 1
+        _synth_cache[key] = (np.array(samples, copy=True), int(sr))
+        _synth_cache.move_to_end(key)
+        # evict overflow
+        max_size = _tts_lru_size()
+        while len(_synth_cache) > max_size:
+            _synth_cache.popitem(last=False)
+            _synth_cache_stats["evictions"] += 1
+    return samples, sr
 
 
 def write_wav(path: Path | str, samples: np.ndarray, sample_rate: int) -> None:
@@ -388,6 +473,9 @@ __all__ = [
     "DEFAULT_SPEED",
     "MAX_TEXT_LEN",
     "KOKORO_DIR",
+    "ENV_TTS_LRU",
+    "ENV_TTS_LRU_SIZE",
+    "DEFAULT_TTS_LRU_SIZE",
     "synthesize",
     "synthesize_edge",
     "say",
@@ -398,4 +486,6 @@ __all__ = [
     "set_expression_player",
     "get_expression_player",
     "reset_prosody_fallback_emit_flag",
+    "reset_tts_cache",
+    "get_tts_cache_stats",
 ]
