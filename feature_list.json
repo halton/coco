@@ -1670,8 +1670,7 @@
         "infra-006",
         "infra-008"
       ],
-      "evidence": "Reviewer (sub-agent, fresh-context): LGTM-with-caveats — merge OK; scripts/verify_infra_011.py V1-V10 10/10 PASS (dorny/paths-filter@v3 step / 每个 verify-XXX job 含 if 条件读 paths-filter outputs / push 到 main/feat/** 强制全量 / paths-filter outputs 与 evidence/infra-008/paths-filter.yml 一致 / hot path 改动 → 全量 fan-out / scripts/verify_*.py 改动触发自身 area / 回归 infra-006 / 回归 infra-008); 回归 verify_infra_006 9/9 PASS + verify_infra_008 all PASS; smoke COCO_CI=1 ./init.sh PASS; 4 条 caveat 不阻 merge → followup infra-011-fu-1 (workflow_dispatch 行为未实证 + PR cross-area regression 漏判 mitigation 文档化) / infra-011-fu-2 (paths-filter 补 pyproject.toml / tests/** / conftest.py 兜底段); dorny/paths-filter pin 为 tag 非 sha 暂留 caveat. branch feat/infra-011 merged into main.",
-      "status": "passing"
+      "evidence": "Reviewer (sub-agent, fresh-context): LGTM-with-caveats — merge OK; scripts/verify_infra_011.py V1-V10 10/10 PASS (dorny/paths-filter@v3 step / 每个 verify-XXX job 含 if 条件读 paths-filter outputs / push 到 main/feat/** 强制全量 / paths-filter outputs 与 evidence/infra-008/paths-filter.yml 一致 / hot path 改动 → 全量 fan-out / scripts/verify_*.py 改动触发自身 area / 回归 infra-006 / 回归 infra-008); 回归 verify_infra_006 9/9 PASS + verify_infra_008 all PASS; smoke COCO_CI=1 ./init.sh PASS; 4 条 caveat 不阻 merge → followup infra-011-fu-1 (workflow_dispatch 行为未实证 + PR cross-area regression 漏判 mitigation 文档化) / infra-011-fu-2 (paths-filter 补 pyproject.toml / tests/** / conftest.py 兜底段); dorny/paths-filter pin 为 tag 非 sha 暂留 caveat. branch feat/infra-011 merged into main."
     },
     {
       "id": "infra-010-fu-1",
