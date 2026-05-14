@@ -1684,3 +1684,28 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - **phase-11 第 2 个** companion-012 (priority=76, area=companion) — 吸收 companion-011-fu-1/2，verify_companion_011 V12b helper + observe cheap-doc 注释 + profile_id reconcile 真 face_id
 - 或 uat-phase4 / uat-phase8 / uat-phase10 异步真机 UAT（不阻 phase-11 推进）
+
+## Session 2026-05-14：companion-012 close-out：fu-1/fu-2 absorbed LGTM merge
+
+### 实做
+- **fu-1 (verify V12b 简化)**：`scripts/verify_companion_011.py` V12b 布尔表达式抽 helper 简化，行为不变
+- **fu-1 (observe cheap-doc)**：`coco/companion/group_mode.py` module docstring + observe() docstring 补 cheap-doc 注释（observe 调用频率与 face-id 回调一致；coordinator 内部已 set-equal 短路）
+- **fu-2 (profile_id_resolver face_id path)**：`coco/perception/face_tracker.py` + `coco/companion/group_mode.py` profile_id_resolver 增加 face_id 优先 → name fallback chain；stub-by-design：face_id 真接入 deferred to **vision-008**，接口契约稳定，零调用方改动
+- **verify**：`scripts/verify_companion_012.py` V1-V8 全 PASS（V1 V12b helper / V2 module docstring / V3 observe docstring / V4 name-only pid → 真 pid 校正路径 / V5 emit reconciled 事件 / V6 schema v3 旧 group_sessions load 兼容 / V7 face_id 入网自动 reconcile / V8 reconciled 事件含 old_pid/new_pid）
+- **main.py 接线**：profile_id_resolver 真接 GroupModeCoordinator.observe（最小钩入）
+- **Reviewer (sub-agent, fresh-context)**：LGTM **no caveats**
+
+### 回归
+- verify_companion_012 V1-V8：9/9 PASS
+- verify_companion_011 V1-V12b：16/16 PASS
+- verify_vision_007 V1-V10：10/10 PASS
+- smoke COCO_CI=1 ./init.sh：PASS
+
+### main HEAD
+- Merge commit: 见 git log（Merge branch 'feat/companion-012' into main）
+- Closeout commit: 本 commit
+- feat/companion-012 ahead 3 commit before merge: e355c7a / 61f3027 / 0ad5d09
+
+### 下一步
+- **phase-11 第 3 个** interact-013 (priority=77, area=interact) — 吸收 interact-012-fu-1，ProactiveScheduler._build_mm_system_prompt 拆 snapshot+渲染，锁外 IO + 锁内仅 cooldown/计数
+- 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
