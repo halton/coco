@@ -45,8 +45,8 @@
     "vision-010-fu-4": "PASS"
   },
   "real_machine_uat": "pending (sim-first; PreferenceLearner persist 与 _bump_comfort_prefer 修复均为纯 sim 行为，无新增真机依赖)",
-  "evidence_side_effects_clean": true,
-  "caveats": "无新 caveat（首次 capture 修复关闭 companion-010 inherited caveat；新 cache 机制为附加 default-OFF feature，未替换既有 persist_store 行为）",
-  "merged_to_main": false,
-  "reviewer_lgtm": "PENDING (Reviewer sub-agent fresh-context 评审待开)"
+  "evidence_side_effects_clean": "regress_subprocess_only_ts_refresh; restored on closeout",
+  "caveats": "Reviewer LGTM-with-caveats: caveat-1 [MED] companion.preference_persisted emit 自报节流为误报（_persisted_emit_lock 仅 thread-safety lock 不去重）→ 入 backlog companion-015-backlog-emit-throttle；caveat-2 [LOW] evidence dirty (4 个 regress 子进程刷 ts) → closeout 已 restore；caveat-3 [LOW] saved_at 未参与 hydrate validation（信息性，忽略）",
+  "merged_to_main": true,
+  "reviewer_lgtm": "LGTM-with-caveats (Reviewer sub-agent fresh-context)"
 }
