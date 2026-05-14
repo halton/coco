@@ -1215,12 +1215,25 @@ class Coco(ReachyMiniApp):
                         from coco.companion.profile_persist import (
                             compute_profile_id as _compute_pid,
                         )
+                        # companion-012 fu-2: face_id 真接路径 + fallback chain。
+                        # 优先调用 face_tracker.get_face_id(name)（vision-008 stable-id
+                        # 入网后真接），缺省（当前 stub 返回 None）回退到 name 自身。
+                        # 真接 scope: vision-008；此处仅做接口对接 + fallback。
+                        _ft_for_fid = _face_tracker_shared
                         def _profile_id_resolver(name: str):
                             # 与 profile_persist_bridge 同步：face_id 退化为 user_id（name）
                             if not name:
                                 return None
                             try:
-                                return _compute_pid(name, name)
+                                _fid: Optional[str] = None
+                                if _ft_for_fid is not None and hasattr(_ft_for_fid, "get_face_id"):
+                                    try:
+                                        _fid = _ft_for_fid.get_face_id(name)
+                                    except Exception:  # noqa: BLE001
+                                        _fid = None
+                                # fallback chain: face_id -> name
+                                _stable = _fid or name
+                                return _compute_pid(_stable, name)
                             except Exception:  # noqa: BLE001
                                 return None
                         _group_mode_coord = _GroupModeCoord(
