@@ -367,6 +367,25 @@ class MultimodalFusion:
                 self.stats.errors += 1
                 log.warning("[mm_fusion] proactive.record_multimodal_trigger failed: %s: %s", type(e).__name__, e)
 
+            # interact-012: 若 COCO_MM_PROACTIVE_LLM=1 且 scheduler 支持 set_mm_llm_context，
+            # 把场景上下文塞过去；下一次 maybe_trigger 命中时由 _build_mm_system_prompt_unlocked
+            # 注入专用 prompt。default-OFF：env 未设 → 直接跳过；env=ON 但 scheduler 无该方法 →
+            # 同样跳过（保持向后兼容）。
+            try:
+                if _bool_env("COCO_MM_PROACTIVE_LLM", default=False):
+                    setter = getattr(self.proactive, "set_mm_llm_context", None)
+                    if setter is not None:
+                        ctx = {
+                            "rule_id": rule_id,
+                            "hint": hint,
+                            "caption": self._last_caption_text,
+                            "ts": t,
+                        }
+                        setter(ctx)
+            except Exception as e:  # noqa: BLE001
+                self.stats.errors += 1
+                log.warning("[mm_fusion] set_mm_llm_context failed: %s: %s", type(e).__name__, e)
+
             # priority boost（如果 scheduler 提供该字段；否则只本地计数）
             try:
                 if hasattr(self.proactive, "_next_priority_boost"):
