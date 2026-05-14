@@ -2064,7 +2064,7 @@
       "phase": 12,
       "area": "infra",
       "priority": 85,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "verify 影响面 + paths-filter 自检深化（消化 infra-008 L1-1 + infra-013 EC-2）：(a) scripts/verify_impact.py --max 字母序截断改三选一（按改动权重 / 兜底全量 / hash 抽样）并增 stdout 痕迹记 coverage_ratio；(b) paths-filter.yml 与 evidence/infra-008/paths-filter.yml 一致性 + 兜底段顺序自动 lint（python 简单 yaml diff + pattern 顺序断言）；(c) docs/regression-policy.md 增 actionlint dry-run hook 列项跟踪。default-OFF：本 feature 无运行期 gate（CI/verify-only 改动）。",
       "verification": [
@@ -2078,7 +2078,7 @@
         "infra-013"
       ],
       "followed_from": "infra-008 L1-1 + infra-013 EC-2 非阻塞",
-      "evidence": "not_started"
+      "evidence": "in_progress: verify_infra_014 V1-V8 PASS + V4b/V5b PASS / 回归 verify_infra_008 10/10 + verify_infra_011 10/10 + verify_infra_013 8/8 + smoke PASS / branch=feat/infra-014 / Reviewer LGTM PENDING"
     },
     {
       "id": "companion-014",

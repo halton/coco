@@ -1986,3 +1986,58 @@ phase-11 软件全部完成：
 - phase-12 软件 4/7 done（infra-012-fu-1 / vision-009 / interact-014 / companion-013），剩 infra-014 / companion-014 + uat-* 异步
 - 下一候选：infra-014 priority=85（verify 影响面 + paths-filter 自检深化）
 
+
+## Session: 2026-05-14 infra-014 Engineer 实现完成（待 Reviewer LGTM）
+
+### scope
+- infra-014 (priority=85, phase=12, area=infra)：消化 infra-008 L1-1 + infra-013 EC-2
+  - (a) `scripts/precommit_impact.py` --max 字母序截断改三选一并存：
+    - `--max-strategy=alpha` (默认/兼容老路径，带 WARN 痕迹引导用户切换)
+    - `--max-strategy=weighted` (按 staged 文件命中权重降序、字母序破平局)
+    - `--max-strategy=full` (反而跑全量；保守兜底，适合 hot-file 但非 hot_full_fan_out 场景)
+    - `--max-strategy=sample` (基于 staged 文件列表 sha1 决定性抽样，长期均匀)
+  - 所有策略下 stdout 均打印 `[precommit_impact] coverage_ratio=R/A strategy=S full_fan_out=B`
+  - hot_full_fan_out=True 时绕过 --max-strategy（与 infra-009 决策一致），strategy 标记为 `full_fan_out_bypass`
+  - last_run.json 扩展 `max_strategy` / `coverage_ratio` 字段
+  - (b) `scripts/lint_paths_filter.py` 新建，L1-L5：
+    - L1 `.github/paths-filter.yml` 与 `evidence/infra-008/paths-filter.yml` byte-identical
+    - L2 YAML 语法合法
+    - L3 必含 7 area (vision/audio/companion/interact/infra/robot/publish) + meta
+    - L4 各 area pattern 非空
+    - L5 meta 兜底段在所有 area 段之后（防 pyproject/tests/conftest 被 area 段抢匹配）
+  - (c) `_paths_filter_yaml()` 生成器加 meta 段（消化 infra-008 V9 overwrite evidence 副本时丢 meta 的潜在 bug；现在 generator 是唯一权威源）
+  - (d) `docs/regression-policy.md` 新建，含 actionlint dry-run hook 跟踪段（infra-013 fu-3 / infra-014 fu-1 候选）
+  - (e) paths-filter infra area + meta 段加 `scripts/lint_paths_filter.py` 与 `docs/regression-policy.md`
+- default-OFF 合规：lint + 新 --max-strategy 均 CLI/dev 工具；pre-commit hook 默认仍走 alpha（与 infra-008/009 行为等价），不引入运行期 gate
+
+### verify
+- `scripts/verify_infra_014.py` V1-V8 全 PASS（含 V4b/V5b 子断言）：
+  - V1 --run stdout 含 coverage_ratio + strategy（fixture tmp repo 跑 fake verify）
+  - V2 weighted 策略选高权重 hot verify（unit-style，调 select_runnable）
+  - V3 hot-path coco/main.py → 全量 fan-out 不退步（66 hits）
+  - V4 lint default PASS（byte-identical）+ V4b 漂移 fixture lint fail
+  - V5 meta 段在所有 area 段之后 + V5b lint 检测 meta 顺序错 → fail
+  - V6 docs/regression-policy.md 含 actionlint dry-run hook 跟踪
+  - V7 默认 alpha 截断 + WARN + coverage_ratio
+  - V8 `scripts/lint_paths_filter.py` 在 paths-filter infra area（github + evidence 同步）
+- 回归：verify_infra_008 10/10 / verify_infra_011 10/10 / verify_infra_013 8/8 / `COCO_CI=1 ./init.sh` smoke PASS
+- evidence：`evidence/infra-014/verify_summary.json`
+
+### --max-strategy 决策（Engineer 选择记录）
+- description 已明确"三选一"，按字面落地全部 4 路径（含 alpha 兼容）；alpha 为默认保 V7 兼容
+- 推荐：日常本地 hook 用 weighted（hot file 优先）；CI matrix 用 sample（长期均匀覆盖）；面对未知 hot 改动用 full
+- alpha 在 truncate 时打 WARN 引导切换；不强制改默认（避免破现有 evidence/infra-008/last_run.json 历史对比）
+
+### 流程合规
+- Engineer **遵守 feat/ 分支约束，不自 merge**：仅 commit + push feat/infra-014，待 Reviewer fresh-context LGTM 后由 closeout sub-agent merge → main
+
+### caveat / followup（Reviewer 重点关注）
+- V1/V7 用 fixture tmp repo 跑 fake verify_vision_zfake_*.py 触发 --run 路径，未真跑 prod verify
+- select_runnable sample 策略：同 staged 集合决定性，不同 staged 长期均匀但短期非严格均匀
+- lint L5 用文本扫描定位顶层 key 行号，未用 ruamel/PyYAML round-trip；对非常规格式可能漏报
+- _paths_filter_yaml 生成器现 hardcoded meta 段；未来 paths-filter 模型变更需同步生成器与 lint
+- actionlint dry-run hook 仅"列项跟踪"未落地（infra-014 fu-1 候选）
+
+### 下一步
+- 主会话派 Reviewer fresh-context 评审：默认 OFF gate / --max-strategy 三选一语义 / lint L5 文本扫描健壮性 / 008 V9 overwrite evidence 行为变化
+- LGTM 后 closeout sub-agent merge + push main + 切 status=passing

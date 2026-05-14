@@ -23,6 +23,8 @@ infra:
   - 'coco/logging_setup.py'
   - 'coco/main.py'
   - 'coco/metrics.py'
+  - 'docs/regression-policy.md'
+  - 'scripts/lint_paths_filter.py'
   - 'scripts/precommit_impact.py'
   - 'scripts/run_verify_all.py'
   - 'scripts/verify_infra_*.py'
@@ -44,16 +46,17 @@ robot:
 vision:
   - 'coco/perception/**'
   - 'scripts/verify_vision_*.py'
-# infra-013 fu-2: meta 兜底段。
-# 跨 area 改动（pyproject 依赖、test fixture、conftest、CI 自身、verify runner）
-# 在 PR 上必须触发全 7 个 verify-XXX job，避免 paths-filter 误判 cross-area
-# regression。verify-matrix.yml 7 个 verify-XXX job 的 if 均含
-# `needs.changes.outputs.meta == 'true'`。
+# infra-013 fu-2: meta 兜底段（infra-014 V5 lint 强制其在尾段）。
+# 跨 area 改动（pyproject 依赖、test fixture、conftest、CI 自身、
+# verify runner / lint 自检脚本）在 PR 上必须触发全 7 个 verify-XXX job，
+# 避免 paths-filter 误判 cross-area regression。
 meta:
   - 'pyproject.toml'
   - 'uv.lock'
   - 'conftest.py'
   - 'tests/**'
   - '.github/**'
+  - 'docs/regression-policy.md'
+  - 'scripts/lint_paths_filter.py'
   - 'scripts/run_verify_all.py'
   - 'scripts/precommit_impact.py'
