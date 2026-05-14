@@ -2190,12 +2190,12 @@
       "phase": 13,
       "area": "vision",
       "priority": 89.95,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "env boost NaN/Inf 防御 + 解析层硬上限 — vision-010-fu-3 caveat C-1 / C-2 关闭：read_primary_prefer_boost_from_env 加 math.isnan / math.isinf 拦截（NaN/+Inf/-Inf 视为非法），加上限校验（建议 100.0，超上限视为非法），命中即 WARN once 返回 None 走 default=2.0；verify 含 NaN / +Inf / -Inf / 超上限四个用例 + 现有 V1-V6 回归。default-OFF gate：复用 COCO_GROUP_PRIMARY_PREFER_BOOST，env 未设/非法均走 default=2.0。sim-first。followed_from: vision-010-fu-3 (caveats C-1, C-2)",
       "followed_from": "vision-010-fu-3",
-      "verification": "",
-      "evidence": ""
+      "verification": "scripts/verify_vision_010_fu_4.py 全 PASS（V1 NaN/NaN/NAN 三例 → warn + None / V2 inf/-inf/Infinity/-Infinity 四例 → warn + None / V3 超上限 100.5 / 1e6 / 999999 三例 → warn + None / V4 边界 100.0 → accept / V5 50.0 合法 → accept / V6 回归 vision-010 + fu-1 + fu-2 + fu-3 全 PASS）。",
+      "evidence": "evidence/vision-010-fu-4/verify_summary.json"
     },
     {
       "id": "companion-015",

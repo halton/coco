@@ -46,6 +46,7 @@ profile write）在锁外执行，避免反向加锁。
 from __future__ import annotations
 
 import logging
+import math
 import os
 import threading
 import time
@@ -171,11 +172,15 @@ def group_mode_enabled_from_env(env: Optional[Mapping[str, str]] = None) -> bool
 
 
 # vision-010-fu-3 C-3: 暴露 primary_prefer_boost 的 env 入口.
+# vision-010-fu-4: 关闭 fu-3 caveat-1/2 — NaN/Inf 拦截 + 硬上限 (MAX=100.0).
 #
 # - env 未设 / 空白 → 返回 None（让 GroupModeCoordinator 走
 #   DEFAULT_PRIMARY_PREFER_BOOST=2.0）
-# - 合法正浮点 → 返回 float
-# - 非数字 / 0 / 负数 → 返回 None 并 print 一行 warn（不 crash）
+# - 合法正浮点 (0 < val <= MAX_PRIMARY_PREFER_BOOST) → 返回 float
+# - 非数字 / 0 / 负数 / NaN / Inf / 超上限 → 返回 None 并 print 一行 warn（不 crash）
+MAX_PRIMARY_PREFER_BOOST: float = 100.0
+
+
 def read_primary_prefer_boost_from_env(
     env: Optional[Mapping[str, str]] = None,
     *,
@@ -187,8 +192,17 @@ def read_primary_prefer_boost_from_env(
         return None
     try:
         val = float(raw)
+        if math.isnan(val):
+            raise ValueError(f"NaN boost {raw!r}")
+        if math.isinf(val):
+            raise ValueError(f"infinite boost {raw!r}")
         if val <= 0:
             raise ValueError(f"non-positive boost {val}")
+        if val > MAX_PRIMARY_PREFER_BOOST:
+            raise ValueError(
+                f"boost {val} exceeds MAX_PRIMARY_PREFER_BOOST="
+                f"{MAX_PRIMARY_PREFER_BOOST}"
+            )
         return val
     except (TypeError, ValueError) as ex:
         msg = (
