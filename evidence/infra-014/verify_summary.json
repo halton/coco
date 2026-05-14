@@ -1,0 +1,23 @@
+{
+  "feature_id": "infra-014",
+  "verify_script": "scripts/verify_infra_014.py",
+  "v_count": "8 (V1-V8) + V4b/V5b sub-checks (10 records total)",
+  "result": "all PASS",
+  "regression": {
+    "verify_infra_008": "10/10 PASS",
+    "verify_infra_011": "10/10 PASS",
+    "verify_infra_013": "8/8 PASS",
+    "smoke_ci": "PASS"
+  },
+  "max_strategy_decision": "三选一全部实现 (alpha/weighted/full/sample) + alpha 为默认保兼容 (V7) + WARN 痕迹引导用户切到 weighted/sample/full",
+  "lint_paths_filter": "scripts/lint_paths_filter.py L1-L5: byte-identical / yaml syntax / 7 area + meta / pattern 非空 / meta 段尾顺序",
+  "regression_policy_doc": "docs/regression-policy.md 含 actionlint dry-run hook 跟踪段（infra-013 fu-3 / infra-014 fu-1 候选）",
+  "self_caveats": [
+    "V1/V7 用 fixture tmp repo 跑 fake verify_vision_zfake_*.py 触发 --run 路径，未真跑 prod verify",
+    "select_runnable 'sample' 策略基于 sha1(seed||name) 决定性排序；同一 staged 集合多次跑结果一致；不同 staged 长期均匀但短期非严格均匀",
+    "lint_paths_filter L5 用文本扫描定位顶层 key 行号，未用 ruamel/PyYAML round-trip；对怪异格式 yaml 可能漏报",
+    "_paths_filter_yaml 现在 hardcoded 含 meta 段；若未来 paths-filter 模型改变需同步生成器与 lint",
+    "default-OFF 合规：lint 与新 --max-strategy 均为 CLI/dev 工具，不进入 pre-commit hook 默认路径；hook 仍走 alpha 默认 (与 infra-008/009 行为等价)"
+  ],
+  "real_machine_uat": "n/a (CI / verify-only feature)"
+}

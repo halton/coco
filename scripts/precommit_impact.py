@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""infra-008: pre-commit verify 影响面分析
+"""infra-008 + infra-014: pre-commit verify 影响面分析
 
 输入 staged python 文件（或 --files 显式列出），输出受影响的
 `scripts/verify_*.py` 子集；可选直接 `--run` 跑这些 verify；可选生成
@@ -8,8 +8,20 @@ GitHub Actions `paths-filter` YAML 片段供 infra-006 矩阵 PR 时跳过无关
 用法：
     python scripts/precommit_impact.py --staged --list
     python scripts/precommit_impact.py --files coco/perception/scene_caption.py --list
-    python scripts/precommit_impact.py --staged --run [--max N]
+    python scripts/precommit_impact.py --staged --run [--max N] [--max-strategy alpha|weighted|full|sample]
     python scripts/precommit_impact.py --paths-filter > evidence/infra-008/paths-filter.yml
+
+infra-014 --max-strategy 三选一（消化 infra-008 L1-1）：
+  - alpha   : 默认 / 老路径，按文件名字母序截断（保兼容；带 WARN 痕迹）
+  - weighted: 按"被多少 staged 文件命中"加权排序（hot verify 先跑），再字母序破平局
+  - full    : 超 --max 时**反而跑全量**（保守兜底；适合 hot-file 改动场景，
+              hot_full_fan_out 早已无条件全量，本策略覆盖 affected 集合 > --max
+              的非 hot 场景）
+  - sample  : 基于 staged 文件列表 sha1 决定性抽样 N 个（多次提交长期均匀覆盖）
+
+stdout 痕迹（infra-014 V1）：
+  `[precommit_impact] coverage_ratio=R/A strategy=S full_fan_out=B`
+  其中 R = runnable 截断后, A = affected 总数, S = 实际生效策略。
 
 映射规则（与 feature_list.json infra-008 verification 字段一致）：
   - `coco/<area>/X.py` → `scripts/verify_<area>_*.py`（area 与
@@ -31,6 +43,7 @@ skip-list：复用 `run_verify_all.SKIP_LIST`，`--run` 默认跳过这些（与
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -202,17 +215,39 @@ def compute_impact(
     *,
     strict: bool = False,
 ) -> tuple[set[str], list[str], bool]:
-    """返回 (affected verify 文件名集合, 注释/原因 list, full_fanout 标志)"""
+    """返回 (affected verify 文件名集合, 注释/原因 list, full_fanout 标志)
+
+    infra-014 兼容：内部走 compute_impact_weighted，丢弃权重信息保持旧签名。
+    """
+    affected, weights, notes, full = compute_impact_weighted(files, strict=strict)
+    return affected, notes, full
+
+
+def compute_impact_weighted(
+    files: list[str],
+    *,
+    strict: bool = False,
+) -> tuple[set[str], dict[str, int], list[str], bool]:
+    """infra-014 V2 内核：附带每个 verify 的"被命中权重"。
+
+    权重 = 该 verify 因多少 staged 文件被加进 affected 集合（区域命中 + 反向 import
+    命中各计 1）。weighted 截断按权重降序、字母序破平局。"""
     notes: list[str] = []
     rels = [_to_rel(f) for f in files]
     all_verifies = discover()  # 已排除 EXCLUDED
     verify_names = {p.name for p in all_verifies}
+    weights: dict[str, int] = {}
+
+    def _bump(name: str, n: int = 1) -> None:
+        weights[name] = weights.get(name, 0) + n
 
     # hot-path → 全量
     for r in rels:
         if r in HOT_FULL_FAN_OUT:
             notes.append(f"hot-path {r} → 全量 fan-out")
-            return verify_names, notes, True
+            for n in verify_names:
+                _bump(n)
+            return verify_names, weights, notes, True
 
     affected: set[str] = set()
     located_any = False
@@ -225,6 +260,7 @@ def compute_impact(
             name = Path(rel).name
             if name.startswith("verify_") and name in verify_names:
                 affected.add(name)
+                _bump(name)
                 located_any = True
                 notes.append(f"{rel} → 自身命中")
                 continue
@@ -235,13 +271,14 @@ def compute_impact(
             if area:
                 hits = _verify_for_area(area, all_verifies)
                 affected |= hits
+                for n in hits:
+                    _bump(n)
                 located_any = True
                 notes.append(f"{rel} → area={area} ({len(hits)} verify)")
             else:
                 notes.append(f"{rel} → 无 area 映射")
 
-            # 3. import 反向传播：找所有引用此 module 的文件，
-            #    若文件是 verify_*.py 直接加，若是 coco/*.py 再按 area 加
+            # 3. import 反向传播
             mod = _file_to_module(rel)
             if mod:
                 callers = rev.get(mod, set())
@@ -250,10 +287,14 @@ def compute_impact(
                         cname = Path(caller).name
                         if cname in verify_names:
                             affected.add(cname)
+                            _bump(cname)
                     elif caller.startswith("coco/"):
                         carea = _area_for_file(caller)
                         if carea:
-                            affected |= _verify_for_area(carea, all_verifies)
+                            chits = _verify_for_area(carea, all_verifies)
+                            affected |= chits
+                            for n in chits:
+                                _bump(n)
                 if callers:
                     notes.append(
                         f"  ↳ 反向 import 命中 {len(callers)} 个引用者"
@@ -266,12 +307,77 @@ def compute_impact(
     if not located_any and not affected:
         if strict:
             notes.append("strict 模式 + 全部文件未定位 → 返回空集")
-            return set(), notes, False
+            return set(), {}, notes, False
         notes.append("fallback：未定位任何文件 → 全量 fan-out")
-        return verify_names, notes, True
+        for n in verify_names:
+            _bump(n)
+        return verify_names, weights, notes, True
 
     # 不在 SKIP_NAMES 中的 affected 才会被 --run 实际跑；这里集合不过滤
-    return affected, notes, False
+    return affected, weights, notes, False
+
+
+# infra-014: --max-strategy 三选一 + 老 alpha 兼容
+MAX_STRATEGIES: tuple[str, ...] = ("alpha", "weighted", "full", "sample")
+
+
+def select_runnable(
+    runnable_sorted: list[str],
+    *,
+    max_n: int,
+    strategy: str,
+    weights: dict[str, int] | None = None,
+    sample_seed: str = "",
+    affected_total: int | None = None,
+) -> tuple[list[str], bool, str]:
+    """infra-014：根据策略从 runnable 中选 <= max_n 个执行，返回 (selected, truncated, note)。
+
+    输入 runnable_sorted 必须是已字母序排序的列表（决定性）。
+    weights：verify_name → 权重，weighted 策略必填。
+    sample_seed：sample 策略用，建议传 staged 文件列表 join('\n') 的 sha1 hex。
+    affected_total：纯日志用，可省。
+    """
+    n = len(runnable_sorted)
+    if n <= max_n:
+        return runnable_sorted, False, f"无需截断 (runnable={n} <= max={max_n})"
+
+    if strategy == "alpha":
+        # 老兼容：字母序前 max_n
+        return runnable_sorted[:max_n], True, (
+            f"alpha 字母序截断；WARN 老路径可能漏 hot verify "
+            f"(infra-014 推荐 weighted/sample/full)"
+        )
+
+    if strategy == "weighted":
+        w = weights or {}
+        # 权重降序、字母序升序破平局
+        ordered = sorted(runnable_sorted, key=lambda nm: (-w.get(nm, 0), nm))
+        return ordered[:max_n], True, (
+            f"weighted 截断（权重降序、字母序破平局）"
+        )
+
+    if strategy == "full":
+        # 兜底全量：超 --max 时反而跑全量
+        return runnable_sorted, False, (
+            f"full 兜底：runnable={n} > max={max_n}，"
+            f"按策略反而跑全量（保守覆盖）"
+        )
+
+    if strategy == "sample":
+        # hash 决定性抽样：sha1(seed + idx) → mod n 选 max_n 个唯一
+        seed = (sample_seed or "").encode("utf-8")
+        ranked = sorted(
+            runnable_sorted,
+            key=lambda nm: hashlib.sha1(seed + b"|" + nm.encode("utf-8")).hexdigest(),
+        )
+        # 选 ranked 前 max_n（决定性）；再按字母序还原以便日志稳定
+        chosen = sorted(ranked[:max_n])
+        return chosen, True, (
+            f"sample 决定性抽样（seed sha1 排序后前 {max_n}）；"
+            f"长期均匀覆盖"
+        )
+
+    raise ValueError(f"未知 --max-strategy: {strategy!r}（支持 {MAX_STRATEGIES}）")
 
 
 def _write_last_run(
@@ -282,9 +388,11 @@ def _write_last_run(
     full_fan_out: bool,
     truncated: bool,
     max_arg: int,
+    strategy: str = "alpha",
+    coverage_ratio: str = "",
 ) -> None:
-    """infra-009 / infra-008 L1-1：把本次 --run 的入参 / 选中 / 截断信息留痕到
-    evidence/infra-008/last_run.json，方便 Reviewer / 事后定位 hot-file 截断盲点。
+    """infra-009 / infra-008 L1-1 / infra-014：留痕本次 --run 入参 / 选中 / 截断 /
+    策略信息到 evidence/infra-008/last_run.json，方便 Reviewer / 事后定位。
     """
     payload = {
         "ts": round(time.time(), 3),
@@ -296,6 +404,8 @@ def _write_last_run(
         "full_fan_out": bool(full_fan_out),
         "truncated": bool(truncated),
         "max_arg": int(max_arg),
+        "max_strategy": str(strategy),
+        "coverage_ratio": str(coverage_ratio),
         "skipped": sorted(set(affected) - set(runnable)),
     }
     try:
@@ -387,8 +497,10 @@ def _paths_filter_yaml() -> str:
     areas.setdefault("infra", []).extend([
         "coco/main.py",
         "coco/__init__.py",
+        "docs/regression-policy.md",
         "scripts/run_verify_all.py",
         "scripts/precommit_impact.py",
+        "scripts/lint_paths_filter.py",
     ])
     # 去重排序
     lines: list[str] = ["# infra-008: paths-filter 建议片段（供 infra-006 verify-matrix 参考）"]
@@ -397,6 +509,29 @@ def _paths_filter_yaml() -> str:
         lines.append(f"{area}:")
         for p in pats:
             lines.append(f"  - '{p}'")
+    # infra-013 fu-2: meta 兜底段必须放在所有 area 段之后（infra-014 V5 lint 强制）。
+    # 跨 area 改动（pyproject 依赖、test fixture、conftest、CI 自身、verify runner）
+    # 在 PR 上必须触发全 7 个 verify-XXX job，避免 paths-filter 误判 cross-area
+    # regression。verify-matrix.yml 7 个 verify-XXX job 的 if 均含
+    # `needs.changes.outputs.meta == 'true'`。
+    meta_patterns = [
+        "pyproject.toml",
+        "uv.lock",
+        "conftest.py",
+        "tests/**",
+        ".github/**",
+        "docs/regression-policy.md",
+        "scripts/lint_paths_filter.py",
+        "scripts/run_verify_all.py",
+        "scripts/precommit_impact.py",
+    ]
+    lines.append("# infra-013 fu-2: meta 兜底段（infra-014 V5 lint 强制其在尾段）。")
+    lines.append("# 跨 area 改动（pyproject 依赖、test fixture、conftest、CI 自身、")
+    lines.append("# verify runner / lint 自检脚本）在 PR 上必须触发全 7 个 verify-XXX job，")
+    lines.append("# 避免 paths-filter 误判 cross-area regression。")
+    lines.append("meta:")
+    for p in meta_patterns:
+        lines.append(f"  - '{p}'")
     return "\n".join(lines) + "\n"
 
 
@@ -420,6 +555,12 @@ def main() -> int:
                     help="无法定位的文件不再 fallback 全量，返回空集")
     ap.add_argument("--max", type=int, default=10,
                     help="--run 模式下最多跑多少个 verify（hook 时长护栏，default 10）")
+    ap.add_argument("--max-strategy", choices=list(MAX_STRATEGIES), default="alpha",
+                    help=("infra-014：超 --max 时的截断策略；"
+                          "alpha=老路径字母序（default，带 WARN）；"
+                          "weighted=按 staged 文件命中权重；"
+                          "full=反而跑全量（保守兜底）；"
+                          "sample=hash 决定性抽样（长期均匀）"))
     ap.add_argument("--timeout", type=float, default=600.0,
                     help="--run 模式下单脚本超时 (default 600s)")
     ap.add_argument("--no-skip-list", action="store_true",
@@ -443,7 +584,9 @@ def main() -> int:
         print("[precommit_impact] no staged files; nothing to do")
         return 0
 
-    affected, notes, full_fan_out = compute_impact(files, strict=args.strict)
+    affected, weights, notes, full_fan_out = compute_impact_weighted(
+        files, strict=args.strict
+    )
 
     if args.verbose or args.list or not args.run:
         print(f"[precommit_impact] inputs={len(files)} affected_verify={len(affected)} "
@@ -458,23 +601,45 @@ def main() -> int:
 
     # --run：跑 affected verify
     apply_skip = not args.no_skip_list
-    runnable = sorted(
+    runnable_pre = sorted(
         n for n in affected
         if not (apply_skip and n in SKIP_NAMES)
     )
     truncated = False
-    # infra-009 / infra-008 L1-1：full_fan_out=True 时跳过 --max 截断（hot-file
-    # 如 coco/main.py 改动必须保留全量覆盖率，不能被 hook 时长护栏吃掉）。
-    if not full_fan_out and len(runnable) > args.max:
-        print(f"[precommit_impact] affected={len(runnable)} > --max={args.max}；"
-              f"截断至前 {args.max} 个（按文件名排序）。完整列表用 --list 查看。")
-        runnable = runnable[:args.max]
-        truncated = True
-    elif full_fan_out and len(runnable) > args.max:
-        print(f"[precommit_impact] full_fan_out=True；--max={args.max} 截断豁免，"
-              f"全量跑 {len(runnable)} 个 verify。")
+    selection_note = ""
 
-    # infra-009 / infra-008 L1-1：留痕到 evidence/infra-008/last_run.json
+    # infra-014 L1-1：full_fan_out=True 时绕过 --max-strategy（hot-path 必须保
+    # 全量覆盖率，与 infra-009 决策一致）。
+    if full_fan_out:
+        runnable = runnable_pre
+        if len(runnable) > args.max:
+            print(f"[precommit_impact] full_fan_out=True；--max={args.max} 截断豁免，"
+                  f"全量跑 {len(runnable)} 个 verify。")
+        effective_strategy = "full_fan_out_bypass"
+    else:
+        sample_seed = "\n".join(files)
+        runnable, truncated, selection_note = select_runnable(
+            runnable_pre,
+            max_n=args.max,
+            strategy=args.max_strategy,
+            weights=weights,
+            sample_seed=sample_seed,
+            affected_total=len(affected),
+        )
+        effective_strategy = args.max_strategy
+        if truncated:
+            print(f"[precommit_impact] affected={len(runnable_pre)} > --max={args.max}；"
+                  f"strategy={args.max_strategy}：{selection_note}")
+            if args.max_strategy == "alpha":
+                print("[precommit_impact] WARN alpha 字母序为兼容老路径，"
+                      "推荐 --max-strategy=weighted|sample|full（infra-014）")
+
+    # infra-014 V1：coverage_ratio stdout 痕迹（runnable 实际跑数 / runnable 截断前数）
+    coverage_ratio = f"{len(runnable)}/{len(runnable_pre)}"
+    print(f"[precommit_impact] coverage_ratio={coverage_ratio} "
+          f"strategy={effective_strategy} full_fan_out={full_fan_out}")
+
+    # 留痕到 evidence/infra-008/last_run.json
     _write_last_run(
         files=files,
         affected=affected,
@@ -482,6 +647,8 @@ def main() -> int:
         full_fan_out=full_fan_out,
         truncated=truncated,
         max_arg=args.max,
+        strategy=effective_strategy,
+        coverage_ratio=coverage_ratio,
     )
 
     if not runnable:
