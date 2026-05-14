@@ -1964,3 +1964,13 @@ phase-11 软件全部完成：
 - _change_log 追加 phase-12 软件进度 2/6 条目
 - phase-12 软件 2/6 done（infra-012-fu-1 / vision-009），剩 interact-014 / companion-013 / infra-014 / companion-014
 - 下一候选：interact-014 priority=83（ProactiveScheduler 真消费 vision-007 priority_boost）
+
+## Session: 2026-05-14 interact-014 close-out + phase-12 推进 3/7
+
+- interact-014 fresh-context Reviewer LGTM（6 Engineer self-caveats 全 accepted）
+- merge feat/interact-014 → main（--no-ff），main HEAD=ad235a9
+- push origin main + origin feat/interact-014 一次成功
+- feature_list.json：interact-014 status in_progress→passing，evidence 补 verify_interact_014 V1-V8 8/8 + 回归 interact-013/012/vision-007/smoke + Reviewer LGTM + main HEAD=ad235a9 + 6 caveats accepted + env gate COCO_PROACTIVE_ARBIT
+- 实现要点：ProactiveScheduler 真消费 vision-007 priority_boost，三级强度（dark_silence / motion_greet / curious_idle）映射 cooldown 缩放，仲裁顺序 emotion_alert > fusion_boost > mm_proactive > 普通，boost 仅作权重不绕 cooldown；default-OFF（COCO_PROACTIVE_ARBIT + COCO_FUSION + COCO_MM_PROACTIVE 三级 gate）
+- phase-12 软件 3/7 done（infra-012-fu-1 / vision-009 / interact-014），剩 companion-013 / infra-014 / companion-014 + uat-* 异步
+- 下一候选：companion-013 priority=84（companion-010 L2 收尾 — emotion tick / baseline re-capture / V6 e2e fixture）

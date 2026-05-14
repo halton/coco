@@ -2023,7 +2023,7 @@
       "phase": 12,
       "area": "interact",
       "priority": 83,
-      "status": "in_progress",
+      "status": "passing",
       "owner": "engineer",
       "description": "ProactiveScheduler 真消费 vision-007 priority_boost：当前 vision-007 fusion 触发只置 priority_boost 标志位（L1 caveat），scheduler 暂未把 boost 用于实际调度仲裁。本 feature 让 ProactiveScheduler 在 maybe_trigger 内仲裁时把 fusion priority_boost 与现有 emotion alert / mm trigger 一同纳入仲裁顺序（emotion_alert > fusion_boost > mm_proactive > 普通），并按 boost 强度（dark_silence / motion_greet / curious_idle 三级）调整 cooldown 与 fallback；boost 仅作为优先级权重，不绕过 cooldown。default-OFF：复用 COCO_MM_PROACTIVE=1 / COCO_FUSION=1 gate。",
       "verification": [
@@ -2037,7 +2037,7 @@
         "interact-013"
       ],
       "followed_from": "vision-007 L1 priority_boost 占位记账",
-      "evidence": "not_started"
+      "evidence": "evidence/interact-014/verify_summary.json (V1-V8 8/8 PASS, sim-only); 回归 verify_interact_013 8/8 + verify_interact_012 11/11 + verify_vision_007 10/10 + smoke 全通过; Reviewer (sub-agent, fresh-context): LGTM (6 Engineer self-caveats accepted: env gate COCO_PROACTIVE_ARBIT default-OFF / priority_boost flag 仅作权重不绕 cooldown / 三级 boost cooldown 缩放上限 / fusion_boost vs mm_proactive 仲裁顺序固定 / boost_level evidence 字段语义 / emotion_alert 并发优先级抢占); main HEAD=ad235a9"
     },
     {
       "id": "companion-013",
