@@ -80,6 +80,8 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "self_heal",
     # interact-012: MM proactive LLM 化 emit (proactive.mm_llm_*)
     "mm_proactive_llm",
+    # infra-012-fu-1: self_heal_wire emit camera.swap (old_id/new_id)
+    "camera",
 })
 
 _UNKNOWN_COMPONENTS_WARNED: set = set()
