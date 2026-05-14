@@ -1,0 +1,51 @@
+{
+  "feature": "vision-010-fu-3",
+  "ok": true,
+  "results": [
+    {
+      "name": "v1_env_boost_override",
+      "ok": true,
+      "detail": "val=5.0 coord.boost=5.0"
+    },
+    {
+      "name": "v2_env_unset_default",
+      "ok": true,
+      "detail": "val=None coord.boost=2.0 default=2.0"
+    },
+    {
+      "name": "v3_env_invalid_fallback",
+      "ok": true,
+      "detail": "bad=[] warns=3/3 default_ok=True"
+    },
+    {
+      "name": "v4_arbit_primary_wired_render",
+      "ok": true,
+      "detail": "rendered=('alice 你今天看起来不错', 'alice 跟大家分享一下', '大家好，一起聊聊', '你们好啊') expected=('alice 你今天看起来不错', 'alice 跟大家分享一下', '大家好，一起聊聊', '你们好啊')"
+    },
+    {
+      "name": "v5_arbit_primary_unwired_drop",
+      "ok": true,
+      "detail": "rendered=('大家好，一起聊聊', '你们好啊') expected=('大家好，一起聊聊', '你们好啊') no_leak=True"
+    },
+    {
+      "name": "v6_default_off_bytewise_equiv",
+      "ok": true,
+      "detail": "rendered_eq_default=True default=('大家好，一起聊聊', '你们好啊', '大家一起', '我们一起', '大家')"
+    },
+    {
+      "name": "v6b_primary_switch_rerender",
+      "ok": true,
+      "detail": "first=('alice 你今天看起来不错', 'alice 跟大家分享一下', '大家好，一起聊聊', '你们好啊') second=('bob 你今天看起来不错', 'bob 跟大家分享一下', '大家好，一起聊聊', '你们好啊')"
+    },
+    {
+      "name": "v7_regress_010_chain",
+      "ok": true,
+      "detail": "010:True fu1:True fu2:True | [PASS] V10 regress vision-008 / 009 still PASS — results={'v || [PASS] v9_e2e_set_arbit_callback_wire — before_wire=None aft || [PASS] v7_regress_vision_008_009 — 008: [PASS] V10 classifie"
+    },
+    {
+      "name": "v8_regress_008_009",
+      "ok": true,
+      "detail": "008:True 009:True"
+    }
+  ]
+}

@@ -2434,3 +2434,40 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **异步 UAT 队列累计**: uat-phase4 / uat-phase8 / infra-012-fu-1 / vision-008 / audio-008 / vision-010 / vision-010-fu-1 / vision-010-fu-2。
 
 **next**: phase-13 第 5 个 candidate 推荐 vision-010-fu-3 (89.9, 同链 caveat 收口) 或 companion-015 (91, 跨子系统切换)。
+
+---
+
+## Session — 2026-05-14 vision-010-fu-3 Engineer in_progress
+
+**Branch**: `feat/vision-010-fu-3` (起自 main HEAD=58febb3)
+**Status**: in_progress, sim-first PASS, 待 Reviewer LGTM 后 closeout merge.
+
+**目标**: 关闭 vision-010-fu-2 caveat C-3 + C-4.
+
+**实现**:
+
+1. **C-3 env COCO_GROUP_PRIMARY_PREFER_BOOST**:
+   - `coco/companion/group_mode.py` 新增 `read_primary_prefer_boost_from_env(env, *, warn=None) -> Optional[float]`，公开 helper：env 未设/空白 → None；合法正浮点 → float；非数字/0/负数 → None + print warn（warn 可注入）。
+   - `coco/main.py` GroupModeCoordinator 构造前调 helper，非 None 时 inject `primary_prefer_boost=val` kwarg + print 一行 override 日志；None 走 DEFAULT_PRIMARY_PREFER_BOOST=2.0.
+2. **C-4 group_phrases {primary_name} 占位渲染**:
+   - `coco/companion/group_mode.py` 新增 `_render_group_phrases(phrases, primary_name) -> Tuple[str, ...]`：含占位 + name → format 填入；含占位 + name None → 剔除；不含占位 → 原样保留。default-OFF: DEFAULT_GROUP_PHRASES 全无占位 → render(default, None) bytewise 等价.
+   - `_on_enter` 调 `set_group_template_override` 时改用 rendered tuple；锁内取 `_arbit_primary_name`.
+   - `on_face_id_arbit` 写入新 primary_name 后，若 group active + override 已注入 → re-render & re-set override（in-flight primary 切换同步生效）.
+3. `__all__` 导出 `_render_group_phrases` 给 verify 使用.
+
+**verify_vision_010_fu_3.py 9/9 PASS**:
+- V1 env=5.0 → coord.primary_prefer_boost=5.0
+- V2 env 未设 → DEFAULT=2.0
+- V3 env="abc"/"-1.5"/"0" → fallback + 3 warns 不 crash
+- V4 ARBIT primary 已 wire → "alice 你今天看起来不错" 等正确填入
+- V5 primary=None → 含占位句式被剔除，无 "{primary_name}" / "None" 泄漏
+- V6 ARBIT OFF + DEFAULT_GROUP_PHRASES → bytewise 等价
+- V6b primary 切换 alice→bob → override 同步 re-render
+- V7 回归 vision-010 + 010-fu-1 + 010-fu-2 全 PASS
+- V8 回归 vision-008 + 009 全 PASS
+
+**Smoke**: `./init.sh` 全 PASS.
+
+**Evidence 副作用**: V7 子进程跑 010 改了 evidence/vision-010/verify_summary.json，已用 `uv run python scripts/restore_unrelated_evidence.py --target vision-010-fu-3` 还原；目前 `git status evidence/` 仅剩 untracked `evidence/vision-010-fu-3/`.
+
+**未 merge**: 仍在 feat/vision-010-fu-3 分支，等 Reviewer LGTM 后 closeout merge → main.

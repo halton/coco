@@ -1254,11 +1254,28 @@ class Coco(ReachyMiniApp):
                                 return _compute_pid(_stable, name)
                             except Exception:  # noqa: BLE001
                                 return None
+                        # vision-010-fu-3 C-3: env COCO_GROUP_PRIMARY_PREFER_BOOST
+                        # 暴露 primary_prefer_boost 参数。未设 → 走
+                        # DEFAULT_PRIMARY_PREFER_BOOST (=2.0)。非数字 / 负数 / 0 →
+                        # warn-once + 走 default，不 crash。
+                        from coco.companion.group_mode import (
+                            read_primary_prefer_boost_from_env as _read_boost_env,
+                        )
+                        _gm_extra_kwargs: dict = {}
+                        _boost_val = _read_boost_env()
+                        if _boost_val is not None:
+                            _gm_extra_kwargs["primary_prefer_boost"] = _boost_val
+                            print(
+                                f"[main] group_mode primary_prefer_boost "
+                                f"override via env: {_boost_val}",
+                                flush=True,
+                            )
                         _group_mode_coord = _GroupModeCoord(
                             proactive_scheduler=_proactive,
                             persist_store=_persistent_profile_store,
                             profile_id_resolver=_profile_id_resolver,
                             emit_fn=emit,
+                            **_gm_extra_kwargs,
                         )
                         try:
                             _group_mode_ref[0] = _group_mode_coord
