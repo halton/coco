@@ -1762,3 +1762,18 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - **phase-11 第 5 个** vision-008 (priority=79, area=vision) — face_id 真接入 GroupModeCoordinator，default-OFF COCO_FACE_ID_REAL=1 gate，多 face_id 合成 mp4 fixture
 - 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
+
+## Session — 2026-05-14 vision-008 Engineer 实现
+
+### 完成（Engineer，feat/vision-008 分支）
+- FaceTracker.get_face_id 真接入：default-OFF（未设 COCO_FACE_ID_REAL=1 → 返回 None，与 companion-012 fu-2 stub bytewise 等价）
+- gate ON：维护 name → stable face_id 映射，同 name 同 face_id；classifier 注入时返回 `fid_<user_id>`，否则 fallback `fid_<sha1(name)[:8]>`
+- FaceTracker 增加可选 `emit_fn` 参数；首次解析为某 name 生成 face_id 时 emit `vision.face_id_resolved {name, face_id}`
+- 新增合成 mp4 fixture `tests/fixtures/vision/two_faces.mp4`（gen_vision_fixtures.py 扩展 gen_two_faces；README 列入清单；幂等可重 gen）
+- scripts/verify_vision_008.py V1-V10 共 10/10 PASS：default-OFF / 稳定性 / 区分性 / GroupMode resolver 真接 / gate-OFF fallback / emit schema 与单次性 / TrackedFace schema back-compat / 源码 marker / fixture 解码 / classifier-aware path
+- 回归 verify_companion_011 / verify_companion_012 / verify_vision_003 / verify_vision_005 / verify_vision_007 / ./init.sh smoke 全 PASS
+- Reviewer fresh-context 评审待办；evidence 落 evidence/vision-008/verify_summary.json
+
+### 下一步
+- vision-008 Reviewer fresh-context 评审 → LGTM 后 merge feat/vision-008 → main，status → passing
+- 或 phase-11 下一 candidate / uat-* 异步项

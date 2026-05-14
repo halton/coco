@@ -27,12 +27,13 @@
 from __future__ import annotations
 
 import collections
+import hashlib
 import logging
 import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from coco.perception.camera_source import CameraSource, open_camera
 from coco.perception.face_detect import FaceBox, FaceDetector
@@ -244,6 +245,16 @@ def _env_float(key: str, default: float) -> float:
         return default
 
 
+def _bool_env_face_id_real(env: Any) -> bool:
+    """vision-008: ``COCO_FACE_ID_REAL=1/true/yes/on`` → True，否则 False。
+
+    default-OFF：未设 / 任意其它值 → False，``get_face_id`` 返回 None（与
+    companion-012 stub 路径 bytewise 等价）。
+    """
+    raw = (env.get("COCO_FACE_ID_REAL") or "").strip().lower()
+    return raw in {"1", "true", "yes", "on"}
+
+
 # ---------------------------------------------------------------------------
 # FaceTracker
 # ---------------------------------------------------------------------------
@@ -284,6 +295,8 @@ class FaceTracker:
         primary_switch_min_frames: int = 3,
         # vision-003 face-id（可选注入；默认 None 不识别）
         face_id_classifier: Optional[Any] = None,
+        # vision-008: face_id 真接 emit hook（None 时 fail-soft 不 emit）
+        emit_fn: Optional[Callable[..., None]] = None,
     ) -> None:
         if camera is not None and camera_spec is not None:
             raise ValueError("camera 与 camera_spec 二选一")
@@ -361,6 +374,14 @@ class FaceTracker:
         # vision-003 face-id（可选）
         self._face_id_classifier = face_id_classifier
 
+        # vision-008: name → stable face_id 映射 + emit hook + env gate
+        # default-OFF：未设 COCO_FACE_ID_REAL=1 时 get_face_id 始终返回 None
+        # （与 companion-012 stub 路径 bytewise 等价）。
+        self._emit_fn: Optional[Callable[..., None]] = emit_fn
+        self._face_id_map: Dict[str, str] = {}
+        self._face_id_lock = threading.Lock()
+        self._face_id_real_enabled: bool = _bool_env_face_id_real(os.environ)
+
     # --- public ---
     def start(self) -> None:
         if self._thread is not None and self._thread.is_alive():
@@ -399,20 +420,76 @@ class FaceTracker:
         with self._lock:
             return self._snapshot
 
-    # companion-012 fu-2: face_id 真接接口（stub）。
-    # 当前 face-id 识别器只输出 ``name``（可读人名），尚未提供稳定的内部 face_id
-    # 字符串。该方法保留接口位，便于 vision-008 face_id stable-id 入网后真接：
-    #   - 真接后：返回 classifier 内部稳定 face_id（与 name 解耦，name 可改）
-    #   - 当前 stub：始终返回 None；上层 resolver 须 fallback 到 name
-    # 上层 (main.py group_mode wire) 通过该方法 + fallback chain 解耦
-    # GroupModeCoordinator 与未来 face_id stable-id 路径。
+    # vision-008: face_id 真接接口 + default-OFF gate。
+    #
+    # 设计：
+    #   - default-OFF：未设 ``COCO_FACE_ID_REAL=1`` → 返回 None（与 companion-012
+    #     fu-2 stub 路径 bytewise 等价；上层 resolver 仍走 fallback to name）。
+    #   - 启用后：维护 name → stable face_id 字符串映射。
+    #     * 若注入了 ``face_id_classifier`` 且 store 中能查到该 name → 返回
+    #       ``"fid_<user_id>"`` （跨进程稳定 by FaceIDStore）。
+    #     * 否则在本进程内为该 name 生成 ``"fid_<sha1(name)[:8]>"`` 并缓存
+    #       （进程内确定、跨进程也确定，因为只依赖 name）。
+    #     * 同一 ``name`` 在同一进程内始终返回同一 face_id。
+    #   - 首次为某 name 解析出 face_id 时 emit ``vision.face_id_resolved``
+    #     （emit_fn 为 None 时 fail-soft 不 emit，不破坏 sim path）。
+    #
+    # schema (face_id payload)：
+    #   - ``face_id``: str，形如 ``"fid_<token>"``；同 name 多次解析稳定不变
+    #   - 上层 GroupModeCoordinator 通过 ``profile_id_resolver(name)`` 调用本方法
     def get_face_id(self, name: Optional[str]) -> Optional[str]:
-        """根据已识别 name 返回稳定 face_id（stub: 暂返回 None）。
+        """根据已识别 name 返回稳定 face_id。
 
-        真接 scope: vision-008（face_id stable-id）。在此之前 caller 必须做
-        fallback：``face_tracker.get_face_id(name) or name``。
+        Default-OFF（``COCO_FACE_ID_REAL`` 未设）→ 始终返回 None，
+        与 companion-012 fu-2 stub 路径 bytewise 等价。
         """
-        return None
+        if not name:
+            return None
+        if not self._face_id_real_enabled:
+            return None
+        # 已缓存直接返回
+        with self._face_id_lock:
+            cached = self._face_id_map.get(name)
+            if cached is not None:
+                return cached
+        # 计算 face_id
+        fid: Optional[str] = None
+        clf = self._face_id_classifier
+        if clf is not None:
+            try:
+                store = getattr(clf, "store", None)
+                recs = store.all_records() if store is not None else {}
+                for uid, rec in recs.items():
+                    if getattr(rec, "name", None) == name:
+                        fid = f"fid_{int(uid)}"
+                        break
+            except Exception as e:  # noqa: BLE001
+                log.warning("FaceTracker get_face_id store lookup failed: %s: %s",
+                            type(e).__name__, e)
+        if fid is None:
+            # fallback：sha1(name)[:8] —— 进程内 / 跨进程都确定，与 classifier 解耦
+            fid = "fid_" + hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
+        # 写入缓存 + emit
+        with self._face_id_lock:
+            existed = self._face_id_map.get(name)
+            if existed is None:
+                self._face_id_map[name] = fid
+                first_time = True
+            else:
+                fid = existed
+                first_time = False
+        if first_time and self._emit_fn is not None:
+            try:
+                self._emit_fn(
+                    "vision",
+                    "face_id_resolved",
+                    name=name,
+                    face_id=fid,
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning("FaceTracker emit face_id_resolved failed: %s: %s",
+                            type(e).__name__, e)
+        return fid
 
     # --- 测试钩子：纯函数地喂 detections，便于合成测试不依赖摄像头 ---
     def feed_detections(
