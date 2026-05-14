@@ -2201,3 +2201,19 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 - gh api rhysd/actionlint v1.7.12 tag → sha=914e7df21a07
 
 **等待**: Reviewer round 2。Engineer 仍不 merge，按硬规则只 commit + push feat 分支。
+
+## Session — 2026-05-14 — infra-015 closeout (passing + merged)
+
+**Reviewer round 2 verdict**: LGTM。三个 LOW caveats 不阻 merge（已记入 feature_list.json verification.notes）：
+- (A) actionlint binary 下载未做 sha256 checksum 验证（pin tag 已锁版本，后续可加 checksum hardening follow-up）
+- (B) lint pre-job 只在 PR/push 触发跑，workflow_dispatch 手动触发未覆盖（影响面小）
+- (C) GITHUB_PATH 注入未在 self-hosted runner 场景测试（GH-hosted ubuntu-latest 已验）
+
+**closeout 动作**:
+- `git checkout main && git pull --ff-only origin main`（pre HEAD=8b22d8e）
+- `git merge --no-ff feat/infra-015 -m "Merge feat/infra-015: verify-matrix.yml lint pre-job + actionlint setup"` → merge commit 457d306
+- `feature_list.json`: infra-015 status `in_progress` → `passing`，verification 字段补 Reviewer LGTM 摘要 + 3 LOW caveats
+- closeout commit 入 main（chore(infra-015): closeout）
+- push origin main + push origin feat/infra-015（每条只跑一次失败忽略）
+
+**phase-13 进度**: 1/6 passing（infra-015 ✓）。下一候选 = vision-010 (priority=90, area=vision)。
