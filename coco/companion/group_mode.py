@@ -76,6 +76,60 @@ DEFAULT_GROUP_PHRASES: Tuple[str, ...] = (
 )
 
 
+# vision-010-fu-3 C-4: ``{primary_name}`` 占位渲染.
+#
+# - phrase 含 ``{primary_name}`` 占位 + primary_name 非空 → ``str.format`` 填入
+# - phrase 含 ``{primary_name}`` 占位 + primary_name 为空（None / 空串） →
+#   该句式从候选池中**剔除**（避免出现 ``{primary_name}`` 字面量 / "None" / 空白
+#   call site）
+# - phrase **不含** ``{primary_name}`` 占位 → 原样保留（DEFAULT_GROUP_PHRASES
+#   就是这种情况，render 后 bytewise 等价）
+#
+# default-OFF 保证：
+# - DEFAULT_GROUP_PHRASES 全部不含占位 → ARBIT OFF / primary 未注入时
+#   render(default, None) 返回与 default 相同的 tuple（同序、同元素）
+# - 仅当用户显式注入含占位的 group_phrases **且** ARBIT 已注入 primary_name
+#   时才发生填充行为
+def _render_group_phrases(
+    phrases: Sequence[str],
+    primary_name: Optional[str],
+) -> Tuple[str, ...]:
+    """渲染 group_phrases：填入 ``{primary_name}`` 或剔除含占位的句式.
+
+    Parameters
+    ----------
+    phrases : Sequence[str]
+        原始句式列表（可能含 ``{primary_name}`` 占位）.
+    primary_name : Optional[str]
+        ARBIT primary 的 face name；None / 空串视为未注入.
+
+    Returns
+    -------
+    Tuple[str, ...]
+        渲染后的句式 tuple.
+    """
+    if not phrases:
+        return ()
+    name = primary_name if isinstance(primary_name, str) and primary_name.strip() else None
+    out: list = []
+    for ph in phrases:
+        if not isinstance(ph, str):
+            continue
+        has_placeholder = "{primary_name}" in ph
+        if has_placeholder:
+            if name is None:
+                # 剔除含占位但无 primary 的句式
+                continue
+            try:
+                out.append(ph.format(primary_name=name))
+            except (KeyError, IndexError, ValueError):
+                # format 失败 fail-soft：剔除该句式
+                continue
+        else:
+            out.append(ph)
+    return tuple(out)
+
+
 EmitFn = Callable[..., None]
 
 
@@ -114,6 +168,41 @@ def group_mode_enabled_from_env(env: Optional[Mapping[str, str]] = None) -> bool
     if not _bool_env(e, "COCO_MULTI_USER", False):
         return False
     return _bool_env(e, "COCO_GROUP_MODE", True)
+
+
+# vision-010-fu-3 C-3: 暴露 primary_prefer_boost 的 env 入口.
+#
+# - env 未设 / 空白 → 返回 None（让 GroupModeCoordinator 走
+#   DEFAULT_PRIMARY_PREFER_BOOST=2.0）
+# - 合法正浮点 → 返回 float
+# - 非数字 / 0 / 负数 → 返回 None 并 print 一行 warn（不 crash）
+def read_primary_prefer_boost_from_env(
+    env: Optional[Mapping[str, str]] = None,
+    *,
+    warn: Optional[Callable[[str], None]] = None,
+) -> Optional[float]:
+    e = env if env is not None else os.environ
+    raw = (e.get("COCO_GROUP_PRIMARY_PREFER_BOOST") or "").strip()
+    if not raw:
+        return None
+    try:
+        val = float(raw)
+        if val <= 0:
+            raise ValueError(f"non-positive boost {val}")
+        return val
+    except (TypeError, ValueError) as ex:
+        msg = (
+            f"[coco][group_mode] COCO_GROUP_PRIMARY_PREFER_BOOST={raw!r} "
+            f"解析失败 ({ex}); fallback to default"
+        )
+        if warn is not None:
+            try:
+                warn(msg)
+            except Exception:  # noqa: BLE001
+                pass
+        else:
+            print(msg, flush=True)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +411,24 @@ class GroupModeCoordinator:
                     self._arbit_last_ts = float(ts)
                 except (TypeError, ValueError):
                     pass
+            # vision-010-fu-3 C-4: 若 group 已 active 且 template override 已注入，
+            # 则按新 primary_name re-render group_phrases 并 re-set override.
+            # 这样 group 进行中 primary 切换时 override 也随之更新.
+            _need_rerender = self._in_group and self._template_overridden
+            _pn_for_render = self._arbit_primary_name
+        if _need_rerender and self.proactive is not None:
+            try:
+                ov = getattr(self.proactive, "set_group_template_override", None)
+                if callable(ov):
+                    rendered = _render_group_phrases(
+                        self.group_phrases, _pn_for_render
+                    )
+                    ov(tuple(rendered))
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "[group_mode] re-render template on arbit failed: %s: %s",
+                    type(e).__name__, e,
+                )
 
     def current_arbit_primary(self) -> Optional[str]:
         """返回最近一次 arbitrate 的 primary face_id（ARBIT OFF → 永远 None）."""
@@ -446,7 +553,13 @@ class GroupModeCoordinator:
             try:
                 ov = getattr(self.proactive, "set_group_template_override", None)
                 if callable(ov):
-                    ov(tuple(self.group_phrases))
+                    # vision-010-fu-3 C-4: 渲染 {primary_name} 占位.
+                    # ARBIT OFF / primary 未注入 → primary_name=None；DEFAULT
+                    # phrases 不含占位 → bytewise 等价.
+                    with self._lock:
+                        _pn = self._arbit_primary_name
+                    rendered = _render_group_phrases(self.group_phrases, _pn)
+                    ov(tuple(rendered))
                     with self._lock:
                         self._template_overridden = True
             except Exception as e:  # noqa: BLE001
@@ -638,6 +751,7 @@ __all__ = [
     "DEFAULT_PRIMARY_PREFER_BOOST",
     "GroupModeCoordinator",
     "GroupModeStats",
+    "_render_group_phrases",
     "group_mode_enabled_from_env",
     "merge_prefer_union_intersect",
 ]
