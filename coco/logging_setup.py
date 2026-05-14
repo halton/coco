@@ -78,6 +78,8 @@ AUTHORITATIVE_COMPONENTS = frozenset({
     "group_mode",
     # infra-007: SelfHealRegistry emit self_heal.*
     "self_heal",
+    # interact-012: MM proactive LLM 化 emit (proactive.mm_llm_*)
+    "mm_proactive_llm",
 })
 
 _UNKNOWN_COMPONENTS_WARNED: set = set()

@@ -104,6 +104,13 @@ class ProactiveStats:
     # vision-007: multimodal fusion 触发记账
     mm_triggered: int = 0
     mm_per_rule: dict = field(default_factory=dict)
+    # interact-012: MM proactive LLM 化（COCO_MM_PROACTIVE_LLM=1）
+    # - mm_llm_proactive_count: ON 且 LLM 成功生成后递增
+    # - mm_llm_errors: ON 但 LLM 失败 / 异常的次数
+    # - mm_llm_fallback_offline: 离线 fallback 期间退化模板的次数
+    mm_llm_proactive_count: int = 0
+    mm_llm_errors: int = 0
+    mm_llm_fallback_offline: int = 0
     # companion-009: 偏好加权选 topic 命中计数
     prefer_weighted_select_count: int = 0
     # companion-010: 情绪记忆触发的 alert 计数 + 按 kind 拆分
@@ -172,6 +179,15 @@ def _int_env(key: str, default: int, lo: int, hi: int) -> int:
 
 def proactive_enabled_from_env() -> bool:
     return _bool_env("COCO_PROACTIVE", default=False)
+
+
+def mm_proactive_llm_enabled_from_env() -> bool:
+    """interact-012: MM proactive LLM 化（default-OFF）。
+
+    需同时设 ``COCO_MM_PROACTIVE_LLM=1``（本 feature 开关）；
+    上层 main.py 仍要求 ``COCO_MM_PROACTIVE=1`` 让 MultimodalFusion 本身可构造。
+    """
+    return _bool_env("COCO_MM_PROACTIVE_LLM", default=False)
 
 
 def config_from_env() -> ProactiveConfig:
@@ -265,6 +281,20 @@ class ProactiveScheduler:
         # 非空时 _build_system_prompt 追加 group 句式指令，_do_trigger_unlocked
         # 在 LLM 兜底前缀用 group_phrases[0]。
         self._group_template_override: Optional[tuple] = None
+
+        # interact-012: MM proactive LLM 化（default-OFF）。MultimodalFusion 命中
+        # 规则后通过 set_mm_llm_context({rule_id, hint, caption, emotion_label,
+        # face_ids, ts}) 把上下文塞过来；下一次 maybe_trigger 命中时 _build_mm_system_prompt
+        # 注入专用 prompt（含场景词 + 当前情绪 + prefer TopK）。一次性消费——consume
+        # 后立即清回 None，避免污染后续普通 tick。仅在 COCO_MM_PROACTIVE_LLM=1 时
+        # 真把它喂给 LLM；OFF 时即使 fusion 调过 setter，本字段也维持 None。
+        self._mm_llm_context: Optional[Dict[str, Any]] = None
+        # interact-012: 当前情绪 label（可选）；EmotionAlertCoordinator / 外部 emotion 模块
+        # 通过 set_current_emotion_label() 灌入；_build_mm_system_prompt 注入。
+        self._current_emotion_label: str = ""
+        # interact-012: 离线 fallback 标志位（OfflineDialogFallback 在离线降级期间 set True）。
+        # MM 路径若 _offline_fallback_active=True 则退化为离线模板，不调 LLM。
+        self._offline_fallback_active: bool = False
 
         # 探测 llm_reply_fn 是否接受 system_prompt
         self._llm_accepts_system_prompt = self._probe_kwarg(llm_reply_fn, "system_prompt")
@@ -478,6 +508,44 @@ class ProactiveScheduler:
         with self._lock:
             return self._group_template_override
 
+    # interact-012: MM proactive LLM 化 API
+    # ------------------------------------------------------------------
+    # MultimodalFusion 触发规则时（在 record_multimodal_trigger 路径之后）调本方法，
+    # 把场景上下文塞进 scheduler，下一次 maybe_trigger 命中时由 _build_mm_system_prompt
+    # 注入专用 prompt。一次性消费。OFF 时调入也无害（_build_mm_system_prompt 只在 ON 时读）。
+    def set_mm_llm_context(self, ctx: Optional[Dict[str, Any]]) -> None:
+        with self._lock:
+            if ctx is None:
+                self._mm_llm_context = None
+                return
+            # 防御性拷贝，避免上游 mutate 后续 prompt 渲染时跳值
+            try:
+                self._mm_llm_context = dict(ctx)
+            except (TypeError, ValueError):
+                self._mm_llm_context = None
+
+    def get_mm_llm_context(self) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            return dict(self._mm_llm_context) if self._mm_llm_context else None
+
+    def set_current_emotion_label(self, label: str) -> None:
+        """interact-012: 外部情绪源（companion-010 / EmotionAlertCoordinator）灌入当前情绪 label。"""
+        with self._lock:
+            self._current_emotion_label = str(label or "").strip()
+
+    def set_offline_fallback_active(self, active: bool) -> None:
+        """interact-012: interact-011 OfflineDialogFallback 在离线降级期间 set True。
+
+        ON 时 MM 路径退化为离线模板（不调 LLM）；OFF 时维持普通 LLM 路径。
+        与 pause()/resume() 解耦：pause 是整段 proactive 静默；本字段只影响 MM-LLM 路径行为。
+        """
+        with self._lock:
+            self._offline_fallback_active = bool(active)
+
+    def is_offline_fallback_active(self) -> bool:
+        with self._lock:
+            return self._offline_fallback_active
+
     # companion-010 / infra-009: 让 scheduler tick 顺手调一次 coord.tick()，
     # 这样 alert 过期 prefer 还原不再依赖"再来一个 emotion 事件触发 on_emotion 的内部 tick"。
     def set_emotion_alert_coord(self, coord: Any) -> None:
@@ -638,22 +706,66 @@ class ProactiveScheduler:
             if self._next_priority_boost:
                 self.stats.priority_boost_consumed += 1
                 self._next_priority_boost = False
-            system_prompt = self._build_system_prompt()
+
+            # interact-012: MM proactive LLM 化（default-OFF via COCO_MM_PROACTIVE_LLM=1）
+            # - mm_llm_on=True 且 mm_ctx 非空：用 MM 专用 prompt（含场景词 + 当前 emotion + prefer TopK）；
+            #   一次性消费（无论 LLM 成败都清 ctx，避免污染下一个普通 tick）
+            # - 离线 fallback 激活：退化为模板，不调 LLM，仅记 mm_llm_fallback_offline
+            # - OFF：维持普通 _build_system_prompt 路径（vision-007 record_trigger only 行为）
+            mm_llm_on = mm_proactive_llm_enabled_from_env()
+            mm_ctx = self._mm_llm_context
+            mm_offline_fallback = False
             seed = self.config.topic_seed
+            if mm_llm_on and mm_ctx:
+                if self._offline_fallback_active:
+                    mm_offline_fallback = True
+                    self.stats.mm_llm_fallback_offline += 1
+                    system_prompt = self._build_system_prompt()
+                    # 标记 seed 用 hint 当模板，避免调 LLM
+                    seed_hint = str(mm_ctx.get("hint") or "").strip()
+                    if seed_hint:
+                        seed = seed_hint
+                else:
+                    system_prompt = self._build_mm_system_prompt_unlocked(mm_ctx)
+                    seed_hint = str(mm_ctx.get("hint") or "").strip()
+                    if seed_hint:
+                        seed = seed_hint
+                self._mm_llm_context = None  # 一次性消费
+            else:
+                system_prompt = self._build_system_prompt()
         # ---- 锁外：实际 LLM + TTS + emit + on_interaction（耗时操作）----
-        self._do_trigger_unlocked(t, system_prompt=system_prompt, seed=seed)
+        # interact-012: mm_offline_fallback=True → 走 _do_trigger_unlocked 但跳过 LLM（template-only）
+        llm_errors_before = self.stats.llm_errors
+        self._do_trigger_unlocked(
+            t,
+            system_prompt=system_prompt,
+            seed=seed,
+            skip_llm=mm_offline_fallback,
+        )
+        # interact-012: ON 且 mm_ctx 真触发了 LLM（非 fallback），且 LLM 没新增 error → 算成功
+        if mm_llm_on and mm_ctx is not None and not mm_offline_fallback:
+            if self.stats.llm_errors > llm_errors_before:
+                with self._lock:
+                    self.stats.mm_llm_errors += 1
+            else:
+                with self._lock:
+                    self.stats.mm_llm_proactive_count += 1
         return True
 
-    def _do_trigger_unlocked(self, t: float, *, system_prompt: Optional[str], seed: str) -> None:
+    def _do_trigger_unlocked(self, t: float, *, system_prompt: Optional[str], seed: str,
+                              skip_llm: bool = False) -> None:
         """实际触发的耗时段：LLM → TTS → emit → on_interaction。锁外执行。
 
         失败时**不回滚**预占（fail-soft）：即使 LLM/TTS 都失败，也宁可少一次主动话题，
         也不冒"重新放锁后立即重发"的风险。仅 emit 一个 proactive_topic_failed 事件
         让上层可观测。
+
+        interact-012: ``skip_llm=True`` 时（MM 路径离线 fallback）整段跳过 LLM 调用，
+        直接用 seed 作为模板播报。
         """
         topic_text = ""
         # 1) LLM
-        if self.llm_reply_fn is not None:
+        if self.llm_reply_fn is not None and not skip_llm:
             try:
                 if self._llm_accepts_system_prompt and system_prompt is not None:
                     topic_text = self.llm_reply_fn(seed, system_prompt=system_prompt)
@@ -666,7 +778,11 @@ class ProactiveScheduler:
                 topic_text = ""
         if not topic_text:
             # fail-soft：用一句兜底，仍走 TTS（保证"主动开口"这件事 happen）
-            topic_text = "我们聊点什么吧？"
+            # interact-012: skip_llm（MM 离线 fallback）走 seed（mm hint 模板），不再用通用兜底
+            if skip_llm and seed:
+                topic_text = seed
+            else:
+                topic_text = "我们聊点什么吧？"
             # companion-011: group_mode override → 兜底句子前缀拼 group lead，
             # 即便 LLM 失败也保持群体场景口吻。
             with self._lock:
@@ -725,6 +841,76 @@ class ProactiveScheduler:
             log.warning("[proactive] emit failed: %s: %s", type(e).__name__, e)
 
         log.info("[proactive] triggered topic=%r", topic_text[:80])
+
+    def _build_mm_system_prompt_unlocked(self, ctx: Dict[str, Any]) -> Optional[str]:
+        """interact-012: MM proactive 专用 system_prompt（锁内调用）。
+
+        组成：基础 system_prompt（_build_system_prompt 含 profile/prefer/group） +
+        场景描述（caption + rule_id 翻译）+ 当前情绪 + 偏好 TopK + face_ids（如有）。
+        若上层有 profile_store，prefer/group_hint 已由 _build_system_prompt 拼好，
+        这里只追加 MM 专属段。
+
+        verification V1/V2/V3 通过子串 'dark_silence'/'移动'/emotion_label/prefer key
+        在最终 prompt 出现来断言注入。
+        """
+        # 基础 prompt（含 profile + prefer + group_override）；_build_system_prompt
+        # 内部自取锁；这里我们在持有外层锁的状态下调用 —— 它用 RLock，安全。
+        base = self._build_system_prompt() or ""
+
+        rule_id = str(ctx.get("rule_id") or "").strip()
+        caption = str(ctx.get("caption") or "").strip()
+        hint = str(ctx.get("hint") or "").strip()
+        face_ids = ctx.get("face_ids") or []
+        emotion_label = (ctx.get("emotion_label") or self._current_emotion_label or "").strip()
+        prefer = dict(self._topic_preferences)
+
+        scene_desc = ""
+        rule_lookup = {
+            "dark_silence": "环境偏暗且用户已经一段时间没有说话，可能需要灯光提示或轻松开口。",
+            "motion_greet": "检测到用户在视野内有移动/经过，但已经一段时间没有交互，是个打招呼契机。",
+        }
+        scene_parts = []
+        if rule_id:
+            scene_parts.append(f"触发规则：{rule_id}（{rule_lookup.get(rule_id, '多模态触发')}）")
+        if caption:
+            scene_parts.append(f"当前场景描述：{caption}")
+        if hint:
+            scene_parts.append(f"建议参考开口意图：{hint}")
+        if scene_parts:
+            scene_desc = "\n".join(scene_parts)
+
+        emotion_hint = ""
+        if emotion_label:
+            emotion_hint = f"当前用户情绪：{emotion_label}。语气与之匹配。"
+
+        prefer_hint = ""
+        if prefer:
+            top = sorted(prefer.items(), key=lambda kv: kv[1], reverse=True)[:5]
+            keys = "、".join(k for k, _ in top)
+            prefer_hint = f"用户偏好话题（TopK）：{keys}。围绕这些展开。"
+
+        face_hint = ""
+        try:
+            if face_ids:
+                ids = [str(x) for x in face_ids if str(x).strip()][:5]
+                if ids:
+                    face_hint = f"在场用户 face_id：{', '.join(ids)}。"
+        except Exception:  # noqa: BLE001
+            pass
+
+        mm_section_parts = [
+            "[MM 主动话题上下文]",
+            scene_desc,
+            emotion_hint,
+            prefer_hint,
+            face_hint,
+            "请基于上述场景说一句自然、简短（<=30 字）的主动话题。",
+        ]
+        mm_section = "\n".join(p for p in mm_section_parts if p)
+
+        if base:
+            return f"{base}\n\n{mm_section}"
+        return mm_section
 
     def _build_system_prompt(self) -> Optional[str]:
         # companion-009: 即使没 profile_store，只要 set_topic_preferences 被调过，
