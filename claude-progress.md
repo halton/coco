@@ -1777,3 +1777,29 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - vision-008 Reviewer fresh-context 评审 → LGTM 后 merge feat/vision-008 → main，status → passing
 - 或 phase-11 下一 candidate / uat-* 异步项
+
+## Session — 2026-05-14 vision-008 close-out
+
+### 完成
+- Reviewer fresh-context (sub-agent) 评审：LGTM-with-caveats，5 caveat 全可接受不阻 merge
+- merge `feat/vision-008` → main（--no-ff），main HEAD: b94c092 → 6ee3808
+- push origin main 成功；push origin feat/vision-008 已是最新
+- feature_list.json vision-008 status: in_progress → passing，evidence 写入 LGTM-with-caveats + 5 caveat 摘要 + main HEAD
+- working tree closeout 前重置 3 个 evidence/*.json 无关 trace 抖动（vision-002/003/005），不带入 closeout commit
+
+### Reviewer 5 caveats（全部不阻 merge）
+- (C-1) face_id 未写回 TrackedFace.name_confidence — 正交语义，不影响下游
+- (C-2) classifier vs sha1 fallback 运行期注入分歧 — 理论缺陷，构造期注入实际不触发，**已知 polish 项**
+- (C-3) emit_fn 未 wire 到 main.py — schema 已验证，wiring 留 polish，**已知 polish 项**
+- (C-4) two_faces.mp4 cascade 检出率低 — V9 已避开 cascade 依赖
+- (C-5) status 切 passing — 已执行
+
+### 关键指标
+- verify_vision_008 V1-V10 10/10 PASS
+- 回归 verify_companion_011 / verify_companion_012 / verify_vision_003 / verify_vision_005 / verify_vision_007 全 PASS
+- COCO_CI=1 ./init.sh smoke 全 PASS
+- main HEAD（merge 后）：6ee3808ff433a86263f641d4b0833a713b1f595f
+
+### 下一步
+- **phase-11 第 6 个**（最后一个）audio-008 (priority=80, area=audio) — 真扬声器 USB 自检 sim 前置 + 真机 UAT 异步，default-OFF COCO_AUDIO_USB_PROBE=1 gate
+- phase-11 6/6 完成后进入 phase-12 规划 或 uat-* 异步真机 UAT
