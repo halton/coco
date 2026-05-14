@@ -168,6 +168,10 @@ def main() -> int:
                    help="模拟运行：按预期顺序列出任务但不实际执行")
     p.add_argument("--skip-list", action="store_true",
                    help="启用 SKIP_LIST：跳过 CI 跑不动的脚本（CI 默认开，本地默认关）")
+    p.add_argument("--restore-unrelated", metavar="FEATURE_ID", default=None,
+                   help=("infra-014-fu-2: 跑完后调用 restore_unrelated_evidence "
+                         "helper，自动 git restore 不在 evidence/<FEATURE_ID>/ 下"
+                         "的 evidence 副作用（dev/closeout 工具）"))
     args = p.parse_args()
 
     scripts = select(
@@ -227,8 +231,32 @@ def main() -> int:
         for sp, rc, dt, tail in fails:
             print(f"\n--- {sp.name} (rc={rc} dt={dt:.1f}s) ---")
             print(tail)
+        # infra-014-fu-2: 即使 fail 也尝试 restore（dev 习惯：先看见 fail，再清干净）
+        if args.restore_unrelated:
+            _do_restore(args.restore_unrelated)
         return 1
+    if args.restore_unrelated:
+        _do_restore(args.restore_unrelated)
     return 0
+
+
+def _do_restore(target_feature_id: str) -> None:
+    """infra-014-fu-2: 调用 restore_unrelated_evidence helper 清理副作用。"""
+    try:
+        from restore_unrelated_evidence import restore_unrelated_evidence
+    except ImportError:
+        # 兜底：fixed 路径 import
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from restore_unrelated_evidence import restore_unrelated_evidence  # type: ignore
+    restored = restore_unrelated_evidence(target_feature_id, dry_run=False)
+    if restored:
+        print(f"\n[run_verify_all] restored {len(restored)} unrelated evidence "
+              f"file(s) (target={target_feature_id}):")
+        for p in restored:
+            print(f"  {p}")
+    else:
+        print(f"\n[run_verify_all] no unrelated evidence to restore "
+              f"(target={target_feature_id})")
 
 
 if __name__ == "__main__":

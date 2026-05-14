@@ -1,0 +1,11 @@
+infra-014-fu-2 V1-V8
+  [OK] V1 helper 存在 + 接口签名 — pos=['target_feature_id'] kwonly=['dry_run', 'repo_root', 'extra_keep_paths']
+  [OK] V2 dry_run=True 列出不还原 — restored=['evidence/bar/summary.json'] bar_dirty=True foo_dirty=True
+  [OK] V3 dry_run=False 实际 restore — restored=['evidence/bar/summary.json'] bar_restored=True
+  [OK] V4 target evidence 不被 restore — foo_kept=True bar_restored=True restored=['evidence/bar/summary.json']
+  [OK] V5 回归 verify_infra_014 / fu_1 / 011 / 013 / 008 全 PASS — ran 5
+  [OK] V6 ./init.sh COCO_CI=1 smoke PASS — rc=0
+  [OK] V7 AST/grep marker (helper def + run_verify_all flag + 调用) — helper_def=True flag=True call=True
+  [OK] V8 docs/regression-policy.md 已加 evidence-restore 段 — section=True helper_ref=True flag_ref=True
+
+PASS infra-014-fu-2 V1-V8 (8/8)
