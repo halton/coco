@@ -1,0 +1,47 @@
+{
+  "ts": 1778737377.548438,
+  "total": 8,
+  "passed": 8,
+  "items": [
+    {
+      "name": "V1 _collect_mm_prompt_snapshot_locked exists",
+      "ok": true,
+      "detail": "type=function"
+    },
+    {
+      "name": "V2 _render_mm_prompt_from_snapshot pure",
+      "ok": true,
+      "detail": "is_static=True no_self_lock=True"
+    },
+    {
+      "name": "V3 MmPromptSnapshot frozen dataclass",
+      "ok": true,
+      "detail": "frozen=True fields=['caption', 'ctx_emotion_label', 'current_emotion_label', 'face_ids', 'group_template_override', 'hint', 'profile_store', 'rule_id', 'topic_preferences']"
+    },
+    {
+      "name": "V4 maybe_trigger collect-in-lock / render-out-of-lock",
+      "ok": true,
+      "detail": "collect_in_lock=True render_outside=True render_in_lock=False collect_outside=False"
+    },
+    {
+      "name": "V5 render contains rule/caption/emotion/prefer/face_id",
+      "ok": true,
+      "detail": "missing=[] len=233"
+    },
+    {
+      "name": "V6 verify_interact_012 regression",
+      "ok": true,
+      "detail": "rc=0 tail=['[verify_interact_012] PASS V10 main.py wire (informational): hits=[] note=fusion 已内置 setter 调入，main.py wire 仅为 emotion/offline 增益', '', '[verify_interact_012] SUMMARY 11/11 PASS']"
+    },
+    {
+      "name": "V7 profile_store.load only at render",
+      "ok": true,
+      "detail": "collect_calls=0 render_delta=1"
+    },
+    {
+      "name": "V8 AUTHORITATIVE_COMPONENTS mm_proactive_llm",
+      "ok": true,
+      "detail": "present=True total=23"
+    }
+  ]
+}

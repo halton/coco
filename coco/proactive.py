@@ -201,6 +201,30 @@ def config_from_env() -> ProactiveConfig:
 
 
 # ---------------------------------------------------------------------------
+# interact-013: MM prompt snapshot（锁内 collect + 锁外 render 拆分）
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class MmPromptSnapshot:
+    """interact-013: 锁内抓取的 mm prompt 构建所需 self.* 与 ctx 快照（不可变）。
+
+    render 阶段在锁外纯函数运行，调 profile_store.load() 做 IO（如有）。
+    """
+    # self.* 快照
+    profile_store: Any  # 引用即可（load() 锁外调）
+    topic_preferences: Mapping[str, int]
+    group_template_override: Optional[Sequence[str]]
+    current_emotion_label: str
+    # ctx 拷贝
+    rule_id: str
+    caption: str
+    hint: str
+    face_ids: Sequence[str]
+    ctx_emotion_label: str
+
+
+# ---------------------------------------------------------------------------
 # Scheduler
 # ---------------------------------------------------------------------------
 
@@ -716,24 +740,44 @@ class ProactiveScheduler:
             mm_ctx = self._mm_llm_context
             mm_offline_fallback = False
             seed = self.config.topic_seed
+            # interact-013: 锁内只 snapshot；不在锁内调 profile_store.load / _build_system_prompt
+            mm_snapshot: Optional[MmPromptSnapshot] = None
+            base_prompt_needed = False
             if mm_llm_on and mm_ctx:
                 if self._offline_fallback_active:
                     mm_offline_fallback = True
                     self.stats.mm_llm_fallback_offline += 1
-                    system_prompt = self._build_system_prompt()
-                    # 标记 seed 用 hint 当模板，避免调 LLM
+                    base_prompt_needed = True  # 锁外构造普通 base prompt
                     seed_hint = str(mm_ctx.get("hint") or "").strip()
                     if seed_hint:
                         seed = seed_hint
                 else:
-                    system_prompt = self._build_mm_system_prompt_unlocked(mm_ctx)
+                    try:
+                        mm_snapshot = self._collect_mm_prompt_snapshot_locked(mm_ctx)
+                    except Exception as e:  # noqa: BLE001
+                        # snapshot 抓取异常 → 退化为普通 prompt 路径（V7 断言）
+                        log.warning("[proactive] mm snapshot collect failed: %s: %s",
+                                    type(e).__name__, e)
+                        mm_snapshot = None
+                        base_prompt_needed = True
                     seed_hint = str(mm_ctx.get("hint") or "").strip()
                     if seed_hint:
                         seed = seed_hint
                 self._mm_llm_context = None  # 一次性消费
             else:
+                base_prompt_needed = True
+        # ---- 锁外：渲染 prompt（含 profile_store IO）+ LLM + TTS + emit ----
+        if mm_snapshot is not None:
+            try:
+                system_prompt = self._render_mm_prompt_from_snapshot(mm_snapshot)
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive] mm prompt render failed: %s: %s",
+                            type(e).__name__, e)
                 system_prompt = self._build_system_prompt()
-        # ---- 锁外：实际 LLM + TTS + emit + on_interaction（耗时操作）----
+        elif base_prompt_needed:
+            system_prompt = self._build_system_prompt()
+        else:
+            system_prompt = None
         # interact-012: mm_offline_fallback=True → 走 _do_trigger_unlocked 但跳过 LLM（template-only）
         llm_errors_before = self.stats.llm_errors
         self._do_trigger_unlocked(
@@ -842,46 +886,97 @@ class ProactiveScheduler:
 
         log.info("[proactive] triggered topic=%r", topic_text[:80])
 
-    def _build_mm_system_prompt_unlocked(self, ctx: Dict[str, Any]) -> Optional[str]:
-        """interact-012: MM proactive 专用 system_prompt（锁内调用）。
+    def _collect_mm_prompt_snapshot_locked(self, ctx: Mapping[str, Any]) -> MmPromptSnapshot:
+        """interact-013: 锁内 snapshot —— 仅拷贝 self.* 可变字段与 ctx，不做 IO。
 
-        组成：基础 system_prompt（_build_system_prompt 含 profile/prefer/group） +
-        场景描述（caption + rule_id 翻译）+ 当前情绪 + 偏好 TopK + face_ids（如有）。
-        若上层有 profile_store，prefer/group_hint 已由 _build_system_prompt 拼好，
-        这里只追加 MM 专属段。
-
-        verification V1/V2/V3 通过子串 'dark_silence'/'移动'/emotion_label/prefer key
-        在最终 prompt 出现来断言注入。
+        必须在持有 self._lock 状态下调用（调用方负责）。返回 frozen dataclass，
+        后续 render 阶段在锁外纯函数运行。
         """
-        # 基础 prompt（含 profile + prefer + group_override）；_build_system_prompt
-        # 内部自取锁；这里我们在持有外层锁的状态下调用 —— 它用 RLock，安全。
-        base = self._build_system_prompt() or ""
+        try:
+            face_ids_raw = ctx.get("face_ids") or []
+            face_ids = tuple(str(x) for x in face_ids_raw if str(x).strip())
+        except Exception:  # noqa: BLE001
+            face_ids = tuple()
+        return MmPromptSnapshot(
+            profile_store=self.profile_store,
+            topic_preferences=dict(self._topic_preferences),
+            group_template_override=(
+                tuple(self._group_template_override)
+                if self._group_template_override else None
+            ),
+            current_emotion_label=str(self._current_emotion_label or "").strip(),
+            rule_id=str(ctx.get("rule_id") or "").strip(),
+            caption=str(ctx.get("caption") or "").strip(),
+            hint=str(ctx.get("hint") or "").strip(),
+            face_ids=face_ids,
+            ctx_emotion_label=str(ctx.get("emotion_label") or "").strip(),
+        )
 
-        rule_id = str(ctx.get("rule_id") or "").strip()
-        caption = str(ctx.get("caption") or "").strip()
-        hint = str(ctx.get("hint") or "").strip()
-        face_ids = ctx.get("face_ids") or []
-        emotion_label = (ctx.get("emotion_label") or self._current_emotion_label or "").strip()
-        prefer = dict(self._topic_preferences)
+    @staticmethod
+    def _render_mm_prompt_from_snapshot(snapshot: MmPromptSnapshot) -> Optional[str]:
+        """interact-013: 锁外纯渲染 —— 不取 self._lock，profile_store.load IO 在此发生。
 
-        scene_desc = ""
+        与原 _build_mm_system_prompt_unlocked 输出等价（含 base prompt + scene/emotion/prefer/face）。
+        异常 fail-soft：profile_store IO 失败时退化为不含 profile 段的 prompt。
+        """
+        # --- base prompt（含 profile + prefer + group_override）---
+        prefer = dict(snapshot.topic_preferences)
+        prefer_hint_base = ""
+        if prefer:
+            top = sorted(prefer.items(), key=lambda kv: kv[1], reverse=True)[:5]
+            keys = "、".join(k for k, _ in top)
+            prefer_hint_base = f"用户感兴趣的话题包括：{keys}。优先围绕这些聊。"
+        group_hint = ""
+        if snapshot.group_template_override:
+            try:
+                lead = str(snapshot.group_template_override[0]).strip()
+            except Exception:  # noqa: BLE001
+                lead = ""
+            if lead:
+                group_hint = (
+                    f"群体场景偏好：现在有多位用户在场，用 \"{lead}\" 这类群体口吻开口，"
+                    "不要单独称呼某个 profile。"
+                )
+
+        def _join(*parts: str) -> Optional[str]:
+            xs = [p for p in parts if p]
+            return "\n".join(xs) if xs else None
+
+        base: Optional[str]
+        if snapshot.profile_store is None:
+            base = _join(prefer_hint_base, group_hint)
+        else:
+            try:
+                from coco.profile import build_system_prompt as _bsp
+                from coco.llm import SYSTEM_PROMPT as _BASE
+                prof = snapshot.profile_store.load()
+                sp = _bsp(prof, base=_BASE)
+                base = _join(sp or "", prefer_hint_base, group_hint)
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive] render: build_system_prompt failed: %s: %s",
+                            type(e).__name__, e)
+                base = _join(prefer_hint_base, group_hint)
+        base = base or ""
+
+        # --- MM 专属段 ---
         rule_lookup = {
             "dark_silence": "环境偏暗且用户已经一段时间没有说话，可能需要灯光提示或轻松开口。",
             "motion_greet": "检测到用户在视野内有移动/经过，但已经一段时间没有交互，是个打招呼契机。",
         }
         scene_parts = []
-        if rule_id:
-            scene_parts.append(f"触发规则：{rule_id}（{rule_lookup.get(rule_id, '多模态触发')}）")
-        if caption:
-            scene_parts.append(f"当前场景描述：{caption}")
-        if hint:
-            scene_parts.append(f"建议参考开口意图：{hint}")
-        if scene_parts:
-            scene_desc = "\n".join(scene_parts)
+        if snapshot.rule_id:
+            scene_parts.append(
+                f"触发规则：{snapshot.rule_id}（"
+                f"{rule_lookup.get(snapshot.rule_id, '多模态触发')}）"
+            )
+        if snapshot.caption:
+            scene_parts.append(f"当前场景描述：{snapshot.caption}")
+        if snapshot.hint:
+            scene_parts.append(f"建议参考开口意图：{snapshot.hint}")
+        scene_desc = "\n".join(scene_parts) if scene_parts else ""
 
-        emotion_hint = ""
-        if emotion_label:
-            emotion_hint = f"当前用户情绪：{emotion_label}。语气与之匹配。"
+        emotion_label = (snapshot.ctx_emotion_label or snapshot.current_emotion_label or "").strip()
+        emotion_hint = f"当前用户情绪：{emotion_label}。语气与之匹配。" if emotion_label else ""
 
         prefer_hint = ""
         if prefer:
@@ -890,13 +985,10 @@ class ProactiveScheduler:
             prefer_hint = f"用户偏好话题（TopK）：{keys}。围绕这些展开。"
 
         face_hint = ""
-        try:
-            if face_ids:
-                ids = [str(x) for x in face_ids if str(x).strip()][:5]
-                if ids:
-                    face_hint = f"在场用户 face_id：{', '.join(ids)}。"
-        except Exception:  # noqa: BLE001
-            pass
+        if snapshot.face_ids:
+            ids = list(snapshot.face_ids)[:5]
+            if ids:
+                face_hint = f"在场用户 face_id：{', '.join(ids)}。"
 
         mm_section_parts = [
             "[MM 主动话题上下文]",
@@ -911,6 +1003,16 @@ class ProactiveScheduler:
         if base:
             return f"{base}\n\n{mm_section}"
         return mm_section
+
+    def _build_mm_system_prompt_unlocked(self, ctx: Dict[str, Any]) -> Optional[str]:
+        """interact-012/013: MM proactive system_prompt 便利包装。
+
+        interact-013 后已拆为 _collect_mm_prompt_snapshot_locked + _render_mm_prompt_from_snapshot
+        两步：本包装锁内 collect 锁外 render，保持原对外语义与 verify_interact_012 V4 兼容。
+        """
+        with self._lock:
+            snapshot = self._collect_mm_prompt_snapshot_locked(ctx)
+        return self._render_mm_prompt_from_snapshot(snapshot)
 
     def _build_system_prompt(self) -> Optional[str]:
         # companion-009: 即使没 profile_store，只要 set_topic_preferences 被调过，
