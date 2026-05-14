@@ -2215,11 +2215,11 @@
       "phase": 13,
       "area": "companion",
       "priority": 91,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "_bump_comfort_prefer baseline 真修 + preference 跨进程持久化深化 — (a) 修 companion-010 inherited caveat：_bump_comfort_prefer 首次 capture 剥 comfort keys（仅保非 comfort prefer），用户 alert 期间手改 prefer 不再被首次 baseline 含 comfort 残留回滚；(b) preference_learner state（prefer TopK + emit history + last_emit_ts）serialize 到 ~/.coco/preference_state.json（schema_version + atomic + lock），跨进程 hydrate 保留学习增量；(c) hydrate 失败/损坏 fallback 干净 baseline 不抛。default-OFF gate：COCO_COMFORT_PREFER=1 + COCO_PREFER_LEARN=1 + 新 COCO_PREFER_PERSIST=1。sim-first：unit + 损坏 fixture + 跨进程 subprocess 验证；followed_from: companion-010 / companion-013 / companion-014",
       "followed_from": "companion-013",
-      "evidence": ""
+      "evidence": "evidence/companion-015/verify_summary.json (in_progress, 17/17 PASS, smoke OK, base=dacaa5b, branch=feat/companion-015, Reviewer LGTM PENDING)"
     },
     {
       "id": "audio-009",

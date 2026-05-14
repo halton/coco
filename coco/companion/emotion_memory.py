@@ -480,14 +480,26 @@ class EmotionAlertCoordinator:
                     current = {}
             else:
                 current = {}
+            # companion-015：首次 capture 也剥 comfort keys（关闭 companion-010 inherited
+            # caveat）。先前实现首次 capture 直接吞 current（含可能残留的 comfort keys，
+            # 例如用户手动设了 comfort 同名 prefer，或上一轮异常未到期还原），导致 baseline
+            # 被 comfort 污染、tick() 还原时仍把 comfort keys 当 baseline 的一部分补回。
+            # 现在对首次/后续统一行为：始终把 current 减去 comfort keys 当 baseline。
+            stripped = {
+                k: v for k, v in current.items()
+                if k not in self.comfort_prefer
+            }
             if self._original_prefer is None:
-                self._original_prefer = current
+                # 防御 + 透明度：若 current 含 comfort keys（不该但可能），warn-once
+                contaminated = [k for k in current if k in self.comfort_prefer]
+                if contaminated and not getattr(self, "_warned_first_capture_contaminated", False):
+                    log.warning(
+                        "[emotion_memory] first capture saw comfort keys in current prefer "
+                        "(stripped): %s", sorted(contaminated),
+                    )
+                    self._warned_first_capture_contaminated = True
+                self._original_prefer = stripped
             else:
-                # 把 comfort keys 从 current 里剥掉再 capture（comfort 是我们上一次 bump 加的）
-                stripped = {
-                    k: v for k, v in current.items()
-                    if k not in self.comfort_prefer
-                }
                 # 合并：保留 stripped 中的 key，且对同 key 取用户最新值（即 stripped[k]）
                 # 用户可能新增 key，也可能改了 weight
                 self._original_prefer = stripped
