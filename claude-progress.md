@@ -2406,3 +2406,31 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **push 策略**: 仅在 `feat/vision-010-fu-2` 分支 commit + 尝试一次 push；不 merge 到 main，等 Reviewer LGTM 后由 closeout 合并。
 
 **phase-13 软件进度**: 3/6 不变（vision-010-fu-2 in_progress；剩 vision-010-fu-2 closeout / companion-015 / audio-009 / interact-015 / infra-016）。
+
+---
+
+## Session — vision-010-fu-2 closeout (2026-05-14)
+
+**角色**: closeout sub-agent（按 CLAUDE.md 主会话编排模式由主会话派发）。
+
+**目标**: vision-010-fu-2 status `in_progress` → `passing`，merge `feat/vision-010-fu-2` 回 main，处理 Reviewer 7 条 caveats（C-5 evidence 还原 + C-6 progress 措辞修正必须本轮做），注入 follow-up vision-010-fu-3 关闭 C-3/C-4。
+
+**Reviewer verdict**: LGTM-with-caveats（7 caveats，全不阻 merge）。
+
+**closeout 处理**:
+- C-5 (info)：feat 分支工作区 `evidence/vision-010/verify_summary.json` 因 V6 子进程跑 verify_vision_010 副作用产生 ts/tmpdir 抖动，未进 commit，`git checkout HEAD -- evidence/vision-010/verify_summary.json` 还原干净。
+- C-6 (medium)：claude-progress.md L2404 "流程违规自记" 修正为 "流程澄清"，明确 Engineer sub-agent 视角混淆——sub-agent 内部使用执行类工具完成实现属正常职责，CLAUDE.md 硬规则约束的是主编排会话，原措辞错误已更正以避免后续会话误读。修正在 feat 分支 commit `5ca0758` 一并带入 merge。
+- C-1/C-2/C-7 (info/medium/info)：登记不做（C-1 Reviewer 已独立跨版本实测；C-2 boost default=2.0 暂留 follow-up sweep；C-7 uat-vision-010-fu-2 真机异步登记于 feature evidence real_machine_uat=pending）。
+- C-3/C-4 (low)：转 follow-up vision-010-fu-3 priority=89.9 关闭。
+
+**merge**: `git merge --no-ff feat/vision-010-fu-2` 成功，合入 5 个文件（GroupMode 实现 + verify_vision_010_fu_2.py + evidence + feature_list.json status 字段 + claude-progress.md）。
+
+**follow-up 注入**: vision-010-fu-3 priority=89.9 phase=13 status=not_started area=vision followed_from=vision-010-fu-2，主题 `primary_prefer_boost env + group_phrases primary 称呼定制`：暴露 COCO_GROUP_PRIMARY_PREFER_BOOST env (float, default=2.0, 非法 WARN once 退回 default) + group_phrases 接受 {primary_name} 占位符（primary 已知时 .format 渲染，未知 fallback 旧句式 default-OFF safe）。
+
+**push 策略**: closeout commit 后按 CLAUDE.md "commit 后必须尝试 push 一次失败忽略继续"——`git push origin main` 与 `git push origin feat/vision-010-fu-2` 各跑一次，结果记入 closeout 报告。
+
+**phase-13 软件进度**: 4/6（含 vision-010-fu-2，剩 vision-010-fu-3 / companion-015 / audio-009 / interact-015 / infra-016）。
+
+**异步 UAT 队列累计**: uat-phase4 / uat-phase8 / infra-012-fu-1 / vision-008 / audio-008 / vision-010 / vision-010-fu-1 / vision-010-fu-2。
+
+**next**: phase-13 第 5 个 candidate 推荐 vision-010-fu-3 (89.9, 同链 caveat 收口) 或 companion-015 (91, 跨子系统切换)。
