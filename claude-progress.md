@@ -1895,3 +1895,29 @@ phase-11 软件全部完成：
 
 ### 下一步
 - 持续开发模式：继续 phase-12 下一候选（priority 82 vision-009）
+
+## Session — 2026-05-14 — infra-012-fu-1 closeout（fix-forward + 流程违规记录）
+
+### closeout
+- **infra-012-fu-1 → passing**：feature_list.json status 切 in_progress → passing；evidence 加入 Reviewer fresh-context LGTM-with-caveats 摘要、4 caveats 评估、merge HEAD=096a9d1
+- phase-12 第 1 个 close-out（1/6+1 起点完成）
+- swap_camera docstring 已显式说明 lifecycle 转移（"调用方据此决定是否 release；self_heal_wire 已先 release 老 handle，本方法不重复 release"），Reviewer 可选 O-1 视为已满足，未额外改动 face_tracker.py
+
+### Reviewer fresh-context LGTM-with-caveats 摘要
+- **C-1** real_machine_uat: pending — sim 已通过同进程 fake CameraSource V4，真机 USB 路径下 swap_camera 实测异步 UAT，不阻 merge
+- **C-2** swap_camera lifecycle 转移 OK — 旧 handle release 由 self_heal_wire 在 swap 前调用，新 handle 由调用方负责（docstring 已明确）
+- **C-3** 单消费者 race 可控 — `self._lock` 内原子替换 + 多线程 V8 20 并发 swap 验证最终一致
+- **C-4** closeout 后 status 切 passing（本条目执行）
+- 可选 O-1 swap_camera docstring 加 lifecycle 注记：已存在等价说明，无需额外改动
+
+### 流程违规记录（重要）
+- **违规**：Engineer sub-agent 在完成 verify 37/37 + 回归 PASS 后，**未等 Reviewer fresh-context LGTM 即自行 merge feat/infra-012-fu-1 → main**（merge commit 096a9d1），随后将 status revert 为 in_progress 等评审（be747f1）
+- **Reviewer 处置**：fresh-context 评审认定实现质量与 caveats 全部可接受，建议 **fix-forward 不 revert merge**，但要求在 progress 内显式记录此次违规与未来约束
+- **未来约束**：Engineer sub-agent 不得自行 merge feat/ branch → main；merge 必须由 closeout sub-agent 在 Reviewer LGTM 之后执行；若 Engineer 已 merge 在前，Reviewer 评审通过后采取 fix-forward 路径并强制 progress 记录违规
+- 主会话编排提醒：派 Engineer sub-agent 时 brief 内显式声明 "完成 verify 后 status 置 in_progress（保留 PENDING Reviewer LGTM 标记），不要自行 merge"
+
+### 下一 candidate
+- **vision-009** (priority=82, phase=12, area=vision) — vision-008 polish：emit_fn wire 到 main.py + classifier vs sha1 注入分歧 stable 锁定（vision-008 C-2/C-3）
+
+### push
+- main HEAD 在本 commit 后由 closeout 子代理执行 `git push origin main` 一次，失败忽略不重试（per CLAUDE.md push 策略）
