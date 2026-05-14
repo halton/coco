@@ -1,0 +1,47 @@
+{
+  "ts": 1778743996.474022,
+  "results": [
+    {
+      "name": "V1 emit companion.preference_updated schema (topic/delta/new_score/old_score/profile_id)",
+      "ok": true,
+      "detail": "kw={'做菜': 1.0, '跑步': 0.5, '前面': 0.25, '面聊': 0.25, '聊到': 0.25} n_emit=5 schema_ok=True pid_ok=True pos_ok=True"
+    },
+    {
+      "name": "V2 emit 去抖（prev==new 不发；变化才发）",
+      "ok": true,
+      "detail": "n1=5 n2=5 n3=11"
+    },
+    {
+      "name": "V3 set_topic_seed_provider wire 到 maybe_trigger 后台路径",
+      "ok": true,
+      "detail": "get_ok=True triggered=True provider_called=1"
+    },
+    {
+      "name": "V4 candidates 注入按 prefer 加权挑选 + stats 计数",
+      "ok": true,
+      "detail": "prefer_select_count=1 spoken=['A 聊聊跑步']"
+    },
+    {
+      "name": "V5 async rebuild：env gate + submit 不阻主线程 + future 后续完成",
+      "ok": true,
+      "detail": "env_ok=True submit_dt=0.000s kw={'阅读': 1.0, '前面': 0.25, '面聊': 0.25, '聊到': 0.25, '散步': 0.25} save_done=True"
+    },
+    {
+      "name": "V6 default-OFF：emit_fn=None 不发 / provider=None 不走 candidates",
+      "ok": true,
+      "detail": "no_emit=True triggered=True prefer_select_count=0 spoken=['DEFAULT_SEED']"
+    },
+    {
+      "name": "V7 source marker (preference_learner emit + proactive provider hook)",
+      "ok": true,
+      "detail": "pl_ok=True pa_ok=True"
+    },
+    {
+      "name": "V8 AUTHORITATIVE_COMPONENTS 包含 'companion'",
+      "ok": true,
+      "detail": "companion_in=True"
+    }
+  ],
+  "n_pass": 8,
+  "n_total": 8
+}

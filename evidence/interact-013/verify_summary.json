@@ -1,5 +1,5 @@
 {
-  "ts": 1778737377.548438,
+  "ts": 1778744002.481743,
   "total": 8,
   "passed": 8,
   "items": [
@@ -41,7 +41,7 @@
     {
       "name": "V8 AUTHORITATIVE_COMPONENTS mm_proactive_llm",
       "ok": true,
-      "detail": "present=True total=23"
+      "detail": "present=True total=24"
     }
   ]
 }
