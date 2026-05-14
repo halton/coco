@@ -118,6 +118,15 @@ class ProactiveStats:
     emotion_alert_per_kind: dict = field(default_factory=dict)
     # vision-007 / infra-009: priority_boost 被 _should_trigger 消费的次数
     priority_boost_consumed: int = 0
+    # interact-014: ProactiveScheduler 真消费 vision-007 priority_boost（仲裁层）
+    # - priority_boost_level_consumed: 按 boost level（rule_id，如 dark_silence /
+    #   motion_greet / curious_idle）拆分的消费计数
+    # - arbit_skipped_for_emotion: 同帧 emotion_alert 最近发生 → fusion/mm 被抑制的次数
+    # - arbit_cooldown_with_boost: boost 有效但仍因全局 cooldown 抑制的次数
+    #   （证明 boost 不绕过 cooldown）
+    priority_boost_level_consumed: dict = field(default_factory=dict)
+    arbit_skipped_for_emotion: int = 0
+    arbit_cooldown_with_boost: int = 0
     # companion-011: group_mode 状态统计
     # - group_mode_trigger_count: 累计进入 group_mode 的次数（False→True 边沿）
     # - group_mode_active_total: 累计在 group_mode 内的 tick / observe 次数（驻留时长代理）
@@ -188,6 +197,38 @@ def mm_proactive_llm_enabled_from_env() -> bool:
     上层 main.py 仍要求 ``COCO_MM_PROACTIVE=1`` 让 MultimodalFusion 本身可构造。
     """
     return _bool_env("COCO_MM_PROACTIVE_LLM", default=False)
+
+
+def proactive_arbitration_enabled_from_env() -> bool:
+    """interact-014: ProactiveScheduler 真消费 vision-007 priority_boost 仲裁层。
+
+    default-OFF（``COCO_PROACTIVE_ARBIT=1`` 启用）。OFF 时与 vision-007 现状
+    bytewise 等价：cooldown 缩放 0.5 全规则，无 boost_level emit，emotion_alert
+    不抑制同帧 fusion/mm。ON 时引入：
+    - 按 boost level（dark_silence=0.3 / motion_greet=0.5 / curious_idle=0.7 /
+      其他=0.5）缩放 cooldown，但 boost 不绕过全局 cooldown（最小裁剪后仍执行
+      `since < cooldown` 检查）
+    - 最近 ``ARBIT_EMOTION_WINDOW_S`` 内若 record_emotion_alert_trigger 发生，
+      本帧 fusion_boost / mm_proactive 路径被抑制（emotion_alert > fusion >
+      mm > 普通）
+    - trigger 成功时 emit `interact.proactive_topic` 附 ``boost_level`` 字段
+    """
+    return _bool_env("COCO_PROACTIVE_ARBIT", default=False)
+
+
+# interact-014: boost level → cooldown 缩放因子。
+# arbit OFF 时统一用 0.5（与 vision-007 原 _should_trigger 行为等价）。
+# arbit ON 时按 rule_id 区分：dark_silence 最强（紧急感）；curious_idle 最弱。
+_ARBIT_BOOST_COOLDOWN_SCALE = {
+    "dark_silence": 0.3,
+    "motion_greet": 0.5,
+    "curious_idle": 0.7,
+}
+_ARBIT_BOOST_DEFAULT_SCALE = 0.5
+# 同帧 emotion_alert 抢占的时间窗（秒）。emotion_alert 由独立路径触发，不走
+# maybe_trigger；仲裁层把 _last_emotion_alert_ts 与当前帧 t 比较，落在窗内
+# 则抑制 fusion/mm 一次。
+ARBIT_EMOTION_WINDOW_S = 1.0
 
 
 def config_from_env() -> ProactiveConfig:
@@ -296,6 +337,13 @@ class ProactiveScheduler:
         # 视作"优先调度一次"，consume 后立即清回 False。MultimodalFusion 通过
         # hasattr 检测后写本字段。
         self._next_priority_boost: bool = False
+        # interact-014: boost level（rule_id，如 dark_silence/motion_greet/curious_idle）；
+        # MultimodalFusion 真消费仲裁路径上 fire 时由 fusion 设置。OFF 时无人写也无人读，
+        # 与 vision-007 现状 bytewise 等价。
+        self._next_priority_boost_level: Optional[str] = None
+        # interact-014: 最近一次 record_emotion_alert_trigger 的时间戳（用于
+        # 仲裁层"emotion_alert 抢占同帧 fusion/mm"判定，default-OFF 时无效）
+        self._last_emotion_alert_ts: float = 0.0
         # companion-010: 可选 EmotionAlertCoordinator 注入；scheduler tick 时
         # 顺带调一次 coord.tick() 让到期 prefer 自动还原（不再依赖新 emotion 事件触发）。
         self._emotion_alert_coord: Any = None
@@ -448,6 +496,8 @@ class ProactiveScheduler:
                 self.stats.emotion_alert_per_kind.get(kind, 0) + 1
             )
             t = self.clock()
+            # interact-014: 写最近 alert 时戳，仲裁层用以在 maybe_trigger 同帧抢占 fusion/mm
+            self._last_emotion_alert_ts = t
             try:
                 self.stats.history.append(
                     f"@{t:.2f}: <emotion_alert:{kind}:r={ratio:.2f}>"
@@ -678,18 +728,34 @@ class ProactiveScheduler:
         # 3) idle threshold
         idle_for = max(0.0, t - self._last_interaction_ts)
         # vision-007 / infra-009: priority_boost 减半 idle threshold
+        # interact-014: arbit ON 时按 boost level 缩放；OFF 维持 0.5（bytewise 等价）
         idle_threshold = self.config.idle_threshold_s
+        cooldown_scale = 1.0  # 1.0 = 不缩放
         if self._next_priority_boost:
-            idle_threshold = max(0.0, idle_threshold * 0.5)
+            arbit_on = proactive_arbitration_enabled_from_env()
+            if arbit_on:
+                lvl = self._next_priority_boost_level or ""
+                cooldown_scale = _ARBIT_BOOST_COOLDOWN_SCALE.get(
+                    lvl, _ARBIT_BOOST_DEFAULT_SCALE
+                )
+                # idle 缩放：保持 vision-007 原减半行为（避免改变 V1 既有断言）
+                idle_threshold = max(0.0, idle_threshold * 0.5)
+            else:
+                cooldown_scale = 0.5
+                idle_threshold = max(0.0, idle_threshold * 0.5)
         if idle_for < idle_threshold:
             return "idle"
         # 4) cooldown since last proactive
+        # interact-014: boost 不绕过全局 cooldown —— 仅缩放，若仍 < cooldown 则 skip
         if self._last_proactive_ts > 0:
             since = max(0.0, t - self._last_proactive_ts)
             cooldown = self.config.cooldown_s
             if self._next_priority_boost:
-                cooldown = max(0.0, cooldown * 0.5)
+                cooldown = max(0.0, cooldown * cooldown_scale)
             if since < cooldown:
+                # interact-014: boost 在但被 cooldown 抑制 → 单独记账（V5 断言用）
+                if self._next_priority_boost and proactive_arbitration_enabled_from_env():
+                    self.stats.arbit_cooldown_with_boost += 1
                 return "cooldown"
         # 5) rate limit
         # 清理 1h 之外的旧条目
@@ -713,6 +779,26 @@ class ProactiveScheduler:
         with self._lock:
             self.stats.ticks += 1
             t = now if now is not None else self.clock()
+
+            # interact-014: 仲裁层（default-OFF）—— emotion_alert > fusion_boost > mm_proactive > 普通
+            # ON 时若最近 ARBIT_EMOTION_WINDOW_S 内发生过 emotion_alert，则抑制本帧
+            # fusion/mm 路径（清 boost flag + mm_ctx），记 arbit_skipped_for_emotion 后
+            # 让 _should_trigger 走普通路径（多半会因 cooldown skip）。emotion_alert
+            # 已通过独立 emit 路径输出告警，仲裁层不再二次驱动 LLM/TTS。
+            arbit_on = proactive_arbitration_enabled_from_env()
+            if arbit_on and self._last_emotion_alert_ts > 0:
+                if (t - self._last_emotion_alert_ts) < ARBIT_EMOTION_WINDOW_S:
+                    suppressed_any = False
+                    if self._next_priority_boost:
+                        self._next_priority_boost = False
+                        self._next_priority_boost_level = None
+                        suppressed_any = True
+                    if self._mm_llm_context is not None:
+                        self._mm_llm_context = None
+                        suppressed_any = True
+                    if suppressed_any:
+                        self.stats.arbit_skipped_for_emotion += 1
+
             reason = self._should_trigger(now=t)
             if reason is not None:
                 key = f"skipped_{reason}"
@@ -727,9 +813,18 @@ class ProactiveScheduler:
             self.stats.triggered += 1
             # vision-007 / infra-009: consume priority_boost（无论本次是否真因
             # boost 命中——只要 boost 标志为 True 且本次成功 trigger，就视为已消耗）
+            # interact-014: 同时按 level 拆账；本次 emit 也带上 boost_level 字段
+            consumed_boost_level: Optional[str] = None
             if self._next_priority_boost:
                 self.stats.priority_boost_consumed += 1
+                consumed_boost_level = self._next_priority_boost_level or ""
+                if proactive_arbitration_enabled_from_env():
+                    key = consumed_boost_level or "_unknown"
+                    self.stats.priority_boost_level_consumed[key] = (
+                        self.stats.priority_boost_level_consumed.get(key, 0) + 1
+                    )
                 self._next_priority_boost = False
+                self._next_priority_boost_level = None
 
             # interact-012: MM proactive LLM 化（default-OFF via COCO_MM_PROACTIVE_LLM=1）
             # - mm_llm_on=True 且 mm_ctx 非空：用 MM 专用 prompt（含场景词 + 当前 emotion + prefer TopK）；
@@ -785,6 +880,7 @@ class ProactiveScheduler:
             system_prompt=system_prompt,
             seed=seed,
             skip_llm=mm_offline_fallback,
+            boost_level=consumed_boost_level,
         )
         # interact-012: ON 且 mm_ctx 真触发了 LLM（非 fallback），且 LLM 没新增 error → 算成功
         if mm_llm_on and mm_ctx is not None and not mm_offline_fallback:
@@ -797,7 +893,8 @@ class ProactiveScheduler:
         return True
 
     def _do_trigger_unlocked(self, t: float, *, system_prompt: Optional[str], seed: str,
-                              skip_llm: bool = False) -> None:
+                              skip_llm: bool = False,
+                              boost_level: Optional[str] = None) -> None:
         """实际触发的耗时段：LLM → TTS → emit → on_interaction。锁外执行。
 
         失败时**不回滚**预占（fail-soft）：即使 LLM/TTS 都失败，也宁可少一次主动话题，
@@ -868,10 +965,13 @@ class ProactiveScheduler:
                 from coco.logging_setup import emit as _emit
                 emit_fn = _emit
             # interact-007 L2: 去掉 informational 但语义无效的 idle_for 字段
+            # interact-014: arbit ON 且本次 trigger 消费了 boost 时附 boost_level 字段
+            _emit_kwargs = {"topic": topic_text[:200], "source": "scheduler"}
+            if boost_level is not None and proactive_arbitration_enabled_from_env():
+                _emit_kwargs["boost_level"] = boost_level or "_unknown"
             emit_fn(
                 "interact.proactive_topic",
-                topic=topic_text[:200],
-                source="scheduler",
+                **_emit_kwargs,
             )
             if not tts_ok or self.stats.llm_errors > 0:
                 # 仅记一次失败事件（不影响计数已经预占的 triggered）
@@ -1086,6 +1186,7 @@ __all__ = [
     "ProactiveStats",
     "config_from_env",
     "proactive_enabled_from_env",
+    "proactive_arbitration_enabled_from_env",
     "DEFAULT_IDLE_S",
     "DEFAULT_COOLDOWN_S",
     "DEFAULT_MAX_PER_HOUR",

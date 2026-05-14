@@ -387,9 +387,15 @@ class MultimodalFusion:
                 log.warning("[mm_fusion] set_mm_llm_context failed: %s: %s", type(e).__name__, e)
 
             # priority boost（如果 scheduler 提供该字段；否则只本地计数）
+            # interact-014: 同时写 _next_priority_boost_level=rule_id（dark_silence /
+            # motion_greet / curious_idle 等），仲裁层 ON 时按 level 缩放 cooldown
+            # 并 emit boost_level 字段。无 _next_priority_boost_level 属性的旧版
+            # scheduler 兼容（hasattr 守护）。
             try:
                 if hasattr(self.proactive, "_next_priority_boost"):
                     self.proactive._next_priority_boost = True  # noqa: SLF001
+                if hasattr(self.proactive, "_next_priority_boost_level"):
+                    self.proactive._next_priority_boost_level = rule_id  # noqa: SLF001
                 self.stats.priority_boost_count += 1
             except Exception as e:  # noqa: BLE001
                 self.stats.errors += 1
