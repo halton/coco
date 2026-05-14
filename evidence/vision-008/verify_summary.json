@@ -30,7 +30,7 @@
     {
       "name": "V6 emit vision.face_id_resolved schema + once-per-name",
       "ok": true,
-      "detail": "captured=[{'component': 'vision', 'event': 'face_id_resolved', 'name': 'alice', 'face_id': 'fid_522b276a'}, {'component': 'vision', 'event': 'face_id_resolved', 'name': 'bob', 'face_id': 'fid_48181acd'}] fid1='fid_522b276a' fid2='fid_522b276a' fid3='fid_48181acd'"
+      "detail": "captured=[{'component': 'vision', 'event': 'face_id_resolved', 'name': 'alice', 'face_id': 'fid_522b276a', 'source': 'sha1'}, {'component': 'vision', 'event': 'face_id_resolved', 'name': 'bob', 'face_id': 'fid_48181acd', 'source': 'sha1'}] fid1='fid_522b276a' fid2='fid_522b276a' fid3='fid_48181acd'"
     },
     {
       "name": "V7 FaceTracker / TrackedFace schema 向后兼容",

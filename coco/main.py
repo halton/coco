@@ -248,7 +248,15 @@ class Coco(ReachyMiniApp):
                 from coco.perception.face_tracker import FaceTracker as _FaceTracker
                 _spec = os.environ.get("COCO_CAMERA")
                 if _spec:
-                    _face_tracker_shared = _FaceTracker(stop_event, camera_spec=_spec)
+                    # vision-009: wire emit_fn 让 face_tracker.get_face_id 首次解析
+                    # 时把 ``vision.face_id_resolved`` event 真打上总线（与
+                    # logging_setup.emit 签名对齐）。default-OFF 时
+                    # face_tracker.get_face_id 直接返回 None 不 emit，零开销。
+                    _face_tracker_shared = _FaceTracker(
+                        stop_event,
+                        camera_spec=_spec,
+                        emit_fn=emit,
+                    )
                     _face_tracker_shared.start()
                     print(
                         f"[coco][face] FaceTracker started camera={_spec!r}",

@@ -2004,7 +2004,7 @@
       "phase": 12,
       "area": "vision",
       "priority": 82,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "vision-008 polish：(a) emit_fn wire 到 main.py — FaceTracker 在 Coco.run() 装配时把 EventBus emit 注入，使 vision.face_id_resolved 事件真上总线（C-3 polish）；(b) classifier vs sha1 fallback 注入分歧统一 — 当 classifier 在运行期注入/替换时 fid_<user_id> 与 fid_<sha1(name)[:8]> 不互转，统一为 stable mapping 锁定优先 classifier 路径并显式记录注入分歧情况（C-2 polish）；(c) TrackedFace.name_confidence 与 face_id 关系文档化（C-1 polish 备注，正交语义不强行写回）。Sim-first：default-OFF gate 复用 COCO_FACE_ID_REAL=1；真机 face_id 区分力由 vision-008 real_machine_uat=pending 项跟踪不在本 feature 内。",
       "verification": [
@@ -2016,7 +2016,7 @@
         "vision-008"
       ],
       "followed_from": "vision-008 C-2 / C-3 polish caveats",
-      "evidence": "not_started"
+      "evidence": "evidence/vision-009/verify_summary.json (V1-V9 9/9 PASS, sim-only); 回归 verify_vision_008 10/10 / companion_011 / companion_012 / smoke 全通过; 待 Reviewer fresh-context LGTM"
     },
     {
       "id": "interact-014",

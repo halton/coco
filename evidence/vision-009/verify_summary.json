@@ -1,0 +1,51 @@
+{
+  "feature": "vision-009",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 main.py FaceTracker(emit_fn=emit) wire + vision-009 marker",
+      "ok": true,
+      "detail": "wire_match=True marker=True"
+    },
+    {
+      "name": "V2 gate ON emit vision.face_id_resolved schema + payload",
+      "ok": true,
+      "detail": "captured=[{'component': 'vision', 'event': 'face_id_resolved', 'message': '', 'name': 'alice', 'face_id': 'fid_522b276a', 'source': 'sha1'}] fid='fid_522b276a'"
+    },
+    {
+      "name": "V3 emit_fn=None gate ON 静默 fallback",
+      "ok": true,
+      "detail": "fid='fid_522b276a'"
+    },
+    {
+      "name": "V4 sha1 已绑后 classifier 注入 lock-once + 计数",
+      "ok": true,
+      "detail": "sha1='fid_522b276a' after='fid_522b276a' after2='fid_522b276a' skipped=2"
+    },
+    {
+      "name": "V5 fid_<user_id> 已绑 classifier 失效不退到 sha1 (lock-once 反向)",
+      "ok": true,
+      "detail": "first='fid_7' after_none='fid_7' after_empty='fid_7'"
+    },
+    {
+      "name": "V6 emit once-per-name 重复抑制",
+      "ok": true,
+      "detail": "captured_len=2 alice_eq=True b1='fid_48181acd'"
+    },
+    {
+      "name": "V7 docstring name_confidence ⊥ face_id + vision-009 marker",
+      "ok": true,
+      "detail": "name_conf=True face_id=True orth=True marker=True"
+    },
+    {
+      "name": "V8 gate OFF get_face_id=None + emit_fn 0 calls",
+      "ok": true,
+      "detail": "r1=None r2=None r3=None captured_len=0"
+    },
+    {
+      "name": "V9 regress verify_vision_008 (10/10)",
+      "ok": true,
+      "detail": "rc=0 tail=[\"[PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9'\", '', '[verify_vision_008] ALL PASS 10/10']"
+    }
+  ]
+}
