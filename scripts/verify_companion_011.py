@@ -109,7 +109,7 @@ def v12():
     _check("V12a main.py imports GroupModeCoordinator",
            "GroupModeCoordinator" in src)
     _check("V12b main.py wires _group_mode_ref",
-           "_group_mode_ref" in src and "coord.observe" not in src or "_gmc.observe" in src,
+           ("_group_mode_ref" in src) and ("_gmc.observe" in src),
            "expect attention loop calls _gmc.observe")
     _check("V12c main.py logs 'group_mode wired'",
            "group_mode wired" in src)

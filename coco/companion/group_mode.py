@@ -262,6 +262,9 @@ class GroupModeCoordinator:
     def observe(self, snapshot: Any, *, now: Optional[float] = None) -> None:
         """喂入 ``FaceSnapshot``（或任何带 ``tracks`` 属性的对象）。
 
+        **cheap path: no inline IO** — observe 仅做内存状态机迁移，不做文件/网络/
+        日志 IO；persistent_profile_store 写入由 enter/exit action 路径异步触发。
+
         从 ``snapshot.tracks`` 取所有 ``name`` 非空的 ``TrackedFace`` → 视为
         当前帧 known 在场用户集合。按 enter/exit hold 计时迁移状态。
         """
