@@ -27,6 +27,7 @@ infra:
   - 'scripts/lint_paths_filter.py'
   - 'scripts/lint_workflows.py'
   - 'scripts/precommit_impact.py'
+  - 'scripts/restore_unrelated_evidence.py'
   - 'scripts/run_verify_all.py'
   - 'scripts/verify_infra_*.py'
 interact:
@@ -60,5 +61,6 @@ meta:
   - 'docs/regression-policy.md'
   - 'scripts/lint_paths_filter.py'
   - 'scripts/lint_workflows.py'
+  - 'scripts/restore_unrelated_evidence.py'
   - 'scripts/run_verify_all.py'
   - 'scripts/precommit_impact.py'
