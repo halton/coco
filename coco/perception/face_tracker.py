@@ -399,6 +399,21 @@ class FaceTracker:
         with self._lock:
             return self._snapshot
 
+    # companion-012 fu-2: face_id 真接接口（stub）。
+    # 当前 face-id 识别器只输出 ``name``（可读人名），尚未提供稳定的内部 face_id
+    # 字符串。该方法保留接口位，便于 vision-008 face_id stable-id 入网后真接：
+    #   - 真接后：返回 classifier 内部稳定 face_id（与 name 解耦，name 可改）
+    #   - 当前 stub：始终返回 None；上层 resolver 须 fallback 到 name
+    # 上层 (main.py group_mode wire) 通过该方法 + fallback chain 解耦
+    # GroupModeCoordinator 与未来 face_id stable-id 路径。
+    def get_face_id(self, name: Optional[str]) -> Optional[str]:
+        """根据已识别 name 返回稳定 face_id（stub: 暂返回 None）。
+
+        真接 scope: vision-008（face_id stable-id）。在此之前 caller 必须做
+        fallback：``face_tracker.get_face_id(name) or name``。
+        """
+        return None
+
     # --- 测试钩子：纯函数地喂 detections，便于合成测试不依赖摄像头 ---
     def feed_detections(
         self,
