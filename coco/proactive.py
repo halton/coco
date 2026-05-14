@@ -667,6 +667,17 @@ class ProactiveScheduler:
         if not topic_text:
             # fail-soft：用一句兜底，仍走 TTS（保证"主动开口"这件事 happen）
             topic_text = "我们聊点什么吧？"
+            # companion-011: group_mode override → 兜底句子前缀拼 group lead，
+            # 即便 LLM 失败也保持群体场景口吻。
+            with self._lock:
+                _gov = self._group_template_override
+            if _gov:
+                try:
+                    _lead = str(_gov[0]).strip()
+                except Exception:  # noqa: BLE001
+                    _lead = ""
+                if _lead:
+                    topic_text = f"{_lead}，{topic_text}"
 
         # 2) TTS
         tts_ok = True
@@ -720,25 +731,38 @@ class ProactiveScheduler:
         # 也把 prefer_topics 拼进一个轻量 system_prompt 让 LLM 偏向用户兴趣。
         with self._lock:
             prefer = dict(self._topic_preferences)
+            group_override = self._group_template_override
         prefer_hint = ""
         if prefer:
             top = sorted(prefer.items(), key=lambda kv: kv[1], reverse=True)[:5]
             keys = "、".join(k for k, _ in top)
             prefer_hint = f"用户感兴趣的话题包括：{keys}。优先围绕这些聊。"
 
+        # companion-011: group_mode override → 注入群体场景偏好（用第一个 phrase 作为开场暗示）
+        group_hint = ""
+        if group_override:
+            try:
+                lead = str(group_override[0]).strip()
+            except Exception:  # noqa: BLE001
+                lead = ""
+            if lead:
+                group_hint = f"群体场景偏好：现在有多位用户在场，用 \"{lead}\" 这类群体口吻开口，不要单独称呼某个 profile。"
+
+        def _join(*parts: str) -> Optional[str]:
+            xs = [p for p in parts if p]
+            return "\n".join(xs) if xs else None
+
         if self.profile_store is None:
-            return prefer_hint or None
+            return _join(prefer_hint, group_hint)
         try:
             from coco.profile import build_system_prompt
             from coco.llm import SYSTEM_PROMPT as _BASE
             prof = self.profile_store.load()
             sp = build_system_prompt(prof, base=_BASE)
-            if prefer_hint:
-                sp = f"{sp}\n{prefer_hint}" if sp else prefer_hint
-            return sp
+            return _join(sp or "", prefer_hint, group_hint)
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] build_system_prompt failed: %s: %s", type(e).__name__, e)
-            return prefer_hint or None
+            return _join(prefer_hint, group_hint)
 
     # ------------------------------------------------------------------
     # 后台线程
