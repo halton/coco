@@ -36,14 +36,17 @@ verify 直构造。
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 import os
 import re
+import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
 from concurrent.futures import Future, ThreadPoolExecutor
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 log = logging.getLogger(__name__)
@@ -58,6 +61,97 @@ DEFAULT_TOPK = 10
 DEFAULT_HALF_LIFE_S = 86400.0  # 24h
 DEFAULT_MIN_TOKEN_LEN = 2
 DEFAULT_PERSIST_EVERY_N_TURNS = 20
+
+
+# ---------------------------------------------------------------------------
+# companion-015: PreferenceLearner cross-process cache (per-profile topic→score)
+# ---------------------------------------------------------------------------
+
+# 与 vision-010 face_id_map persist 模式一致：版本化 schema + atomic write + warn-once。
+# default-OFF：未设 COCO_PREFERENCE_PERSIST=1 时完全不读不写、不 emit、bytewise 等价。
+_PREFERENCE_STATE_SCHEMA_VERSION = 1
+_PREFERENCE_STATE_DEFAULT_PATH = "data/preference_learner_state.json"
+
+
+def preference_persist_enabled_from_env(env: Optional[Mapping[str, str]] = None) -> bool:
+    """companion-015: ``COCO_PREFERENCE_PERSIST=1`` → True；default-OFF 等价。"""
+    e = env if env is not None else os.environ
+    return (e.get("COCO_PREFERENCE_PERSIST") or "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def preference_persist_path_from_env(env: Optional[Mapping[str, str]] = None) -> Path:
+    """companion-015: ``COCO_PREFERENCE_PATH`` 覆盖默认 cache 路径。"""
+    e = env if env is not None else os.environ
+    return Path(e.get("COCO_PREFERENCE_PATH") or _PREFERENCE_STATE_DEFAULT_PATH)
+
+
+def _load_preference_state(path: Path) -> Dict[str, Dict[str, float]]:
+    """读取 preference cache；schema 不匹配 / 损坏 / 缺失 → 空 dict + warn-once.
+
+    Returns: ``{profile_id: {topic: score, ...}, ...}``
+    """
+    if not path.exists():
+        return {}
+    try:
+        raw = path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("top-level not object")
+        if data.get("version") != _PREFERENCE_STATE_SCHEMA_VERSION:
+            raise ValueError(f"schema version mismatch: {data.get('version')!r}")
+        profiles = data.get("profiles", {})
+        if not isinstance(profiles, dict):
+            raise ValueError("profiles not object")
+        out: Dict[str, Dict[str, float]] = {}
+        for pid, topics in profiles.items():
+            if not isinstance(pid, str) or not isinstance(topics, dict):
+                continue
+            cleaned: Dict[str, float] = {}
+            for t, s in topics.items():
+                if isinstance(t, str):
+                    try:
+                        cleaned[t] = float(s)
+                    except (TypeError, ValueError):
+                        continue
+            out[pid] = cleaned
+        return out
+    except Exception as e:  # noqa: BLE001
+        log.warning(
+            "PreferenceLearner state hydrate failed (path=%s): %s: %s -> empty state",
+            path, type(e).__name__, e,
+        )
+        return {}
+
+
+def _atomic_write_preference_state(
+    path: Path,
+    profiles: Dict[str, Dict[str, float]],
+) -> None:
+    """atomic write: tmp + rename，避免半写文件污染下次 hydrate。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "version": _PREFERENCE_STATE_SCHEMA_VERSION,
+        "saved_at": time.time(),
+        "profiles": {
+            pid: {t: float(s) for t, s in sorted(topics.items())}
+            for pid, topics in sorted(profiles.items())
+        },
+    }
+    fd, tmp_path = tempfile.mkstemp(
+        prefix=".preference_state.", suffix=".json.tmp", dir=str(path.parent)
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 # 极简中文停用词表（高频虚词、代词、量词、口语助词），覆盖最常见对话噪声。
 # 不追求齐全；目标是把"我们""然后""可以"这种盖过实词的高频词压下。
@@ -213,6 +307,8 @@ class PreferenceLearner:
         clock: Callable[[], float] = time.time,
         extra_stopwords: Optional[Iterable[str]] = None,
         emit_fn: Optional[Callable[..., None]] = None,
+        # companion-015: 跨进程 state cache（默认 None；env 启用时由 main 注入）
+        state_cache_path: Optional[Path] = None,
     ) -> None:
         if topk < 1:
             raise ValueError(f"topk 必须 ≥1，got {topk}")
@@ -234,6 +330,24 @@ class PreferenceLearner:
         # companion-014: 真 emit `companion.preference_updated` 事件（schema 见 rebuild_for_profile）。
         # default-OFF：emit_fn 为 None 时完全 no-op，行为与 companion-009 bytewise 等价。
         self._emit_fn: Optional[Callable[..., None]] = emit_fn
+        # companion-015: cross-process state cache（per-profile topic→score）。
+        # default-OFF：state_cache_path 为 None 时完全不读不写、不 emit、不做任何 IO，
+        # 与 companion-014 bytewise 等价。
+        self._state_cache_path: Optional[Path] = state_cache_path
+        self._state_cache: Dict[str, Dict[str, float]] = {}
+        # warn-once 节流（emit `companion.preference_persisted` 仅 lock-once 节流见下方 _emit_persisted_once）
+        self._persisted_emit_lock = threading.Lock()
+        if self._state_cache_path is not None:
+            try:
+                self._state_cache = _load_preference_state(self._state_cache_path)
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "[preference_learner] state hydrate failed (path=%s): %s: %s -> empty",
+                    self._state_cache_path, type(e).__name__, e,
+                )
+                self._state_cache = {}
+            # emit 一条 load 事件（即便 cache 为空，也宣告 hydrate 已发生）
+            self._emit_persisted_once(action="load")
 
     # ---------------------------------------------------------------- helpers
     def _decay_weight(self, ts: float, *, now: float) -> float:
@@ -474,6 +588,12 @@ class PreferenceLearner:
             self.stats.last_input_turns = n_turns
             self.stats.last_input_summaries = n_summaries
             self._pending_turns = 0
+            # companion-015: 同步更新 in-memory state cache（default-OFF 时 path is None 跳过 flush）
+            if self._state_cache_path is not None:
+                self._state_cache[profile_id] = dict(kw)
+        # flush 在 lock 外（avoid 在持锁期间 fsync）
+        if self._state_cache_path is not None:
+            self.flush_state()
         return kw
 
     # companion-014: 计算 prev/new 的 delta，按 topic 维度 emit。
@@ -544,6 +664,52 @@ class PreferenceLearner:
             self._executor = None
         if ex is not None:
             ex.shutdown(wait=wait)
+
+    # ----------------------------------------------------- companion-015: state cache
+    def _emit_persisted_once(self, *, action: str) -> None:
+        """emit `companion.preference_persisted`；lock-once 节流（每 action 最多 emit 一次每秒级别即可，
+        但本实现仅按 action+counts 触发，不跨调用去重，由 flush_state 自身节流调用次数）。
+
+        default-OFF：_emit_fn 为 None / cache 未启用时 no-op。
+        """
+        if self._emit_fn is None or self._state_cache_path is None:
+            return
+        with self._persisted_emit_lock:
+            try:
+                pc = len(self._state_cache)
+                tc = sum(len(v) for v in self._state_cache.values())
+                self._emit_fn(
+                    "companion.preference_persisted",
+                    f"preference_persisted action={action} profiles={pc} topics={tc}",
+                    action=action,
+                    profile_count=pc,
+                    topic_count=tc,
+                    ts=self.clock(),
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning("[preference_learner] emit preference_persisted failed: %s: %s",
+                            type(e).__name__, e)
+
+    def get_cached_topics(self, profile_id: str) -> Dict[str, float]:
+        """读取 in-memory state cache（不触发 IO）。default-OFF 时仍返回空 dict。"""
+        with self._lock:
+            return dict(self._state_cache.get(profile_id, {}))
+
+    def flush_state(self) -> bool:
+        """把 _state_cache atomic 写盘。default-OFF 返回 False；启用时成功 True / 失败 False。"""
+        if self._state_cache_path is None:
+            return False
+        try:
+            with self._lock:
+                snapshot = {pid: dict(v) for pid, v in self._state_cache.items()}
+            _atomic_write_preference_state(self._state_cache_path, snapshot)
+        except Exception as e:  # noqa: BLE001
+            log.warning("[preference_learner] flush state failed (path=%s): %s: %s",
+                        self._state_cache_path, type(e).__name__, e)
+            return False
+        # emit save 事件（lock-once 节流）
+        self._emit_persisted_once(action="save")
+        return True
 
     # ----------------------------------------------------- on_turn (lightweight)
     def on_turn(
@@ -631,6 +797,8 @@ __all__ = [
     "DEFAULT_PERSIST_EVERY_N_TURNS",
     "preference_learn_enabled_from_env",
     "async_rebuild_enabled_from_env",
+    "preference_persist_enabled_from_env",
+    "preference_persist_path_from_env",
     "tokenize",
     "LLMPreferenceBackend",
 ]

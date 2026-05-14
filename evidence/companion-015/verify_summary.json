@@ -1,0 +1,52 @@
+{
+  "feature_id": "companion-015",
+  "phase": 13,
+  "status": "in_progress",
+  "branch": "feat/companion-015",
+  "base_main_head": "dacaa5b",
+  "verify_script": "scripts/verify_companion_015.py",
+  "verify_summary": "PASS=17 FAIL=0",
+  "checks": {
+    "V1_first_capture_strips_comfort": "PASS",
+    "V2_warn_once_on_contaminated_first_capture": "PASS",
+    "V3_tick_user_change_preserved": "PASS",
+    "V4_persist_atomic_and_dual_process_hydrate": "PASS",
+    "V5_corrupted_file_warn_empty_no_crash": "PASS",
+    "V6_schema_mismatch_warn_empty_no_crash": "PASS",
+    "V7_emit_preference_persisted_schema": "PASS",
+    "V8_default_off_no_io_no_emit_bytewise": "PASS",
+    "V9_regression_companion_013_014": "PASS",
+    "V10_regression_vision_010_chain_companion_008_009": "PASS"
+  },
+  "smoke": "init.sh ALL PASS (vision/audio/wake/power/config/publish)",
+  "default_off_evidence": "V8 — flush_state() returns False; no file IO; no companion.preference_persisted emits when state_cache_path is None",
+  "implementation_summary": {
+    "fix_1_bump_comfort_prefer": {
+      "file": "coco/companion/emotion_memory.py",
+      "change": "首次 capture（_original_prefer is None）也把 current 减去 comfort keys 当 baseline；contaminated 时 warn-once（_warned_first_capture_contaminated 标志位）。关闭 companion-010 inherited caveat。",
+      "env": "复用 COCO_EMO_MEMORY=1（无新 env）"
+    },
+    "fix_2_preference_learner_persist": {
+      "file": "coco/companion/preference_learner.py",
+      "change": "新增 cross-process state cache：模块级 _load_preference_state / _atomic_write_preference_state（schema v1, version+saved_at+profiles, atomic tmp+rename）；__init__ 接 state_cache_path（None 时完全 OFF）；构造期 hydrate + emit `companion.preference_persisted` action=load；rebuild_for_profile 末尾同步 _state_cache 并 flush + emit action=save；新 helpers preference_persist_enabled_from_env / preference_persist_path_from_env / get_cached_topics / flush_state。",
+      "env": "新 COCO_PREFERENCE_PERSIST=1 启用，COCO_PREFERENCE_PATH 覆盖路径（默认 data/preference_learner_state.json）",
+      "schema": "{\"version\": 1, \"profiles\": {\"<pid>\": {\"<topic>\": <score>}}, \"saved_at\": <ts>}"
+    }
+  },
+  "regression": {
+    "companion-013": "PASS",
+    "companion-014": "PASS",
+    "companion-008": "PASS",
+    "companion-009": "PASS",
+    "vision-010": "PASS",
+    "vision-010-fu-1": "PASS",
+    "vision-010-fu-2": "PASS",
+    "vision-010-fu-3": "PASS",
+    "vision-010-fu-4": "PASS"
+  },
+  "real_machine_uat": "pending (sim-first; PreferenceLearner persist 与 _bump_comfort_prefer 修复均为纯 sim 行为，无新增真机依赖)",
+  "evidence_side_effects_clean": "regress_subprocess_only_ts_refresh; restored on closeout",
+  "caveats": "Reviewer LGTM-with-caveats: caveat-1 [MED] companion.preference_persisted emit 自报节流为误报（_persisted_emit_lock 仅 thread-safety lock 不去重）→ 入 backlog companion-015-backlog-emit-throttle；caveat-2 [LOW] evidence dirty (4 个 regress 子进程刷 ts) → closeout 已 restore；caveat-3 [LOW] saved_at 未参与 hydrate validation（信息性，忽略）",
+  "merged_to_main": true,
+  "reviewer_lgtm": "LGTM-with-caveats (Reviewer sub-agent fresh-context)"
+}

@@ -2552,3 +2552,29 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **Real machine UAT**: 继承 vision-010 链路 pending（COCO_GROUP_PRIMARY_PREFER_BOOST 真摄像头 ARBIT primary 切换效果），不另开 uat 项。
 
 **Push**: `git push origin main` + `git push origin feat/vision-010-fu-4` 各一次（失败忽略）。
+
+---
+
+## Session 2026-05-14 (companion-015 in_progress)
+
+**Task**: companion-015（priority=91, phase=13, area=companion）— 关闭 companion-010 inherited caveat + PreferenceLearner state 跨进程持久化
+
+**Branch**: `feat/companion-015`（从 main HEAD=`dacaa5b` 切）
+
+**Engineer Sub-agent 实现**:
+- `coco/companion/emotion_memory.py`: `_bump_comfort_prefer` 首次 capture（`_original_prefer is None`）也把 `current` 减去 comfort keys 当 baseline；contaminated（current 含 comfort key）warn-once（`_warned_first_capture_contaminated` 标志位）。env 复用 `COCO_EMO_MEMORY=1`，无新 env。关闭 companion-010 inherited caveat。
+- `coco/companion/preference_learner.py`: 新增 cross-process state cache。模块级 `_load_preference_state` / `_atomic_write_preference_state`（schema v1, version+saved_at+profiles, atomic tmp+rename）；`__init__` 接 `state_cache_path`（None 时完全 OFF, bytewise 等价）；构造期 hydrate + emit `companion.preference_persisted` action=load；`rebuild_for_profile` 末尾同步 `_state_cache` 并 flush + emit action=save；新 helpers `preference_persist_enabled_from_env` / `preference_persist_path_from_env` / `get_cached_topics` / `flush_state`。新 env `COCO_PREFERENCE_PERSIST=1`（启用）+ `COCO_PREFERENCE_PATH`（覆盖默认 `data/preference_learner_state.json`）。
+
+**Verify** (`scripts/verify_companion_015.py`): 17/17 PASS（V1 首次 capture 剥 comfort、V2 warn-once、V3 tick 用户改动保留、V4 双进程 hydrate、V5 损坏 fallback、V6 schema mismatch fallback、V7 emit schema、V8 default-OFF bytewise、V9 companion-013/014 回归、V10 vision-010 链 + companion-008/009 回归）
+
+**Smoke**: `./init.sh` 全 PASS
+
+**Evidence side-effects clean**: `git status evidence/` 仅 `evidence/companion-015/` 新增，回归子进程副作用已用 `scripts/restore_unrelated_evidence.py --target companion-015` 还原 4 个文件（companion-014/interact-012/interact-013/vision-010）
+
+**Default-OFF 等价证据** (V8): `state_cache_path=None` 时 `flush_state()` 返回 False；零文件 IO；零 `companion.preference_persisted` emit；`preference_persist_enabled_from_env({})` 与 `({"COCO_PREFERENCE_PERSIST":"0"})` 均 False
+
+**Caveats**: 无新 caveat（首次 capture 修复关闭 companion-010 inherited caveat；新 cache 机制为附加 default-OFF feature，未替换既有 persist_store 行为）
+
+**Reviewer**: PENDING（fresh-context 评审待开）
+
+**未 merge feat/companion-015 → main**（Engineer sub-agent 守硬规则，等 Reviewer LGTM 后由 closeout sub-agent merge）

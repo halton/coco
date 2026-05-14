@@ -1,0 +1,23 @@
+WARNING coco.companion.emotion_memory: [emotion_memory] first capture saw comfort keys in current prefer (stripped): ['安慰']
+WARNING coco.companion.emotion_memory: [emotion_memory] first capture saw comfort keys in current prefer (stripped): ['安慰']
+WARNING coco.companion.preference_learner: PreferenceLearner state hydrate failed (path=/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco-companion-015-ht5zy00z/pref_corrupt.json): JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1) -> empty state
+WARNING coco.companion.preference_learner: PreferenceLearner state hydrate failed (path=/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco-companion-015-ht5zy00z/pref_v99.json): ValueError: schema version mismatch: 99 -> empty state
+[PASS] V1 首次 capture 剥 comfort keys — baseline={'游戏': 0.5}
+[PASS] V2 contaminated first capture 标志位 + baseline 不含 comfort — flag=True base={'猫': 0.4}
+[PASS] V3 tick 撤回 comfort + 保留用户改动 — after={'足球': 0.5, '阅读': 0.6}
+[PASS] V4 PERSIST=1 atomic + 双进程 hydrate — flush=True file=True schema=True cached={'做菜': 0.5, '猫咪': 0.9}
+[PASS] V5 corrupted file → empty state + no crash — cached={}
+[PASS] V6 schema mismatch → empty state + no crash — cached={}
+[PASS] V7 emit preference_persisted load+save schema — emits=[{'topic': 'companion.preference_persisted', 'kw': {'action': 'load', 'profile_count': 0, 'topic_count': 0, 'ts': 1778751856.9144168}}, {'topic': 'companion.preference_persisted', 'kw': {'action': 'save', 'profile_count': 1, 'topic_count': 2, 'ts': 1778751856.915144}}]
+[PASS] V8 default-OFF 无 IO + 无 emit — flush_ret=False emits=[] env_off=True env_unset=True
+[PASS] V9 verify_companion_013.py — [PASS] regress verify_interact_013.py (exit=0) — rc=0 tail=[verify_interact_013] SUMMARY 8/8 PASS |  | verify_companion_013: PASS=12 FAIL=0 failures=[]
+[PASS] V9 verify_companion_014.py —  | [verify_companion_014] summary: 8/8 PASS | [proactive] tts_say_fn failed: TypeError: v6_default_off.<locals>.<lambda>() got an unexpected keyword argument 'blocking'
+[PASS] V10 verify_companion_008.py — [profile_persist] /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_v008_v12_hydrate_mixed_31t1xeei/ac1ba60ff79b.json parse failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0) — quarantine to _corrupt | [profile_persist] skip non-profile file: /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_v008_v12_hydrate_mixed_31t1xeei/not_a_profile.json | [profile_persist] /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_v008_v15_emit_payload_oq9uqr_r/c53d192b83ee.json parse failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0) — quarantine to _corrupt
+[PASS] V10 verify_companion_009.py — [verify_companion_009] PASS V10 共存（vision-006/-007/interact-011/companion-008）: ps.stats(caption=1 mm=1 prefer_sel=1) profile_persist_ok=True |  | [verify_companion_009] ALL PASS 10/10
+[PASS] V10 verify_vision_010.py —  | [vision-010] 10/10 PASS | FaceTracker face_id_map hydrate failed (path=/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/tmp45x6oimk/face_id_map.json): JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2) -> empty map
+[PASS] V10 verify_vision_010_fu_1.py — [PASS] v9_e2e_set_arbit_callback_wire — before_wire=None after_wire='fid_48181acd' name='bob' emit_primary='fid_48181acd' emits=2 |  | [vision-010-fu-1] 9/9 PASS
+[PASS] V10 verify_vision_010_fu_2.py — [PASS] v7_regress_vision_008_009 — 008: [PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9' |  | [verify_vision_008] ALL PASS 10/10 || 009: [PASS] V9 regress verify_vision_008 (10/10) — rc=0 tail=["[PASS] V10 classifier-aware face_id 来自 store user_id — a='fid_7' b='fid_42' c='fid_d8cd10b9'", '', '[verify_vision_008] ALL PASS 10/10'] |  | [vision-009] 9/9 PASS |  | [vision-010-fu-2] 7/7 PASS
+[PASS] V10 verify_vision_010_fu_3.py — [PASS] v8_regress_008_009 — 008:True 009:True |  | [vision-010-fu-3] 9/9 PASS
+[PASS] V10 verify_vision_010_fu_4.py — [PASS] v6_regress_010_chain — 010:True fu1:True fu2:True fu3:True |  | [vision-010-fu-4] 6/6 PASS
+
+PASS: 17  FAIL: 0
