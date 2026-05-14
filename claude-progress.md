@@ -1803,3 +1803,47 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - **phase-11 第 6 个**（最后一个）audio-008 (priority=80, area=audio) — 真扬声器 USB 自检 sim 前置 + 真机 UAT 异步，default-OFF COCO_AUDIO_USB_PROBE=1 gate
 - phase-11 6/6 完成后进入 phase-12 规划 或 uat-* 异步真机 UAT
+
+## Session — 2026-05-14 audio-008 closeout + phase-11 收官 6/6
+
+### audio-008 → passing
+- verify_audio_008 V1-V8 8/8 PASS
+- sim-side USB audio probe：sounddevice.query_devices 枚举 + name regex 匹配 + probe.json 写入 (device_count / matched_devices / latency_ms)
+- default-OFF gate：`COCO_AUDIO_USB_PROBE=1` 开启；OFF 时主路径零开销
+- 优雅退化：sounddevice ImportError / probe 异常 / regex 编译失败 → WARN log 不阻 init
+- main.py 启动 log：`audio usb probe matched=<N>`
+- 回归：verify_audio_003_tts / verify_companion_011 / verify_companion_012 / verify_vision_008 全 PASS + COCO_CI=1 ./init.sh smoke PASS
+- Reviewer (sub-agent, fresh-context)：LGTM，5 Engineer caveats 全部 Reviewer 评为可接受不阻 merge
+  - (C-1) default-OFF 主路径零开销
+  - (C-2) sounddevice ImportError 静默退化
+  - (C-3) probe 异常 WARN log + 退化不阻 init
+  - (C-4) regex 编译失败回退 substring 匹配
+  - (C-5) real_machine_uat: pending（USB 扬声器真机插拔与播放听感由用户异步执行）
+- merge：`git merge --no-ff feat/audio-008` → main
+- main HEAD（merge 后）：933b7ff33b4fa49d1c006185dbc83b99ed7e56e6
+
+### phase-11 收官 6/6
+phase-11 软件全部完成：
+
+| # | feature | priority | 摘要 |
+|---|---------|----------|------|
+| 1 | infra-012 | 75 | self_heal wire 完善 + handles=N/3 log + camera USB 独占 + audio/asr handle surface + V2.c helper |
+| 2 | companion-012 | 76 | verify 强化 + profile_id reconcile face_id（face_id 真接入 deferred to vision-008） |
+| 3 | interact-013 | 77 | MM proactive LLM 锁内 IO 拆 snapshot+渲染（_collect_locked / _render staticmethod） |
+| 4 | infra-013 | 78 | paths-filter.yml 兜底段 pyproject/tests/conftest + workflow_dispatch 静态校验 + regression-policy.md |
+| 5 | vision-008 | 79 | FaceTracker.get_face_id 真接入 + COCO_FACE_ID_REAL=1 default-OFF + emit vision.face_id_resolved |
+| 6 | audio-008 | 80 | sim-side USB audio probe + COCO_AUDIO_USB_PROBE=1 default-OFF + probe.json |
+
+### phase-11 期间产生的异步 UAT 项（real_machine_uat: pending / uat-*）
+- **infra-012-fu-1** (priority=81, not_started)：face_tracker.swap_camera(new_cam) 公开 API + self_heal_wire 真共享 camera ref（infra-012 C-1 followup）。sim 用假 list ref 通过，真机 USB camera 路径需 UAT
+- **vision-008** real_machine_uat=pending：COCO_FACE_ID_REAL=1 真摄像头 face_id 区分力（同 name 同 face_id；fid_<user_id> / fid_<sha1(name)[:8]>）
+- **audio-008** real_machine_uat=pending：USB 扬声器真机插拔 + TTS wav 播放听感
+- 累计未消化：**uat-phase4** (priority=999) + **uat-phase8** (历史 phase-8 真机 UAT)
+
+### 下一步
+- phase-12 规划：feature_list.json 当前 not_started 仅剩 2 项
+  - `infra-012-fu-1` (priority=81, area=infra) — 可作 phase-12 起点 candidate
+  - `uat-phase4` (priority=999, area=uat) — 异步 milestone gate
+- **需要 phase-12 planner 注入新候选**（vision / companion / interact / robot 方向，按 sim-first）
+- 推荐下一个 candidate：`infra-012-fu-1`（priority=81）启动，但同时建议主会话调用 phase-12 planner 扩充 candidate 池
+- main HEAD=933b7ff33b4fa49d1c006185dbc83b99ed7e56e6
