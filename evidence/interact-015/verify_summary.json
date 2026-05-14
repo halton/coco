@@ -1,0 +1,42 @@
+{
+  "feature": "interact-015",
+  "overall_ok": true,
+  "ts": 1778753869.90848,
+  "results": [
+    {
+      "name": "V1 default-OFF: no proactive.trace / llm.usage emit; behaviour bytewise equiv",
+      "ok": true,
+      "detail": "trace_emits=0 ev_kinds=['interact.proactive_topic', 'proactive.emotion_alert'] fired=True"
+    },
+    {
+      "name": "V2 trace ON: normal admit emits arbit_winner trace",
+      "ok": true,
+      "detail": "fired=True winner=[{'stage': 'arbit_winner', 'candidate_id': '20000000', 'decision': 'admit', 'ts': 20000.0, 'stage_in': 'normal', 'boost_level': ''}]"
+    },
+    {
+      "name": "V3 trace ON: cooldown reject emits stage=cooldown_hit reason=cooldown",
+      "ok": true,
+      "detail": "rejs=[{'stage': 'cooldown_hit', 'candidate_id': '30005000', 'decision': 'reject', 'ts': 30005.0, 'reason': 'cooldown'}]"
+    },
+    {
+      "name": "V4 trace ON + arbit ON: emotion_alert admit + fusion preempt reject",
+      "ok": true,
+      "detail": "emotion=[{'stage': 'emotion_alert', 'candidate_id': '40000000', 'decision': 'admit', 'ts': 40000.0, 'kind': 'sad', 'ratio': 0.8}] preempt=[{'stage': 'fusion_boost', 'candidate_id': '40000000', 'decision': 'reject', 'ts': 40000.0, 'reason': 'arbit_emotion_preempt'}]"
+    },
+    {
+      "name": "V5 llm_usage ON: mm trigger emits llm.usage + writes ~/.coco/llm_usage_*.jsonl",
+      "ok": true,
+      "detail": "fired=True usage_emits=[{'component': 'mm_proactive', 'prompt_tokens': 70, 'completion_tokens': 6, 'ts': 50000.0, 'estimated': True}] disk_exists=True"
+    },
+    {
+      "name": "V6 summary CLI: trace + usage aggregation correct",
+      "ok": true,
+      "detail": "rc=0 trace={'admit': 2, 'by_stage': {'arbit_winner': {'admit': 1, 'reject': 0}, 'cooldown_hit': {'admit': 0, 'reject': 1}, 'normal': {'admit': 1, 'reject': 0}}, 'candidates': 2, 'reject': 1, 'rejection_pct_by_stage': {'arbit_winner': 0.0, 'cooldown_hit': 100.0, 'normal': 0.0}} usage={'by_component': {'mm_proactive': {'calls': 2, 'completion_tokens': 80, 'prompt_tokens': 180}}, 'daily_avg': {'20240506': {'calls': 2, 'completion_tokens': 80, 'prompt_tokens': 180}}, 'total_calls': 2, 'total_completion_tokens': 80, 'total_prompt_tokens': 180} stderr="
+    },
+    {
+      "name": "V7 candidate_id consistent across stages within one maybe_trigger",
+      "ok": true,
+      "detail": "cids={'60000000'}"
+    }
+  ]
+}

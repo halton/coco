@@ -525,6 +525,21 @@ class ProactiveScheduler:
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] emotion_alert emit failed: %s: %s",
                         type(e).__name__, e)
+        # interact-015: 仲裁链 trace —— emotion_alert 始终视为 admit（独立路径，已发告警）
+        # default-OFF 时 emit_trace 立即 return，不引入 IO/state 变化
+        try:
+            from coco.proactive_trace import emit_trace as _et, make_candidate_id as _mci
+            _et(
+                "emotion_alert",
+                _mci(t),
+                "admit",
+                ts=t,
+                kind=str(kind),
+                ratio=float(ratio),
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("[proactive] trace emotion_alert failed: %s: %s",
+                        type(e).__name__, e)
 
     # interact-011: pause / resume —— 让 OfflineDialogFallback 在离线降级期间静默
     # ProactiveScheduler，避免雪上加霜。pause/resume 幂等；线程 loop 不停（继续 tick
@@ -802,6 +817,19 @@ class ProactiveScheduler:
             self.stats.ticks += 1
             t = now if now is not None else self.clock()
 
+            # interact-015: 同帧 candidate_id（trace 用于把同一次决策路径的多 stage
+            # 关联起来；trace OFF 时 emit_trace 立即 return，无副作用）
+            try:
+                from coco.proactive_trace import (
+                    emit_trace as _trace_emit,
+                    make_candidate_id as _trace_mci,
+                )
+                _candidate_id = _trace_mci(t)
+            except Exception:  # noqa: BLE001
+                def _trace_emit(*a, **kw):  # type: ignore[no-redef]
+                    return None
+                _candidate_id = str(int(t * 1000))
+
             # interact-014: 仲裁层（default-OFF）—— emotion_alert > fusion_boost > mm_proactive > 普通
             # ON 时若最近 ARBIT_EMOTION_WINDOW_S 内发生过 emotion_alert，则抑制本帧
             # fusion/mm 路径（清 boost flag + mm_ctx），记 arbit_skipped_for_emotion 后
@@ -820,12 +848,43 @@ class ProactiveScheduler:
                         suppressed_any = True
                     if suppressed_any:
                         self.stats.arbit_skipped_for_emotion += 1
+                        # interact-015 trace: emotion_alert 窗口内抢占 fusion/mm
+                        try:
+                            _trace_emit(
+                                "fusion_boost" if self._next_priority_boost is False else "mm_proactive",
+                                _candidate_id, "reject",
+                                reason="arbit_emotion_preempt", ts=t,
+                            )
+                        except Exception:  # noqa: BLE001
+                            pass
+
+            # interact-015 trace: stage 入口侦测（emit 顺序：fusion_boost / mm_proactive / normal）
+            # 仅观测，不改 state。OFF 时 _trace_emit no-op。
+            try:
+                _stage_in: Optional[str] = None
+                if self._next_priority_boost:
+                    _stage_in = "fusion_boost"
+                elif self._mm_llm_context is not None:
+                    _stage_in = "mm_proactive"
+                else:
+                    _stage_in = "normal"
+            except Exception:  # noqa: BLE001
+                _stage_in = "normal"
 
             reason = self._should_trigger(now=t)
             if reason is not None:
                 key = f"skipped_{reason}"
                 if hasattr(self.stats, key):
                     setattr(self.stats, key, getattr(self.stats, key) + 1)
+                # interact-015 trace: reject —— stage 与入口 stage 一致；cooldown 单独标 cooldown_hit
+                try:
+                    _stage_out = "cooldown_hit" if reason == "cooldown" else (_stage_in or "normal")
+                    _trace_emit(
+                        _stage_out, _candidate_id, "reject",
+                        reason=str(reason), ts=t,
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
                 return False
             # 抢占式预占：先把 last_proactive_ts / last_interaction_ts / recent_triggers
             # 写好，再放锁；这样 LLM/TTS 期间外部线程读到的"已发"，不会被同 tick 重复触发。
@@ -847,6 +906,17 @@ class ProactiveScheduler:
                     )
                 self._next_priority_boost = False
                 self._next_priority_boost_level = None
+
+            # interact-015 trace: arbit_winner —— 本次 trigger 已锁内预占成功
+            try:
+                _trace_emit(
+                    "arbit_winner", _candidate_id, "admit",
+                    ts=t,
+                    stage_in=str(_stage_in or "normal"),
+                    boost_level=(consumed_boost_level if consumed_boost_level else ""),
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
             # interact-012: MM proactive LLM 化（default-OFF via COCO_MM_PROACTIVE_LLM=1）
             # - mm_llm_on=True 且 mm_ctx 非空：用 MM 专用 prompt（含场景词 + 当前 emotion + prefer TopK）；
@@ -934,6 +1004,20 @@ class ProactiveScheduler:
             else:
                 with self._lock:
                     self.stats.mm_llm_proactive_count += 1
+                # interact-015: 记录 mm_proactive LLM 用量（estimate from chars; default-OFF）
+                try:
+                    from coco.proactive_trace import record_llm_usage as _rlu
+                    _prompt_chars = len(system_prompt or "") + len(seed or "")
+                    _completion_chars = len(self.stats.last_topic or "")
+                    _rlu(
+                        "mm_proactive",
+                        prompt_chars=_prompt_chars,
+                        completion_chars=_completion_chars,
+                        ts=t,
+                    )
+                except Exception as e:  # noqa: BLE001
+                    log.warning("[proactive] llm_usage record failed: %s: %s",
+                                type(e).__name__, e)
         return True
 
     def _do_trigger_unlocked(self, t: float, *, system_prompt: Optional[str], seed: str,

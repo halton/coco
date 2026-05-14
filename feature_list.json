@@ -2253,11 +2253,14 @@
       "phase": 13,
       "area": "interact",
       "priority": 93,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "proactive 仲裁链可观察性 + mm_proactive LLM 用量监控 — (a) ProactiveScheduler 仲裁链全节点 emit trace event proactive.trace{stage, candidate_id, decision=admit|reject, reason, ts}（stages: emotion_alert / fusion_boost / mm_proactive / 普通 / cooldown_hit / arbit_winner），离线可重建一次完整决策路径；(b) mm_proactive LLM 用量计量 — emit llm.usage{component=mm_proactive, prompt_tokens, completion_tokens, ts}，~/.coco/llm_usage_<date>.jsonl 滚动落盘；(c) summary CLI scripts/proactive_trace_summary.py — 从 jsonl 重建 admit/reject 计数 + 按 stage rejection 占比 + LLM 日均用量。default-OFF gate：COCO_PROACTIVE_TRACE=1 + COCO_LLM_USAGE_LOG=1（与现有 COCO_PROACTIVE_ARBIT 独立，trace 仅观测不改决策）。sim-first：fake LLM 注入用量 + 决策路径 fixture + summary CLI 输出快照",
       "followed_from": "interact-014",
-      "evidence": ""
+      "evidence": "",
+      "_change_log": [
+        "2026-05-14: not_started -> in_progress (Engineer sub-agent: phase-13 candidate 9, proactive arbit 可观察性 + mm LLM 用量监控)"
+      ]
     },
     {
       "id": "infra-016",
