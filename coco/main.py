@@ -1699,31 +1699,56 @@ class Coco(ReachyMiniApp):
                 from coco.infra.self_heal_wire import (
                     selfheal_wire_enabled_from_env as _selfheal_wire_enabled,
                     build_real_reopen_callbacks as _build_wire_callbacks,
+                    compute_handle_status as _compute_handle_status,
                 )
                 if _selfheal_enabled():
                     _is_real = bool(_self_heal_is_real())
                     _wire_on = bool(_selfheal_wire_enabled())
                     if _wire_on:
-                        # infra-010: 真实接线工厂；audio/asr/camera handle 当前在 main.py
-                        # 作用域内仍未全部 surface（audio 子系统是 sounddevice 直连无统一
-                        # handle；ASR 在 InteractSession 内部）。这里传当前已有的引用：
-                        # - audio_handle: None（caveat — 未来 audio-driver 接 surface 时填）
-                        # - asr_handle: None（同上）
-                        # - offline_fallback: 后续 InteractSession 构造时 register；这里
-                        #   先 None，回调走 stub
-                        # - camera_handle_ref: 未持久 ref（face_tracker 内部管理），传 None
-                        # 因此当前 wire ON 的回调路径基本走 stub + WARN 一次，但调用链路
-                        # 已经真实存在；future-feature 可逐项把 handle 填进来。
+                        # infra-012: 真接 audio/asr/camera handle。
+                        # - audio_handle: sounddevice 直连无统一句柄对象 →
+                        #   stub-by-design（无 reopen 语义；future 若包 AudioReopenAdapter
+                        #   再填）。在 startup log 里 audio 永远 stub，是预期行为。
+                        # - asr_handle: 留 None；asr restart 路径走 offline_fallback
+                        #   切换（在线 LLM/ASR 失败 → 进入离线 fallback；recover →
+                        #   退出）——这是当前真有效的 ASR self-heal 形态。
+                        # - offline_fallback: _offline_fallback 实例（可能为 None）。
+                        # - camera_handle_ref: mutable list ref，与 face_tracker 共享
+                        #   当前 camera 句柄；reopen 时 release 老 → open 新 → 写回
+                        #   ref[0]，避免 USB 独占冲突。
+                        _camera_ref_list: list = [None]
+                        try:
+                            if _face_tracker_shared is not None:
+                                # FaceTracker._camera 是当前正在用的 CameraSource；
+                                # 注意 FaceTracker 自己也会 release，二者同源即可。
+                                _camera_ref_list[0] = getattr(_face_tracker_shared, "_camera", None)
+                        except Exception:  # noqa: BLE001
+                            _camera_ref_list = [None]
+                        _camera_ref_arg = _camera_ref_list if _camera_ref_list[0] is not None else None
+                        _handle_status = _compute_handle_status(
+                            audio_handle=None,
+                            asr_handle=None,
+                            camera_handle_ref=_camera_ref_arg,
+                            offline_fallback=_offline_fallback,
+                        )
                         _wire = _build_wire_callbacks(
                             audio_handle=None,
                             asr_handle=None,
-                            camera_handle_ref=None,
+                            camera_handle_ref=_camera_ref_arg,
                             camera_spec=os.environ.get("COCO_CAMERA"),
-                            offline_fallback=None,
+                            offline_fallback=_offline_fallback,
                         )
                         _audio_fn = _wire.audio
                         _asr_fn = _wire.asr
                         _cam_fn = _wire.camera
+                        _handles_ok = sum(1 for v in _handle_status.values() if v == "ok")
+                        print(
+                            f"[coco][self_heal] wire=on handles={_handles_ok}/3 "
+                            f"(audio={_handle_status['audio']}, "
+                            f"asr={_handle_status['asr']}, "
+                            f"camera={_handle_status['camera']})",
+                            flush=True,
+                        )
                     else:
                         # OFF: 占位 lambda + 一次性 WARN（消化 infra-009 L1-1 caveat）
                         print(

@@ -50,8 +50,66 @@ log = logging.getLogger(__name__)
 __all__ = [
     "selfheal_wire_enabled_from_env",
     "build_real_reopen_callbacks",
+    "compute_handle_status",
     "WireCallbacks",
 ]
+
+
+# ---------------------------------------------------------------------------
+# infra-012: handle status surface — 让 main.py 在 startup log 上打出
+# "handles=N/3 (audio=<ok|stub>, asr=<ok|stub>, camera=<ok|stub>)"，一眼看出
+# self_heal wire 接的是真句柄还是壳。
+# ---------------------------------------------------------------------------
+
+
+def compute_handle_status(
+    *,
+    audio_handle: Any = None,
+    asr_handle: Any = None,
+    camera_handle_ref: Any = None,
+    offline_fallback: Any = None,
+) -> Dict[str, str]:
+    """计算三档 handle 是否真接。
+
+    判定规则（保守）：
+    - audio: ``audio_handle`` 非 None 且具备 reopen/close/open/stop_input/start_input
+      任一方法 → "ok"；否则 "stub"。
+    - asr: ``offline_fallback`` 非 None（拥有 _enter_fallback / _exit_fallback）
+      或 ``asr_handle`` 提供 restart/reset → "ok"；否则 "stub"。
+    - camera: ``camera_handle_ref`` 是 callable 或具备 ``__getitem__`` 的容器
+      → "ok"；None → "stub"。
+
+    返回 dict: {"audio": "ok|stub", "asr": "ok|stub", "camera": "ok|stub"}.
+    """
+    def _audio_ok() -> bool:
+        if audio_handle is None:
+            return False
+        for attr in ("reopen", "close", "open", "stop_input", "start_input"):
+            if hasattr(audio_handle, attr):
+                return True
+        return False
+
+    def _asr_ok() -> bool:
+        if offline_fallback is not None:
+            if hasattr(offline_fallback, "_enter_fallback") or hasattr(
+                offline_fallback, "_exit_fallback"
+            ):
+                return True
+        if asr_handle is not None:
+            if hasattr(asr_handle, "restart") or hasattr(asr_handle, "reset"):
+                return True
+        return False
+
+    def _camera_ok() -> bool:
+        if camera_handle_ref is None:
+            return False
+        return callable(camera_handle_ref) or hasattr(camera_handle_ref, "__getitem__")
+
+    return {
+        "audio": "ok" if _audio_ok() else "stub",
+        "asr": "ok" if _asr_ok() else "stub",
+        "camera": "ok" if _camera_ok() else "stub",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -276,17 +334,34 @@ def build_real_reopen_callbacks(
 
     def _camera_reopen(**ctx: Any) -> bool:
         component = "camera"
+        # infra-012: 解决 USB 独占 + ref 回写。
+        # camera_handle_ref 支持两种形态：
+        #   1) callable() -> CameraSource | None   （只读 ref，不能回写新 handle；
+        #      这种情况下我们不能持有新 handle，必须 release 再让上游重新构造，
+        #      所以走 read-probe 验活后 release 临时 handle）
+        #   2) mutable container（list/dict）：传 list 时 ref[0] 是当前 handle；
+        #      我们 release 老 → open 新 → 写回 ref[0]，保持 USB 独占被一个 handle
+        #      持有，避免每次 reopen 都临时多开一个 (USB camera 真机会撞)。
+        is_mutable_ref = (
+            camera_handle_ref is not None
+            and not callable(camera_handle_ref)
+            and hasattr(camera_handle_ref, "__getitem__")
+            and hasattr(camera_handle_ref, "__setitem__")
+        )
         # 取当前 handle
         h = None
         if camera_handle_ref is not None:
             try:
-                h = camera_handle_ref()
+                if is_mutable_ref:
+                    h = camera_handle_ref[0]
+                else:
+                    h = camera_handle_ref()
             except Exception as e:  # noqa: BLE001
                 log.debug("[self_heal_wire] camera_handle_ref raised: %r", e)
                 emit("self_heal.component_attempt", component=component, path="ref_raised",
                      error=type(e).__name__)
                 return False
-        # release 旧
+        # 先 release 老 handle —— 否则 USB 独占下 open 新 handle 会失败
         if h is not None:
             try:
                 if hasattr(h, "release"):
@@ -305,10 +380,34 @@ def build_real_reopen_callbacks(
                 log.debug("[self_heal_wire] new camera.read raised: %r", e)
                 emit("self_heal.component_attempt", component=component, path="read_raised",
                      error=type(e).__name__)
+                # 验活失败也要释放，避免 USB 泄漏
+                try:
+                    if hasattr(new_cam, "release"):
+                        new_cam.release()
+                except Exception:  # noqa: BLE001
+                    pass
                 return False
+            if is_mutable_ref:
+                # 写回 ref；保留新 handle，由 ref 持有方负责后续 release。
+                try:
+                    camera_handle_ref[0] = new_cam
+                except Exception as e:  # noqa: BLE001
+                    log.debug("[self_heal_wire] camera_handle_ref writeback raised: %r", e)
+                    # 写回失败 → 释放避免 USB 泄漏
+                    try:
+                        if hasattr(new_cam, "release"):
+                            new_cam.release()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    emit("self_heal.component_attempt", component=component,
+                         path="ref_writeback_raised", error=type(e).__name__)
+                    return False
+                emit("self_heal.component_attempt", component=component,
+                     path="reopened_ref_writeback", read_ok=bool(ok))
+                return bool(ok)
+            # callable / None ref：临时 handle，释放避免 USB 泄漏
             emit("self_heal.component_attempt", component=component,
-                 path="reopened", read_ok=bool(ok))
-            # 释放本工厂创建的新 handle（调用方 ref 不会自动更新；这里只验活）
+                 path="reopened_probe_release", read_ok=bool(ok))
             try:
                 if hasattr(new_cam, "release"):
                     new_cam.release()

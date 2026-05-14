@@ -145,10 +145,8 @@ def v2_wire_on_not_placeholder() -> None:
         # identity / __name__ 检查
         _check("V2.b audio 不是 placeholder identity",
                wire.audio is not placeholder)
-        _check("V2.c audio 是工厂内闭包（__name__ != '<lambda>')",
-               wire.audio.__name__ in {"_audio_reopen", "<lambda>"}
-               and wire.audio.__name__ != placeholder.__name__
-               or wire.audio.__name__ == "_audio_reopen")
+        _check("V2.c audio 是工厂内闭包（__name__ == '_audio_reopen'）",
+               wire.audio.__name__ == "_audio_reopen")
         _check("V2.d asr 是工厂内闭包",
                wire.asr.__name__ == "_asr_restart")
         _check("V2.e camera 是工厂内闭包",
