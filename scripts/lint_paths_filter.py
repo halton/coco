@@ -124,7 +124,7 @@ def check_pattern_nonempty(data: dict) -> str:
 
 
 def check_meta_tail_order(path: Path) -> str:
-    """L5：meta 段在所有 area 段之后（行号比较）。
+    r"""L5：meta 段在所有 area 段之后（行号比较）。
 
     用文本扫描而非 yaml.safe_load（后者顺序无意义）。识别顶层 key 行：
     `^[a-z_]+:\s*$`（注意 yaml 顶层 key，无缩进）。

@@ -2085,7 +2085,7 @@
       "phase": 12,
       "area": "infra",
       "priority": 87,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "actionlint dry-run hook 落地 + lint_paths_filter.py:130 docstring raw-string 修复（infra-014 caveat #5 + 1 轻微瑕疵 SyntaxWarning）",
       "followed_from": "infra-014"
