@@ -2528,3 +2528,27 @@ phase-12（8/8）软件主线全部 sim-first done 后，feature_list.json not_s
 **未 merge**: 仍在 feat/vision-010-fu-4 分支，待 Reviewer LGTM 后由主会话 closeout merge → main.
 
 **新 caveat**: 实现期未发现新 caveat。按硬规则即使发现也只入 backlog 注释，**不再衍生 fu-5**；phase-13 closeout 后直接转 companion-015.
+
+---
+
+## Session: vision-010-fu-4 closeout (2026-05-14)
+
+**Verdict**: passing — Reviewer LGTM-with-caveats（1 LOW caveat 不阻 merge）
+
+**Reviewer caveat**:
+- C-1 [low] git status evidence/ 在 fresh 重跑 verify 后再次脏（vision-010/verify_summary.json 时间戳抖动）。**根因在 vision-010 自身 verify 不幂等**（临时路径 + 时间戳进 evidence detail），不是 fu-4 引入。closeout 已 `git checkout HEAD -- evidence/vision-010/verify_summary.json` 还原；**不开 fu-5，入 backlog 跟踪**。
+
+**Backlog 注入**: `infra-backlog-vision-010-verify-idempotent` priority=999 status=backlog（明确不进 phase-13 执行队列），description: vision-010 verify 不幂等：临时路径 + 时间戳进 evidence detail 致每次重跑后 git status evidence/vision-010 脏。fix-forward 将 tmpdir/timestamp 从 evidence 剥离。
+
+**Merge**: `feat/vision-010-fu-4` → `main` via `git merge --no-ff`. main HEAD 见末尾。
+
+**vision-010 fu chain 终结声明**:
+- vision-010 (base) / vision-010-fu-1 (wire+state) / vision-010-fu-2 (act primary) / vision-010-fu-3 (env+template) / vision-010-fu-4 (NaN/Inf/上限防御) 全部 passing
+- 任何后续 vision-010 边角问题（含 verify 幂等性）转 backlog，不再衍生 fu-N
+- 下一候选: **companion-015 priority=91**（_bump_comfort_prefer baseline 真修 + preference 跨进程持久化深化）
+
+**phase-13 软件进度**: 6/7（vision-010 / fu-1 / fu-2 / fu-3 / fu-4 + 起点 → 剩 companion-015 / audio-009 / interact-015 / infra-016）
+
+**Real machine UAT**: 继承 vision-010 链路 pending（COCO_GROUP_PRIMARY_PREFER_BOOST 真摄像头 ARBIT primary 切换效果），不另开 uat 项。
+
+**Push**: `git push origin main` + `git push origin feat/vision-010-fu-4` 各一次（失败忽略）。
