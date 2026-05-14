@@ -1623,3 +1623,19 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 ### 下一步
 - **phase-11 规划**：分析 phase-10 followup backlog 中 priority 最低数字的 not_started（infra-009-fu-* / infra-010-fu-1..4 / companion-011-fu-1..2 / interact-012-fu-1 / infra-011-fu-1..2）+ 新候选；按 sim-first 推进
 - 或 **uat-phase4 / uat-phase8 异步真机 UAT**（不阻 phase-11）
+
+
+## Session 2026-05-14 — phase-11 入库
+
+phase-10 完成 5/5 (infra-009/010 + companion-011 + interact-012 + infra-011)。phase-11 启动，入库 6 候选并 absorb phase-10 followup 9 项：
+
+- **infra-012** (priority=75, in_progress) — 吸收 infra-010-fu-1..4：self_heal wire 完善（handles=N/3 startup log + camera USB 独占 + audio/asr handle surface + verify V2.c helper）
+- **companion-012** (priority=76) — 吸收 companion-011-fu-1/2：verify_companion_011 V12b helper + observe cheap-doc 注释 + profile_id reconcile 真 face_id
+- **interact-013** (priority=77) — 吸收 interact-012-fu-1：MM LLM `_build_mm_system_prompt_unlocked` 锁内 IO 拆 snapshot + 锁外渲染
+- **infra-013** (priority=78) — 吸收 infra-011-fu-1/2：paths-filter 补 pyproject.toml / tests/** / conftest.py 兜底段 + workflow_dispatch 验证 + cross-area regression mitigation 文档化
+- **vision-008** (priority=79) — face_id 真接入 GroupModeCoordinator (default-OFF COCO_FACE_ID_REAL=1)
+- **audio-008** (priority=80) — sim-side USB audio probe 自检 (default-OFF COCO_AUDIO_USB_PROBE=1)，真机 UAT 异步
+
+9 项 followup (infra-010-fu-1..4 / companion-011-fu-1/2 / interact-012-fu-1 / infra-011-fu-1/2) 全部 status=absorbed + absorbed_by 指向对应新 feature，不再单独执行。
+
+下一步：派 Engineer 执行 infra-012（在 feat/infra-012 分支）。
