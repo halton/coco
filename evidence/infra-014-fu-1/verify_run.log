@@ -1,0 +1,11 @@
+infra-014-fu-1 V1-V8
+  [OK] V1 SyntaxWarning 已消除（lint_paths_filter.py compile clean） — 0 warnings
+  [OK] V2 lint_paths_filter.py 仍 PASS（infra-014 行为不破） — rc=0
+  [OK] V3 actionlint hook 调用路径存在 (lint_workflows.py 可用) — exists=True help_rc=0 import=True
+  [OK] V4 actionlint 未装：默认 rc=0+SKIP，strict rc=1+FAIL — default_rc=0 strict_rc=1
+  [OK] V5 actionlint 已装真跑 dry-run（hook 接通 actionlint 二进制） — bin=/opt/homebrew/bin/actionlint rc=0
+  [OK] V6 回归 verify_infra_014/011/013 全 PASS — verify_infra_014.py=OK(rc=0) verify_infra_011.py=OK(rc=0) verify_infra_013.py=OK(rc=0)
+  [OK] V7 ./init.sh COCO_CI=1 smoke PASS — rc=0
+  [OK] V8 docs 已更新 + lint_workflows 在 paths-filter (infra+meta, 双副本) — docs=True pf_infra_g=True meta_g=True infra_e=True meta_e=True
+
+PASS infra-014-fu-1 V1-V8 (8/8)

@@ -501,6 +501,7 @@ def _paths_filter_yaml() -> str:
         "scripts/run_verify_all.py",
         "scripts/precommit_impact.py",
         "scripts/lint_paths_filter.py",
+        "scripts/lint_workflows.py",
     ])
     # 去重排序
     lines: list[str] = ["# infra-008: paths-filter 建议片段（供 infra-006 verify-matrix 参考）"]
@@ -522,6 +523,7 @@ def _paths_filter_yaml() -> str:
         ".github/**",
         "docs/regression-policy.md",
         "scripts/lint_paths_filter.py",
+        "scripts/lint_workflows.py",
         "scripts/run_verify_all.py",
         "scripts/precommit_impact.py",
     ]

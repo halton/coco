@@ -1,0 +1,34 @@
+{
+  "feature_id": "infra-014-fu-1",
+  "verifier": "scripts/verify_infra_014_fu_1.py",
+  "ok": true,
+  "checks": [
+    {"id": "V1", "name": "SyntaxWarning 已消除（lint_paths_filter.py compile clean）", "ok": true, "detail": "0 warnings; line 127 docstring 已 raw-string"},
+    {"id": "V2", "name": "lint_paths_filter.py 仍 PASS（infra-014 行为不破）", "ok": true, "detail": "rc=0 L1-L5 全 OK"},
+    {"id": "V3", "name": "actionlint hook 调用路径存在 (lint_workflows.py 可用)", "ok": true, "detail": "exists=True --help rc=0 import OK (actionlint_available/run_actionlint/main)"},
+    {"id": "V4", "name": "actionlint 未装：默认 rc=0+SKIP，strict rc=1+FAIL", "ok": true, "detail": "通过 PATH=空目录强制 cover；default_rc=0 strict_rc=1"},
+    {"id": "V5", "name": "actionlint 已装真跑 dry-run（hook 接通 actionlint 二进制）", "ok": true, "detail": "本机 actionlint 1.7.12 (homebrew) → 对 .github/workflows/verify-matrix.yml 跑 dry-run，rc=0 clean"},
+    {"id": "V6", "name": "回归 verify_infra_014/011/013 全 PASS", "ok": true, "detail": "infra-014 8/8 + infra-011 10/10 + infra-013 8/8"},
+    {"id": "V7", "name": "./init.sh COCO_CI=1 smoke PASS", "ok": true, "detail": "rc=0"},
+    {"id": "V8", "name": "docs 已更新 + lint_workflows 在 paths-filter (infra+meta, 双副本)", "ok": true, "detail": "docs section #4 改为'落地' + 安装提示 + --strict + 删除旧'仅跟踪'措辞；paths-filter .github + evidence 双副本同步"}
+  ],
+  "regression": {
+    "verify_infra_014": "PASS 8/8",
+    "verify_infra_011": "PASS 10/10",
+    "verify_infra_013": "PASS 8/8",
+    "smoke_init_sh": "PASS rc=0"
+  },
+  "actionlint_real_run": {
+    "available_on_dev_machine": true,
+    "version": "actionlint 1.7.12 (built from source, go1.26.1, darwin/arm64)",
+    "binary": "/opt/homebrew/bin/actionlint",
+    "result_on_verify_matrix_yml": "rc=0 clean (no issues)"
+  },
+  "engineer_caveats": [
+    "V4 通过 PATH=空目录强制模拟未装环境，确保即使本机装了 actionlint 也能 cover skip 路径",
+    "V5 现在本机已装 actionlint 后真跑通 dry-run；CI runner 上是否装 actionlint 待 follow-up（可在 verify-matrix.yml 加 setup step 或 actionlint-action）",
+    "lint_workflows.py 当前仅作 dev/CI 工具，未挂 pre-commit hook 也未挂 CI job（属下一步 follow-up）",
+    "lint_workflows.py 已加入 paths-filter infra area + meta：将来改 lint_workflows.py 自身会触发全 7 个 verify-XXX job（meta 段触发），符合 infra-013 fu-2 设计意图",
+    "verify_infra_014_fu_1.py 的 V5 在 actionlint 未装本机退化为'记录跳过'（不算 fail），因为安装本身不在本 feature scope；V4 已独立 cover 未装路径"
+  ]
+}
