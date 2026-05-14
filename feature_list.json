@@ -2085,10 +2085,12 @@
       "phase": 12,
       "area": "infra",
       "priority": 87,
-      "status": "in_progress",
+      "status": "passing",
       "owner": "engineer",
       "description": "actionlint dry-run hook 落地 + lint_paths_filter.py:130 docstring raw-string 修复（infra-014 caveat #5 + 1 轻微瑕疵 SyntaxWarning）",
-      "followed_from": "infra-014"
+      "followed_from": "infra-014",
+      "evidence": "verify_infra_014_fu_1 8/8 PASS (V1 actionlint binary present 1.7.12 / V2 lint_workflows.py exists / V3 actionlint dry-run on workflow files / V4 paths-filter raw-string fix / V5 pre-commit hook list / V6 evidence files / V7 regression / V8 smoke). 回归: verify_infra_014 10/10 + verify_infra_011 10/10 + verify_infra_013 8/8 + verify_infra_008 all PASS + COCO_CI=1 ./init.sh smoke 全 PASS. Reviewer (sub-agent): LGTM no-caveats; 5 caveats accepted（actionlint binary 路径假设 / dry-run 仅静态语法 / lint_paths_filter raw-string 修复仅 b\\xff 一处 / hook 触发条件文档化 / future polish: CI runner setup actionlint + verify-matrix lint pre-job）. actionlint 1.7.12 本机真跑通过. main HEAD=4b3113b3970ef34fc8b38930bd17b7e2da973736 (post-merge).",
+      "notes": "Followup polish 建议（不阻 merge）: CI runner setup actionlint + verify-matrix lint pre-job（在 verify-matrix.yml 加 lint job 跑 actionlint + lint_paths_filter）."
     },
     {
       "id": "infra-014-fu-2",

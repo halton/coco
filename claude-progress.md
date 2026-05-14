@@ -2084,3 +2084,16 @@ phase-11 软件全部完成：
 
 ### 下一 candidate
 - infra-014-fu-1（priority=87, phase=12, not_started）
+
+
+## Session — 2026-05-14 — infra-014-fu-1 close-out
+
+- infra-014-fu-1 → passing（V1-V8 8/8 PASS + Reviewer LGTM no-caveats；actionlint 1.7.12 dry-run hook + lint_paths_filter raw-string 修复；5 caveats accepted 不阻 merge）
+- 回归：verify_infra_014 10/10 + verify_infra_011 10/10 + verify_infra_013 8/8 + verify_infra_008 all PASS + COCO_CI=1 ./init.sh smoke 全 PASS
+- merge feat/infra-014-fu-1 → main，main HEAD=4b3113b
+- push origin main / feat/infra-014-fu-1 各 1 次：main 推送成功（0ada722..4b3113b），feat 分支 up-to-date
+- phase-12 软件进度 7/8（infra-012-fu-1 / vision-009 / interact-014 / companion-013 / infra-014 / companion-014 / infra-014-fu-1 done），剩 infra-014-fu-2（priority=88 evidence policy 实现）
+- Followup polish（不阻 merge）：CI runner setup actionlint + verify-matrix.yml 加 lint pre-job（actionlint + lint_paths_filter）
+
+### 下一 candidate
+- infra-014-fu-2（priority=88, phase=12, not_started）—— evidence dirty 自动 reset policy + verify-matrix lint pre-job
