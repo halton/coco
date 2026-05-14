@@ -1589,3 +1589,37 @@ merge feat/robot-003 → main no-ff；robot-003 status=passing。phase-5 全部 
 
 ### 下一步
 - **infra-011**（priority=64，phase-10）— 把 infra-008 生成的 `evidence/infra-008/paths-filter.yml` wire 到 `.github/workflows/verify-matrix.yml`，PR 路径检测 → 仅触发受影响 area job，加速 CI（hot path / 全量改动仍 fan out 全部 job）。dorny/paths-filter@v3 + verify-XXX job if 条件 + push event 强制全量。
+
+## 2026-05-14 — infra-011 close-out + phase-10 完成（5/5 全 passing）
+
+### 实做摘要
+- feat/infra-011 上 c3432ec (wire) + e66aeac (verify) 两 commit
+- `.github/workflows/verify-matrix.yml`：新增 dorny/paths-filter@v3 step → outputs；每个 verify-XXX job 加 `if` 条件读 paths-filter outputs（push to main/feat/** 时强制全量，PR 时按 area 切片）
+- `.github/paths-filter.yml`：与 `evidence/infra-008/paths-filter.yml` 同步的 area → glob 切片定义
+- `scripts/verify_infra_011.py`：V1-V10 共 10/10 PASS（V1 dorny step 存在 / V2 每个 verify-XXX job if 条件 / V3 push 强制全量 / V4 paths-filter 与 infra-008 一致 / V5 hot path fan-out / V6 scripts/verify_*.py 触发自身 area / V7 verify_infra_006 不破 / V8 回归 infra-006 + infra-008 / V9-V10 边界）
+- 回归：verify_infra_006 9/9 + verify_infra_008 all PASS；smoke COCO_CI=1 ./init.sh PASS
+- Reviewer fresh-context: **LGTM-with-caveats** → merge
+
+### 4 caveat（不阻 merge）
+1. `workflow_dispatch` 触发行为未实证，仅静态校验 push event 走 force-all
+2. PR 跨 area regression 漏判（vision 改动影响 interact 类）未在 paths-filter 中 mitigation 文档化
+3. `paths-filter.yml` area 切片未覆盖 `pyproject.toml` / `tests/**` / `conftest.py` 兜底段（依赖/上下文改动应全量 fan-out）
+4. `dorny/paths-filter@v3` pin 是 tag 非 sha（供应链最佳实践应 pin sha）
+
+### 2 followup（phase-10 backlog 末尾）
+- **infra-011-fu-1** (priority 72): workflow_dispatch 实跑验证 + cross-area regression mitigation 文档化（补 V11/V12 静态断言 + 注释）
+- **infra-011-fu-2** (priority 73): paths-filter 补 `pyproject.toml` / `tests/**` / `conftest.py` 兜底段 + V13 全量 fan-out 断言
+
+### phase-10 5/5 一句话回顾
+- **infra-009**：phase-7/8/9 followup sweep — robot-005 模式集中收割（V6 文案 Reviewer 自撤回 / resume() 多余 log.debug / emit fallback None 吞事件 等）
+- **infra-010**：SelfHealRegistry reopen 策略 wire 主回路 — camera/audio/asr handle 占位 ref + sim dry-run 不消耗 giveup 真机配额
+- **companion-011**：group_mode multi-user 共处 — 多 face_id 共存窗口 / 切换 profile 不抖 / prefer TopK 融合
+- **interact-012**：MM proactive LLM 化 — fusion dark_silence/motion_greet 命中 → 拼专用 system_prompt (场景+emotion+prefer TopK) 调 LLM → TTS 直播；default-OFF；cooldown 60s
+- **infra-011**：dorny/paths-filter@v3 wire 到 verify-matrix.yml — PR 按 area 切 jobs，push 强制全量；CI 加速 + 静默漏 verify 防线
+
+### main HEAD
+（merge commit + closeout commit 完成后填实际 hash，见 sub-agent 输出）
+
+### 下一步
+- **phase-11 规划**：分析 phase-10 followup backlog 中 priority 最低数字的 not_started（infra-009-fu-* / infra-010-fu-1..4 / companion-011-fu-1..2 / interact-012-fu-1 / infra-011-fu-1..2）+ 新候选；按 sim-first 推进
+- 或 **uat-phase4 / uat-phase8 异步真机 UAT**（不阻 phase-11）
