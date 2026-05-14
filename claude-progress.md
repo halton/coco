@@ -1709,3 +1709,38 @@ phase-11 第 1 个 feature infra-012 完成。Engineer 在 feat/infra-012 实施
 ### 下一步
 - **phase-11 第 3 个** interact-013 (priority=77, area=interact) — 吸收 interact-012-fu-1，ProactiveScheduler._build_mm_system_prompt 拆 snapshot+渲染，锁外 IO + 锁内仅 cooldown/计数
 - 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
+
+
+## Session 2026-05-14 — interact-013 close-out：MM LLM 锁内 IO 拆分 LGTM merge
+
+### 实做
+- **拆分设计**：`coco/proactive.py` `ProactiveScheduler._build_mm_system_prompt` 拆为：
+  - `MmPromptSnapshot` frozen dataclass — 锁内一次性拷出的不可变快照（profile state / prefer TopK / emotion_label / now_ts / cooldown_until / last_emit_ts）
+  - `_collect_locked(self, trigger)` — 锁内调用，把上述三元组 + 时间戳 + cooldown 状态打包成 snapshot，立即归还锁
+  - `_render(snapshot, trigger)` — `staticmethod` 纯函数，零外部依赖，仅接收 snapshot+trigger meta，移出锁外执行
+  - `maybe_trigger` 锁块改造：锁内仅留 cooldown 判定 + counter 更新 + snapshot 抓取，render 完全在锁外执行
+- **scripts/verify_interact_013.py** V1-V8 全 PASS (8/8)：
+  - V1 锁外 snapshot 调用断言（profile_store / preference_learner / emotion 读路径在锁外被调用一次）
+  - V2 `_render` 内不再访问外部 store
+  - V3 锁内仅 cooldown / 计数
+  - V4 snapshot dict 含必要键
+  - V5 trigger meta 透传不丢
+  - V6 多线程并发拼 prompt 不死锁
+  - V7 snapshot 抓取异常退化普通 prompt
+  - V8 cooldown 60s 抑流断言保持
+- **回归**：verify_interact_012 11/11 + verify_vision_007 10/10 + verify_companion_011 PASS + COCO_CI=1 ./init.sh smoke 全 PASS
+
+### caveat 3 解除依据
+- Engineer 第三 caveat 担心 `profile.py ProfileStore.load` 在锁外 snapshot 时存在线程安全问题
+- Reviewer 复核 `coco/profile.py:128-152`：`ProfileStore.load` 自身持有 `threading.RLock`，IO+state 内部互斥
+- 因此从 `_collect_locked` 在 ProactiveScheduler._lock 持有期间调用 `profile_store.load`（或锁外调用）均线程安全
+- Reviewer fresh-context: **LGTM no-caveats**，零 caveat 入账
+
+### Merge / Commit
+- feat/interact-013 ahead 2 commit (04e79e2 split / 1a2ba85 verify) merged 到 main via `--no-ff`
+- closeout commit: feature_list.json status passing + evidence 入账 + _change_log 追加 + claude-progress.md Session 记录
+- main HEAD（merge 后）：b95a6c7
+
+### 下一步
+- **phase-11 第 4 个** infra-013 (priority=78, area=infra) — 吸收 infra-011-fu-1/2，paths-filter 兜底段补 pyproject.toml / tests/** / conftest.py + workflow_dispatch 静态校验 + cross-area regression mitigation 文档化
+- 或 uat-phase4 / uat-phase8 / uat-phase10 / uat-phase11 异步真机 UAT（不阻 phase-11 推进）
