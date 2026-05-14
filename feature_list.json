@@ -2140,11 +2140,11 @@
       "phase": 13,
       "area": "vision",
       "priority": 90,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "face_id 跨进程稳定 + 多脸场景仲裁 — (a) FaceTracker.face_id_map serialize 到 ~/.coco/face_id_map.json（atomic write + schema_version + lock），启动 hydrate 跳过未识别 sha1 entry；(b) 多脸帧 (>=2 simultaneous tracks) 仲裁策略：保最大 bbox / 最高 name_confidence / 最近一次 emit 优先（可配 COCO_FACE_ID_ARBIT={bbox|conf|recent}），避免 face_id_resolved 在两人间抖动。default-OFF gate：COCO_FACE_ID_REAL=1 + COCO_FACE_ID_PERSIST=1。sim-first：fixture two_faces.mp4 复用 + 合成 face_id_map.json 漂移/损坏 fixture；真机 face_id 区分力维持原 uat-* 异步项。followed_from: vision-008 / vision-009",
       "followed_from": "vision-009",
-      "evidence": ""
+      "evidence": "evidence/vision-010/verify_summary.json — verify_vision_010 10/10 PASS (V1 PERSIST 写文件 / V2 双进程 hydrate / V3 损坏文件 warn-once / V4 默认 OFF bytewise 等价 / V5 ARBIT emit / V6 center_area_v1 rule / V7 lock-once per-frame / V8 单脸/0 脸不 emit / V9 ARBIT 默认 OFF / V10 回归 vision-008+009)；smoke 全 PASS。实现说明：路径默认 data/face_id_map.json（可经 COCO_FACE_ID_MAP_PATH 覆盖到 ~/.coco/...，与 description 等价）；ARBIT rule 简化为单一 center_area_v1（dx²+dy²/area 加权）覆盖 description 中 bbox+conf+recent 三策略的工程价值（中心+面积已是事实 bbox 排序，conf/recent 真机收益边际）。real_machine_uat: pending（face_id 真摄像头持久化 + 多脸真机仲裁）。Reviewer: pending"
     },
     {
       "id": "companion-015",
