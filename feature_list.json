@@ -2456,7 +2456,7 @@
       "area": "vision",
       "priority": 105,
       "phase": 14,
-      "status": "not_started",
+      "status": "in_progress",
       "description": "face_id_map LRU/GC + 漂移自愈深化 — vision-010 持久化第二步。(a) FaceTracker.face_id_map LRU 化：max_entries=500 (env COCO_FACE_ID_MAP_MAX 可调)，超量按 last_seen_ts 删最久未见 entry；(b) GC 周期 (每 5 min 或每 N 帧) 扫描 entry，清理 last_seen_ts 超 COCO_FACE_ID_MAP_TTL_DAYS=30 的 stale entry；(c) face_id_map.json schema_version mismatch / 部分字段损坏 (单 entry malformed) 时仅丢该 entry 继续 hydrate 其余，emit vision.face_id_map_repair{dropped_n, reason}；(d) entry quality 评分：name_confidence 长期 <0.3 标 untrusted，仲裁优先级降低不参与 active speaker。default-OFF gate：COCO_FACE_ID_MAP_GC=1 (GC + LRU)，COCO_FACE_ID_REAL=1 + COCO_FACE_ID_PERSIST=1 沿用。sim-first：fixture 500+entries map + 损坏 entry + stale ts 注入 + GC tick 验证。followed_from: vision-010 (持久化深化)",
       "acceptance": "V1 LRU 超 max_entries 删最久 last_seen_ts; V2 GC 周期清理 TTL 超期 entry + emit map_repair{reason='ttl'}; V3 单 entry malformed 只丢该 entry + emit map_repair{reason='schema'} + 其余 hydrate 成功; V4 untrusted entry 仲裁优先级降低 (low name_confidence 长期); V5 env COCO_FACE_ID_MAP_GC OFF zero-cost no-op; V6 vision-010 V1-V10 回归 PASS",
       "_change_log": [
@@ -2465,6 +2465,14 @@
           "action": "created",
           "by": "phase-14-planner-subagent",
           "note": "vision-010 持久化深化第二步 (LRU + GC + 漂移自愈)"
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "status_change",
+          "from": "not_started",
+          "to": "in_progress",
+          "by": "engineer-subagent",
+          "note": "LRU+GC+漂移自愈 实现启动"
         }
       ]
     },

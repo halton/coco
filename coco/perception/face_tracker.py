@@ -3,6 +3,14 @@
 vision-010: face_id_map 跨进程持久化 (COCO_FACE_ID_PERSIST) +
 多脸仲裁 (COCO_FACE_ID_ARBIT, rule center_area_v1).
 
+vision-011: face_id_map LRU + GC + 漂移自愈
+- COCO_FACE_ID_MAP_GC=1 启用 LRU/GC 总开关（default-OFF bytewise 等价）
+- COCO_FACE_ID_MAP_MAX=500 上限，超量按 last_seen 升序 LRU 淘汰
+- COCO_FACE_ID_MAP_TTL_DAYS=30 TTL，run_gc_cycle 清理超期 entry
+- 单 entry malformed 仅丢该 entry，其余 hydrate 成功
+- emit ``vision.face_id_map_repair{dropped_n, reason}`` (reason='ttl'|'schema')
+- untrusted entry（name_confidence < 0.3 长期）仲裁降权
+
 设计目标：
 - 把"开摄像头 + 周期 detect"独立成一个 daemon 线程，不阻塞 IdleAnimator 的主循环。
 - 暴露线程安全 snapshot：``latest() -> FaceSnapshot``，IdleAnimator 在自己节奏下读。
@@ -281,10 +289,34 @@ _FACE_ID_MAP_SCHEMA_VERSION = 1
 _FACE_ID_MAP_DEFAULT_PATH = "data/face_id_map.json"
 
 
-def _load_face_id_map(path: Path) -> Dict[str, Dict[str, Any]]:
+# vision-011: LRU + GC + 漂移自愈 env
+def _bool_env_face_id_gc(env: Any) -> bool:
+    """vision-011: ``COCO_FACE_ID_MAP_GC=1`` → True；default-OFF 等价."""
+    raw = (env.get("COCO_FACE_ID_MAP_GC") or "").strip().lower()
+    return raw in {"1", "true", "yes", "on"}
+
+
+_FACE_ID_MAP_MAX_DEFAULT = 500
+_FACE_ID_MAP_TTL_DAYS_DEFAULT = 30
+# vision-011: untrusted 阈值（name_confidence 长期低于此值 → 仲裁降权）
+_FACE_ID_UNTRUSTED_CONF_THRESHOLD = 0.3
+# vision-011: 仲裁降权时给 untrusted 候选 score 增加的固定惩罚（与最大可能 score 同量级）
+_FACE_ID_UNTRUSTED_SCORE_PENALTY = 1e6
+
+
+def _load_face_id_map(
+    path: Path,
+    emit_fn: Optional[Callable[..., None]] = None,
+) -> Dict[str, Dict[str, Any]]:
     """读取 face_id_map.json；schema 不匹配 / 损坏 / 缺失 → 返回空 dict + warn-once.
 
-    Returns: ``{name: {"face_id": str, "first_seen": float, "last_seen": float}}``
+    vision-011: 单 entry malformed 仅丢该 entry，其余 hydrate 成功；
+    若有 entry 被丢，emit ``vision.face_id_map_repair{reason='schema',dropped_n}``。
+    顶层 schema 损坏（非 dict / version mismatch / entries 非 list / 文件本身非 JSON）
+    仍走全量 fallback（返回空 dict + warn）。
+
+    Returns: ``{name: {"face_id": str, "first_seen": float, "last_seen": float,
+                        "name_confidence": float (optional, vision-011)}}``
     """
     if not path.exists():
         return {}
@@ -299,18 +331,50 @@ def _load_face_id_map(path: Path) -> Dict[str, Dict[str, Any]]:
         if not isinstance(entries, list):
             raise ValueError("entries not list")
         out: Dict[str, Dict[str, Any]] = {}
+        dropped_n = 0
         for ent in entries:
+            # vision-011: 单 entry malformed → 丢该 entry 继续
             if not isinstance(ent, dict):
+                dropped_n += 1
                 continue
             name = ent.get("name")
             fid = ent.get("face_id")
             if not isinstance(name, str) or not isinstance(fid, str):
+                dropped_n += 1
                 continue
-            out[name] = {
-                "face_id": fid,
-                "first_seen": float(ent.get("first_seen", 0.0) or 0.0),
-                "last_seen": float(ent.get("last_seen", 0.0) or 0.0),
-            }
+            try:
+                rec: Dict[str, Any] = {
+                    "face_id": fid,
+                    "first_seen": float(ent.get("first_seen", 0.0) or 0.0),
+                    "last_seen": float(ent.get("last_seen", 0.0) or 0.0),
+                }
+            except (TypeError, ValueError):
+                dropped_n += 1
+                continue
+            # vision-011 可选字段（schema 兼容：load fallback 0.0）
+            nc = ent.get("name_confidence")
+            if isinstance(nc, (int, float)):
+                rec["name_confidence"] = float(nc)
+            out[name] = rec
+        # vision-011: schema repair emit（dropped 才 emit）
+        if dropped_n > 0 and emit_fn is not None:
+            try:
+                emit_fn(
+                    "vision.face_id_map_repair",
+                    "",
+                    dropped_n=dropped_n,
+                    reason="schema",
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker emit face_id_map_repair(schema) failed: %s: %s",
+                    type(e).__name__, e,
+                )
+        if dropped_n > 0:
+            log.warning(
+                "FaceTracker face_id_map hydrate dropped %d malformed entries "
+                "(path=%s)", dropped_n, path,
+            )
         return out
     except Exception as e:  # noqa: BLE001
         log.warning(
@@ -324,20 +388,28 @@ def _atomic_write_face_id_map(
     path: Path,
     entries: Dict[str, Dict[str, Any]],
 ) -> None:
-    """atomic write: tmp + rename，避免半写文件污染下次 hydrate。"""
+    """atomic write: tmp + rename，避免半写文件污染下次 hydrate.
+
+    vision-011: 若 entry 含 ``name_confidence`` 字段则持久化（schema 兼容：
+    老 reader 忽略未知字段，新 reader load fallback；schema_version 仍为 1）。
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _ent_to_dict(name: str, rec: Dict[str, Any]) -> Dict[str, Any]:
+        d: Dict[str, Any] = {
+            "name": name,
+            "face_id": rec["face_id"],
+            "first_seen": rec.get("first_seen", 0.0),
+            "last_seen": rec.get("last_seen", 0.0),
+        }
+        if "name_confidence" in rec:
+            d["name_confidence"] = rec["name_confidence"]
+        return d
+
     payload = {
         "version": _FACE_ID_MAP_SCHEMA_VERSION,
         "saved_at": time.time(),
-        "entries": [
-            {
-                "name": name,
-                "face_id": rec["face_id"],
-                "first_seen": rec.get("first_seen", 0.0),
-                "last_seen": rec.get("last_seen", 0.0),
-            }
-            for name, rec in sorted(entries.items())
-        ],
+        "entries": [_ent_to_dict(name, rec) for name, rec in sorted(entries.items())],
     }
     fd, tmp_path = tempfile.mkstemp(
         prefix=".face_id_map.", suffix=".json.tmp", dir=str(path.parent)
@@ -490,11 +562,33 @@ class FaceTracker:
         self._face_id_persist_path: Path = Path(
             os.environ.get("COCO_FACE_ID_MAP_PATH", _FACE_ID_MAP_DEFAULT_PATH)
         )
-        # name → {face_id, first_seen, last_seen}（仅持久化模式下维护）
+        # name → {face_id, first_seen, last_seen, [name_confidence]}（仅持久化模式下维护）
         self._face_id_meta: Dict[str, Dict[str, Any]] = {}
+
+        # vision-011: LRU + GC + 漂移自愈
+        self._face_id_gc_enabled: bool = _bool_env_face_id_gc(os.environ)
+        self._face_id_map_max: int = max(
+            1, _env_int("COCO_FACE_ID_MAP_MAX", _FACE_ID_MAP_MAX_DEFAULT)
+        )
+        self._face_id_map_ttl_days: float = max(
+            0.0, _env_float("COCO_FACE_ID_MAP_TTL_DAYS",
+                            float(_FACE_ID_MAP_TTL_DAYS_DEFAULT))
+        )
+        # name_confidence 长期低于该阈值则视为 untrusted（仲裁降权）
+        self._face_id_untrusted_threshold: float = _FACE_ID_UNTRUSTED_CONF_THRESHOLD
+        # 每帧（_tick）调用 _maybe_run_gc；GC 周期靠 frame counter 控制
+        self._gc_frame_counter: int = 0
+        # GC 默认每多少帧扫描一次（5min @ 5fps ≈ 1500 帧；env 可调）
+        self._gc_period_frames: int = max(
+            1, _env_int("COCO_FACE_ID_MAP_GC_PERIOD_FRAMES", 1500)
+        )
+
         # hydrate 一次（启动时；持久化模式下）
         if self._face_id_persist_enabled:
-            hydrated = _load_face_id_map(self._face_id_persist_path)
+            hydrated = _load_face_id_map(
+                self._face_id_persist_path,
+                emit_fn=self._emit_fn,
+            )
             if hydrated:
                 with self._face_id_lock:
                     for name, rec in hydrated.items():
@@ -504,6 +598,16 @@ class FaceTracker:
                     "FaceTracker face_id_map hydrated from %s: %d entries",
                     self._face_id_persist_path, len(hydrated),
                 )
+            # vision-011: hydrate 后若 GC 启用，立刻跑一次 TTL 清理
+            # （应对长时间未启动后的 stale entry 堆积）
+            if self._face_id_gc_enabled:
+                try:
+                    self.run_gc_cycle(reason_tag="hydrate")
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "FaceTracker GC after hydrate failed: %s: %s",
+                        type(e).__name__, e,
+                    )
 
         # 多脸仲裁
         self._face_id_arbit_enabled: bool = _bool_env_face_id_arbit(os.environ)
@@ -699,6 +803,15 @@ class FaceTracker:
                     self._face_id_meta[name]["last_seen"] = time.time()
         # vision-010: 持久化模式下 flush（atomic write；锁外执行避免长 IO 阻塞）
         if first_time and self._face_id_persist_enabled:
+            # vision-011: 首次写入后若 GC 启用且超量则跑一次 LRU 淘汰
+            if self._face_id_gc_enabled:
+                try:
+                    self.run_gc_cycle(reason_tag="post_insert")
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "FaceTracker GC post-insert failed: %s: %s",
+                        type(e).__name__, e,
+                    )
             try:
                 with self._face_id_lock:
                     snapshot = {k: dict(v) for k, v in self._face_id_meta.items()}
@@ -803,6 +916,11 @@ class FaceTracker:
             dy = float(b.cy) - cy_frame
             area = max(1, int(b.w) * int(b.h))
             score = (dx * dx + dy * dy) / float(area + 1)
+            # vision-011: untrusted (name_confidence 长期 < 0.3) 仲裁降权
+            # 用加法 penalty 而非乘法，保证 baseline score=0 的情况下也能被降权
+            untrusted = self._is_untrusted(n)
+            if untrusted:
+                score += _FACE_ID_UNTRUSTED_SCORE_PENALTY
             candidates.append({
                 "name": n,
                 "face_id": face_id,
@@ -810,6 +928,7 @@ class FaceTracker:
                 "cx": float(b.cx),
                 "cy": float(b.cy),
                 "area": area,
+                "untrusted": untrusted,
             })
         if len(candidates) < 2:
             return None
@@ -931,6 +1050,18 @@ class FaceTracker:
         # default-OFF：未设 COCO_FACE_ID_ARBIT=1 → arbitrate_faces 内部 short-circuit 返回 None。
         # lock-once policy: 同帧 ts 去重，已由 arbitrate_faces 内部保证。
         self._maybe_auto_arbitrate(int(w), int(h), ts)
+        # vision-011: 周期性 GC（default-OFF 时 run_gc_cycle 内部 short-circuit）
+        if self._face_id_gc_enabled and self._face_id_persist_enabled:
+            self._gc_frame_counter += 1
+            if self._gc_frame_counter >= self._gc_period_frames:
+                self._gc_frame_counter = 0
+                try:
+                    self.run_gc_cycle()
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "FaceTracker periodic GC failed: %s: %s",
+                        type(e).__name__, e,
+                    )
 
     def _maybe_auto_arbitrate(self, frame_w: int, frame_h: int, ts: float) -> None:
         """vision-010-fu-1: _tick 末尾尝试一次多脸仲裁（default-OFF cheap path）.
@@ -1003,6 +1134,141 @@ class FaceTracker:
         - 因此 ``set_arbit_callback`` 调用本身不打破 default-OFF bytewise 等价。
         """
         self._arbit_callback = callback
+
+    # vision-011: LRU + GC 公开 API
+    def run_gc_cycle(self, *, now: Optional[float] = None,
+                     reason_tag: str = "tick") -> Dict[str, int]:
+        """跑一轮 GC：TTL 过期 entry 清理 + LRU 超量淘汰.
+
+        Default-OFF：``COCO_FACE_ID_MAP_GC`` 未设 / 持久化未启用 → 直接返回
+        全 0 字典（bytewise 等价旧路径，无 emit、无文件 IO）。
+
+        Parameters
+        ----------
+        now : Optional[float]
+            当前时间戳（time.time()）；None 时取 time.time()。测试可注入。
+        reason_tag : str
+            内部日志 tag（非 emit reason；emit reason 固定为 'ttl' / 'lru'）。
+
+        Returns
+        -------
+        dict
+            ``{"dropped_ttl": int, "dropped_lru": int}``
+
+        emit:
+        - ``vision.face_id_map_repair{reason='ttl', dropped_n}`` 若 TTL 清理 >0
+        - ``vision.face_id_map_repair{reason='lru', dropped_n}`` 若 LRU 淘汰 >0
+          （spec 主要要求 'ttl' 与 'schema'；'lru' 是补充信号，下游可忽略）
+
+        Side effects: 持久化模式下若有 entry 被丢，atomic flush 到磁盘。
+        """
+        if not self._face_id_gc_enabled or not self._face_id_persist_enabled:
+            return {"dropped_ttl": 0, "dropped_lru": 0}
+        if now is None:
+            now = time.time()
+        ttl_secs = self._face_id_map_ttl_days * 86400.0
+        dropped_ttl: List[str] = []
+        dropped_lru: List[str] = []
+        with self._face_id_lock:
+            # 1) TTL 清理 (ttl_days <= 0 视为禁用 TTL)
+            if ttl_secs > 0:
+                stale = [
+                    name for name, rec in self._face_id_meta.items()
+                    if (now - float(rec.get("last_seen", 0.0))) > ttl_secs
+                ]
+                for name in stale:
+                    self._face_id_meta.pop(name, None)
+                    self._face_id_map.pop(name, None)
+                    dropped_ttl.append(name)
+            # 2) LRU 超量淘汰（按 last_seen 升序删最久未见）
+            if len(self._face_id_meta) > self._face_id_map_max:
+                excess = len(self._face_id_meta) - self._face_id_map_max
+                # 按 last_seen 升序排序
+                ordered = sorted(
+                    self._face_id_meta.items(),
+                    key=lambda kv: float(kv[1].get("last_seen", 0.0)),
+                )
+                for name, _rec in ordered[:excess]:
+                    self._face_id_meta.pop(name, None)
+                    self._face_id_map.pop(name, None)
+                    dropped_lru.append(name)
+            # 拷一份 snapshot 出锁外做 IO
+            snapshot = {k: dict(v) for k, v in self._face_id_meta.items()}
+
+        # emit (锁外)
+        if dropped_ttl and self._emit_fn is not None:
+            try:
+                self._emit_fn(
+                    "vision.face_id_map_repair",
+                    "",
+                    dropped_n=len(dropped_ttl),
+                    reason="ttl",
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker emit face_id_map_repair(ttl) failed: %s: %s",
+                    type(e).__name__, e,
+                )
+        if dropped_lru and self._emit_fn is not None:
+            try:
+                self._emit_fn(
+                    "vision.face_id_map_repair",
+                    "",
+                    dropped_n=len(dropped_lru),
+                    reason="lru",
+                )
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker emit face_id_map_repair(lru) failed: %s: %s",
+                    type(e).__name__, e,
+                )
+
+        # flush 若有丢弃发生
+        if dropped_ttl or dropped_lru:
+            try:
+                _atomic_write_face_id_map(self._face_id_persist_path, snapshot)
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker flush after GC failed (path=%s): %s: %s",
+                    self._face_id_persist_path, type(e).__name__, e,
+                )
+            log.info(
+                "FaceTracker GC[%s] dropped ttl=%d lru=%d (remaining=%d)",
+                reason_tag, len(dropped_ttl), len(dropped_lru), len(snapshot),
+            )
+        return {"dropped_ttl": len(dropped_ttl), "dropped_lru": len(dropped_lru)}
+
+    def record_name_confidence(self, name: str, confidence: float) -> None:
+        """vision-011: 记录最近一次 name_confidence，便于 untrusted 判定 + 持久化.
+
+        Default-OFF（持久化未启用）→ no-op，bytewise 等价。
+        """
+        if not self._face_id_persist_enabled:
+            return
+        if not isinstance(name, str) or not name:
+            return
+        with self._face_id_lock:
+            rec = self._face_id_meta.get(name)
+            if rec is None:
+                return
+            rec["name_confidence"] = float(confidence)
+
+    def _is_untrusted(self, name: str) -> bool:
+        """vision-011: name 是否 untrusted（仲裁降权）.
+
+        判据：持久化 meta 中记录的 name_confidence < 阈值（0.3）。
+        无记录 → False（保守：不降权）。
+        """
+        if not self._face_id_persist_enabled:
+            return False
+        with self._face_id_lock:
+            rec = self._face_id_meta.get(name)
+        if rec is None:
+            return False
+        nc = rec.get("name_confidence")
+        if not isinstance(nc, (int, float)):
+            return False
+        return float(nc) < self._face_id_untrusted_threshold
 
     def _maybe_identify(self, frame, faces) -> None:
         """对 primary face 跑一次 face-id；patch snapshot.primary_track.name/confidence。"""

@@ -1,0 +1,41 @@
+{
+  "feature": "vision-011",
+  "ok": true,
+  "results": [
+    {
+      "name": "V1 LRU evict oldest (max=3 keeps 3 newest by last_seen)",
+      "ok": true,
+      "detail": "dropped_lru=2 remaining=['u_mid', 'u_new1', 'u_new2'] lru_events=1"
+    },
+    {
+      "name": "V2 TTL GC drops stale + emits map_repair{reason='ttl'}",
+      "ok": true,
+      "detail": "dropped_ttl=2 remaining=['u_fresh'] events=1 dropped_n=2"
+    },
+    {
+      "name": "V3 malformed entries dropped + others hydrated + emit schema",
+      "ok": true,
+      "detail": "hydrated=['alice', 'carol'] alice_fid=fid_alice carol_fid=fid_carol schema_events=1 dropped_n=2"
+    },
+    {
+      "name": "V4 untrusted (low confidence) arbit demoted (bob wins over center alice)",
+      "ok": true,
+      "detail": "primary_name='bob' alice_untrusted=True"
+    },
+    {
+      "name": "V5 GC OFF: zero-cost no-op (no emit, no eviction)",
+      "ok": true,
+      "detail": "dropped_ttl=0 dropped_lru=0 count=5 repair_events=0"
+    },
+    {
+      "name": "V5b PERSIST+GC both OFF: bytewise eq (no IO, no meta, no map_repair emit)",
+      "ok": true,
+      "detail": "fid='fid_522b276a' no_file=True no_meta=True no_repair=True"
+    },
+    {
+      "name": "V6 regress vision-010 V1-V10 still PASS",
+      "ok": true,
+      "detail": "rc=0 tail=[\"[PASS] V10 regress vision-008 / 009 still PASS — results={'verify_vision_008.py': ('ok', 0), 'verify_vision_009.py': ('ok', 0)}\", '', '[vision-010] 10/10 PASS']"
+    }
+  ]
+}
