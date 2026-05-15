@@ -2536,7 +2536,7 @@
       "area": "infra",
       "priority": 110,
       "phase": 15,
-      "status": "not_started",
+      "status": "passing",
       "title": "smoke 子检查 exit-code 细分 + CI history-summary upload job",
       "user_visible_behavior": "./init.sh smoke 在 PASS/WARN/SKIP/FAIL 之间做出 exit-code 细分（rc=0 全 PASS / rc=1 FAIL / rc=2 WARN-only / rc=3 SKIP-only），CI 在每次 verify-matrix 运行末自动 upload health-summary jsonl + html 作为 artifact，便于跨日趋势观察。",
       "origin_backlog": [
@@ -2558,7 +2558,12 @@
         "V5 Regression: verify_infra_017 V1-V10 + ./init.sh smoke 通过。",
         "V6 Reviewer fresh-context sub-agent 评审 (硬规则)。"
       ],
-      "evidence": [],
+      "evidence": {
+        "verify_summary": "evidence/infra-018/verify_summary.json",
+        "smoke": "evidence/_history/smoke_history.jsonl",
+        "merge_sha": "16184ce",
+        "reviewer": "Reviewer (sub-agent fresh-context 02d4478): LGTM-with-caveats — verify V1-V5 PASS / smoke rc=0 / regression infra-016/017 PASS / actionlint PASS / Default-OFF bytewise 等价 V4 覆盖; 3 caveats 入 backlog infra-018-backlog-classify-and-matrix"
+      },
       "description": "infra-017 backlog 子项升级 (C4+C9) — smoke exit-code 细分 + CI artifact upload。default-OFF gate COCO_SMOKE_FINEGRAINED_EXIT=1。sim-first 全可证；不依赖真机。"
     },
     {
@@ -2729,6 +2734,14 @@
       "phase": null,
       "status": "backlog",
       "description": "C1 coco/main.py:_robot_sequencer 仅 placeholder wire — 缺 ProactiveScheduler / GroupMode 注入路径、atexit cancel-on-shutdown 钩子、subscribe callbacks 实际接入；C2 cancel 语义：sleep poll cancel 会丢当前 action 的 action_done emit，Engineer 「完成当前 + 跳 pending」描述微偏，行为合理但需文档显式说明；C3 高频 subscribe dispatch 用 daemon Thread per-event 无上限，接高频业务前换 ThreadPoolExecutor / asyncio queue；C4 Action.type 现为 str，真集成 ProactiveScheduler 时再决定是否改 Enum；C5 sequencer_config_from_env 仅识别 1/true/yes/on 小写白名单，不识别 TRUE/On 等，加 .lower() 或在 docstring 标注大小写敏感；C6 verify_summary.json files_changed 标 248 lines 实际 ~300 行，minor 记账偏差"
+    },
+    {
+      "id": "infra-018-backlog-classify-and-matrix",
+      "area": "infra",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "C1 scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283)，model 缺失 ON 模式下 rc=3 而非 rc=2；建议改 prefix 'SKIP:' 匹配或统一文案为大写 SKIP/WARN 前缀。C2 .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 仅按 python-version 维度区分；未来加 OS axis 需补 '${{ matrix.os }}' 防 artifact 覆盖。C3 scripts/smoke.py harness 顶层 try/except 仅捕 Exception；若未来改 thread/async 注意 SystemExit/KeyboardInterrupt 不会被该处捕获，仅文档/防御性 note。"
     },
     {
       "id": "uat-robot-006",

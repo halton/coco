@@ -2887,3 +2887,11 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - 升级 backlog → upgraded: 0 条 (按禁令"不再做 sequencer/preference/face-id-map/history/proactive-trace 残留 wire 整条升级"；polish/doc-only 子项保留 backlog；结构性/observability 子项吸收记于候选 absorbed_items)
 - companion 域本轮不出候选 (companion-016-backlog 全 doc-only/polish，无独立 ROI)
 - 下一步: 主会话决定启动第一个 phase-15 候选 (按 priority 最低数字 = infra-018)
+
+## Session 2026-05-15 — infra-018 PHASE-15 #1 closeout
+
+- infra-018 PASSING, merge sha=16184ce
+- Reviewer (sub-agent fresh-context 02d4478) LGTM-with-caveats, NO BLOCKER, 3 caveats
+- backlog: infra-018-backlog-classify-and-matrix (C1 WARN/SKIP 子串误判, C2 OS axis artifact name, C3 SystemExit 防御 note)
+- phase-15 进度: 1/5 完成 (infra-018 ✅; robot-007/audio-011/vision-012/interact-017 待)
+- 下一步: robot-007 (priority=111)
