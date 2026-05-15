@@ -173,12 +173,22 @@ class WakeWordDetector:
         self._mic_stream_lock = threading.Lock()
         self._reopen_count = 0
 
-    def request_reopen(self, event: str = "changed", device: Optional[dict] = None) -> None:
+    def request_reopen(
+        self,
+        event: str = "changed",
+        device: Optional[dict] = None,
+        error_type: str = "requested",
+    ) -> None:
         """外部 hotplug cb 调用：请求 mic_loop stop+reopen 当前 InputStream。
 
         见 ``VADTrigger.request_reopen`` 注释。
+        audio-012: 新增 ``error_type``（``"requested"`` / ``"portaudio_error"`` / ``"unknown"``）。
         """
-        self._reopen_meta = {"event": str(event), "device": dict(device or {})}
+        self._reopen_meta = {
+            "event": str(event),
+            "device": dict(device or {}),
+            "error_type": str(error_type or "requested"),
+        }
         self._reopen_event.set()
         with self._mic_stream_lock:
             s = self._current_mic_stream
@@ -409,6 +419,7 @@ class WakeWordDetector:
                 self._reopen_event.clear()
                 old_dev = meta.get("device") or {}
                 old_idx = old_dev.get("index")
+                error_type = str(meta.get("error_type") or "requested")
                 try:
                     _stop = getattr(_stream, "stop", None)
                     if callable(_stop):
@@ -421,6 +432,8 @@ class WakeWordDetector:
                         _close()
                 except Exception:  # noqa: BLE001
                     pass
+                # audio-012: 记录 close 完成时刻（实际丢失窗口下界）
+                t_close_done = time.monotonic()
                 with self._mic_stream_lock:
                     self._current_mic_stream = None
 
@@ -442,15 +455,32 @@ class WakeWordDetector:
                         reason=str(meta.get("event") or "changed"),
                         old_device_idx=old_idx,
                         new_device_idx=new_idx,
+                        error_type=error_type,
                         ts=time.time(),
                     )
-                    dt = max(0.0, t_reopen_done - t_stop)
-                    lost_n = int(dt * cfg.sample_rate)
+                    # audio-012: 校准 lost_n window — 同 VADTrigger
+                    dt_total = max(0.0, t_reopen_done - t_stop)
+                    dt_actual = max(0.0, t_reopen_done - t_close_done)
+                    from coco.vad_trigger import _read_loss_window_override_ms as _read_ovr
+                    env_ms_override = _read_ovr()
+                    if env_ms_override is not None:
+                        window_ms = int(env_ms_override)
+                        actual_ms = int(env_ms_override)
+                        lost_n_actual = int((env_ms_override / 1000.0) * cfg.sample_rate)
+                    else:
+                        window_ms = int(dt_actual * 1000)
+                        actual_ms = window_ms
+                        lost_n_actual = int(dt_actual * cfg.sample_rate)
+                    lost_n = int(dt_total * cfg.sample_rate)
                     _emit(
                         "audio.reopen_buffer_lost_n",
                         subsystem="wake",
                         lost_n=lost_n,
-                        ms=int(dt * 1000),
+                        ms=int(dt_total * 1000),
+                        lost_n_actual=lost_n_actual,
+                        window_ms=window_ms,
+                        actual_ms=actual_ms,
+                        error_type=error_type,
                         ts=time.time(),
                     )
                 except Exception:  # noqa: BLE001
