@@ -2704,24 +2704,27 @@
       "area": "interact",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C1 brief 早期文案曾写 llm_usage_rollup.py，与实现 scripts/llm_usage_summary.py 不一致；closeout 时 feature_list.json 已同步为 llm_usage_summary.py，此处记录历史 note 防回退。C2 proactive_trace_summary._is_fail 只认 ok=False / error / status:*fail*，不认顶层 failure 字段；若 ProactiveScheduler emit 用 failure 键统计漏算 — 需补 emit 端约定 (ok/error 标准化) 或扩展 _is_fail。C3 trace 行 latency_ms 字段目前 fixture 显式注入，生产 ProactiveScheduler 调用端需补发 (wire-up)。C4 空 jsonl rc=0 而非 brief 描述的 rc=2；语义合理 (合法但无数据 ≠ 缺失输入)，需后续校准 brief/V3 文案。"
+      "status": "upgraded",
+      "description": "C1 brief 早期文案曾写 llm_usage_rollup.py，与实现 scripts/llm_usage_summary.py 不一致；closeout 时 feature_list.json 已同步为 llm_usage_summary.py，此处记录历史 note 防回退。C2 proactive_trace_summary._is_fail 只认 ok=False / error / status:*fail*，不认顶层 failure 字段；若 ProactiveScheduler emit 用 failure 键统计漏算 — 需补 emit 端约定 (ok/error 标准化) 或扩展 _is_fail。C3 trace 行 latency_ms 字段目前 fixture 显式注入，生产 ProactiveScheduler 调用端需补发 (wire-up)。C4 空 jsonl rc=0 而非 brief 描述的 rc=2；语义合理 (合法但无数据 ≠ 缺失输入)，需后续校准 brief/V3 文案。",
+      "upgraded_to": "interact-018"
     },
     {
       "id": "vision-012-backlog-time-source-and-validation",
       "area": "vision",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C1 _gc_last_time 使用 time.time() (wall clock)，NTP 回拨理论上影响 time_due 判断；GC 300s 默认窗口对其不敏感，建议换 time.monotonic() 消除回拨敏感性。C2 verify_vision_012 V2 用 monkey-patch time.time 模拟时间推进；若 C1 改为 monotonic，verify 需同步换 monkey-patch time.monotonic。C3 _face_id_untrusted_penalty <0 时 fallback 到默认 1e6 但构造无 logger.warning，env 误填负数静默；建议加 debug log 提示 fallback。C4 evidence/ 大量 audio-* / infra-018 jsonl mtime 漂移 (与 vision-012 无关，环境噪声)；非本 feature 责任，记录便于下次 closeout 关注。"
+      "status": "upgraded",
+      "description": "C1 _gc_last_time 使用 time.time() (wall clock)，NTP 回拨理论上影响 time_due 判断；GC 300s 默认窗口对其不敏感，建议换 time.monotonic() 消除回拨敏感性。C2 verify_vision_012 V2 用 monkey-patch time.time 模拟时间推进；若 C1 改为 monotonic，verify 需同步换 monkey-patch time.monotonic。C3 _face_id_untrusted_penalty <0 时 fallback 到默认 1e6 但构造无 logger.warning，env 误填负数静默；建议加 debug log 提示 fallback。C4 evidence/ 大量 audio-* / infra-018 jsonl mtime 漂移 (与 vision-012 无关，环境噪声)；非本 feature 责任，记录便于下次 closeout 关注。",
+      "upgraded_to": "vision-013"
     },
     {
       "id": "audio-010-backlog-residual-wire",
       "area": "audio",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C1 coco/asr.py:138 InputStream wrap；C2 coco/main.py:2150 备用 InputStream wrap；C3 reopen_callback 真业务接入（vad/wake mic_loop 持有 watcher 句柄触发流重开）；C4 HotplugWatcher poll_interval 默认 5s 可调小评估"
+      "status": "upgraded",
+      "description": "C1 coco/asr.py:138 InputStream wrap；C2 coco/main.py:2150 备用 InputStream wrap；C3 reopen_callback 真业务接入（vad/wake mic_loop 持有 watcher 句柄触发流重开）；C4 HotplugWatcher poll_interval 默认 5s 可调小评估",
+      "upgraded_to": "audio-012"
     },
     {
       "id": "interact-016-backlog-doc-polish",
@@ -2752,40 +2755,45 @@
       "area": "vision",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C-1 wire _maybe_identify → record_name_confidence（生产路径目前直接 patch TrackedFace.name_confidence 不写 _face_id_meta，导致 untrusted 检测在无上层业务显式调用时永不触发）；C-2 reason='lru' 是 spec 之外补充信号，下游可选忽略；C-3 _FACE_ID_UNTRUSTED_SCORE_PENALTY=1e6 与 _FACE_ID_UNTRUSTED_CONF_THRESHOLD=0.3 硬编码常量未 env 化；C-4 GC 周期 1500 帧在低 fps（1fps）下会拉到 25min，可加时间 OR 帧数双触发"
+      "status": "upgraded",
+      "description": "C-1 wire _maybe_identify → record_name_confidence（生产路径目前直接 patch TrackedFace.name_confidence 不写 _face_id_meta，导致 untrusted 检测在无上层业务显式调用时永不触发）；C-2 reason='lru' 是 spec 之外补充信号，下游可选忽略；C-3 _FACE_ID_UNTRUSTED_SCORE_PENALTY=1e6 与 _FACE_ID_UNTRUSTED_CONF_THRESHOLD=0.3 硬编码常量未 env 化；C-4 GC 周期 1500 帧在低 fps（1fps）下会拉到 25min，可加时间 OR 帧数双触发",
+      "upgraded_to": "vision-013"
     },
     {
       "id": "robot-006-backlog-wire-and-polish",
       "area": "robot",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C1 coco/main.py:_robot_sequencer 仅 placeholder wire — 缺 ProactiveScheduler / GroupMode 注入路径、atexit cancel-on-shutdown 钩子、subscribe callbacks 实际接入；C2 cancel 语义：sleep poll cancel 会丢当前 action 的 action_done emit，Engineer 「完成当前 + 跳 pending」描述微偏，行为合理但需文档显式说明；C3 高频 subscribe dispatch 用 daemon Thread per-event 无上限，接高频业务前换 ThreadPoolExecutor / asyncio queue；C4 Action.type 现为 str，真集成 ProactiveScheduler 时再决定是否改 Enum；C5 sequencer_config_from_env 仅识别 1/true/yes/on 小写白名单，不识别 TRUE/On 等，加 .lower() 或在 docstring 标注大小写敏感；C6 verify_summary.json files_changed 标 248 lines 实际 ~300 行，minor 记账偏差"
+      "status": "upgraded",
+      "description": "C1 coco/main.py:_robot_sequencer 仅 placeholder wire — 缺 ProactiveScheduler / GroupMode 注入路径、atexit cancel-on-shutdown 钩子、subscribe callbacks 实际接入；C2 cancel 语义：sleep poll cancel 会丢当前 action 的 action_done emit，Engineer 「完成当前 + 跳 pending」描述微偏，行为合理但需文档显式说明；C3 高频 subscribe dispatch 用 daemon Thread per-event 无上限，接高频业务前换 ThreadPoolExecutor / asyncio queue；C4 Action.type 现为 str，真集成 ProactiveScheduler 时再决定是否改 Enum；C5 sequencer_config_from_env 仅识别 1/true/yes/on 小写白名单，不识别 TRUE/On 等，加 .lower() 或在 docstring 标注大小写敏感；C6 verify_summary.json files_changed 标 248 lines 实际 ~300 行，minor 记账偏差",
+      "upgraded_to": "robot-008"
     },
     {
       "id": "infra-018-backlog-classify-and-matrix",
       "area": "infra",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "C1 scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283)，model 缺失 ON 模式下 rc=3 而非 rc=2；建议改 prefix 'SKIP:' 匹配或统一文案为大写 SKIP/WARN 前缀。C2 .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 仅按 python-version 维度区分；未来加 OS axis 需补 '${{ matrix.os }}' 防 artifact 覆盖。C3 scripts/smoke.py harness 顶层 try/except 仅捕 Exception；若未来改 thread/async 注意 SystemExit/KeyboardInterrupt 不会被该处捕获，仅文档/防御性 note。"
+      "status": "upgraded",
+      "description": "C1 scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283)，model 缺失 ON 模式下 rc=3 而非 rc=2；建议改 prefix 'SKIP:' 匹配或统一文案为大写 SKIP/WARN 前缀。C2 .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 仅按 python-version 维度区分；未来加 OS axis 需补 '${{ matrix.os }}' 防 artifact 覆盖。C3 scripts/smoke.py harness 顶层 try/except 仅捕 Exception；若未来改 thread/async 注意 SystemExit/KeyboardInterrupt 不会被该处捕获，仅文档/防御性 note。",
+      "upgraded_to": "infra-019"
     },
     {
       "id": "robot-007-backlog-polish-and-shutdown",
       "area": "robot",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "robot-007 closeout 5 caveats 汇总，全部不阻 merge：C1 (历史记录) 原 brief 与 feature_list 描述 env 命名分歧 (COCO_ROBOT_DISPATCH_WORKERS / drop-newest vs 代码 COCO_ROBOT_SEQ_{POOL_SIZE,QUEUE_MAX,OVERFLOW} / drop_oldest|drop_new|block)，已在本次 closeout 修复 feature_list.json 文案对齐代码命名，此条仅作历史记录。C2 RobotSequencer._dispatch_executor 当前 max_workers=1 占位形同虚设；下次迭代删除或改为纯手工 Thread 管理。C3 RobotSequencer.shutdown() 实现完整但未被 coco/main.py 接入；daemon thread 退出无 leak，hot-restart / 长生命周期场景需加 lifecycle hook。C4 block 模式回调内若递归调用 sequencer 理论可造成死锁；当前业务无此调用模式，不存在实际风险，需 docstring 显式说明。C5 drop 通知事件本身可能被 drop（dispatch_overflow 也走同一 queue）；但 dropped_n 累计字段单调反映总数，可观察性仍可恢复。"
+      "status": "upgraded",
+      "description": "robot-007 closeout 5 caveats 汇总，全部不阻 merge：C1 (历史记录) 原 brief 与 feature_list 描述 env 命名分歧 (COCO_ROBOT_DISPATCH_WORKERS / drop-newest vs 代码 COCO_ROBOT_SEQ_{POOL_SIZE,QUEUE_MAX,OVERFLOW} / drop_oldest|drop_new|block)，已在本次 closeout 修复 feature_list.json 文案对齐代码命名，此条仅作历史记录。C2 RobotSequencer._dispatch_executor 当前 max_workers=1 占位形同虚设；下次迭代删除或改为纯手工 Thread 管理。C3 RobotSequencer.shutdown() 实现完整但未被 coco/main.py 接入；daemon thread 退出无 leak，hot-restart / 长生命周期场景需加 lifecycle hook。C4 block 模式回调内若递归调用 sequencer 理论可造成死锁；当前业务无此调用模式，不存在实际风险，需 docstring 显式说明。C5 drop 通知事件本身可能被 drop（dispatch_overflow 也走同一 queue）；但 dropped_n 累计字段单调反映总数，可观察性仍可恢复。",
+      "upgraded_to": "robot-008"
     },
     {
       "id": "audio-011-backlog-loss-and-recovery",
       "area": "audio",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
-      "description": "audio-011 closeout 3 caveats，全部不阻 merge：C1 asr 路径 reopen_callback 仅注册信号 cb (短录音 record_audio() 而非 mic_loop)，合理设计 (无 long-running stream 需重开)，仅作历史记录与设计 note。C2 audio.reopen_buffer_lost_n 是 stop→reopen 全时段上界估计 (假设整段全丢)；真硬件切换下偏保守，需真机 UAT 校准真实丢帧率。C3 coco/audio/vad_trigger.py:371-378 `except Exception` 不区分 stop 触发 vs 真错误，统一 break 到 reopen 分支，仅 `_reopen_event` 未 set 时 sleep+continue；行为可接受，但 PortAudio 抛 fatal exception 可能被误识为 stop 触发并重开，保留观察，必要时区分异常类型。"
+      "status": "upgraded",
+      "description": "audio-011 closeout 3 caveats，全部不阻 merge：C1 asr 路径 reopen_callback 仅注册信号 cb (短录音 record_audio() 而非 mic_loop)，合理设计 (无 long-running stream 需重开)，仅作历史记录与设计 note。C2 audio.reopen_buffer_lost_n 是 stop→reopen 全时段上界估计 (假设整段全丢)；真硬件切换下偏保守，需真机 UAT 校准真实丢帧率。C3 coco/audio/vad_trigger.py:371-378 `except Exception` 不区分 stop 触发 vs 真错误，统一 break 到 reopen 分支，仅 `_reopen_event` 未 set 时 sleep+continue；行为可接受，但 PortAudio 抛 fatal exception 可能被误识为 stop 触发并重开，保留观察，必要时区分异常类型。",
+      "upgraded_to": "audio-012"
     },
     {
       "id": "uat-audio-011",
@@ -2804,6 +2812,79 @@
       "status": "pending",
       "real_machine_uat": "pending",
       "description": "robot-006 真机异步 UAT：(a) 真机 cancel 硬中断验证（mid-flight cancel 是否真停电机 + sequence_cancelled emit 时序）；(b) 真机电机扭矩 / 头部姿态在 5-action 序列下的物理表现；(c) 真机 sequencer 与 ProactiveScheduler / GroupMode 业务订阅闭环（action_done 回压避免动作叠加）。sim-first 已 PASS (mockup-sim zero-hardware verify_robot_006 全 PASS)，本项不阻 merge，由用户在方便时物理执行回填 evidence。"
+    },
+    {
+      "id": "audio-012",
+      "name": "audio hotplug reopen 真业务接入 + 设备切换 buffer-loss 度量",
+      "area": "audio",
+      "status": "not_started",
+      "phase": 16,
+      "priority": 120,
+      "origin_backlog": [
+        "audio-010-backlog-residual-wire",
+        "audio-011-backlog-loss-and-recovery"
+      ],
+      "description": "目标: 把 HotplugWatcher reopen_callback 真正接到 vad/wake mic_loop 的 long-running InputStream (coco/asr.py:138 / coco/main.py:2150 备用路径), 设备热插拔时端到端能 stop→reopen 不需重启进程; 并细化 audio.reopen_buffer_lost_n 度量 (现为全时段上界, sim 下校准为按 stop→reopen 时间窗估算)。来源: audio-010-backlog-residual-wire C1/C2/C3, audio-011-backlog-loss-and-recovery C2/C3。Sim-first 验收: scripts/verify_audio_012.py 模拟 InputStream wrap + HotplugWatcher fake 设备 disappear/return, 断言 (a) mic_loop 收到 reopen_event 后 buffer_lost_n 计数与时间窗一致, (b) PortAudio 异常 vs 主动 stop 在 vad_trigger.py:371-378 路径有区分(error_type 字段), (c) reopen_callback 被注册到真 stream 句柄而非 placeholder。Env: COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S (default 5, 可调小评估), COCO_AUDIO_REOPEN_LOSS_WINDOW_MS。真机依赖: USB 麦克实拔插下 reopen 行为 / 真实丢帧率 → uat-audio-012 异步项 (不阻 merge)。",
+      "verification": "scripts/verify_audio_012.py",
+      "evidence": {}
+    },
+    {
+      "id": "vision-013",
+      "name": "face_id 生产路径 wire-up + 时钟源切换 monotonic + 阈值 env 化",
+      "area": "vision",
+      "status": "not_started",
+      "phase": 16,
+      "priority": 121,
+      "origin_backlog": [
+        "vision-011-backlog-wire-and-tune",
+        "vision-012-backlog-time-source-and-validation"
+      ],
+      "description": "目标: 把 _maybe_identify 接入 record_name_confidence (生产路径目前直接 patch TrackedFace.name_confidence 不写 _face_id_meta, 导致 untrusted GC 在无上层显式调用时永不触发); _gc_last_time 从 time.time() 切换为 time.monotonic() 消除 NTP 回拨敏感; _FACE_ID_UNTRUSTED_SCORE_PENALTY (1e6) / _FACE_ID_UNTRUSTED_CONF_THRESHOLD (0.3) 硬编码常量 env 化; GC 周期低 fps 下加时间 OR 帧数双触发。来源: vision-011-backlog-wire-and-tune C-1/C-3/C-4, vision-012-backlog-time-source-and-validation C1/C2/C3。Sim-first 验收: scripts/verify_vision_013.py 用 image:/video: 输入跑生产路径 _maybe_identify, 断言 (a) record_name_confidence 被调用且 _face_id_meta 写入, (b) untrusted 阈值触发后 GC 行为符合预期, (c) verify 切 monkey-patch time.monotonic 后 time_due 推进正确, (d) env 误填负数 fallback 默认值并 debug log 提示。Env: COCO_FACE_ID_UNTRUSTED_SCORE_PENALTY (default 1e6), COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD (default 0.3), COCO_FACE_ID_GC_FRAME_INTERVAL, COCO_FACE_ID_GC_TIME_INTERVAL_S。真机依赖: 实际光照下 face_id 区分力 / 误判率仍走 uat-vision-* 异步项。",
+      "verification": "scripts/verify_vision_013.py",
+      "evidence": {}
+    },
+    {
+      "id": "robot-008",
+      "name": "RobotSequencer 接入 main lifecycle + ProactiveScheduler 注入路径",
+      "area": "robot",
+      "status": "not_started",
+      "phase": 16,
+      "priority": 122,
+      "origin_backlog": [
+        "robot-006-backlog-wire-and-polish",
+        "robot-007-backlog-polish-and-shutdown"
+      ],
+      "description": "目标: 把 RobotSequencer 从 coco/main.py:_robot_sequencer placeholder 升级为真 wire — ProactiveScheduler / GroupMode 注入路径建立, subscribe callbacks 实际接入, atexit cancel-on-shutdown hook 注册 (RobotSequencer.shutdown() 已实现但未被 main 接入, 当前 daemon thread 无 leak 但 hot-restart / 长生命周期场景需 lifecycle hook); 删除 _dispatch_executor max_workers=1 占位 (改纯手工 Thread 管理或保留但明确说明)。来源: robot-006-backlog-wire-and-polish C1/C3, robot-007-backlog-polish-and-shutdown C2/C3/C4。Sim-first 验收: scripts/verify_robot_008.py 用 --mockup-sim daemon + ProactiveScheduler fake event 源, 断言 (a) subscribe→dispatch→action_done emit 链路打通, (b) shutdown hook 触发后 pending action 取消并 emit cancel 事件, (c) hot-restart (start→shutdown→start) 无 thread leak, (d) block 模式回调内递归 dispatch 在 docstring 显式标注 (不实际触发)。Env: 沿用 COCO_ROBOT_SEQ_POOL_SIZE / QUEUE_MAX / OVERFLOW (drop_oldest|drop_new|block)。真机依赖: 真硬件 goto_sleep / 头部姿态 / 视觉-运动闭环延迟 → uat-robot-008 异步项。",
+      "verification": "scripts/verify_robot_008.py",
+      "evidence": {}
+    },
+    {
+      "id": "interact-018",
+      "name": "ProactiveScheduler emit 端 latency_ms wire + _is_fail 约定标准化",
+      "area": "interact",
+      "status": "not_started",
+      "phase": 16,
+      "priority": 123,
+      "origin_backlog": [
+        "interact-017-backlog-script-name-and-emit"
+      ],
+      "description": "目标: 修 interact-017 C2/C3 真功能性遗留 — (a) ProactiveScheduler 调用端补发 latency_ms 字段到 trace 行 (生产路径目前不发, 仅 fixture 显式注入, 导致 scripts/proactive_trace_summary.py 在生产 trace 上 latency 维度统计为 0); (b) _is_fail 统一约定: 接入 emit 端使 ProactiveScheduler 失败路径标准化为 ok=False/error 字段 (而非顶层 failure 键), 或扩展 _is_fail 同时识别 failure 顶层键; 二选一并文档化。来源: interact-017-backlog-script-name-and-emit C2/C3。Sim-first 验收: scripts/verify_interact_018.py 跑生产 ProactiveScheduler 模拟运行 N 次任务, 断言 (a) 每条 trace 行含 latency_ms 字段且数值 > 0, (b) failure 路径在 proactive_trace_summary 统计中被 _is_fail 正确识别, (c) ok=False / error / failure 三种 emit 形态都被统一识别 (或 emit 端只发其中一种且全链路一致)。Env: 无新增。真机依赖: 无 (纯 trace 字段约定 + emit wire)。",
+      "verification": "scripts/verify_interact_018.py",
+      "evidence": {}
+    },
+    {
+      "id": "infra-019",
+      "name": "smoke _classify_stdout 误判修复 + verify-matrix OS-axis artifact 命名",
+      "area": "infra",
+      "status": "not_started",
+      "phase": 16,
+      "priority": 124,
+      "origin_backlog": [
+        "infra-018-backlog-classify-and-matrix"
+      ],
+      "description": "目标: 修 infra-018 C1/C2 — (a) scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283), model 缺失 ON 模式下 rc 应为 2 但当前是 3; 改为 prefix 'SKIP:' 严格匹配, 并把内部所有相关文案统一为 'SKIP:' / 'WARN:' / 'FAIL:' 大写前缀; (b) .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 加入 '${{ matrix.os }}' 维度 (未来加 OS axis 防 artifact 覆盖), 即使当前只有 ubuntu-latest 也先把模板补上。来源: infra-018-backlog-classify-and-matrix C1/C2。Sim-first 验收: scripts/verify_infra_019.py 用 fixture stdout 含 'skipped' 在 WARN 行 / 'SKIP:' 前缀在 SKIP 行, 断言 (a) _classify_stdout 不再把 WARN 行误归为 SKIP, (b) model 缺失 ON 模式 smoke rc=2, (c) verify-matrix.yml artifact name 含 matrix.os 占位。Env: 无。真机依赖: 无 (纯 CI/harness)。",
+      "verification": "scripts/verify_infra_019.py",
+      "evidence": {}
     }
   ],
   "_meta": {

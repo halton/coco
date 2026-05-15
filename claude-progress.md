@@ -2933,3 +2933,17 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - backlog: interact-017-backlog-script-name-and-emit (C1 脚本名已修 note, C2 _is_fail 字段约定, C3 latency_ms 生产 wire, C4 空 jsonl rc 语义)
 - **phase-15 全部 5/5 完成**: infra-018 ✅ robot-007 ✅ audio-011 ✅ vision-012 ✅ interact-017 ✅
 - 下一步: phase-16 规划 (从 backlog 拣 candidate) 或处理 uat-* 异步项
+
+## Session 2026-05-15 — phase-16 规划入库
+
+- main HEAD: 6e4b5d8 (phase-15 5/5 完成)
+- phase-16 候选 (5 个):
+  - audio-012 (prio=120, area=audio) — hotplug reopen 真业务接入 + buffer-loss 度量细化
+  - vision-013 (prio=121, area=vision) — face_id 生产路径 wire + monotonic 时钟 + 阈值 env 化
+  - robot-008 (prio=122, area=robot) — RobotSequencer main lifecycle 接入 + ProactiveScheduler 注入
+  - interact-018 (prio=123, area=interact) — ProactiveScheduler latency_ms wire + _is_fail emit 约定
+  - infra-019 (prio=124, area=infra) — smoke _classify_stdout 误判修复 + verify-matrix OS-axis artifact 名
+- 来源 backlog: audio-010/011, vision-011/012, robot-006/007, interact-017, infra-018
+- 升级 backlog → upgraded: 8 个 (8→5 合并; 每个 backlog 加 upgraded_to 字段)
+- 未吸收 (纯文档 polish / 历史 note, 保留 backlog 不阻 merge): companion-016-backlog-polish, interact-016-backlog-doc-polish, infra-017-backlog-history-residual (其 C1/C4 真功能项可待 phase-17 吸收)
+- 下一步: 主会话决定启动第一个候选 (按 priority 最低数字, 即 audio-012)
