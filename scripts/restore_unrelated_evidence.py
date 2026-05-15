@@ -40,6 +40,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_PREFIX = "evidence/"
+# infra-016: _history/* 是 generated artifact，不是 feature evidence，永远不能被
+# restore_unrelated_evidence 抹掉（dogfood: 本 helper 自己保护新落地的 history
+# jsonl trend）。任何路径以 ``evidence/_history/`` 开头一律视为 protected。
+HISTORY_PROTECTED_PREFIX = "evidence/_history/"
 
 
 def _git_status_porcelain(repo: Path) -> list[tuple[str, str]]:
@@ -117,6 +121,9 @@ def restore_unrelated_evidence(
         if not path.startswith(EVIDENCE_PREFIX):
             continue
         if path.startswith(target_prefix):
+            continue
+        # infra-016: _history/* 永远保护（generated artifact，trend 数据）
+        if path.startswith(HISTORY_PROTECTED_PREFIX):
             continue
         if path in keep_set:
             continue

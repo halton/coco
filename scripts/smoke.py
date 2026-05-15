@@ -446,22 +446,68 @@ def main() -> None:
                         help="同时验 mockup-sim daemon（需先关 Reachy Mini Control.app）")
     args = parser.parse_args()
 
+    t_start = time.time()
+    # infra-016: 按 area 名收集子检查结果（PASS/FAIL/SKIP/WARN），写 history jsonl
+    areas: dict[str, str] = {}
+
+    def _run(name: str, fn) -> None:  # type: ignore[no-untyped-def]
+        """跑一个 smoke 子检查；任何 sys.exit -> 记 FAIL 并继续 raise。"""
+        try:
+            fn()
+        except SystemExit as e:
+            areas[name] = "FAIL"
+            _emit_smoke_history(areas, time.time() - t_start, failed=True)
+            raise
+
+    # 简版包装：保留各子检查直跑行为，仅追加 areas 状态记录。
+    # 子检查内部 print "WARN" / "SKIP" 是 stdout 标识，本层只在它不抛出时记 PASS。
     print_env_baseline()
-    smoke_audio()
-    smoke_asr()
-    smoke_tts()
-    smoke_vision()
-    smoke_companion_vision()
-    smoke_face_tracker()
-    smoke_vad()
-    smoke_wake_word()
-    smoke_power_state()
-    smoke_config()
-    smoke_publish()
+    for nm, fn in [
+        ("audio", smoke_audio),
+        ("asr", smoke_asr),
+        ("tts", smoke_tts),
+        ("vision", smoke_vision),
+        ("companion_vision", smoke_companion_vision),
+        ("face_tracker", smoke_face_tracker),
+        ("vad", smoke_vad),
+        ("wake_word", smoke_wake_word),
+        ("power_state", smoke_power_state),
+        ("config", smoke_config),
+        ("publish", smoke_publish),
+    ]:
+        _run(nm, fn)
+        areas[nm] = "PASS"
     if args.daemon:
-        smoke_daemon()
+        _run("daemon", smoke_daemon)
+        areas["daemon"] = "PASS"
     print()
     print("==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json")
+    # infra-016: 写 history jsonl（成功路径）
+    _emit_smoke_history(areas, time.time() - t_start, failed=False)
+
+
+def _emit_smoke_history(areas: dict[str, str], duration_s: float, *, failed: bool) -> None:
+    """infra-016: 把本次 smoke 结果追加到 evidence/_history/smoke_history.jsonl。
+
+    运行期零影响：异常吞掉。areas 中 PASS / FAIL 计数分别填 pass / fail；
+    SKIP / WARN 暂未单独计（子检查内部仅 print，不抛），保持 skip=0。
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from _history_writer import emit_smoke  # noqa: PLC0415
+    except Exception as e:  # noqa: BLE001
+        sys.stderr.write(f"[smoke] WARN: history import fail: {e}\n")
+        return
+    pass_n = sum(1 for v in areas.values() if v == "PASS")
+    fail_n = sum(1 for v in areas.values() if v == "FAIL")
+    emit_smoke(
+        total=len(areas),
+        pass_=pass_n,
+        fail=fail_n,
+        skip=0,
+        duration_s=duration_s,
+        areas=dict(areas),
+    )
 
 
 if __name__ == "__main__":

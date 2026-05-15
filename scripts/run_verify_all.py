@@ -226,6 +226,8 @@ def main() -> int:
     fails = [r for r in results if r[1] != 0]
     print()
     print(f"[run_verify_all] total={total:.1f}s passed={len(results)-len(fails)} failed={len(fails)}")
+    # infra-016: append-only history jsonl（运行期零影响，写盘失败仅 warn）
+    _emit_history(results, total)
     if fails:
         print("\n[run_verify_all] FAILED scripts (tail of output):")
         for sp, rc, dt, tail in fails:
@@ -238,6 +240,29 @@ def main() -> int:
     if args.restore_unrelated:
         _do_restore(args.restore_unrelated)
     return 0
+
+
+def _emit_history(results: list[tuple[Path, int, float, str]], duration_s: float) -> None:
+    """infra-016: 把本次 run 结果追加到 evidence/_history/verify_history.jsonl。
+
+    运行期零影响：异常吞掉，stderr WARN 一次；不改 main() 返回 rc。
+    """
+    try:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from _history_writer import emit_verify  # noqa: PLC0415
+    except Exception as e:  # noqa: BLE001
+        sys.stderr.write(f"[run_verify_all] WARN: history import fail: {e}\n")
+        return
+    fails = [r for r in results if r[1] != 0]
+    passes = [r for r in results if r[1] == 0]
+    emit_verify(
+        total=len(results),
+        pass_=len(passes),
+        fail=len(fails),
+        skip=0,  # run_verify_all 自身不区分 skip（SKIP_LIST 走 select 阶段过滤掉）
+        duration_s=duration_s,
+        failed_names=[sp.name for sp, *_ in fails],
+    )
 
 
 def _do_restore(target_feature_id: str) -> None:
