@@ -588,6 +588,13 @@ class FaceTracker:
         # 允许 0（关闭降权）；负值 fallback 默认（保护逻辑）
         _pen_raw = _env_float("COCO_FACE_ID_UNTRUSTED_PENALTY",
                               _FACE_ID_UNTRUSTED_SCORE_PENALTY)
+        if _pen_raw < 0.0:
+            # vision-013: 负值显式 warning，便于排查 env 误填
+            log.warning(
+                "COCO_FACE_ID_UNTRUSTED_PENALTY=%.3f invalid (<0), "
+                "fallback to default %.3e",
+                _pen_raw, _FACE_ID_UNTRUSTED_SCORE_PENALTY,
+            )
         self._face_id_untrusted_penalty: float = (
             _pen_raw if _pen_raw >= 0.0 else _FACE_ID_UNTRUSTED_SCORE_PENALTY
         )
@@ -1100,24 +1107,30 @@ class FaceTracker:
 
         同帧双触发节流: 任一满足都仅触发一次 run_gc_cycle, 两计数器都重置.
         Default-OFF (gc OR persist 未启用): 立即 return, 无开销.
+
+        vision-013: `_gc_last_time` 改用 ``time.monotonic()`` 作单调时基, 避免
+        NTP 回拨 / 系统时钟跳变导致 due 判定异常。``run_gc_cycle(now=...)`` 用
+        的 TTL 仍是 wall clock（与 entry 的 last_seen 时间戳一致），因此两路
+        计时是分开的：monotonic 用于 due check，wall clock 用于 TTL 过期。
         """
         if not (self._face_id_gc_enabled and self._face_id_persist_enabled):
             return
         self._gc_frame_counter += 1
-        now_wall = time.time()
-        # 第一次跑前 _gc_last_time=None, 用 wall time 初始化避免启动立即触发
+        now_mono = time.monotonic()
+        # 第一次跑前 _gc_last_time=None, 用 monotonic 初始化避免启动立即触发
         if self._gc_last_time is None:
-            self._gc_last_time = now_wall
+            self._gc_last_time = now_mono
         frame_due = self._gc_frame_counter >= self._gc_period_frames
         time_due = (
             self._gc_period_s > 0.0
-            and (now_wall - self._gc_last_time) >= self._gc_period_s
+            and (now_mono - self._gc_last_time) >= self._gc_period_s
         )
         if frame_due or time_due:
             self._gc_frame_counter = 0
-            self._gc_last_time = now_wall
+            self._gc_last_time = now_mono
             try:
-                self.run_gc_cycle(now=now_wall)
+                # TTL 计算仍走 wall clock (与 last_seen 时间戳一致)
+                self.run_gc_cycle(now=time.time())
             except Exception as e:  # noqa: BLE001
                 log.warning(
                     "FaceTracker periodic GC failed: %s: %s",
@@ -1351,6 +1364,24 @@ class FaceTracker:
         except Exception as e:  # noqa: BLE001
             log.warning("FaceTracker face-id identify failed: %s: %s", type(e).__name__, e)
             return
+        # vision-013: 生产路径接入 — identify 拿到 (name, conf) 后先确保 name 已
+        # 进入 face_id_meta（通过 get_face_id 触发 first-time 注册），再
+        # record_name_confidence 把当帧 confidence 写进 meta，让 _is_untrusted
+        # 和后续 GC TTL 链路能基于真实数据工作。
+        # default-OFF（COCO_FACE_ID_PERSIST 未设）下 get_face_id 返回 None /
+        # record_name_confidence 内部 short-circuit → bytewise 等价。
+        if isinstance(name, str) and name:
+            try:
+                # 注册 meta（若尚未存在）；持久化未启用时该调用仍安全（map 写入但
+                # meta 不写、不 flush，符合既有 default-OFF 等价语义）。
+                self.get_face_id(name)
+                # 写当帧 confidence
+                self.record_name_confidence(name, float(conf))
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker record_name_confidence wire failed: %s: %s",
+                    type(e).__name__, e,
+                )
         # vision-003 L1 fix: identify() 跑在锁外，回填时必须重新按 track_id
         # 在最新快照里查找 TrackedFace 实例；若 track 已被淘汰或 id 已变，
         # 丢弃这次识别结果，避免 lost-update / patch 到错误对象。
