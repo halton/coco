@@ -2895,3 +2895,12 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - backlog: infra-018-backlog-classify-and-matrix (C1 WARN/SKIP 子串误判, C2 OS axis artifact name, C3 SystemExit 防御 note)
 - phase-15 进度: 1/5 完成 (infra-018 ✅; robot-007/audio-011/vision-012/interact-017 待)
 - 下一步: robot-007 (priority=111)
+
+## Session 2026-05-15 — robot-007 PHASE-15 #2 closeout
+
+- robot-007 PASSING, merge sha=ce70d39
+- Reviewer (sub-agent fresh-context 1b56cca) LGTM-with-caveats, NO BLOCKER, 5 caveats
+- 修复: feature_list.json robot-007 description env 命名同步代码 (COCO_ROBOT_SEQ_POOL_SIZE/QUEUE_MAX/OVERFLOW + drop_oldest|drop_new|block)
+- backlog: robot-007-backlog-polish-and-shutdown (C1 env 文案对齐已修, C2 _dispatch_executor 占位, C3 shutdown 未接 main, C4 block 递归死锁理论, C5 drop 通知自身可丢)
+- phase-15 进度: 2/5 完成 (infra-018 ✅ robot-007 ✅; audio-011/vision-012/interact-017 待)
+- 下一步: audio-011 (priority=112)
