@@ -2848,3 +2848,23 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
   - `vision-011-backlog-wire-and-tune` 入库（C1-C4 汇总）
 - **Default-OFF bytewise**：PERSIST+GC 全 OFF / PERSIST=1+GC=0 混合 独立 PASS（zero-cost no-op 路径稳态）
 - **下一候选**：robot-006
+
+## Session 2026-05-15 — robot-006 PHASE-14 #6 closeout + phase-14 完成
+
+- robot-006 PASSING, merge sha=94cb3d6, feat/robot-006 → main (--no-ff, ort strategy, +1125/-3, 10 files)
+- Reviewer (sub-agent fresh-context dd3216f) LGTM-with-caveats, NO BLOCKER, 6 caveats
+- 关键改动：
+  - `coco/robot/sequencer.py` 新增 — RobotSequencer 抽象，串行执行 list[Action]，每个 action 完成 emit `robot.action_done{action_id, type, duration_ms, ts}`；cancel() 立即停当前 action + 跳 pending + emit `robot.sequence_cancelled{cancelled_n}`；sleep poll 取消
+  - `coco/main.py:_robot_sequencer` placeholder wire — default-OFF gate `COCO_ROBOT_SEQ=1`，OFF 时 sequencer 不构造
+  - `scripts/verify_robot_006.py` V1..V8 全 PASS — 5-action 序列 emit 顺序 / cancel mid-flight / 业务订阅回压 (elapsed=0.111s) / Default-OFF zero-cost / mockup-sim 零硬件
+- Regression: robot-003 / robot-004 / robot-005 全 PASS + `./init.sh` smoke 全 PASS
+- Reviewer 6 caveats (合并入 backlog `robot-006-backlog-wire-and-polish`):
+  - C1 `_robot_sequencer` placeholder — 缺 ProactiveScheduler / GroupMode 注入、atexit cancel-on-shutdown、subscribe callbacks 实际接入
+  - C2 cancel 语义: sleep poll cancel 丢当前 action 的 action_done emit，Engineer「完成当前+跳 pending」描述微偏，行为合理需文档
+  - C3 高频 subscribe dispatch daemon Thread per-event 无上限，接高频业务前换 ThreadPoolExecutor / asyncio queue
+  - C4 Action.type 现为 str，真集成时再决定是否 Enum
+  - C5 `sequencer_config_from_env` 不识别 TRUE/On 大写，加 .lower() 或 docstring 标注
+  - C6 `verify_summary.json files_changed` 标 248 lines 实际 ~300 行 minor 偏差
+- async uat: `uat-robot-006` (真机 cancel 硬中断 / 电机扭矩 / sequencer-ProactiveScheduler 闭环), real_machine_uat=pending, 不阻 merge
+- **phase-14 全部 6/6 完成 ✅**: audio-010 / interact-016 / infra-017 / companion-016 / vision-011 / robot-006
+- **下一步**: phase-15 规划 (从 backlog 拣 candidate) 或处理 uat-* 异步项

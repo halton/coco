@@ -2490,7 +2490,7 @@
       "area": "robot",
       "priority": 106,
       "phase": 14,
-      "status": "passing_pending_reviewer",
+      "status": "passing",
       "description": "mockup-sim 多动作序列编排 + 事件 emit — 补 robot 域 phase-12 后空白。(a) RobotSequencer 抽象：接受 list[Action] (head_turn / nod / look_at / sleep / wakeup)，串行执行，每个 action 完成 emit robot.action_done{action_id, type, duration_ms, ts}；(b) cancel 协议：sequencer.cancel() 立即停当前 action + 跳 pending，emit robot.sequence_cancelled{cancelled_n}；(c) ProactiveScheduler / GroupMode 端订阅 robot.action_done 作为状态机回压 (避免动作叠加)；(d) mockup-sim daemon 模式下全程 zero-hardware，evidence 仅记 emit 序列；真机执行作 uat-* 异步项不阻 merge。default-OFF gate：COCO_ROBOT_SEQ=1 (class 提供 always-on，wire 进 main 仅 ON 时启用)。sim-first：fixture 5-action 序列 + cancel mid-flight + 业务订阅 wire；真机扭矩 / 头部姿态保留独立 uat-robot 异步项不阻 merge。followed_from: robot-005",
       "acceptance": "V1 5-action 序列串行执行 emit action_done 顺序正确 (ts 单调); V2 cancel mid-flight 中止当前 + 跳 pending + emit sequence_cancelled{cancelled_n>=1}; V3 业务订阅 (ProactiveScheduler mock) 收到 action_done 后状态机不叠加新动作; V4 env COCO_ROBOT_SEQ OFF zero-cost (sequencer 不构造 / main 不 wire); V5 mockup-sim daemon 全程 zero-hardware; V6 robot-005 回归 PASS",
       "_change_log": [
@@ -2511,6 +2511,12 @@
           "action": "status_changed_to_passing_pending_reviewer",
           "by": "robot-006-engineer-subagent",
           "note": "verify V1..V8 PASS; robot-003/004/005 regression PASS; smoke PASS; mockup-sim zero-hardware 验证; 等 Reviewer fresh-context LGTM."
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "status_changed_to_passing",
+          "by": "closeout-subagent",
+          "note": "Reviewer (sub-agent fresh-context dd3216f) LGTM-with-caveats NO BLOCKER; merge sha=94cb3d6; 6 caveats 入 backlog robot-006-backlog-wire-and-polish; uat-robot-006 异步项立项"
         }
       ],
       "evidence": {
@@ -2520,6 +2526,8 @@
         "regress_robot_004": "evidence/robot-006/regress_robot_004.out",
         "regress_robot_005": "evidence/robot-006/regress_robot_005.out",
         "smoke": "evidence/robot-006/smoke.out",
+        "merge_sha": "94cb3d6",
+        "reviewer": "Reviewer (sub-agent): LGTM-with-caveats — Default-OFF 行为等价 PASS, cancel 重置 PASS, 订阅回压 elapsed=0.111s, mockup-sim 零硬件 PASS, robot-003/004/005 regression PASS, smoke PASS; 6 caveats 入 backlog robot-006-backlog-wire-and-polish",
         "real_machine_uat": "pending (uat-robot-006 异步项, 不阻 merge)"
       }
     },
@@ -2562,6 +2570,23 @@
       "phase": null,
       "status": "backlog",
       "description": "C-1 wire _maybe_identify → record_name_confidence（生产路径目前直接 patch TrackedFace.name_confidence 不写 _face_id_meta，导致 untrusted 检测在无上层业务显式调用时永不触发）；C-2 reason='lru' 是 spec 之外补充信号，下游可选忽略；C-3 _FACE_ID_UNTRUSTED_SCORE_PENALTY=1e6 与 _FACE_ID_UNTRUSTED_CONF_THRESHOLD=0.3 硬编码常量未 env 化；C-4 GC 周期 1500 帧在低 fps（1fps）下会拉到 25min，可加时间 OR 帧数双触发"
+    },
+    {
+      "id": "robot-006-backlog-wire-and-polish",
+      "area": "robot",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "C1 coco/main.py:_robot_sequencer 仅 placeholder wire — 缺 ProactiveScheduler / GroupMode 注入路径、atexit cancel-on-shutdown 钩子、subscribe callbacks 实际接入；C2 cancel 语义：sleep poll cancel 会丢当前 action 的 action_done emit，Engineer 「完成当前 + 跳 pending」描述微偏，行为合理但需文档显式说明；C3 高频 subscribe dispatch 用 daemon Thread per-event 无上限，接高频业务前换 ThreadPoolExecutor / asyncio queue；C4 Action.type 现为 str，真集成 ProactiveScheduler 时再决定是否改 Enum；C5 sequencer_config_from_env 仅识别 1/true/yes/on 小写白名单，不识别 TRUE/On 等，加 .lower() 或在 docstring 标注大小写敏感；C6 verify_summary.json files_changed 标 248 lines 实际 ~300 行，minor 记账偏差"
+    },
+    {
+      "id": "uat-robot-006",
+      "area": "robot",
+      "priority": 998,
+      "phase": null,
+      "status": "pending",
+      "real_machine_uat": "pending",
+      "description": "robot-006 真机异步 UAT：(a) 真机 cancel 硬中断验证（mid-flight cancel 是否真停电机 + sequence_cancelled emit 时序）；(b) 真机电机扭矩 / 头部姿态在 5-action 序列下的物理表现；(c) 真机 sequencer 与 ProactiveScheduler / GroupMode 业务订阅闭环（action_done 回压避免动作叠加）。sim-first 已 PASS (mockup-sim zero-hardware verify_robot_006 全 PASS)，本项不阻 merge，由用户在方便时物理执行回填 evidence。"
     }
   ],
   "_meta": {
