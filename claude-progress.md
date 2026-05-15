@@ -2904,3 +2904,15 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - backlog: robot-007-backlog-polish-and-shutdown (C1 env 文案对齐已修, C2 _dispatch_executor 占位, C3 shutdown 未接 main, C4 block 递归死锁理论, C5 drop 通知自身可丢)
 - phase-15 进度: 2/5 完成 (infra-018 ✅ robot-007 ✅; audio-011/vision-012/interact-017 待)
 - 下一步: audio-011 (priority=112)
+
+## Session 2026-05-15 — audio-011 PHASE-15 #3 closeout
+
+- audio-011 PASSING, merge sha=015a63b
+- Reviewer 一轮 NEEDS-CHANGES (9c804b3, 3 BLOCKER) → Engineer 二轮修 → Reviewer 二轮 LGTM-with-caveats (a1147e9, 0 BLOCKER, 3 caveats)
+- 二轮修复: 真 stream stop+reopen (vad+wake mic_loop) + audio.stream_reopened 五字段 (reason/old_device_idx/new_device_idx/ts/path) + audio.reopen_buffer_lost_n 计数
+- 跨线程 PortAudio 安全 (外部 cb 仅 stop, mic_loop 内 close+open) / Default-OFF bytewise 等价 / 正常路径 zero-overhead (仅 Event.is_set() 检查)
+- verify V1/V1b/V2/V2b/V3/V4/V5/V6/V7 全 PASS / smoke rc=0 / regression audio-010/009/infra-018/robot-007 PASS
+- backlog: audio-011-backlog-loss-and-recovery (C1 asr 信号 cb 设计 note, C2 lost_n 上界估计 UAT 校准, C3 vad_trigger except 不区分 stop vs fatal)
+- async uat: uat-audio-011 (真扬声器/麦克风拔插 + lost_n 真值 + device_idx 字段)
+- phase-15 进度: 3/5 完成 (infra-018 ✅ robot-007 ✅ audio-011 ✅; vision-012/interact-017 待)
+- 下一步: vision-012 (priority=113)
