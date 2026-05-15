@@ -2811,3 +2811,22 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
   - `infra-016-backlog-history-followup` → upgraded（C1/C2/C3/C6/C7/C8 + vision-010 幂等已修；剩 C4/C5/C9 + 新 nit → `infra-017-backlog-history-residual`）
   - `infra-backlog-vision-010-verify-idempotent` → upgraded（sha256 edb8808f 字节稳定）
 - **下一候选**：phase-14 #4 companion-016
+
+## Session 2026-05-15 — phase-14 #4 companion-016 PASSING
+
+- **companion-016 PASSING merge sha=e393662**（feat/companion-016 → main --no-ff）— preference_persisted emit 真节流，解决 companion-015 backlog (emit 自报节流误报)
+- **关键改动**：
+  - `coco/companion/preference_learner.py`: `_emit_persisted_once` 实装双门 (interval_ok = now - last_emit_ts >= min_interval_s, AND hash_changed = sha256(json.dumps(content,sort_keys)) != last_emit_hash)；新增 `_suppressed_since_last` 计数随下一次成功 emit 一并上报
+  - env `COCO_PERSIST_EMIT_MIN_INTERVAL_S` 默认 10s，9 种 fallback case（空 / 非法 / 负 / 浮点 / 极大值）解析含模块级 WARN once
+  - `scripts/verify_companion_016.py` 全 PASS（节流 / dedup / suppressed_since_last 计数 / env 9 case / load anchor）
+- **Regression**：companion-015 V1-V8 全 PASS；`./init.sh` smoke 全 PASS
+- **Reviewer (sub-agent) LGTM-with-caveats**：4 caveat 全 LOW/INFO，无 BLOCKER：
+  - C1 brief 写 `COCO_PREFERENCE_EMIT_INTERVAL_S` 默认 30s 但实现为 `COCO_PERSIST_EMIT_MIN_INTERVAL_S` 默认 10s（spec 与代码不一致以代码为准）
+  - C2 `__init__` 即使 `state_cache_path=None` 仍读 env（极轻，可在未来 lazy load）
+  - C3 `round(.,6)` 浮点精度有损（同值场景为 feature，需文档化）
+  - C4 模块级 WARN once 多进程各 warn 一次（与 companion-015 一致）
+- **Backlog**：
+  - `companion-016-backlog-polish` 入库（C1-C4 polish 项汇总）
+  - `companion-015-backlog-emit-throttle` → upgraded（主体已由 companion-016 实现；polish 项 → companion-016-backlog-polish）
+- **env 名分歧记录**：spec=COCO_PREFERENCE_EMIT_INTERVAL_S / 实现=COCO_PERSIST_EMIT_MIN_INTERVAL_S — 当前以实现为准，未来文档统一
+- **下一候选**：vision-011
