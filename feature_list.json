@@ -2413,7 +2413,7 @@
       "area": "infra",
       "priority": 103,
       "phase": 14,
-      "status": "not_started",
+      "status": "in_progress",
       "description": "infra-016 history jsonl 加固 + vision-010 verify 幂等 — 一次性收割。(a) verify_history.jsonl / smoke_history.jsonl append 加文件锁 (fcntl/msvcrt fallback) 防多进程并发撕裂; (b) rotate 后立即 recreate 空文件 + 维持 schema 头注释; (c) .archive/ 文件名带 PID + nanos 防同秒碰撞; (d) .archive retention 策略：保最近 N=20 个 archive / 超量按 mtime 删旧，env COCO_HISTORY_ARCHIVE_KEEP=20 可调; (e) COCO_HISTORY_DISABLE 解析 .lower() 容忍 'TRUE'/'YES'/'1'/'on'; (f) evidence/infra-016/verify_summary.json archived_path 字段 stamp 剔除以稳定 bytewise diff; (g) verify_vision_010 tmpdir/timestamp 从 evidence 剥离 — 多次重跑 evidence/vision-010/verify_summary.json bytewise 等价 (吸收 infra-backlog-vision-010-verify-idempotent)。default-OFF 不适用 (CI 工具)。sim-first：并发 spawn 两 worker append → 行数 / 不撕裂 verify + retention 单测 + idempotent verify_vision_010 两次跑 diff=empty。followed_from: infra-016-backlog-history-followup (C1/C2/C3/C6/C7/C8 升级) + infra-backlog-vision-010-verify-idempotent (吸收)",
       "acceptance": "V1 并发 append 文件锁 (两 worker 各写 100 行 → 200 行无撕裂); V2 rotate 后空文件立即 recreate; V3 .archive 文件名 PID+nanos 同秒不碰撞; V4 archive retention 保 N=20 删旧 mtime; V5 HISTORY_DISABLE 容忍大小写 / on/off / yes/no; V6 archived_path stamp 剔除后 evidence bytewise 稳定; V7 verify_vision_010 两次跑 evidence 字节级等价; V8 infra-016 / vision-010 回归 PASS",
       "_change_log": [

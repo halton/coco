@@ -87,7 +87,10 @@ def _make_box(x: int, y: int, w: int, h: int):
 # ---------------------------------------------------------------------------
 
 def v1_persist_writes_file() -> None:
-    """V1 PERSIST=1 时首次解析后文件出现且 schema 合规."""
+    """V1 PERSIST=1 时首次解析后文件出现且 schema 合规.
+
+    infra-017 V7：detail 剥离 tmpdir 路径与时间戳浮点，evidence 字节稳定。
+    """
     with tempfile.TemporaryDirectory() as td:
         path = Path(td) / "face_id_map.json"
         ft = _fresh_face_tracker(real=True, persist=True, persist_path=path)
@@ -95,22 +98,25 @@ def v1_persist_writes_file() -> None:
         exists = path.exists()
         if exists:
             data = json.loads(path.read_text(encoding="utf-8"))
+            entries = data.get("entries", [])
             ok = (
                 data.get("version") == 1
-                and isinstance(data.get("entries"), list)
-                and len(data["entries"]) == 1
-                and data["entries"][0]["name"] == "alice"
-                and data["entries"][0]["face_id"] == fid
+                and isinstance(entries, list)
+                and len(entries) == 1
+                and entries[0]["name"] == "alice"
+                and entries[0]["face_id"] == fid
                 and "saved_at" in data
             )
+            # 静态 detail：只暴露稳定字段（schema 版本 / entries 数 / name / fid）
             _record(
                 "V1 PERSIST=1 first resolve writes face_id_map.json",
                 ok,
-                f"path={path} entries={data.get('entries')}",
+                f"version={data.get('version')} entries_count={len(entries)} "
+                f"name={entries[0]['name']!r} face_id={fid!r}",
             )
         else:
             _record("V1 PERSIST=1 first resolve writes face_id_map.json",
-                    False, f"path={path} not created")
+                    False, "face_id_map.json not created")
 
 
 def v2_hydrate_across_process() -> None:

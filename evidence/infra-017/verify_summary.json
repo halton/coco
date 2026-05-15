@@ -1,0 +1,101 @@
+{
+  "feature_id": "infra-017",
+  "title": "history jsonl 加固 + verify_vision_010 evidence 幂等",
+  "phase": 14,
+  "branch": "feat/infra-017",
+  "verify_script": "scripts/verify_infra_017.py",
+  "results": [
+    {
+      "name": "V1_concurrent_append_lock",
+      "passed": true,
+      "total_lines": 200,
+      "bad_lines": 0,
+      "per_worker_counts": {
+        "w0": 100,
+        "w1": 100
+      },
+      "tag": "v1"
+    },
+    {
+      "name": "V2_rotate_recreates_empty",
+      "passed": true,
+      "archive_exists": true,
+      "main_recreated_empty": true,
+      "tag": "v2"
+    },
+    {
+      "name": "V3_archive_stamp_unique",
+      "passed": true,
+      "unique_stamps": 50,
+      "rotate_unique_names": 3,
+      "tag": "v3"
+    },
+    {
+      "name": "V4_archive_retention",
+      "passed": true,
+      "first_pass_deleted": 5,
+      "env_override_deleted": 10,
+      "tag": "v4"
+    },
+    {
+      "name": "V5_disable_case_insensitive",
+      "passed": true,
+      "true_values_tested": [
+        "1",
+        "true",
+        "TRUE",
+        "True",
+        "yes",
+        "YES",
+        "Yes",
+        "on",
+        "ON",
+        "On"
+      ],
+      "negative_values_tested": [
+        "",
+        "0",
+        "false",
+        "no",
+        "off",
+        "FOO"
+      ],
+      "tag": "v5"
+    },
+    {
+      "name": "V6_infra016_evidence_stable_bytewise",
+      "passed": true,
+      "bytewise_equal": true,
+      "tag": "v6"
+    },
+    {
+      "name": "V7_vision010_idempotent",
+      "passed": true,
+      "sha256": "edb8808ffbc47c11cabe06490fddc354868ed19c4649bfc1de08d026732415a1",
+      "runs": 3,
+      "bytewise_equal": true,
+      "tag": "v7"
+    },
+    {
+      "name": "V8_regression_infra016_vision010",
+      "passed": true,
+      "results": {
+        "verify_infra_016.py": {
+          "rc": 0
+        },
+        "verify_vision_010.py": {
+          "rc": 0
+        }
+      },
+      "tag": "v8"
+    },
+    {
+      "name": "V_zero_runtime_impact_disable_on",
+      "passed": true,
+      "tag": "vZ"
+    }
+  ],
+  "totals": "9/9 PASS",
+  "default_off": "N/A — CI/工具加固。运行期零影响：HISTORY_DISABLE=1/on/yes/true (case-insensitive) 完全停 IO（V_zero_runtime_impact 守护）；写盘失败仅 stderr WARN 不阻塞 main flow。",
+  "real_machine_uat": "N/A — pure CI/observability tool"
+}
