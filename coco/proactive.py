@@ -838,6 +838,13 @@ class ProactiveScheduler:
             arbit_on = proactive_arbitration_enabled_from_env()
             if arbit_on and self._last_emotion_alert_ts > 0:
                 if (t - self._last_emotion_alert_ts) < ARBIT_EMOTION_WINDOW_S:
+                    # interact-016 C-6 fix: 在改 state 之前先快照原始路径，避免
+                    # 抑制后再用 _next_priority_boost 推断 stage 名（之前 bug:
+                    # boost True 抑制路径被错标成 mm_proactive；mm-only 路径被
+                    # 错标成 fusion_boost）。fusion 路径优先于 mm（与仲裁链
+                    # emotion_alert > fusion_boost > mm_proactive 同序）。
+                    _preempt_boost = bool(self._next_priority_boost)
+                    _preempt_mm = self._mm_llm_context is not None
                     suppressed_any = False
                     if self._next_priority_boost:
                         self._next_priority_boost = False
@@ -849,9 +856,14 @@ class ProactiveScheduler:
                     if suppressed_any:
                         self.stats.arbit_skipped_for_emotion += 1
                         # interact-015 trace: emotion_alert 窗口内抢占 fusion/mm
+                        # interact-016 C-6: stage 名按快照决定（fusion 优先）
                         try:
+                            _preempt_stage = (
+                                "fusion_boost" if _preempt_boost
+                                else ("mm_proactive" if _preempt_mm else "fusion_boost")
+                            )
                             _trace_emit(
-                                "fusion_boost" if self._next_priority_boost is False else "mm_proactive",
+                                _preempt_stage,
                                 _candidate_id, "reject",
                                 reason="arbit_emotion_preempt", ts=t,
                             )

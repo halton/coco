@@ -48,7 +48,42 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional
 
+# interact-016 C-3: filelock 防御并发 append（fcntl on POSIX, msvcrt on Windows）
+try:
+    import fcntl as _fcntl  # type: ignore
+    _HAS_FCNTL = True
+except Exception:  # noqa: BLE001
+    _fcntl = None  # type: ignore
+    _HAS_FCNTL = False
+try:
+    import msvcrt as _msvcrt  # type: ignore
+    _HAS_MSVCRT = True
+except Exception:  # noqa: BLE001
+    _msvcrt = None  # type: ignore
+    _HAS_MSVCRT = False
+
 log = logging.getLogger("coco.proactive_trace")
+
+
+# interact-016 C-4: emit_trace reserved kwargs（业务侧禁止覆写；命中 WARN once）
+# 包含两类：
+# (a) schema reserved: stage / candidate_id / decision / reason / ts —— 这些字段
+#     已在 emit_trace 显式参数中，Python 语法层面就不可能从 **extra 渠道注入；
+#     仍写入集合，便于未来扩展（例如改为 dict-extra API 时复用）。
+# (b) logging reserved: logging.LogRecord 的内置字段（msg / message / args /
+#     levelname / created / ...），如果从 extra 渠道注入会让 logger.info(extra=)
+#     抛 KeyError 把事件吞掉。把它们 pre-filter 掉。
+_RESERVED_TRACE_KEYS = frozenset({
+    # schema reserved
+    "stage", "candidate_id", "decision", "reason", "ts",
+    # logging stdlib reserved（与 logging.LogRecord 内置 attr 同名时 logger.info
+    # extra=... 会抛 KeyError）—— 与 logging_setup.JsonlFormatter._RESERVED 同源
+    "name", "msg", "args", "levelname", "levelno", "pathname", "filename",
+    "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
+    "created", "msecs", "relativeCreated", "thread", "threadName",
+    "processName", "process", "message",
+})
+_RESERVED_WARN_ONCE = {"warned": False}
 
 
 # 已知 stage（仅作 schema 提示；模块不强校验，未知 stage 仍 emit）
@@ -144,11 +179,25 @@ def emit_trace(
     }
     if reason:
         payload["reason"] = str(reason)
-    # 透传 extra（如 boost_level / suppressed_path 等观测维度）
+    # interact-016 C-4: reserved kwarg 规范化——业务侧若想从 extra 覆写
+    # stage/decision/reason/ts/candidate_id 一律拒绝并 WARN once。这样上游
+    # 误用（例：emit_trace("...", reason="x", **{"reason": "y"})）不会让
+    # extra 的脏字段悄悄覆盖标准 schema 字段。
+    _had_reserved_in_extra = False
     for k, v in extra.items():
+        if k in _RESERVED_TRACE_KEYS:
+            _had_reserved_in_extra = True
+            continue
         if k in payload:
             continue
         payload[k] = v
+    if _had_reserved_in_extra and not _RESERVED_WARN_ONCE["warned"]:
+        _RESERVED_WARN_ONCE["warned"] = True
+        log.warning(
+            "[proactive_trace] emit_trace ignored reserved kwarg(s) in extra "
+            "(stage/candidate_id/decision/reason/ts are reserved; subsequent "
+            "occurrences suppressed)"
+        )
     _emit("proactive.trace", **payload)
 
 
@@ -224,12 +273,72 @@ def record_llm_usage(
     _emit("llm.usage", **payload)
 
     # 落盘（fail-soft：disk error 不向上抛）
+    # interact-016 C-2/C-3:
+    # - rollover：path 在写入紧前才计算（基于 payload ts），保证日界附近的
+    #   每条 entry 都按其 ts 当地日期路由到对应文件；fixture 通过 mock clock
+    #   控 ts 即可让跨日两条目落到不同文件。
+    # - filelock：多进程并发 append 用 fcntl (POSIX) / msvcrt (Windows) 加锁，
+    #   退化分支：两者都不存在时 best-effort 不加锁，记 WARN once。
     try:
         path = _llm_usage_log_path(ts)
         path.parent.mkdir(parents=True, exist_ok=True)
         line = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-        with path.open("a", encoding="utf-8") as fp:
-            fp.write(line + "\n")
+        _append_with_filelock(path, line + "\n")
     except Exception as e:  # noqa: BLE001
         log.warning("[proactive_trace] llm_usage write failed: %s: %s",
                     type(e).__name__, e)
+
+
+# interact-016 C-3: 跨进程并发 append 文件锁封装。
+_FILELOCK_FALLBACK_WARNED = {"warned": False}
+
+
+def _append_with_filelock(path: Path, content: str) -> None:
+    """append ``content`` to ``path`` under an exclusive file lock.
+
+    POSIX: fcntl.flock(LOCK_EX) on the file fd itself.
+    Windows: msvcrt.locking(LK_LOCK) on the file fd.
+    Fallback (neither available): best-effort 直接 append（记 WARN once）。
+    """
+    # 注意：用 "a" 模式打开，offset 由 OS 在每次 write 时按 O_APPEND 推进，
+    # 配合 fd 上的 LOCK_EX，多进程也能保证整行不撕裂。
+    with path.open("a", encoding="utf-8") as fp:
+        locked = False
+        if _HAS_FCNTL and _fcntl is not None:
+            try:
+                _fcntl.flock(fp.fileno(), _fcntl.LOCK_EX)
+                locked = True
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive_trace] fcntl.flock failed: %s: %s",
+                            type(e).__name__, e)
+        elif _HAS_MSVCRT and _msvcrt is not None:
+            try:
+                # msvcrt.locking 需要 size；按 1 字节锁 advisory range
+                _msvcrt.locking(fp.fileno(), _msvcrt.LK_LOCK, 1)
+                locked = True
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive_trace] msvcrt.locking failed: %s: %s",
+                            type(e).__name__, e)
+        else:
+            if not _FILELOCK_FALLBACK_WARNED["warned"]:
+                _FILELOCK_FALLBACK_WARNED["warned"] = True
+                log.warning(
+                    "[proactive_trace] no fcntl/msvcrt; appending without "
+                    "filelock (concurrent writes may interleave)"
+                )
+        try:
+            fp.write(content)
+            fp.flush()
+            try:
+                os.fsync(fp.fileno())
+            except Exception:  # noqa: BLE001
+                pass
+        finally:
+            if locked:
+                try:
+                    if _HAS_FCNTL and _fcntl is not None:
+                        _fcntl.flock(fp.fileno(), _fcntl.LOCK_UN)
+                    elif _HAS_MSVCRT and _msvcrt is not None:
+                        _msvcrt.locking(fp.fileno(), _msvcrt.LK_UNLCK, 1)
+                except Exception:  # noqa: BLE001
+                    pass

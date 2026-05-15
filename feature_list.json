@@ -2387,7 +2387,7 @@
       "area": "interact",
       "priority": 102,
       "phase": 14,
-      "status": "not_started",
+      "status": "in_progress",
       "description": "interact-015 backlog 升级 — proactive.trace stage 标签反转 bug 修 + jsonl 跨日并发防御 + summary CLI 健壮性。(a) 修 coco/proactive.py:855 _next_priority_boost True/False 时 stage 名反转 (trace 字段语义对调，仅影响观测不影响决策)，加单测固定语义。(b) llm_usage_<date>.jsonl 跨日界 rollover：写入前按当日 date 决定文件名 + filelock (fcntl/portalocker fallback) 保护并发 append，避免日界附近条目写错文件 / 同秒两写撕裂。(c) emit_trace reserved kwarg 规范化：stage / decision / reason / ts 为保留字段，业务侧禁止覆写，命中 WARN once。(d) summary CLI scripts/proactive_trace_summary.py 输入文件不存在时 warn 到 stderr + 非零 rc，便于 CI 检测；空 jsonl 输出 zero-line summary 不抛。(e) cooldown_hit / token 估算精度 (C-1/C-5) 作 doc 段落补完不动实现 (待真 backend 接入再改 hook)。default-OFF gate：复用 COCO_PROACTIVE_TRACE / COCO_LLM_USAGE_LOG。sim-first：fixture 模拟跨日时钟 + 并发两 process append + summary CLI 缺文件 rc verify。followed_from: interact-015-backlog-trace-followup (C-2/C-3/C-4/C-6 升级；C-1/C-5 doc-only)",
       "acceptance": "V1 _next_priority_boost True/False stage 标签语义固定 (单测断言反转 bug 已修); V2 llm_usage jsonl 跨日 rollover (mock clock day boundary 两条目写不同文件); V3 并发两 process append 文件锁有效 (fixture: 100 条交错 append 不撕裂 / 不丢行); V4 emit_trace reserved kwarg 命中 WARN once; V5 summary CLI 缺文件 stderr warn + rc!=0; V6 interact-015 V1-V10 回归 PASS",
       "_change_log": [
@@ -2396,6 +2396,12 @@
           "action": "created",
           "by": "phase-14-planner-subagent",
           "note": "interact-015-backlog-trace-followup 部分升级 (C-2/C-3/C-4/C-6); C-1/C-5 doc-only 留 backlog"
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "in_progress",
+          "by": "interact-016-engineer-subagent",
+          "note": "start impl"
         }
       ]
     },

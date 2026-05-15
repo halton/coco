@@ -1,0 +1,37 @@
+{
+  "feature": "interact-016",
+  "overall_ok": true,
+  "ts": 1778817061.397286,
+  "results": [
+    {
+      "name": "V1 stage label semantics fixed (boost->fusion_boost / mm-only->mm_proactive)",
+      "ok": true,
+      "detail": "boost_case_stage=fusion_boost mm_case_stage=mm_proactive"
+    },
+    {
+      "name": "V2 llm_usage jsonl day rollover (two ts cross day -> two files)",
+      "ok": true,
+      "detail": "p1=llm_usage_20260514.jsonl p2=llm_usage_20260515.jsonl differ=True exists=(True,True) counts=(1,1)"
+    },
+    {
+      "name": "V3 concurrent append filelock: 100 lines, no tearing, no loss",
+      "ok": true,
+      "detail": "rc=(0,0) files=1 lines=100 bad_json=0 by_worker={'A': 50, 'B': 50}"
+    },
+    {
+      "name": "V4 emit_trace reserved kwarg WARN once + extra ignored",
+      "ok": true,
+      "detail": "warn_count=1 payload_ok=True emit_count_ok=True"
+    },
+    {
+      "name": "V5 summary CLI missing file: stderr WARN + rc != 0",
+      "ok": true,
+      "detail": "rc=2 stderr_head='[proactive_trace_summary] WARN: input file not found: /tmp/coco_v016_does_not_exist_xyz.jsonl\\n'"
+    },
+    {
+      "name": "V6 interact-015 V1..V7 regression PASS",
+      "ok": true,
+      "detail": "rc=0 stdout_tail=\"ns': 80, 'total_prompt_tokens': 180} stderr=\\n[verify_interact_015] PASS V7 candidate_id consistent across stages within one maybe_trigger: cids={'60000000'}\\n[verify_interact_015] DONE overall_ok=True\\n\""
+    }
+  ]
+}

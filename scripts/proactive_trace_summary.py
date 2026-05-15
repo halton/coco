@@ -169,6 +169,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     if args.trace_jsonl is None and not args.usage_jsonl:
         p.error("at least one of --trace-jsonl / --usage-jsonl required")
 
+    # interact-016 C-4: 缺文件 → stderr warn + 非零 rc，便于 CI 检测
+    missing: list[str] = []
+    if args.trace_jsonl is not None and not args.trace_jsonl.exists():
+        missing.append(str(args.trace_jsonl))
+    for u in args.usage_jsonl:
+        if not u.exists():
+            missing.append(str(u))
+    for m in missing:
+        print(f"[proactive_trace_summary] WARN: input file not found: {m}",
+              file=sys.stderr)
+
     out: Dict[str, Any] = {}
     if args.trace_jsonl is not None:
         out["trace"] = summarize_trace(args.trace_jsonl)
@@ -176,7 +187,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         out["usage"] = summarize_usage(args.usage_jsonl)
 
     print(json.dumps(out, indent=2, ensure_ascii=False, sort_keys=True))
-    return 0
+    return 2 if missing else 0
 
 
 if __name__ == "__main__":
