@@ -2814,19 +2814,41 @@
       "description": "robot-006 真机异步 UAT：(a) 真机 cancel 硬中断验证（mid-flight cancel 是否真停电机 + sequence_cancelled emit 时序）；(b) 真机电机扭矩 / 头部姿态在 5-action 序列下的物理表现；(c) 真机 sequencer 与 ProactiveScheduler / GroupMode 业务订阅闭环（action_done 回压避免动作叠加）。sim-first 已 PASS (mockup-sim zero-hardware verify_robot_006 全 PASS)，本项不阻 merge，由用户在方便时物理执行回填 evidence。"
     },
     {
+      "id": "audio-012-backlog-coupling-and-doc",
+      "area": "audio",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "audio-012 closeout 4 caveats，全部不阻 merge：C1 coco/audio/wake_word.py L463 跨模块 import vad_trigger 的私有函数 _read_loss_window_override_ms 形成隐性耦合；建议抽 coco.audio_resilience / coco.audio_common 公共 util 统一暴露 loss_window 读取与 PortAudio 异常判定。C2 verify_audio_012 V4 ok_upper_not_overridden 是弱负向断言 (lost_n != 8000)，sim 下不会真触发 override 路径，真机毫秒级窗口下偶发接近 500ms 可能假阴；建议补一条正向断言 (override env 被实际生效时 lost_n 等于覆盖值)。C3 description env 名 COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S vs 代码实际 COCO_AUDIO_HOTPLUG_INTERVAL_S 不一致；已于 closeout 同步描述。C4 V3 sim 下 dt_actual/dt_total 都截断为 0ms (sim 时间分辨率限制)，真机毫秒级窗口数据由 uat-audio-012 校准。"
+    },
+    {
+      "id": "uat-audio-012",
+      "area": "audio",
+      "priority": 998,
+      "phase": null,
+      "status": "pending",
+      "real_machine_uat": "pending",
+      "description": "audio-012 真机异步 UAT：(a) 真 USB 麦克风物理拔插触发 HotplugWatcher → reopen_callback → vad/wake mic_loop stop→reopen 完整 chain (sim 已验 instances 1→2 / cb_called=1 / dev_change=1)；(b) audio.reopen_buffer_lost_n 真机毫秒级 dt_actual / dt_total 窗口校准 (sim 截断为 0ms)；(c) error_type=portaudio_error 真触发路径 (真 PortAudioError 抛出而非 sim mock 注入)，验证 vad_trigger.py:371-378 异常类型区分在真硬件下成立。sim-first 已 PASS (verify_audio_012 V1-V5)，本项不阻 merge，由用户在方便时物理执行回填 evidence。"
+    },
+    {
       "id": "audio-012",
       "name": "audio hotplug reopen 真业务接入 + 设备切换 buffer-loss 度量",
       "area": "audio",
-      "status": "not_started",
+      "status": "passing",
       "phase": 16,
       "priority": 120,
       "origin_backlog": [
         "audio-010-backlog-residual-wire",
         "audio-011-backlog-loss-and-recovery"
       ],
-      "description": "目标: 把 HotplugWatcher reopen_callback 真正接到 vad/wake mic_loop 的 long-running InputStream (coco/asr.py:138 / coco/main.py:2150 备用路径), 设备热插拔时端到端能 stop→reopen 不需重启进程; 并细化 audio.reopen_buffer_lost_n 度量 (现为全时段上界, sim 下校准为按 stop→reopen 时间窗估算)。来源: audio-010-backlog-residual-wire C1/C2/C3, audio-011-backlog-loss-and-recovery C2/C3。Sim-first 验收: scripts/verify_audio_012.py 模拟 InputStream wrap + HotplugWatcher fake 设备 disappear/return, 断言 (a) mic_loop 收到 reopen_event 后 buffer_lost_n 计数与时间窗一致, (b) PortAudio 异常 vs 主动 stop 在 vad_trigger.py:371-378 路径有区分(error_type 字段), (c) reopen_callback 被注册到真 stream 句柄而非 placeholder。Env: COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S (default 5, 可调小评估), COCO_AUDIO_REOPEN_LOSS_WINDOW_MS。真机依赖: USB 麦克实拔插下 reopen 行为 / 真实丢帧率 → uat-audio-012 异步项 (不阻 merge)。",
+      "description": "目标: 把 HotplugWatcher reopen_callback 真正接到 vad/wake mic_loop 的 long-running InputStream (coco/asr.py:138 / coco/main.py:2150 备用路径), 设备热插拔时端到端能 stop→reopen 不需重启进程; 并细化 audio.reopen_buffer_lost_n 度量 (现为全时段上界, sim 下校准为按 stop→reopen 时间窗估算)。来源: audio-010-backlog-residual-wire C1/C2/C3, audio-011-backlog-loss-and-recovery C2/C3。Sim-first 验收: scripts/verify_audio_012.py 模拟 InputStream wrap + HotplugWatcher fake 设备 disappear/return, 断言 (a) mic_loop 收到 reopen_event 后 buffer_lost_n 计数与时间窗一致, (b) PortAudio 异常 vs 主动 stop 在 vad_trigger.py:371-378 路径有区分(error_type 字段), (c) reopen_callback 被注册到真 stream 句柄而非 placeholder。Env: COCO_AUDIO_HOTPLUG_INTERVAL_S (default 5, 可调小评估; 实现与代码一致, 早期文档曾写 COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S), COCO_AUDIO_REOPEN_LOSS_WINDOW_MS。真机依赖: USB 麦克实拔插下 reopen 行为 / 真实丢帧率 → uat-audio-012 异步项 (不阻 merge)。",
       "verification": "scripts/verify_audio_012.py",
-      "evidence": {}
+      "evidence": {
+        "verify_summary": "evidence/audio-012/verify_summary.json",
+        "reviewer": "Reviewer (sub-agent fresh-context dbe1584): LGTM-with-caveats — verify V1-V5 PASS / smoke rc=0 / regression audio-011/010/009/infra-018/robot-007/vision-012/interact-017 PASS / Default-OFF bytewise 等价 / 端到端 chain 真实 / actual<=upper 关系成立 / error_type meta 两 emit 都带; 4 caveats 入 backlog audio-012-backlog-coupling-and-doc",
+        "merge_sha": "0ee4d7d",
+        "real_machine_uat": "pending (uat-audio-012)"
+      }
     },
     {
       "id": "vision-013",

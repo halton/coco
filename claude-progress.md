@@ -2947,3 +2947,13 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - 升级 backlog → upgraded: 8 个 (8→5 合并; 每个 backlog 加 upgraded_to 字段)
 - 未吸收 (纯文档 polish / 历史 note, 保留 backlog 不阻 merge): companion-016-backlog-polish, interact-016-backlog-doc-polish, infra-017-backlog-history-residual (其 C1/C4 真功能项可待 phase-17 吸收)
 - 下一步: 主会话决定启动第一个候选 (按 priority 最低数字, 即 audio-012)
+
+## Session 2026-05-15 — audio-012 PHASE-16 #1 closeout
+
+- audio-012 PASSING, merge sha=0ee4d7d
+- Reviewer (sub-agent fresh-context dbe1584) LGTM-with-caveats, NO BLOCKER, 4 caveats
+- 修复: feature_list.json env 名同步 COCO_AUDIO_HOTPLUG_INTERVAL_S (代码实际名), 与早期文档 COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S 区分
+- backlog: audio-012-backlog-coupling-and-doc (C1 跨模块私有 import wake_word→vad_trigger._read_loss_window_override_ms, C2 V4 弱负向断言, C3 env 名已修 note, C4 sim 数据 0ms→UAT 校准)
+- async uat: uat-audio-012 (真硬件 hotplug chain + dt_actual/dt_total 窗口校准 + portaudio_error 真路径)
+- phase-16 进度: 1/5 完成 (audio-012 ✅; vision-013/robot-008/interact-018/infra-019 待)
+- 下一步: vision-013 (priority=121)
