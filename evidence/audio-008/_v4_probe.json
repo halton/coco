@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "ok": false,
+  "device_count": 0,
+  "matched_devices": [],
+  "matched_count": 0,
+  "latency_ms": 0.004,
+  "patterns": [
+    "usb",
+    "speaker",
+    "headphone",
+    "audio device",
+    "reachy",
+    "jabra",
+    "logitech",
+    "anker"
+  ],
+  "error": "RuntimeError: synthetic backend failure"
+}

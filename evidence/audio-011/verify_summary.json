@@ -1,0 +1,71 @@
+{
+  "feature": "audio-011",
+  "ts": 1778823708.6081731,
+  "all_passed": true,
+  "results": [
+    {
+      "name": "V1_asr_inputstream_wrap",
+      "ok": true,
+      "calls": 3,
+      "sleeps": [
+        0.5,
+        1.0
+      ],
+      "recovered": true
+    },
+    {
+      "name": "V2_main_inputstream_wrap_off_equivalence",
+      "ok": true,
+      "calls": 1,
+      "emits_n": 0,
+      "sleeps_n": 0
+    },
+    {
+      "name": "V3_hotplug_callback_registry",
+      "ok": true,
+      "count_after_add": 3,
+      "seen_a": [
+        [
+          "added",
+          "Fake Mic"
+        ],
+        [
+          "removed",
+          "Fake Mic"
+        ]
+      ],
+      "seen_b": [
+        [
+          "added",
+          "Fake Mic"
+        ],
+        [
+          "removed",
+          "Fake Mic"
+        ]
+      ],
+      "removed_flag": true,
+      "removed_again": false,
+      "reopen_call_count": 4,
+      "emits_n": 2
+    },
+    {
+      "name": "V4_env_hotplug_interval",
+      "ok": true,
+      "bad": [],
+      "watcher_pi": 0.05,
+      "explicit_pi": 2.5,
+      "cases_n": 9
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_audio_010.py": 0,
+        "scripts/verify_audio_009.py": 0,
+        "scripts/verify_infra_018.py": 0,
+        "scripts/verify_robot_007.py": 0
+      }
+    }
+  ]
+}

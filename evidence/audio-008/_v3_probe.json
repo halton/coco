@@ -1,0 +1,56 @@
+{
+  "enabled": true,
+  "ok": true,
+  "device_count": 6,
+  "matched_devices": [
+    {
+      "index": 4,
+      "name": "Anker PowerConf Speaker (USB)",
+      "max_output_channels": 6,
+      "max_input_channels": 1,
+      "default_samplerate": 48000.0,
+      "hostapi": 0,
+      "matched": true
+    },
+    {
+      "index": 1,
+      "name": "MacBook Pro Speakers",
+      "max_output_channels": 2,
+      "max_input_channels": 0,
+      "default_samplerate": 48000.0,
+      "hostapi": 0,
+      "matched": true
+    },
+    {
+      "index": 2,
+      "name": "Jabra Speak 510 USB",
+      "max_output_channels": 2,
+      "max_input_channels": 1,
+      "default_samplerate": 48000.0,
+      "hostapi": 0,
+      "matched": true
+    },
+    {
+      "index": 3,
+      "name": "USB Audio Device",
+      "max_output_channels": 2,
+      "max_input_channels": 0,
+      "default_samplerate": 44100.0,
+      "hostapi": 0,
+      "matched": true
+    }
+  ],
+  "matched_count": 4,
+  "latency_ms": 0.016,
+  "patterns": [
+    "usb",
+    "speaker",
+    "headphone",
+    "audio device",
+    "reachy",
+    "jabra",
+    "logitech",
+    "anker"
+  ],
+  "error": null
+}

@@ -135,12 +135,33 @@ def transcribe_microphone(
     leftover = np.zeros(0, dtype=np.float32)
 
     deadline = time.monotonic() + float(seconds)
-    with sd.InputStream(
-        samplerate=sample_rate,
-        channels=1,
-        dtype="float32",
-        blocksize=block_size,
-    ) as stream:
+    # audio-011: 真实 InputStream 调用站 wrap 在 open_stream_with_recovery 下。
+    # COCO_AUDIO_RECOVERY=1 时退避重试 sd.PortAudioError；OFF 时与原直连字节级等价
+    # （helper 内部 short-circuit 直接 ``open_fn()``）。
+    def _open_input_stream():
+        return sd.InputStream(
+            samplerate=sample_rate,
+            channels=1,
+            dtype="float32",
+            blocksize=block_size,
+        )
+    try:
+        from coco.audio_resilience import open_stream_with_recovery as _osr
+        _stream = _osr(_open_input_stream, stream_kind="input")
+        if _stream is None:
+            # recovery 全部尝试用尽（仅 ON 时可能发生）—— 透传给调用方，与历史行为兼容
+            raise RuntimeError("asr.transcribe_microphone: InputStream open exhausted")
+    except RuntimeError:
+        raise
+    except Exception:  # noqa: BLE001
+        # 任何 helper 自身异常（不应发生），最后兜底直连一次
+        _stream = sd.InputStream(
+            samplerate=sample_rate,
+            channels=1,
+            dtype="float32",
+            blocksize=block_size,
+        )
+    with _stream as stream:
         while time.monotonic() < deadline:
             data, _overflow = stream.read(block_size)
             samples = np.asarray(data, dtype=np.float32).reshape(-1)

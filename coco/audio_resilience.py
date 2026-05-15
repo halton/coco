@@ -38,6 +38,36 @@ log = logging.getLogger("audio_resilience")
 # ---- env gates ------------------------------------------------------------
 ENV_RECOVERY = "COCO_AUDIO_RECOVERY"
 ENV_HOTPLUG = "COCO_AUDIO_HOTPLUG"
+# audio-011: HotplugWatcher poll_interval 可调（默认沿用 5s 不变；env 显式覆盖）。
+ENV_HOTPLUG_INTERVAL = "COCO_AUDIO_HOTPLUG_INTERVAL_S"
+HOTPLUG_INTERVAL_DEFAULT = 5.0
+HOTPLUG_INTERVAL_MIN = 0.01  # 测试可调到 50ms 以下；生产典型 1s+
+
+
+def _read_hotplug_interval(default: float = HOTPLUG_INTERVAL_DEFAULT) -> float:
+    """读 env ``COCO_AUDIO_HOTPLUG_INTERVAL_S``；非法值/未设置回退到 default。
+
+    解析鲁棒性 (9-case)：未设、空串、纯空格、非数字、负数、0、小于 MIN、合法整数、合法浮点。
+    任一非法情况退到 default 并 log.warning。
+    """
+    raw = os.environ.get(ENV_HOTPLUG_INTERVAL)
+    if raw is None:
+        return float(default)
+    s = raw.strip()
+    if not s:
+        return float(default)
+    try:
+        v = float(s)
+    except (ValueError, TypeError):
+        log.warning("[audio_resilience] invalid %s=%r, fallback %.3f", ENV_HOTPLUG_INTERVAL, raw, default)
+        return float(default)
+    if v != v or v <= 0:  # NaN / 非正
+        log.warning("[audio_resilience] non-positive %s=%r, fallback %.3f", ENV_HOTPLUG_INTERVAL, raw, default)
+        return float(default)
+    if v < HOTPLUG_INTERVAL_MIN:
+        log.warning("[audio_resilience] %s=%r below MIN=%.3f, clamp", ENV_HOTPLUG_INTERVAL, raw, HOTPLUG_INTERVAL_MIN)
+        return float(HOTPLUG_INTERVAL_MIN)
+    return v
 
 # ---- recovery 参数 (硬编码；改动需新立 feature) -------------------------
 RECOVERY_BASE_DELAY = 0.5
@@ -201,7 +231,7 @@ class HotplugWatcher:
         self,
         stop_event: Optional[threading.Event] = None,
         *,
-        poll_interval: float = 5.0,
+        poll_interval: Optional[float] = None,
         emit_fn: Optional[Callable[..., None]] = None,
         query_devices_fn: Optional[Callable[[], Any]] = None,
         sleep_fn: Callable[[float], None] = time.sleep,
@@ -209,7 +239,12 @@ class HotplugWatcher:
         reopen_callback: Optional[Callable[[str, dict], None]] = None,
     ) -> None:
         self._stop_event = stop_event or threading.Event()
-        self._poll_interval = float(poll_interval)
+        # audio-011: poll_interval 解析优先级 —— 显式参数 > env > 默认 5s。
+        # 显式参数传 None 走 env 解析（带 9-case 回退）；传具体值（含测试 0.05s）则尊重之。
+        if poll_interval is None:
+            self._poll_interval = _read_hotplug_interval()
+        else:
+            self._poll_interval = float(poll_interval)
         self._emit_fn = emit_fn
         self._query_fn = query_devices_fn
         self._sleep_fn = sleep_fn
@@ -217,11 +252,38 @@ class HotplugWatcher:
         # audio-010: device_change → 业务订阅 reopen 钩子。
         # 触发条件：每个 added/removed device emit 完后调用一次 callback(event, device)。
         # 任何异常被吞掉只 log，不中断 poll 线程。
+        # audio-011: 在单 callback 之外新增 callback registry（list），让 asr/vad/wake
+        # 三处 mic_loop 都可注册 reopen 钩子。registry 与 reopen_callback 并存触发。
         self._reopen_callback = reopen_callback
+        self._reopen_registry: List[Callable[[str, dict], None]] = []
+        self._registry_lock = threading.Lock()
         self._reopen_call_count = 0
         self._thread: Optional[threading.Thread] = None
         self._prev: List[dict] = []
         self._lock = threading.Lock()
+
+    # audio-011: callback registry API
+    def add_reopen_callback(self, cb: Callable[[str, dict], None]) -> None:
+        """注册一个 reopen 钩子。同一 cb 不会重复注册。线程安全。"""
+        if cb is None:
+            return
+        with self._registry_lock:
+            if cb not in self._reopen_registry:
+                self._reopen_registry.append(cb)
+
+    def remove_reopen_callback(self, cb: Callable[[str, dict], None]) -> bool:
+        """注销；返回是否真的移除过。"""
+        with self._registry_lock:
+            try:
+                self._reopen_registry.remove(cb)
+                return True
+            except ValueError:
+                return False
+
+    @property
+    def reopen_callback_count(self) -> int:
+        with self._registry_lock:
+            return len(self._reopen_registry) + (1 if self._reopen_callback is not None else 0)
 
     def _query(self) -> List[dict]:
         if self._query_fn is not None:
@@ -275,15 +337,30 @@ class HotplugWatcher:
         return added, removed
 
     def _fire_reopen(self, event: str, device: dict) -> None:
-        """触发 reopen callback；callback 抛错只 log，不影响 poll 线程。"""
+        """触发 reopen callback；callback 抛错只 log，不影响 poll 线程。
+
+        audio-011: 先触发单 callback（向后兼容），再遍历 registry。任何 cb 抛错
+        都被吞掉只 log，相互之间也不影响。每成功调用一个 cb 计数 +1（包括 stub）。
+        """
         cb = self._reopen_callback
-        if cb is None:
-            return
-        try:
-            cb(event, device)
-            self._reopen_call_count += 1
-        except Exception as exc:  # noqa: BLE001
-            log.warning("[hotplug] reopen_callback raised: %s: %s", type(exc).__name__, exc)
+        if cb is not None:
+            try:
+                cb(event, device)
+                self._reopen_call_count += 1
+            except Exception as exc:  # noqa: BLE001
+                log.warning("[hotplug] reopen_callback raised: %s: %s", type(exc).__name__, exc)
+        # registry 遍历（snapshot 一份，避免遍历中被 add/remove 改写）
+        with self._registry_lock:
+            registry_snap = list(self._reopen_registry)
+        for rcb in registry_snap:
+            try:
+                rcb(event, device)
+                self._reopen_call_count += 1
+            except Exception as exc:  # noqa: BLE001
+                log.warning(
+                    "[hotplug] registry cb %r raised: %s: %s",
+                    getattr(rcb, "__name__", rcb), type(exc).__name__, exc,
+                )
 
     @property
     def reopen_call_count(self) -> int:
@@ -327,9 +404,13 @@ class HotplugWatcher:
 __all__ = [
     "ENV_RECOVERY",
     "ENV_HOTPLUG",
+    "ENV_HOTPLUG_INTERVAL",
+    "HOTPLUG_INTERVAL_DEFAULT",
+    "HOTPLUG_INTERVAL_MIN",
     "RECOVERY_BASE_DELAY",
     "RECOVERY_MAX_DELAY",
     "RECOVERY_MAX_ATTEMPTS",
+    "_read_hotplug_interval",
     "open_stream_with_recovery",
     "diff_devices",
     "HotplugWatcher",
