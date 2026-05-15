@@ -1,0 +1,40 @@
+{
+  "feature_id": "audio-010",
+  "phase": 14,
+  "generated_at": "2026-05-15T11:36:52+0800",
+  "results": [
+    {
+      "name": "V1 hotplug wire-to-main: start + atexit stop+join no hang",
+      "ok": true,
+      "detail": "started=True join_dur=0.000s q_calls=4 thread_alive=False"
+    },
+    {
+      "name": "V2 main wire OFF: no watcher instance / no thread / no query_devices",
+      "ok": true,
+      "detail": "env_on=False instances=0 threads_before=1 threads_after=1"
+    },
+    {
+      "name": "V3 error_types tightened: OSError raises through (not retried)",
+      "ok": true,
+      "detail": "raised=True open_calls=1 events=0"
+    },
+    {
+      "name": "V4 call-site wrap: OFF baseline + ON retry success",
+      "ok": true,
+      "detail": "off_ok=True on_ok=True src_ok=True on_attempts=3 att_evs=2 succ_evs=1"
+    },
+    {
+      "name": "V5 device_change → reopen_callback fired added=1 removed=1",
+      "ok": true,
+      "detail": "cb_calls=[('added', 'Jabra USB Speaker'), ('removed', 'Jabra USB Speaker')] reopen_count=2"
+    },
+    {
+      "name": "V6 regression: verify_audio_009.py + verify_audio_008.py PASS",
+      "ok": true,
+      "detail": "audio_009 rc=0 | audio_008 rc=0"
+    }
+  ],
+  "passed": 6,
+  "failed": 0,
+  "total": 6
+}

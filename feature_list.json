@@ -2369,7 +2369,7 @@
       "area": "audio",
       "priority": 101,
       "phase": 14,
-      "status": "not_started",
+      "status": "in_progress",
       "description": "audio-009 backlog 升级 — HotplugWatcher wire-to-main + 调用站替换 + error_types 收紧。(a) HotplugWatcher 接入 main.py 启动序列：default-OFF gate COCO_AUDIO_HOTPLUG=1 时构造 + start()，atexit 注册 stop+join(timeout=2)；不启用时 zero-cost no-op。(b) open_stream_with_recovery error_types 收紧仅捕获 sd.PortAudioError，让 OSError / RuntimeError 透传不被吞。(c) 替换 wake_word / vad / asr 真实 sounddevice.InputStream 调用站为 open_stream_with_recovery wrap（gate COCO_AUDIO_RECOVERY=1，OFF 时走原直连 stream）。(d) device_changed 事件订阅 self_heal reopen 钩子（接 reopen callback，class 层 emit + main 层订阅）。default-OFF gate：COCO_AUDIO_HOTPLUG / COCO_AUDIO_RECOVERY 复用。sim-first：fake sounddevice + fixture device list 切换 + InputStream wrap 调用计数 verify；真扬声器/麦克风 listener 留 audio-008 uat 异步项不阻 merge。followed_from: audio-009-backlog-wire-to-main",
       "acceptance": "V1 HotplugWatcher main.py wire (env ON 启动 + atexit stop join 收尾不悬挂线程); V2 main.py env OFF zero-cost no-op (无 thread spawn / 无 emit); V3 error_types 收紧 — OSError 透传不被吞; V4 wake_word/vad/asr 真实调用站替换为 wrap + gate OFF 走原路径 baseline 等价; V5 device_changed emit 触发 reopen callback 计数; V6 audio-009 / audio-008 回归 PASS",
       "_change_log": [
@@ -2379,7 +2379,8 @@
           "by": "phase-14-planner-subagent",
           "note": "audio-009-backlog-wire-to-main 升级为正式 feature; 原 backlog 项 status=upgraded"
         }
-      ]
+      ],
+      "evidence": "evidence/audio-010/verify_summary.json (6/6 V PASS); audio-009 verify 12/12 PASS; audio-008 PASS; smoke PASS. Reviewer (sub-agent): pending LGTM."
     },
     {
       "id": "interact-016",

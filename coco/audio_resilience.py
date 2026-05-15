@@ -99,13 +99,19 @@ def open_stream_with_recovery(
     if not _is_recovery_on():
         return open_stream_fn()
 
+    # audio-010 收紧：默认只捕 sd.PortAudioError，让 OSError / RuntimeError 透传。
+    # 调用方需要兜更广的异常时显式传 error_types=(...) 覆盖。
+    # sounddevice 不可用时退化为空元组（即默认行为=透传，等价 recovery OFF；不再误吞 OSError）。
     if error_types is None:
         try:
             import sounddevice as _sd  # type: ignore
-            error_types = (_sd.PortAudioError, OSError)
+            error_types = (_sd.PortAudioError,)
         except Exception:
-            error_types = (OSError,)
+            error_types = ()
     error_types = tuple(error_types)
+    if not error_types:
+        # 没有可重试的异常类型 → 直接 passthrough（与 recovery OFF 等价）
+        return open_stream_fn()
 
     delay = float(base_delay)
     last_exc: Optional[BaseException] = None
@@ -200,6 +206,7 @@ class HotplugWatcher:
         query_devices_fn: Optional[Callable[[], Any]] = None,
         sleep_fn: Callable[[float], None] = time.sleep,
         clock_fn: Callable[[], float] = time.time,
+        reopen_callback: Optional[Callable[[str, dict], None]] = None,
     ) -> None:
         self._stop_event = stop_event or threading.Event()
         self._poll_interval = float(poll_interval)
@@ -207,6 +214,11 @@ class HotplugWatcher:
         self._query_fn = query_devices_fn
         self._sleep_fn = sleep_fn
         self._clock_fn = clock_fn
+        # audio-010: device_change → 业务订阅 reopen 钩子。
+        # 触发条件：每个 added/removed device emit 完后调用一次 callback(event, device)。
+        # 任何异常被吞掉只 log，不中断 poll 线程。
+        self._reopen_callback = reopen_callback
+        self._reopen_call_count = 0
         self._thread: Optional[threading.Thread] = None
         self._prev: List[dict] = []
         self._lock = threading.Lock()
@@ -250,6 +262,7 @@ class HotplugWatcher:
                 device=d,
                 ts=ts,
             )
+            self._fire_reopen("added", d)
         for d in removed:
             _safe_emit(
                 self._emit_fn,
@@ -258,7 +271,23 @@ class HotplugWatcher:
                 device=d,
                 ts=ts,
             )
+            self._fire_reopen("removed", d)
         return added, removed
+
+    def _fire_reopen(self, event: str, device: dict) -> None:
+        """触发 reopen callback；callback 抛错只 log，不影响 poll 线程。"""
+        cb = self._reopen_callback
+        if cb is None:
+            return
+        try:
+            cb(event, device)
+            self._reopen_call_count += 1
+        except Exception as exc:  # noqa: BLE001
+            log.warning("[hotplug] reopen_callback raised: %s: %s", type(exc).__name__, exc)
+
+    @property
+    def reopen_call_count(self) -> int:
+        return self._reopen_call_count
 
     def prime(self) -> None:
         """初始化基线（不 emit）。供 start() 与测试共用。"""

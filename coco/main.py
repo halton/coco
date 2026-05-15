@@ -220,6 +220,49 @@ class Coco(ReachyMiniApp):
         except Exception as _aupe:  # noqa: BLE001 — 兜底
             print(f"[coco][audio] usb probe wire failed: {_aupe!r}", flush=True)
 
+        # audio-010: HotplugWatcher wire-to-main.
+        # default-OFF（COCO_AUDIO_HOTPLUG=1 启用）。OFF 时**完全不构造实例**、
+        # 不起线程、不调 query_devices —— 与 audio-010 之前的 baseline 字节级等价。
+        # ON 时起 daemon 线程轮询 sounddevice 设备列表，emit ``audio.device_change``，
+        # 并触发 reopen_callback（当前为日志占位 stub；真业务接入留 backlog）。
+        # atexit 注册 stop+join(timeout=2) 收尾，避免线程悬挂。
+        _hotplug_watcher = None
+        try:
+            from coco import audio_resilience as _ar
+            if os.environ.get(_ar.ENV_HOTPLUG, "0") == "1":
+                def _hotplug_reopen_stub(event: str, device: dict) -> None:
+                    # 最小占位：真业务（asr / vad / wake_word reopen InputStream）订阅留 backlog。
+                    try:
+                        print(
+                            f"[coco][hotplug] device_change event={event} "
+                            f"name={device.get('name')!r} → reopen stub (no-op)",
+                            flush=True,
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+
+                _hotplug_watcher = _ar.HotplugWatcher(
+                    stop_event=stop_event,
+                    emit_fn=emit,
+                    reopen_callback=_hotplug_reopen_stub,
+                )
+                _started = _hotplug_watcher.start()
+                print(f"[coco][hotplug] watcher started={_started}", flush=True)
+
+                import atexit as _atexit
+                def _hotplug_atexit():
+                    try:
+                        if _hotplug_watcher is not None:
+                            _hotplug_watcher.stop()
+                            t = getattr(_hotplug_watcher, "_thread", None)
+                            if t is not None:
+                                t.join(timeout=2.0)
+                    except Exception:  # noqa: BLE001
+                        pass
+                _atexit.register(_hotplug_atexit)
+        except Exception as _hpe:  # noqa: BLE001
+            print(f"[coco][hotplug] wire failed: {_hpe!r}", flush=True)
+
         # audio-002 V6：把 ASR 一次性 fixture 验证放后台线程，避免阻塞心跳/stop_event
         asr_thread = threading.Thread(
             target=_run_fixture_asr_once,
