@@ -2781,3 +2781,16 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - **Reviewer (sub-agent)**: LGTM 无 BLOCKER，4 条 caveat C1-C4 均 LOW/INFO，全部入 audio-010-backlog-residual-wire（C1 asr.py:138 / C2 main.py:2150 / C3 reopen_callback 真业务接入 / C4 poll_interval 调小评估）
 - **backlog 流转**：audio-009-backlog-wire-to-main 主体完成（追加 → audio-010 标注，status=upgraded 已存在）；+audio-010-backlog-residual-wire
 - **下一候选**：phase-14 #2 interact-016（priority 次低）
+
+## Session — 2026-05-15 interact-016 closeout (phase-14 #2)
+
+- interact-016 → passing（PHASE-14 第 2 项），merge sha 6a9bae7（feat/interact-016 → main --no-ff）
+- 关键修复（4 项 BLOCKER / HIGH 全部合入）：
+  - `coco/proactive.py:854` stage 标签反转修：`_next_priority_boost True/False` 时 stage 名对调（之前 cooldown_hit / boost 倒挂）
+  - `coco/proactive_trace.py` jsonl 跨日 rollover 防御（按日切文件，文件名带日期）
+  - fcntl (POSIX) / msvcrt (Windows) filelock 并发写入：100 行并发无撕裂
+  - `emit_trace` `_RESERVED_TRACE_KEYS` 过滤（避免与 logging 标准字段冲突触发 KeyError）
+  - `scripts/proactive_trace_summary.py` rc=2 健壮性（文件不存在 / 空文件 / 非法 jsonl 行）
+- Reviewer fresh-context：LGTM-with-caveats，0 BLOCKER；2 nit (N-1 _RESERVED_TRACE_KEYS 集合缺 taskName / N-2 emit_trace 注释 Python 3.13 KeyError 描述过时) 合并 C-1 (cooldown_hit boost 重复入账精度) + C-5 (token chars/2 估算) 入 backlog `interact-016-backlog-doc-polish` priority=999
+- Regression：verify_interact_015 / 014 / 012 + `./init.sh` smoke 全 PASS
+- `interact-015-backlog-trace-followup` → status=upgraded（C-2/C-3/C-4/C-6 已修）
