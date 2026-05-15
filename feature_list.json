@@ -2881,7 +2881,7 @@
       "id": "robot-008",
       "name": "RobotSequencer 接入 main lifecycle + ProactiveScheduler 注入路径",
       "area": "robot",
-      "status": "not_started",
+      "status": "passing",
       "phase": 16,
       "priority": 122,
       "origin_backlog": [
@@ -2890,7 +2890,15 @@
       ],
       "description": "目标: 把 RobotSequencer 从 coco/main.py:_robot_sequencer placeholder 升级为真 wire — ProactiveScheduler / GroupMode 注入路径建立, subscribe callbacks 实际接入, atexit cancel-on-shutdown hook 注册 (RobotSequencer.shutdown() 已实现但未被 main 接入, 当前 daemon thread 无 leak 但 hot-restart / 长生命周期场景需 lifecycle hook); 删除 _dispatch_executor max_workers=1 占位 (改纯手工 Thread 管理或保留但明确说明)。来源: robot-006-backlog-wire-and-polish C1/C3, robot-007-backlog-polish-and-shutdown C2/C3/C4。Sim-first 验收: scripts/verify_robot_008.py 用 --mockup-sim daemon + ProactiveScheduler fake event 源, 断言 (a) subscribe→dispatch→action_done emit 链路打通, (b) shutdown hook 触发后 pending action 取消并 emit cancel 事件, (c) hot-restart (start→shutdown→start) 无 thread leak, (d) block 模式回调内递归 dispatch 在 docstring 显式标注 (不实际触发)。Env: 沿用 COCO_ROBOT_SEQ_POOL_SIZE / QUEUE_MAX / OVERFLOW (drop_oldest|drop_new|block)。真机依赖: 真硬件 goto_sleep / 头部姿态 / 视觉-运动闭环延迟 → uat-robot-008 异步项。",
       "verification": "scripts/verify_robot_008.py",
-      "evidence": {}
+      "evidence": {
+        "verify_script": "scripts/verify_robot_008.py",
+        "verify_summary": "evidence/robot-008/verify_summary.json",
+        "reviewer": "sub-agent fresh-context: LGTM-with-caveats — V1-V5 PASS / regression 全 PASS / smoke PASS / 禁词无命中 / Default-OFF bytewise 等价; caveats 入 4 个 backlog (enqueue-not-daemon-thread / sigterm-shutdown / setter-lifecycle / groupmodecoord-wire)",
+        "merge_sha": "5b466d2",
+        "default_off_bytewise": true,
+        "forbidden_words_scan": "clean",
+        "real_machine_uat": "pending (uat-robot-008)"
+      }
     },
     {
       "id": "interact-018",
@@ -2919,6 +2927,68 @@
       "description": "目标: 修 infra-018 C1/C2 — (a) scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283), model 缺失 ON 模式下 rc 应为 2 但当前是 3; 改为 prefix 'SKIP:' 严格匹配, 并把内部所有相关文案统一为 'SKIP:' / 'WARN:' / 'FAIL:' 大写前缀; (b) .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 加入 '${{ matrix.os }}' 维度 (未来加 OS axis 防 artifact 覆盖), 即使当前只有 ubuntu-latest 也先把模板补上。来源: infra-018-backlog-classify-and-matrix C1/C2。Sim-first 验收: scripts/verify_infra_019.py 用 fixture stdout 含 'skipped' 在 WARN 行 / 'SKIP:' 前缀在 SKIP 行, 断言 (a) _classify_stdout 不再把 WARN 行误归为 SKIP, (b) model 缺失 ON 模式 smoke rc=2, (c) verify-matrix.yml artifact name 含 matrix.os 占位。Env: 无。真机依赖: 无 (纯 CI/harness)。",
       "verification": "scripts/verify_infra_019.py",
       "evidence": {}
+    },
+    {
+      "id": "robot-008-backlog-enqueue-not-daemon-thread",
+      "name": "ProactiveScheduler 注入路径改走 sequencer.enqueue 而非 daemon thread + seq.run()",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "description": "Reviewer caveat (robot-008): 当前 ProactiveScheduler→RobotSequencer 注入路径仍以 daemon thread + seq.run() 方式驱动, 违背 RobotSequencer 自带 dispatch executor 的设计意图; 应改为 callback 内直接调用 sequencer.enqueue(action), 让 RobotSequencer 内部 _dispatch_executor 统一调度, 消除外部线程管理与潜在的 queue / executor 双重 fan-out。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-008-backlog-sigterm-shutdown",
+      "name": "atexit shutdown 对 SIGTERM / 异常退出场景的覆盖",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "description": "Reviewer caveat (robot-008): atexit hook 仅覆盖正常解释器退出, SIGTERM / SIGINT / uncaught exception / hard kill 不会触发, 导致真机或容器场景 RobotSequencer 可能不优雅退出。需要 (a) 注册 signal handler (SIGTERM/SIGINT) 调用 shutdown, (b) shutdown timeout 配置化 (COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S), (c) 文档化非正常退出路径的 known limit。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-008-backlog-setter-lifecycle",
+      "name": "set_robot_sequencer 重入与 lifecycle 校验缺失",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "description": "Reviewer caveat (robot-008): set_robot_sequencer 缺少 lifecycle 校验 — 没有 is_shutdown 探针 (向已 shutdown 的 sequencer 注入会静默失败), 没有重复注入告警 (第二次注入静默覆盖第一次), shutdown 回调不会自动清空 ProactiveScheduler 侧的引用 (悬垂引用风险)。需要 (a) is_shutdown 检查 + 告警, (b) 重复注入 WARNING log, (c) shutdown 回调清空引用。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-008-backlog-groupmodecoord-wire",
+      "name": "GroupModeCoordinator 接入 RobotSequencer (候选 robot-009)",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "description": "Reviewer caveat (robot-008): robot-008 描述提到 ProactiveScheduler / GroupMode 注入路径, 但本次仅落地 ProactiveScheduler 侧, GroupModeCoordinator 接入 RobotSequencer 路径尚未建立。可考虑命名为 robot-009 candidate 单独立项, 复用 robot-008 的 set_robot_sequencer 模式 + lifecycle 校验改进。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "uat-robot-008",
+      "name": "真机 UAT: nod amplitude_deg=8 / duration_s=0.25 头部物理表现与视觉-运动闭环延迟",
+      "area": "robot",
+      "status": "pending",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["robot-008 sim-first real_machine_uat"],
+      "description": "robot-008 sim-first 已 passing, 真机 UAT 异步项 (不阻 merge): 在 Reachy Mini 真硬件上验 nod 动作 amplitude_deg=8 / duration_s=0.25 的头部物理表现 (扭矩平滑度 / 过冲 / 末端抖动), 以及视觉-运动闭环延迟 (proactive nod 触发 → 真摄像头帧视野变化的端到端 latency_ms)。用户方便时物理执行, 结果回填 evidence.real_machine_uat。",
+      "verification": null,
+      "evidence": {
+        "real_machine_uat": "pending"
+      }
     }
   ],
   "_meta": {

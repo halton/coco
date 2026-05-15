@@ -2966,3 +2966,14 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - backlog: vision-013-backlog-ttl-and-overhead (C1 TTL wall clock NTP 影响 - 跨进程必须设计选择, C2 default-OFF short-circuit ns 级开销 ignorable)
 - phase-16 进度: 2/5 完成 (audio-012 ✅ vision-013 ✅; robot-008/interact-018/infra-019 待)
 - 下一步: robot-008 (priority=122)
+
+## Session 2026-05-15 — robot-008 PHASE-16 #3 closeout
+
+- robot-008 PASSING, merge sha=5b466d2 (--no-ff feat/robot-008 → main)
+- Engineer HEAD: 65322e9 (sequencer lifecycle atexit + ProactiveScheduler 注入 + business subscribe wire)
+- Reviewer (sub-agent fresh-context): LGTM-with-caveats — V1-V5 PASS / regression 全 PASS / smoke PASS / 禁词无命中 / Default-OFF bytewise 等价
+- 修复内容: coco/proactive.py 注入 set_robot_sequencer + ProactiveScheduler→RobotSequencer 订阅 wire / coco/main.py atexit shutdown hook 注册 / scripts/verify_robot_008.py V1-V5 (subscribe→dispatch→action_done / shutdown 取消 pending / hot-restart 无 leak / block 模式 docstring / Default-OFF bytewise)
+- backlog (4 个): robot-008-backlog-enqueue-not-daemon-thread (主要遗留议题: proactive 路径仍以 daemon thread + seq.run() 驱动, 应改走 sequencer.enqueue 让 RobotSequencer 内部 _dispatch_executor 统一调度) / robot-008-backlog-sigterm-shutdown (atexit 不覆盖 SIGTERM/异常退出, 需 signal handler + 配置化 timeout) / robot-008-backlog-setter-lifecycle (set_robot_sequencer 缺 is_shutdown 探针 / 重复注入告警 / shutdown 回调清空引用) / robot-008-backlog-groupmodecoord-wire (GroupModeCoordinator 接入 RobotSequencer, 可考虑命名为 robot-009 candidate)
+- async uat: uat-robot-008 (真机 nod amplitude_deg=8 / duration_s=0.25 头部物理表现与视觉-运动闭环延迟)
+- phase-16 进度: 3/5 完成 (audio-012 ✅ vision-013 ✅ robot-008 ✅; interact-018/infra-019 待)
+- 下一步: interact-018 (priority=123)
