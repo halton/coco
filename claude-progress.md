@@ -2830,3 +2830,21 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
   - `companion-015-backlog-emit-throttle` → upgraded（主体已由 companion-016 实现；polish 项 → companion-016-backlog-polish）
 - **env 名分歧记录**：spec=COCO_PREFERENCE_EMIT_INTERVAL_S / 实现=COCO_PERSIST_EMIT_MIN_INTERVAL_S — 当前以实现为准，未来文档统一
 - **下一候选**：vision-011
+
+## Session 2026-05-15 — phase-14 #5 vision-011 PASSING
+
+- **vision-011 PASSING merge sha=5a6e575**（feat/vision-011 → main --no-ff）— face_id_map LRU + TTL GC + malformed skip + untrusted 降权，vision-010 持久化深化第二步
+- **关键改动**：
+  - `coco/perception/face_tracker.py`: face_id_map LRU 化 (max_entries=500, env `COCO_FACE_ID_MAP_MAX`)；超量按 `last_seen_ts` 淘汰最久未见 entry；TTL 30d (env `COCO_FACE_ID_MAP_TTL_DAYS`) GC 周期 (每 1500 帧, env `COCO_FACE_ID_MAP_GC_INTERVAL_FRAMES`) 清理 stale entry；malformed entry 仅丢该 entry 继续 hydrate 其余 + emit `vision.face_id_map_repair{reason: ttl|schema|lru, dropped_n}`；untrusted 评分 (name_confidence<0.3 长期) 仲裁 penalty=1e6（参不参与 active speaker 降权）
+  - default-OFF gate：`COCO_FACE_ID_MAP_GC=1` 启用 GC + LRU；`COCO_FACE_ID_REAL=1 + COCO_FACE_ID_PERSIST=1` 沿用
+  - `scripts/verify_vision_011.py` 全 V1-V6 PASS：LRU 超量淘汰 / GC TTL 清理 / 单 entry malformed 仅丢一条 / untrusted 仲裁降权 / Default-OFF zero-cost no-op / vision-010 V1-V10 回归
+- **Regression**：vision-009 9/9 + vision-010 10/10（sha256=edb8808f 字节稳定，无 evidence 刷新）+ `./init.sh` smoke 全 PASS
+- **Reviewer (sub-agent) LGTM-with-caveats**：4 caveat 全 LOW/INFO，无 BLOCKER：
+  - C1 wire 缺口：`_maybe_identify` 生产路径直接 patch `TrackedFace.name_confidence` 不写 `_face_id_meta`，导致 untrusted 检测在无上层业务显式调用 `record_name_confidence` 时永不触发（V4 用 patch 通过但生产未挂线）
+  - C2 `reason='lru'` 是 spec 之外的补充信号（spec 仅 ttl|schema），下游可选忽略
+  - C3 `_FACE_ID_UNTRUSTED_SCORE_PENALTY=1e6` 与 `_FACE_ID_UNTRUSTED_CONF_THRESHOLD=0.3` 硬编码常量未 env 化
+  - C4 GC 周期 1500 帧在低 fps (1fps) 下会拉到 25min，可加时间 OR 帧数双触发
+- **Backlog**：
+  - `vision-011-backlog-wire-and-tune` 入库（C1-C4 汇总）
+- **Default-OFF bytewise**：PERSIST+GC 全 OFF / PERSIST=1+GC=0 混合 独立 PASS（zero-cost no-op 路径稳态）
+- **下一候选**：robot-006
