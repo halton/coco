@@ -2353,7 +2353,7 @@
       "phase": null,
       "status": "upgraded",
       "owner": null,
-      "description": "C1 多进程并发 jsonl append 加锁；C2 rotate 后 jsonl 立即 recreate；C3 .archive 文件名加 PID 防同秒碰撞；C4 smoke WARN/SKIP 走子检查 exit code 细分；C5 verify_history.skip 字段恒 0 设计澄清；C6 .archive 加 retention 策略；C7 evidence/infra-016/verify_summary.json archived_path stamp 剔除以稳定；C8 COCO_HISTORY_DISABLE 白名单 .lower()；C9 CI 加专门 history-summary upload job 评估；额外：evidence/_history/ commit vs .gitignore 设计讨论（dirty tree 噪音 vs 跨 session 趋势） → infra-017 → infra-017 (C1/C2/C3/C6/C7/C8 + vision-010 幂等已修；剩 C4/C5/C9 + 新 nit → infra-017-backlog-history-residual)",
+      "description": "C1 多进程并发 jsonl append 加锁；C2 rotate 后 jsonl 立即 recreate；C3 .archive 文件名加 PID 防同秒碰撞；C4 smoke WARN/SKIP 走子检查 exit code 细分；C5 verify_history.skip 字段恒 0 设计澄清；C6 .archive 加 retention 策略；C7 evidence/infra-016/verify_summary.json archived_path stamp 剔除以稳定；C8 COCO_HISTORY_DISABLE 白名单 .lower()；C9 CI 加专门 history-summary upload job 评估；额外：evidence/_history/ commit vs .gitignore 设计讨论（dirty tree 噪音 vs 跨 session 趋势） → infra-017 (C1/C2/C3/C6/C7/C8 + vision-010 幂等已修；剩 C4/C5/C9 + 新 nit → infra-017-backlog-history-residual)",
       "evidence": "",
       "_change_log": [
         {
