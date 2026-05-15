@@ -1,0 +1,32 @@
+{
+  "feature": "vision-013",
+  "total": 5,
+  "failed": 0,
+  "results": [
+    {
+      "name": "V1 _maybe_identify → record_name_confidence 生产路径接入",
+      "ok": true,
+      "detail": "pt_name=alice pt_conf=0.42 meta_keys=['alice'] recorded_conf=0.42"
+    },
+    {
+      "name": "V2 _gc_last_time 用 time.monotonic (time_due 由 monotonic 推动)",
+      "ok": true,
+      "detail": "ttl1=0 ttl2=1 last1=1000.0 last2=1012.0"
+    },
+    {
+      "name": "V3 NTP 回拨场景 (wall jump back), monotonic 仍单调推进触发 GC",
+      "ok": true,
+      "detail": "ttl_events=1 last_mono=2006.0 wall_now=6400.0"
+    },
+    {
+      "name": "V4 penalty<0 → fallback 默认 + log.warning 提示",
+      "ok": true,
+      "detail": "field=1000000.0 warn_count=1 sample=COCO_FACE_ID_UNTRUSTED_PENALTY=-1.500 invalid (<0), fallback to default 1.000e+06"
+    },
+    {
+      "name": "V5 regression verify_vision_012 + verify_vision_011 子进程",
+      "ok": true,
+      "detail": "verify_vision_012.py=rc0, verify_vision_011.py=rc0"
+    }
+  ]
+}
