@@ -2868,3 +2868,22 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - async uat: `uat-robot-006` (真机 cancel 硬中断 / 电机扭矩 / sequencer-ProactiveScheduler 闭环), real_machine_uat=pending, 不阻 merge
 - **phase-14 全部 6/6 完成 ✅**: audio-010 / interact-016 / infra-017 / companion-016 / vision-011 / robot-006
 - **下一步**: phase-15 规划 (从 backlog 拣 candidate) 或处理 uat-* 异步项
+
+## Session 2026-05-15 — phase-15 规划入库
+
+- main HEAD: 192a592 (phase-14 6/6 完成)
+- phase-15 候选 (5 个，area 覆盖 5 个不同子域):
+  - infra-018 (P110, area=infra) — smoke exit-code 细分 + CI history-summary upload artifact
+  - robot-007 (P111, area=robot) — subscribe dispatch ThreadPoolExecutor + 有界回压
+  - audio-011 (P112, area=audio) — HotplugWatcher reopen_callback 真业务接入 vad/wake mic_loop
+  - vision-012 (P113, area=vision) — face_id GC 时间+帧双触发 + untrusted 阈值 env 化
+  - interact-017 (P114, area=interact) — proactive_trace_summary 多日合并 + LLM usage daily roll-up CLI
+- 各候选来源 backlog (子项吸收，不整条 upgrade):
+  - infra-018 ← infra-017-backlog-history-residual:C4+C9
+  - robot-007 ← robot-006-backlog-wire-and-polish:C3
+  - audio-011 ← audio-010-backlog-residual-wire:C3+C4
+  - vision-012 ← vision-011-backlog-wire-and-tune:C3+C4
+  - interact-017 ← interact-016-backlog-doc-polish (observability 配套，不冲突)
+- 升级 backlog → upgraded: 0 条 (按禁令"不再做 sequencer/preference/face-id-map/history/proactive-trace 残留 wire 整条升级"；polish/doc-only 子项保留 backlog；结构性/observability 子项吸收记于候选 absorbed_items)
+- companion 域本轮不出候选 (companion-016-backlog 全 doc-only/polish，无独立 ROI)
+- 下一步: 主会话决定启动第一个 phase-15 候选 (按 priority 最低数字 = infra-018)
