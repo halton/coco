@@ -127,7 +127,9 @@ def v4_rotate(tmpdir: Path) -> dict:
         archived = hw._rotate_if_needed(jpath, rotate_lines=3)
         _ok(archived is not None, "rotate 未触发")
         _ok(archived.exists(), f"归档文件不存在: {archived}")
-        _ok(not jpath.exists(), "rotate 后主 jsonl 应消失，等下一次 append 重建")
+        # infra-017 C2: rotate 后立即 recreate 空 jsonl（覆盖 infra-016 原"应消失"断言）
+        _ok(jpath.exists(), "rotate 后主 jsonl 应被 recreate（infra-017 C2）")
+        _ok(jpath.stat().st_size == 0, f"recreate 后应为空文件，size={jpath.stat().st_size}")
         # rotate threshold 不到不触发
         with open(jpath, "w") as f:
             f.write(json.dumps({"i": 0}) + "\n")
@@ -136,7 +138,7 @@ def v4_rotate(tmpdir: Path) -> dict:
     finally:
         hw.ARCHIVE_DIR = orig_arch
     return {"name": name, "passed": True,
-            "archived_path": str(archived.relative_to(tmpdir))}
+            "archived_basename_stem": archived.stem.split(".", 1)[0]}
 
 
 def v5_run_verify_all_wire_in() -> dict:

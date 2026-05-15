@@ -12,3 +12,6 @@ wheels/
 # Model artifacts (cached under ~/.cache/coco/asr/, never commit)
 models/
 *.onnx
+
+# infra-017: per-file advisory lock files for jsonl history writer (runtime-only)
+evidence/_history/*.lock

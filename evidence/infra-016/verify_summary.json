@@ -45,7 +45,7 @@
     {
       "name": "V4_rotate_when_over_threshold",
       "passed": true,
-      "archived_path": ".archive/v_rot.20260515T031553Z.jsonl",
+      "archived_basename_stem": "v_rot",
       "tag": "v4"
     },
     {

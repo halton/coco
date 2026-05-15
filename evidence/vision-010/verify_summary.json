@@ -5,7 +5,7 @@
     {
       "name": "V1 PERSIST=1 first resolve writes face_id_map.json",
       "ok": true,
-      "detail": "path=/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/tmpg5atd8x6/face_id_map.json entries=[{'name': 'alice', 'face_id': 'fid_522b276a', 'first_seen': 1778747495.534998, 'last_seen': 1778747495.534998}]"
+      "detail": "version=1 entries_count=1 name='alice' face_id='fid_522b276a'"
     },
     {
       "name": "V2 hydrate across process (same face_id)",
