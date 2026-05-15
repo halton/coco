@@ -1,0 +1,37 @@
+{
+  "feature_id": "companion-016",
+  "checks": [
+    {
+      "name": "V1 min_interval_s 节流 (10 save in 1s -> 1 emit)",
+      "ok": true,
+      "info": "save_emits_count=1 (expect 1)"
+    },
+    {
+      "name": "V2 content-hash dedup (相同 state 跨 interval 仍不 emit)",
+      "ok": true,
+      "info": "first=1 second=1"
+    },
+    {
+      "name": "V3 suppressed_since_last 累积正确",
+      "ok": true,
+      "info": "save_emits=2 second_supp=3"
+    },
+    {
+      "name": "V4 env 注入 + 非法 fallback + WARN once",
+      "ok": true,
+      "info": "legit=True zero=True fallback=True warn_set=True inst=True"
+    },
+    {
+      "name": "V5 docstring 不再含 '非节流'",
+      "ok": true,
+      "info": "hit=False"
+    },
+    {
+      "name": "V6 regression companion-015 V1-V8 PASS (schema 兼容)",
+      "ok": true,
+      "info": "v1-v8 pass=8 fail=0"
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

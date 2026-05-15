@@ -36,6 +36,7 @@ verify 直构造。
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
@@ -71,6 +72,52 @@ DEFAULT_PERSIST_EVERY_N_TURNS = 20
 # default-OFF：未设 COCO_PREFERENCE_PERSIST=1 时完全不读不写、不 emit、bytewise 等价。
 _PREFERENCE_STATE_SCHEMA_VERSION = 1
 _PREFERENCE_STATE_DEFAULT_PATH = "data/preference_learner_state.json"
+
+# companion-016: emit `companion.preference_persisted` 节流参数。
+# default 10s；env `COCO_PERSIST_EMIT_MIN_INTERVAL_S` 可覆盖；非法值 WARN once + fallback。
+_PERSIST_EMIT_MIN_INTERVAL_S_DEFAULT = 10.0
+_PERSIST_EMIT_INTERVAL_ENV = "COCO_PERSIST_EMIT_MIN_INTERVAL_S"
+_PERSIST_EMIT_INTERVAL_WARN_ONCE = False  # module-level，进程内 warn once
+
+
+def preference_persist_emit_min_interval_s_from_env(
+    env: Optional[Mapping[str, str]] = None,
+) -> float:
+    """companion-016: 读 `COCO_PERSIST_EMIT_MIN_INTERVAL_S`；非法值 WARN once + fallback default。
+
+    合法：非负 float（包含 0）。"-1" / "abc" / "" 等非法 → default 10.0 + WARN once。
+    """
+    global _PERSIST_EMIT_INTERVAL_WARN_ONCE
+    e = env if env is not None else os.environ
+    raw = e.get(_PERSIST_EMIT_INTERVAL_ENV)
+    if raw is None or raw == "":
+        return _PERSIST_EMIT_MIN_INTERVAL_S_DEFAULT
+    try:
+        v = float(raw)
+        if v < 0 or math.isnan(v) or math.isinf(v):
+            raise ValueError(f"out-of-range: {v!r}")
+        return v
+    except (TypeError, ValueError) as exc:
+        if not _PERSIST_EMIT_INTERVAL_WARN_ONCE:
+            log.warning(
+                "[preference_learner] %s=%r invalid (%s) -> fallback default %.1fs",
+                _PERSIST_EMIT_INTERVAL_ENV, raw, exc, _PERSIST_EMIT_MIN_INTERVAL_S_DEFAULT,
+            )
+            _PERSIST_EMIT_INTERVAL_WARN_ONCE = True
+        return _PERSIST_EMIT_MIN_INTERVAL_S_DEFAULT
+
+
+def _hash_preference_state(profiles: Mapping[str, Mapping[str, float]]) -> str:
+    """companion-016: 稳定 hash（sorted keys + JSON），用于 content dedup。
+
+    同一份 profiles dict（无论插入顺序）→ 同 hash。空 dict → 稳定 hash（非空字符串）。
+    """
+    canon = {
+        pid: {t: round(float(s), 6) for t, s in sorted(topics.items())}
+        for pid, topics in sorted(profiles.items())
+    }
+    blob = json.dumps(canon, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
 
 
 def preference_persist_enabled_from_env(env: Optional[Mapping[str, str]] = None) -> bool:
@@ -337,6 +384,15 @@ class PreferenceLearner:
         self._state_cache: Dict[str, Dict[str, float]] = {}
         # warn-once 节流（emit `companion.preference_persisted` 仅 lock-once 节流见下方 _emit_persisted_once）
         self._persisted_emit_lock = threading.Lock()
+        # companion-016: emit `companion.preference_persisted` 真节流状态
+        # （min_interval_s + content-hash 双门；suppressed_since_last 累计被节流次数）。
+        # default-OFF：state_cache_path is None 时整段逻辑不触发（_emit_persisted_once 早返回）。
+        self._persist_emit_min_interval_s: float = (
+            preference_persist_emit_min_interval_s_from_env()
+        )
+        self._persist_emit_last_ts: float = 0.0
+        self._persist_emit_last_hash: str = ""
+        self._persist_emit_suppressed_n: int = 0
         if self._state_cache_path is not None:
             try:
                 self._state_cache = _load_preference_state(self._state_cache_path)
@@ -667,25 +723,52 @@ class PreferenceLearner:
 
     # ----------------------------------------------------- companion-015: state cache
     def _emit_persisted_once(self, *, action: str) -> None:
-        """emit `companion.preference_persisted`；lock-once 节流（每 action 最多 emit 一次每秒级别即可，
-        但本实现仅按 action+counts 触发，不跨调用去重，由 flush_state 自身节流调用次数）。
+        """emit `companion.preference_persisted`，companion-016 真节流双门：
 
-        default-OFF：_emit_fn 为 None / cache 未启用时 no-op。
+        - **min_interval_s**：距上次成功 emit 不足 `min_interval_s` → 抑制（计入 suppressed_n）。
+        - **content-hash dedup**：当前 `_state_cache` 与上次成功 emit 的 hash 相同 → 抑制
+          （即便已超 interval；状态没真变化就不噪声）。
+        - 抑制时累计 `_persist_emit_suppressed_n`；下一次成功 emit 时携带
+          `suppressed_since_last=N` 字段然后清零。
+
+        例外：`action="load"` 是 hydrate 公告，强制首发（绕过双门），且 **不消耗** save 的
+        interval/hash anchor，避免 load 阻塞下一次真 save emit。
+        default-OFF：_emit_fn / state_cache_path 未配置时 no-op。
         """
         if self._emit_fn is None or self._state_cache_path is None:
             return
         with self._persisted_emit_lock:
             try:
-                pc = len(self._state_cache)
-                tc = sum(len(v) for v in self._state_cache.values())
+                now = self.clock()
+                with self._lock:
+                    snapshot = {pid: dict(v) for pid, v in self._state_cache.items()}
+                cur_hash = _hash_preference_state(snapshot)
+                pc = len(snapshot)
+                tc = sum(len(v) for v in snapshot.values())
+
+                force = (action == "load")
+                interval_ok = (now - self._persist_emit_last_ts) >= self._persist_emit_min_interval_s
+                hash_changed = (cur_hash != self._persist_emit_last_hash)
+
+                if not force and not (interval_ok and hash_changed):
+                    self._persist_emit_suppressed_n += 1
+                    return
+
+                suppressed_since_last = self._persist_emit_suppressed_n
                 self._emit_fn(
                     "companion.preference_persisted",
-                    f"preference_persisted action={action} profiles={pc} topics={tc}",
+                    f"preference_persisted action={action} profiles={pc} topics={tc} "
+                    f"suppressed_since_last={suppressed_since_last}",
                     action=action,
                     profile_count=pc,
                     topic_count=tc,
-                    ts=self.clock(),
+                    suppressed_since_last=suppressed_since_last,
+                    ts=now,
                 )
+                if not force:
+                    self._persist_emit_last_ts = now
+                    self._persist_emit_last_hash = cur_hash
+                    self._persist_emit_suppressed_n = 0
             except Exception as e:  # noqa: BLE001
                 log.warning("[preference_learner] emit preference_persisted failed: %s: %s",
                             type(e).__name__, e)
@@ -799,6 +882,7 @@ __all__ = [
     "async_rebuild_enabled_from_env",
     "preference_persist_enabled_from_env",
     "preference_persist_path_from_env",
+    "preference_persist_emit_min_interval_s_from_env",
     "tokenize",
     "LLMPreferenceBackend",
 ]
