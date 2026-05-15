@@ -1,6 +1,6 @@
 {
   "feature": "audio-011",
-  "ts": 1778824321.641231,
+  "ts": 1778826853.638266,
   "all_passed": true,
   "results": [
     {
@@ -46,7 +46,7 @@
       "ok": true,
       "emit_n": 1,
       "subsystem": "vad",
-      "lost_n": 0,
+      "lost_n": 1,
       "ms": 0
     },
     {

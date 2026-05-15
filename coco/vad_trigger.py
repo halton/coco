@@ -37,6 +37,28 @@ from coco import asr as coco_asr
 log = logging.getLogger(__name__)
 
 
+# audio-012: env override for reopen buffer-loss window estimate.
+# 取值含义: 强制使用该毫秒数作为 lost_n_actual / window_ms 的估算窗口
+# （便于 sim 验证 / 真机现场校准）。OFF (未设/非法/<=0) 时使用实测窗口。
+ENV_LOSS_WINDOW_MS = "COCO_AUDIO_REOPEN_LOSS_WINDOW_MS"
+
+
+def _read_loss_window_override_ms() -> Optional[float]:
+    raw = os.environ.get(ENV_LOSS_WINDOW_MS)
+    if raw is None:
+        return None
+    s = raw.strip()
+    if not s:
+        return None
+    try:
+        v = float(s)
+    except (ValueError, TypeError):
+        return None
+    if v != v or v <= 0:  # NaN / 非正
+        return None
+    return v
+
+
 # ---------------------------------------------------------------------------
 # Config & stats
 # ---------------------------------------------------------------------------
@@ -118,13 +140,25 @@ class VADTrigger:
         self._stream_lock = threading.Lock()
         self._reopen_count = 0
 
-    def request_reopen(self, event: str = "changed", device: Optional[dict] = None) -> None:
+    def request_reopen(
+        self,
+        event: str = "changed",
+        device: Optional[dict] = None,
+        error_type: str = "requested",
+    ) -> None:
         """外部 hotplug cb 调用：请求 mic_loop 在下一轮 read 后 stop+reopen 当前 stream。
 
         线程安全：通过设置 ``_reopen_event`` + 直接 stop 当前 stream 强制 read 返回。
         实际 reopen 在 mic_loop 内部线程完成，避免跨线程操作 sounddevice 句柄。
+
+        audio-012: 新增 ``error_type`` 字段（``"requested"`` 主动 hotplug / ``"portaudio_error"``
+        read 异常自愈 / ``"unknown"``）。该值会回传给 ``audio.stream_reopened`` emit payload。
         """
-        self._reopen_meta = {"event": str(event), "device": dict(device or {})}
+        self._reopen_meta = {
+            "event": str(event),
+            "device": dict(device or {}),
+            "error_type": str(error_type or "requested"),
+        }
         self._reopen_event.set()
         # 主动 stop 当前 stream，让 mic_loop 内 read 立刻返回 / raise，进入 reopen 分支
         with self._stream_lock:
@@ -399,6 +433,7 @@ class VADTrigger:
                 self._reopen_event.clear()
                 old_dev = meta.get("device") or {}
                 old_idx = old_dev.get("index")
+                error_type = str(meta.get("error_type") or "requested")
                 # 显式 stop+close（真 sd.InputStream / fake 都应支持）
                 try:
                     _stop = getattr(_stream, "stop", None)
@@ -412,6 +447,9 @@ class VADTrigger:
                         _close()
                 except Exception:  # noqa: BLE001
                     pass
+                # audio-012: 记录 close 完成时刻，用于"实际丢失窗口"度量
+                # (vs 上界 dt = t_reopen_done - t_stop，包含 stop+close 自身耗时)
+                t_close_done = time.monotonic()
                 with self._stream_lock:
                     self._current_stream = None
 
@@ -435,16 +473,35 @@ class VADTrigger:
                         reason=str(meta.get("event") or "changed"),
                         old_device_idx=old_idx,
                         new_device_idx=new_idx,
+                        error_type=error_type,
                         ts=time.time(),
                     )
-                    # buffer-loss 估算：stop 到 reopen 完成的时间 * sample_rate
-                    dt = max(0.0, t_reopen_done - t_stop)
-                    lost_n = int(dt * cfg.sample_rate)
+                    # buffer-loss 估算：
+                    #   - lost_n (上界)：stop→reopen_done 全时段 * sample_rate（保留旧字段供回归）
+                    #   - lost_n_actual (校准)：close_done→reopen_done 实际不可读窗口
+                    #   - window_ms：actual 窗口的毫秒
+                    # env COCO_AUDIO_REOPEN_LOSS_WINDOW_MS 可强制覆盖 window（测试/校准用）
+                    dt_total = max(0.0, t_reopen_done - t_stop)
+                    dt_actual = max(0.0, t_reopen_done - t_close_done)
+                    env_ms_override = _read_loss_window_override_ms()
+                    if env_ms_override is not None:
+                        window_ms = int(env_ms_override)
+                        actual_ms = int(env_ms_override)
+                        lost_n_actual = int((env_ms_override / 1000.0) * cfg.sample_rate)
+                    else:
+                        window_ms = int(dt_actual * 1000)
+                        actual_ms = window_ms
+                        lost_n_actual = int(dt_actual * cfg.sample_rate)
+                    lost_n = int(dt_total * cfg.sample_rate)
                     _emit(
                         "audio.reopen_buffer_lost_n",
                         subsystem="vad",
                         lost_n=lost_n,
-                        ms=int(dt * 1000),
+                        ms=int(dt_total * 1000),
+                        lost_n_actual=lost_n_actual,
+                        window_ms=window_ms,
+                        actual_ms=actual_ms,
+                        error_type=error_type,
                         ts=time.time(),
                     )
                 except Exception:  # noqa: BLE001

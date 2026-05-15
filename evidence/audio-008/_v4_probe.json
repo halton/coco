@@ -4,7 +4,7 @@
   "device_count": 0,
   "matched_devices": [],
   "matched_count": 0,
-  "latency_ms": 0.005,
+  "latency_ms": 0.003,
   "patterns": [
     "usb",
     "speaker",

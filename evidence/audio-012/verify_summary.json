@@ -1,0 +1,66 @@
+{
+  "feature": "audio-012",
+  "ts": 1778826869.154119,
+  "all_passed": true,
+  "results": [
+    {
+      "name": "V1_end_to_end_hotplug_reopen_chain",
+      "ok": true,
+      "cb_called_n": 1,
+      "instances_before": 1,
+      "instances_after": 2,
+      "first_stopped": 2,
+      "first_closed": 1,
+      "emit_reopened_n": 1,
+      "dev_change_n": 1,
+      "reopen_call_count": 1
+    },
+    {
+      "name": "V2_error_type_propagation",
+      "ok": true,
+      "reopened_n": 2,
+      "lost_n": 2,
+      "types_reopen": [
+        "requested",
+        "portaudio_error"
+      ],
+      "types_lost": [
+        "requested",
+        "portaudio_error"
+      ]
+    },
+    {
+      "name": "V3_window_calibration_fields",
+      "ok": true,
+      "emit_n": 1,
+      "lost_n": 1,
+      "lost_n_actual": 0,
+      "window_ms": 0,
+      "actual_ms": 0,
+      "fields_ok": true
+    },
+    {
+      "name": "V4_env_loss_window_override",
+      "ok": true,
+      "parse_bad": [],
+      "override_window_ms": 500,
+      "override_lost_n_actual": 8000,
+      "upper_lost_n": 1,
+      "ok_override": true,
+      "ok_upper_not_overridden": true
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_audio_011.py": 0,
+        "scripts/verify_audio_010.py": 0,
+        "scripts/verify_audio_009.py": 0,
+        "scripts/verify_infra_018.py": 0,
+        "scripts/verify_robot_007.py": 0,
+        "scripts/verify_vision_012.py": 0,
+        "scripts/verify_interact_017.py": 0
+      }
+    }
+  ]
+}
