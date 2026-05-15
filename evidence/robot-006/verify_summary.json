@@ -1,0 +1,60 @@
+{
+  "feature_id": "robot-006",
+  "phase": 14,
+  "status_at_evidence": "passing_pending_reviewer",
+  "engineer_summary": "RobotSequencer 实现 + emit + cancel + 业务订阅回压 + default-OFF wire; verify V1..V8 全 PASS; robot-003/004/005 regression PASS; smoke PASS.",
+  "env_gates": {
+    "COCO_ROBOT_SEQ": {"default": "unset (OFF)", "on_value": "1"},
+    "COCO_ROBOT_SEQ_POLL_S": {"default": "0.02"},
+    "COCO_ROBOT_SEQ_SUB_ASYNC": {"default": "1 (async daemon thread dispatch)"}
+  },
+  "spec_acceptance_mapping": {
+    "V1 5-action 序列串行执行 emit 顺序正确 ts 单调": "verify V1 PASS",
+    "V2 cancel mid-flight 中止 + 跳 pending + emit sequence_cancelled{cancelled_n>=1}": "verify V2 PASS (cancelled_n=3 with 4-action seq cancelled after a1)",
+    "V3 业务订阅 (ProactiveScheduler mock) 收 action_done 后状态机不叠加": "verify V3 PASS (busy 期 5 次请求拒绝, 解锁后 scheduled==2)",
+    "V4 env OFF zero-cost (sequencer 不构造 / main 不 wire)": "verify V4 PASS (main.py wire 段走 _seq_cfg.enabled 短路)",
+    "V5 mockup-sim 全程 zero-hardware": "verify V5 PASS (robot=None 与 MagicMock 都正常; 禁词 token 校验)",
+    "V6 robot-005 回归 PASS": "verify V6 PASS (subprocess rc=0)"
+  },
+  "extra_verifications": {
+    "V7 业务订阅回压 — 慢订阅者 0.5s 阻塞不传染 sequencer 主线程": "PASS (elapsed=0.111s, 5 action 完成)",
+    "V8 subscribe callback 抛异常不影响 sequencer 继续推进": "PASS"
+  },
+  "files_changed": [
+    "coco/robot/sequencer.py (new, 248 lines)",
+    "coco/main.py (insert robot-006 wire 段 +28 lines, env-gated)",
+    "scripts/verify_robot_006.py (new)",
+    "feature_list.json (status not_started -> in_progress -> passing_pending_reviewer)"
+  ],
+  "results": {
+    "verify_robot_006": "PASS rc=0",
+    "verify_robot_005": "PASS rc=0",
+    "verify_robot_004": "PASS rc=0",
+    "verify_robot_003": "PASS rc=0",
+    "init_sh_smoke": "PASS rc=0"
+  },
+  "evidence_cleanliness": {
+    "verify_out_has_python_traceback": false,
+    "expected_stderr_lines_count": 2,
+    "expected_stderr_kind": "V8 子项故意触发 subscribe callback 抛异常, sequencer 吞掉后打一行可读 stderr ([robot_seq] subscriber raised RuntimeError ...). 非 traceback."
+  },
+  "real_machine_uat": {
+    "status": "pending",
+    "track_as": "uat-robot-006 (异步 / 不阻 merge)",
+    "items": [
+      "真机扭矩 / head pose 物理表现",
+      "5-action sequence 真机执行延迟与抖动",
+      "cancel mid-flight 真机时舵机响应",
+      "sleep / wakeup 真机姿态"
+    ]
+  },
+  "default_off_bytewise": {
+    "claim": "env unset 时 main.py wire 段进入 disabled 分支, 不构造 RobotSequencer; 与 main HEAD bytewise 等价（除了输出一行 disabled log）",
+    "verified_by": "verify V4 (sequencer_config_from_env / main.py 短路 / disabled log token)"
+  },
+  "caveats_into_backlog_no_fu_chain": [
+    "cancel 当前粒度: 真正"中断当前 SDK 调用"在 mockup-sim 下不可证 (goto_target 是阻塞 RPC, 实测真机时可能需要 lower-level abort API); 当前实现是"完成当前 SDK 调用后停止 + 跳 pending"。真机 UAT 阶段再决定是否需要 hard-abort。",
+    "subscribe 异步派发用 daemon Thread per-event, 高频时可能短期产生大量线程; 业务上线高频前应换 ThreadPoolExecutor 或 asyncio queue。当前 phase-14 use case (Proactive / GroupMode 几秒一次) 不会触发。",
+    "action.type 当前为 str 而非 Enum, 留待 ProactiveScheduler 真正接入时再决定是否升级 Enum。"
+  ]
+}

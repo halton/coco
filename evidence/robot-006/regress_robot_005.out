@@ -1,0 +1,51 @@
+V1: 首帧无 ramp — 启动后第一个 emotion target 立即 snap，不走 ramp_s
+  [PASS] 首帧 tick 后 _current == _target（snap）: current=PostureOffset(pitch_deg=-3.0, yaw_deg=0.0, antenna=1.0) target=PostureOffset(pitch_deg=-3.0, yaw_deg=0.0, antenna=1.0)
+  [PASS] 首帧 antenna 立即跳到目标（非中位 0.5）: got 1.0
+  [PASS] _first_ramp_done flag 已置 True
+  [PASS] 第二次切换走 ramp（_current 介于 happy 与 sad 之间）: cur.pitch=-3.0 target.pitch=3.0
+V2: antenna_joint_rad 整段可区分 — SAD (a=0.0) ≠ NEUTRAL (a=0.5) ≠ HAPPY (a=1.0)
+  [PASS] SAD antenna 输出非中位 (0,0): got (-0.3, 0.3)
+  [PASS] NEUTRAL antenna 仍是 (0,0): got (0.0, -0.0)
+  [PASS] HAPPY antenna 外展 (+amp, -amp): got (0.5, -0.5)
+  [PASS] SAD ≠ NEUTRAL: sad=(-0.3, 0.3) neu=(0.0, -0.0)
+  [PASS] SAD 与 HAPPY 方向相反（内合 vs 外展）: sad=(-0.3, 0.3) hap=(0.5, -0.5)
+V3: pause/resume 嵌套引用计数 — 两层 pause 需要两次 resume 才真正解锁
+  [PASS] 初态 not paused
+  [PASS] 第 1 次 pause 后 paused=True
+  [PASS] 第 2 次 pause 后仍 paused=True（计数=2）
+  [PASS] 第 1 次 resume 后仍 paused=True（计数=1，内层 resume 不解锁）
+  [PASS] 第 2 次 resume 后 paused=False（计数=0，外层 resume 真正解锁）
+  [PASS] 多余 resume 幂等（不抛、保持 not paused）
+  [PASS] 嵌套 pause 期间天线 0 下发: before=0 after=0
+  [PASS] 内层 resume 后仍 pause，天线仍不下发: after=0 after2=0
+  [PASS] 外层 resume 后天线恢复下发: after2=0 after3=3
+V4: PostureBaselineStats.history 是 deque(maxlen=200)，超出旧条目被丢
+  [PASS] history 类型为 deque: got deque
+  [PASS] history maxlen=200: got 200
+  [PASS] 超出后长度 == maxlen: got 200
+  [PASS] 旧条目已被丢弃（队头是 x300）: got x300
+  [PASS] 队尾是最新条目 x499: got x499
+V5: ExpressionPlayer.play docstring 显式说明 stop 与并发语义
+  [PASS] play docstring 非空: len=601
+  [PASS] docstring 提到 stop: doc snippet='同步播放命名 expression。\n\n并发与 stop 语义（robot-005 followup (e) 显式文档化）：\n  - **不会隐式中断** 正在执行的 play —— 并发 play 调用通过非阻塞\n    ``_play_'
+  [PASS] docstring 提到并发/busy 拒绝: doc snippet='同步播放命名 expression。\n\n并发与 stop 语义（robot-005 followup (e) 显式文档化）：\n  - **不会隐式中断** 正在执行的 play —— 并发 play 调用通过非阻塞\n    ``_play_'
+  [PASS] docstring 明确说不会隐式中断（不会 / not / 拒）: doc snippet='同步播放命名 expression。\n\n并发与 stop 语义（robot-005 followup (e) 显式文档化）：\n  - **不会隐式中断** 正在执行的 play —— 并发 play 调用通过非阻塞\n    ``_play_lock.acquire(blocking=False)`` 立即被拒，返回 ``False`` 并\n    emit ``robot.expression_b'
+V6: emit fallback import 提到模块顶（_DEFAULT_EMIT 在模块属性）
+  [PASS] posture_baseline._DEFAULT_EMIT 存在
+  [PASS] posture_baseline._DEFAULT_EMIT is not None
+  [PASS] expressions._DEFAULT_EMIT 存在
+  [PASS] expressions._DEFAULT_EMIT is not None
+  [PASS] posture_baseline._emit_event 不再 lazy import logging_setup: pb_src has lazy import
+  [PASS] expressions._emit_event 不再 lazy import logging_setup: ex_src has lazy import
+  [PASS] 默认 emit 调用不抛
+V7: 回归 verify_robot_004 全 PASS（subprocess）
+  [PASS] verify_robot_004 returncode == 0: rc=0; tail stderr=[posture_baseline] COCO_POSTURE_BASELINE_RAMP_S=100.00 >10.00，clamp
+[posture_baseline] COCO_POSTURE_BASELINE_TICK_S=0.00 <0.05，clamp
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+[posture_baseline] antenna SDK failed: RuntimeError: zenoh dropped
+
+V8: 与 vision-006 / interact-011 / companion-008 不互相干扰（import smoke）
+  [PASS] vision-006 SceneCaption + robot.expressions/posture_baseline import 不破
+
+========== robot-005 verify done in 0.73s ==========
+ALL PASS
