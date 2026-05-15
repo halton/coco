@@ -857,6 +857,35 @@ class Coco(ReachyMiniApp):
                     f"sub_async={_seq_cfg.subscribe_async}",
                     flush=True,
                 )
+                # robot-008: lifecycle hook —— 进程退出时优雅停 dispatch pool。
+                # atexit 注册一次；shutdown() 自身幂等（重复调用不爆）。
+                try:
+                    import atexit as _atexit_seq
+                    _atexit_seq.register(
+                        lambda _s=_robot_sequencer: _s.shutdown(wait=True, timeout=2.0)
+                    )
+                    print("[coco][robot_seq] atexit shutdown hook registered", flush=True)
+                except Exception as _ae:  # noqa: BLE001
+                    print(f"[coco][robot_seq] atexit register failed: {_ae!r}", flush=True)
+                # robot-008: 业务侧 subscribe —— 记录 action_done / sequence_cancelled
+                # 到 logging emit，便于线下分析"主动话题→点头"链路是否真的串起来了。
+                # 与 _emit 是两条独立路径：emit 走 logging_setup, subscribe 走业务回调链路。
+                def _robot_seq_business_observer(event: str, payload: dict) -> None:
+                    try:
+                        emit(
+                            "robot.seq_observed",
+                            event=str(event),
+                            action_id=str(payload.get("action_id", "")),
+                            seq_id=int(payload.get("seq_id", 0) or 0),
+                            executed_n=int(payload.get("executed_n", 0) or 0),
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
+                try:
+                    _robot_sequencer.subscribe(_robot_seq_business_observer)
+                    print("[coco][robot_seq] business subscribe wired", flush=True)
+                except Exception as _se:  # noqa: BLE001
+                    print(f"[coco][robot_seq] subscribe wire failed: {_se!r}", flush=True)
             else:
                 print("[coco][robot_seq] disabled (COCO_ROBOT_SEQ not set)", flush=True)
         except Exception as exc:  # noqa: BLE001
@@ -1270,6 +1299,16 @@ class Coco(ReachyMiniApp):
                         f"cooldown={_pcfg.cooldown_s:.0f}s max/h={_pcfg.max_topics_per_hour}",
                         flush=True,
                     )
+                    # robot-008: 把 RobotSequencer 注入 ProactiveScheduler。
+                    # 注入后 _do_trigger_unlocked emit 后 best-effort 跑一次轻量 nod。
+                    # _robot_sequencer=None 时 setter 等价清空，bytewise 与基线一致。
+                    if _robot_sequencer is not None:
+                        try:
+                            _proactive.set_robot_sequencer(_robot_sequencer)
+                            print("[coco][proactive] robot_sequencer injected", flush=True)
+                        except Exception as _pe:  # noqa: BLE001
+                            print(f"[coco][proactive] inject robot_sequencer failed: {_pe!r}",
+                                  flush=True)
                 else:
                     print("[coco][proactive] disabled (COCO_PROACTIVE not set)", flush=True)
             except Exception as e:  # noqa: BLE001
