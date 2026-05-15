@@ -286,13 +286,34 @@ class VADTrigger:
             log.warning("[vad] sounddevice unavailable, mic loop exits: %s", e)
             return
         block = max(int(cfg.sample_rate * block_seconds), cfg.window)
-        try:
-            with sd.InputStream(
+        # audio-010: 真实 InputStream 调用站可选 wrap 在 open_stream_with_recovery 下。
+        # COCO_AUDIO_RECOVERY=1 时构造 wrap（捕 sd.PortAudioError 退避重试）；
+        # OFF 时调用 helper 路径与原直连 ``sd.InputStream(...)`` 字节级等价
+        # （helper 内部 short-circuit 直接 ``open_fn()``，sentinel 透传）。
+        def _open_input_stream():
+            return sd.InputStream(
                 samplerate=cfg.sample_rate,
                 channels=1,
                 dtype="float32",
                 blocksize=block,
-            ) as stream:
+            )
+        try:
+            from coco.audio_resilience import open_stream_with_recovery as _osr
+            _stream = _osr(_open_input_stream, stream_kind="input")
+            if _stream is None:
+                # recovery 全部尝试用尽（仅 ON 时可能发生）—— 主动放弃 mic loop
+                log.warning("[vad] InputStream open exhausted, mic loop exits")
+                return
+        except Exception:  # noqa: BLE001
+            # 任何 helper 自身异常（不应发生），最后兜底直连一次
+            _stream = sd.InputStream(
+                samplerate=cfg.sample_rate,
+                channels=1,
+                dtype="float32",
+                blocksize=block,
+            )
+        try:
+            with _stream as stream:
                 log.info("[vad] mic loop started (sr=%d block=%d)", cfg.sample_rate, block)
                 while not self._stop_event.is_set():
                     try:

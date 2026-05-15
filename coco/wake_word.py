@@ -310,13 +310,30 @@ class WakeWordDetector:
             log.warning("[wake] sounddevice unavailable, mic loop exits: %s", e)
             return
         block = max(int(cfg.sample_rate * block_seconds), 1024)
-        try:
-            with sd.InputStream(
+        # audio-010: 真实 InputStream 调用站可选 wrap 在 open_stream_with_recovery 下。
+        # COCO_AUDIO_RECOVERY=1 时退避重试 PortAudioError；OFF 时与原直连等价。
+        def _open_input_stream():
+            return sd.InputStream(
                 samplerate=cfg.sample_rate,
                 channels=1,
                 dtype="float32",
                 blocksize=block,
-            ) as stream:
+            )
+        try:
+            from coco.audio_resilience import open_stream_with_recovery as _osr
+            _stream = _osr(_open_input_stream, stream_kind="input")
+            if _stream is None:
+                log.warning("[wake] InputStream open exhausted, mic loop exits")
+                return
+        except Exception:  # noqa: BLE001
+            _stream = sd.InputStream(
+                samplerate=cfg.sample_rate,
+                channels=1,
+                dtype="float32",
+                blocksize=block,
+            )
+        try:
+            with _stream as stream:
                 log.info("[wake] mic loop started (sr=%d block=%d)", cfg.sample_rate, block)
                 while not self._stop_event.is_set():
                     try:
