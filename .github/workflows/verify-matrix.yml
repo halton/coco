@@ -122,6 +122,18 @@ jobs:
             evidence/**
             /tmp/coco-daemon.log
           if-no-files-found: ignore
+      # infra-018: 上传 history jsonl + verify_summary.json 用于跨日趋势分析。
+      # 独立 artifact 名带 run_id 便于回溯。retention 14d 控制存储费。
+      - name: Upload history + summary artifacts (infra-018)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-summary-${{ github.run_id }}-py${{ matrix.python-version }}
+          path: |
+            evidence/_history/**
+            evidence/**/verify_summary.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   verify-vision:
     name: verify vision
