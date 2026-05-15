@@ -226,6 +226,8 @@ class Coco(ReachyMiniApp):
         # ON 时起 daemon 线程轮询 sounddevice 设备列表，emit ``audio.device_change``，
         # 并触发 reopen_callback（当前为日志占位 stub；真业务接入留 backlog）。
         # atexit 注册 stop+join(timeout=2) 收尾，避免线程悬挂。
+        # audio-011: poll_interval 从 env COCO_AUDIO_HOTPLUG_INTERVAL_S 读（默认 5s 不变）；
+        # callback registry 接入 — vad_trigger / wake_detector 构造后注册 mic_loop reopen 钩子。
         _hotplug_watcher = None
         try:
             from coco import audio_resilience as _ar
@@ -246,8 +248,15 @@ class Coco(ReachyMiniApp):
                     emit_fn=emit,
                     reopen_callback=_hotplug_reopen_stub,
                 )
+                # audio-011: 暴露 watcher 句柄给后续 vad/wake init 阶段注册 callback。
+                # 这是 *进程内单例* 的早期 wire，不破坏 OFF 时 zero-cost 不构造的约定。
+                try:
+                    import builtins as _bi
+                    setattr(_bi, "_coco_hotplug_watcher", _hotplug_watcher)
+                except Exception:  # noqa: BLE001
+                    pass
                 _started = _hotplug_watcher.start()
-                print(f"[coco][hotplug] watcher started={_started}", flush=True)
+                print(f"[coco][hotplug] watcher started={_started} poll_interval={_hotplug_watcher._poll_interval:.3f}s", flush=True)
 
                 import atexit as _atexit
                 def _hotplug_atexit():
@@ -2192,6 +2201,76 @@ class Coco(ReachyMiniApp):
                     f"cooldown={vad_cfg.cooldown_seconds}s min_speech={vad_cfg.min_speech_seconds}s)",
                     flush=True,
                 )
+                # audio-011: 把 vad / wake mic_loop 的 reopen 信号 cb 注册到 HotplugWatcher
+                # registry。vad/wake cb 调对应实例 .request_reopen() — mic_loop 内
+                # 真做 stream.stop()/close() + 重 open，emit audio.stream_reopened +
+                # audio.reopen_buffer_lost_n。asr 路径是按需短录音，仅 emit signal。
+                # OFF 时 _hotplug_watcher is None，整段 no-op。
+                if _hotplug_watcher is not None:
+                    def _vad_reopen_cb(event: str, device: dict) -> None:
+                        try:
+                            print(
+                                f"[coco][hotplug] vad mic_loop reopen-request event={event} "
+                                f"name={device.get('name')!r}",
+                                flush=True,
+                            )
+                            try:
+                                emit("audio.mic_loop_reopen_signal", subsystem="vad", event=event, device_name=str(device.get("name", "")))
+                            except Exception:  # noqa: BLE001
+                                pass
+                            # 真做 stop+reopen（mic_loop 内执行 stream.stop/close + 重 open + emit）
+                            try:
+                                vad_trigger.request_reopen(event=event, device=device)
+                            except Exception as exc:  # noqa: BLE001
+                                print(
+                                    f"[coco][hotplug] vad.request_reopen failed: {exc!r}",
+                                    flush=True,
+                                )
+                        except Exception:  # noqa: BLE001
+                            pass
+                    _hotplug_watcher.add_reopen_callback(_vad_reopen_cb)
+                    if wake_detector is not None:
+                        def _wake_reopen_cb(event: str, device: dict) -> None:
+                            try:
+                                print(
+                                    f"[coco][hotplug] wake mic_loop reopen-request event={event} "
+                                    f"name={device.get('name')!r}",
+                                    flush=True,
+                                )
+                                try:
+                                    emit("audio.mic_loop_reopen_signal", subsystem="wake", event=event, device_name=str(device.get("name", "")))
+                                except Exception:  # noqa: BLE001
+                                    pass
+                                try:
+                                    wake_detector.request_reopen(event=event, device=device)
+                                except Exception as exc:  # noqa: BLE001
+                                    print(
+                                        f"[coco][hotplug] wake.request_reopen failed: {exc!r}",
+                                        flush=True,
+                                    )
+                            except Exception:  # noqa: BLE001
+                                pass
+                        _hotplug_watcher.add_reopen_callback(_wake_reopen_cb)
+                    # asr 也注册一个 signal cb；asr.transcribe_microphone 是按需短录音，
+                    # 不长驻 mic_loop —— 这里只作为 reopen-intent 信号（caveat: 不做真 reopen）。
+                    def _asr_reopen_cb(event: str, device: dict) -> None:
+                        try:
+                            print(
+                                f"[coco][hotplug] asr reopen-signal event={event} "
+                                f"name={device.get('name')!r}",
+                                flush=True,
+                            )
+                            try:
+                                emit("audio.mic_loop_reopen_signal", subsystem="asr", event=event, device_name=str(device.get("name", "")))
+                            except Exception:  # noqa: BLE001
+                                pass
+                        except Exception:  # noqa: BLE001
+                            pass
+                    _hotplug_watcher.add_reopen_callback(_asr_reopen_cb)
+                    print(
+                        f"[coco][hotplug] registry callbacks registered (count={_hotplug_watcher.reopen_callback_count})",
+                        flush=True,
+                    )
             elif not PUSH_TO_TALK_DISABLED:
                 ptt_thread = threading.Thread(
                     target=_push_to_talk_loop,
@@ -2214,18 +2293,39 @@ class Coco(ReachyMiniApp):
                     time.sleep(0.5)
             else:
                 # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
-                with sd.InputStream(
-                    samplerate=SAMPLE_RATE,
-                    channels=1,
-                    dtype="float32",
-                    blocksize=block_frames,
-                ) as mic:
-                    while not stop_event.is_set():
-                        data, _overflow = mic.read(block_frames)
-                        rms = float(np.sqrt(np.mean(np.square(data))))
-                        print(f"[coco] rms={rms:.4f}", flush=True)
-                        # 让出循环，给 stop_event 检查机会。
-                        time.sleep(0.05)
+                # audio-011: InputStream wrap 在 open_stream_with_recovery 下。
+                # COCO_AUDIO_RECOVERY=1 时退避重试 PortAudioError；OFF 时字节级等价。
+                def _open_main_mic_stream():
+                    return sd.InputStream(
+                        samplerate=SAMPLE_RATE,
+                        channels=1,
+                        dtype="float32",
+                        blocksize=block_frames,
+                    )
+                try:
+                    from coco.audio_resilience import open_stream_with_recovery as _osr_main
+                    _mic_stream = _osr_main(_open_main_mic_stream, stream_kind="input")
+                    if _mic_stream is None:
+                        print("[coco] main mic InputStream open exhausted; loop falls back to idle sleep", flush=True)
+                        while not stop_event.is_set():
+                            time.sleep(0.5)
+                        _mic_stream = None
+                except Exception as _mse:  # noqa: BLE001
+                    print(f"[coco] main mic wrap fallback direct open: {_mse!r}", flush=True)
+                    _mic_stream = sd.InputStream(
+                        samplerate=SAMPLE_RATE,
+                        channels=1,
+                        dtype="float32",
+                        blocksize=block_frames,
+                    )
+                if _mic_stream is not None:
+                    with _mic_stream as mic:
+                        while not stop_event.is_set():
+                            data, _overflow = mic.read(block_frames)
+                            rms = float(np.sqrt(np.mean(np.square(data))))
+                            print(f"[coco] rms={rms:.4f}", flush=True)
+                            # 让出循环，给 stop_event 检查机会。
+                            time.sleep(0.05)
         finally:
             # 确保 idle 线程退出干净；stop_event 已被外部或本循环 set
             if idle_animator is not None:

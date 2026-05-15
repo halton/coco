@@ -166,6 +166,33 @@ class WakeWordDetector:
         self._stream = self._spotter.create_stream()
         # 临时关键词文件需要保留生命期到 spotter 释放（Path 对象只在 __init__ 创建）
         self._keywords_file: Optional[Path] = None  # set 在 _build_spotter 内
+        # audio-011: hotplug reopen 机制（与 VADTrigger 同形态）
+        self._reopen_event = threading.Event()
+        self._reopen_meta: dict = {}
+        self._current_mic_stream = None
+        self._mic_stream_lock = threading.Lock()
+        self._reopen_count = 0
+
+    def request_reopen(self, event: str = "changed", device: Optional[dict] = None) -> None:
+        """外部 hotplug cb 调用：请求 mic_loop stop+reopen 当前 InputStream。
+
+        见 ``VADTrigger.request_reopen`` 注释。
+        """
+        self._reopen_meta = {"event": str(event), "device": dict(device or {})}
+        self._reopen_event.set()
+        with self._mic_stream_lock:
+            s = self._current_mic_stream
+        if s is not None:
+            try:
+                stop_fn = getattr(s, "stop", None)
+                if callable(stop_fn):
+                    stop_fn()
+            except Exception:  # noqa: BLE001
+                pass
+
+    @property
+    def reopen_count(self) -> int:
+        return self._reopen_count
 
     # ------------------------------------------------------------------
     # 构造 KeywordSpotter
@@ -319,37 +346,118 @@ class WakeWordDetector:
                 dtype="float32",
                 blocksize=block,
             )
+
+        def _do_open():
+            try:
+                from coco.audio_resilience import open_stream_with_recovery as _osr
+                _s = _osr(_open_input_stream, stream_kind="input")
+                if _s is None:
+                    log.warning("[wake] InputStream open exhausted, mic loop exits")
+                    return None
+                return _s
+            except Exception:  # noqa: BLE001
+                return sd.InputStream(
+                    samplerate=cfg.sample_rate,
+                    channels=1,
+                    dtype="float32",
+                    blocksize=block,
+                )
+
+        # audio-011: 外层 reopen-loop，内层 read-loop
+        _stream = _do_open()
+        if _stream is None:
+            return
+        with self._mic_stream_lock:
+            self._current_mic_stream = _stream
         try:
-            from coco.audio_resilience import open_stream_with_recovery as _osr
-            _stream = _osr(_open_input_stream, stream_kind="input")
-            if _stream is None:
-                log.warning("[wake] InputStream open exhausted, mic loop exits")
-                return
-        except Exception:  # noqa: BLE001
-            _stream = sd.InputStream(
-                samplerate=cfg.sample_rate,
-                channels=1,
-                dtype="float32",
-                blocksize=block,
-            )
-        try:
-            with _stream as stream:
+            while not self._stop_event.is_set():
+                try:
+                    _stream.__enter__()
+                except Exception as e:  # noqa: BLE001
+                    log.warning("[wake] InputStream __enter__ failed: %s; mic loop exits", e)
+                    return
                 log.info("[wake] mic loop started (sr=%d block=%d)", cfg.sample_rate, block)
-                while not self._stop_event.is_set():
+                try:
+                    while not self._stop_event.is_set() and not self._reopen_event.is_set():
+                        try:
+                            data, _ovf = _stream.read(block)
+                        except Exception as e:  # noqa: BLE001
+                            if self._reopen_event.is_set():
+                                break
+                            log.warning("[wake] InputStream.read error: %s; sleep+retry", e)
+                            time.sleep(0.2)
+                            continue
+                        samples = np.asarray(data, dtype=np.float32).reshape(-1)
+                        try:
+                            self.feed(samples)
+                        except Exception as e:  # noqa: BLE001
+                            log.warning("[wake] feed error: %s", e)
+                finally:
                     try:
-                        data, _ovf = stream.read(block)
-                    except Exception as e:  # noqa: BLE001
-                        log.warning("[wake] InputStream.read error: %s; sleep+retry", e)
-                        time.sleep(0.2)
-                        continue
-                    samples = np.asarray(data, dtype=np.float32).reshape(-1)
-                    try:
-                        self.feed(samples)
-                    except Exception as e:  # noqa: BLE001
-                        log.warning("[wake] feed error: %s", e)
-        except Exception as e:  # noqa: BLE001
-            log.warning("[wake] InputStream open failed: %s; mic loop exits", e)
+                        _stream.__exit__(None, None, None)
+                    except Exception:  # noqa: BLE001
+                        pass
+
+                if self._stop_event.is_set():
+                    break
+                if not self._reopen_event.is_set():
+                    break
+
+                # ===== reopen 分支 =====
+                t_stop = time.monotonic()
+                meta = dict(self._reopen_meta)
+                self._reopen_event.clear()
+                old_dev = meta.get("device") or {}
+                old_idx = old_dev.get("index")
+                try:
+                    _stop = getattr(_stream, "stop", None)
+                    if callable(_stop):
+                        _stop()
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    _close = getattr(_stream, "close", None)
+                    if callable(_close):
+                        _close()
+                except Exception:  # noqa: BLE001
+                    pass
+                with self._mic_stream_lock:
+                    self._current_mic_stream = None
+
+                _stream = _do_open()
+                t_reopen_done = time.monotonic()
+                if _stream is None:
+                    log.warning("[wake] reopen failed: open exhausted; mic loop exits")
+                    return
+                with self._mic_stream_lock:
+                    self._current_mic_stream = _stream
+                self._reopen_count += 1
+                try:
+                    from coco.logging_setup import emit as _emit
+                    new_dev = meta.get("device") or {}
+                    new_idx = new_dev.get("index")
+                    _emit(
+                        "audio.stream_reopened",
+                        subsystem="wake",
+                        reason=str(meta.get("event") or "changed"),
+                        old_device_idx=old_idx,
+                        new_device_idx=new_idx,
+                        ts=time.time(),
+                    )
+                    dt = max(0.0, t_reopen_done - t_stop)
+                    lost_n = int(dt * cfg.sample_rate)
+                    _emit(
+                        "audio.reopen_buffer_lost_n",
+                        subsystem="wake",
+                        lost_n=lost_n,
+                        ms=int(dt * 1000),
+                        ts=time.time(),
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
         finally:
+            with self._mic_stream_lock:
+                self._current_mic_stream = None
             log.info("[wake] mic loop stopped")
 
 
