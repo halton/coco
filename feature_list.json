@@ -2431,7 +2431,7 @@
       "area": "companion",
       "priority": 104,
       "phase": 14,
-      "status": "not_started",
+      "status": "in_progress",
       "description": "companion.preference_persisted emit 真节流 — 解决 companion-015 backlog (emit 自报节流为误报)。(a) PreferenceLearner._emit_persisted 实装 min_interval_s (default=10s, env COCO_PERSIST_EMIT_MIN_INTERVAL_S 可调) + content-hash dedup (同 prefer state hash 跳 emit)，真节流避免 save 与 preference_updated 同频噪声；(b) emit 抑制时不丢观测：累积计数器 suppressed_n，下一次 emit 携带 suppressed_since_last 字段，下游可重建活跃度；(c) flush_state→save emit→_emit_persisted 链路插入节流节点，rebuild_for_profile 路径同享；(d) docstring 改口从 '非节流' 到 'min_interval_s + content-hash 双门'。default-OFF gate：复用 COCO_PREFER_PERSIST=1；emit 节流参数 always-on (safe default)。sim-first：fixture mock clock + 高频 save call → emit 次数受限 + suppressed_since_last 字段递增；content-hash 相同跳 emit 单测。followed_from: companion-015-backlog-emit-throttle",
       "acceptance": "V1 min_interval_s 节流 (mock clock 1s 内 10 save → 1 emit); V2 content-hash dedup (相同 prefer state save 不 emit); V3 suppressed_since_last 字段累积正确; V4 env COCO_PERSIST_EMIT_MIN_INTERVAL_S 注入生效 (非法值 WARN once + fallback default); V5 docstring 措辞与实装一致 (grep '非节流' 不命中); V6 companion-015 V1-V8 回归 PASS",
       "_change_log": [
@@ -2441,7 +2441,14 @@
           "by": "phase-14-planner-subagent",
           "note": "companion-015-backlog-emit-throttle 升级为正式 feature; 原 backlog 项 status=upgraded"
         }
-      ]
+      ],
+      "evidence": {
+        "verify_summary": "evidence/companion-016/verify_summary.json",
+        "verify_script": "scripts/verify_companion_016.py",
+        "smoke": "init.sh PASS (feat/companion-016)",
+        "companion_015_regression": "V1-V8 PASS (V9/V10 vision-010 chain failures = main HEAD=d63f20a baseline)",
+        "default_off_bytewise": "state_cache_path=None → flush=False, emits=0, no IO"
+      }
     },
     {
       "id": "vision-011",
