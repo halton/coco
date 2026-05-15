@@ -55,6 +55,38 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+# interact-018: 让脚本能 import coco.proactive_trace.is_fail
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+
+def _is_fail(rec: Dict[str, Any]) -> bool:
+    """interact-018: emit-end 标准 fail 三口约定（委托 coco.proactive_trace.is_fail）。
+
+    供 trace summary 与 llm_usage summary 复用同一约定:
+      ok=False / error=非空 str / failure_reason=非空 str（兼容 status 含 fail）。
+    """
+    try:
+        from coco.proactive_trace import is_fail as _shared_is_fail
+    except Exception:  # noqa: BLE001
+        _shared_is_fail = None
+    if _shared_is_fail is not None:
+        return bool(_shared_is_fail(rec))
+    ok = rec.get("ok")
+    if ok is False:
+        return True
+    err = rec.get("error")
+    if isinstance(err, str) and err.strip():
+        return True
+    fr = rec.get("failure_reason")
+    if isinstance(fr, str) and fr.strip():
+        return True
+    status = rec.get("status")
+    if isinstance(status, str) and "fail" in status.lower():
+        return True
+    return False
+
 
 def _iter_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
     if not path.exists():
@@ -91,6 +123,10 @@ def summarize_trace(paths: List[Path]) -> Dict[str, Any]:
     reject = 0
     by_stage: Dict[str, Dict[str, int]] = {}
     latency_by_stage: Dict[str, List[float]] = {}
+    # interact-018: emit-end fail 统计（三口标准 OR）；与 reject 解耦——
+    # reject 是仲裁决策（idle/cooldown/...），fail 是 emit 端"这次行为本身失败"。
+    fail_by_stage: Dict[str, int] = {}
+    total_fail = 0
     for path in paths:
         for rec in _iter_jsonl(path):
             ev = rec.get("event") or ""
@@ -119,6 +155,10 @@ def summarize_trace(paths: List[Path]) -> Dict[str, Any]:
                     latency_by_stage.setdefault(stage, []).append(float(lat))
                 except (TypeError, ValueError):
                     pass
+            # interact-018: emit-end fail 三口判定（_is_fail 函数）
+            if _is_fail(rec):
+                fail_by_stage[stage] = fail_by_stage.get(stage, 0) + 1
+                total_fail += 1
 
     rejection_pct: Dict[str, float] = {}
     for stage, c in by_stage.items():
@@ -141,6 +181,8 @@ def summarize_trace(paths: List[Path]) -> Dict[str, Any]:
         "by_stage": by_stage,
         "rejection_pct_by_stage": rejection_pct,
         "latency_by_stage": latency_summary,
+        "fail_by_stage": fail_by_stage,
+        "total_fail": total_fail,
     }
 
 
@@ -386,7 +428,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         # range 模式但无任何 daily 文件命中：仍输出空骨架而非裸 rc=2，方便 CI 区分
         out = {"trace": {"candidates": 0, "admit": 0, "reject": 0,
                           "by_stage": {}, "rejection_pct_by_stage": {},
-                          "latency_by_stage": {}},
+                          "latency_by_stage": {},
+                          "fail_by_stage": {}, "total_fail": 0},
                "usage": {"total_calls": 0, "total_prompt_tokens": 0,
                           "total_completion_tokens": 0,
                           "by_component": {}, "daily_avg": {}}}
