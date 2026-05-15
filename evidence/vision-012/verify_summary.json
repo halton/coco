@@ -1,0 +1,36 @@
+{
+  "feature_id": "vision-012",
+  "verification": {
+    "V1_default_frame_trigger": "PASS — defaults (untrusted_threshold=0.3, penalty=1e6, period_s=300.0, period_frames=3 override) + 3 ticks → frame-due GC, ttl_events=1, remaining=[]",
+    "V2_time_trigger_low_fps": "PASS — frame period 1500 (未达), INTERVAL_S=0.05s → tick 1 init, sleep 80ms, tick 2 time-due GC, ttl_after_1=0 ttl_after_2=1 frame_counter=0",
+    "V3_double_trigger_throttled": "PASS — frame=2 period + time=0.05s, 2 ticks (其中 sleep 80ms) → 仅 1 次 run_gc_cycle 调用 (节流)",
+    "V4_untrusted_threshold_env": "PASS — name_conf=0.4 在默认 0.3 下不 untrusted; COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD=0.5 → untrusted=True; field=0.5",
+    "V5_penalty_env_and_regression": "PASS — penalty=99 时 untrusted 候选 score≈99 (非 1e6), alice 仍胜; penalty=0 时关闭降权, bob 胜; 子进程 verify_vision_011 rc=0"
+  },
+  "smoke": "PASS rc=0 (./init.sh)",
+  "regression": {
+    "verify_vision_011": "PASS (rc=0, 子进程 in V5)",
+    "verify_vision_010": "PASS 10/10",
+    "verify_infra_018": "PASS",
+    "verify_robot_007": "PASS",
+    "verify_audio_011": "PASS"
+  },
+  "files_changed": [
+    "coco/perception/face_tracker.py",
+    "scripts/verify_vision_012.py",
+    "evidence/vision-012/verify_summary.json"
+  ],
+  "new_envs": {
+    "COCO_FACE_ID_MAP_GC_INTERVAL_S": "300.0 (默认; OR with frame interval; <=0 fallback default)",
+    "COCO_FACE_ID_MAP_GC_INTERVAL_FRAMES": "1500 (默认; 新名, 兼容旧 COCO_FACE_ID_MAP_GC_PERIOD_FRAMES)",
+    "COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD": "0.3 (默认 = vision-011 等价)",
+    "COCO_FACE_ID_UNTRUSTED_PENALTY": "1e6 (默认 = vision-011 等价; 0 关闭降权; 负值 fallback default)"
+  },
+  "default_off_equivalence": true,
+  "notes": [
+    "feature_list 要求 default-OFF gate 跟 COCO_FACE_ID_MAP_GC=0; 本 feature 沿用 vision-011 同款 gate (gc OR persist 未启用 → _maybe_periodic_gc 立即 return, run_gc_cycle 内部 short-circuit), 新增字段不影响 default-OFF bytewise 等价",
+    "_tick 中 GC 逻辑抽出为 _maybe_periodic_gc() 独立方法, 便于 verify 直接驱动 (避免 _tick 依赖 camera/detector)",
+    "同帧双触发节流: frame_due 或 time_due 任一满足都仅触发一次 run_gc_cycle, 两计数器都重置",
+    "兼容性: 旧 env COCO_FACE_ID_MAP_GC_PERIOD_FRAMES 仍受支持 (新名优先)"
+  ]
+}
