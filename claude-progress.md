@@ -2957,3 +2957,12 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - async uat: uat-audio-012 (真硬件 hotplug chain + dt_actual/dt_total 窗口校准 + portaudio_error 真路径)
 - phase-16 进度: 1/5 完成 (audio-012 ✅; vision-013/robot-008/interact-018/infra-019 待)
 - 下一步: vision-013 (priority=121)
+
+## Session 2026-05-15 — vision-013 PHASE-16 #2 closeout
+
+- vision-013 PASSING, merge sha=57f3f5c
+- Reviewer (sub-agent fresh-context 3e03ad2) LGTM (本轮最干净), NO BLOCKER, 2 minor caveats
+- 修复内容: _maybe_identify 接入 record_name_confidence 生产路径 (非 mock) / GC due 切 monotonic 免疫 NTP 回拨 / penalty<0 fallback log WARNING / 阈值 env 化 (PENALTY/CONF_THRESHOLD/GC_FRAME_INTERVAL/GC_TIME_INTERVAL_S)
+- backlog: vision-013-backlog-ttl-and-overhead (C1 TTL wall clock NTP 影响 - 跨进程必须设计选择, C2 default-OFF short-circuit ns 级开销 ignorable)
+- phase-16 进度: 2/5 完成 (audio-012 ✅ vision-013 ✅; robot-008/interact-018/infra-019 待)
+- 下一步: robot-008 (priority=122)

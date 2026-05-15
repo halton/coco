@@ -2822,6 +2822,14 @@
       "description": "audio-012 closeout 4 caveats，全部不阻 merge：C1 coco/audio/wake_word.py L463 跨模块 import vad_trigger 的私有函数 _read_loss_window_override_ms 形成隐性耦合；建议抽 coco.audio_resilience / coco.audio_common 公共 util 统一暴露 loss_window 读取与 PortAudio 异常判定。C2 verify_audio_012 V4 ok_upper_not_overridden 是弱负向断言 (lost_n != 8000)，sim 下不会真触发 override 路径，真机毫秒级窗口下偶发接近 500ms 可能假阴；建议补一条正向断言 (override env 被实际生效时 lost_n 等于覆盖值)。C3 description env 名 COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S vs 代码实际 COCO_AUDIO_HOTPLUG_INTERVAL_S 不一致；已于 closeout 同步描述。C4 V3 sim 下 dt_actual/dt_total 都截断为 0ms (sim 时间分辨率限制)，真机毫秒级窗口数据由 uat-audio-012 校准。"
     },
     {
+      "id": "vision-013-backlog-ttl-and-overhead",
+      "area": "vision",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "vision-013 closeout 2 minor caveats，全部不阻 merge：C1 TTL 比较仍走 wall clock (time.time())，跨进程 / 持久化 session 共享必须用 wall clock，monotonic 不可序列化；NTP 大幅回拨 / 前跳理论上影响 TTL 触发时机，但本次未恶化（GC due → monotonic 已免疫，仅 TTL 命中点窗口偏移），属设计选择记录。C2 _maybe_identify 在 default-OFF 下虽然 short-circuit (env 未开)，但仍有两次方法调用 (get_face_id / record_name_confidence) + try/except 开销，ns 级，高 FPS (>=60) 下亦可忽略；如未来要在 hot path 微优化可加 module-level cached flag 提前 return。"
+    },
+    {
       "id": "uat-audio-012",
       "area": "audio",
       "priority": 998,
@@ -2854,7 +2862,7 @@
       "id": "vision-013",
       "name": "face_id 生产路径 wire-up + 时钟源切换 monotonic + 阈值 env 化",
       "area": "vision",
-      "status": "not_started",
+      "status": "passing",
       "phase": 16,
       "priority": 121,
       "origin_backlog": [
@@ -2863,7 +2871,11 @@
       ],
       "description": "目标: 把 _maybe_identify 接入 record_name_confidence (生产路径目前直接 patch TrackedFace.name_confidence 不写 _face_id_meta, 导致 untrusted GC 在无上层显式调用时永不触发); _gc_last_time 从 time.time() 切换为 time.monotonic() 消除 NTP 回拨敏感; _FACE_ID_UNTRUSTED_SCORE_PENALTY (1e6) / _FACE_ID_UNTRUSTED_CONF_THRESHOLD (0.3) 硬编码常量 env 化; GC 周期低 fps 下加时间 OR 帧数双触发。来源: vision-011-backlog-wire-and-tune C-1/C-3/C-4, vision-012-backlog-time-source-and-validation C1/C2/C3。Sim-first 验收: scripts/verify_vision_013.py 用 image:/video: 输入跑生产路径 _maybe_identify, 断言 (a) record_name_confidence 被调用且 _face_id_meta 写入, (b) untrusted 阈值触发后 GC 行为符合预期, (c) verify 切 monkey-patch time.monotonic 后 time_due 推进正确, (d) env 误填负数 fallback 默认值并 debug log 提示。Env: COCO_FACE_ID_UNTRUSTED_SCORE_PENALTY (default 1e6), COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD (default 0.3), COCO_FACE_ID_GC_FRAME_INTERVAL, COCO_FACE_ID_GC_TIME_INTERVAL_S。真机依赖: 实际光照下 face_id 区分力 / 误判率仍走 uat-vision-* 异步项。",
       "verification": "scripts/verify_vision_013.py",
-      "evidence": {}
+      "evidence": {
+        "reviewer": "Reviewer (sub-agent fresh-context 3e03ad2): LGTM — verify V1-V5 PASS / smoke rc=0 / regression vision-012/011/010+audio-012/infra-018/robot-007/interact-017 PASS / Default-OFF bytewise 等价 / monotonic vs wall clock 分工正确 / 生产路径真接入非 mock / NTP 回拨免疫 / penalty fallback log WARNING; 2 minor caveats 入 backlog vision-013-backlog-ttl-and-overhead",
+        "merge_sha": "57f3f5c",
+        "real_machine_uat": "pending (uat-vision-*)"
+      }
     },
     {
       "id": "robot-008",
