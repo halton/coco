@@ -1,0 +1,55 @@
+{
+  "feature": "interact-017",
+  "files_changed": [
+    "scripts/proactive_trace_summary.py",
+    "scripts/llm_usage_summary.py",
+    "scripts/verify_interact_017.py"
+  ],
+  "ok": true,
+  "regressions": {
+    "smoke ./init.sh": "PASS (driver)",
+    "verify_audio_011": "PASS (driver)",
+    "verify_infra_018": "PASS (driver)",
+    "verify_interact_016": "PASS (V6)",
+    "verify_robot_007": "PASS (driver)",
+    "verify_vision_012": "PASS (driver)"
+  },
+  "results": [
+    {
+      "detail": "ok",
+      "name": "V1_multiday_stage_latency",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "V2_llm_usage_rollup",
+      "ok": true
+    },
+    {
+      "detail": "trace_admit=1 candidates=1",
+      "name": "V3_robustness",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "V4_dual_format",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "V5_precision_and_idempotent",
+      "ok": true
+    },
+    {
+      "detail": "rc=0",
+      "name": "V6_regression_interact_016",
+      "ok": true
+    },
+    {
+      "detail": "scheduled in closeout (主会话)",
+      "name": "V7_reviewer_placeholder",
+      "ok": true
+    }
+  ],
+  "sha": "f44238f3569dc9ce1e539e38910817b35ab4963c"
+}
