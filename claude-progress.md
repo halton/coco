@@ -2794,3 +2794,20 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - Reviewer fresh-context：LGTM-with-caveats，0 BLOCKER；2 nit (N-1 _RESERVED_TRACE_KEYS 集合缺 taskName / N-2 emit_trace 注释 Python 3.13 KeyError 描述过时) 合并 C-1 (cooldown_hit boost 重复入账精度) + C-5 (token chars/2 估算) 入 backlog `interact-016-backlog-doc-polish` priority=999
 - Regression：verify_interact_015 / 014 / 012 + `./init.sh` smoke 全 PASS
 - `interact-015-backlog-trace-followup` → status=upgraded（C-2/C-3/C-4/C-6 已修）
+
+## Session — 2026-05-15 infra-017 closeout (phase-14 #3 PASSING)
+
+- **merge sha**: 9f7534a (Merge feat/infra-017 → main, --no-ff)
+- **关键改动**（history jsonl 加固 + vision-010 evidence 幂等）：
+  - `scripts/_history_writer.py`: `_FileLock` POSIX `fcntl.flock(LOCK_EX)` + Windows `msvcrt.locking(LK_LOCK)` 双路；`_rotate_if_needed` rotate>5000 行后 jsonl 立即 recreate；`.archive/` 文件名加 PID + nanos stamp 防同秒碰撞（`_archive_stamp`）；retention N=20（超过删除最旧）；`COCO_HISTORY_DISABLE` 白名单 `.lower()` case-insensitive（12 case 覆盖）；`archived_basename_stem` 字段重命名稳定化（evidence stamp 剔除）
+  - `scripts/verify_vision_010.py`: tmpdir/timestamp 从 evidence detail 剥离，3 次重跑 sha256 字节等价 (edb8808f...)
+  - `scripts/verify_infra_017.py`: V1-V10 共 442 行完整 spec
+  - `scripts/verify_infra_016.py`: 微调兼容新 schema
+  - `evidence/infra-016/verify_summary.json` + `evidence/vision-010/verify_summary.json`: schema-only sync（合理副作用）
+- **验证**：V1-V10 全 PASS；regression `verify_infra_016` 10/10 + `verify_vision_010` 10/10 + `./init.sh` smoke 全 PASS
+- **Reviewer (sub-agent)**: LGTM-with-caveats，0 BLOCKER；4 nit N1-N4 (N1 `_archive_stamp` 弱 ns 时钟碰撞 / N2 `datetime.UTC` py3.11+ / N3 `_FileLock` 退化无锁路径 WARN once / N4 `_rotate_if_needed` replace+touch 锁包) + Engineer 自陈 caveat 全入 backlog
+- **backlog 流转**（新 + 升级两项）：
+  - +`infra-017-backlog-history-residual` priority=999（N1-N4 + C4 smoke exit-code 细分 + C5 verify_history.skip 语义 + C9 CI history-summary upload + C-extra load_records 读锁）
+  - `infra-016-backlog-history-followup` → upgraded（C1/C2/C3/C6/C7/C8 + vision-010 幂等已修；剩 C4/C5/C9 + 新 nit → `infra-017-backlog-history-residual`）
+  - `infra-backlog-vision-010-verify-idempotent` → upgraded（sha256 edb8808f 字节稳定）
+- **下一候选**：phase-14 #4 companion-016
