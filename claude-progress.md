@@ -2772,3 +2772,12 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - infra-backlog-vision-010-verify-idempotent → infra-017 (被吸收，status=upgraded)
 
 **下一步**：按持续开发模式自动开始 phase-14 #1 **audio-010**（priority 101 最低）。
+
+## Session — 2026-05-15 audio-010 closeout (phase-14 #1 PASSING)
+
+- **merge sha**: 4f81da3 (Merge feat/audio-010 → main, --no-ff)
+- **关键改动**：HotplugWatcher wire main.py（COCO_AUDIO_HOTPLUG=1 启动 + atexit stop+join timeout=2）+ open_stream_with_recovery error_types 收紧仅 sd.PortAudioError（OSError 透传不重试）+ wake_word/vad_trigger InputStream wrap（asr.py:138 / main.py:2150 备用调用点未 wrap，C1/C2 入残余 backlog）
+- **验证**：6/6 V PASS（V1 atexit join=0.000s / V2 OFF 无 watcher 无 thread / V3 OSError 透传 / V4 OFF baseline+ON retry / V5 device_change reopen_cb 2 次 / V6 audio-009 12/12 + audio-008 回归 PASS）
+- **Reviewer (sub-agent)**: LGTM 无 BLOCKER，4 条 caveat C1-C4 均 LOW/INFO，全部入 audio-010-backlog-residual-wire（C1 asr.py:138 / C2 main.py:2150 / C3 reopen_callback 真业务接入 / C4 poll_interval 调小评估）
+- **backlog 流转**：audio-009-backlog-wire-to-main 主体完成（追加 → audio-010 标注，status=upgraded 已存在）；+audio-010-backlog-residual-wire
+- **下一候选**：phase-14 #2 interact-016（priority 次低）
