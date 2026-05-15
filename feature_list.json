@@ -2639,7 +2639,8 @@
       "area": "vision",
       "priority": 113,
       "phase": 15,
-      "status": "not_started",
+      "status": "passing",
+      "merge_sha": "31be745",
       "title": "face_id GC 时间+帧双触发 + untrusted 阈值 env 化",
       "user_visible_behavior": "vision-011 face_id_map GC 当前仅按帧数 (1500 frames) 触发，在低 fps (1 fps) 场景下会拉到 25min 一次 GC，stale entry 长期占用。本 feature 把 GC 触发改为 (帧数 N) OR (时间 T) 双触发；同时把 untrusted score penalty (1e6) 与 confidence threshold (0.3) 这两个硬编码常量提到 env，便于场景调参。",
       "origin_backlog": [
@@ -2662,7 +2663,9 @@
         "V6 Regression: verify_vision_011 V1-V6 + vision-010 V1-V10 + ./init.sh smoke 全 PASS。",
         "V7 Reviewer fresh-context sub-agent 评审 (硬规则)。"
       ],
-      "evidence": [],
+      "evidence": [
+        "Reviewer (sub-agent fresh-context fbb160e): LGTM-with-caveats — verify V1-V5 PASS / smoke rc=0 / regression vision-011 PASS / Default-OFF bytewise 等价 / 旧 env 兼容 / GC 双触发节流正确; 4 caveats 入 backlog vision-012-backlog-time-source-and-validation"
+      ],
       "description": "vision-011 backlog C3+C4 升级 — GC 时间+帧双触发 + untrusted 阈值 env 化。新 env: COCO_FACE_ID_MAP_GC_INTERVAL_S / COCO_FACE_ID_UNTRUSTED_PENALTY / COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD。default-OFF gate 跟 COCO_FACE_ID_MAP_GC=1。sim-first 全可证。"
     },
     {
@@ -2692,6 +2695,14 @@
       ],
       "evidence": [],
       "description": "interact-016 配套 observability 增强 — proactive_trace_summary 多日合并 + stage 分组 + LLM usage daily roll-up CLI。不与 interact-016-backlog-doc-polish (doc-only) 冲突 (后者另留 backlog)。sim-first 全可证；新增 scripts/llm_usage_summary.py。"
+    },
+    {
+      "id": "vision-012-backlog-time-source-and-validation",
+      "area": "vision",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "C1 _gc_last_time 使用 time.time() (wall clock)，NTP 回拨理论上影响 time_due 判断；GC 300s 默认窗口对其不敏感，建议换 time.monotonic() 消除回拨敏感性。C2 verify_vision_012 V2 用 monkey-patch time.time 模拟时间推进；若 C1 改为 monotonic，verify 需同步换 monkey-patch time.monotonic。C3 _face_id_untrusted_penalty <0 时 fallback 到默认 1e6 但构造无 logger.warning，env 误填负数静默；建议加 debug log 提示 fallback。C4 evidence/ 大量 audio-* / infra-018 jsonl mtime 漂移 (与 vision-012 无关，环境噪声)；非本 feature 责任，记录便于下次 closeout 关注。"
     },
     {
       "id": "audio-010-backlog-residual-wire",

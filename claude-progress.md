@@ -2916,3 +2916,11 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - async uat: uat-audio-011 (真扬声器/麦克风拔插 + lost_n 真值 + device_idx 字段)
 - phase-15 进度: 3/5 完成 (infra-018 ✅ robot-007 ✅ audio-011 ✅; vision-012/interact-017 待)
 - 下一步: vision-012 (priority=113)
+
+## Session 2026-05-15 — vision-012 PHASE-15 #4 closeout
+
+- vision-012 PASSING, merge sha=31be745
+- Reviewer (sub-agent fresh-context fbb160e) LGTM-with-caveats, NO BLOCKER, 4 caveats
+- backlog: vision-012-backlog-time-source-and-validation (C1 wall clock NTP 回拨, C2 verify monkey-patch 同步, C3 penalty<0 fallback 静默 log, C4 evidence jsonl mtime 噪声)
+- phase-15 进度: 4/5 完成 (infra-018 / robot-007 / audio-011 / vision-012; 剩 interact-017)
+- 下一步: interact-017 (priority=114)
