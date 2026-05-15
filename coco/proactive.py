@@ -361,6 +361,11 @@ class ProactiveScheduler:
         # 在 LLM 兜底前缀用 group_phrases[0]。
         self._group_template_override: Optional[tuple] = None
 
+        # robot-008: 可选 RobotSequencer 注入（default=None）。
+        # 注入后 _do_trigger_unlocked emit 之后会异步 run 一个简单的 nod 序列，
+        # 让主动开口附带轻量肢体反馈。None 时整段 no-op，bytewise 与基线等价。
+        self._robot_sequencer: Any = None
+
         # interact-012: MM proactive LLM 化（default-OFF）。MultimodalFusion 命中
         # 规则后通过 set_mm_llm_context({rule_id, hint, caption, emotion_label,
         # face_ids, ts}) 把上下文塞过来；下一次 maybe_trigger 命中时 _build_mm_system_prompt
@@ -405,6 +410,17 @@ class ProactiveScheduler:
         """挂到 InteractSession.on_interaction：每次交互重置 idle 计时。"""
         with self._lock:
             self._last_interaction_ts = self.clock()
+
+    def set_robot_sequencer(self, sequencer: Any) -> None:
+        """robot-008: 注入 RobotSequencer 实例。
+
+        注入后 _do_trigger_unlocked emit 之后会 best-effort 触发一个简单 nod
+        序列，让主动开口附带轻量肢体反馈。sequencer=None 时清除注入（OFF 等价）。
+
+        线程：seq.run() 在新 daemon 线程中执行，避免阻塞 proactive _loop。
+        """
+        with self._lock:
+            self._robot_sequencer = sequencer
 
     # interact-010: 共享 cooldown API
     # ------------------------------------------------------------------
@@ -1123,6 +1139,37 @@ class ProactiveScheduler:
                 )
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] emit failed: %s: %s", type(e).__name__, e)
+
+        # robot-008: best-effort 触发轻量 nod 序列（注入后才生效）。
+        # 异步 daemon 线程执行 seq.run()，避免阻塞 proactive _loop / TTS 收尾。
+        # 任何异常吃掉——主动话题 happen 不依赖于 robot 动作成功。
+        with self._lock:
+            _seq = self._robot_sequencer
+        if _seq is not None:
+            try:
+                from coco.robot.sequencer import Action as _SeqAction
+                _nod = _SeqAction(
+                    action_id=f"proactive-nod-{int(t * 1000)}",
+                    type="nod",
+                    params={"amplitude_deg": 8.0},
+                    duration_s=0.25,
+                )
+
+                def _run_seq() -> None:
+                    try:
+                        _seq.run([_nod])
+                    except Exception as _e:  # noqa: BLE001
+                        log.warning("[proactive] robot_sequencer.run failed: %s: %s",
+                                    type(_e).__name__, _e)
+
+                threading.Thread(
+                    target=_run_seq,
+                    name="coco-proactive-robot-seq",
+                    daemon=True,
+                ).start()
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive] robot_sequencer dispatch failed: %s: %s",
+                            type(e).__name__, e)
 
         log.info("[proactive] triggered topic=%r", topic_text[:80])
 

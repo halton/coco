@@ -1,0 +1,36 @@
+{
+  "feature": "robot-008",
+  "phase": 16,
+  "verify_script": "scripts/verify_robot_008.py",
+  "result": "PASS",
+  "v_results": {
+    "V1_atexit_shutdown": "PASS (subprocess rc=0, workers=2, no traceback)",
+    "V2_proactive_inject": "PASS (fake_seq.run call_count>=1, first action type=nod)",
+    "V3_business_subscribe": "PASS (proactive→real_seq→subscribe callback got action_done, type=nod)",
+    "V4_default_off_equivalence": "PASS (_robot_sequencer is None when not injected; no coco-proactive-robot-seq threads spawned)",
+    "V5_regression": "PASS (verify_robot_007 rc=0, verify_robot_006 rc=0)"
+  },
+  "smoke": "PASS rc=0",
+  "regression_other": {
+    "verify_vision_013.py": "PASS",
+    "verify_audio_012.py": "PASS",
+    "verify_infra_018.py": "PASS",
+    "verify_interact_017.py": "PASS"
+  },
+  "files_changed": [
+    "coco/proactive.py",
+    "coco/main.py",
+    "scripts/verify_robot_008.py"
+  ],
+  "default_off_equivalence": "yes (set_robot_sequencer 未调用时 _robot_sequencer=None；_do_trigger_unlocked 末尾 if _seq is not None 守卫；main.py env-gated 块仅在 _seq_cfg.enabled and reachy_mini is not None 时 wire)",
+  "atexit_strategy": "atexit.register(lambda: seq.shutdown(wait=True, timeout=2.0)) — 已在 main.py env-gated 块内注册；RobotSequencer.shutdown() 自身幂等",
+  "proactive_inject_point": "coco/proactive.py:_do_trigger_unlocked emit 之后 (~line 1130+) — best-effort 异步 daemon thread 跑 seq.run([nod])，吃异常",
+  "business_subscribe_wire": "coco/main.py env-gated 块内调 _robot_sequencer.subscribe(_robot_seq_business_observer)，回调 emit 'robot.seq_observed'",
+  "禁词扫描": "无命中 (set_motor_torque/enable_torque/body./low_level 在改动文件中均未出现)",
+  "notes": [
+    "RobotSequencer 通过 set_robot_sequencer(seq) 注入到 ProactiveScheduler；main.py 在 ProactiveScheduler 构造后立即注入（若 sequencer 启用）",
+    "GroupModeCoordinator 注入留待后续 feature — 当前 GroupModeCoord 路径不直接驱动单次 robot 动作，更适合作为单独 backlog",
+    "Default-OFF bytewise 等价：未注入 sequencer 时 _do_trigger_unlocked 走 `with self._lock: _seq = self._robot_sequencer` → 取出 None → 不进 if 分支；与 robot-007 基线行为一致",
+    "uat-robot-008 真机依赖：goto_target nod 实际头部物理表现 / 视觉-运动闭环延迟 — 异步项不阻 merge"
+  ]
+}
