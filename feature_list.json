@@ -2268,11 +2268,25 @@
       "phase": 13,
       "area": "infra",
       "priority": 94,
-      "status": "not_started",
+      "status": "in_progress",
       "owner": "engineer",
       "description": "observability — verify/smoke 历史趋势 + summary CLI — (a) run_verify_all.py 跑完追加 evidence/_history/verify_history.jsonl{ts, total, pass, fail, skip, duration_s, git_head}；smoke 类似 evidence/_history/smoke_history.jsonl；rotate >5000 行 → .archive/；(b) scripts/health_summary.py CLI — 解析 history jsonl 输出最近 N 次 PASS rate、平均时长、失败 verify 频次 TopK、各 area smoke 趋势；(c) verify-matrix CI artifact 上传 history jsonl（可选），便于 cross-run 比较；(d) restore_unrelated_evidence.py 默认保护 _history/* 不被回退（dogfood）。default-OFF 不适用（CI/dev 工具，jsonl 写入 always-on 但零运行期影响）；evidence policy 集成 — _history/* 是 generated artifact 不视为 feature evidence。sim-first：注入 fake verify run 行 + summary CLI 输出快照 + restore_unrelated_evidence 保护 _history 单元测试。followed_from: infra-014-fu-2 polish",
       "followed_from": "infra-014-fu-2",
-      "evidence": ""
+      "evidence": "evidence/infra-016/verify_summary.json + evidence/_history/{verify,smoke}_history.jsonl",
+      "_change_log": [
+        {
+          "ts": "2026-05-15",
+          "action": "status: not_started -> in_progress",
+          "by": "engineer-subagent",
+          "note": "phase-13 infra-016 启动：verify/smoke history jsonl + health_summary CLI + restore_unrelated_evidence dogfood 保护 _history/*"
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "implementation round 1 done, awaiting Reviewer",
+          "by": "engineer-subagent",
+          "note": "scripts/_history_writer.py + health_summary.py + verify_infra_016.py 落地；run_verify_all.py / smoke.py / restore_unrelated_evidence.py wire-in；10/10 V PASS；smoke + infra-015 regression PASS"
+        }
+      ]
     },
     {
       "id": "audio-009-backlog-wire-to-main",

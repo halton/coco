@@ -1,0 +1,139 @@
+{
+  "feature_id": "infra-016",
+  "title": "verify/smoke history jsonl + health_summary CLI + restore protect",
+  "phase": 13,
+  "branch": "feat/infra-016",
+  "verify_script": "scripts/verify_infra_016.py",
+  "results": [
+    {
+      "name": "V1_history_writer_imports",
+      "passed": true,
+      "exports": [
+        "ARCHIVE_DIR",
+        "HISTORY_DIR",
+        "ROTATE_LINES",
+        "SMOKE_JSONL",
+        "VERIFY_JSONL",
+        "emit_smoke",
+        "emit_verify",
+        "load_records"
+      ],
+      "tag": "v1"
+    },
+    {
+      "name": "V2_emit_verify_roundtrip",
+      "passed": true,
+      "record_keys": [
+        "duration_s",
+        "fail",
+        "failed_names",
+        "git_head",
+        "kind",
+        "pass",
+        "skip",
+        "total",
+        "ts"
+      ],
+      "tag": "v2"
+    },
+    {
+      "name": "V3_emit_smoke_roundtrip",
+      "passed": true,
+      "areas_preserved": true,
+      "tag": "v3"
+    },
+    {
+      "name": "V4_rotate_when_over_threshold",
+      "passed": true,
+      "archived_path": ".archive/v_rot.20260515T031553Z.jsonl",
+      "tag": "v4"
+    },
+    {
+      "name": "V5_run_verify_all_wire_in",
+      "passed": true,
+      "tag": "v5"
+    },
+    {
+      "name": "V6_smoke_wire_in",
+      "passed": true,
+      "tag": "v6"
+    },
+    {
+      "name": "V7_health_summary_cli",
+      "passed": true,
+      "verify_summary": {
+        "avg_duration_s": 11.5,
+        "count": 2,
+        "first_ts": "2026-05-15T00:00:00+00:00",
+        "last_ts": "2026-05-15T01:00:00+00:00",
+        "pass_rate": 0.85,
+        "top_failing": [
+          {
+            "name": "verify_x.py",
+            "occurrences": 2
+          },
+          {
+            "name": "verify_y.py",
+            "occurrences": 1
+          }
+        ],
+        "total_runs_with_failure": 2
+      },
+      "smoke_summary": {
+        "areas": {
+          "audio": {
+            "pass": 1,
+            "pass_rate": 1.0,
+            "total": 1
+          },
+          "tts": {
+            "pass": 1,
+            "pass_rate": 1.0,
+            "total": 1
+          },
+          "vision": {
+            "pass": 1,
+            "pass_rate": 1.0,
+            "total": 1
+          }
+        },
+        "avg_duration_s": 5.0,
+        "count": 1,
+        "first_ts": "2026-05-15T00:00:00+00:00",
+        "last_ts": "2026-05-15T00:00:00+00:00",
+        "pass_rate": 1.0
+      },
+      "tag": "v7"
+    },
+    {
+      "name": "V8_restore_protects_history",
+      "passed": true,
+      "restored_count": 1,
+      "tag": "v8"
+    },
+    {
+      "name": "V9_runtime_zero_impact_env_disable",
+      "passed": true,
+      "tag": "v9"
+    },
+    {
+      "name": "V10_schema_stable_across_appends",
+      "passed": true,
+      "schema_keys": [
+        "duration_s",
+        "fail",
+        "failed_names",
+        "git_head",
+        "kind",
+        "pass",
+        "skip",
+        "total",
+        "ts"
+      ],
+      "tag": "v10"
+    }
+  ],
+  "totals": "10/10 PASS",
+  "default_off": "N/A — CI/dev tool。jsonl append 默认 always-on，但运行期零影响：写盘失败仅 stderr WARN；COCO_HISTORY_DISABLE=1 完全关闭（V9 守护）。无 stdout/rc 语义改变。",
+  "real_machine_uat": "N/A — pure CI/observability tool"
+}
