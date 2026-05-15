@@ -8,6 +8,21 @@
 
 平台：macOS / Linux / Windows（reachy-mini 本身仅 Lite SDK 跨平台；
 真机硬件相关功能可能仍受限，但 smoke 仅验通路）。
+
+Exit codes (infra-018)
+----------------------
+默认 (`COCO_SMOKE_FINEGRAINED_EXIT` 未设置 / 不为 1)：
+  0  全部子检查 PASS / WARN / SKIP（无 FAIL）
+  1  ≥1 个 FAIL 或 harness 自身异常
+
+细分模式 (`COCO_SMOKE_FINEGRAINED_EXIT=1`，default-OFF)：
+  0  全部子检查 PASS
+  1  ≥1 个 FAIL（或 harness 自身异常）
+  2  无 FAIL，但 ≥1 个 WARN
+  3  无 FAIL / WARN，但 ≥1 个 SKIP
+
+向后兼容：老调用方按 `rc != 0 → FAIL` 判定，OFF 模式下行为完全一致；ON 模式
+下 rc=2/3 在老 caller 眼里仍 = 失败语义，但本仓库尚无任何老 caller 启用此 env。
 """
 
 from __future__ import annotations
@@ -440,8 +455,38 @@ def smoke_daemon() -> None:
             proc.kill()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Coco smoke test")
+def _finegrained_exit_enabled() -> bool:
+    """infra-018: default-OFF gate, 仅在 COCO_SMOKE_FINEGRAINED_EXIT=1 时启用 rc=2/3 细分。"""
+    return os.environ.get("COCO_SMOKE_FINEGRAINED_EXIT", "").strip() in ("1", "true", "yes")
+
+
+def _classify_stdout(text: str) -> str:
+    """infra-018: 把子检查 stdout 末段映射到 WARN / SKIP / PASS。
+
+    子检查内部约定 print "  WARN: ..." 或 "  SKIP: ..." 表示软跳过；其它无 FAIL
+    抛出的视作 PASS（FAIL 不在此函数判定，由 SystemExit 捕获）。
+    """
+    lo = text.lower()
+    # 顺序：SKIP 优先于 WARN（部分子检查 print "SKIP: ..." 表示主动跳过）
+    if "skip" in lo:
+        return "SKIP"
+    if "warn" in lo:
+        return "WARN"
+    return "PASS"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Coco smoke test",
+        epilog=(
+            "Exit codes (infra-018):\n"
+            "  0  全部 PASS (或 OFF 模式下含 WARN/SKIP 而无 FAIL)\n"
+            "  1  ≥1 FAIL 或 harness 自身异常\n"
+            "  2  仅在 COCO_SMOKE_FINEGRAINED_EXIT=1：无 FAIL 但有 WARN\n"
+            "  3  仅在 COCO_SMOKE_FINEGRAINED_EXIT=1：无 FAIL/WARN 但有 SKIP\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--daemon", action="store_true",
                         help="同时验 mockup-sim daemon（需先关 Reachy Mini Control.app）")
     args = parser.parse_args()
@@ -450,18 +495,31 @@ def main() -> None:
     # infra-016: 按 area 名收集子检查结果（PASS/FAIL/SKIP/WARN），写 history jsonl
     areas: dict[str, str] = {}
 
-    def _run(name: str, fn) -> None:  # type: ignore[no-untyped-def]
-        """跑一个 smoke 子检查；任何 sys.exit -> 记 FAIL 并继续 raise。"""
-        try:
-            fn()
-        except SystemExit as e:
-            areas[name] = "FAIL"
-            _emit_smoke_history(areas, time.time() - t_start, failed=True)
-            raise
+    def _run(name: str, fn) -> bool:  # type: ignore[no-untyped-def]
+        """跑一个 smoke 子检查；SystemExit -> 记 FAIL；正常返回时按 stdout 区分 PASS/WARN/SKIP。
 
-    # 简版包装：保留各子检查直跑行为，仅追加 areas 状态记录。
-    # 子检查内部 print "WARN" / "SKIP" 是 stdout 标识，本层只在它不抛出时记 PASS。
+        返回 True 表示未 FAIL（PASS/WARN/SKIP），False 表示 FAIL（已记录, 调用方决定是否 raise）。
+        """
+        import io as _io
+        from contextlib import redirect_stdout as _redirect_stdout
+
+        buf = _io.StringIO()
+        try:
+            with _redirect_stdout(buf):
+                fn()
+        except SystemExit:
+            # 把子检查 stdout 透传, 让用户看到 FAIL 原因
+            sys.stdout.write(buf.getvalue())
+            areas[name] = "FAIL"
+            return False
+        out = buf.getvalue()
+        sys.stdout.write(out)
+        areas[name] = _classify_stdout(out)
+        return True
+
+    # 子检查内部 print "WARN" / "SKIP" 是 stdout 标识，本层捕获 stdout 后分类。
     print_env_baseline()
+    failed = False
     for nm, fn in [
         ("audio", smoke_audio),
         ("asr", smoke_asr),
@@ -475,22 +533,45 @@ def main() -> None:
         ("config", smoke_config),
         ("publish", smoke_publish),
     ]:
-        _run(nm, fn)
-        areas[nm] = "PASS"
-    if args.daemon:
-        _run("daemon", smoke_daemon)
-        areas["daemon"] = "PASS"
+        ok = _run(nm, fn)
+        if not ok:
+            failed = True
+            break
+    if not failed and args.daemon:
+        ok = _run("daemon", smoke_daemon)
+        if not ok:
+            failed = True
+
+    duration = time.time() - t_start
+    # infra-016: 写 history jsonl（永远写，含 FAIL）
+    _emit_smoke_history(areas, duration, failed=failed)
+
+    if failed:
+        print()
+        print("==> Smoke FAIL. 详见上方第一个 FAIL 子检查输出。")
+        return 1
+
     print()
     print("==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json")
-    # infra-016: 写 history jsonl（成功路径）
-    _emit_smoke_history(areas, time.time() - t_start, failed=False)
+
+    # infra-018: 细分 exit code（default-OFF）
+    if _finegrained_exit_enabled():
+        states = set(areas.values())
+        if "WARN" in states:
+            return 2
+        if "SKIP" in states:
+            return 3
+    return 0
 
 
 def _emit_smoke_history(areas: dict[str, str], duration_s: float, *, failed: bool) -> None:
     """infra-016: 把本次 smoke 结果追加到 evidence/_history/smoke_history.jsonl。
 
-    运行期零影响：异常吞掉。areas 中 PASS / FAIL 计数分别填 pass / fail；
-    SKIP / WARN 暂未单独计（子检查内部仅 print，不抛），保持 skip=0。
+    infra-018 更新：SKIP / WARN 现在能在 _run 包装层正确分类（按子检查 stdout
+    含 "SKIP" / "WARN" 关键字判定），skip 字段填 SKIP 计数；WARN 仅体现在 areas
+    map 与 fine-grained rc 中，不混入 skip 计数。
+
+    运行期零影响：异常吞掉。
     """
     try:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -500,15 +581,22 @@ def _emit_smoke_history(areas: dict[str, str], duration_s: float, *, failed: boo
         return
     pass_n = sum(1 for v in areas.values() if v == "PASS")
     fail_n = sum(1 for v in areas.values() if v == "FAIL")
+    skip_n = sum(1 for v in areas.values() if v == "SKIP")
     emit_smoke(
         total=len(areas),
         pass_=pass_n,
         fail=fail_n,
-        skip=0,
+        skip=skip_n,
         duration_s=duration_s,
         areas=dict(areas),
     )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        rc = main()
+    except Exception as e:  # noqa: BLE001
+        # harness 自身异常：不在子检查 try/except 里 → 仍以 rc=1 退出，保持向后兼容
+        sys.stderr.write(f"[smoke] harness exception: {type(e).__name__}: {e}\n")
+        rc = 1
+    sys.exit(rc)

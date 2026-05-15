@@ -1,0 +1,76 @@
+{
+  "feature": "infra-018",
+  "git_head": "ede243a",
+  "results": {
+    "V1_V3_exit_codes": {
+      "all_pass_off": {
+        "rc": 0,
+        "states": [
+          "PASS"
+        ]
+      },
+      "all_pass_on": {
+        "rc": 0,
+        "states": [
+          "PASS"
+        ]
+      },
+      "one_fail_off": {
+        "rc": 1,
+        "publish": "FAIL"
+      },
+      "one_fail_on": {
+        "rc": 1,
+        "vision": "FAIL"
+      },
+      "warn_only_on": {
+        "rc": 2,
+        "tts": "WARN"
+      },
+      "warn_only_off": {
+        "rc": 0
+      },
+      "skip_only_on": {
+        "rc": 3,
+        "audio": "SKIP"
+      },
+      "skip_only_off": {
+        "rc": 0
+      },
+      "warn_plus_skip_on": {
+        "rc": 2
+      },
+      "fail_dominates_on": {
+        "rc": 1
+      }
+    },
+    "V2_workflow_artifact": {
+      "workflow": ".github/workflows/verify-matrix.yml",
+      "needles_ok": true,
+      "smoke_position_ok": true
+    },
+    "V4_legacy_compat": {
+      "all_pass": {
+        "rc": 0,
+        "legacy_fail": false
+      },
+      "warn_off": {
+        "rc": 0,
+        "legacy_fail": false
+      },
+      "skip_off": {
+        "rc": 0,
+        "legacy_fail": false
+      },
+      "fail_off": {
+        "rc": 1,
+        "legacy_fail": true
+      }
+    },
+    "V5_actionlint": {
+      "status": "PASS",
+      "rc": 0
+    }
+  },
+  "status": "PASS"
+}
