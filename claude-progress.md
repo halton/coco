@@ -2924,3 +2924,12 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - backlog: vision-012-backlog-time-source-and-validation (C1 wall clock NTP 回拨, C2 verify monkey-patch 同步, C3 penalty<0 fallback 静默 log, C4 evidence jsonl mtime 噪声)
 - phase-15 进度: 4/5 完成 (infra-018 / robot-007 / audio-011 / vision-012; 剩 interact-017)
 - 下一步: interact-017 (priority=114)
+
+## Session 2026-05-15 — interact-017 PHASE-15 #5 closeout + phase-15 全部完成
+
+- interact-017 PASSING, merge sha=f45a34d
+- Reviewer (sub-agent fresh-context d020361) LGTM-with-caveats, NO BLOCKER, 4 caveats
+- 修复: feature_list.json interact-017 description / title / V2 脚本名同步代码 (llm_usage_rollup.py → llm_usage_summary.py)
+- backlog: interact-017-backlog-script-name-and-emit (C1 脚本名已修 note, C2 _is_fail 字段约定, C3 latency_ms 生产 wire, C4 空 jsonl rc 语义)
+- **phase-15 全部 5/5 完成**: infra-018 ✅ robot-007 ✅ audio-011 ✅ vision-012 ✅ interact-017 ✅
+- 下一步: phase-16 规划 (从 backlog 拣 candidate) 或处理 uat-* 异步项

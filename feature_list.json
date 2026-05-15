@@ -2673,9 +2673,9 @@
       "area": "interact",
       "priority": 114,
       "phase": 15,
-      "status": "not_started",
-      "title": "proactive_trace_summary CLI 增强 + LLM usage daily roll-up",
-      "user_visible_behavior": "interact-016 落地了 proactive trace + LLM usage jsonl，但 summary CLI 仅做基础统计。本 feature 增强 summary：(a) 按 stage 分组 (cooldown_hit / boost / normal) 出 p50/p95/p99 延迟；(b) 多日合并 (--from / --to 日期范围 + glob 匹配 daily jsonl)；(c) LLM usage daily roll-up CLI (按 model + 调用次数 + token 估算 + 失败率)。",
+      "status": "passing",
+      "title": "proactive_trace_summary CLI 增强 + LLM usage daily summary",
+      "user_visible_behavior": "interact-016 落地了 proactive trace + LLM usage jsonl，但 summary CLI 仅做基础统计。本 feature 增强 summary：(a) 按 stage 分组 (cooldown_hit / boost / normal) 出 p50/p95/p99 延迟；(b) 多日合并 (--from / --to 日期范围 + glob 匹配 daily jsonl)；(c) LLM usage daily summary CLI (按 model + 调用次数 + token 估算 + 失败率)。",
       "origin_backlog": [
         "interact-016-backlog-doc-polish"
       ],
@@ -2686,15 +2686,26 @@
       "real_machine_uat": "n/a",
       "verification": [
         "V1 proactive_trace_summary --from 2026-05-13 --to 2026-05-15 多日合并：跨日 rollover jsonl 正确加载，stage 分组 p50/p95/p99 输出。",
-        "V2 LLM usage daily roll-up CLI (scripts/llm_usage_summary.py)：按 model + 调用次数 + token 估算总和 + 失败率 (fail/total) 输出 json/table 两种格式。",
+        "V2 LLM usage daily summary CLI (scripts/llm_usage_summary.py)：按 model + 调用次数 + token 估算总和 + 失败率 (fail/total) 输出 json/table 两种格式。",
         "V3 空文件 / 非法 jsonl 行 / 缺失字段 鲁棒性 (rc=2 + clear error msg)。",
         "V4 --output json 与 --output table 双格式，table 用 tabulate fallback (无依赖时纯 print)。",
         "V5 verify_interact_017.py 覆盖：100 行合成 jsonl 跨 3 天 → p50/p95/p99 精度 ±5%；LLM usage 5 model × 200 call 汇总精度。",
         "V6 Regression: verify_interact_016 + ./init.sh smoke 全 PASS。",
         "V7 Reviewer fresh-context sub-agent 评审 (硬规则)。"
       ],
-      "evidence": [],
-      "description": "interact-016 配套 observability 增强 — proactive_trace_summary 多日合并 + stage 分组 + LLM usage daily roll-up CLI。不与 interact-016-backlog-doc-polish (doc-only) 冲突 (后者另留 backlog)。sim-first 全可证；新增 scripts/llm_usage_summary.py。"
+      "evidence": [
+        "Reviewer (sub-agent fresh-context d020361): LGTM-with-caveats — verify V1-V7 PASS / smoke rc=0 / regression interact-016 PASS / Default-OFF 等价 (coco/ diff 空) / 幂等 sort_keys=True / 鲁棒性 PASS; 4 caveats 入 backlog interact-017-backlog-script-name-and-emit",
+        "merge_sha: f45a34d"
+      ],
+      "description": "interact-016 配套 observability 增强 — proactive_trace_summary 多日合并 + stage 分组 + LLM usage daily summary CLI (scripts/llm_usage_summary.py)。不与 interact-016-backlog-doc-polish (doc-only) 冲突 (后者另留 backlog)。sim-first 全可证；新增 scripts/llm_usage_summary.py。"
+    },
+    {
+      "id": "interact-017-backlog-script-name-and-emit",
+      "area": "interact",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "description": "C1 brief 早期文案曾写 llm_usage_rollup.py，与实现 scripts/llm_usage_summary.py 不一致；closeout 时 feature_list.json 已同步为 llm_usage_summary.py，此处记录历史 note 防回退。C2 proactive_trace_summary._is_fail 只认 ok=False / error / status:*fail*，不认顶层 failure 字段；若 ProactiveScheduler emit 用 failure 键统计漏算 — 需补 emit 端约定 (ok/error 标准化) 或扩展 _is_fail。C3 trace 行 latency_ms 字段目前 fixture 显式注入，生产 ProactiveScheduler 调用端需补发 (wire-up)。C4 空 jsonl rc=0 而非 brief 描述的 rc=2；语义合理 (合法但无数据 ≠ 缺失输入)，需后续校准 brief/V3 文案。"
     },
     {
       "id": "vision-012-backlog-time-source-and-validation",
