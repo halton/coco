@@ -1,0 +1,43 @@
+{
+  "feature": "robot-007",
+  "git_head_at_verify": "c015ada (pre-commit, branch feat/robot-007)",
+  "verify_script": "scripts/verify_robot_007.py",
+  "results": {
+    "V1_pool_dispatch_no_loss": "PASS — pool_size=2 + 5 fast sub + 5 ev → 25 dispatch 完成",
+    "V2_drop_oldest": "PASS — queue_max=2 + slow sub → 6 次 robot.subscribe_dropped emit, dropped_n 单调递增 [1..6], reason=drop_oldest",
+    "V3_drop_new": "PASS — pool_size=1 queue_max=2 8 ev → 5 次 drop, reason=drop_new, 最早 d0/d1/d2 处理",
+    "V4_block_backpressure": "PASS — block 模式无 drop, 全部 6 ev received, run elapsed≈0.162s 被回压",
+    "V5_mockup_sim_integration": "PASS — cancel 仍工作, sequence_cancelled 1 次, action_done ts 单调",
+    "V6_regression_robot_006": "PASS — verify_robot_006 子进程 rc=0 (V1-V8 全 PASS)"
+  },
+  "smoke_init_sh": "PASS rc=0",
+  "regression": {
+    "verify_robot_006": "rc=0 ALL PASS",
+    "verify_robot_005": "rc=0 ALL PASS",
+    "verify_robot_004": "rc=0 PASS",
+    "verify_infra_018": "rc=0 PASS"
+  },
+  "forbidden_token_scan": {
+    "files_scanned": ["coco/robot/sequencer.py", "scripts/verify_robot_007.py"],
+    "tokens": ["set_motor_torque", "enable_torque", "body.", "low_level"],
+    "result": "全无"
+  },
+  "files_changed": [
+    "coco/robot/sequencer.py",
+    "scripts/verify_robot_007.py",
+    "evidence/robot-007/verify_summary.json"
+  ],
+  "env_added": [
+    "COCO_ROBOT_SEQ_POOL_SIZE (default 4)",
+    "COCO_ROBOT_SEQ_QUEUE_MAX (default 64)",
+    "COCO_ROBOT_SEQ_OVERFLOW (drop_oldest|drop_new|block, default drop_oldest)"
+  ],
+  "design_notes": [
+    "原 daemon-Thread-per-event 改为 N worker 线程从同一 bounded queue 阻塞 get；queue 真实反映 backlog。",
+    "drop_oldest: q.put_nowait 满则 get_nowait 丢最老一条再 put 新；reason 字段标记。",
+    "drop_new: 满则直接 _on_drop, 不入队。",
+    "block: q.put 阻塞直到有空位。",
+    "shutdown(wait, timeout): stop event + 排空 queue + sentinel + join worker + executor.shutdown(cancel_futures=True 兼容老 py 用 try)。",
+    "robot.subscribe_dropped emit payload: {event, reason, queue_max, dropped_n} dropped_n 滚动单调累计。"
+  ]
+}
