@@ -2490,7 +2490,7 @@
       "area": "robot",
       "priority": 106,
       "phase": 14,
-      "status": "not_started",
+      "status": "passing_pending_reviewer",
       "description": "mockup-sim 多动作序列编排 + 事件 emit — 补 robot 域 phase-12 后空白。(a) RobotSequencer 抽象：接受 list[Action] (head_turn / nod / look_at / sleep / wakeup)，串行执行，每个 action 完成 emit robot.action_done{action_id, type, duration_ms, ts}；(b) cancel 协议：sequencer.cancel() 立即停当前 action + 跳 pending，emit robot.sequence_cancelled{cancelled_n}；(c) ProactiveScheduler / GroupMode 端订阅 robot.action_done 作为状态机回压 (避免动作叠加)；(d) mockup-sim daemon 模式下全程 zero-hardware，evidence 仅记 emit 序列；真机执行作 uat-* 异步项不阻 merge。default-OFF gate：COCO_ROBOT_SEQ=1 (class 提供 always-on，wire 进 main 仅 ON 时启用)。sim-first：fixture 5-action 序列 + cancel mid-flight + 业务订阅 wire；真机扭矩 / 头部姿态保留独立 uat-robot 异步项不阻 merge。followed_from: robot-005",
       "acceptance": "V1 5-action 序列串行执行 emit action_done 顺序正确 (ts 单调); V2 cancel mid-flight 中止当前 + 跳 pending + emit sequence_cancelled{cancelled_n>=1}; V3 业务订阅 (ProactiveScheduler mock) 收到 action_done 后状态机不叠加新动作; V4 env COCO_ROBOT_SEQ OFF zero-cost (sequencer 不构造 / main 不 wire); V5 mockup-sim daemon 全程 zero-hardware; V6 robot-005 回归 PASS",
       "_change_log": [
@@ -2499,8 +2499,29 @@
           "action": "created",
           "by": "phase-14-planner-subagent",
           "note": "robot 域 phase-12 后空白补齐 (mockup-sim 多动作序列 + emit)"
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "status_changed_to_in_progress",
+          "by": "robot-006-engineer-subagent",
+          "note": "开始实现 RobotSequencer + emit + cancel + 业务订阅回压"
+        },
+        {
+          "ts": "2026-05-15",
+          "action": "status_changed_to_passing_pending_reviewer",
+          "by": "robot-006-engineer-subagent",
+          "note": "verify V1..V8 PASS; robot-003/004/005 regression PASS; smoke PASS; mockup-sim zero-hardware 验证; 等 Reviewer fresh-context LGTM."
         }
-      ]
+      ],
+      "evidence": {
+        "verify_summary": "evidence/robot-006/verify_summary.json",
+        "verify_out": "evidence/robot-006/verify.out",
+        "regress_robot_003": "evidence/robot-006/regress_robot_003.out",
+        "regress_robot_004": "evidence/robot-006/regress_robot_004.out",
+        "regress_robot_005": "evidence/robot-006/regress_robot_005.out",
+        "smoke": "evidence/robot-006/smoke.out",
+        "real_machine_uat": "pending (uat-robot-006 异步项, 不阻 merge)"
+      }
     },
     {
       "id": "audio-010-backlog-residual-wire",

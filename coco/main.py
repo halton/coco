@@ -830,6 +830,30 @@ class Coco(ReachyMiniApp):
             print(f"[coco][posture] init failed: {exc!r}", flush=True)
             _posture_baseline = None
 
+        # robot-006: 可选 RobotSequencer (COCO_ROBOT_SEQ=1, 默认 OFF, bytewise 等价基线).
+        # class 始终可构造；仅 env=1 时 wire + 暴露给业务层 (ProactiveScheduler / GroupMode)。
+        _robot_sequencer = None
+        try:
+            from coco.robot.sequencer import (
+                RobotSequencer as _RobotSequencer,
+                sequencer_config_from_env as _seq_cfg_from_env,
+            )
+            _seq_cfg = _seq_cfg_from_env()
+            if _seq_cfg.enabled and reachy_mini is not None:
+                _robot_sequencer = _RobotSequencer(
+                    robot=reachy_mini, config=_seq_cfg, emit_fn=emit,
+                )
+                print(
+                    f"[coco][robot_seq] RobotSequencer enabled poll={_seq_cfg.cancel_poll_interval_s:.3f}s "
+                    f"sub_async={_seq_cfg.subscribe_async}",
+                    flush=True,
+                )
+            else:
+                print("[coco][robot_seq] disabled (COCO_ROBOT_SEQ not set)", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[coco][robot_seq] init failed: {exc!r}", flush=True)
+            _robot_sequencer = None
+
         # companion-007: 可选 EmotionRenderer (COCO_EMOTION_PROSODY=1，默认 OFF)。
         # 依赖 PostureBaselineModulator 已启用（同源 debounce）；未启用则 warn + skip。
         _emotion_renderer = None

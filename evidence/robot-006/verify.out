@@ -1,0 +1,55 @@
+[robot_seq] subscriber raised RuntimeError: RuntimeError('boom') on event='robot.action_done'
+[robot_seq] subscriber raised RuntimeError: RuntimeError('boom') on event='robot.action_done'
+V1: 5-action 序列串行执行 + emit action_done 顺序正确 (ts 单调)
+  [PASS] executed == 5: got 5
+  [PASS] cancelled == False
+  [PASS] emit 5 次 action_done: got 5
+  [PASS] action_id 顺序 == a1..a5: got ['a1', 'a2', 'a3', 'a4', 'a5']
+  [PASS] type 顺序正确: got ['head_turn', 'nod', 'look_at', 'sleep', 'wakeup']
+  [PASS] ts 严格单调递增: ts=[1778820722.6742442, 1778820722.726673, 1778820722.778071, 1778820722.8283882, 1778820722.878461]
+  [PASS] 每条 payload 含 duration_ms
+  [PASS] seq_id 一致
+V2: cancel mid-flight 中止当前 + 跳 pending + emit sequence_cancelled{cancelled_n>=1}
+  [PASS] cancelled == True
+  [PASS] executed >= 1 (c1 完成): executed=1
+  [PASS] executed < 4 (未跑完所有): executed=1
+  [PASS] cancelled_n >= 1: cancelled_n=3
+  [PASS] emit sequence_cancelled 一次: got 1
+  [PASS] payload.cancelled_n >= 1: got 3
+  [PASS] payload 含 executed_n
+  [PASS] payload 含 seq_id
+V3: 业务订阅 (ProactiveScheduler mock) 收 action_done 后状态机不叠加新动作
+  [PASS] 第 1 次 maybe_schedule -> True
+  [PASS] busy 期间 5 次请求都被拒（不叠加）: got rejected=5
+  [PASS] 订阅收到 1 条 action_done: got 1
+  [PASS] 收到事件后 busy 解锁
+  [PASS] 解锁后 maybe_schedule -> True
+  [PASS] scheduled 总数 == 2 (无叠加): got 2
+V4: COCO_ROBOT_SEQ OFF zero-cost (sequencer 不构造 / main 不 wire)
+  [PASS] env unset → enabled=False: got False
+  [PASS] env=1 → enabled=True: got True
+  [PASS] main.py 含 COCO_ROBOT_SEQ wire 段
+  [PASS] wire 走 _seq_cfg.enabled 短路 (env-gated): main.py wire must be env-gated
+  [PASS] main.py 仅在 sequencer.py 模块中 import RobotSequencer (lazy in main)
+  [PASS] OFF 路径明确输出 disabled 字样 (bytewise no-side-effect)
+V5: mockup-sim daemon 全程 zero-hardware (action 走 SDK 抽象, fixture robot=None no-op)
+  [PASS] robot=None 时序列照常完成: got 3
+  [PASS] goto_target 至少调用 1 次 (head_turn)
+  [PASS] goto_sleep 调用 1 次
+  [PASS] wake_up 调用 1 次
+  [PASS] sequencer.py 不含真硬件 token: 'set_motor_torque': token 'set_motor_torque' appeared
+  [PASS] sequencer.py 不含真硬件 token: 'enable_torque': token 'enable_torque' appeared
+  [PASS] sequencer.py 不含真硬件 token: 'body.': token 'body.' appeared
+  [PASS] sequencer.py 不含真硬件 token: 'low_level': token 'low_level' appeared
+V6: 回归 verify_robot_005 全 PASS (subprocess)
+  [PASS] verify_robot_005 rc == 0: rc=0; tail stderr=
+V7: 业务订阅回压 — 慢订阅者不阻塞 sequencer 主线程 (subscribe_async=True)
+  [PASS] sequencer 主线程未被慢订阅阻塞 (elapsed < 0.5s): elapsed=0.111s
+  [PASS] 所有 5 action 都跑完: got 5
+  [PASS] 慢订阅至少被触发 1 次（异步派发已发出）: got 5
+V8: subscribe callback 抛异常不影响 sequencer 继续推进
+  [PASS] subscribe 异常下序列仍完整执行: got 2
+  [PASS] cancelled == False
+
+========== robot-006 verify done in 2.09s ==========
+ALL PASS
