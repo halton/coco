@@ -1,12 +1,12 @@
 {
   "feature_id": "audio-010",
   "phase": 14,
-  "generated_at": "2026-05-15T13:41:37+0800",
+  "generated_at": "2026-05-15T13:51:50+0800",
   "results": [
     {
       "name": "V1 hotplug wire-to-main: start + atexit stop+join no hang",
       "ok": true,
-      "detail": "started=True join_dur=0.000s q_calls=3 thread_alive=False"
+      "detail": "started=True join_dur=0.000s q_calls=4 thread_alive=False"
     },
     {
       "name": "V2 main wire OFF: no watcher instance / no thread / no query_devices",

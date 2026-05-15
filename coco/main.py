@@ -2202,13 +2202,15 @@ class Coco(ReachyMiniApp):
                     flush=True,
                 )
                 # audio-011: 把 vad / wake mic_loop 的 reopen 信号 cb 注册到 HotplugWatcher
-                # registry。callback 仅 emit/log（实际 stream 重开走 PortAudioError → wrapper
-                # 退避路径）。OFF 时 _hotplug_watcher is None，整段 no-op。
+                # registry。vad/wake cb 调对应实例 .request_reopen() — mic_loop 内
+                # 真做 stream.stop()/close() + 重 open，emit audio.stream_reopened +
+                # audio.reopen_buffer_lost_n。asr 路径是按需短录音，仅 emit signal。
+                # OFF 时 _hotplug_watcher is None，整段 no-op。
                 if _hotplug_watcher is not None:
                     def _vad_reopen_cb(event: str, device: dict) -> None:
                         try:
                             print(
-                                f"[coco][hotplug] vad mic_loop reopen-signal event={event} "
+                                f"[coco][hotplug] vad mic_loop reopen-request event={event} "
                                 f"name={device.get('name')!r}",
                                 flush=True,
                             )
@@ -2216,6 +2218,14 @@ class Coco(ReachyMiniApp):
                                 emit("audio.mic_loop_reopen_signal", subsystem="vad", event=event, device_name=str(device.get("name", "")))
                             except Exception:  # noqa: BLE001
                                 pass
+                            # 真做 stop+reopen（mic_loop 内执行 stream.stop/close + 重 open + emit）
+                            try:
+                                vad_trigger.request_reopen(event=event, device=device)
+                            except Exception as exc:  # noqa: BLE001
+                                print(
+                                    f"[coco][hotplug] vad.request_reopen failed: {exc!r}",
+                                    flush=True,
+                                )
                         except Exception:  # noqa: BLE001
                             pass
                     _hotplug_watcher.add_reopen_callback(_vad_reopen_cb)
@@ -2223,7 +2233,7 @@ class Coco(ReachyMiniApp):
                         def _wake_reopen_cb(event: str, device: dict) -> None:
                             try:
                                 print(
-                                    f"[coco][hotplug] wake mic_loop reopen-signal event={event} "
+                                    f"[coco][hotplug] wake mic_loop reopen-request event={event} "
                                     f"name={device.get('name')!r}",
                                     flush=True,
                                 )
@@ -2231,11 +2241,18 @@ class Coco(ReachyMiniApp):
                                     emit("audio.mic_loop_reopen_signal", subsystem="wake", event=event, device_name=str(device.get("name", "")))
                                 except Exception:  # noqa: BLE001
                                     pass
+                                try:
+                                    wake_detector.request_reopen(event=event, device=device)
+                                except Exception as exc:  # noqa: BLE001
+                                    print(
+                                        f"[coco][hotplug] wake.request_reopen failed: {exc!r}",
+                                        flush=True,
+                                    )
                             except Exception:  # noqa: BLE001
                                 pass
                         _hotplug_watcher.add_reopen_callback(_wake_reopen_cb)
                     # asr 也注册一个 signal cb；asr.transcribe_microphone 是按需短录音，
-                    # 不长驻 mic_loop —— 这里只作为 reopen-intent 信号。
+                    # 不长驻 mic_loop —— 这里只作为 reopen-intent 信号（caveat: 不做真 reopen）。
                     def _asr_reopen_cb(event: str, device: dict) -> None:
                         try:
                             print(

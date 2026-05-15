@@ -34,7 +34,7 @@
     {
       "name": "V7 ProbeResult schema + stable sort",
       "ok": true,
-      "detail": "device_count=6 matched_count=4 latency_ms=0.011 sorted=True"
+      "detail": "device_count=6 matched_count=4 latency_ms=0.013 sorted=True"
     },
     {
       "name": "V8 source markers (audio-008 / ENV_GATE / wire)",

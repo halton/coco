@@ -109,6 +109,37 @@ class VADTrigger:
         # 多线程并发调用 start_microphone() 时只允许起一份 InputStream，
         # 第二次返回已起的引用并 log.warning。
         self._mic_lock = threading.Lock()
+        # audio-011: reopen 机制 — hotplug device_change 时外部调 request_reopen()，
+        # mic_loop 主动 stop+close 当前 stream 并 reopen 新 stream，emit
+        # audio.stream_reopened + audio.reopen_buffer_lost_n。
+        self._reopen_event = threading.Event()
+        self._reopen_meta: dict = {}
+        self._current_stream = None  # 仅供 inspection / 测试，不在外部线程操作
+        self._stream_lock = threading.Lock()
+        self._reopen_count = 0
+
+    def request_reopen(self, event: str = "changed", device: Optional[dict] = None) -> None:
+        """外部 hotplug cb 调用：请求 mic_loop 在下一轮 read 后 stop+reopen 当前 stream。
+
+        线程安全：通过设置 ``_reopen_event`` + 直接 stop 当前 stream 强制 read 返回。
+        实际 reopen 在 mic_loop 内部线程完成，避免跨线程操作 sounddevice 句柄。
+        """
+        self._reopen_meta = {"event": str(event), "device": dict(device or {})}
+        self._reopen_event.set()
+        # 主动 stop 当前 stream，让 mic_loop 内 read 立刻返回 / raise，进入 reopen 分支
+        with self._stream_lock:
+            s = self._current_stream
+        if s is not None:
+            try:
+                stop_fn = getattr(s, "stop", None)
+                if callable(stop_fn):
+                    stop_fn()
+            except Exception:  # noqa: BLE001
+                pass
+
+    @property
+    def reopen_count(self) -> int:
+        return self._reopen_count
 
     # ------------------------------------------------------------------
     # Mute / unmute（TTS 期间用，防自激）
@@ -297,39 +328,130 @@ class VADTrigger:
                 dtype="float32",
                 blocksize=block,
             )
+
+        def _do_open():
+            try:
+                from coco.audio_resilience import open_stream_with_recovery as _osr
+                _s = _osr(_open_input_stream, stream_kind="input")
+                if _s is None:
+                    log.warning("[vad] InputStream open exhausted, mic loop exits")
+                    return None
+                return _s
+            except Exception:  # noqa: BLE001
+                # 任何 helper 自身异常（不应发生），最后兜底直连一次
+                return sd.InputStream(
+                    samplerate=cfg.sample_rate,
+                    channels=1,
+                    dtype="float32",
+                    blocksize=block,
+                )
+
+        # audio-011: 外层 reopen-loop，内层 read-loop；reopen_event 触发时 stop+close +
+        # 重 open + emit 事件。首次进入直接 open。
+        _stream = _do_open()
+        if _stream is None:
+            return
+        with self._stream_lock:
+            self._current_stream = _stream
         try:
-            from coco.audio_resilience import open_stream_with_recovery as _osr
-            _stream = _osr(_open_input_stream, stream_kind="input")
-            if _stream is None:
-                # recovery 全部尝试用尽（仅 ON 时可能发生）—— 主动放弃 mic loop
-                log.warning("[vad] InputStream open exhausted, mic loop exits")
-                return
-        except Exception:  # noqa: BLE001
-            # 任何 helper 自身异常（不应发生），最后兜底直连一次
-            _stream = sd.InputStream(
-                samplerate=cfg.sample_rate,
-                channels=1,
-                dtype="float32",
-                blocksize=block,
-            )
-        try:
-            with _stream as stream:
+            while not self._stop_event.is_set():
+                # 进入新的 stream 的 read-loop
+                # _stream 可能是 context manager（真 sd.InputStream）或 fake；
+                # 真 InputStream 需要 __enter__/__exit__ 来启 PortAudio；fake 也支持。
+                try:
+                    _stream.__enter__()
+                except Exception as e:  # noqa: BLE001
+                    log.warning("[vad] InputStream __enter__ failed: %s; mic loop exits", e)
+                    return
                 log.info("[vad] mic loop started (sr=%d block=%d)", cfg.sample_rate, block)
-                while not self._stop_event.is_set():
+                try:
+                    while not self._stop_event.is_set() and not self._reopen_event.is_set():
+                        try:
+                            data, _ovf = _stream.read(block)
+                        except Exception as e:  # noqa: BLE001
+                            # reopen_event 可能在 read 期间被外部 request_reopen 调 stop()
+                            # 触发；这里不区分错误源，回到外层让 reopen 分支处理
+                            if self._reopen_event.is_set():
+                                break
+                            log.warning("[vad] InputStream.read error: %s; sleep+retry", e)
+                            time.sleep(0.2)
+                            continue
+                        samples = np.asarray(data, dtype=np.float32).reshape(-1)
+                        try:
+                            self.feed(samples)
+                        except Exception as e:  # noqa: BLE001
+                            log.warning("[vad] feed error: %s", e)
+                finally:
                     try:
-                        data, _ovf = stream.read(block)
-                    except Exception as e:  # noqa: BLE001
-                        log.warning("[vad] InputStream.read error: %s; sleep+retry", e)
-                        time.sleep(0.2)
-                        continue
-                    samples = np.asarray(data, dtype=np.float32).reshape(-1)
-                    try:
-                        self.feed(samples)
-                    except Exception as e:  # noqa: BLE001
-                        log.warning("[vad] feed error: %s", e)
-        except Exception as e:  # noqa: BLE001
-            log.warning("[vad] InputStream open failed: %s; mic loop exits", e)
+                        _stream.__exit__(None, None, None)
+                    except Exception:  # noqa: BLE001
+                        pass
+
+                if self._stop_event.is_set():
+                    break
+                if not self._reopen_event.is_set():
+                    # read-loop 自然结束但未 reopen 也未 stop — 退出 mic_loop
+                    break
+
+                # ===== reopen 分支 =====
+                t_stop = time.monotonic()
+                meta = dict(self._reopen_meta)
+                self._reopen_event.clear()
+                old_dev = meta.get("device") or {}
+                old_idx = old_dev.get("index")
+                # 显式 stop+close（真 sd.InputStream / fake 都应支持）
+                try:
+                    _stop = getattr(_stream, "stop", None)
+                    if callable(_stop):
+                        _stop()
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    _close = getattr(_stream, "close", None)
+                    if callable(_close):
+                        _close()
+                except Exception:  # noqa: BLE001
+                    pass
+                with self._stream_lock:
+                    self._current_stream = None
+
+                # 打开新 stream
+                _stream = _do_open()
+                t_reopen_done = time.monotonic()
+                if _stream is None:
+                    log.warning("[vad] reopen failed: open exhausted; mic loop exits")
+                    return
+                with self._stream_lock:
+                    self._current_stream = _stream
+                self._reopen_count += 1
+                # emit 事件
+                try:
+                    from coco.logging_setup import emit as _emit
+                    new_dev = meta.get("device") or {}
+                    new_idx = new_dev.get("index")
+                    _emit(
+                        "audio.stream_reopened",
+                        subsystem="vad",
+                        reason=str(meta.get("event") or "changed"),
+                        old_device_idx=old_idx,
+                        new_device_idx=new_idx,
+                        ts=time.time(),
+                    )
+                    # buffer-loss 估算：stop 到 reopen 完成的时间 * sample_rate
+                    dt = max(0.0, t_reopen_done - t_stop)
+                    lost_n = int(dt * cfg.sample_rate)
+                    _emit(
+                        "audio.reopen_buffer_lost_n",
+                        subsystem="vad",
+                        lost_n=lost_n,
+                        ms=int(dt * 1000),
+                        ts=time.time(),
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
         finally:
+            with self._stream_lock:
+                self._current_stream = None
             log.info("[vad] mic loop stopped")
 
 

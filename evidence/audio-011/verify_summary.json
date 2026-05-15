@@ -1,10 +1,21 @@
 {
   "feature": "audio-011",
-  "ts": 1778823708.6081731,
+  "ts": 1778824321.641231,
   "all_passed": true,
   "results": [
     {
-      "name": "V1_asr_inputstream_wrap",
+      "name": "V1_vad_real_stop_reopen",
+      "ok": true,
+      "instances_before": 1,
+      "instances_after": 2,
+      "first_stopped": 2,
+      "first_closed": 1,
+      "emit_reopened_n": 1,
+      "emit_fields_ok": true,
+      "reopen_count": 1
+    },
+    {
+      "name": "V1b_asr_inputstream_wrap",
       "ok": true,
       "calls": 3,
       "sleeps": [
@@ -14,14 +25,32 @@
       "recovered": true
     },
     {
-      "name": "V2_main_inputstream_wrap_off_equivalence",
+      "name": "V2_wake_real_stop_reopen",
+      "ok": true,
+      "instances_before": 1,
+      "instances_after": 2,
+      "first_stopped": 2,
+      "first_closed": 1,
+      "emit_wake_reopened_n": 1,
+      "reopen_count": 1
+    },
+    {
+      "name": "V2b_main_inputstream_wrap_off_equivalence",
       "ok": true,
       "calls": 1,
       "emits_n": 0,
       "sleeps_n": 0
     },
     {
-      "name": "V3_hotplug_callback_registry",
+      "name": "V3_reopen_buffer_lost_n",
+      "ok": true,
+      "emit_n": 1,
+      "subsystem": "vad",
+      "lost_n": 0,
+      "ms": 0
+    },
+    {
+      "name": "V4_hotplug_callback_registry",
       "ok": true,
       "count_after_add": 3,
       "seen_a": [
@@ -50,7 +79,7 @@
       "emits_n": 2
     },
     {
-      "name": "V4_env_hotplug_interval",
+      "name": "V5_env_hotplug_interval",
       "ok": true,
       "bad": [],
       "watcher_pi": 0.05,
@@ -58,7 +87,13 @@
       "cases_n": 9
     },
     {
-      "name": "V5_regression",
+      "name": "V6_default_off",
+      "ok": true,
+      "has_gate": true,
+      "gate_in_window": true
+    },
+    {
+      "name": "V7_regression",
       "ok": true,
       "rcs": {
         "scripts/verify_audio_010.py": 0,
