@@ -1,0 +1,39 @@
+{
+  "feature": "interact-018",
+  "files_changed": [
+    "coco/proactive.py",
+    "coco/proactive_trace.py",
+    "scripts/proactive_trace_summary.py",
+    "scripts/llm_usage_summary.py",
+    "scripts/verify_interact_018.py"
+  ],
+  "ok": true,
+  "results": [
+    {
+      "detail": "1 trace events with latency_ms; sample lat=0.015 stage=arbit_winner; arbit_winner=1",
+      "name": "V1_latency_wire_in_production",
+      "ok": true
+    },
+    {
+      "detail": "三口+legacy 全识别为 fail",
+      "name": "V2_is_fail_three_signals",
+      "ok": true
+    },
+    {
+      "detail": "9 种非 fail 输入全返回 False",
+      "name": "V3_is_fail_not_false_positive",
+      "ok": true
+    },
+    {
+      "detail": "count=20 p50=10.0 p95=19.0 p99=20.0",
+      "name": "V4_trace_summary_latency_aggregation",
+      "ok": true
+    },
+    {
+      "detail": "total=10 fail=3 rate=0.3 by_model={'calls': 10, 'completion_tokens': 71, 'estimated_calls': 0, 'fail': 3, 'failure_rate': 0.3, 'prompt_tokens': 121}",
+      "name": "V5_llm_usage_failure_rate",
+      "ok": true
+    }
+  ],
+  "sha": "0efe4b8d96a0508dc534d88e18d6bf0c518e8773"
+}

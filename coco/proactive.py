@@ -543,6 +543,8 @@ class ProactiveScheduler:
                         type(e).__name__, e)
         # interact-015: 仲裁链 trace —— emotion_alert 始终视为 admit（独立路径，已发告警）
         # default-OFF 时 emit_trace 立即 return，不引入 IO/state 变化
+        # interact-018: 独立路径的 latency_ms 自测量（emit_trace 内部到外部无锁，取 monotonic 单点 0.0）
+        _ea_lat_start = time.monotonic()
         try:
             from coco.proactive_trace import emit_trace as _et, make_candidate_id as _mci
             _et(
@@ -552,6 +554,7 @@ class ProactiveScheduler:
                 ts=t,
                 kind=str(kind),
                 ratio=float(ratio),
+                latency_ms=round((time.monotonic() - _ea_lat_start) * 1000.0, 3),
             )
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] trace emotion_alert failed: %s: %s",
@@ -829,6 +832,14 @@ class ProactiveScheduler:
         刷新 _last_interaction_ts。
         """
         # ---- 锁内：判定 + 抢占式预占（fail-soft：不回滚，宁少发也不连发）----
+        # interact-018: latency_ms 测量起点 —— 锁外 monotonic，覆盖整段 maybe_trigger
+        # （判定 + 预占 + LLM/TTS + emit）。t_start 后续每次 _trace_emit 时计算
+        # `round((monotonic() - t_start) * 1000, 3)` 作为 latency_ms extra kwarg。
+        _lat_start = time.monotonic()
+
+        def _lat_ms() -> float:
+            return round((time.monotonic() - _lat_start) * 1000.0, 3)
+
         with self._lock:
             self.stats.ticks += 1
             t = now if now is not None else self.clock()
@@ -882,6 +893,7 @@ class ProactiveScheduler:
                                 _preempt_stage,
                                 _candidate_id, "reject",
                                 reason="arbit_emotion_preempt", ts=t,
+                                latency_ms=_lat_ms(),
                             )
                         except Exception:  # noqa: BLE001
                             pass
@@ -910,6 +922,7 @@ class ProactiveScheduler:
                     _trace_emit(
                         _stage_out, _candidate_id, "reject",
                         reason=str(reason), ts=t,
+                        latency_ms=_lat_ms(),
                     )
                 except Exception:  # noqa: BLE001
                     pass
@@ -942,6 +955,7 @@ class ProactiveScheduler:
                     ts=t,
                     stage_in=str(_stage_in or "normal"),
                     boost_level=(consumed_boost_level if consumed_boost_level else ""),
+                    latency_ms=_lat_ms(),
                 )
             except Exception:  # noqa: BLE001
                 pass
@@ -1131,11 +1145,24 @@ class ProactiveScheduler:
             )
             if not tts_ok or self.stats.llm_errors > 0:
                 # 仅记一次失败事件（不影响计数已经预占的 triggered）
+                # interact-018: emit-end 标准 fail 三口同发（additive，不破坏既有字段）
+                #   - ok=False（强类型 bool；is_fail 第一口）
+                #   - error="<llm|tts>:<class>"（is_fail 第二口）
+                #   - failure_reason="llm_or_tts"（is_fail 第三口）
+                _err_parts = []
+                if self.stats.llm_errors > 0:
+                    _err_parts.append(f"llm_errors={int(self.stats.llm_errors)}")
+                if not tts_ok:
+                    _err_parts.append(f"tts_errors={int(self.stats.tts_errors)}")
+                _err_str = ";".join(_err_parts) or "unknown"
                 emit_fn(
                     "interact.proactive_topic_failed",
                     topic=topic_text[:200],
                     llm_errors=int(self.stats.llm_errors),
                     tts_errors=int(self.stats.tts_errors),
+                    ok=False,
+                    error=_err_str,
+                    failure_reason="llm_or_tts",
                 )
         except Exception as e:  # noqa: BLE001
             log.warning("[proactive] emit failed: %s: %s", type(e).__name__, e)

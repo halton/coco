@@ -42,6 +42,11 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+# interact-018: 让脚本能 import coco.proactive_trace.is_fail
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 
 def _iter_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
     if not path.exists():
@@ -88,11 +93,22 @@ def collect_usage_files(
 
 
 def _is_fail(rec: Dict[str, Any]) -> bool:
+    # interact-018: 委托给 coco.proactive_trace.is_fail（三口标准约定）。
+    # 失败 import（旧 env / 部分 fixture）时退回旧本地实现，保持兼容。
+    try:
+        from coco.proactive_trace import is_fail as _shared_is_fail
+    except Exception:  # noqa: BLE001
+        _shared_is_fail = None
+    if _shared_is_fail is not None:
+        return bool(_shared_is_fail(rec))
     ok = rec.get("ok")
     if ok is False:
         return True
     err = rec.get("error")
     if isinstance(err, str) and err.strip():
+        return True
+    fr = rec.get("failure_reason")
+    if isinstance(fr, str) and fr.strip():
         return True
     status = rec.get("status")
     if isinstance(status, str) and "fail" in status.lower():

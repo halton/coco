@@ -100,6 +100,48 @@ KNOWN_STAGES = frozenset(
 KNOWN_DECISIONS = frozenset({"admit", "reject"})
 
 
+# ---------------------------------------------------------------------------
+# interact-018: emit-end fail 约定（标准化为 3 口，权威信号 OR 即 fail）
+# ---------------------------------------------------------------------------
+# 任一为 truthy 即视为失败：
+#   (1) rec["ok"] is False（强类型 bool；string "false" 不算，避免被 ok="success" 误中）
+#   (2) rec["error"] 为非空 str（任何错误描述）
+#   (3) rec["failure_reason"] 为非空 str（结构化失败原因；与 reason 区分，因 reason 也用于 reject）
+# 既有兼容口（不在 V2 三口内但仍识别）：
+#   - rec["status"]: str 含 "fail" 子串（llm_usage_summary 历史用法）
+# 不会被误判为 fail（V3 显式覆盖）：
+#   - ok="ok" / "success" 等任意 truthy 字符串
+#   - error="" / error=None / 缺字段
+#   - failure_reason="" / 缺字段
+def is_fail(rec: Mapping[str, Any]) -> bool:
+    """interact-018: emit-end 标准 fail 判定（3 口 OR）。
+
+    判定 3 个权威字段任一命中：
+      - ``ok=False``（必须是 bool False，字符串不算）
+      - ``error`` 为非空 str
+      - ``failure_reason`` 为非空 str
+
+    兼容历史 ``status`` 字段（含 "fail" 子串）。
+
+    其他形态（字段缺失 / truthy 字符串 / error=""）均返回 False。
+
+    供 scripts/proactive_trace_summary.py / scripts/llm_usage_summary.py 共用。
+    """
+    ok = rec.get("ok")
+    if ok is False:
+        return True
+    err = rec.get("error")
+    if isinstance(err, str) and err.strip():
+        return True
+    fr = rec.get("failure_reason")
+    if isinstance(fr, str) and fr.strip():
+        return True
+    status = rec.get("status")
+    if isinstance(status, str) and "fail" in status.lower():
+        return True
+    return False
+
+
 def _bool_env(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
     if raw is None:
