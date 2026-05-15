@@ -302,6 +302,10 @@ _FACE_ID_MAP_TTL_DAYS_DEFAULT = 30
 _FACE_ID_UNTRUSTED_CONF_THRESHOLD = 0.3
 # vision-011: 仲裁降权时给 untrusted 候选 score 增加的固定惩罚（与最大可能 score 同量级）
 _FACE_ID_UNTRUSTED_SCORE_PENALTY = 1e6
+# vision-012: GC 时间周期默认值（秒）。frame 周期默认 1500 帧 @ 5fps ≈ 300s，
+# 但低 fps（如 1 fps）场景下 1500 帧 = 25min；用 OR 触发避免拖延。
+_FACE_ID_MAP_GC_INTERVAL_S_DEFAULT = 300.0
+_FACE_ID_MAP_GC_INTERVAL_FRAMES_DEFAULT = 1500
 
 
 def _load_face_id_map(
@@ -575,13 +579,45 @@ class FaceTracker:
                             float(_FACE_ID_MAP_TTL_DAYS_DEFAULT))
         )
         # name_confidence 长期低于该阈值则视为 untrusted（仲裁降权）
-        self._face_id_untrusted_threshold: float = _FACE_ID_UNTRUSTED_CONF_THRESHOLD
+        # vision-012: 从 env 读取（默认 0.3 = vision-011 等价）
+        self._face_id_untrusted_threshold: float = max(
+            0.0, _env_float("COCO_FACE_ID_UNTRUSTED_CONF_THRESHOLD",
+                            _FACE_ID_UNTRUSTED_CONF_THRESHOLD)
+        )
+        # vision-012: untrusted 候选 score penalty（默认 1e6 = vision-011 等价）
+        # 允许 0（关闭降权）；负值 fallback 默认（保护逻辑）
+        _pen_raw = _env_float("COCO_FACE_ID_UNTRUSTED_PENALTY",
+                              _FACE_ID_UNTRUSTED_SCORE_PENALTY)
+        self._face_id_untrusted_penalty: float = (
+            _pen_raw if _pen_raw >= 0.0 else _FACE_ID_UNTRUSTED_SCORE_PENALTY
+        )
         # 每帧（_tick）调用 _maybe_run_gc；GC 周期靠 frame counter 控制
         self._gc_frame_counter: int = 0
         # GC 默认每多少帧扫描一次（5min @ 5fps ≈ 1500 帧；env 可调）
-        self._gc_period_frames: int = max(
-            1, _env_int("COCO_FACE_ID_MAP_GC_PERIOD_FRAMES", 1500)
+        # vision-012: 兼容旧 env 名 COCO_FACE_ID_MAP_GC_PERIOD_FRAMES；
+        # 新名 COCO_FACE_ID_MAP_GC_INTERVAL_FRAMES 优先。
+        _frames_new = os.environ.get("COCO_FACE_ID_MAP_GC_INTERVAL_FRAMES")
+        if _frames_new is not None and _frames_new != "":
+            self._gc_period_frames: int = max(
+                1, _env_int("COCO_FACE_ID_MAP_GC_INTERVAL_FRAMES",
+                            _FACE_ID_MAP_GC_INTERVAL_FRAMES_DEFAULT)
+            )
+        else:
+            self._gc_period_frames = max(
+                1, _env_int("COCO_FACE_ID_MAP_GC_PERIOD_FRAMES",
+                            _FACE_ID_MAP_GC_INTERVAL_FRAMES_DEFAULT)
+            )
+        # vision-012: GC 时间触发（秒）；与 frame 触发 OR 关系，任一满足跑 GC
+        # 默认 300s（5min）= 与 frame 周期 1500 帧 @ 5fps 同量级
+        # 极大值（如 1e12）等效禁用；负值 fallback 默认
+        _interval_s_raw = _env_float("COCO_FACE_ID_MAP_GC_INTERVAL_S",
+                                     _FACE_ID_MAP_GC_INTERVAL_S_DEFAULT)
+        self._gc_period_s: float = (
+            _interval_s_raw if _interval_s_raw > 0.0
+            else _FACE_ID_MAP_GC_INTERVAL_S_DEFAULT
         )
+        # 最后一次 GC 触发的时间戳；None = 尚未跑过（启动时不立即触发时间分支）
+        self._gc_last_time: Optional[float] = None
 
         # hydrate 一次（启动时；持久化模式下）
         if self._face_id_persist_enabled:
@@ -916,11 +952,12 @@ class FaceTracker:
             dy = float(b.cy) - cy_frame
             area = max(1, int(b.w) * int(b.h))
             score = (dx * dx + dy * dy) / float(area + 1)
-            # vision-011: untrusted (name_confidence 长期 < 0.3) 仲裁降权
+            # vision-011: untrusted (name_confidence 长期 < 阈值) 仲裁降权
             # 用加法 penalty 而非乘法，保证 baseline score=0 的情况下也能被降权
+            # vision-012: 阈值与 penalty 均从 env 读取（实例字段）；penalty=0 → 关闭降权
             untrusted = self._is_untrusted(n)
-            if untrusted:
-                score += _FACE_ID_UNTRUSTED_SCORE_PENALTY
+            if untrusted and self._face_id_untrusted_penalty > 0.0:
+                score += self._face_id_untrusted_penalty
             candidates.append({
                 "name": n,
                 "face_id": face_id,
@@ -1051,17 +1088,41 @@ class FaceTracker:
         # lock-once policy: 同帧 ts 去重，已由 arbitrate_faces 内部保证。
         self._maybe_auto_arbitrate(int(w), int(h), ts)
         # vision-011: 周期性 GC（default-OFF 时 run_gc_cycle 内部 short-circuit）
-        if self._face_id_gc_enabled and self._face_id_persist_enabled:
-            self._gc_frame_counter += 1
-            if self._gc_frame_counter >= self._gc_period_frames:
-                self._gc_frame_counter = 0
-                try:
-                    self.run_gc_cycle()
-                except Exception as e:  # noqa: BLE001
-                    log.warning(
-                        "FaceTracker periodic GC failed: %s: %s",
-                        type(e).__name__, e,
-                    )
+        # vision-012: 触发条件改为 OR — (frames>=period_frames) OR (now-last>=period_s)
+        self._maybe_periodic_gc()
+
+    def _maybe_periodic_gc(self) -> None:
+        """vision-012: 每帧调用一次, 检查是否需要跑周期性 GC.
+
+        触发条件 OR:
+        - frame counter 累计 >= self._gc_period_frames
+        - 距上次 GC >= self._gc_period_s
+
+        同帧双触发节流: 任一满足都仅触发一次 run_gc_cycle, 两计数器都重置.
+        Default-OFF (gc OR persist 未启用): 立即 return, 无开销.
+        """
+        if not (self._face_id_gc_enabled and self._face_id_persist_enabled):
+            return
+        self._gc_frame_counter += 1
+        now_wall = time.time()
+        # 第一次跑前 _gc_last_time=None, 用 wall time 初始化避免启动立即触发
+        if self._gc_last_time is None:
+            self._gc_last_time = now_wall
+        frame_due = self._gc_frame_counter >= self._gc_period_frames
+        time_due = (
+            self._gc_period_s > 0.0
+            and (now_wall - self._gc_last_time) >= self._gc_period_s
+        )
+        if frame_due or time_due:
+            self._gc_frame_counter = 0
+            self._gc_last_time = now_wall
+            try:
+                self.run_gc_cycle(now=now_wall)
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "FaceTracker periodic GC failed: %s: %s",
+                    type(e).__name__, e,
+                )
 
     def _maybe_auto_arbitrate(self, frame_w: int, frame_h: int, ts: float) -> None:
         """vision-010-fu-1: _tick 末尾尝试一次多脸仲裁（default-OFF cheap path）.
