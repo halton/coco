@@ -100,6 +100,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -117,7 +118,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-py${{ matrix.python-version }}
+          name: smoke-py${{ matrix.python-version }}-${{ matrix.os }}
           path: |
             evidence/**
             /tmp/coco-daemon.log
@@ -128,7 +129,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: history-summary-${{ github.run_id }}-py${{ matrix.python-version }}
+          name: history-summary-${{ github.run_id }}-py${{ matrix.python-version }}-${{ matrix.os }}
           path: |
             evidence/_history/**
             evidence/**/verify_summary.json
@@ -144,6 +145,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -159,7 +161,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-vision-py${{ matrix.python-version }}
+          name: verify-vision-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -172,6 +174,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -187,7 +190,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-interact-py${{ matrix.python-version }}
+          name: verify-interact-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -200,6 +203,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -215,7 +219,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-companion-py${{ matrix.python-version }}
+          name: verify-companion-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -228,6 +232,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -245,7 +250,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-audio-py${{ matrix.python-version }}
+          name: verify-audio-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -264,6 +269,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -279,7 +285,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-robot-py${{ matrix.python-version }}
+          name: verify-robot-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -292,6 +298,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -307,7 +314,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-infra-py${{ matrix.python-version }}
+          name: verify-infra-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore
 
@@ -320,6 +327,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.13"]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -339,6 +347,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-publish-py${{ matrix.python-version }}
+          name: verify-publish-py${{ matrix.python-version }}-${{ matrix.os }}
           path: evidence/**
           if-no-files-found: ignore

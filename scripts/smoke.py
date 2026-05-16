@@ -461,16 +461,34 @@ def _finegrained_exit_enabled() -> bool:
 
 
 def _classify_stdout(text: str) -> str:
-    """infra-018: 把子检查 stdout 末段映射到 WARN / SKIP / PASS。
+    """infra-018/019: 把子检查 stdout 映射到 WARN / SKIP / PASS。
 
-    子检查内部约定 print "  WARN: ..." 或 "  SKIP: ..." 表示软跳过；其它无 FAIL
-    抛出的视作 PASS（FAIL 不在此函数判定，由 SystemExit 捕获）。
+    infra-019 修复 C1：旧实现用 ``"skip" in text.lower()`` 子串匹配，会把含
+    "skipped" 字样的 WARN 行（例如 ``WARN: ASR model not downloaded, skipped``）
+    误判为 SKIP。改为**行级显式前缀 marker** 匹配：
+
+      - 任一行（去左右空白后）以 ``SKIP:`` 开头 → SKIP
+      - 任一行以 ``WARN:`` 开头 → WARN
+      - 其它（无 FAIL，FAIL 由 SystemExit 捕获）→ PASS
+
+    优先级：SKIP 优先于 WARN（部分子检查 print "SKIP: ..." 表示主动跳过）。
+    大小写不敏感前缀（``skip:`` / ``Skip:`` 亦匹配），与历史输出（全大写
+    ``SKIP:`` / ``WARN:``）一致；纯描述性 "skipped" / "warning" 不再误中。
     """
-    lo = text.lower()
-    # 顺序：SKIP 优先于 WARN（部分子检查 print "SKIP: ..." 表示主动跳过）
-    if "skip" in lo:
+    has_skip = False
+    has_warn = False
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        head_lo = line.lower()
+        if head_lo.startswith("skip:"):
+            has_skip = True
+        elif head_lo.startswith("warn:"):
+            has_warn = True
+    if has_skip:
         return "SKIP"
-    if "warn" in lo:
+    if has_warn:
         return "WARN"
     return "PASS"
 
