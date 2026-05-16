@@ -3011,3 +3011,34 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
   - infra-019-backlog-runs-on-matrix-os: matrix 真扩到 macos/windows 时把 runs-on 同步改 ${{ matrix.os }}
   - infra-019-backlog-finegrained-exit-e2e-v5: smoke ON 模式 (FINEGRAINED_EXIT) 端到端 rc=2 走查作为 V5 补强
 - 下一步: 按持续开发模式默认进入 phase-17 planning (候选写入 feature_list.json 后立即起 phase-17 第一个 feature); uat-* 异步项继续累积, 不阻塞主线
+
+## Session 2026-05-15 phase-17 planning
+
+phase-16 全 5/5 passing 收官后, 持续开发模式进入 phase-17 planning。从 backlog 池 (共 16 条, 跨 robot/interact/infra/audio/vision/companion 6 子系统) 中筛选 5 个最 valuable 的 candidate, 按"承接 phase-16 主线 + 风险分散 (>=3 子系统)"原则。
+
+**phase-17 candidate (priority 130-134, 跨 4 子系统)**:
+- 130 robot-009 (area=robot, 源 robot-008-backlog-enqueue-not-daemon-thread): ProactiveScheduler→RobotSequencer 注入路径改造 — 移除 daemon thread + seq.run(), callback 内直接 sequencer.enqueue(action), 消除 queue/executor 双重 fan-out。robot-008 主线最重要的架构修正。
+- 131 robot-010 (area=robot, 源 robot-008-backlog-setter-lifecycle): set_robot_sequencer lifecycle 校验 — is_shutdown 探针 + 重复注入 WARNING + shutdown 回调清空引用。配合 robot-009 把注入路径打磨干净。depends_on robot-009。
+- 132 interact-019 (area=interact, 源 interact-018-backlog-status-fail-strict-match): trace _is_fail 对 status 字段从 substring 改为 token 精确白名单, 修 no_failure/failsafe/no_fail 误判, 保 trace 数据语义正确。
+- 133 vision-014 (area=vision, 源 vision-013-backlog-ttl-and-overhead): TTL wall clock 设计选择文档化 + _maybe_identify hot path module-level env cache 微优化。
+- 134 infra-020 (area=infra, 源 infra-019-backlog-finegrained-exit-e2e-v5): verify_infra_019.py V5 — subprocess 真跑 smoke.py ON 模式 model 缺失场景断言 rc==2, 作为 _classify_stdout 真闭环回归。
+
+**未选但值得提及的近因 backlog**:
+- robot-008-backlog-sigterm-shutdown: 真机/容器场景信号处理, 优先级稍低; phase-18 候选
+- robot-008-backlog-groupmodecoord-wire: GroupModeCoordinator 接入 sequencer; 等 robot-009/010 模式稳定后做更稳, phase-18 候选
+- interact-018-backlog-v1-cooldown-coverage / latency-stage-semantics-doc: 与 interact-019 同源, 但 132 选 status-fail 因为它是正确性问题; 这两条是覆盖度/文档, phase-18 优先
+- audio-012-backlog-coupling-and-doc: 4 caveats 综合项, 评估改造面较大, 单独成 phase 更稳, phase-18 候选
+- infra-019-backlog-classifier-list-prefix: 可在 infra-020 主线下捎带轻量扩展
+- infra-019-backlog-runs-on-matrix-os: 真正多 OS matrix 启用前不必动, deferred
+- companion-016-backlog-polish / interact-016-backlog-doc-polish / infra-017-backlog-history-residual: polish 类, 留 phase-18 或更后
+
+**upgraded backlog 列表** (原 backlog 加 upgraded_to / upgraded_phase=17):
+- robot-008-backlog-enqueue-not-daemon-thread -> robot-009
+- robot-008-backlog-setter-lifecycle -> robot-010
+- interact-018-backlog-status-fail-strict-match -> interact-019
+- vision-013-backlog-ttl-and-overhead -> vision-014
+- infra-019-backlog-finegrained-exit-e2e-v5 -> infra-020
+
+**风险分散**: ✓ 5 candidate 跨 4 子系统 (robot×2 + interact + vision + infra), 无单子系统拥堵。
+
+**下一步**: 主会话按持续开发模式立即派 Engineer 执行 phase-17 #1 (robot-009)。

@@ -2827,7 +2827,9 @@
       "priority": 999,
       "phase": null,
       "status": "backlog",
-      "description": "vision-013 closeout 2 minor caveats，全部不阻 merge：C1 TTL 比较仍走 wall clock (time.time())，跨进程 / 持久化 session 共享必须用 wall clock，monotonic 不可序列化；NTP 大幅回拨 / 前跳理论上影响 TTL 触发时机，但本次未恶化（GC due → monotonic 已免疫，仅 TTL 命中点窗口偏移），属设计选择记录。C2 _maybe_identify 在 default-OFF 下虽然 short-circuit (env 未开)，但仍有两次方法调用 (get_face_id / record_name_confidence) + try/except 开销，ns 级，高 FPS (>=60) 下亦可忽略；如未来要在 hot path 微优化可加 module-level cached flag 提前 return。"
+      "description": "vision-013 closeout 2 minor caveats，全部不阻 merge：C1 TTL 比较仍走 wall clock (time.time())，跨进程 / 持久化 session 共享必须用 wall clock，monotonic 不可序列化；NTP 大幅回拨 / 前跳理论上影响 TTL 触发时机，但本次未恶化（GC due → monotonic 已免疫，仅 TTL 命中点窗口偏移），属设计选择记录。C2 _maybe_identify 在 default-OFF 下虽然 short-circuit (env 未开)，但仍有两次方法调用 (get_face_id / record_name_confidence) + try/except 开销，ns 级，高 FPS (>=60) 下亦可忽略；如未来要在 hot path 微优化可加 module-level cached flag 提前 return。",
+      "upgraded_to": "vision-014",
+      "upgraded_phase": 17
     },
     {
       "id": "uat-audio-012",
@@ -2949,10 +2951,14 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "origin_backlog": [
+        "robot-008 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (robot-008): 当前 ProactiveScheduler→RobotSequencer 注入路径仍以 daemon thread + seq.run() 方式驱动, 违背 RobotSequencer 自带 dispatch executor 的设计意图; 应改为 callback 内直接调用 sequencer.enqueue(action), 让 RobotSequencer 内部 _dispatch_executor 统一调度, 消除外部线程管理与潜在的 queue / executor 双重 fan-out。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "upgraded_to": "robot-009",
+      "upgraded_phase": 17
     },
     {
       "id": "robot-008-backlog-sigterm-shutdown",
@@ -2961,7 +2967,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "origin_backlog": [
+        "robot-008 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (robot-008): atexit hook 仅覆盖正常解释器退出, SIGTERM / SIGINT / uncaught exception / hard kill 不会触发, 导致真机或容器场景 RobotSequencer 可能不优雅退出。需要 (a) 注册 signal handler (SIGTERM/SIGINT) 调用 shutdown, (b) shutdown timeout 配置化 (COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S), (c) 文档化非正常退出路径的 known limit。",
       "verification": null,
       "evidence": {}
@@ -2973,10 +2981,14 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "origin_backlog": [
+        "robot-008 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (robot-008): set_robot_sequencer 缺少 lifecycle 校验 — 没有 is_shutdown 探针 (向已 shutdown 的 sequencer 注入会静默失败), 没有重复注入告警 (第二次注入静默覆盖第一次), shutdown 回调不会自动清空 ProactiveScheduler 侧的引用 (悬垂引用风险)。需要 (a) is_shutdown 检查 + 告警, (b) 重复注入 WARNING log, (c) shutdown 回调清空引用。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "upgraded_to": "robot-010",
+      "upgraded_phase": 17
     },
     {
       "id": "robot-008-backlog-groupmodecoord-wire",
@@ -2985,7 +2997,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["robot-008 Reviewer caveat"],
+      "origin_backlog": [
+        "robot-008 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (robot-008): robot-008 描述提到 ProactiveScheduler / GroupMode 注入路径, 但本次仅落地 ProactiveScheduler 侧, GroupModeCoordinator 接入 RobotSequencer 路径尚未建立。可考虑命名为 robot-009 candidate 单独立项, 复用 robot-008 的 set_robot_sequencer 模式 + lifecycle 校验改进。",
       "verification": null,
       "evidence": {}
@@ -2997,7 +3011,9 @@
       "status": "pending",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["robot-008 sim-first real_machine_uat"],
+      "origin_backlog": [
+        "robot-008 sim-first real_machine_uat"
+      ],
       "description": "robot-008 sim-first 已 passing, 真机 UAT 异步项 (不阻 merge): 在 Reachy Mini 真硬件上验 nod 动作 amplitude_deg=8 / duration_s=0.25 的头部物理表现 (扭矩平滑度 / 过冲 / 末端抖动), 以及视觉-运动闭环延迟 (proactive nod 触发 → 真摄像头帧视野变化的端到端 latency_ms)。用户方便时物理执行, 结果回填 evidence.real_machine_uat。",
       "verification": null,
       "evidence": {
@@ -3011,7 +3027,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "origin_backlog": [
+        "interact-018 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (interact-018): V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire, cooldown_hit 路径 latency_ms 端到端断言尚缺。需补 fixture 触发 cooldown_hit (相同 task 在 cooldown 窗口内重入), 断言 trace 行 latency_ms 字段存在且语义合理 (判定即出, 不含等待时间)。",
       "verification": null,
       "evidence": {}
@@ -3023,10 +3041,14 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "origin_backlog": [
+        "interact-018 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (interact-018): 当前 _is_fail 对 status 字段用 'fail' substring 匹配, 会把 'no_failure' / 'failsafe' / 'no_fail' 等 token 误判为 failure。改为 token 精确匹配 (status in {'fail','failure','failed','error'} 等白名单), 或正则边界匹配, 消除误判风险。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "upgraded_to": "interact-019",
+      "upgraded_phase": 17
     },
     {
       "id": "interact-018-backlog-latency-stage-semantics-doc",
@@ -3035,7 +3057,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "origin_backlog": [
+        "interact-018 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (interact-018): latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。需在 scripts/proactive_trace_summary.py 输出与 README / docstring 中按 stage 分类标注语义, 避免下游 metric 聚合时混淆。",
       "verification": null,
       "evidence": {}
@@ -3047,7 +3071,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "origin_backlog": [
+        "interact-018 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (interact-018): scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel / PyInstaller 等场景下健壮性未审计。需 audit 各执行路径 (直接 python / subprocess / -m / 打包) 下 sys.path 注入是否仍然定位到正确 repo 根, 或改用 importlib.resources / 包内显式导入。",
       "verification": null,
       "evidence": {}
@@ -3059,7 +3085,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "origin_backlog": [
+        "infra-019 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (infra-019): 当前 _classify_stdout 严格 prefix 'SKIP:' / 'WARN:' / 'FAIL:' 匹配, 若未来子检查输出走 markdown 列表格式 (如 '- SKIP: xxx' / '* WARN: yyy'), 会落回旧的子串匹配回退路径或被误分类。需要扩展 classifier 支持列表项前缀 (lstrip '-*+' + 空白后再做 prefix 判定), 同时补 verify fixture 覆盖列表格式。",
       "verification": null,
       "evidence": {}
@@ -3071,7 +3099,9 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "origin_backlog": [
+        "infra-019 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (infra-019): infra-019 已把 artifact name 加入 ${{ matrix.os }} 占位, 但 .github/workflows/verify-matrix.yml 的 runs-on 仍硬编码 ubuntu-latest。当 matrix 真正扩到 macos-latest / windows-latest 时, 需要同步把 runs-on 改 ${{ matrix.os }}, 并补一次 verify 跑过的 evidence (各 OS rc=0 + 各 OS artifact 不冲突)。",
       "verification": null,
       "evidence": {}
@@ -3083,10 +3113,80 @@
       "status": "backlog",
       "phase": null,
       "priority": 999,
-      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "origin_backlog": [
+        "infra-019 Reviewer caveat"
+      ],
       "description": "Reviewer caveat (infra-019): verify_infra_019.py V1-V4 已覆盖 classifier 单元 + matrix.os 占位 + 内部文案大写, 但 smoke ON 模式 (FINEGRAINED_EXIT) 在 model 缺失场景下真跑一次端到端 rc=2 走查未作为 V5 固化。建议补 V5: subprocess 真跑 scripts/smoke.py ON 模式 (env model 缺失) 断言 rc==2, 作为 classifier 真闭环回归。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "upgraded_to": "infra-020",
+      "upgraded_phase": 17
+    },
+    {
+      "id": "robot-009",
+      "area": "robot",
+      "phase": 17,
+      "priority": 130,
+      "status": "not_started",
+      "description": "承接 robot-008 caveat: ProactiveScheduler→RobotSequencer 注入路径改造 — 移除 daemon thread + seq.run() 模式, callback 内直接调用 sequencer.enqueue(action), 让 RobotSequencer 内部 _dispatch_executor 统一调度, 消除外部线程管理与 queue/executor 双重 fan-out。来源 backlog: robot-008-backlog-enqueue-not-daemon-thread。",
+      "depends_on": [
+        "robot-008"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "robot-008-backlog-enqueue-not-daemon-thread"
+    },
+    {
+      "id": "robot-010",
+      "area": "robot",
+      "phase": 17,
+      "priority": 131,
+      "status": "not_started",
+      "description": "承接 robot-008 caveat: set_robot_sequencer lifecycle 校验 — (a) is_shutdown 探针(向已 shutdown sequencer 注入告警并拒绝), (b) 重复注入 WARNING log, (c) shutdown 回调自动清空 ProactiveScheduler 侧引用避免悬垂。来源 backlog: robot-008-backlog-setter-lifecycle。建议与 robot-009 顺序衔接(robot-009 改造路径后, robot-010 加 lifecycle 校验)。",
+      "depends_on": [
+        "robot-008",
+        "robot-009"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "robot-008-backlog-setter-lifecycle"
+    },
+    {
+      "id": "interact-019",
+      "area": "interact",
+      "phase": 17,
+      "priority": 132,
+      "status": "not_started",
+      "description": "承接 interact-018 caveat: trace _is_fail 函数对 status 字段当前用 substring 匹配, 会把 no_failure / failsafe / no_fail 等 token 误判 failure。改为 token 精确匹配(status in {fail,failure,failed,error} 白名单)或正则边界匹配, 消除误判, 保证 trace 数据 is_fail 字段语义正确。verify 需新增至少 2 fixture: 正向 (status=fail 命中) + 负向 (status=no_failure 不命中)。来源 backlog: interact-018-backlog-status-fail-strict-match。",
+      "depends_on": [
+        "interact-018"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "interact-018-backlog-status-fail-strict-match"
+    },
+    {
+      "id": "vision-014",
+      "area": "vision",
+      "phase": 17,
+      "priority": 133,
+      "status": "not_started",
+      "description": "承接 vision-013 caveat: (C1) TTL wall clock 设计选择文档化 — 跨进程 / 持久化 session 共享 TTL 必须用 wall clock, 但 NTP 大幅回拨 / 前跳影响触发时机, 需在 docstring + research/ 记一笔 known-limit, 给出 NTP 重大调时的预期行为; (C2) _maybe_identify hot path 微优化 — 在 default-OFF 时 short-circuit 前先 module-level cache env flag, 减少高 FPS 路径 (>=60 FPS) 上 get_face_id/record_name_confidence + try/except 开销。来源 backlog: vision-013-backlog-ttl-and-overhead。",
+      "depends_on": [
+        "vision-013"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "vision-013-backlog-ttl-and-overhead"
+    },
+    {
+      "id": "infra-020",
+      "area": "infra",
+      "phase": 17,
+      "priority": 134,
+      "status": "not_started",
+      "description": "承接 infra-019 caveat: scripts/verify_infra_019.py 增补 V5 — subprocess 真跑 scripts/smoke.py ON 模式 (COCO_SMOKE_FINEGRAINED_EXIT=1) 在 model 缺失场景下断言 rc==2, 作为 _classify_stdout 真闭环回归(V1-V4 仅单元测试 + 占位)。可附带把列表前缀 (infra-019-backlog-classifier-list-prefix) 的轻量扩展捎带进来, 但主线为 V5 闭环。来源 backlog: infra-019-backlog-finegrained-exit-e2e-v5。",
+      "depends_on": [
+        "infra-019"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "infra-019-backlog-finegrained-exit-e2e-v5"
     }
   ],
   "_meta": {
