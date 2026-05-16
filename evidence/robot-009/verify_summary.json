@@ -1,0 +1,56 @@
+{
+  "feature_id": "robot-009",
+  "verify_script": "scripts/verify_robot_009.py",
+  "results": {
+    "V1_enqueue_path_no_daemon_thread": {
+      "enqueue_call_count": 1,
+      "enqueue_action_type": "nod",
+      "run_call_count": 0,
+      "proactive_robot_seq_threads_before": 0,
+      "proactive_robot_seq_threads_after": 0,
+      "status": "PASS"
+    },
+    "V2_queue_full_drop_oldest": {
+      "queue_max": 2,
+      "overflow_policy": "drop_oldest",
+      "enqueue_results": [true, true, true],
+      "dropped_events": 1,
+      "dropped_reason": "drop_oldest",
+      "status": "PASS"
+    },
+    "V3_shutdown_enqueue_no_op": {
+      "is_shutdown": true,
+      "enqueue_raised": false,
+      "enqueue_return": false,
+      "dropped_reason": "shutdown",
+      "status": "PASS"
+    },
+    "V4_default_off_bytewise": {
+      "robot_sequencer_is_none": true,
+      "proactive_robot_seq_threads_before": 0,
+      "proactive_robot_seq_threads_after": 0,
+      "status": "PASS"
+    },
+    "V5_regression": {
+      "verify_robot_008_rc": 0,
+      "verify_robot_007_rc": 0,
+      "verify_robot_006_rc": 0,
+      "status": "PASS"
+    }
+  },
+  "smoke": "PASS",
+  "cross_area_regression": {
+    "verify_vision_013_rc": 0,
+    "verify_audio_012_rc": 0,
+    "verify_interact_018_rc": 0,
+    "verify_infra_019_rc": 0
+  },
+  "design_notes": {
+    "sequencer_api_change": "新增 RobotSequencer.enqueue(action) 非阻塞 API + is_shutdown() 探针; 内部单一 action_worker 串行消费 (drop_oldest/drop_new/block 三策略 emit robot.enqueue_dropped); shutdown() 一并停 action worker + 设 _is_shutdown=True",
+    "proactive_change": "_do_trigger_unlocked 末尾 robot-008 引入的 threading.Thread(name='coco-proactive-robot-seq', daemon=True).start() + 内嵌 _run_seq 已完全删除; 改为 _seq.enqueue(_nod) 同步非阻塞调用 (getattr fallback 保护 mock/legacy sequencer)",
+    "daemon_thread_removed": true,
+    "forbidden_token_scan": "无命中 (set_motor_torque|enable_torque|body.|low_level)"
+  },
+  "branch": "feat/robot-009",
+  "base": "main@0bfcce3"
+}

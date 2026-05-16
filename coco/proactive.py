@@ -1168,7 +1168,8 @@ class ProactiveScheduler:
             log.warning("[proactive] emit failed: %s: %s", type(e).__name__, e)
 
         # robot-008: best-effort 触发轻量 nod 序列（注入后才生效）。
-        # 异步 daemon 线程执行 seq.run()，避免阻塞 proactive _loop / TTS 收尾。
+        # robot-009: 改造 — 不再起 daemon thread + seq.run(), 改为 sequencer.enqueue(action)
+        # 非阻塞投递；由 sequencer 内部 action worker 串行消费，统一调度入口。
         # 任何异常吃掉——主动话题 happen 不依赖于 robot 动作成功。
         with self._lock:
             _seq = self._robot_sequencer
@@ -1181,19 +1182,23 @@ class ProactiveScheduler:
                     params={"amplitude_deg": 8.0},
                     duration_s=0.25,
                 )
-
-                def _run_seq() -> None:
+                # robot-009: 优先调 enqueue（新非阻塞 API），若 sequencer 是旧/mock
+                # 没有 enqueue 方法则退化（不再起新线程，调用方负责）。
+                _enqueue_fn = getattr(_seq, "enqueue", None)
+                if callable(_enqueue_fn):
+                    try:
+                        _enqueue_fn(_nod)
+                    except Exception as _e:  # noqa: BLE001
+                        log.warning("[proactive] robot_sequencer.enqueue failed: %s: %s",
+                                    type(_e).__name__, _e)
+                else:
+                    # 兼容路径：sequencer 上没有 enqueue（不应出现，留兜底）。
+                    # 同步调用 run，不再起 daemon thread。
                     try:
                         _seq.run([_nod])
                     except Exception as _e:  # noqa: BLE001
-                        log.warning("[proactive] robot_sequencer.run failed: %s: %s",
+                        log.warning("[proactive] robot_sequencer.run fallback failed: %s: %s",
                                     type(_e).__name__, _e)
-
-                threading.Thread(
-                    target=_run_seq,
-                    name="coco-proactive-robot-seq",
-                    daemon=True,
-                ).start()
             except Exception as e:  # noqa: BLE001
                 log.warning("[proactive] robot_sequencer dispatch failed: %s: %s",
                             type(e).__name__, e)

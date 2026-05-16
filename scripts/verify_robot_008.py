@@ -78,13 +78,15 @@ except Exception:  # noqa: BLE001
 
 
 # =======================================================================
-# V2 ProactiveScheduler 注入 — _do_trigger_unlocked 后 sequencer.run([nod]) 被调
+# V2 ProactiveScheduler 注入 — _do_trigger_unlocked 后 sequencer.enqueue(nod) 被调
+# (robot-009 改造: 旧 run([nod]) daemon thread → enqueue 非阻塞 API)
 # =======================================================================
-print("V2: ProactiveScheduler.set_robot_sequencer + _do_trigger_unlocked 触发 sequencer.run")
+print("V2: ProactiveScheduler.set_robot_sequencer + _do_trigger_unlocked 触发 sequencer.enqueue")
 try:
     from coco.proactive import ProactiveScheduler, ProactiveConfig
 
     fake_seq = MagicMock()
+    fake_seq.enqueue = MagicMock(return_value=True)
     fake_seq.run = MagicMock(return_value={"executed": 1, "cancelled": False})
 
     sched = ProactiveScheduler(
@@ -99,25 +101,22 @@ try:
     # 直接调 _do_trigger_unlocked (绕过锁 / 条件检查)
     sched._do_trigger_unlocked(t=time.time(), system_prompt=None, seed="topic-seed")
 
-    # 异步 daemon 线程内调用 fake_seq.run；等几个 ticks
-    deadline = time.time() + 2.0
-    while time.time() < deadline and fake_seq.run.call_count < 1:
-        time.sleep(0.02)
-
-    check("V2 fake_seq.run() 至少被调用一次",
-          fake_seq.run.call_count >= 1,
-          f"call_count={fake_seq.run.call_count}")
-    if fake_seq.run.call_count >= 1:
-        args, _ = fake_seq.run.call_args
-        actions = args[0] if args else []
-        first_type = getattr(actions[0], "type", None) if actions else None
-        check("V2 第一个 action 是 nod", first_type == "nod", f"type={first_type!r}")
+    # robot-009: enqueue 同步非阻塞调用, 不再需要等异步线程
+    check("V2 fake_seq.enqueue() 至少被调用一次",
+          fake_seq.enqueue.call_count >= 1,
+          f"call_count={fake_seq.enqueue.call_count}")
+    if fake_seq.enqueue.call_count >= 1:
+        args, _ = fake_seq.enqueue.call_args
+        action = args[0] if args else None
+        first_type = getattr(action, "type", None)
+        check("V2 enqueue 的 action 是 nod", first_type == "nod", f"type={first_type!r}")
 except Exception:  # noqa: BLE001
     errors.append("V2: " + traceback.format_exc())
 
 
 # =======================================================================
-# V3 business subscribe — proactive→真 sequencer.run([nod])→subscribe callback 收到 action_done
+# V3 business subscribe — proactive→enqueue→action worker→run([nod])→dispatch→biz_observer 收 action_done
+# (robot-009: 路径变成 enqueue, 但 action worker 内部仍调 run() 走 dispatch, 业务回调端到端不变)
 # =======================================================================
 print("V3: business subscribe — proactive 触发后 subscribe 回调收到 action_done")
 try:
