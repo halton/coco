@@ -2926,7 +2926,7 @@
       "id": "infra-019",
       "name": "smoke _classify_stdout 误判修复 + verify-matrix OS-axis artifact 命名",
       "area": "infra",
-      "status": "not_started",
+      "status": "passing",
       "phase": 16,
       "priority": 124,
       "origin_backlog": [
@@ -2934,7 +2934,13 @@
       ],
       "description": "目标: 修 infra-018 C1/C2 — (a) scripts/smoke.py _classify_stdout WARN 行子串匹配 'skipped' 误判 SKIP (L90/108/238/242/276/283), model 缺失 ON 模式下 rc 应为 2 但当前是 3; 改为 prefix 'SKIP:' 严格匹配, 并把内部所有相关文案统一为 'SKIP:' / 'WARN:' / 'FAIL:' 大写前缀; (b) .github/workflows/verify-matrix.yml upload-artifact 名 'history-summary-${run_id}' 加入 '${{ matrix.os }}' 维度 (未来加 OS axis 防 artifact 覆盖), 即使当前只有 ubuntu-latest 也先把模板补上。来源: infra-018-backlog-classify-and-matrix C1/C2。Sim-first 验收: scripts/verify_infra_019.py 用 fixture stdout 含 'skipped' 在 WARN 行 / 'SKIP:' 前缀在 SKIP 行, 断言 (a) _classify_stdout 不再把 WARN 行误归为 SKIP, (b) model 缺失 ON 模式 smoke rc=2, (c) verify-matrix.yml artifact name 含 matrix.os 占位。Env: 无。真机依赖: 无 (纯 CI/harness)。",
       "verification": "scripts/verify_infra_019.py",
-      "evidence": {}
+      "evidence": {
+        "verify_script": "scripts/verify_infra_019.py",
+        "verify_summary": "evidence/infra-019/verify_summary.json",
+        "reviewer": "sub-agent fresh-context: LGTM",
+        "forbidden_words_scan": "clean",
+        "backward_compatible": true
+      }
     },
     {
       "id": "robot-008-backlog-enqueue-not-daemon-thread",
@@ -3043,6 +3049,42 @@
       "priority": 999,
       "origin_backlog": ["interact-018 Reviewer caveat"],
       "description": "Reviewer caveat (interact-018): scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel / PyInstaller 等场景下健壮性未审计。需 audit 各执行路径 (直接 python / subprocess / -m / 打包) 下 sys.path 注入是否仍然定位到正确 repo 根, 或改用 importlib.resources / 包内显式导入。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "infra-019-backlog-classifier-list-prefix",
+      "name": "_classify_stdout 列表项 '- SKIP:' 前缀支持",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "description": "Reviewer caveat (infra-019): 当前 _classify_stdout 严格 prefix 'SKIP:' / 'WARN:' / 'FAIL:' 匹配, 若未来子检查输出走 markdown 列表格式 (如 '- SKIP: xxx' / '* WARN: yyy'), 会落回旧的子串匹配回退路径或被误分类。需要扩展 classifier 支持列表项前缀 (lstrip '-*+' + 空白后再做 prefix 判定), 同时补 verify fixture 覆盖列表格式。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "infra-019-backlog-runs-on-matrix-os",
+      "name": "verify-matrix runs-on 切到 matrix.os (随真扩 OS axis)",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "description": "Reviewer caveat (infra-019): infra-019 已把 artifact name 加入 ${{ matrix.os }} 占位, 但 .github/workflows/verify-matrix.yml 的 runs-on 仍硬编码 ubuntu-latest。当 matrix 真正扩到 macos-latest / windows-latest 时, 需要同步把 runs-on 改 ${{ matrix.os }}, 并补一次 verify 跑过的 evidence (各 OS rc=0 + 各 OS artifact 不冲突)。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "infra-019-backlog-finegrained-exit-e2e-v5",
+      "name": "FINEGRAINED_EXIT smoke ON 模式端到端 rc=2 走查 (V5 补强)",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["infra-019 Reviewer caveat"],
+      "description": "Reviewer caveat (infra-019): verify_infra_019.py V1-V4 已覆盖 classifier 单元 + matrix.os 占位 + 内部文案大写, 但 smoke ON 模式 (FINEGRAINED_EXIT) 在 model 缺失场景下真跑一次端到端 rc=2 走查未作为 V5 固化。建议补 V5: subprocess 真跑 scripts/smoke.py ON 模式 (env model 缺失) 断言 rc==2, 作为 classifier 真闭环回归。",
       "verification": null,
       "evidence": {}
     }

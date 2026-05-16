@@ -2991,3 +2991,23 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
   - interact-018-backlog-syspath-injection-audit: scripts 双脚本 sys.path 注入 subprocess/打包路径下健壮性 audit
 - phase-16 进度: 4/5 完成 (audio-012 ✅ vision-013 ✅ robot-008 ✅ interact-018 ✅; infra-019 待)
 - 下一步: infra-019 (priority=124) — smoke _classify_stdout 误判修复 + verify-matrix OS-axis artifact 名
+
+## Session 2026-05-15 — infra-019 closeout + phase-16 收官
+
+- infra-019 closeout: Engineer push e9835bb → Reviewer fresh-context LGTM (V1-V4 PASS, regression 全 PASS, 禁词 0) → merge --no-ff → main HEAD=013ee88
+- 改动: scripts/smoke.py _classify_stdout 改 'SKIP:'/'WARN:'/'FAIL:' 严格前缀匹配 (修 'skipped' 子串误判), 内部文案统一大写前缀; .github/workflows/verify-matrix.yml artifact name 加入 ${{ matrix.os }} 维度 (runs-on 暂留 ubuntu-latest, 待真扩 OS axis 时同步切)
+- evidence: scripts/verify_infra_019.py + evidence/infra-019/verify_summary.json
+- **phase-16 收官 — 5/5 全 passing**:
+  - audio-012 (TTS prosody emotion-aware)
+  - vision-013 (face-id 光照鲁棒性 sim baseline)
+  - robot-008 (RobotSequencer atexit + ProactiveScheduler 注入)
+  - interact-018 (proactive_trace latency_ms wire + _is_fail 三口约定)
+  - infra-019 (smoke classifier 修复 + verify-matrix OS-axis)
+- 异步累积 uat-* 项 (sim-first, 不阻 merge, 用户方便时物理执行回填 evidence.real_machine_uat):
+  - uat-robot-006 / uat-audio-011 / uat-audio-012 / uat-robot-008
+  - 历史链 (尚未真机回填): vision-009 / infra-012-fu-1 / audio-008 / audio-001 / vision-010 chain / audio-009 / uat-phase4
+- 新增 infra-019 backlog (priority=999):
+  - infra-019-backlog-classifier-list-prefix: _classify_stdout 列表项 '- SKIP:' 前缀支持 (未来 markdown 列表输出兼容)
+  - infra-019-backlog-runs-on-matrix-os: matrix 真扩到 macos/windows 时把 runs-on 同步改 ${{ matrix.os }}
+  - infra-019-backlog-finegrained-exit-e2e-v5: smoke ON 模式 (FINEGRAINED_EXIT) 端到端 rc=2 走查作为 V5 补强
+- 下一步: 按持续开发模式默认进入 phase-17 planning (候选写入 feature_list.json 后立即起 phase-17 第一个 feature); uat-* 异步项继续累积, 不阻塞主线
