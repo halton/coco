@@ -2904,7 +2904,7 @@
       "id": "interact-018",
       "name": "ProactiveScheduler emit 端 latency_ms wire + _is_fail 约定标准化",
       "area": "interact",
-      "status": "not_started",
+      "status": "passing",
       "phase": 16,
       "priority": 123,
       "origin_backlog": [
@@ -2912,7 +2912,15 @@
       ],
       "description": "目标: 修 interact-017 C2/C3 真功能性遗留 — (a) ProactiveScheduler 调用端补发 latency_ms 字段到 trace 行 (生产路径目前不发, 仅 fixture 显式注入, 导致 scripts/proactive_trace_summary.py 在生产 trace 上 latency 维度统计为 0); (b) _is_fail 统一约定: 接入 emit 端使 ProactiveScheduler 失败路径标准化为 ok=False/error 字段 (而非顶层 failure 键), 或扩展 _is_fail 同时识别 failure 顶层键; 二选一并文档化。来源: interact-017-backlog-script-name-and-emit C2/C3。Sim-first 验收: scripts/verify_interact_018.py 跑生产 ProactiveScheduler 模拟运行 N 次任务, 断言 (a) 每条 trace 行含 latency_ms 字段且数值 > 0, (b) failure 路径在 proactive_trace_summary 统计中被 _is_fail 正确识别, (c) ok=False / error / failure 三种 emit 形态都被统一识别 (或 emit 端只发其中一种且全链路一致)。Env: 无新增。真机依赖: 无 (纯 trace 字段约定 + emit wire)。",
       "verification": "scripts/verify_interact_018.py",
-      "evidence": {}
+      "evidence": {
+        "verify_script": "scripts/verify_interact_018.py",
+        "verify_summary": "evidence/interact-018/verify_summary.json",
+        "reviewer": "sub-agent fresh-context: LGTM",
+        "emit_additive": true,
+        "default_off_bytewise": true,
+        "default_off_gate": "COCO_PROACTIVE_TRACE",
+        "forbidden_words_scan": "clean"
+      }
     },
     {
       "id": "infra-019",
@@ -2989,6 +2997,54 @@
       "evidence": {
         "real_machine_uat": "pending"
       }
+    },
+    {
+      "id": "interact-018-backlog-v1-cooldown-coverage",
+      "name": "V1 fixture 补 cooldown_hit 路径 latency_ms 端到端断言",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "description": "Reviewer caveat (interact-018): V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire, cooldown_hit 路径 latency_ms 端到端断言尚缺。需补 fixture 触发 cooldown_hit (相同 task 在 cooldown 窗口内重入), 断言 trace 行 latency_ms 字段存在且语义合理 (判定即出, 不含等待时间)。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "interact-018-backlog-status-fail-strict-match",
+      "name": "is_fail 的 status~fail substring 改 token 精确匹配",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "description": "Reviewer caveat (interact-018): 当前 _is_fail 对 status 字段用 'fail' substring 匹配, 会把 'no_failure' / 'failsafe' / 'no_fail' 等 token 误判为 failure。改为 token 精确匹配 (status in {'fail','failure','failed','error'} 等白名单), 或正则边界匹配, 消除误判风险。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "interact-018-backlog-latency-stage-semantics-doc",
+      "name": "latency_ms 语义按 stage 分类文档化",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "description": "Reviewer caveat (interact-018): latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。需在 scripts/proactive_trace_summary.py 输出与 README / docstring 中按 stage 分类标注语义, 避免下游 metric 聚合时混淆。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "interact-018-backlog-syspath-injection-audit",
+      "name": "scripts 双脚本 sys.path 注入 subprocess/打包路径健壮性 audit",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": ["interact-018 Reviewer caveat"],
+      "description": "Reviewer caveat (interact-018): scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel / PyInstaller 等场景下健壮性未审计。需 audit 各执行路径 (直接 python / subprocess / -m / 打包) 下 sys.path 注入是否仍然定位到正确 repo 根, 或改用 importlib.resources / 包内显式导入。",
+      "verification": null,
+      "evidence": {}
     }
   ],
   "_meta": {

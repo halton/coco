@@ -2977,3 +2977,17 @@ phase-13 main HEAD=56c76fe，全部 sim-first 通过；真机 UAT 项保留为 u
 - async uat: uat-robot-008 (真机 nod amplitude_deg=8 / duration_s=0.25 头部物理表现与视觉-运动闭环延迟)
 - phase-16 进度: 3/5 完成 (audio-012 ✅ vision-013 ✅ robot-008 ✅; interact-018/infra-019 待)
 - 下一步: interact-018 (priority=123)
+
+## Session 2026-05-15 — interact-018 PHASE-16 #4 closeout
+
+- interact-018 PASSING, merge sha=0893401 (--no-ff feat/interact-018 → main)
+- Engineer HEAD: bf80703 (emit 端 latency_ms wire + _is_fail 三口约定标准化)
+- Reviewer (sub-agent fresh-context): LGTM 干净 — V1-V? PASS / regression 全 PASS / smoke PASS / 禁词无命中 / Default-OFF bytewise (COCO_PROACTIVE_TRACE gate) 等价
+- 修复内容: ProactiveScheduler 调用端补发 latency_ms 字段到 trace 行 (生产路径) / _is_fail 三口约定标准化 (ok=False / error / failure 顶层键统一识别) / additive emit 不破坏既有 trace schema / COCO_PROACTIVE_TRACE 环境变量 default-OFF
+- backlog (4 个, 全部来自 Reviewer caveats):
+  - interact-018-backlog-v1-cooldown-coverage: V1 fixture 补 cooldown_hit 路径 latency_ms 端到端断言
+  - interact-018-backlog-status-fail-strict-match: is_fail 的 status~fail substring 改 token 精确匹配, 防 "no_failure"/"failsafe" 误判
+  - interact-018-backlog-latency-stage-semantics-doc: latency_ms 语义按 stage 分类 (admit=端到端 / reject=判定即出) 文档化
+  - interact-018-backlog-syspath-injection-audit: scripts 双脚本 sys.path 注入 subprocess/打包路径下健壮性 audit
+- phase-16 进度: 4/5 完成 (audio-012 ✅ vision-013 ✅ robot-008 ✅ interact-018 ✅; infra-019 待)
+- 下一步: infra-019 (priority=124) — smoke _classify_stdout 误判修复 + verify-matrix OS-axis artifact 名
