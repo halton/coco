@@ -171,6 +171,128 @@ class RobotSequencer:
         if self.config.subscribe_async:
             self._init_dispatch_pool()
 
+        # robot-009: action enqueue worker。所有触发源（proactive / future
+        # GroupModeCoord / Gesture）通过 enqueue(action) 走同一道口，由单一
+        # action_worker 串行消费（复用 run([action]) 内部串行/cancel/emit 语义）。
+        # 单 worker 保证 action 之间不并发——多个 trigger 同时来会按 FIFO 排队，
+        # 不会出现两个动作同时驱动 robot SDK 的竞争。
+        # bounded queue（容量默认 = config.queue_max）+ overflow_policy 与 dispatch
+        # 同套策略；满时 emit `robot.enqueue_dropped`。
+        # shutdown() 时一并清空 + 注入 sentinel + join worker。
+        self._action_queue: Optional[_queue.Queue] = None
+        self._action_worker: Optional[threading.Thread] = None
+        self._action_stop = threading.Event()
+        self._enqueue_dropped_n = 0
+        self._enqueue_drop_lock = threading.Lock()
+        self._is_shutdown = False
+        self._init_action_worker()
+
+    def _init_action_worker(self) -> None:
+        """robot-009: 启动单一 action worker 消费 enqueue 投递的 action。"""
+        self._action_queue = _queue.Queue(maxsize=max(1, int(self.config.queue_max)))
+        self._action_stop.clear()
+        th = threading.Thread(
+            target=self._action_worker_loop,
+            daemon=True,
+            name="coco-robot-seq-action",
+        )
+        th.start()
+        self._action_worker = th
+
+    def _action_worker_loop(self) -> None:
+        """Worker：阻塞 get → 串行 run([action]) → 再 get 下一条。"""
+        q = self._action_queue
+        assert q is not None
+        while not self._action_stop.is_set():
+            try:
+                item = q.get(timeout=0.05)
+            except _queue.Empty:
+                continue
+            if item is None:
+                # sentinel
+                break
+            action = item
+            try:
+                # 串行调用现有 run() 主循环（emit + dispatch + cancel 一致）。
+                # 若已 _running（罕见：外部正调 run），等下一轮再消费。
+                if self._running:
+                    # put back to tail and yield
+                    try:
+                        q.put_nowait(action)
+                    except _queue.Full:
+                        self._on_enqueue_drop(reason="busy_requeue_full")
+                    time.sleep(self.config.cancel_poll_interval_s)
+                    continue
+                self.run([action])
+            except Exception as exc:  # noqa: BLE001
+                print(
+                    f"[robot_seq] action worker run failed: {type(exc).__name__}: {exc!r}",
+                    file=_sys.stderr,
+                )
+
+    def enqueue(self, action: "Action") -> bool:
+        """robot-009: 非阻塞投递一个 action 给 sequencer 内部 worker 执行。
+
+        返回 True 表示已入队（worker 将异步执行），False 表示被 drop（队列满
+        或 sequencer 已 shutdown）。drop 时 emit `robot.enqueue_dropped`。
+
+        所有外部触发源（ProactiveScheduler / GroupModeCoord / Gesture）一律走
+        本入口，统一调度，消除外部 daemon thread + queue/executor 双 fan-out。
+        """
+        if not isinstance(action, Action):
+            raise TypeError(f"enqueue expects Action, got {type(action).__name__}")
+        if self._is_shutdown or self._action_queue is None:
+            # 已 shutdown：best-effort no-op + emit dropped
+            self._on_enqueue_drop(reason="shutdown")
+            return False
+        q = self._action_queue
+        policy = self.config.overflow_policy
+        if policy == "block":
+            try:
+                q.put(action, timeout=1.0)
+                return True
+            except _queue.Full:
+                self._on_enqueue_drop(reason="block_timeout")
+                return False
+        try:
+            q.put_nowait(action)
+            return True
+        except _queue.Full:
+            if policy == "drop_new":
+                self._on_enqueue_drop(reason="drop_new")
+                return False
+            # drop_oldest
+            try:
+                q.get_nowait()
+                self._on_enqueue_drop(reason="drop_oldest")
+            except _queue.Empty:
+                pass
+            try:
+                q.put_nowait(action)
+                return True
+            except _queue.Full:
+                self._on_enqueue_drop(reason="drop_oldest_retry_full")
+                return False
+
+    def _on_enqueue_drop(self, reason: str) -> None:
+        """robot-009: emit robot.enqueue_dropped；enqueue_dropped_n 累计。"""
+        with self._enqueue_drop_lock:
+            self._enqueue_dropped_n += 1
+            n = self._enqueue_dropped_n
+        try:
+            self._emit(
+                "robot.enqueue_dropped",
+                reason=reason,
+                queue_max=self.config.queue_max,
+                dropped_n=n,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[robot_seq] emit enqueue_dropped failed: {exc!r}", file=_sys.stderr)
+
+    def is_shutdown(self) -> bool:
+        """robot-009: 是否已 shutdown。"""
+        return self._is_shutdown
+
     def _init_dispatch_pool(self) -> None:
         """robot-007: bounded queue + N worker threads pulling from it."""
         self._dispatch_queue = _queue.Queue(maxsize=max(1, int(self.config.queue_max)))
@@ -210,7 +332,29 @@ class RobotSequencer:
             self._safe_invoke(cb, event, payload)
 
     def shutdown(self, wait: bool = True, timeout: float = 2.0) -> None:
-        """robot-007: 优雅停 dispatch pool。"""
+        """robot-007: 优雅停 dispatch pool。robot-009: 同时停 action worker。"""
+        # robot-009: 标记已 shutdown，之后 enqueue 全部 no-op
+        self._is_shutdown = True
+
+        # robot-009: 停 action worker
+        self._action_stop.set()
+        aq = self._action_queue
+        if aq is not None:
+            try:
+                while True:
+                    aq.get_nowait()
+            except _queue.Empty:
+                pass
+            try:
+                aq.put_nowait(None)
+            except _queue.Full:
+                pass
+        aw = self._action_worker
+        if aw is not None and aw.is_alive():
+            aw.join(timeout=timeout)
+        self._action_worker = None
+        self._action_queue = None
+
         self._dispatch_stop.set()
         q = self._dispatch_queue
         if q is not None:
