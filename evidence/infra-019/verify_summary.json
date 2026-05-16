@@ -1,0 +1,52 @@
+{
+  "failures": [],
+  "feature": "infra-019",
+  "results": {
+    "V1_skip_prefix": {
+      "detail": {
+        "SKIP_lowercase_prefix": "SKIP",
+        "SKIP_prefix_indented": "SKIP",
+        "SKIP_prefix_top": "SKIP",
+        "SKIP_with_other_lines": "SKIP"
+      },
+      "status": "PASS"
+    },
+    "V2_warn_no_false_skip": {
+      "detail": {
+        "PASS_no_tests_skipped": "PASS",
+        "PASS_skipped_eq_zero": "PASS",
+        "PASS_skipped_in_log": "PASS",
+        "WARN_with_fixture_skipped": "WARN",
+        "WARN_with_skipped_word": "WARN"
+      },
+      "status": "PASS"
+    },
+    "V3_regression": {
+      "detail": {
+        "PASS_empty": "PASS",
+        "PASS_only_info": "PASS",
+        "SKIP_over_WARN_priority": "SKIP",
+        "WARN_only": "WARN"
+      },
+      "status": "PASS"
+    },
+    "V4_artifact_os_axis": {
+      "detail": {
+        "artifact_names": [
+          "smoke-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "history-summary-${{ github.run_id }}-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-vision-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-interact-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-companion-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-audio-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-robot-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-infra-py${{ matrix.python-version }}-${{ matrix.os }}",
+          "verify-publish-py${{ matrix.python-version }}-${{ matrix.os }}"
+        ],
+        "os_decl_count": 8
+      },
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
