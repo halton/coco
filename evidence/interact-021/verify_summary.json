@@ -1,0 +1,56 @@
+{
+  "feature": "interact-021",
+  "all_pass": true,
+  "results": {
+    "V0_fingerprint": {
+      "ok": true,
+      "missing_anchors": [],
+      "missing_stages": [],
+      "doc_size": 8728
+    },
+    "V1_contract_doc_stage_section": {
+      "ok": true,
+      "missing_tokens": [],
+      "missing_stages": [],
+      "has_judge_only": true,
+      "has_end_to_end": true
+    },
+    "V2_proactive_py_emit_sites": {
+      "ok": true,
+      "latency_ms_kwarg_count": 4,
+      "expected_at_least": 4
+    },
+    "V3_latency_monotonic_in_fixture": {
+      "ok": true,
+      "traces_count": 1,
+      "latency_seq": [
+        0.013
+      ],
+      "stages_seq": [
+        "arbit_winner"
+      ],
+      "violations": []
+    },
+    "V4_doc_stage_names_in_source": {
+      "ok": true,
+      "missing_stage_names_in_source": [],
+      "checked_stages": [
+        "arbit_winner",
+        "cooldown_hit",
+        "emotion_alert",
+        "fusion_boost",
+        "mm_proactive",
+        "normal"
+      ]
+    },
+    "V5_regression": {
+      "ok": true,
+      "rcs": {
+        "verify_interact_018.py": 0,
+        "verify_interact_019.py": 0,
+        "verify_interact_020.py": 0
+      },
+      "bad": []
+    }
+  }
+}
