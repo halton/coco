@@ -3279,3 +3279,21 @@ phase-18 全 5 个 feature 全部 passing, 0 阻塞 backlog 残留, 全部 sim-f
 - 其余 phase-18 feature 均 real_machine_uat=not_required, 无新增 uat 项。
 
 **下一步**: 等用户输入 / phase-19 规划 (候选源: 当前 0 阻塞 backlog 残留, 需挖掘新 caveats 或新方向)。持续开发模式按 CLAUDE.md 在本 phase 收官后转入候选规划阶段。
+
+## Session 2026-05-17 — phase-19 planning (5 candidates from historical backlog upgrade)
+
+main HEAD (planning 前) = 954de2b。从 status=backlog 池升级 5 个候选, priority 150-154, 跨 3 子系统 (infra×2 / robot×2 / interact×1), 风险分散达标。
+
+| # | new id | priority | area | source_backlog | 主旨 |
+|---|--------|----------|------|----------------|------|
+| 1 | infra-022 | 150 | infra | infra-017-backlog-history-residual | history residual: 弱 ns 时钟碰撞 + FileLock rotate + smoke 子检查 exit-code 细分 |
+| 2 | robot-012 | 151 | robot | robot-008-backlog-sigterm-shutdown | RobotSequencer SIGTERM/SIGINT signal handler + shutdown timeout 配置化 |
+| 3 | interact-021 | 152 | interact | interact-018-backlog-latency-stage-semantics-doc | latency_ms 语义按 stage 分类文档化 |
+| 4 | infra-023 | 153 | infra | infra-019-backlog-classifier-list-prefix | _classify_stdout 列表项 '- SKIP:' 前缀支持 |
+| 5 | robot-013 | 154 | robot | robot-009-backlog-busy-requeue-metric | action_worker busy putback drop 与 overflow drop_* metric 分离 |
+
+**升级规则**: 5 源 backlog status=backlog → upgraded, 加 upgraded_to/upgraded_phase=19; 新主线 status=not_started, phase=19, 含 source_backlog。不挑 uat-*, 不衍生 fu chain。
+
+**phase-19 主题候选**: 历史 backlog Reviewer caveats / residual 收割, 继续巩固单源真理 + 跨平台 / 异常退出 / 边界 metric 覆盖。default-OFF 默认。
+
+**下一步**: 持续开发模式按 CLAUDE.md 启动 infra-022 (priority 150 最低数字 not_started)。

@@ -2739,7 +2739,9 @@
       "area": "infra",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "infra-022",
+      "upgraded_phase": 19,
       "description": "N1 _archive_stamp 在弱 ns 时钟平台理论碰撞，加进程内 itertools.count() 或 monotonic_ns 双路融合；N2 datetime.UTC 需 py3.11+，用 _dt.timezone.utc 兜底；N3 _FileLock 退化无锁路径加 stderr WARN once；N4 _rotate_if_needed 的 replace+touch 不在 _FileLock 内，加锁包住 rotate；C4 smoke 子检查 PASS/WARN/SKIP/FAIL exit-code 细分；C5 verify_history.skip 字段语义澄清（select 阶段 SKIP_LIST 统计）；C9 CI history-summary upload job；C-extra load_records 读路径未加锁（jsonl 单行原子，短期可接受）"
     },
     {
@@ -2968,7 +2970,9 @@
       "id": "robot-008-backlog-sigterm-shutdown",
       "name": "atexit shutdown 对 SIGTERM / 异常退出场景的覆盖",
       "area": "robot",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "robot-012",
+      "upgraded_phase": 19,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3060,7 +3064,9 @@
       "id": "interact-018-backlog-latency-stage-semantics-doc",
       "name": "latency_ms 语义按 stage 分类文档化",
       "area": "interact",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "interact-021",
+      "upgraded_phase": 19,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3088,7 +3094,9 @@
       "id": "infra-019-backlog-classifier-list-prefix",
       "name": "_classify_stdout 列表项 '- SKIP:' 前缀支持",
       "area": "infra",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "infra-023",
+      "upgraded_phase": 19,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3146,7 +3154,9 @@
       "id": "robot-009-backlog-busy-requeue-metric",
       "name": "action_worker busy putback drop 与正常 drop_* metric 分离",
       "area": "robot",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "robot-013",
+      "upgraded_phase": 19,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3274,7 +3284,13 @@
         "verify_script": "scripts/verify_interact_019.py",
         "verify_summary": "evidence/interact-019/verify_summary.json",
         "reviewer": "sub-agent fresh-context: LGTM",
-        "token_set": ["error", "errored", "fail", "failed", "failure"],
+        "token_set": [
+          "error",
+          "errored",
+          "fail",
+          "failed",
+          "failure"
+        ],
         "case_insensitive_strip": true,
         "history_jsonl_audit": "clean (无复合 FAILURE token)",
         "forbidden_words_scan": "clean"
@@ -3425,6 +3441,66 @@
       "real_machine_uat": "not_required",
       "source_backlog": "infra-020-backlog-mixed-warn-skip-case",
       "evidence": "Reviewer (sub-agent): LGTM (干净, 0 backlog, 1 非阻塞 caveat 不入 backlog) / V0-V12 全 PASS / smoke PASS / V0 fingerprint 锁 warn_idx<skip_idx 顺序 / V6 三种 dict 排列证明 dict-order 无关 (WARN>SKIP 优先级稳定) / smoke.py 零改动 (verification 内闭环) / V12 regression verify_infra_020 rc=0 / scripts/verify_infra_021.py + evidence/infra-021/verify_summary.json / merge HEAD aaeba86 / phase-18 收官 5/5"
+    },
+    {
+      "id": "infra-022",
+      "name": "history residual: 弱 ns 时钟碰撞 + FileLock rotate + smoke 子检查 exit-code 细分",
+      "area": "infra",
+      "priority": 150,
+      "phase": 19,
+      "status": "not_started",
+      "source_backlog": [
+        "infra-017-backlog-history-residual"
+      ],
+      "description": "升级自 infra-017 backlog 残留项：N1 _archive_stamp 在弱 ns 时钟平台理论碰撞 (itertools.count() / monotonic_ns 双路融合)；N3 _FileLock 退化无锁路径 stderr WARN once；N4 _rotate_if_needed 的 replace+touch 包入 _FileLock；C4 smoke 子检查 PASS/WARN/SKIP/FAIL exit-code 细分；C5 verify_history.skip 字段语义澄清。来源 backlog: infra-017-backlog-history-residual。"
+    },
+    {
+      "id": "robot-012",
+      "name": "RobotSequencer SIGTERM/SIGINT signal handler + shutdown timeout 配置化",
+      "area": "robot",
+      "priority": 151,
+      "phase": 19,
+      "status": "not_started",
+      "source_backlog": [
+        "robot-008-backlog-sigterm-shutdown"
+      ],
+      "description": "升级自 robot-008 Reviewer caveat：atexit hook 仅覆盖正常解释器退出, SIGTERM / SIGINT / uncaught exception / hard kill 不会触发, 真机或容器场景 RobotSequencer 可能不优雅退出。要求: (a) 注册 signal handler (SIGTERM/SIGINT) 调用 shutdown; (b) shutdown timeout 配置化 (COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S); (c) 文档化非正常退出路径的 known limit。来源 backlog: robot-008-backlog-sigterm-shutdown。"
+    },
+    {
+      "id": "interact-021",
+      "name": "latency_ms 语义按 stage 分类文档化 (admit/reject/cooldown 区分)",
+      "area": "interact",
+      "priority": 152,
+      "phase": 19,
+      "status": "not_started",
+      "source_backlog": [
+        "interact-018-backlog-latency-stage-semantics-doc"
+      ],
+      "description": "升级自 interact-018 Reviewer caveat：latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。需在 scripts/proactive_trace_summary.py 输出与 README / docstring 中按 stage 分类标注语义, 避免下游 metric 聚合时混淆。来源 backlog: interact-018-backlog-latency-stage-semantics-doc。"
+    },
+    {
+      "id": "infra-023",
+      "name": "_classify_stdout 列表项 '- SKIP:' / '* WARN:' 前缀支持",
+      "area": "infra",
+      "priority": 153,
+      "phase": 19,
+      "status": "not_started",
+      "source_backlog": [
+        "infra-019-backlog-classifier-list-prefix"
+      ],
+      "description": "升级自 infra-019 Reviewer caveat：当前 _classify_stdout 严格 prefix 'SKIP:' / 'WARN:' / 'FAIL:' 匹配, 若子检查输出走 markdown 列表格式 (如 '- SKIP: xxx' / '* WARN: yyy') 会落回子串匹配或误分类。扩展 classifier 支持列表项前缀 (lstrip '-*+' + 空白后再 prefix 判定), 补 verify fixture 覆盖列表格式。来源 backlog: infra-019-backlog-classifier-list-prefix。"
+    },
+    {
+      "id": "robot-013",
+      "name": "action_worker busy putback drop 与 overflow drop_* metric 分离 (reason=busy_requeue_full)",
+      "area": "robot",
+      "priority": 154,
+      "phase": 19,
+      "status": "not_started",
+      "source_backlog": [
+        "robot-009-backlog-busy-requeue-metric"
+      ],
+      "description": "升级自 robot-009 Reviewer caveat：RobotSequencer action_worker 在 _running=True 时若新 action 入队且 queue 已满, putback 触发 drop, 当前与正常 overflow drop 共用同一 reason ('drop_oldest'/'drop_new') 走 robot.enqueue_dropped, 难在 trace 区分 'busy 期间的合法 requeue 失败' vs '真正的 overflow'。新增 reason='busy_requeue_full', 单独 metric 入口; 文档化 + verify 覆盖。来源 backlog: robot-009-backlog-busy-requeue-metric。"
     }
   ],
   "_meta": {
