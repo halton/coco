@@ -3446,3 +3446,23 @@ evidence:
 merge: feat/robot-014 → main (--no-ff), HEAD=ba706e1 (closeout commit 见下).
 
 next: phase-20 剩余 4 项 (interact-022 P161 / infra-024 P162 / robot-015 P163 / vision-014b P164), 下一候选 interact-022 priority=161 (area=interact)。
+
+## Session 2026-05-17 — interact-022 closeout
+
+phase-20 P161 interact-022 (area=interact, 吸收 backlog interact-018-backlog-status-fail-strict-match) → passing。**纯 verify + evidence, 无源码改动**, 维度为 contract reaffirmation, 补 interact-019/020/021 未覆盖的 status_fail strict-match 锁面。
+
+改动:
+- scripts/verify_interact_022.py: V0-V5 — V0 frozenset + isinstance + 正则三重锁 (mutant 防漂移); V3 type-strict 10 case 与 coco/proactive_trace.py:170 `isinstance(status, str) and status.strip().lower() in STATUS_FAIL_TOKENS` 一致; V4 emit-site audit clean (grep status emit-site 排除 proactive_trace.py 后 0 命中); V5 三口 10 case PASS。
+- evidence/interact-022/verify_summary.json: V0-V5 全 PASS + sha 落地。
+
+evidence:
+- verify_interact_022 V0-V5 全 PASS
+- ./init.sh smoke 11/11 PASS
+- Reviewer (sub-agent fresh-context) LGTM 干净, 0 backlog / 0 caveat
+- 无源码改动 (纯锁定 + 审计)
+- source: interact-018-backlog-status-fail-strict-match
+- real_machine_uat: pending (异步, 不阻 merge)
+
+merge: feat/interact-022 → main (--no-ff), merge commit=8884969。
+
+next: phase-20 剩余 3 项 (infra-024 P162 / robot-015 P163 / vision-014b P164), 下一候选 infra-024 priority=162 (area=infra)。

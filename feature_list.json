@@ -3672,7 +3672,7 @@
       "title": "_is_fail status 字段精确匹配",
       "user_visible_behavior": "proactive _is_fail 对 status 字段从 substring 匹配改为 token 白名单精确匹配, 消除 'no_failure'/'failsafe'/'no_fail' 等 token 误判为 failure 的风险。",
       "description": "吸收 backlog interact-018-backlog-status-fail-strict-match: _is_fail 内 status 字段比对 fail/failure/failed/error 改用 set 白名单 (lower+strip), 或正则边界匹配; verify 覆盖白名单 hit / 反例 'no_failure'/'failsafe'/'failover'/'no_fail' / 大小写 / 边界空白。原 _is_fail 三口契约不变 (interact-018 已固化)。",
-      "status": "not_started",
+      "status": "passing",
       "phase": 20,
       "source_backlog": [
         "interact-018-backlog-status-fail-strict-match"
@@ -3681,7 +3681,15 @@
         "scripts/verify_interact_022.py: status='fail'/'failure'/'failed'/'error' → True; 'no_failure'/'failsafe'/'failover'/'no_fail'/'success' → False; 大小写 + 前后空白归一; 非 str (None/dict) safe → False。",
         "回归 verify_interact_018 + verify_interact_021 + smoke 全 PASS (契约不变)。",
         "Reviewer (sub-agent fresh-context) 评审: 白名单完备 + 反例覆盖 + 三口契约未破。"
-      ]
+      ],
+      "evidence": {
+        "reviewer": "sub-agent fresh-context LGTM 干净 (0 backlog / 0 caveat)",
+        "verify": "scripts/verify_interact_022.py V0-V5 全 PASS — V0 frozenset+isinstance+正则三重锁 (mutant 防漂移); V3 type-strict 10 case 与 coco/proactive_trace.py:170 一致; V4 emit-site audit clean (grep status emit-site 排除 proactive_trace.py 后 0 命中); V5 三口 10 case PASS",
+        "smoke": "./init.sh smoke 11/11 PASS",
+        "implementation": "无源码改动 — 纯 verify + evidence (contract reaffirmation 维度补 interact-019/020/021 未覆盖)",
+        "source": "interact-018-backlog-status-fail-strict-match",
+        "real_machine_uat": "pending"
+      }
     },
     {
       "id": "infra-024",
