@@ -3427,3 +3427,22 @@ phase-20 planning: 从 backlog 池挑 5 候选 priority 160-164 跨 4 子系统 
 next: feature_list.json commit + push origin main 一次失败忽略, 然后进入持续开发模式起点 robot-014 (P160)。
 
 main HEAD=eb4b04c (待 plan commit)。
+
+## Session 2026-05-17 — robot-014 closeout
+
+phase-20 起点 robot-014 (P160, area=robot, 吸收 backlog robot-012-backlog-shutdown-timeout-inf-nan-hardening) → passing。
+
+改动:
+- coco/robot/sequencer.py: 双 side (env 解析 `_parse_shutdown_timeout_env` + SequencerConfig dataclass `__post_init__`) 加 `math.isfinite()` 硬化, 非有限值 (inf/-inf/nan/'inf'/'nan' string) 降级 default 2.0 + WARN once。
+- scripts/verify_robot_014.py: V0-V5 覆盖 env 五种非有限输入、dataclass 双 side 拦截、正常数值 bytewise 等价、负值 ValueError 回归、shutdown(timeout=inf) 不阻塞。
+
+evidence:
+- verify_robot_014 V0-V5 全 PASS
+- ./init.sh smoke PASS
+- 回归 robot-008..robot-013 共 6 个 verify rc=0
+- Reviewer (sub-agent fresh-context) LGTM 干净, 0 backlog / 0 caveat (异常少见)
+- real_machine_uat: pending (异步, 不阻 merge)
+
+merge: feat/robot-014 → main (--no-ff), HEAD=ba706e1 (closeout commit 见下).
+
+next: phase-20 剩余 4 项 (interact-022 P161 / infra-024 P162 / robot-015 P163 / vision-014b P164), 下一候选 interact-022 priority=161 (area=interact)。
