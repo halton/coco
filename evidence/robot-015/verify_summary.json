@@ -1,0 +1,23 @@
+{
+  "feature": "robot-015",
+  "title": "ProactiveScheduler→Sequencer callback 直 enqueue contract 锁定",
+  "elapsed_s": 441.036,
+  "errors": [],
+  "regression_rcs": {
+    "scripts/verify_robot_007.py": 0,
+    "scripts/verify_robot_008.py": 0,
+    "scripts/verify_robot_012.py": 0,
+    "scripts/verify_robot_013.py": 0
+  },
+  "contract": {
+    "enqueue_first": "callable(seq.enqueue) → 调一次 enqueue(nod_action)",
+    "fallback_sync_run": "缺 enqueue → 同步 seq.run([nod_action]), 不起线程",
+    "no_daemon_thread_spawn": "_do_trigger_unlocked 不再 spawn coco-proactive-robot-seq daemon thread",
+    "exception_fail_soft": "enqueue 抛异常 → warn-once, 不回退 run, proactive emit 不阻断",
+    "default_off": "未注入 _robot_sequencer → 全程 no-op"
+  },
+  "source_backlog": [
+    "robot-008-backlog-enqueue-not-daemon-thread"
+  ],
+  "source_code_note": "源码改造已在 robot-009 落地 (coco/proactive.py:1226-1283). robot-015 为 verify-only contract 锁定 + docstring 锁定 + evidence 固化."
+}

@@ -417,7 +417,11 @@ class ProactiveScheduler:
         注入后 _do_trigger_unlocked emit 之后会 best-effort 触发一个简单 nod
         序列，让主动开口附带轻量肢体反馈。sequencer=None 时清除注入（OFF 等价）。
 
-        线程：seq.run() 在新 daemon 线程中执行，避免阻塞 proactive _loop。
+        线程 (robot-015 锁定): _do_trigger_unlocked 优先调 seq.enqueue(action) 非阻塞投递,
+        由 RobotSequencer 内部 _action_worker daemon 线程串行消费, proactive _loop 不再
+        起新线程; 仅当注入对象无 enqueue 方法时, 走 seq.run([action]) 同步 fallback (legacy /
+        mock 兜底, 也不起新线程)。lifecycle 串行: set_robot_sequencer 应在 sequencer 注入
+        路径就绪后、proactive 启动 _loop 前调用 (main.py 当前布局已满足)。
 
         robot-010: lifecycle 校验
         - (a) 注入已 shutdown 的 sequencer → logger.warning 后 **拒绝**（不写入 _robot_sequencer）；
