@@ -3410,3 +3410,20 @@ evidence:
 - 其余 sim 不可证明项按 Sim-First §4 累计
 
 main HEAD=4b08a23 (待 closeout commit), phase-19 软件 FULL closeout。
+
+## Session 2026-05-17 phase-20 planning
+
+phase-19 收官 (5/5 FULL: infra-022 / robot-012 / interact-021 / infra-023 / robot-013) 已 main HEAD=eb4b04c。
+phase-20 planning: 从 backlog 池挑 5 候选 priority 160-164 跨 4 子系统 (robot ×2 / interact ×1 / infra ×1 / vision ×1):
+
+- robot-014 (P160 robot): shutdown timeout inf/nan 加固 — math.isfinite + 非有限值降级 default 2.0 + WARN once。source: robot-012-backlog-shutdown-timeout-inf-nan-hardening
+- interact-022 (P161 interact): _is_fail status 字段 substring → token 白名单精确匹配 (fail/failure/failed/error), 消除 'no_failure'/'failsafe' 等误判。source: interact-018-backlog-status-fail-strict-match
+- infra-024 (P162 infra): smoke FINEGRAINED_EXIT V5 端到端闭环 — subprocess 真跑 smoke.py ON 模式 model 缺失断言 rc==2。source: infra-019-backlog-finegrained-exit-e2e-v5
+- robot-015 (P163 robot): ProactiveScheduler→Sequencer callback 直 enqueue 消 daemon thread, double fan-out 消除, fallback chain 保留兼容 robot-009。source: robot-008-backlog-enqueue-not-daemon-thread
+- vision-014b (P164 vision): TTL 时钟选型记录 (wall clock vs monotonic + NTP 回拨窗口) + _maybe_identify default-OFF 短路前置微优化。source: vision-013-backlog-ttl-and-overhead
+
+5 源 backlog 全部 status=upgraded + upgraded_to/upgraded_phase=20 标注。跨子系统数=4。
+
+next: feature_list.json commit + push origin main 一次失败忽略, 然后进入持续开发模式起点 robot-014 (P160)。
+
+main HEAD=eb4b04c (待 plan commit)。
