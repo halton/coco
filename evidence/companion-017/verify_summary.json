@@ -1,0 +1,57 @@
+{
+  "feature": "companion-017",
+  "results": [
+    {
+      "name": "V0 fingerprint env-name+default",
+      "ok": true,
+      "info": "env=COCO_PERSIST_EMIT_MIN_INTERVAL_S default=10.0"
+    },
+    {
+      "name": "V1 C1 code uses only COCO_PERSIST_EMIT_MIN_INTERVAL_S",
+      "ok": true,
+      "info": "stale-name hits in .py: []"
+    },
+    {
+      "name": "V2 C2 __init__ state_cache_path=None -> min_interval_s is None (lazy)",
+      "ok": true,
+      "info": "min_interval_s=None"
+    },
+    {
+      "name": "V3 C2 state_cache_path on -> min_interval_s float cached",
+      "ok": true,
+      "info": "min_interval_s=10.0"
+    },
+    {
+      "name": "V4 C2 default-OFF zero emit / zero IO",
+      "ok": true,
+      "info": "emits=0 files=[]"
+    },
+    {
+      "name": "V5 C2 env injection effective",
+      "ok": true,
+      "info": "min_interval_s=2.5"
+    },
+    {
+      "name": "V6 C3 docstring keywords (round/有损/feature)",
+      "ok": true,
+      "info": "doc len=462"
+    },
+    {
+      "name": "V7 C4 module docstring keywords (C4/多进程/warn)",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "V8 regression verify_companion_016",
+      "ok": true,
+      "info": "rc=0 tail=['[PASS] V4 env 注入 + 非法 fallback + WARN once -- legit=True zero=True fallback=True warn_set=True inst=True', \"[PASS] V5 docstring 不再含 '非节流' -- hit=False\", '[PASS] V6 regression companion-015 V1-V8 PASS (schema 兼容) -- v1-v8 pass=8 fail=0', '', 'OK: 6/6', \"[preference_learner] COCO_PERSIST_EMIT_MIN_INTERVAL_S='-1' invalid (out-of-range: -1.0) -> fallback default 10.0s\"]"
+    },
+    {
+      "name": "V9 default-OFF bytewise (no env read / no IO / no emit)",
+      "ok": true,
+      "info": "min=None emits=0 files=[]"
+    }
+  ],
+  "pass": 10,
+  "fail": 0
+}

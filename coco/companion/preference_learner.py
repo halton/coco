@@ -75,9 +75,21 @@ _PREFERENCE_STATE_DEFAULT_PATH = "data/preference_learner_state.json"
 
 # companion-016: emit `companion.preference_persisted` 节流参数。
 # default 10s；env `COCO_PERSIST_EMIT_MIN_INTERVAL_S` 可覆盖；非法值 WARN once + fallback。
+#
+# companion-017 C1（env 名口径统一）：
+#   历史 backlog/spec 曾出现 ``COCO_PREFERENCE_EMIT_INTERVAL_S`` 默认 30s 的写法（companion-016
+#   规划期文案），与代码实现 ``COCO_PERSIST_EMIT_MIN_INTERVAL_S`` 默认 10s 不一致。
+#   ——**以代码为准**：本文件、verify 脚本、feature_list description、research 文档统一
+#   使用 ``COCO_PERSIST_EMIT_MIN_INTERVAL_S`` 与 default 10.0；不为旧名提供 alias（旧名从未
+#   被读出，外部也无引用，加 alias 反而增加心智负担）。如未来需更名再在该层补 alias。
+#
+# companion-017 C4（warn-once 多进程语义）：
+#   ``_PERSIST_EMIT_INTERVAL_WARN_ONCE`` 是 *进程* 级 flag —— 每个新解释器/子进程会各 warn
+#   一次（与 companion-015 _PREFERENCE_STATE_WARN_ONCE 行为一致，sub-process 隔离）。
+#   sim/verify 跑子进程时单次 warn 是已知且预期行为，不视为 regression。
 _PERSIST_EMIT_MIN_INTERVAL_S_DEFAULT = 10.0
 _PERSIST_EMIT_INTERVAL_ENV = "COCO_PERSIST_EMIT_MIN_INTERVAL_S"
-_PERSIST_EMIT_INTERVAL_WARN_ONCE = False  # module-level，进程内 warn once
+_PERSIST_EMIT_INTERVAL_WARN_ONCE = False  # module-level，进程内 warn once（companion-017 C4 文档化）
 
 
 def preference_persist_emit_min_interval_s_from_env(
@@ -111,6 +123,13 @@ def _hash_preference_state(profiles: Mapping[str, Mapping[str, float]]) -> str:
     """companion-016: 稳定 hash（sorted keys + JSON），用于 content dedup。
 
     同一份 profiles dict（无论插入顺序）→ 同 hash。空 dict → 稳定 hash（非空字符串）。
+
+    companion-017 C3（浮点精度语义）：
+        canon 步骤 ``round(float(s), 6)`` **有损**——只保留小数后 6 位。两个真实
+        score 仅在第 7 位及之后不同会被视为 "同 hash"（dedup 命中、emit 抑制）。
+        这是 content-hash dedup 的 *预期行为*：preference score 物理意义只到 ppm
+        粒度即可，第 7 位差异对话题加权不可分辨，把它们 dedup 掉是 feature 而非 bug。
+        若未来需要更高精度对比，应改写 hash 输入或换 dedup 策略（不要单独提精度）。
     """
     canon = {
         pid: {t: round(float(s), 6) for t, s in sorted(topics.items())}
@@ -387,9 +406,19 @@ class PreferenceLearner:
         # companion-016: emit `companion.preference_persisted` 真节流状态
         # （min_interval_s + content-hash 双门；suppressed_since_last 累计被节流次数）。
         # default-OFF：state_cache_path is None 时整段逻辑不触发（_emit_persisted_once 早返回）。
-        self._persist_emit_min_interval_s: float = (
-            preference_persist_emit_min_interval_s_from_env()
-        )
+        #
+        # companion-017 C2（lazy load env）：
+        #   旧实现在 __init__ 无条件读 ``COCO_PERSIST_EMIT_MIN_INTERVAL_S``，即使
+        #   state_cache_path=None（emit 路径永不触发）也会 os.environ.get。为了严格 bytewise
+        #   default-OFF（"未启用持久化时 __init__ 零 IO / 零 env 读"），改为 lazy：
+        #   - state_cache_path is None  → 不读 env，min_interval_s 留 None（access 时短路返回 0）
+        #   - state_cache_path is not None → __init__ 读 env 并缓存（与 companion-016 行为一致）
+        #   首次 _emit_persisted_once 真触发时若仍是 None 再读一次（防御性，正常路径走不到）。
+        self._persist_emit_min_interval_s: Optional[float] = None
+        if self._state_cache_path is not None:
+            self._persist_emit_min_interval_s = (
+                preference_persist_emit_min_interval_s_from_env()
+            )
         self._persist_emit_last_ts: float = 0.0
         self._persist_emit_last_hash: str = ""
         self._persist_emit_suppressed_n: int = 0
@@ -737,6 +766,12 @@ class PreferenceLearner:
         """
         if self._emit_fn is None or self._state_cache_path is None:
             return
+        # companion-017 C2 lazy fallback：state_cache_path is not None 路径下 __init__ 已读 env；
+        # 防御性兜底：若仍为 None（理论走不到，state_cache_path 非 None 必已设值）此时再读一次。
+        if self._persist_emit_min_interval_s is None:
+            self._persist_emit_min_interval_s = (
+                preference_persist_emit_min_interval_s_from_env()
+            )
         with self._persisted_emit_lock:
             try:
                 now = self.clock()
