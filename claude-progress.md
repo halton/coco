@@ -3241,3 +3241,41 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 **Merge**: feat/interact-020 → main `--no-ff`, merge HEAD=f38dbc3。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
 
 **下一步**: phase-18 priority=144 infra-021 (infra-020 rc_table V6 WARN+SKIP 共存断言)。主会话持续开发模式派 Engineer sub-agent 在 feat/infra-021 推进。
+
+---
+
+## Session 2026-05-17 — infra-021 closeout
+
+**Feature**: infra-021 — scripts/verify_infra_020.py rc_table 端到端补 ON+WARN+SKIP 共存场景验证 (WARN 优先于 SKIP, rc=2)。sim-first, verification 内闭环, real_machine_uat=not_required, smoke.py 零改动。
+
+**改动**:
+- `scripts/verify_infra_021.py` — V0-V12: V0 fingerprint 锁 _decide_rc / _classify_stdout 行内序锁 (warn_idx < skip_idx) / V1-V5 单态 WARN / FAIL / SKIP / OK rc 行为 / V6 三种 dict 排列 (WARN+SKIP 共存, dict 键序 WARN-first / SKIP-first / 交错) 均返回 rc=2 — 证明 WARN>SKIP 优先级与 dict-order 无关 / V7-V11 边界 (空 stdout / 只有 OK / 多 WARN / 多 SKIP / SKIP+OK) / V12 regression 调 verify_infra_020 rc=0 不破坏 infra-020。
+- `evidence/infra-021/verify_summary.json` — V0-V12 PASS 摘要 + fingerprint 锁。
+
+**Verification**: V0-V12 全 PASS, `./init.sh` smoke PASS, Reviewer (sub-agent) LGTM 干净 (0 backlog, 1 非阻塞 caveat 不入 backlog)。V0 fingerprint 锁 + V6 三种 dict 排列 双锁防 WARN>SKIP 优先级回归; V12 直接调 verify_infra_020 rc=0 证明 infra-020 不被打扰。smoke.py 零改动 — verification 内闭环, 不污染主流程。
+
+**承接**: 收割 infra-020 backlog `infra-020-backlog-mixed-warn-skip-case`, 0 新增 backlog。
+
+**Merge**: feat/infra-021 → main `--no-ff`, merge HEAD=aaeba86。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
+
+---
+
+## Session 2026-05-17 — phase-18 FULL 收官 (5/5)
+
+phase-18 全 5 个 feature 全部 passing, 0 阻塞 backlog 残留, 全部 sim-first 内闭环 (real_machine_uat=not_required):
+
+| # | feature | merge HEAD | 主旨 |
+|---|---------|-----------|------|
+| 1 | robot-011 | (见前) | RobotSequencer + ProactiveScheduler 注入收尾 / lifecycle 守护 |
+| 2 | audio-013 | 1e00917 | audio_resilience re-export 解耦, audio-012 bytewise 等价 |
+| 3 | companion-017 | d6d4066 | companion-016 caveats 收割 (env 名统一 + lazy load + docstring) |
+| 4 | interact-020 | f38dbc3 | proactive trace status 白名单 token contract 文档化 (双锁) |
+| 5 | infra-021 | aaeba86 | smoke rc_table WARN+SKIP 共存断言 (WARN>SKIP 优先级锁) |
+
+**phase-18 主题**: 收割 phase-17 全量 caveats / backlog, 巩固单源真理 (contract 文档锁 + verify fingerprint 锁双向防漂移), 不引入新外部行为。default-OFF 默认, smoke.py / 主运行路径 bytewise 等价 main。
+
+**异步 uat 累积** (仅记录, 不阻 phase 推进, 由用户在物理硬件方便时执行):
+- uat-audio-012 — sim dt 截断 (C4) 真扬声器 USB 音频长帧丢包窗口实际信号 (audio-012 异步项)
+- 其余 phase-18 feature 均 real_machine_uat=not_required, 无新增 uat 项。
+
+**下一步**: 等用户输入 / phase-19 规划 (候选源: 当前 0 阻塞 backlog 残留, 需挖掘新 caveats 或新方向)。持续开发模式按 CLAUDE.md 在本 phase 收官后转入候选规划阶段。
