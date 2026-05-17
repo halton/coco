@@ -3183,3 +3183,22 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 **Merge**: feat/robot-011 → main `--no-ff`。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
 
 **下一步**: phase-18 priority=141 audio-013 (audio-012 caveats 收割: 抽 coco.audio_resilience/audio_common 公共 util)。主会话持续开发模式派 Engineer sub-agent 在 feat/audio-013 推进。
+
+
+## Session 2026-05-17 — audio-013 closeout (passing, merged)
+
+**Feature**: audio-013 (area=audio, phase 18, priority 141) audio_resilience util 抽取 + V4 正向断言 (纯重构)
+
+**改动**:
+- `coco/audio_resilience.py` — 新公共 util 模块, 统一暴露 `read_loss_window_override_ms()` 与 PortAudio 异常判定, 消除 wake_word → vad_trigger 私有函数跨模块 import 隐性耦合 (audio-012 C1)。
+- `coco/vad_trigger.py` — `_read_loss_window_override_ms` 改为从 `audio_resilience` re-export, bytewise 同一对象 (V1 same_obj=True), audio-012 行为完全不变。
+- `coco/wake_word.py` — import 路径改为 `from .audio_resilience import read_loss_window_override_ms`, 不再依赖 vad_trigger 私有名。
+- `scripts/verify_audio_013.py` — V0-V5 (re-export 等价性 / same_obj / 正向断言 lost_n=override_value / audio-012 bytewise 等价 / 8 个 V5 regression / smoke)。
+
+**Verification**: V0-V5 全 PASS, `./init.sh` smoke PASS, Reviewer (sub-agent) LGTM 干净, no new backlog。8 个 V5 regression scripts rc=0 (audio-008..audio-012 系列 + wake_word 基线), 纯重构 same_obj=True 保证 audio-012 字节级等价。
+
+**承接**: 收割 audio-012 backlog C1 (跨模块 import 私有函数耦合) 与 C2 (V4 由弱负向断言升级为正向 lost_n=override_value 强断言)。C3 docstring/research 已补一笔, C4 sim dt 截断仍在 uat-audio-012 异步项不动。default-OFF, sim-first, real_machine_uat=not_required。
+
+**Merge**: feat/audio-013 → main `--no-ff`, merge HEAD=1e00917。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
+
+**下一步**: phase-18 priority=142 companion-017 (companion-016 caveats 收割)。主会话持续开发模式派 Engineer sub-agent 在 feat/companion-017 推进。
