@@ -3485,3 +3485,33 @@ evidence:
 merge: feat/infra-024 → main (--no-ff), merge commit=d5902d4。
 
 next: phase-20 剩余 2 项 (robot-015 P163 / vision-014b P164), 下一候选 robot-015 priority=163 (area=robot)。
+
+## Session 2026-05-17 — robot-015 closeout (phase-20 P163)
+
+robot-015 (ProactiveScheduler→Sequencer callback 直 enqueue) → status=passing。
+
+verify:
+- scripts/verify_robot_015.py (304 行, V1-V5) 全 PASS
+- V1 注入后 trigger callback → seq.enqueue 真调 1 次, 无 daemon thread spawn
+- V2 default-OFF bytewise 等价 main 路径
+- V3 fallback (mock 缺 enqueue) 走 robot-009 sync warn-and-continue path
+- V4 lifecycle 串行 (注入在 start() 前) 不破 robot-010 race window 文档
+- V5 regression subprocess: verify_robot_007/008/012/013 rc==0 全过
+- evidence/robot-015/verify_summary.json 落盘
+- smoke 11/11 PASS (PROACTIVE 默认 OFF)
+
+源码改动:
+- scripts/verify_robot_015.py 新增 (V1-V5, 304 行)
+- evidence/robot-015/verify_summary.json 新增
+- coco/proactive.py docstring +6 行 (additive, 锁定 enqueue-first 契约; 核心 enqueue-first 已在 robot-009 落地)
+- evidence/_history/smoke_history.jsonl 追加
+
+Reviewer (sub-agent fresh-context): LGTM。2 条 nit 非阻塞 → backlog:
+- robot-015-backlog-verify-error-print-truncation (verify e[:300] 截断放宽)
+- robot-015-backlog-v3-warn-once-rename (V3 文案 warn-once → warn-and-continue)
+
+source: robot-008-backlog-enqueue-not-daemon-thread (已吸收)
+
+merge: feat/robot-015 → main (--no-ff), merge commit=a193b83。
+
+next: phase-20 剩余 1 项 (vision-014b P164, area=vision)。

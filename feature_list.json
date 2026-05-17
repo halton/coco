@@ -3729,7 +3729,7 @@
       "title": "ProactiveScheduler→Sequencer callback 直 enqueue",
       "user_visible_behavior": "ProactiveScheduler 注入路径改为 callback 内直接 sequencer.enqueue(action), 移除 daemon thread + seq.run() 外部驱动, 让 RobotSequencer._dispatch_executor 统一调度, 消除外部线程管理与潜在 queue/executor 双重 fan-out。",
       "description": "吸收 backlog robot-008-backlog-enqueue-not-daemon-thread: ProactiveScheduler 命中 → callback 直 _seq.enqueue(_nod) 不再起 daemon thread; 保留 getattr(_seq,'enqueue',None) fallback 兼容 robot-009 path; default-OFF bytewise 等价 main 路径; 回归 robot-006/007/008/012/013 全 PASS; lifecycle 串行 (注入在 start() 前) 不破坏 robot-010 race window 文档。",
-      "status": "not_started",
+      "status": "passing",
       "phase": 20,
       "source_backlog": [
         "robot-008-backlog-enqueue-not-daemon-thread"
@@ -3738,7 +3738,44 @@
         "scripts/verify_robot_015.py: 注入后 trigger callback → seq.enqueue 真调 1 次 + 无 daemon thread spawn; fallback 路径 (mock 缺 enqueue) 走 robot-009 sync warn once。",
         "回归 verify_robot_007/008/012/013 + verify_interact_015/018 + smoke 全 PASS (PROACTIVE 默认 OFF)。",
         "Reviewer (sub-agent fresh-context) 评审: 线程模型清晰 + double fan-out 消除 + fallback chain 完整。"
-      ]
+      ],
+      "evidence": {
+        "reviewer": "Reviewer (sub-agent fresh-context): LGTM — 线程契约清晰, enqueue-first 已在 robot-009 落地, V1-V5 全 PASS, fallback chain 完整; 2 条 nit 非阻塞 (verify e[:300] 截断 + V3 warn-once 文案), 进 backlog。",
+        "verify_results": "scripts/verify_robot_015.py V1-V5 全 PASS (304 行); evidence/robot-015/verify_summary.json 落盘。",
+        "smoke": "11/11 PASS (PROACTIVE 默认 OFF)。",
+        "regression": "V5 regression: verify_robot_007/008/012/013 subprocess rc==0 全通过。",
+        "source_changes": "scripts/verify_robot_015.py (304 行 V1-V5, 新增) + evidence/robot-015/verify_summary.json (新增) + coco/proactive.py docstring +6 行 (additive 锁定 enqueue-first 契约, 核心 enqueue-first 已在 robot-009 落地) + evidence/_history/smoke_history.jsonl。",
+        "source_backlog": "robot-008-backlog-enqueue-not-daemon-thread (已吸收)",
+        "merge_commit": "a193b83"
+      }
+    },
+    {
+      "id": "robot-015-backlog-verify-error-print-truncation",
+      "name": "verify_robot_015.py 错误打印 e[:300] 截断放宽",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-015 Reviewer nit-a"
+      ],
+      "description": "scripts/verify_robot_015.py 错误路径打印 str(e)[:300] 截断, 长 traceback 被切; 建议放宽到 [:1500] 或改用 traceback.format_exc, 便于排障。非阻塞文案/工具改进。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-015-backlog-v3-warn-once-rename",
+      "name": "V3 标题/contract 文案 warn-once → warn-and-continue",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-015 Reviewer nit-b"
+      ],
+      "description": "verify_robot_015.py V3 标题与 contract 描述 \"warn-once\" 暗示去抖/单次, 但源码并无去抖语义 (每次缺 enqueue 都 warn 后 sync 调用); 建议改为 \"warn-and-continue\" 与实际行为一致。纯文案。",
+      "verification": null,
+      "evidence": {}
     },
     {
       "id": "vision-014b",
