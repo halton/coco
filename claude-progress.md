@@ -3202,3 +3202,22 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 **Merge**: feat/audio-013 → main `--no-ff`, merge HEAD=1e00917。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
 
 **下一步**: phase-18 priority=142 companion-017 (companion-016 caveats 收割)。主会话持续开发模式派 Engineer sub-agent 在 feat/companion-017 推进。
+
+---
+
+## Session 2026-05-17 — companion-017 closeout
+
+**Feature**: companion-017 — companion-016 caveats 收割 (env 名统一 + lazy load + docstring/research 同步)。default-OFF, sim-first, real_machine_uat=not_required。
+
+**改动**:
+- `coco/companion/preference_learner.py` — (C1) env 名以 `COCO_PERSIST_EMIT_MIN_INTERVAL_S` (default 10.0) 为唯一事实来源, 旧 `COCO_PREFERENCE_EMIT_INTERVAL_S` 不再被代码读取; (C2) `__init__` 在 `state_cache_path is None` 时 lazy load env, 严格 bytewise 无 IO 等价于旧路径; (C3) `round(., 6)` 浮点精度有损在 docstring 明示 (同值场景为 feature, 非 bug); (C4) 模块级 WARN once 多进程各 warn 一次行为与 companion-015 一致, docstring 文档化。
+- `scripts/verify_companion_017.py` — V0-V9: V0 env 名 default 10.0 / V1 旧 env 名只在 markdown 引用 grep 安全 / V2 lazy load __init__ 无 env 读 / V3 lazy load bytewise 等价 / V4 round(.,6) 同值 feature / V5 多进程 WARN once 独立 / V6-V9 default-OFF / sim 默认行为 / docstring 同步 / smoke。
+- `evidence/companion-017/verify_summary.json` — V0-V9 PASS 摘要。
+
+**Verification**: V0-V9 全 PASS, `./init.sh` smoke PASS, Reviewer (sub-agent) LGTM 干净 0 backlog 新增。env 名 grep `COCO_PREFERENCE_EMIT_INTERVAL_S` 仅 markdown/research 引用, 代码已统一为 `COCO_PERSIST_EMIT_MIN_INTERVAL_S`。lazy load 路径 bytewise 等价旧路径 (state_cache_path=None 时 __init__ 不读 env)。
+
+**承接**: 收割 companion-016 caveats C1/C2/C3/C4 全部, 0 backlog 残留。
+
+**Merge**: feat/companion-017 → main `--no-ff`, merge HEAD=d6d4066。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
+
+**下一步**: phase-18 priority=143 interact-020 (interact-019 trace contract 文档化白名单原子 token)。主会话持续开发模式派 Engineer sub-agent 在 feat/interact-020 推进。

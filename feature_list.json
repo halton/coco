@@ -3373,13 +3373,23 @@
       "area": "companion",
       "phase": 18,
       "priority": 142,
-      "status": "not_started",
+      "status": "passing",
       "description": "承接 companion-016 caveats: (C1) env 名 spec 写 COCO_PREFERENCE_EMIT_INTERVAL_S 默认 30s, 实现为 COCO_PERSIST_EMIT_MIN_INTERVAL_S 默认 10s — 以代码为准统一文档/注释/feature_list description; (C2) __init__ 在 state_cache_path=None 时 lazy load env 改造, 严格 bytewise 无 IO; (C3) round(.,6) 浮点精度有损 (同值场景为 feature) docstring + research 明示; (C4) 模块级 WARN once 多进程各 warn 一次, 与 companion-015 一致 — 文档化已知行为。default-OFF, sim-first。来源 backlog: companion-016-backlog-polish。",
       "depends_on": [
         "companion-016"
       ],
       "real_machine_uat": "not_required",
-      "source_backlog": "companion-016-backlog-polish"
+      "source_backlog": "companion-016-backlog-polish",
+      "evidence": {
+        "branch": "feat/companion-017",
+        "merge_commit": "d6d4066",
+        "verify_script": "scripts/verify_companion_017.py",
+        "verify_summary": "evidence/companion-017/verify_summary.json",
+        "verify_results": "V0-V9 全 PASS (env 名以 COCO_PERSIST_EMIT_MIN_INTERVAL_S default 10.0 为准, lazy load bytewise 等价, docstring/research 同步, grep 旧 env 名 COCO_PREFERENCE_EMIT_INTERVAL_S 仅 markdown 引用安全)",
+        "smoke": "./init.sh PASS",
+        "reviewer_sub_agent": "LGTM — 干净, 0 backlog 新增",
+        "real_machine_uat": "not_required (default-OFF, sim-first, 仅 docstring/env 名统一/lazy load 改造)"
+      }
     },
     {
       "id": "interact-020",
