@@ -1,0 +1,155 @@
+{
+  "coexistence_cases": {
+    "OFF+WARN+SKIP": 0,
+    "ON+FAIL+SKIP": 1,
+    "ON+FAIL+WARN": 1,
+    "ON+FAIL+WARN+SKIP": 1,
+    "ON+PASS+WARN+SKIP": 2,
+    "ON+WARN+SKIP": 2
+  },
+  "failures": [],
+  "feature": "infra-021",
+  "priority_table": {
+    "FAIL": 1,
+    "PASS_or_OFF": 0,
+    "SKIP": 3,
+    "WARN": 2,
+    "order": "FAIL > WARN > SKIP > PASS"
+  },
+  "results": {
+    "V0_source_fingerprint": {
+      "detail": {
+        "missing": [],
+        "must_have_count": 8,
+        "warn_before_skip": true
+      },
+      "status": "PASS"
+    },
+    "V10_on_pass_warn_skip": {
+      "detail": {
+        "areas": {
+          "a": "PASS",
+          "b": "WARN",
+          "c": "SKIP"
+        },
+        "rc": 2
+      },
+      "status": "PASS"
+    },
+    "V11_off_warn_skip": {
+      "detail": {
+        "areas": {
+          "a": "WARN",
+          "b": "SKIP"
+        },
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V12_regression_infra_020": {
+      "detail": {
+        "rc": 0,
+        "stdout_tail": [
+          "[V5_off_mixed] PASS",
+          "",
+          "wrote /Users/halton/work/coco/evidence/infra-020/verify_summary.json"
+        ]
+      },
+      "status": "PASS"
+    },
+    "V1_on_all_pass": {
+      "detail": {
+        "areas": {
+          "asr": "PASS",
+          "audio": "PASS"
+        },
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V2_on_warn_only": {
+      "detail": {
+        "areas": {
+          "a": "PASS",
+          "b": "WARN"
+        },
+        "rc": 2
+      },
+      "status": "PASS"
+    },
+    "V3_on_skip_only": {
+      "detail": {
+        "areas": {
+          "a": "PASS",
+          "b": "SKIP"
+        },
+        "rc": 3
+      },
+      "status": "PASS"
+    },
+    "V4_off_mixed": {
+      "detail": {
+        "areas": {
+          "a": "PASS",
+          "b": "WARN",
+          "c": "SKIP"
+        },
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V5_on_fail_only": {
+      "detail": {
+        "areas": {
+          "a": "FAIL"
+        },
+        "rc": 1
+      },
+      "status": "PASS"
+    },
+    "V6_on_warn_and_skip": {
+      "detail": {
+        "arrangements_count": 3,
+        "rcs": [
+          2,
+          2,
+          2
+        ]
+      },
+      "status": "PASS"
+    },
+    "V7_on_fail_and_warn": {
+      "detail": {
+        "areas": {
+          "a": "FAIL",
+          "b": "WARN"
+        },
+        "rc": 1
+      },
+      "status": "PASS"
+    },
+    "V8_on_fail_and_skip": {
+      "detail": {
+        "areas": {
+          "a": "FAIL",
+          "b": "SKIP"
+        },
+        "rc": 1
+      },
+      "status": "PASS"
+    },
+    "V9_on_fail_warn_skip": {
+      "detail": {
+        "areas": {
+          "a": "FAIL",
+          "b": "WARN",
+          "c": "SKIP",
+          "d": "PASS"
+        },
+        "rc": 1
+      },
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
