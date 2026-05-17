@@ -1,0 +1,71 @@
+{
+  "failures": [],
+  "feature": "infra-024",
+  "results": {
+    "V0_static_gate": {
+      "detail": {
+        "aliases_checked": [
+          "1",
+          "true",
+          "yes",
+          " 1 ",
+          "  true  ",
+          "yes "
+        ],
+        "case_sensitive_negatives": [
+          "TRUE",
+          "Yes",
+          "YES",
+          "True"
+        ],
+        "off_values_checked": [
+          "",
+          " ",
+          "0",
+          "no",
+          "false",
+          "off",
+          "random",
+          "<missing>"
+        ]
+      },
+      "status": "PASS"
+    },
+    "V1_on_path_rc2": {
+      "detail": {
+        "rc": 2,
+        "stderr_len": 0,
+        "stdout_len": 1342
+      },
+      "status": "PASS"
+    },
+    "V2_off_default_rc0": {
+      "detail": {
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V3_off_explicit_rc0": {
+      "detail": {
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V4_on_alias_rc2": {
+      "detail": {
+        "rc": 2
+      },
+      "status": "PASS"
+    },
+    "V5_stdout_real_chain": {
+      "detail": {
+        "skip_line_count": 1,
+        "skip_sample": "  SKIP: COCO_CI=1，跳过真麦克录音（CI 无声卡）",
+        "warn_line_count": 4,
+        "warn_sample": "  WARN: ASR model not downloaded, skipped (run scripts/fetch_asr_models.sh)"
+      },
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
