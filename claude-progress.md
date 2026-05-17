@@ -3332,3 +3332,25 @@ evidence:
 - 真机 UAT pending (sim-first, 异步验收)
 
 **status**: robot-012 → passing。phase-19 软件进度 2/5 (剩 interact-021 / infra-023 / robot-013)。下一候选 interact-021 priority=152。
+
+## Session 2026-05-17 — interact-021 closeout
+
+**interact-021 latency_ms 各 stage 语义文档化 (admit/reject/cooldown 区分)** → **passing**
+
+实现：
+- `coco/proactive.py`: 纯注释改动 (4 处 emit 站点 + arbit 路径 stage 名语义说明); bytewise 行为不变
+- `research/proactive_trace_contract.md` §5: 新增 6 stage 名 (arbit_winner / arbit_skip_cooldown / arbit_skip_low_value / emit_skip_low_value_below_min / sim_reject_short_silence / sim_admit) 语义、latency_ms 语义按 stage 分类 (admit=端到端 / reject/cooldown=判定即出)
+- `scripts/verify_interact_021.py`: V0 bytewise 等价 / V1 6 stage 名 / V2 sentinel doc / V3 单调性 / V4 emit 站点 4 处 + stage 名一致 / V5 reject_short_silence stage 名 — V0-V5 PASS
+
+Reviewer (sub-agent fresh context): **LGTM-with-caveats**
+- 2 backlog 已登:
+  - `interact-021-backlog-v3-multi-emit-coverage`: V3 单调性 fixture 只捕 1 trace, 未覆盖同 tick 多 emit
+  - `interact-021-backlog-stale-doc-numbers`: docstring 与 research §5.7 内 stage 数字 (5 vs 4/6) 不一致, 纯文档清理
+
+evidence:
+- smoke 11/11 PASS @ db7c31e (7.5s)
+- regression interact-018/019/020 verify rc=0 sha=db7c31e
+- merge HEAD=5a8b9ab, feature HEAD=1172b5e (含 evidence 刷新提交)
+- 纯文档化, real_machine_uat=n/a
+
+**status**: interact-021 → passing。phase-19 软件进度 3/5 (剩 infra-023 / robot-013)。下一候选 infra-023 priority=153。

@@ -3540,11 +3540,26 @@
       "area": "interact",
       "priority": 152,
       "phase": 19,
-      "status": "not_started",
+      "status": "passing",
       "source_backlog": [
         "interact-018-backlog-latency-stage-semantics-doc"
       ],
-      "description": "升级自 interact-018 Reviewer caveat：latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。需在 scripts/proactive_trace_summary.py 输出与 README / docstring 中按 stage 分类标注语义, 避免下游 metric 聚合时混淆。来源 backlog: interact-018-backlog-latency-stage-semantics-doc。"
+      "description": "升级自 interact-018 Reviewer caveat：latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。需在 scripts/proactive_trace_summary.py 输出与 README / docstring 中按 stage 分类标注语义, 避免下游 metric 聚合时混淆。来源 backlog: interact-018-backlog-latency-stage-semantics-doc。",
+      "evidence": {
+        "review": "Reviewer (sub-agent fresh-context): LGTM-with-caveats — 纯文档化 (注释 + research §5 新增 + verify V0-V5), 2 caveat 已登 backlog (V3 多 emit 覆盖 / 文档数字一致性)",
+        "verify": "scripts/verify_interact_021.py V0-V5 全 PASS (V0 bytewise 等价 / V1 6 stage 名 / V2 sentinel doc / V3 单调性 / V4 emit 站点 4 处 + stage 名一致 / V5 reject_short_silence stage 名)",
+        "smoke": "./init.sh smoke 11/11 PASS @ db7c31e (duration 7.5s)",
+        "regression": "interact-018 / interact-019 / interact-020 verify 重跑 rc=0, sha=db7c31e",
+        "doc_purity": "coco/proactive.py 改动为纯注释 (bytewise 行为不变); research/proactive_trace_contract.md §5 新增 6 个 stage 名语义说明",
+        "stage_names": "arbit_winner / arbit_skip_cooldown / arbit_skip_low_value / emit_skip_low_value_below_min / sim_reject_short_silence / sim_admit (6 个)",
+        "merge_head": "5a8b9ab",
+        "feature_head": "1172b5e",
+        "backlog_followups": [
+          "interact-021-backlog-v3-multi-emit-coverage",
+          "interact-021-backlog-stale-doc-numbers"
+        ],
+        "real_machine_uat": "n/a (纯文档化, sim 即闭环, 无真机相关行为)"
+      }
     },
     {
       "id": "infra-023",
@@ -3569,6 +3584,34 @@
         "robot-009-backlog-busy-requeue-metric"
       ],
       "description": "升级自 robot-009 Reviewer caveat：RobotSequencer action_worker 在 _running=True 时若新 action 入队且 queue 已满, putback 触发 drop, 当前与正常 overflow drop 共用同一 reason ('drop_oldest'/'drop_new') 走 robot.enqueue_dropped, 难在 trace 区分 'busy 期间的合法 requeue 失败' vs '真正的 overflow'。新增 reason='busy_requeue_full', 单独 metric 入口; 文档化 + verify 覆盖。来源 backlog: robot-009-backlog-busy-requeue-metric。"
+    },
+    {
+      "id": "interact-021-backlog-v3-multi-emit-coverage",
+      "name": "V3 单调性 verify 同 tick 多 emit 场景覆盖",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-021 Reviewer caveat"
+      ],
+      "description": "V3 单调性 verify 在 fixture 只捕 1 条 trace, 未覆盖同 tick 多 emit 场景 (例 _preempt_boost=True 触发站点 #2+#4 两 emit), 后续可补强 fixture 制造多 emit 路径并断言 latency_ms 序列单调或各自合理。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "interact-021-backlog-stale-doc-numbers",
+      "name": "verify docstring 与 research §5.7 内 stage 数字一致性清理",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-021 Reviewer caveat"
+      ],
+      "description": "scripts/verify_interact_021.py docstring 与 research/proactive_trace_contract.md §5.7 内 '5 处/5 个' 文字与正文 (4 emit 站点 / 6 stage 名) 不一致, 也与 interact-018 V2/V3 真实意图 (_is_fail 三口) 不符, 纯文档化清理。",
+      "verification": null,
+      "evidence": {}
     }
   ],
   "_meta": {
