@@ -3374,3 +3374,39 @@ evidence:
 - 纯 classifier 重构, real_machine_uat=n/a
 
 **status**: infra-023 → passing。phase-19 软件进度 4/5 (剩 robot-013)。下一候选 robot-013 priority=154。
+
+## Session 2026-05-17 — robot-013 closeout
+
+**action_worker busy putback drop 与 overflow drop_* metric 分离 (reason=busy_requeue_full)** → **passing**
+
+实现：
+- `coco/robot/sequencer.py`: 新增 `_busy_count` 计数器 + lock; 重写 `_on_enqueue_drop` 钩子, busy 期间的合法 putback 失败按 `reason=busy_requeue_full` 单独累积 (env-gated by `COCO_ROBOT_BUSY_METRIC`); 同时 `policy` 字段常开 additive (∈ {drop_oldest, drop_new}) — 与 overflow drop_* 走的 `robot.enqueue_dropped` 路径解耦, trace 端可清晰区分
+- `scripts/verify_robot_013.py`: V0 bytewise 等价 / V1 policy 常开 additive / V2 env-gated busy_count 默认 OFF / V3 env=1 时 busy_requeue_full 单独 metric / V4 200x 并发 race-free / V5 与 overflow drop_* 互斥 — V0-V5 PASS
+
+Reviewer (sub-agent fresh context): **LGTM 干净, 0 backlog** (仅一条注释措辞噪音, 不立项)
+
+evidence:
+- V0-V5 PASS (含 200x 并发 cumulative race-free V4)
+- smoke PASS
+- regression robot-008/009/010/011/012 verify rc=0
+- env COCO_ROBOT_BUSY_METRIC default-OFF; policy additive 常开; busy_count cumulative
+- merge HEAD=4b08a23, feature HEAD=a983649
+- 纯 metric 字段重构, real_machine_uat=n/a
+
+**status**: robot-013 → passing。
+
+## Session 2026-05-17 — phase-19 FULL 收官
+
+**phase-19 软件全部 5/5 passing**：
+1. infra-022 — smoke `_classify_stdout` 表驱动重构基线
+2. robot-012 — robot helper preempt cooldown 单调与 cancel 路径加固
+3. interact-021 — proactive latency_ms 各 stage 语义文档化 (admit/reject/cooldown)
+4. infra-023 — `_classify_stdout` markdown 列表前缀 ('-' / '*' / '+') 支持
+5. robot-013 — action_worker busy putback drop 与 overflow drop_* metric 分离 (`reason=busy_requeue_full`)
+
+异步真机 UAT 累积 (不阻 merge, 全 phase 软件已闭环):
+- robot-008..013 真机扭矩 / goto_sleep 物理表现 / 视-动闭环 pending
+- audio TTS 真扬声器听感 pending
+- 其余 sim 不可证明项按 Sim-First §4 累计
+
+main HEAD=4b08a23 (待 closeout commit), phase-19 软件 FULL closeout。

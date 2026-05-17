@@ -3593,11 +3593,21 @@
       "area": "robot",
       "priority": 154,
       "phase": 19,
-      "status": "not_started",
+      "status": "passing",
       "source_backlog": [
         "robot-009-backlog-busy-requeue-metric"
       ],
-      "description": "升级自 robot-009 Reviewer caveat：RobotSequencer action_worker 在 _running=True 时若新 action 入队且 queue 已满, putback 触发 drop, 当前与正常 overflow drop 共用同一 reason ('drop_oldest'/'drop_new') 走 robot.enqueue_dropped, 难在 trace 区分 'busy 期间的合法 requeue 失败' vs '真正的 overflow'。新增 reason='busy_requeue_full', 单独 metric 入口; 文档化 + verify 覆盖。来源 backlog: robot-009-backlog-busy-requeue-metric。"
+      "description": "升级自 robot-009 Reviewer caveat：RobotSequencer action_worker 在 _running=True 时若新 action 入队且 queue 已满, putback 触发 drop, 当前与正常 overflow drop 共用同一 reason ('drop_oldest'/'drop_new') 走 robot.enqueue_dropped, 难在 trace 区分 'busy 期间的合法 requeue 失败' vs '真正的 overflow'。新增 reason='busy_requeue_full', 单独 metric 入口; 文档化 + verify 覆盖。来源 backlog: robot-009-backlog-busy-requeue-metric。",
+      "evidence": {
+        "reviewer_subagent": "LGTM (干净, 0 backlog; 仅一条注释措辞噪音, 不立项)",
+        "verify": "scripts/verify_robot_013.py V0-V5 PASS",
+        "smoke": "./init.sh smoke PASS",
+        "regression": "robot-008/009/010/011/012 verify rc=0",
+        "env_flag": "COCO_ROBOT_BUSY_METRIC (default-OFF)",
+        "policy_field": "additive (常开): policy ∈ {drop_oldest, drop_new}",
+        "busy_count_field": "env-gated cumulative, race-free 200x concurrent V4 验证",
+        "real_machine_uat": "n/a (纯 metric 字段重构, sim 即闭环)"
+      }
     },
     {
       "id": "interact-021-backlog-v3-multi-emit-coverage",
