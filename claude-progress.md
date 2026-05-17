@@ -3515,3 +3515,35 @@ source: robot-008-backlog-enqueue-not-daemon-thread (已吸收)
 merge: feat/robot-015 → main (--no-ff), merge commit=a193b83。
 
 next: phase-20 剩余 1 项 (vision-014b P164, area=vision)。
+
+## Session 2026-05-17 — vision-014b closeout（phase-20 收官）
+
+vision-014b (P164, area=vision) closeout 完成, 状态 not_started → passing。
+
+V1-V5 全 PASS:
+- V1 strict-greater-than 边界 (TTL 临界值锁定)
+- V2 frame-due + time-due + default-OFF short-circuit
+- V3 overhead default-OFF call==0 + ON==N 反例
+- V5 regression vision_013 / vision_014 rc==0
+
+smoke 11/11 PASS。
+
+源码改动 (0 源码 + 文档/verify):
+- docs/vision-ttl-design.md 新增 (wall clock vs monotonic 选型 + NTP 回拨窗口 + 跨进程持久化论证)
+- scripts/verify_vision_014b.py 新增 (V1-V5, 493 行)
+- evidence/vision-014b/verify_summary.json 新增
+
+Reviewer (sub-agent fresh-context): LGTM 干净 (0 nit), 0 新增 backlog。
+
+source: vision-013-backlog-ttl-and-overhead (已吸收)
+
+merge: feat/vision-014b → main (--no-ff), merge commit=2cf593c。
+
+**phase-20 收官** — 5/5 features 全部 passing:
+- robot-014
+- interact-022
+- infra-024
+- robot-015
+- vision-014b
+
+next: phase-21 规划。

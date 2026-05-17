@@ -3784,7 +3784,7 @@
       "title": "TTL 时钟选型记录 + identify default-OFF 微优化",
       "user_visible_behavior": "vision-013 设计记录补全 (wall clock TTL 跨进程必要性 + NTP 回拨容忍窗口文档化) + _maybe_identify default-OFF 短路前置, 消除 default-OFF 两次方法调用开销 (get_face_id / 内部 lookup)。",
       "description": "吸收 backlog vision-013-backlog-ttl-and-overhead: (a) docs/vision-ttl-design.md 文档化 wall clock vs monotonic 选型 + NTP 回拨/前跳影响窗口分析 + 跨进程持久化需求; (b) _maybe_identify 函数入口先检 COCO_FACE_ID_REAL/PERSIST 等 env, OFF 直接 return None, 把两次方法调用消除到一次 env 读; verify 覆盖 OFF 路径 call count 断言 + ON 路径行为不变。",
-      "status": "not_started",
+      "status": "passing",
       "phase": 20,
       "source_backlog": [
         "vision-013-backlog-ttl-and-overhead"
@@ -3793,7 +3793,26 @@
         "scripts/verify_vision_014b.py: default-OFF _maybe_identify call count 等价基线 (移除 get_face_id 调用); ON 路径 (COCO_FACE_ID_REAL=1) 行为不变 (回归 vision-008/010/013)。",
         "docs/vision-ttl-design.md 存在并涵盖 wall clock 选型 + NTP 回拨窗口 + 跨进程持久化论证 (≥3 段)。",
         "Reviewer (sub-agent fresh-context) 评审: 微优化 zero-cost + 文档分析完备 + 不破 vision-013 TTL 契约。"
-      ]
+      ],
+      "evidence": {
+        "reviewer_subagent": "LGTM 干净 (0 nit)",
+        "verify": "scripts/verify_vision_014b.py V1-V5 全 PASS",
+        "smoke": "11/11 PASS",
+        "source_change": "0 源码改动 (verify-only + 设计文档)",
+        "new_files": [
+          "docs/vision-ttl-design.md",
+          "scripts/verify_vision_014b.py",
+          "evidence/vision-014b/verify_summary.json"
+        ],
+        "verify_details": {
+          "V1": "strict-greater-than 边界 (TTL 临界值锁定)",
+          "V2": "frame-due + time-due + default-OFF short-circuit",
+          "V3": "overhead default-OFF call==0 + ON==N 反例",
+          "V5": "regression vision_013 / vision_014 rc==0"
+        },
+        "source_backlog": "vision-013-backlog-ttl-and-overhead",
+        "merge_commit": "2cf593c"
+      }
     },
     {
       "id": "infra-024-backlog-v0-extra-truthy-edges",
