@@ -862,11 +862,81 @@ class Coco(ReachyMiniApp):
                 try:
                     import atexit as _atexit_seq
                     _atexit_seq.register(
-                        lambda _s=_robot_sequencer: _s.shutdown(wait=True, timeout=2.0)
+                        lambda _s=_robot_sequencer: _s.shutdown(
+                            wait=True, timeout=_seq_cfg.shutdown_timeout_s,
+                        )
                     )
                     print("[coco][robot_seq] atexit shutdown hook registered", flush=True)
                 except Exception as _ae:  # noqa: BLE001
                     print(f"[coco][robot_seq] atexit register failed: {_ae!r}", flush=True)
+                # robot-012: SIGTERM/SIGINT signal handler 触发 shutdown (default-OFF).
+                # atexit 仅覆盖正常解释器退出; SIGTERM/SIGINT/容器 stop 场景需显式 signal handler.
+                # gate: COCO_ROBOT_SIGTERM_HANDLE in {1,true,yes,on}
+                # 未开时不注册 (bytewise 等价基线); 已开时 chain 到 main() 的 _graceful_stop.
+                # 重入安全: module-level flag 防 handler 内 shutdown 触发再次 signal 时递归.
+                if os.environ.get("COCO_ROBOT_SIGTERM_HANDLE", "").strip().lower() in (
+                    "1", "true", "yes", "on",
+                ):
+                    try:
+                        import signal as _sig
+                        _seq_ref = _robot_sequencer
+                        _seq_to = float(_seq_cfg.shutdown_timeout_s)
+                        # 重入防护 (signal handler 本身可被异步重入)
+                        _seq_shutdown_in_progress = {"flag": False}
+                        # 按 signum 保存 prev handler, 避免 closure 后绑错信号
+                        _prev_handlers: dict = {}
+
+                        def _seq_signal_handler(signum, _frame):  # noqa: ANN001
+                            if _seq_shutdown_in_progress["flag"]:
+                                return
+                            _seq_shutdown_in_progress["flag"] = True
+                            try:
+                                _seq_ref.shutdown(wait=True, timeout=_seq_to)
+                                print(
+                                    f"[coco][robot_seq] signal {signum} shutdown done",
+                                    flush=True,
+                                )
+                            except Exception as _se:  # noqa: BLE001
+                                print(
+                                    f"[coco][robot_seq] signal {signum} shutdown failed: {_se!r}",
+                                    flush=True,
+                                )
+                            # chain 到旧 handler (main() 的 _graceful_stop) 让正常退出流程继续
+                            _prev = _prev_handlers.get(signum)
+                            try:
+                                if callable(_prev) and _prev not in (
+                                    _sig.SIG_DFL, _sig.SIG_IGN, None,
+                                ):
+                                    _prev(signum, _frame)
+                            except Exception:  # noqa: BLE001
+                                pass
+
+                        _registered = []
+                        for _signame in ("SIGTERM", "SIGINT"):
+                            _signum = getattr(_sig, _signame, None)
+                            if _signum is None:
+                                # Windows: SIGTERM 存在但行为不同; 其他平台某些信号可能缺
+                                continue
+                            try:
+                                _prev_handlers[_signum] = _sig.getsignal(_signum)
+                                _sig.signal(_signum, _seq_signal_handler)
+                                _registered.append(_signame)
+                            except (ValueError, OSError, AttributeError) as _re:
+                                # ValueError: not in main thread; OSError: not supported
+                                print(
+                                    f"[coco][robot_seq] signal {_signame} register skipped: {_re!r}",
+                                    flush=True,
+                                )
+                        print(
+                            f"[coco][robot_seq] signal handler registered: {_registered} "
+                            f"(COCO_ROBOT_SIGTERM_HANDLE=ON)",
+                            flush=True,
+                        )
+                    except Exception as _she:  # noqa: BLE001
+                        print(
+                            f"[coco][robot_seq] signal handler setup failed: {_she!r}",
+                            flush=True,
+                        )
                 # robot-008: 业务侧 subscribe —— 记录 action_done / sequence_cancelled
                 # 到 logging emit，便于线下分析"主动话题→点头"链路是否真的串起来了。
                 # 与 _emit 是两条独立路径：emit 走 logging_setup, subscribe 走业务回调链路。

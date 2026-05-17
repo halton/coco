@@ -82,6 +82,10 @@ class SequencerConfig:
     overflow_policy: str = "drop_oldest"
     """robot-007: 满队列回压策略 — 'drop_oldest' | 'drop_new' | 'block'。"""
 
+    shutdown_timeout_s: float = 2.0
+    """robot-012: shutdown(wait=True, timeout=…) 默认值；signal handler / atexit 共用。
+    env: COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S (float seconds)，默认 2.0。"""
+
 
 _VALID_OVERFLOW = frozenset({"drop_oldest", "drop_new", "block"})
 
@@ -114,6 +118,14 @@ def sequencer_config_from_env(env: Optional[dict] = None) -> SequencerConfig:
     overflow = env.get("COCO_ROBOT_SEQ_OVERFLOW", "").strip().lower() or "drop_oldest"
     if overflow not in _VALID_OVERFLOW:
         overflow = "drop_oldest"
+    # robot-012: shutdown timeout 配置化（signal handler + atexit 共用）
+    raw_st = env.get("COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S", "").strip()
+    try:
+        shutdown_to = float(raw_st) if raw_st else 2.0
+        if shutdown_to <= 0:
+            shutdown_to = 2.0
+    except ValueError:
+        shutdown_to = 2.0
     return SequencerConfig(
         enabled=enabled,
         cancel_poll_interval_s=poll_v,
@@ -121,7 +133,75 @@ def sequencer_config_from_env(env: Optional[dict] = None) -> SequencerConfig:
         pool_size=pool_size,
         queue_max=queue_max,
         overflow_policy=overflow,
+        shutdown_timeout_s=shutdown_to,
     )
+
+
+def install_signal_shutdown_handler(
+    sequencer: "RobotSequencer",
+    timeout_s: float = 2.0,
+    env: Optional[dict] = None,
+    signal_module: Optional[Any] = None,
+    signames: Sequence[str] = ("SIGTERM", "SIGINT"),
+) -> List[str]:
+    """robot-012: 注册 SIGTERM/SIGINT signal handler 调 sequencer.shutdown(timeout).
+
+    Default-OFF: env COCO_ROBOT_SIGTERM_HANDLE 未设 → 不注册任何 handler, 返回 []
+    (bytewise 等价基线).
+
+    设计:
+    - 重入安全: 内部 flag 防 handler 触发后再次进入.
+    - chain prev handler: 每个 signum 单独保存 prev (避免 closure 绑错).
+    - Windows / 缺信号兼容: getattr 兜底, signal.signal 异常 (ValueError/OSError) skip.
+    - signal_module 参数允许测试注入 fake module (验 Windows path / 错误兜底).
+
+    返回: 成功注册的 signame 列表 (env OFF 或失败 → []).
+    """
+    e = env if env is not None else os.environ
+    if e.get("COCO_ROBOT_SIGTERM_HANDLE", "").strip().lower() not in (
+        "1", "true", "yes", "on",
+    ):
+        return []
+
+    if signal_module is None:
+        import signal as signal_module  # type: ignore
+
+    seq_ref = sequencer
+    seq_to = float(timeout_s)
+    in_progress = {"flag": False}
+    prev_handlers: dict = {}
+
+    def _handler(signum, _frame):  # noqa: ANN001
+        # 重入: 第二次进入直接 return, 不再调 shutdown
+        if in_progress["flag"]:
+            return
+        in_progress["flag"] = True
+        try:
+            seq_ref.shutdown(wait=True, timeout=seq_to)
+        except Exception:  # noqa: BLE001
+            pass
+        prev = prev_handlers.get(signum)
+        try:
+            sig_dfl = getattr(signal_module, "SIG_DFL", None)
+            sig_ign = getattr(signal_module, "SIG_IGN", None)
+            if callable(prev) and prev not in (sig_dfl, sig_ign, None):
+                prev(signum, _frame)
+        except Exception:  # noqa: BLE001
+            pass
+
+    registered: List[str] = []
+    for name in signames:
+        signum = getattr(signal_module, name, None)
+        if signum is None:
+            continue
+        try:
+            prev_handlers[signum] = signal_module.getsignal(signum)
+            signal_module.signal(signum, _handler)
+            registered.append(name)
+        except (ValueError, OSError, AttributeError):
+            # ValueError: not in main thread; OSError: not supported on platform
+            continue
+    return registered
 
 
 class RobotSequencer:
@@ -611,4 +691,5 @@ __all__ = [
     "SequencerConfig",
     "RobotSequencer",
     "sequencer_config_from_env",
+    "install_signal_shutdown_handler",
 ]
