@@ -3111,3 +3111,21 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 **Reviewer 干净 LGTM, 不新增 backlog** (Reviewer 仅 3 条非 caveat 说明)
 
 **下一步**: 按持续开发模式立即派 phase-17 #5 (infra-020, depends_on infra-019 已满足) — phase-17 收官 feature。
+
+## Session 2026-05-17 — infra-020 closeout (STAGE_EXIT_CODES rc 表端到端 verify) + phase-17 收官
+
+**infra-020 PASSING**: Engineer 5d8e02b 实现 → Reviewer sub-agent fresh-context LGTM (干净) → merge --no-ff feat/infra-020 → main HEAD `0ebc5c3`
+
+**改造点**:
+- `scripts/verify_infra_020.py` 新增端到端 rc 表 verify — V0 (`scripts/smoke.py` STAGE_EXIT_CODES 常量 fingerprint) + V1 (ON+PASS=0) + V2 (ON+WARN=2) + V3 (ON+FAIL=1) + V4 (ON+SKIP=3) + V5 (OFF=0)
+- 方法: import smoke + `_decide_rc` 复刻替代 subprocess 真跑 (避免 macOS daemon 依赖 + 跨平台稳定)
+- V1-V5 PASS, regression (infra-018/019, robot-009/010, interact-019, vision-014) 全 PASS, forbidden_words_scan clean
+
+**phase-17 收官 FULL 5/5 PASSING**: robot-009 ✓ / robot-010 ✓ / interact-019 ✓ / vision-014 ✓ / infra-020 ✓
+
+**异步累积 uat-* 项 (不阻 merge, sim-first)**: uat-robot-006 / uat-audio-011 / uat-audio-012 / uat-robot-008 + 历史链
+
+**新增 1 个 infra-020 backlog (priority=999, phase=null)**:
+- infra-020-backlog-mixed-warn-skip-case: rc_table 端到端补 ON+WARN+SKIP 共存场景断言 rc=2 (WARN 优先于 SKIP), 当前 V0-V5 仅覆盖单一态
+
+**下一步**: 按持续开发模式默认进入 phase-18 planning, 立即开始执行第一个候选。
