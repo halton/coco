@@ -1,0 +1,27 @@
+{
+  "failed": 0,
+  "feature": "vision-014",
+  "results": [
+    {
+      "detail": "wall_clock=True ntp=True monotonic=True known_limit=True",
+      "name": "V1 face_tracker 模块 docstring 含 TTL wall clock + NTP known-limit",
+      "ok": true
+    },
+    {
+      "detail": "has_flag=True OFF[flag=False get_fid=0 record=0] ON[flag=True get_fid=50 record=50]",
+      "name": "V2 hot path env cache: OFF 跳过 wire / ON 进入 wire",
+      "ok": true
+    },
+    {
+      "detail": "pt_name=alice pt_conf=0.77 recorded=0.77",
+      "name": "V3 行为等价: persist ON wire 语义不变",
+      "ok": true
+    },
+    {
+      "detail": "verify_vision_013.py=rc0, verify_vision_012.py=rc0, verify_vision_011.py=rc0",
+      "name": "V4 regression verify_vision_013/012/011",
+      "ok": true
+    }
+  ],
+  "total": 4
+}
