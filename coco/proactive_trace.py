@@ -102,26 +102,38 @@ KNOWN_DECISIONS = frozenset({"admit", "reject"})
 
 # ---------------------------------------------------------------------------
 # interact-018: emit-end fail 约定（标准化为 3 口，权威信号 OR 即 fail）
+# interact-019: status 子串匹配 → token 白名单精确匹配，消除 no_failure /
+#               failsafe / no_fail_today 等误判
 # ---------------------------------------------------------------------------
 # 任一为 truthy 即视为失败：
 #   (1) rec["ok"] is False（强类型 bool；string "false" 不算，避免被 ok="success" 误中）
 #   (2) rec["error"] 为非空 str（任何错误描述）
 #   (3) rec["failure_reason"] 为非空 str（结构化失败原因；与 reason 区分，因 reason 也用于 reject）
-# 既有兼容口（不在 V2 三口内但仍识别）：
-#   - rec["status"]: str 含 "fail" 子串（llm_usage_summary 历史用法）
-# 不会被误判为 fail（V3 显式覆盖）：
+# 兼容口（不在 V2 三口内但仍识别）：
+#   - rec["status"]: str 经 strip().lower() 后 ∈ STATUS_FAIL_TOKENS 白名单
+#     （interact-019 改为 token 精确匹配；不再 substring）
+# 不会被误判为 fail：
 #   - ok="ok" / "success" 等任意 truthy 字符串
 #   - error="" / error=None / 缺字段
 #   - failure_reason="" / 缺字段
+#   - status="no_failure" / "failsafe" / "no_fail_today" / "success" / 空（interact-019）
+
+# interact-019: status 字段的失败 token 白名单（case-insensitive 全词匹配）。
+# 历史 jsonl 若用 "failsafe" 表示安全模式（非失败），改后正确不再误判。
+STATUS_FAIL_TOKENS = frozenset({"fail", "failed", "failure", "error", "errored"})
+
+
 def is_fail(rec: Mapping[str, Any]) -> bool:
-    """interact-018: emit-end 标准 fail 判定（3 口 OR）。
+    """interact-018/019: emit-end 标准 fail 判定（3 口 OR + status token 白名单）。
 
     判定 3 个权威字段任一命中：
       - ``ok=False``（必须是 bool False，字符串不算）
       - ``error`` 为非空 str
       - ``failure_reason`` 为非空 str
 
-    兼容历史 ``status`` 字段（含 "fail" 子串）。
+    兼容历史 ``status`` 字段：``status.strip().lower()`` ∈
+    :data:`STATUS_FAIL_TOKENS`（interact-019: token 精确匹配，不再 substring，
+    消除 "no_failure" / "failsafe" / "no_fail_today" 误判）。
 
     其他形态（字段缺失 / truthy 字符串 / error=""）均返回 False。
 
@@ -137,7 +149,7 @@ def is_fail(rec: Mapping[str, Any]) -> bool:
     if isinstance(fr, str) and fr.strip():
         return True
     status = rec.get("status")
-    if isinstance(status, str) and "fail" in status.lower():
+    if isinstance(status, str) and status.strip().lower() in STATUS_FAIL_TOKENS:
         return True
     return False
 

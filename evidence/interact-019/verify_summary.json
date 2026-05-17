@@ -1,0 +1,43 @@
+{
+  "feature": "interact-019",
+  "files_changed": [
+    "coco/proactive_trace.py",
+    "scripts/verify_interact_019.py"
+  ],
+  "ok": true,
+  "results": [
+    {
+      "detail": "tokens=['error', 'errored', 'fail', 'failed', 'failure'] all 17 cases hit",
+      "name": "V1_status_token_positives",
+      "ok": true
+    },
+    {
+      "detail": "all 9 historical-substring cases correctly rejected",
+      "name": "V2_status_no_false_positive",
+      "ok": true
+    },
+    {
+      "detail": "ok=False / error / failure_reason 全部正确命中",
+      "name": "V3_three_signals_still_work",
+      "ok": true
+    },
+    {
+      "detail": "all 12 negative cases pass",
+      "name": "V4_negative_cases",
+      "ok": true
+    },
+    {
+      "detail": "total=10 fail=2 rate=0.2 (no_failure 正确不算 fail)",
+      "name": "V5_llm_usage_no_failure_regression",
+      "ok": true
+    }
+  ],
+  "sha": "ed5f174dea9ec9fa85936ef362ef12372de15a85",
+  "status_fail_tokens": [
+    "error",
+    "errored",
+    "fail",
+    "failed",
+    "failure"
+  ]
+}

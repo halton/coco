@@ -171,7 +171,8 @@ def v2_is_fail_three_signals() -> None:
     rec_ok_false = {"ok": False, "topic": "x"}
     rec_error = {"error": "ConnectionError: timeout", "topic": "x"}
     rec_failure_reason = {"failure_reason": "llm_or_tts", "topic": "x"}
-    rec_status_fail = {"status": "RPC_FAILURE", "topic": "x"}  # 历史兼容
+    # interact-019: status 从 substring → token 白名单，需为白名单内 token (大小写不敏感)
+    rec_status_fail = {"status": "FAILURE", "topic": "x"}  # 兼容 status token
 
     ok = True
     detail = []
@@ -179,7 +180,7 @@ def v2_is_fail_three_signals() -> None:
         ("ok=False", rec_ok_false),
         ("error=...", rec_error),
         ("failure_reason=...", rec_failure_reason),
-        ("status~fail (legacy)", rec_status_fail),
+        ("status~fail (token, interact-019)", rec_status_fail),
     ]:
         got = is_fail(rec)
         if not got:
