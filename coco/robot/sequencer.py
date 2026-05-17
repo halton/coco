@@ -264,6 +264,12 @@ class RobotSequencer:
         self._action_stop = threading.Event()
         self._enqueue_dropped_n = 0
         self._enqueue_drop_lock = threading.Lock()
+        # robot-013: busy_count — cumulative busy-hit 计数 (queue_full 类 drop
+        # 的累计, monotonic 自启动)。仅在 COCO_ROBOT_BUSY_METRIC=ON 时附加到
+        # robot.enqueue_dropped emit; default-OFF bytewise 与 main 等价 (policy
+        # 字段 additive 常开)。
+        self._busy_count = 0
+        self._busy_count_lock = threading.Lock()
         self._is_shutdown = False
         self._init_action_worker()
 
@@ -355,17 +361,44 @@ class RobotSequencer:
                 return False
 
     def _on_enqueue_drop(self, reason: str) -> None:
-        """robot-009: emit robot.enqueue_dropped；enqueue_dropped_n 累计。"""
+        """robot-009: emit robot.enqueue_dropped；enqueue_dropped_n 累计。
+
+        robot-013: additive 字段:
+        - policy: 当前 overflow_policy (常开, additive)
+        - busy_count: cumulative busy-hit 计数 (env-gated
+          COCO_ROBOT_BUSY_METRIC, default-OFF; 仅 queue_full 类 reason 计入).
+        """
         with self._enqueue_drop_lock:
             self._enqueue_dropped_n += 1
             n = self._enqueue_dropped_n
+        # robot-013: busy_count — queue_full 类 reason 才计入
+        # (shutdown 类不算 busy)
+        _busy_reasons = (
+            "drop_oldest",
+            "drop_new",
+            "block_timeout",
+            "busy_requeue_full",
+            "drop_oldest_retry_full",
+        )
+        busy_n: Optional[int] = None
+        if reason in _busy_reasons:
+            with self._busy_count_lock:
+                self._busy_count += 1
+                busy_n = self._busy_count
+        # env gate: default-OFF; 未设 → 不附 busy_count, bytewise 等价
+        _env_on = os.environ.get("COCO_ROBOT_BUSY_METRIC", "").strip().lower() in (
+            "1", "true", "yes", "on",
+        )
+        payload: dict = dict(
+            reason=reason,
+            queue_max=self.config.queue_max,
+            dropped_n=n,
+            policy=self.config.overflow_policy,  # additive 常开
+        )
+        if _env_on and busy_n is not None:
+            payload["busy_count"] = busy_n
         try:
-            self._emit(
-                "robot.enqueue_dropped",
-                reason=reason,
-                queue_max=self.config.queue_max,
-                dropped_n=n,
-            )
+            self._emit("robot.enqueue_dropped", **payload)
         except Exception as exc:  # noqa: BLE001
             print(f"[robot_seq] emit enqueue_dropped failed: {exc!r}", file=_sys.stderr)
 
