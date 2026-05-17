@@ -3193,6 +3193,20 @@
       "evidence": {}
     },
     {
+      "id": "interact-019-backlog-trace-status-contract-doc",
+      "name": "trace contract 文档化 status 字段白名单原子 token",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-019 closeout"
+      ],
+      "description": "interact-019 已将 _is_fail status 匹配从 substring 改为白名单原子 token (error/errored/fail/failed/failure, case-insensitive, strip), 消除 no_failure / failsafe 等误判。需要在 trace contract 文档 (research/proactive_trace_contract.md 或同等位置) 显式登记: status 字段必须使用白名单原子 token, 不允许写 'RPC_FAILURE' / 'TASK_FAILED_RETRY' 等复合值, 否则会绕过 is_fail 检测。外部接入方 (proactive emit 调用者) 都需遵守此约定。仅文档化, 不改代码。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
       "id": "robot-009",
       "area": "robot",
       "phase": 17,
@@ -3241,13 +3255,22 @@
       "area": "interact",
       "phase": 17,
       "priority": 132,
-      "status": "not_started",
+      "status": "passing",
       "description": "承接 interact-018 caveat: trace _is_fail 函数对 status 字段当前用 substring 匹配, 会把 no_failure / failsafe / no_fail 等 token 误判 failure。改为 token 精确匹配(status in {fail,failure,failed,error} 白名单)或正则边界匹配, 消除误判, 保证 trace 数据 is_fail 字段语义正确。verify 需新增至少 2 fixture: 正向 (status=fail 命中) + 负向 (status=no_failure 不命中)。来源 backlog: interact-018-backlog-status-fail-strict-match。",
       "depends_on": [
         "interact-018"
       ],
       "real_machine_uat": "not_required",
-      "source_backlog": "interact-018-backlog-status-fail-strict-match"
+      "source_backlog": "interact-018-backlog-status-fail-strict-match",
+      "evidence": {
+        "verify_script": "scripts/verify_interact_019.py",
+        "verify_summary": "evidence/interact-019/verify_summary.json",
+        "reviewer": "sub-agent fresh-context: LGTM",
+        "token_set": ["error", "errored", "fail", "failed", "failure"],
+        "case_insensitive_strip": true,
+        "history_jsonl_audit": "clean (无复合 FAILURE token)",
+        "forbidden_words_scan": "clean"
+      }
     },
     {
       "id": "vision-014",

@@ -3079,3 +3079,20 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 - robot-010-backlog-setter-race-window: setter 锁外探针 + 锁内覆盖两阶段竞态窗口 (T1 探针通过 → T2 sequencer.shutdown() → T3 锁内覆盖), 单线程 lifecycle 路径无影响, 仅记录, 多线程 lifecycle 需将探针纳入锁内或 double-check
 
 **下一步**: 按持续开发模式立即派 Engineer 执行 phase-17 #3 (interact-019, depends_on interact-018 已满足)。
+
+## Session 2026-05-17 — interact-019 closeout (is_fail status token 白名单)
+
+**interact-019 PASSING**: Engineer 1897d64 实现 → Reviewer sub-agent fresh-context LGTM → merge --no-ff feat/interact-019 → main HEAD `a225a76`
+
+**改造点**: `coco/proactive_trace.py::_is_fail` 的 status 字段匹配从 substring 改为白名单原子 token 精确匹配
+- token_set: `{"error", "errored", "fail", "failed", "failure"}`
+- case-insensitive + strip 处理
+- 正向: status="fail" / "FAILED" 命中; 负向: "no_failure" / "failsafe" / "no_fail" 不再误判
+- V1-V5 PASS, regression 全 PASS, forbidden_words_scan clean, 历史 jsonl audit 无复合 FAILURE token 漏判风险
+
+**phase-17 进度**: 3/5 PASSING (robot-009 ✓ / robot-010 ✓ / interact-019 ✓); 剩 vision-014 / infra-020 未起
+
+**新增 1 个 interact-019 backlog (priority=999, phase=null)**:
+- interact-019-backlog-trace-status-contract-doc: trace contract 文档化 status 字段必须用白名单原子 token (避免外部接入方写 "RPC_FAILURE" / "TASK_FAILED_RETRY" 等复合值漏判), 仅文档化不改代码
+
+**下一步**: 按持续开发模式立即派下一 candidate (phase-17 #4 vision-014, depends_on vision-013 已满足)。
