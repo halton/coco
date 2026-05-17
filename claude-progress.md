@@ -3547,3 +3547,19 @@ merge: feat/vision-014b → main (--no-ff), merge commit=2cf593c。
 - vision-014b
 
 next: phase-21 规划。
+
+## Session 2026-05-17 phase-21 planning
+
+phase-20 收官 (5/5 FULL: robot-014 / interact-022 / infra-024 / robot-015 / vision-014b) 已 main HEAD=23ef9c1。
+phase-21 planning: 从 backlog 池 (18 项, area 仅余 robot/interact/infra) 挑 5 候选 priority 170-174 跨 3 子系统 (robot ×2 / interact ×1 / infra ×2):
+
+- robot-016 (P170 robot): set_robot_sequencer lifecycle 校验 + 重复注入静默覆盖告警 + shutdown 不自动 detach 锁面。is_shutdown 探针错误路径 warn-once + duplicate inject WARN env-gated (COCO_ROBOT_SETTER_LIFECYCLE) default-OFF。source: robot-008-backlog-setter-lifecycle
+- interact-023 (P171 interact): V1 cooldown_hit 路径 latency_ms 端到端 fixture 覆盖, 纯 verify 补丁无源码改动。source: interact-018-backlog-v1-cooldown-coverage
+- infra-025 (P172 infra): verify_interact_018.py 与 proactive_trace_summary.py sys.path 注入审计 + try/except ImportError fallback 论证 + module-form 调用替代路径, verify-only 不改源码。source: interact-018-backlog-syspath-injection-audit
+- robot-017 (P173 robot): ProactiveScheduler sync fallback warn-once 节流 (消高频 mock 噪音) + RobotSequencer.enqueue 'block' overflow_policy timeout=1s drop 语义 docstring 同步, verify + docstring 无核心源码改动。source: robot-009-backlog-sync-fallback-warning + robot-009-backlog-block-policy-doc (双吸收)
+- infra-026 (P174 infra): verify-matrix.yml runs-on=ubuntu-latest 硬编码与 ${{ matrix.os }} 占位不一致契约审计, verify-only 不扩 matrix (避免真机依赖)。source: infra-019-backlog-runs-on-matrix-os
+
+area 分散: backlog 池现状仅余 robot/interact/infra 三 area (audio 池空, vision 池空, companion 池空 — 上轮 vision-014b 已吸收 vision-013 backlog)。phase-21 集中清理这 3 area 池, 不强行造 vision/audio 候选避免衍生 fu chain。全部 verify-only 或 small additive default-OFF, real_machine_uat=n/a, sim-first 闭环。
+
+next: feature_list.json + claude-progress.md commit 直接落 main, push origin main 一次失败忽略, 然后进入持续开发模式起点 robot-016 (P170)。
+

@@ -3855,6 +3855,61 @@
       "description": "verify_infra_024.py V5 当前命名偏泛, 建议改为 V5_stdout_chain_assert 显式表达 \"subprocess stdout 链路断言\" 意图。纯命名清理。",
       "verification": null,
       "evidence": {}
+    },
+    {
+      "id": "robot-016",
+      "name": "set_robot_sequencer lifecycle 校验 + 重复注入告警",
+      "area": "robot",
+      "priority": 170,
+      "phase": 21,
+      "status": "not_started",
+      "origin_backlog": "robot-008-backlog-setter-lifecycle",
+      "description": "吸收 backlog robot-008-backlog-setter-lifecycle: set_robot_sequencer 缺 is_shutdown 探针 (向已 shutdown 的 sequencer 注入静默失败) + 重复注入静默覆盖第一次 + shutdown 回调不自动 detach。phase-21 P170 verify-only + 小 additive default-OFF: (a) is_shutdown 探针错误路径 warn-once 锁面 verify (V1) (b) duplicate inject WARN once env-gated (COCO_ROBOT_SETTER_LIFECYCLE) default-OFF (c) V2-V5 contract reaffirmation + regression robot-008/010/015 rc=0。bytewise 等价 main 路径。real_machine_uat=n/a。",
+      "real_machine_uat": "n/a"
+    },
+    {
+      "id": "interact-023",
+      "name": "V1 cooldown_hit 路径 latency_ms 端到端 fixture 覆盖",
+      "area": "interact",
+      "priority": 171,
+      "phase": 21,
+      "status": "not_started",
+      "origin_backlog": "interact-018-backlog-v1-cooldown-coverage",
+      "description": "吸收 backlog interact-018-backlog-v1-cooldown-coverage: V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire, cooldown_hit 路径端到端断言尚缺。phase-21 P171 纯 verify 补丁 (无源码改动): (a) 新增 fixture 触发 cooldown_hit (相同 task 在 cooldown 窗口内连续 propose) (b) 断言 latency_ms wire 在 cooldown_hit emit 站点存在且数值合理 (c) V0-V5 含 monotonic / type-strict / 三口闭环 + regression interact-018/021/022 rc=0。real_machine_uat=n/a。",
+      "real_machine_uat": "n/a"
+    },
+    {
+      "id": "infra-025",
+      "name": "verify_interact_018 / proactive_trace_summary sys.path 注入审计",
+      "area": "infra",
+      "priority": 172,
+      "phase": 21,
+      "status": "not_started",
+      "origin_backlog": "interact-018-backlog-syspath-injection-audit",
+      "description": "吸收 backlog interact-018-backlog-syspath-injection-audit: scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel 环境下脆弱。phase-21 P172 verify-only 审计 (不改源码): (a) V0 grep sys.path 注入站点清单 + 文档化风险 (b) V1-V3 try/except ImportError fallback 模式建议 + module-form 调用替代路径论证 (c) V4 subprocess venv site-packages 引用契约固定 (d) V5 regression interact-018 + proactive_trace_summary 单跑 rc=0。real_machine_uat=n/a。",
+      "real_machine_uat": "n/a"
+    },
+    {
+      "id": "robot-017",
+      "name": "ProactiveScheduler sync fallback warn-once 节流 + block policy 语义文档",
+      "area": "robot",
+      "priority": 173,
+      "phase": 21,
+      "status": "not_started",
+      "origin_backlog": "robot-009-backlog-sync-fallback-warning + robot-009-backlog-block-policy-doc",
+      "description": "吸收双 backlog: (a) robot-009-backlog-sync-fallback-warning — ProactiveScheduler 在 enqueue 缺失 fallback 走同步 run 时缺 warn-once 节流, 高频 mock 场景 log 噪音; (b) robot-009-backlog-block-policy-doc — RobotSequencer.enqueue 'block' overflow_policy 实际语义为最多阻塞 ~1s 等待 worker, 超时 drop, 与 brief 描述不一致。phase-21 P173 verify-only + docstring (无核心源码改动): (a) V0-V2 sync fallback warn-once 节流契约 verify (state machine) (b) V3 block policy timeout=1s drop 行为 bytewise 锁定 + docstring 同步 (c) V4-V5 regression robot-009/013/015 rc=0。real_machine_uat=n/a。",
+      "real_machine_uat": "n/a"
+    },
+    {
+      "id": "infra-026",
+      "name": "verify-matrix.yml runs-on 与 matrix.os 一致性审计",
+      "area": "infra",
+      "priority": 174,
+      "phase": 21,
+      "status": "not_started",
+      "origin_backlog": "infra-019-backlog-runs-on-matrix-os",
+      "description": "吸收 backlog infra-019-backlog-runs-on-matrix-os: infra-019 已把 artifact name 加入 ${{ matrix.os }} 占位, 但 .github/workflows/verify-matrix.yml 的 runs-on 仍硬编码 ubuntu-latest。当 matrix 真正扩到多 os 时 runs-on 与 matrix.os 不一致会导致全部 job 跑同一 runner。phase-21 P174 verify-only 契约审计 (不扩 matrix, 避免真机依赖): (a) V0-V1 yaml parse + grep runs-on / matrix.os 一致性断言 (b) V2 文档化扩 matrix 路径建议 + 命名锁面 (c) V3-V5 regression infra-019/024 rc=0 + 当前单 os 行为 bytewise 等价。real_machine_uat=n/a。",
+      "real_machine_uat": "n/a"
     }
   ],
   "_meta": {
