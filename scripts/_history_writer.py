@@ -38,10 +38,12 @@ Phase-14 infra-017 加固
 from __future__ import annotations
 
 import datetime as _dt
+import itertools
 import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -93,8 +95,13 @@ def _ensure_dir(p: Path) -> None:
 
 
 def _iso_utc_now() -> str:
-    """UTC ISO8601 to seconds（避免 micro 让 diff 干净）。"""
-    return _dt.datetime.now(_dt.UTC).replace(microsecond=0).isoformat()
+    """UTC ISO8601 to seconds（避免 micro 让 diff 干净）。
+
+    infra-022 N2: ``datetime.UTC`` 在 Python 3.11+ 才有, 用 ``timezone.utc`` 兜底
+    覆盖 3.9/3.10 (本仓库 uv 锁定 3.13, 但 verify 脚本可能被 system py3.9 误调)。
+    """
+    utc = getattr(_dt, "UTC", _dt.timezone.utc)
+    return _dt.datetime.now(utc).replace(microsecond=0).isoformat()
 
 
 def _line_count(path: Path) -> int:
@@ -125,12 +132,36 @@ except ImportError:  # POSIX
     _HAS_MSVCRT = False
 
 
+# infra-022 N3: _FileLock 退化无锁路径 stderr WARN once。
+# 进程内一次性标记，避免每条 append 都打印；只标记一次"曾经退化"。
+_LOCK_DEGRADED_WARNED = False
+_LOCK_DEGRADED_LOCK = threading.Lock()
+
+
+def _warn_lock_degraded_once(lock_path: Path, reason: str) -> None:
+    """infra-022 N3: _FileLock 退化（任意原因无法拿到 advisory 锁）时 stderr WARN once。
+
+    诊断输出, 不改变运行时语义（仍走 no-op 无锁退化路径）。进程级一次性。
+    """
+    global _LOCK_DEGRADED_WARNED
+    with _LOCK_DEGRADED_LOCK:
+        if _LOCK_DEGRADED_WARNED:
+            return
+        _LOCK_DEGRADED_WARNED = True
+    sys.stderr.write(
+        f"[_history_writer] WARN: _FileLock degraded to no-op for {lock_path.name}: "
+        f"{reason} (subsequent occurrences suppressed; concurrent append may interleave)\n"
+    )
+
+
 class _FileLock:
     """跨平台 advisory exclusive lock for append-only jsonl.
 
     POSIX: fcntl.flock(LOCK_EX)。Windows: msvcrt.locking(LK_LOCK)。
     锁文件 = jsonl_path + '.lock'（独立 fd），避免被 truncate / rename 干扰。
     任意失败（如 fs 不支持 flock）退化为 no-op；不阻塞 main flow。
+
+    infra-022 N3: 退化路径首次发生时 stderr WARN once（诊断, 不改语义）。
     """
 
     def __init__(self, jsonl_path: Path) -> None:
@@ -143,15 +174,28 @@ class _FileLock:
             # 用 os.open 避免 buffering 影响；'a' 不 truncate
             self._fd = open(self.lock_path, "a+")
             if _HAS_FCNTL:
-                _fcntl.flock(self._fd.fileno(), _fcntl.LOCK_EX)  # type: ignore[union-attr]
+                try:
+                    _fcntl.flock(self._fd.fileno(), _fcntl.LOCK_EX)  # type: ignore[union-attr]
+                except OSError as e:
+                    # fs 不支持 flock 等罕见情况：退化为无锁
+                    _warn_lock_degraded_once(self.lock_path, f"flock OSError: {e}")
+                    try:
+                        self._fd.close()
+                    except Exception:
+                        pass
+                    self._fd = None
             elif _HAS_MSVCRT:
                 # Windows: LK_LOCK 阻塞直到拿到锁
                 try:
                     _msvcrt.locking(self._fd.fileno(), _msvcrt.LK_LOCK, 1)  # type: ignore[union-attr]
-                except OSError:
-                    pass
-        except Exception:
+                except OSError as e:
+                    _warn_lock_degraded_once(self.lock_path, f"msvcrt OSError: {e}")
+            else:
+                # 既无 fcntl 又无 msvcrt（理论不可能）：明确退化
+                _warn_lock_degraded_once(self.lock_path, "no fcntl/msvcrt available")
+        except Exception as e:  # noqa: BLE001
             # 退化：无锁继续，不阻塞主流程
+            _warn_lock_degraded_once(self.lock_path, f"{type(e).__name__}: {e}")
             if self._fd is not None:
                 try:
                     self._fd.close()
@@ -186,16 +230,30 @@ class _FileLock:
 # rotate + archive retention
 # ---------------------------------------------------------------------------
 
-def _archive_stamp() -> str:
-    """infra-017 C3: <YYYYMMDDTHHMMSSZ>.<ns>.<pid> 同秒不碰撞。
+# infra-022 N1: _archive_stamp 单调计数器, 防弱 ns 时钟平台 (e.g. Windows
+# 老内核 / WSL clock_gettime 精度 ~ ms) 同进程同秒多次 rotate ns 碰撞。
+# 与 time.time_ns() + os.getpid() 三路融合, 单调递增保证同进程唯一。
+_ARCHIVE_STAMP_COUNTER = itertools.count()
+_ARCHIVE_STAMP_LOCK = threading.Lock()
 
-    ns 取 time.time_ns() % 1e9（ns of current second 不够稳，用全 ns 即可）；
-    pid 兜底跨进程。归档命名仅用于排序与去重，不参与 verify_summary diff。
+
+def _archive_stamp() -> str:
+    """infra-017 C3 + infra-022 N1: <YYYYMMDDTHHMMSSZ>.<ns>.<seq>.<pid> 同秒不碰撞。
+
+    三路融合:
+      ns   = time.time_ns()              # 绝大多数平台已足够区分
+      seq  = next(_ARCHIVE_STAMP_COUNTER) # 弱 ns 时钟（精度不足 ns）兜底, 进程内单调
+      pid  = os.getpid()                  # 跨进程兜底
+
+    infra-022 N2: 同样用 timezone.utc 兜底以兼容 py3.9/3.10。
     """
-    now = _dt.datetime.now(_dt.UTC)
+    utc = getattr(_dt, "UTC", _dt.timezone.utc)
+    now = _dt.datetime.now(utc)
     stamp = now.strftime("%Y%m%dT%H%M%SZ")
     ns = time.time_ns()
-    return f"{stamp}.{ns}.{os.getpid()}"
+    with _ARCHIVE_STAMP_LOCK:
+        seq = next(_ARCHIVE_STAMP_COUNTER)
+    return f"{stamp}.{ns}.{seq}.{os.getpid()}"
 
 
 def _enforce_retention(stem: str, *, archive_dir: Path | None = None,
@@ -230,15 +288,24 @@ def _enforce_retention(stem: str, *, archive_dir: Path | None = None,
     return deleted
 
 
-def _rotate_if_needed(jsonl_path: Path, *, rotate_lines: int = ROTATE_LINES) -> Path | None:
-    """行数 >= rotate_lines → mv 到 .archive/，立即 recreate 空 jsonl，并执行 retention。
+def _rotate_locked(jsonl_path: Path, *, rotate_lines: int | None = None) -> Path | None:
+    """rotate 实现体, **必须在持锁状态下调用** (infra-022 N4)。
+
+    行数 >= rotate_lines → mv 到 .archive/，立即 recreate 空 jsonl，并执行 retention。
 
     infra-017 C2: rotate 后立即新建空文件（0 行）。
     infra-017 C3: archive 文件名带 ns + pid。
     infra-017 C6: 删多余 archive。
+    infra-022 N4: replace+touch+retention 全过程包入调用方持有的 _FileLock，
+                  避免另一个 worker 在 rename 后、touch 前 append 落到空目录或
+                  老 fd。
+    ``rotate_lines=None`` 时**运行时**读 module-level ``ROTATE_LINES``,
+    方便测试 monkeypatch。
     """
     if not jsonl_path.exists():
         return None
+    if rotate_lines is None:
+        rotate_lines = ROTATE_LINES
     if _line_count(jsonl_path) < rotate_lines:
         return None
     _ensure_dir(ARCHIVE_DIR)
@@ -255,6 +322,19 @@ def _rotate_if_needed(jsonl_path: Path, *, rotate_lines: int = ROTATE_LINES) -> 
     return target
 
 
+def _rotate_if_needed(jsonl_path: Path, *, rotate_lines: int | None = None) -> Path | None:
+    """无锁版本——保留对外签名兼容（测试和老调用方继续用），自带加锁。
+
+    infra-022 N4: 该入口自身加 _FileLock，确保 replace+touch+retention 与同进程
+    其它 append/rotate 串行化。``rotate_lines=None`` 时运行时读 module-level
+    ``ROTATE_LINES``。
+    """
+    if not jsonl_path.exists():
+        return None
+    with _FileLock(jsonl_path):
+        return _rotate_locked(jsonl_path, rotate_lines=rotate_lines)
+
+
 def _append_line(jsonl_path: Path, record: dict) -> None:
     """append-only，单行 json + \\n。infra-017 C1: 文件锁防并发撕裂。"""
     _ensure_dir(jsonl_path.parent)
@@ -265,10 +345,19 @@ def _append_line(jsonl_path: Path, record: dict) -> None:
 
 
 def _emit_safe(jsonl_path: Path, record: dict) -> bool:
-    """对外入口：rotate-if-needed + append。任何异常吞掉返回 False。"""
+    """对外入口: rotate-if-needed + append, 全程持锁 (infra-022 N4)。
+
+    任何异常吞掉返回 False。
+    """
     try:
-        _rotate_if_needed(jsonl_path)
-        _append_line(jsonl_path, record)
+        _ensure_dir(jsonl_path.parent)
+        line = json.dumps(record, ensure_ascii=False, sort_keys=True)
+        # infra-022 N4: rotate + append 在同一把锁下原子完成, 避免 rename
+        # 与 append 之间的 race。动态读 module-level ROTATE_LINES 以便测试改写。
+        with _FileLock(jsonl_path):
+            _rotate_locked(jsonl_path)
+            with open(jsonl_path, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
         return True
     except Exception as e:  # noqa: BLE001
         sys.stderr.write(
@@ -288,7 +377,21 @@ def emit_verify(
     failed_names: list[str] | None = None,
     extra: dict | None = None,
 ) -> bool:
-    """run_verify_all.py 跑完后调用。返回 True 表示行已落盘。"""
+    """run_verify_all.py 跑完后调用。返回 True 表示行已落盘。
+
+    Field semantics (infra-022 C5)
+    ------------------------------
+    - ``total`` = 实际跑完的脚本数（已通过 SKIP_LIST 过滤）。
+    - ``pass``  = 其中 rc == 0 的数量。
+    - ``fail``  = 其中 rc != 0 的数量（含 timeout/异常）。
+    - ``skip``  = SKIP_LIST 在 select 阶段过滤掉的脚本数。
+      历史口径（infra-016 / 017）此处一律传 0; infra-022 C5 起改为传入
+      run_verify_all 当次实际跳过的脚本数, 让 health_summary 可以画出 SKIP 趋势。
+      调用方若不感知 skip, 仍可传 0; 字段在所有行中保持存在以保住 schema。
+    - 不变量: ``total + skip`` 不一定 == 仓库 verify_*.py 总数（discover 还会
+      被 --area / --filter 进一步收窄）。"skip" 只代表 SKIP_LIST 跳过, 不代表
+      "未匹配筛选条件"。
+    """
     if _history_disabled():
         return False  # escape hatch，dev 可关（infra-017 C8 大小写不敏感）
     rec = {
