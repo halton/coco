@@ -348,6 +348,15 @@ class GroupModeCoordinator:
         self.max_group_sessions = max(1, int(max_group_sessions))
         self._clock = clock or time.monotonic
 
+        # robot-011: 可选 RobotSequencer 注入 (default=None). 注入后 enter/exit
+        # side-effect 末尾 best-effort enqueue 一个轻量 head_turn 表示"看向 group"
+        # / "回到中立位"; 真正 enqueue 还需要 env COCO_GROUP_ROBOT_WIRE=1 双层 gate.
+        # None / env OFF 时整段 no-op, bytewise 与基线等价.
+        self._robot_sequencer: Any = None
+        self._group_robot_wire_enabled: bool = _bool_env(
+            os.environ, "COCO_GROUP_ROBOT_WIRE", False
+        )
+
         self._lock = threading.RLock()
         self._in_group: bool = False
         self._current_members: Tuple[str, ...] = ()
@@ -453,6 +462,118 @@ class GroupModeCoordinator:
         """返回最近一次 arbitrate 的 primary face name（ARBIT OFF → 永远 None）."""
         with self._lock:
             return self._arbit_primary_name
+
+    # ------------------------------------------------------------------
+    # robot-011: RobotSequencer 注入 + enqueue helper
+    # ------------------------------------------------------------------
+
+    def set_robot_sequencer(self, sequencer: Any) -> None:
+        """robot-011: 注入 RobotSequencer 实例 (复用 robot-008 模式).
+
+        注入后 group enter / exit side-effect 末尾会 best-effort enqueue 一个
+        轻量 head_turn action; 真正 dispatch 还要 env COCO_GROUP_ROBOT_WIRE=1
+        双层 gate. sequencer=None 等价清空 (OFF 等价).
+
+        lifecycle 校验 (沿用 robot-010 改进):
+        - (a) 注入已 shutdown 的 sequencer → log.warning 后**拒绝**;
+        - (b) 已存在 _robot_sequencer 时再次注入 → log.warning 记重复注入后覆盖;
+        - (c) None 入参 → 清除 (与 OFF 等价);
+        - 探针 is_shutdown 用 best-effort: 没有该方法 / 抛异常按"未 shutdown"处理.
+        仅当 is_shutdown() 返回严格 bool True 才视为 shutdown (保护 MagicMock 默认 stub).
+        """
+        if sequencer is not None:
+            try:
+                is_fn = getattr(sequencer, "is_shutdown", None)
+                if callable(is_fn):
+                    rv = is_fn()
+                    if isinstance(rv, bool) and rv is True:
+                        log.warning(
+                            "[group_mode] set_robot_sequencer: refuse to inject "
+                            "already-shutdown sequencer (%r); keeping existing=%r",
+                            sequencer, self._robot_sequencer is not None,
+                        )
+                        return
+            except Exception as e:  # noqa: BLE001
+                log.warning(
+                    "[group_mode] set_robot_sequencer: is_shutdown probe failed: %s: %s",
+                    type(e).__name__, e,
+                )
+        with self._lock:
+            if self._robot_sequencer is not None and sequencer is not None:
+                log.warning(
+                    "[group_mode] set_robot_sequencer: overwriting existing sequencer "
+                    "(prev=%r, new=%r) — double-injection detected",
+                    self._robot_sequencer, sequencer,
+                )
+            self._robot_sequencer = sequencer
+
+    def _enqueue_robot_action(self, reason: str, ts: float) -> None:
+        """robot-011: best-effort enqueue 一个轻量 head_turn 给 sequencer.
+
+        双层 gate:
+        1) env COCO_GROUP_ROBOT_WIRE != 1 → no-op (即使 sequencer 已注入)
+        2) _robot_sequencer is None → no-op
+        sequencer 已 shutdown → 自动清空引用 + skip (沿用 robot-010 模式).
+        任何异常吃掉 — group enter/exit 不依赖 robot 动作成功.
+        """
+        if not self._group_robot_wire_enabled:
+            return
+        with self._lock:
+            seq = self._robot_sequencer
+        if seq is None:
+            return
+        # shutdown 自检 — 严格 bool True 才视为 shutdown
+        try:
+            is_fn = getattr(seq, "is_shutdown", None)
+            if callable(is_fn):
+                rv = is_fn()
+                if isinstance(rv, bool) and rv is True:
+                    log.warning(
+                        "[group_mode] _enqueue_robot_action: detected shutdown "
+                        "sequencer; clearing _robot_sequencer and skipping enqueue"
+                    )
+                    with self._lock:
+                        if self._robot_sequencer is seq:
+                            self._robot_sequencer = None
+                    return
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "[group_mode] is_shutdown probe (enqueue) failed: %s: %s",
+                type(e).__name__, e,
+            )
+        try:
+            from coco.robot.sequencer import Action as _SeqAction
+            # enter → 轻微转头扫描成员; exit → 回中立位.
+            # 用 head_turn 较 nod 更贴合"看向多人"语义.
+            _action = _SeqAction(
+                action_id=f"group-{reason}-{int(ts * 1000)}",
+                type="head_turn",
+                params={"yaw_deg": 8.0 if reason == "enter" else 0.0},
+                duration_s=0.3,
+            )
+            enqueue_fn = getattr(seq, "enqueue", None)
+            if callable(enqueue_fn):
+                try:
+                    enqueue_fn(_action)
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "[group_mode] robot_sequencer.enqueue failed: %s: %s",
+                        type(e).__name__, e,
+                    )
+            else:
+                # 兼容路径: sequencer 上没有 enqueue (不应出现), 同步 run 兜底.
+                try:
+                    seq.run([_action])
+                except Exception as e:  # noqa: BLE001
+                    log.warning(
+                        "[group_mode] robot_sequencer.run fallback failed: %s: %s",
+                        type(e).__name__, e,
+                    )
+        except Exception as e:  # noqa: BLE001
+            log.warning(
+                "[group_mode] robot_sequencer dispatch failed: %s: %s",
+                type(e).__name__, e,
+            )
 
     # ------------------------------------------------------------------
     # 主输入：observe(snapshot)
@@ -589,6 +710,8 @@ class GroupModeCoordinator:
                     s.group_mode_trigger_count = int(getattr(s, "group_mode_trigger_count", 0)) + 1
             except Exception:  # noqa: BLE001
                 pass
+        # 6) robot-011: best-effort enqueue 一个轻量 head_turn (env+seq 双 gate)
+        self._enqueue_robot_action("enter", ts=ts)
 
     def _on_exit(self, members: Tuple[str, ...], *, ts: float) -> None:
         self._emit_safe(
@@ -623,6 +746,8 @@ class GroupModeCoordinator:
                             type(e).__name__, e)
         # profile.group_sessions exit 记录
         self._append_group_session(members, ts=ts, reason="exit")
+        # robot-011: best-effort enqueue 一个 head_turn 回中立位 (env+seq 双 gate)
+        self._enqueue_robot_action("exit", ts=ts)
 
     # ------------------------------------------------------------------
     # tick — 每次 proactive tick 顺手把 in_group_observe_count 累计
