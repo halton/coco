@@ -11,6 +11,22 @@ vision-011: face_id_map LRU + GC + 漂移自愈
 - emit ``vision.face_id_map_repair{dropped_n, reason}`` (reason='ttl'|'schema')
 - untrusted entry（name_confidence < 0.3 长期）仲裁降权
 
+TTL wall clock 设计选择（vision-013 / vision-014 文档化）:
+- ``run_gc_cycle`` 内 TTL 过期判定使用 ``time.time()`` (wall clock / POSIX
+  epoch), 与 entry 的 ``last_seen`` 字段使用同一时基。``last_seen`` 持久化到
+  ``data/face_id_map.json``, 跨进程 / 跨会话仍需可比较, 因此必须用 wall clock,
+  不能用 ``time.monotonic()`` (monotonic 在每个进程都从 0 开始, 跨进程不可比较)。
+- ``_gc_last_time`` (周期 GC 触发计时, vision-013) 反而使用 ``time.monotonic()``,
+  因为它只在进程内做 "距上次 GC 多久" 的相对差值, 不需要跨进程稳定; 这样可以
+  彻底免疫 NTP 大幅回拨 / 系统时钟跳变对 GC 触发节奏的影响。
+- Known limit (NTP 大幅调时): 系统 wall clock 被 NTP 大幅前跳 (例如服务器从
+  默认时间跳到当前真实时间, 跨度数月)，所有 TTL 内的 entry 会被瞬时判过期并清空;
+  反向地, NTP 大幅回拨 (例如调时回到一年前) 会使 entry 看起来 "未到期"
+  从而保留过久。这两种情况都不会引发崩溃, 业务侧 fallback 路径 (重新识别 + 写新 face_id)
+  能恢复, 但运维需要知道: 重大调时后 face_id_map 可能出现 "全部清空" 或 "停止 GC"
+  的现象。生产建议: 启用 NTP gradual slew 而非 step-jump; 若必须 step-jump,
+  人工触发一次 ``run_gc_cycle()`` 校准。
+
 设计目标：
 - 把"开摄像头 + 周期 detect"独立成一个 daemon 线程，不阻塞 IdleAnimator 的主循环。
 - 暴露线程安全 snapshot：``latest() -> FaceSnapshot``，IdleAnimator 在自己节奏下读。
@@ -651,6 +667,21 @@ class FaceTracker:
                         "FaceTracker GC after hydrate failed: %s: %s",
                         type(e).__name__, e,
                     )
+
+        # vision-014: _maybe_identify hot path env cache.
+        #
+        # 背景: vision-013 在 _maybe_identify 末尾加了 get_face_id + record_name_confidence
+        # wire (用于把当帧 name_confidence 写入持久化 meta)。这两个调用本身在
+        # default-OFF (persist 未启用) 时是 short-circuit 的, 但即便 short-circuit
+        # 也要走 attribute lookup + lock acquire + dict get + 一层 try/except;
+        # 在高 FPS (>=60 FPS) 视觉路径下每帧都是一份 overhead。
+        #
+        # 优化: __init__ 一次性算出 "是否需要跑 vision-013 wire" 的合成 flag,
+        # 缓存到实例字段 self._face_id_identify_wire_enabled。_maybe_identify 直接
+        # 读该字段决定是否进入 wire 块, 不再每帧重读 env / 重新组合判断。
+        # 由于本字段在 __init__ 计算, 与现有 self._face_id_persist_enabled
+        # 的 default-OFF 语义 bytewise 等价 (二者在同一 env 快照下计算)。
+        self._face_id_identify_wire_enabled: bool = self._face_id_persist_enabled
 
         # 多脸仲裁
         self._face_id_arbit_enabled: bool = _bool_env_face_id_arbit(os.environ)
@@ -1370,7 +1401,11 @@ class FaceTracker:
         # 和后续 GC TTL 链路能基于真实数据工作。
         # default-OFF（COCO_FACE_ID_PERSIST 未设）下 get_face_id 返回 None /
         # record_name_confidence 内部 short-circuit → bytewise 等价。
-        if isinstance(name, str) and name:
+        #
+        # vision-014 hot path opt: 当 wire gate flag 为 False (persist 未启用)
+        # 时, 整块直接跳过, 省掉 get_face_id 的 lock + dict get + try/except
+        # 与 record_name_confidence 的同等开销。flag 在 __init__ cache, 不读 env。
+        if self._face_id_identify_wire_enabled and isinstance(name, str) and name:
             try:
                 # 注册 meta（若尚未存在）；持久化未启用时该调用仍安全（map 写入但
                 # meta 不写、不 flush，符合既有 default-OFF 等价语义）。
