@@ -1,0 +1,44 @@
+{
+  "failed": [],
+  "feature_id": "infra-022",
+  "passed": 7,
+  "results": [
+    {
+      "ok": true,
+      "sha256": "0300e618d227472eb41938ef06b36314cb8384135dc81d780f76ec0fd779c5b0",
+      "v": "V0"
+    },
+    {
+      "count": 1000,
+      "ok": true,
+      "sample": "20260517T052323Z.1778995403166614000.0.71469",
+      "unique": 1000,
+      "v": "V1"
+    },
+    {
+      "ok": true,
+      "v": "V2",
+      "warn_lines": 1
+    },
+    {
+      "archive_count": 1,
+      "main_lines": 5,
+      "ok": true,
+      "v": "V3"
+    },
+    {
+      "ok": true,
+      "record_skip": 3,
+      "v": "V4"
+    },
+    {
+      "ok": true,
+      "v": "V4b"
+    },
+    {
+      "ok": true,
+      "v": "V5"
+    }
+  ],
+  "total": 7
+}
