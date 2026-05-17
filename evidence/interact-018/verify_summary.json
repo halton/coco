@@ -10,7 +10,7 @@
   "ok": true,
   "results": [
     {
-      "detail": "1 trace events with latency_ms; sample lat=0.015 stage=arbit_winner; arbit_winner=1",
+      "detail": "1 trace events with latency_ms; sample lat=0.014 stage=arbit_winner; arbit_winner=1",
       "name": "V1_latency_wire_in_production",
       "ok": true
     },
@@ -35,5 +35,5 @@
       "ok": true
     }
   ],
-  "sha": "0efe4b8d96a0508dc534d88e18d6bf0c518e8773"
+  "sha": "db7c31e82003d1cc519cb62ef1a287ecf1a14a8c"
 }

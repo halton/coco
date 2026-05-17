@@ -869,6 +869,23 @@ class ProactiveScheduler:
         # interact-018: latency_ms 测量起点 —— 锁外 monotonic，覆盖整段 maybe_trigger
         # （判定 + 预占 + LLM/TTS + emit）。t_start 后续每次 _trace_emit 时计算
         # `round((monotonic() - t_start) * 1000, 3)` 作为 latency_ms extra kwarg。
+        #
+        # interact-021: latency_ms 各 stage 语义文档化（单源真理：
+        # research/proactive_trace_contract.md §5）。同一字段名在不同 emit 站点下
+        # 语义不同, 下游聚合 (scripts/proactive_trace_summary.py latency_by_stage)
+        # 不可跨 stage 求总 p50/p95。
+        #
+        # 6 个 stage 名权威清单（与 §5.3 同步, 下游必须假设全集）:
+        #   emotion_alert  (站点 #1, 独立路径自测量, decision=admit)
+        #   fusion_boost   (站点 #2/#3/#4, decision=reject 或 admit)
+        #   mm_proactive   (站点 #2/#3/#4, decision=reject 或 admit)
+        #   cooldown_hit   (站点 #3 reason=cooldown 特化, decision=reject)
+        #   arbit_winner   (站点 #4 锁内预占成功, decision=admit, 不含锁外 LLM/TTS)
+        #   normal         (站点 #3 default 入口快照, decision=reject)
+        #
+        # 单调性 (cumulative): 同一 maybe_trigger 调用内多个 emit 共享 _lat_start,
+        # 后发 emit 的 latency_ms >= 前发 emit (单调非降, 不是严格递增)。
+        # 时钟单位: ms float, 精度 0.001 (`round(..., 3)`); monotonic 不受墙钟回拨影响。
         _lat_start = time.monotonic()
 
         def _lat_ms() -> float:
