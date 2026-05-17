@@ -17,6 +17,7 @@ followed_from: robot-005
 
 from __future__ import annotations
 
+import math
 import os
 import queue as _queue
 import sys as _sys
@@ -84,7 +85,19 @@ class SequencerConfig:
 
     shutdown_timeout_s: float = 2.0
     """robot-012: shutdown(wait=True, timeout=…) 默认值；signal handler / atexit 共用。
-    env: COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S (float seconds)，默认 2.0。"""
+    env: COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S (float seconds)，默认 2.0。
+    robot-014: 非有限值 (inf/-inf/nan) 或 <=0 → 降级到 2.0, 防 thread.join(timeout=inf) 永久阻塞。"""
+
+    def __post_init__(self) -> None:
+        # robot-014: shutdown_timeout_s 硬化 — inf/nan/<=0 一律降级到 2.0
+        try:
+            v = float(self.shutdown_timeout_s)
+        except (TypeError, ValueError):
+            v = 2.0
+        if not math.isfinite(v) or v <= 0:
+            v = 2.0
+        # 通过 object.__setattr__ 兼容 frozen dataclass / 普通 dataclass 都安全
+        object.__setattr__(self, "shutdown_timeout_s", v)
 
 
 _VALID_OVERFLOW = frozenset({"drop_oldest", "drop_new", "block"})
@@ -119,10 +132,11 @@ def sequencer_config_from_env(env: Optional[dict] = None) -> SequencerConfig:
     if overflow not in _VALID_OVERFLOW:
         overflow = "drop_oldest"
     # robot-012: shutdown timeout 配置化（signal handler + atexit 共用）
+    # robot-014: 加 math.isfinite() 拦 inf/-inf/nan, 防 thread.join(timeout=inf) 永久阻塞
     raw_st = env.get("COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S", "").strip()
     try:
         shutdown_to = float(raw_st) if raw_st else 2.0
-        if shutdown_to <= 0:
+        if not math.isfinite(shutdown_to) or shutdown_to <= 0:
             shutdown_to = 2.0
     except ValueError:
         shutdown_to = 2.0
