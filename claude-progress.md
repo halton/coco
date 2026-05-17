@@ -3096,3 +3096,18 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 - interact-019-backlog-trace-status-contract-doc: trace contract 文档化 status 字段必须用白名单原子 token (避免外部接入方写 "RPC_FAILURE" / "TASK_FAILED_RETRY" 等复合值漏判), 仅文档化不改代码
 
 **下一步**: 按持续开发模式立即派下一 candidate (phase-17 #4 vision-014, depends_on vision-013 已满足)。
+
+## Session 2026-05-17 — vision-014 closeout (TTL doc + hot path env cache)
+
+**vision-014 PASSING**: Engineer b65f822 实现 → Reviewer sub-agent fresh-context LGTM (干净) → merge --no-ff feat/vision-014 → main HEAD `8c6155d`
+
+**改造点**:
+- (C1) `coco/perception/face_tracker.py` 模块顶 docstring 文档化 TTL wall clock 设计选择 — 跨进程 / 持久化 session 共享 TTL 必须用 wall clock; 已知 NTP 大幅回拨 / 前跳的预期行为 (known-limit)
+- (C2) `_maybe_identify` hot path 微优化 — module-level `_face_id_identify_wire_enabled` env flag cache, default-OFF 时在 get_face_id/record_name_confidence + try/except 前 short-circuit, 降低 >=60 FPS 路径开销
+- V1-V4 PASS (TTL doc keywords / hot path cache exists / default-OFF bytewise / default-ON bytewise), regression 全 PASS, forbidden_words_scan clean
+
+**phase-17 进度**: 4/5 PASSING (robot-009 ✓ / robot-010 ✓ / interact-019 ✓ / vision-014 ✓); 剩 infra-020 未起 (最后一个)
+
+**Reviewer 干净 LGTM, 不新增 backlog** (Reviewer 仅 3 条非 caveat 说明)
+
+**下一步**: 按持续开发模式立即派 phase-17 #5 (infra-020, depends_on infra-019 已满足) — phase-17 收官 feature。
