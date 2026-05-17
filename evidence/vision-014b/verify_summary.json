@@ -1,0 +1,32 @@
+{
+  "failed": 0,
+  "feature": "vision-014b",
+  "results": [
+    {
+      "detail": "survived=['e_boundary', 'e_keep_safe']; dropped_ttl=2; ttl_days=0_keep=True",
+      "name": "V1 TTL 边界 strict-greater-than (>)",
+      "ok": true
+    },
+    {
+      "detail": "a(frame3/5frames)=1 counter_after=2; b(time0.1s/3frames)=1; c(first_frame_init)=0 _gc_last_time_set=True; d(period_s=0,frame=2/2frames)=1; e(default_off)={'dropped_ttl': 0, 'dropped_lru': 0}",
+      "name": "V2 GC 触发 frame_due OR time_due, 双计数器复位",
+      "ok": true
+    },
+    {
+      "detail": "flag_off=False; OFF[20frames] get=0 rec=0; flag_on=True; ON[20frames] get=20 rec=20",
+      "name": "V3 _maybe_identify default-OFF wire short-circuit (0 method call)",
+      "ok": true
+    },
+    {
+      "detail": "h2_count=3 missing_phrases=[]",
+      "name": "V4 docs/vision-ttl-design.md ≥3 段 + 关键短语全覆盖",
+      "ok": true
+    },
+    {
+      "detail": "scripts/verify_vision_014.py=rc0, scripts/verify_vision_013.py=rc0",
+      "name": "V5 regression verify_vision_014/013",
+      "ok": true
+    }
+  ],
+  "total": 5
+}
