@@ -3297,3 +3297,16 @@ main HEAD (planning 前) = 954de2b。从 status=backlog 池升级 5 个候选, p
 **phase-19 主题候选**: 历史 backlog Reviewer caveats / residual 收割, 继续巩固单源真理 + 跨平台 / 异常退出 / 边界 metric 覆盖。default-OFF 默认。
 
 **下一步**: 持续开发模式按 CLAUDE.md 启动 infra-022 (priority 150 最低数字 not_started)。
+
+## Session 2026-05-17 — infra-022 closeout (passing, merged to main)
+
+base main = 454a622; feat/infra-022 HEAD = c5e28ea。Reviewer (sub-agent fresh-context) LGTM-with-caveats, 0 BLOCKER, 1 LOW caveat → backlog `infra-022-backlog-rotate-docstring-mismatch` (priority=999, docstring 措辞与 N4 实际行为表述歧义, 仅文档不改代码)。
+
+**改动**:
+- scripts/_history_writer.py — N1 itertools.count() + monotonic_ns 双路融合; N2 timezone.utc; N3 退化无锁路径 stderr WARN once; N4 _rotate_if_needed replace+touch 包入 _FileLock
+- scripts/run_verify_all.py + scripts/verify_infra_022.py — C5 skipped_count 字段语义澄清 + V0-V5 7/7 PASS
+- evidence/infra-022/verify_summary.json
+
+**验证**: V0+V1-V5 7/7 PASS, smoke 11/11 PASS, regression infra-017/018/021 全 PASS。
+
+**status**: infra-022 → passing。phase-19 软件进度 1/5 (剩 robot-012 / interact-021 / infra-023 / robot-013)。下一候选 robot-012 priority=151。
