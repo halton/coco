@@ -1,0 +1,30 @@
+==> 环境基线
+  python: 3.13.12
+  platform: Darwin 25.4.0 arm64
+  reachy-mini: 1.4.0
+  sounddevice: 0.5.5
+  numpy: 2.4.4
+==> Smoke: audio (sounddevice 0.3s)
+  SKIP: COCO_CI=1，跳过真麦克录音（CI 无声卡）
+==> Smoke: ASR (sense-voice wav)
+  WARN: ASR model not downloaded, skipped (run scripts/fetch_asr_models.sh)
+==> Smoke: TTS (kokoro-zh)
+  WARN: TTS model not downloaded, skipped (run scripts/fetch_tts_models.sh)
+==> Smoke: vision (face detect on single_face.jpg)
+  ok: detected 1 face(s) in single_face.jpg
+==> Smoke: companion-vision (FaceTracker 2s)
+  ok: detect=10 hit=10 present=True
+==> Smoke: face-tracker (primary stability 5 frames)
+  ok: tracks=1 primary_id=1 hits=15 switches=1
+==> Smoke: VAD trigger (fixture wav)
+  WARN: silero_vad.onnx not downloaded, skipped (run scripts/fetch_asr_models.sh)
+==> Smoke: wake-word (KWS on wake_keke fixture)
+  WARN: KWS model not downloaded, skipped (run scripts/fetch_kws_models.sh)
+==> Smoke: power-state (companion-003)
+  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1
+==> Smoke: config (CocoConfig + jsonl logging)
+  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe
+==> Smoke: publish (entry_points + Coco class import)
+  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp
+
+==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json
