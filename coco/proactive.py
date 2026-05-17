@@ -418,8 +418,42 @@ class ProactiveScheduler:
         序列，让主动开口附带轻量肢体反馈。sequencer=None 时清除注入（OFF 等价）。
 
         线程：seq.run() 在新 daemon 线程中执行，避免阻塞 proactive _loop。
+
+        robot-010: lifecycle 校验
+        - (a) 注入已 shutdown 的 sequencer → logger.warning 后 **拒绝**（不写入 _robot_sequencer）；
+        - (b) 已存在 _robot_sequencer 时再次注入 → logger.warning 记重复注入后覆盖；
+        - (c) None 入参 → 清除（与 OFF 等价）；
+        - 探测 is_shutdown 用 best-effort：sequencer 没有该方法 / 抛异常时按"未 shutdown"处理，
+          避免对老/mock sequencer 产生反向破坏（与 default-OFF 不冲突）。
         """
+        # robot-010 (a): is_shutdown 探针 —— 拒绝注入已 shutdown 的 sequencer。
+        # 注：仅当 is_shutdown() 返回**严格 bool True** 才视为 shutdown；返回非 bool
+        # （如 MagicMock 默认 stub 出的 MagicMock 实例）按"未 shutdown"处理，
+        # 保护既有 mock 测试不被反向破坏。
+        if sequencer is not None:
+            try:
+                is_fn = getattr(sequencer, "is_shutdown", None)
+                if callable(is_fn):
+                    rv = is_fn()
+                    if isinstance(rv, bool) and rv is True:
+                        log.warning(
+                            "[proactive] set_robot_sequencer: refuse to inject "
+                            "already-shutdown sequencer (%r); keeping existing=%r",
+                            sequencer, self._robot_sequencer is not None,
+                        )
+                        return
+            except Exception as e:  # noqa: BLE001
+                # 探针自身异常 fail-soft —— 按"未 shutdown"继续注入
+                log.warning("[proactive] set_robot_sequencer: is_shutdown probe failed: %s: %s",
+                            type(e).__name__, e)
         with self._lock:
+            # robot-010 (b): 重复注入 WARNING
+            if self._robot_sequencer is not None and sequencer is not None:
+                log.warning(
+                    "[proactive] set_robot_sequencer: overwriting existing sequencer "
+                    "(prev=%r, new=%r) — double-injection detected",
+                    self._robot_sequencer, sequencer,
+                )
             self._robot_sequencer = sequencer
 
     # interact-010: 共享 cooldown API
@@ -1171,8 +1205,33 @@ class ProactiveScheduler:
         # robot-009: 改造 — 不再起 daemon thread + seq.run(), 改为 sequencer.enqueue(action)
         # 非阻塞投递；由 sequencer 内部 action worker 串行消费，统一调度入口。
         # 任何异常吃掉——主动话题 happen 不依赖于 robot 动作成功。
+        # robot-010 (c): 触发前用 is_shutdown 探针检查；若注入后 sequencer 已 shutdown
+        # → 自动清空 _robot_sequencer 引用 + 跳过本次 enqueue，避免悬垂引用。
         with self._lock:
             _seq = self._robot_sequencer
+        if _seq is not None:
+            # robot-010: shutdown 自检 —— 已 shutdown → 清引用 + skip
+            # 严格 bool True 才视为 shutdown（保护 MagicMock 默认 stub 场景）
+            try:
+                _is_fn = getattr(_seq, "is_shutdown", None)
+                _shutdown_detected = False
+                if callable(_is_fn):
+                    _rv = _is_fn()
+                    if isinstance(_rv, bool) and _rv is True:
+                        _shutdown_detected = True
+                if _shutdown_detected:
+                    log.warning(
+                        "[proactive] _do_trigger_unlocked: detected shutdown "
+                        "sequencer; clearing _robot_sequencer and skipping enqueue"
+                    )
+                    with self._lock:
+                        # 仅当仍是同一个对象时清空，避免覆盖他人新注入
+                        if self._robot_sequencer is _seq:
+                            self._robot_sequencer = None
+                    _seq = None
+            except Exception as e:  # noqa: BLE001
+                log.warning("[proactive] is_shutdown probe (trigger) failed: %s: %s",
+                            type(e).__name__, e)
         if _seq is not None:
             try:
                 from coco.robot.sequencer import Action as _SeqAction

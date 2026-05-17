@@ -1,0 +1,35 @@
+{
+  "feature_id": "robot-010",
+  "lifecycle_checks": {
+    "a_reject_shutdown_on_setter": true,
+    "b_warning_on_double_inject": true,
+    "c_auto_clear_when_seq_becomes_shutdown": true
+  },
+  "regression": {
+    "verify_audio_012": "PASS",
+    "verify_infra_019": "PASS",
+    "verify_interact_018": "PASS",
+    "verify_robot_006": "PASS",
+    "verify_robot_007": "PASS",
+    "verify_robot_008": "PASS",
+    "verify_robot_009": "PASS",
+    "verify_vision_013": "PASS"
+  },
+  "shutdown_callback_approach": "(b) ProactiveScheduler probes seq.is_shutdown() inside _do_trigger_unlocked; True -> auto-clear _robot_sequencer and skip enqueue. Decoupled, no change to RobotSequencer.",
+  "smoke": "PASS",
+  "verify_robot_010": {
+    "V1_reject_shutdown_seq_in_setter": "PASS",
+    "V2_double_inject_warning": "PASS",
+    "V3_auto_clear_on_seq_shutdown_at_trigger": "PASS",
+    "V4_default_off_no_seq_no_thread": "PASS",
+    "V5_regression_robot_009_008_007_006": "PASS"
+  },
+  "forbidden_word_scan": "0 hits (set_motor_torque|enable_torque|body.|low_level)",
+  "default_off_bytewise": true,
+  "strict_bool_probe": "is_shutdown() return value must be strict bool True to count as shutdown; protects MagicMock default-stubbed callers",
+  "files_changed": [
+    "coco/proactive.py",
+    "scripts/verify_robot_010.py",
+    "evidence/robot-010/verify_summary.json"
+  ]
+}
