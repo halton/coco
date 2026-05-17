@@ -1,0 +1,56 @@
+{
+  "feature": "interact-020",
+  "all_pass": true,
+  "results": {
+    "V0_fingerprint": {
+      "ok": true,
+      "tokens": [
+        "error",
+        "errored",
+        "fail",
+        "failed",
+        "failure"
+      ],
+      "module_doc_has_proactive_trace": true,
+      "missing_anchors": []
+    },
+    "V1_const_docstring_terms": {
+      "ok": true,
+      "missing_tokens": [],
+      "missing_terms": []
+    },
+    "V2_tokens_set_equals": {
+      "ok": true,
+      "actual": [
+        "error",
+        "errored",
+        "fail",
+        "failed",
+        "failure"
+      ],
+      "expected": [
+        "error",
+        "errored",
+        "fail",
+        "failed",
+        "failure"
+      ]
+    },
+    "V3_is_fail_behavior_unchanged": {
+      "ok": true,
+      "bad": []
+    },
+    "V4_contract_doc_exists": {
+      "ok": true,
+      "path": "research/proactive_trace_contract.md",
+      "size": 3522,
+      "missing_tokens": [],
+      "missing_terms": []
+    },
+    "V5_regression_interact_019": {
+      "ok": true,
+      "rc": 0,
+      "stderr_tail": ""
+    }
+  }
+}
