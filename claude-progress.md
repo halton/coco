@@ -3466,3 +3466,22 @@ evidence:
 merge: feat/interact-022 → main (--no-ff), merge commit=8884969。
 
 next: phase-20 剩余 3 项 (infra-024 P162 / robot-015 P163 / vision-014b P164), 下一候选 infra-024 priority=162 (area=infra)。
+
+## Session 2026-05-17 — infra-024 closeout
+
+phase-20 P162 infra-024 (area=infra, 吸收 backlog infra-019-backlog-finegrained-exit-e2e-v5) → passing。**纯 verify + evidence, 无源码改动**, 维度为 finegrained exit e2e v5 reaffirmation, 把 classifier 单元测 (V1-V4) 闭环到 smoke 真退出码。
+
+改动:
+- scripts/verify_infra_024.py: V0-V5 — V0 classifier truthy 表 case-sensitive 反证; V1 subprocess smoke.py ON 模式 (COCO_SMOKE_FINEGRAINED_EXIT=1 + COCO_FAKE_MODEL_MISSING=1) 断言 rc==2; V2-V3 OFF 模式同场景 rc==0 (default-ON 路径不变); V4 truthy 别名 ("1"/"true"/"yes"/"on") ON 行为一致; V5 subprocess stdout forensic chain assert。
+- evidence/infra-024/verify_summary.json + v1_subprocess_stdout.txt: V0-V5 全 PASS + 取证落地。
+
+evidence:
+- verify_infra_024 V0-V5 6/6 PASS
+- ./init.sh smoke 11/11 PASS
+- Reviewer (sub-agent fresh-context) LGTM 干净, 3 条 nit-level 建议进 backlog (不衍生 fu chain): V0 额外真值边界 / verify docstring venv 提示 / V5 命名优化
+- 无源码改动 (纯 verify + evidence)
+- source: infra-019-backlog-finegrained-exit-e2e-v5
+
+merge: feat/infra-024 → main (--no-ff), merge commit=d5902d4。
+
+next: phase-20 剩余 2 项 (robot-015 P163 / vision-014b P164), 下一候选 robot-015 priority=163 (area=robot)。
