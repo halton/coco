@@ -1,0 +1,101 @@
+{
+  "failures": [],
+  "feature": "infra-020",
+  "rc_table": {
+    "OFF+any_mix_no_FAIL": 0,
+    "ON+SKIP_only": 3,
+    "ON+WARN_only": 2,
+    "ON+all_PASS": 0,
+    "ON+any_FAIL": 1
+  },
+  "results": {
+    "V0_source_fingerprint": {
+      "detail": {
+        "missing": [],
+        "must_have_count": 6
+      },
+      "status": "PASS"
+    },
+    "V1_on_all_pass": {
+      "detail": {
+        "areas": {
+          "asr": "PASS",
+          "audio": "PASS",
+          "tts": "PASS"
+        },
+        "gate_on": true,
+        "rc": 0
+      },
+      "status": "PASS"
+    },
+    "V2_on_warn_only": {
+      "detail": {
+        "areas": {
+          "asr": "WARN",
+          "audio": "PASS",
+          "tts": "PASS"
+        },
+        "gate_on": true,
+        "rc": 2
+      },
+      "status": "PASS"
+    },
+    "V3_on_fail": {
+      "detail": {
+        "areas": {
+          "asr": "FAIL",
+          "audio": "PASS"
+        },
+        "gate_on": true,
+        "rc": 1,
+        "rc_off": 1
+      },
+      "status": "PASS"
+    },
+    "V4_on_skip_only": {
+      "detail": {
+        "areas": {
+          "asr": "SKIP",
+          "audio": "PASS",
+          "tts": "PASS"
+        },
+        "gate_on": true,
+        "rc": 3
+      },
+      "status": "PASS"
+    },
+    "V5_off_mixed": {
+      "detail": {
+        "cases": [
+          {
+            "env": "unset",
+            "gate_on": false,
+            "rc": 0
+          },
+          {
+            "env": "empty",
+            "gate_on": false,
+            "rc": 0
+          },
+          {
+            "env": "zero",
+            "gate_on": false,
+            "rc": 0
+          },
+          {
+            "env": "false",
+            "gate_on": false,
+            "rc": 0
+          },
+          {
+            "env": "no",
+            "gate_on": false,
+            "rc": 0
+          }
+        ]
+      },
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
