@@ -1396,6 +1396,23 @@ class Coco(ReachyMiniApp):
                             _group_mode_ref[0] = _group_mode_coord
                         except Exception:  # noqa: BLE001
                             pass
+                        # robot-011: 把 RobotSequencer 注入 GroupModeCoordinator.
+                        # 双层 gate: COCO_GROUP_ROBOT_WIRE=1 (env, coord 构造时读)
+                        # + sequencer is not None; 任一不满足 → enter/exit 不 enqueue,
+                        # bytewise 与基线一致.
+                        if _robot_sequencer is not None:
+                            try:
+                                _group_mode_coord.set_robot_sequencer(_robot_sequencer)
+                                print(
+                                    "[coco][group_mode] robot_sequencer injected "
+                                    f"(wire_enabled={os.environ.get('COCO_GROUP_ROBOT_WIRE', '0')})",
+                                    flush=True,
+                                )
+                            except Exception as _pe:  # noqa: BLE001
+                                print(
+                                    f"[coco][group_mode] inject robot_sequencer failed: {_pe!r}",
+                                    flush=True,
+                                )
                         # vision-010-fu-1 R-1: wire FaceTracker arbitrate → GroupMode.on_face_id_arbit。
                         # logging_setup.emit 是单向 jsonl sink；业务侧需显式 callback 注入。
                         # ARBIT OFF 时 _maybe_auto_arbitrate 根本不调 callback，bytewise 等价。
