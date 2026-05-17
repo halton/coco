@@ -1,0 +1,71 @@
+{
+  "feature_id": "audio-013",
+  "ok": true,
+  "ts": "2026-05-17T12:30:07+0800",
+  "results": [
+    {
+      "name": "V0_fingerprint",
+      "ok": true,
+      "head": "cf650b40d5f6",
+      "sd_version": "0.5.5",
+      "python": "3.13.12",
+      "audio_resilience.py.sha256": "0a3f7eec8044461d",
+      "vad_trigger.py.sha256": "4e22b0766f742cf9",
+      "wake_word.py.sha256": "960fd71ee58042e9"
+    },
+    {
+      "name": "V1_util_extracted_equivalence",
+      "ok": true,
+      "same_obj": true,
+      "env_const": true,
+      "bad": []
+    },
+    {
+      "name": "V2_wake_word_no_private_vad_import",
+      "ok": true,
+      "has_public_substr": true,
+      "private_vt_imports": [],
+      "target_private_imports": []
+    },
+    {
+      "name": "V3_v4_positive_assertion_override",
+      "ok": true,
+      "vad_500_window_ms": 500,
+      "vad_500_lost_n_actual": 8000,
+      "vad_500_upper_lost_n": 0,
+      "vad_250_window_ms": 250,
+      "vad_250_lost_n_actual": 4000,
+      "wake_500_lost_n_actual": 8000,
+      "ok_window_eq": true,
+      "ok_actual_eq": true,
+      "ok_lost_n_actual_eq": true,
+      "ok_upper_not_eq_override": true,
+      "ok_window_eq_250": true,
+      "ok_lost_n_actual_eq_250": true,
+      "ok_wake_eq": true
+    },
+    {
+      "name": "V4_classify_stream_error",
+      "ok": true,
+      "ok_none": true,
+      "ok_runtime": true,
+      "ok_value": true,
+      "ok_portaudio": true,
+      "sounddevice_available": true
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_audio_012.py": 0,
+        "scripts/verify_audio_011.py": 0,
+        "scripts/verify_audio_010.py": 0,
+        "scripts/verify_audio_009.py": 0,
+        "scripts/verify_infra_018.py": 0,
+        "scripts/verify_robot_007.py": 0,
+        "scripts/verify_vision_012.py": 0,
+        "scripts/verify_interact_017.py": 0
+      }
+    }
+  ]
+}

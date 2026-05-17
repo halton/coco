@@ -401,10 +401,72 @@ class HotplugWatcher:
         self._stop_event.set()
 
 
+# =====================================================================
+# audio-013：公共 util — loss_window 读取 + PortAudio 异常判定
+# =====================================================================
+# audio-012 closeout C1: coco/wake_word.py 跨模块 import vad_trigger 私有函数
+# _read_loss_window_override_ms 形成隐性耦合。此处把 env 解析 / 默认值与
+# 异常分类统一抽到 audio_resilience 公共 util，vad_trigger / wake_word 都以
+# 公共名导入。纯重构：行为与原 vad_trigger._read_loss_window_override_ms /
+# wake_word.py 内联 portaudio_error 判定 bytewise 等价。
+ENV_LOSS_WINDOW_MS = "COCO_AUDIO_REOPEN_LOSS_WINDOW_MS"
+
+
+def read_loss_window_override_ms() -> Optional[float]:
+    """读 env ``COCO_AUDIO_REOPEN_LOSS_WINDOW_MS``；非法值/未设置返回 None。
+
+    解析 9-case (audio-012 V4 已覆盖)：未设、空串、纯空格、非数字、负数、0、
+    NaN、合法整数、合法浮点。任一非法情况返回 ``None``（OFF / 实测窗口）。
+    合法值返回 ``float(ms)``，调用方自行换算 lost_n_actual。
+
+    audio-013 抽取自 ``coco/vad_trigger.py:_read_loss_window_override_ms``
+    （后者保留为 thin delegate 以维持外部向后兼容）。
+    """
+    raw = os.environ.get(ENV_LOSS_WINDOW_MS)
+    if raw is None:
+        return None
+    s = raw.strip()
+    if not s:
+        return None
+    try:
+        v = float(s)
+    except (ValueError, TypeError):
+        return None
+    if v != v or v <= 0:  # NaN / 非正
+        return None
+    return v
+
+
+def classify_stream_error(exc: Optional[BaseException]) -> str:
+    """audio reopen 路径的 ``error_type`` 标签判定（audio-012 协议）。
+
+    返回值集合：``"requested"``（主动 hotplug / 设备切换）/
+    ``"portaudio_error"``（``sd.PortAudioError``）/ ``"unknown"``（其它异常）。
+
+    - ``exc is None`` → ``"requested"``
+    - ``isinstance(exc, sd.PortAudioError)`` → ``"portaudio_error"``
+    - 其它 ``BaseException`` → ``"unknown"``
+
+    sounddevice 不可用时 PortAudioError 退化为不可达分支，所有异常归 ``"unknown"``。
+    audio-013 新增公共 util；调用方目前仍以 ``meta["error_type"]`` 字符串形式传入，
+    本 util 留作真硬件路径直接吃 exception 时的统一入口。
+    """
+    if exc is None:
+        return "requested"
+    try:
+        import sounddevice as _sd  # type: ignore
+        if isinstance(exc, _sd.PortAudioError):
+            return "portaudio_error"
+    except Exception:  # noqa: BLE001
+        pass
+    return "unknown"
+
+
 __all__ = [
     "ENV_RECOVERY",
     "ENV_HOTPLUG",
     "ENV_HOTPLUG_INTERVAL",
+    "ENV_LOSS_WINDOW_MS",
     "HOTPLUG_INTERVAL_DEFAULT",
     "HOTPLUG_INTERVAL_MIN",
     "RECOVERY_BASE_DELAY",
@@ -414,4 +476,6 @@ __all__ = [
     "open_stream_with_recovery",
     "diff_devices",
     "HotplugWatcher",
+    "read_loss_window_override_ms",
+    "classify_stream_error",
 ]

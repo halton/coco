@@ -40,23 +40,12 @@ log = logging.getLogger(__name__)
 # audio-012: env override for reopen buffer-loss window estimate.
 # 取值含义: 强制使用该毫秒数作为 lost_n_actual / window_ms 的估算窗口
 # （便于 sim 验证 / 真机现场校准）。OFF (未设/非法/<=0) 时使用实测窗口。
-ENV_LOSS_WINDOW_MS = "COCO_AUDIO_REOPEN_LOSS_WINDOW_MS"
-
-
-def _read_loss_window_override_ms() -> Optional[float]:
-    raw = os.environ.get(ENV_LOSS_WINDOW_MS)
-    if raw is None:
-        return None
-    s = raw.strip()
-    if not s:
-        return None
-    try:
-        v = float(s)
-    except (ValueError, TypeError):
-        return None
-    if v != v or v <= 0:  # NaN / 非正
-        return None
-    return v
+# audio-013: 常量与解析函数实际定义已移到 coco.audio_resilience（公共 util）；
+# 这里保留同名导出作为 thin delegate，维持外部向后兼容（含 verify_audio_012）。
+from coco.audio_resilience import (
+    ENV_LOSS_WINDOW_MS as ENV_LOSS_WINDOW_MS,  # re-export
+    read_loss_window_override_ms as _read_loss_window_override_ms,  # alias
+)
 
 
 # ---------------------------------------------------------------------------

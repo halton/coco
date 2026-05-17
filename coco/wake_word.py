@@ -461,7 +461,9 @@ class WakeWordDetector:
                     # audio-012: 校准 lost_n window — 同 VADTrigger
                     dt_total = max(0.0, t_reopen_done - t_stop)
                     dt_actual = max(0.0, t_reopen_done - t_close_done)
-                    from coco.vad_trigger import _read_loss_window_override_ms as _read_ovr
+                    # audio-013: 公共 util — 取自 coco.audio_resilience.
+                    # 等价于历史 from coco.vad_trigger import _read_loss_window_override_ms。
+                    from coco.audio_resilience import read_loss_window_override_ms as _read_ovr
                     env_ms_override = _read_ovr()
                     if env_ms_override is not None:
                         window_ms = int(env_ms_override)
