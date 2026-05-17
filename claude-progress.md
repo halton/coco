@@ -3166,3 +3166,20 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 
 **下一步**: phase-18 起点 priority=140 robot-011, 主会话进入持续开发模式派 Engineer sub-agent 在 feat/robot-011 分支推进。
 
+
+## Session 2026-05-17 — robot-011 closeout (passing, merged)
+
+**Feature**: robot-011 (area=robot, phase 18, priority 140) GroupModeCoordinator 接入 RobotSequencer
+
+**改动**:
+- `coco/companion/group_mode.py` — 增 `set_robot_sequencer()` + `enqueue` 路径; env `COCO_GROUP_ROBOT_WIRE` ON 时 robot action 走 sequencer, OFF (default) 旧路径不变。
+- `coco/main.py` — wire 注入: 当 RobotSequencer 与 GroupModeCoordinator 共存时调用 `coord.set_robot_sequencer(seq)`。
+- `scripts/verify_robot_011.py` — V0-V5 验证 (default-OFF 旧路径 / set_robot_sequencer 注入 / env-ON enqueue 走 sequencer / 双路 fan-out 消除 / lifecycle 安全 / smoke)。
+
+**Verification**: V0-V5 全 PASS, `./init.sh` smoke PASS, Reviewer (sub-agent) LGTM 干净 no new caveat。default-OFF, sim-first, real_machine_uat=not_required。
+
+**承接**: 收割 robot-008 Reviewer caveat (GroupModeCoord wire 尚未建立) — robot-008/009/010 仅落地 ProactiveScheduler 侧, 本次把 GroupModeCoord 路径也统一到 sequencer 单路, 消除外部线程管理与双路 fan-out。
+
+**Merge**: feat/robot-011 → main `--no-ff`。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
+
+**下一步**: phase-18 priority=141 audio-013 (audio-012 caveats 收割: 抽 coco.audio_resilience/audio_common 公共 util)。主会话持续开发模式派 Engineer sub-agent 在 feat/audio-013 推进。
