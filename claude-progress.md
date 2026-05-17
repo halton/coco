@@ -3129,3 +3129,40 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 - infra-020-backlog-mixed-warn-skip-case: rc_table 端到端补 ON+WARN+SKIP 共存场景断言 rc=2 (WARN 优先于 SKIP), 当前 V0-V5 仅覆盖单一态
 
 **下一步**: 按持续开发模式默认进入 phase-18 planning, 立即开始执行第一个候选。
+
+---
+
+## Session 2026-05-17 — phase-18 planning (5 候选入库, backlog upgrade)
+
+**主会话编排**: phase-17 FULL 收官后 (5/5 passing: robot-009 / robot-010 / interact-019 / vision-014 / infra-020), 派 planning sub-agent (fresh context) 从 phase-17 残 + 历史强候选 backlog 池挑 5 候选 priority 140-144 跨 5 子系统 (robot/audio/companion/interact/infra), 写 feature_list.json + claude-progress.md, main 直接 commit + push 一次失败忽略。
+
+**5 候选 (priority 140-144, 跨 5 子系统, 全部 sim-first / default-OFF / real_machine_uat=not_required)**:
+
+- **140 robot-011** (area=robot) ← `robot-008-backlog-groupmodecoord-wire`
+  GroupModeCoordinator 接入 RobotSequencer — 承接 robot-008 Reviewer caveat。robot-008/009 仅落地 ProactiveScheduler 侧, 本次把 GroupModeCoordinator 的 robot action 触发也走 sequencer.enqueue 统一调度, 消除外部线程管理与双路 fan-out。复用 robot-008 set_robot_sequencer 模式 + robot-010 lifecycle 校验改进。depends_on: robot-008/009/010。
+
+- **141 audio-013** (area=audio) ← `audio-012-backlog-coupling-and-doc`
+  audio-012 caveats 收割 — C1 抽 coco.audio_resilience / coco.audio_common 公共 util 解 wake_word.py 跨模块 import vad_trigger 私有函数 _read_loss_window_override_ms 隐性耦合; C2 verify_audio_012 V4 加正向断言 (override env 生效时 lost_n 等于覆盖值); C3 docstring/research 补 env 名一致性记录; C4 sim dt 截断 0ms 已登记 uat-audio-012 不动。depends_on: audio-012。
+
+- **142 companion-017** (area=companion) ← `companion-016-backlog-polish`
+  companion-016 caveats 收割 — C1 env 名 COCO_PERSIST_EMIT_MIN_INTERVAL_S (代码为准, spec 写 COCO_PREFERENCE_EMIT_INTERVAL_S 30s) 统一文档/注释/feature_list description; C2 __init__ state_cache_path=None 时 lazy load env 改造严格 bytewise 无 IO; C3 round(.,6) 浮点精度有损 docstring + research 明示; C4 模块级 WARN once 多进程各 warn 一次文档化已知行为。depends_on: companion-016。
+
+- **143 interact-020** (area=interact) ← `interact-019-backlog-trace-status-contract-doc`
+  trace contract 文档化 status 字段白名单原子 token — interact-019 已把 _is_fail 改为白名单 (error/errored/fail/failed/failure case-insensitive strip) 消除 no_failure / failsafe 误判, 本次在 research/proactive_trace_contract.md 或同等位置显式登记: status 字段必须用白名单原子 token, 不允许 'RPC_FAILURE' / 'TASK_FAILED_RETRY' 等复合值, 外部 proactive emit 调用者均需遵守。仅文档化不改代码。depends_on: interact-019。
+
+- **144 infra-021** (area=infra) ← `infra-020-backlog-mixed-warn-skip-case`
+  rc_table 端到端补共存场景 — scripts/verify_infra_020.py 增 V6 构造 stdout 同时含 WARN 和 SKIPPED 标记, 断言 _decide_rc rc=2 (WARN 优先于 SKIP), 验证多类共存优先级; V0-V5 已分别覆盖 PASS/WARN/FAIL/SKIP/OFF 单一态。sim-first verification 内闭环。depends_on: infra-020。
+
+**Backlog upgrade (5 项 status=backlog → status=upgraded + upgraded_to + upgraded_phase=18)**:
+- robot-008-backlog-groupmodecoord-wire → robot-011
+- audio-012-backlog-coupling-and-doc → audio-013
+- companion-016-backlog-polish → companion-017 (替代 brief 推荐 vision-015, 因 vision 池 backlog 均已被 vision-014 / earlier upgrade 消费)
+- interact-019-backlog-trace-status-contract-doc → interact-020
+- infra-020-backlog-mixed-warn-skip-case → infra-021
+
+**风险分散**: 5 子系统 (robot/audio/companion/interact/infra), 跨 ≥3 子系统要求满足且更优。
+
+**Planning 方式**: main 上直接 commit (轻量元数据, 不开 feat 分支)。commit 后尝试 `git push origin main` 一次, 失败忽略继续。
+
+**下一步**: phase-18 起点 priority=140 robot-011, 主会话进入持续开发模式派 Engineer sub-agent 在 feat/robot-011 分支推进。
+

@@ -2747,7 +2747,9 @@
       "area": "companion",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "companion-017",
+      "upgraded_phase": 18,
       "description": "C1 brief 写 COCO_PREFERENCE_EMIT_INTERVAL_S 默认 30s 实现为 COCO_PERSIST_EMIT_MIN_INTERVAL_S 默认 10s，spec 与代码不一致以代码为准，未来文档同步；C2 __init__ 即使 state_cache_path=None 仍读 env（极轻），bytewise 严格性可在未来 lazy load；C3 round(.,6) 浮点精度有损（同值场景为 feature）需文档化；C4 模块级 WARN once 多进程各 warn 一次（与 companion-015 一致）"
     },
     {
@@ -2818,7 +2820,9 @@
       "area": "audio",
       "priority": 999,
       "phase": null,
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "audio-013",
+      "upgraded_phase": 18,
       "description": "audio-012 closeout 4 caveats，全部不阻 merge：C1 coco/audio/wake_word.py L463 跨模块 import vad_trigger 的私有函数 _read_loss_window_override_ms 形成隐性耦合；建议抽 coco.audio_resilience / coco.audio_common 公共 util 统一暴露 loss_window 读取与 PortAudio 异常判定。C2 verify_audio_012 V4 ok_upper_not_overridden 是弱负向断言 (lost_n != 8000)，sim 下不会真触发 override 路径，真机毫秒级窗口下偶发接近 500ms 可能假阴；建议补一条正向断言 (override env 被实际生效时 lost_n 等于覆盖值)。C3 description env 名 COCO_AUDIO_HOTPLUG_POLL_INTERVAL_S vs 代码实际 COCO_AUDIO_HOTPLUG_INTERVAL_S 不一致；已于 closeout 同步描述。C4 V3 sim 下 dt_actual/dt_total 都截断为 0ms (sim 时间分辨率限制)，真机毫秒级窗口数据由 uat-audio-012 校准。"
     },
     {
@@ -2994,7 +2998,9 @@
       "id": "robot-008-backlog-groupmodecoord-wire",
       "name": "GroupModeCoordinator 接入 RobotSequencer (候选 robot-009)",
       "area": "robot",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "robot-011",
+      "upgraded_phase": 18,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3196,7 +3202,9 @@
       "id": "interact-019-backlog-trace-status-contract-doc",
       "name": "trace contract 文档化 status 字段白名单原子 token",
       "area": "interact",
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "interact-020",
+      "upgraded_phase": 18,
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3321,12 +3329,81 @@
       "area": "infra",
       "phase": null,
       "priority": 999,
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "infra-021",
+      "upgraded_phase": 18,
       "description": "infra-020 后续: scripts/verify_infra_020.py rc_table 端到端补 ON+WARN+SKIP 共存场景 — 构造 stdout 同时含 WARN 和 SKIPPED 标记, 断言 _decide_rc 返回 rc=2 (WARN 优先于 SKIP), 验证多类共存优先级。当前 V0-V5 已分别覆盖 PASS/WARN/FAIL/SKIP/OFF 单一态。",
       "depends_on": [
         "infra-020"
       ],
       "real_machine_uat": "not_required"
+    },
+    {
+      "id": "robot-011",
+      "area": "robot",
+      "phase": 18,
+      "priority": 140,
+      "status": "not_started",
+      "description": "承接 robot-008 Reviewer caveat: GroupModeCoordinator 接入 RobotSequencer — robot-008 描述提到 ProactiveScheduler / GroupMode 注入路径, 但本次仅落地 ProactiveScheduler 侧 (robot-008 + robot-009 改造), GroupModeCoordinator 接入 RobotSequencer 路径尚未建立。复用 robot-008 的 set_robot_sequencer 模式 + robot-010 lifecycle 校验改进, 把 GroupModeCoordinator 的 robot action 触发也走 sequencer.enqueue 统一调度, 消除外部线程管理与双路 fan-out。default-OFF gate (复用现有 sequencer env), 与 robot-008/009/010 一致 sim-first。来源 backlog: robot-008-backlog-groupmodecoord-wire。",
+      "depends_on": [
+        "robot-008",
+        "robot-009",
+        "robot-010"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "robot-008-backlog-groupmodecoord-wire"
+    },
+    {
+      "id": "audio-013",
+      "area": "audio",
+      "phase": 18,
+      "priority": 141,
+      "status": "not_started",
+      "description": "承接 audio-012 caveats: (C1) coco/audio/wake_word.py L463 跨模块 import vad_trigger 私有函数 _read_loss_window_override_ms 隐性耦合 — 抽取 coco.audio_resilience / coco.audio_common 公共 util 统一暴露 loss_window 读取与 PortAudio 异常判定; (C2) verify_audio_012 V4 ok_upper_not_overridden 弱负向断言加正向断言 (override env 生效时 lost_n 等于覆盖值); (C3) env 名 description 已修, 仅 docstring/research 补一笔; (C4) sim dt 截断 0ms 已登记 uat-audio-012, 此处不动。default-OFF, sim-first。来源 backlog: audio-012-backlog-coupling-and-doc。",
+      "depends_on": [
+        "audio-012"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "audio-012-backlog-coupling-and-doc"
+    },
+    {
+      "id": "companion-017",
+      "area": "companion",
+      "phase": 18,
+      "priority": 142,
+      "status": "not_started",
+      "description": "承接 companion-016 caveats: (C1) env 名 spec 写 COCO_PREFERENCE_EMIT_INTERVAL_S 默认 30s, 实现为 COCO_PERSIST_EMIT_MIN_INTERVAL_S 默认 10s — 以代码为准统一文档/注释/feature_list description; (C2) __init__ 在 state_cache_path=None 时 lazy load env 改造, 严格 bytewise 无 IO; (C3) round(.,6) 浮点精度有损 (同值场景为 feature) docstring + research 明示; (C4) 模块级 WARN once 多进程各 warn 一次, 与 companion-015 一致 — 文档化已知行为。default-OFF, sim-first。来源 backlog: companion-016-backlog-polish。",
+      "depends_on": [
+        "companion-016"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "companion-016-backlog-polish"
+    },
+    {
+      "id": "interact-020",
+      "area": "interact",
+      "phase": 18,
+      "priority": 143,
+      "status": "not_started",
+      "description": "承接 interact-019 closeout: trace contract 文档化 status 字段白名单原子 token — interact-019 已把 _is_fail status 匹配从 substring 改为白名单原子 token (error/errored/fail/failed/failure, case-insensitive, strip), 消除 no_failure / failsafe 等误判; 需要在 trace contract 文档 (research/proactive_trace_contract.md 或同等位置) 显式登记白名单原子 token 约定, 不允许写 'RPC_FAILURE' / 'TASK_FAILED_RETRY' 等复合值, 外部接入方 (proactive emit 调用者) 都需遵守。仅文档化, 不改代码。sim-first 验收: 文档存在 + interact-019 V/regression 全 PASS。来源 backlog: interact-019-backlog-trace-status-contract-doc。",
+      "depends_on": [
+        "interact-019"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "interact-019-backlog-trace-status-contract-doc"
+    },
+    {
+      "id": "infra-021",
+      "area": "infra",
+      "phase": 18,
+      "priority": 144,
+      "status": "not_started",
+      "description": "承接 infra-020 后续: scripts/verify_infra_020.py rc_table 端到端补 ON+WARN+SKIP 共存场景 — 构造 stdout 同时含 WARN 和 SKIPPED 标记, 断言 _decide_rc 返回 rc=2 (WARN 优先于 SKIP), 验证多类共存优先级; 与 infra-019 _classify_stdout 行为一致 (WARN > FAIL ordering 已分别在 V0-V5 覆盖单态, 本次 V6 补共存断言)。sim-first verification 内闭环。来源 backlog: infra-020-backlog-mixed-warn-skip-case。",
+      "depends_on": [
+        "infra-020"
+      ],
+      "real_machine_uat": "not_required",
+      "source_backlog": "infra-020-backlog-mixed-warn-skip-case"
     }
   ],
   "_meta": {
