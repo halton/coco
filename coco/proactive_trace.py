@@ -120,7 +120,25 @@ KNOWN_DECISIONS = frozenset({"admit", "reject"})
 
 # interact-019: status 字段的失败 token 白名单（case-insensitive 全词匹配）。
 # 历史 jsonl 若用 "failsafe" 表示安全模式（非失败），改后正确不再误判。
+#
+# interact-020 contract 文档化（research/proactive_trace_contract.md 为单源真理）:
+#   - 匹配语义: status.strip().lower() ∈ STATUS_FAIL_TOKENS（token 精确, 不 substring）
+#   - 白名单原子 token 共 5 个: fail / failed / failure / error / errored
+#   - case-insensitive, 允许首尾 whitespace
+#   - **禁止**复合写法 (会被静默吞掉): "RPC_FAILURE" / "TASK_FAILED_RETRY" /
+#     "ERROR_5XX" / "failed_after_retry" / "check_failed" 等; 这类场景必须改走
+#     ok=False / error=<str> / failure_reason=<str> 三口
+#   - status 字段仅作为历史 jsonl 调试可读兼容口, 不是 emit 端主信号; 主信号首选 ok=False
+#   - 单源真理: 修改本 frozenset 前先更新 research/proactive_trace_contract.md 与
+#     V0 fingerprint (scripts/verify_interact_019.py / scripts/verify_interact_020.py)
 STATUS_FAIL_TOKENS = frozenset({"fail", "failed", "failure", "error", "errored"})
+"""interact-019/020: status 字段失败判定的白名单原子 token 集合。
+
+contract 详见 ``research/proactive_trace_contract.md``。case-insensitive 全词
+匹配 (``status.strip().lower() ∈ STATUS_FAIL_TOKENS``), 不允许 substring;
+复合写法如 ``RPC_FAILURE`` / ``TASK_FAILED_RETRY`` 不会命中, 必须改走
+``ok=False`` / ``error`` / ``failure_reason`` 三口。
+"""
 
 
 def is_fail(rec: Mapping[str, Any]) -> bool:
