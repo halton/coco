@@ -3061,3 +3061,21 @@ robot-009 (ProactiveScheduler→RobotSequencer 注入改造) closeout 完成:
 - robot-009-backlog-block-policy-doc: overflow_policy='block' <=1s 阻塞语义与 brief "完全非阻塞" 表述对齐, 在 sequencer docstring + AGENTS/CLAUDE 子系统段明确三策略
 
 **下一步**: 按持续开发模式立即派 Engineer 执行 phase-17 #2 (robot-010, depends_on robot-009 已满足)。
+
+## Session 2026-05-17 robot-010 closeout
+
+robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
+
+- Engineer: feat/robot-010 e6a683e (set_robot_sequencer 引入 is_shutdown 探针拒绝注入 + 重复注入 WARNING + shutdown 回调清空 ProactiveScheduler._sequencer 自引用; default-OFF bytewise 保持)
+- Reviewer: sub-agent fresh-context LGTM; V1-V5 PASS (V1 reject_shutdown / V2 double_inject_warn / V3 trigger_self_check / V4 default-OFF bytewise / V5 robot-006/007/008/009 regression rc=0); 禁词扫描 0 命中
+- Merge: feat/robot-010 --no-ff -> main; main HEAD = df85799
+- status: not_started -> passing; evidence 写入 (verify_script / verify_summary / reviewer / default_off_bytewise=true / lifecycle_checks='reject_shutdown + double_inject_warn + trigger_self_check' / forbidden_words_scan='clean')
+- 原 backlog robot-008-backlog-setter-lifecycle 保留 upgraded_to=robot-010 标记 (planning 已设)
+
+**phase-17 进度**: 2/5 PASSING (robot-009 ✓ / robot-010 ✓); 剩 interact-019 / vision-014 / infra-020 未起
+
+**新增 2 个 robot-010 backlog (priority=999, phase=null)**:
+- robot-010-backlog-bool-cast-typing: is_shutdown 探针严格 `rv is True` 判定面对 numpy.bool_/int 等 truthy 非 True 返回 fail-open, 建议 `bool(rv) is True` 或显式 cast
+- robot-010-backlog-setter-race-window: setter 锁外探针 + 锁内覆盖两阶段竞态窗口 (T1 探针通过 → T2 sequencer.shutdown() → T3 锁内覆盖), 单线程 lifecycle 路径无影响, 仅记录, 多线程 lifecycle 需将探针纳入锁内或 double-check
+
+**下一步**: 按持续开发模式立即派 Engineer 执行 phase-17 #3 (interact-019, depends_on interact-018 已满足)。

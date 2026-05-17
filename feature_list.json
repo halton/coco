@@ -3165,6 +3165,34 @@
       "evidence": {}
     },
     {
+      "id": "robot-010-backlog-bool-cast-typing",
+      "name": "is_shutdown 探针 bool 严格判定面对 numpy.bool_/int 返回时的 fail-open",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-010 Reviewer caveat"
+      ],
+      "description": "Reviewer caveat (robot-010): set_robot_sequencer 的 is_shutdown 探针当前用 `rv is True` 严格判定, 面对 numpy.bool_ / int(1) / 任意 truthy 但非 Python True 的返回值会被视为非 shutdown, 导致 fail-open (静默接受注入到已 shutdown sequencer)。建议改为 `bool(rv) is True` 或显式 `if bool(rv):` 转换, 兼容 numpy/自定义 sequencer 实现; 不阻 robot-010 close (生产 sequencer is_shutdown 返回原生 bool)。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-010-backlog-setter-race-window",
+      "name": "set_robot_sequencer setter 锁外探针 + 锁内覆盖的两阶段竞态",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-010 Reviewer caveat"
+      ],
+      "description": "Reviewer caveat (robot-010): set_robot_sequencer 在锁外读 is_shutdown / 旧引用做 warning, 锁内执行覆盖, 理论上存在 T1 探针通过 → T2 sequencer.shutdown() → T3 锁内覆盖成功 的两阶段竞态窗口 (注入指针指向刚 shutdown 的 sequencer)。实际单线程 lifecycle 路径无影响 (ProactiveScheduler 在 start() 前注入, shutdown 路径单线程串行), 仅作记录; 若未来出现多线程 lifecycle 管理需将探针纳入锁内或加 double-check。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
       "id": "robot-009",
       "area": "robot",
       "phase": 17,
@@ -3191,14 +3219,22 @@
       "area": "robot",
       "phase": 17,
       "priority": 131,
-      "status": "not_started",
+      "status": "passing",
       "description": "承接 robot-008 caveat: set_robot_sequencer lifecycle 校验 — (a) is_shutdown 探针(向已 shutdown sequencer 注入告警并拒绝), (b) 重复注入 WARNING log, (c) shutdown 回调自动清空 ProactiveScheduler 侧引用避免悬垂。来源 backlog: robot-008-backlog-setter-lifecycle。建议与 robot-009 顺序衔接(robot-009 改造路径后, robot-010 加 lifecycle 校验)。",
       "depends_on": [
         "robot-008",
         "robot-009"
       ],
       "real_machine_uat": "not_required",
-      "source_backlog": "robot-008-backlog-setter-lifecycle"
+      "source_backlog": "robot-008-backlog-setter-lifecycle",
+      "evidence": {
+        "verify_script": "scripts/verify_robot_010.py",
+        "verify_summary": "evidence/robot-010/verify_summary.json",
+        "reviewer": "sub-agent fresh-context: LGTM",
+        "default_off_bytewise": true,
+        "lifecycle_checks": "reject_shutdown + double_inject_warn + trigger_self_check",
+        "forbidden_words_scan": "clean"
+      }
     },
     {
       "id": "interact-019",
