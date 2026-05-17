@@ -3045,6 +3045,34 @@
       "evidence": {}
     },
     {
+      "id": "robot-012-backlog-shutdown-timeout-inf-nan-hardening",
+      "name": "shutdown_timeout_s 输入降级补 math.isfinite() 拦 inf/nan",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-012 Reviewer caveat"
+      ],
+      "description": "Reviewer caveat (robot-012): COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S 输入降级当前只 try/except ValueError 兜底负值, 未拦 float('inf') / float('nan'); inf 会让 join() 永久阻塞, nan 在比较时全 False 行为未定义。需补 math.isfinite() 检查 + 非有限值降级到默认 2.0, 加 verify fixture 覆盖 inf/nan 输入。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-012-backlog-sigterm-swallow-doc",
+      "name": "SIGTERM handler chain prev 跳过 SIG_DFL/SIG_IGN 导致进程不终止, 需 docstring 警告",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-012 Reviewer caveat"
+      ],
+      "description": "Reviewer caveat (robot-012): COCO_ROBOT_SIGTERM_HANDLE=ON 时 signal handler 调用 seq.shutdown() 后只 chain 可调用的 prev handler (跳过 SIG_DFL / SIG_IGN), 等于把 SIGTERM 默认终止行为吞掉, 进程不会因 SIGTERM 退出。需在 _install_sigterm_handler docstring 中明确警告该行为, 并文档化 ON 模式下用户层应自行 sys.exit() 或显式 raise SystemExit。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
       "id": "interact-018-backlog-status-fail-strict-match",
       "name": "is_fail 的 status~fail substring 改 token 精确匹配",
       "area": "interact",
@@ -3489,11 +3517,22 @@
       "area": "robot",
       "priority": 151,
       "phase": 19,
-      "status": "not_started",
+      "status": "passing",
       "source_backlog": [
         "robot-008-backlog-sigterm-shutdown"
       ],
-      "description": "升级自 robot-008 Reviewer caveat：atexit hook 仅覆盖正常解释器退出, SIGTERM / SIGINT / uncaught exception / hard kill 不会触发, 真机或容器场景 RobotSequencer 可能不优雅退出。要求: (a) 注册 signal handler (SIGTERM/SIGINT) 调用 shutdown; (b) shutdown timeout 配置化 (COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S); (c) 文档化非正常退出路径的 known limit。来源 backlog: robot-008-backlog-sigterm-shutdown。"
+      "description": "升级自 robot-008 Reviewer caveat：atexit hook 仅覆盖正常解释器退出, SIGTERM / SIGINT / uncaught exception / hard kill 不会触发, 真机或容器场景 RobotSequencer 可能不优雅退出。要求: (a) 注册 signal handler (SIGTERM/SIGINT) 调用 shutdown; (b) shutdown timeout 配置化 (COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S); (c) 文档化非正常退出路径的 known limit。来源 backlog: robot-008-backlog-sigterm-shutdown。",
+      "evidence": {
+        "reviewer_sub_agent": "LGTM-with-caveats (fresh context, 2 backlog 已登: robot-012-backlog-shutdown-timeout-inf-nan-hardening / robot-012-backlog-sigterm-swallow-doc)",
+        "verify": "scripts/verify_robot_012.py V0-V5 PASS",
+        "smoke": "./init.sh smoke PASS",
+        "regression": "robot-008 / robot-009 / robot-010 / robot-011 verify rc=0",
+        "env": "COCO_ROBOT_SIGTERM_HANDLE default-OFF (additive gate); COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S default 2.0",
+        "cross_platform": "Windows getattr(signal,'SIGTERM',None) + 三重 except (AttributeError/ValueError/OSError) 兜底, 非 main thread 安全跳过",
+        "merge_head": "dfef9a6",
+        "feature_head": "d1677cf",
+        "real_machine_uat": "pending (sim-first, 真机 SIGTERM/SIGINT graceful shutdown 异步验收, 不阻 merge)"
+      }
     },
     {
       "id": "interact-021",

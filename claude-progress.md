@@ -3310,3 +3310,25 @@ base main = 454a622; feat/infra-022 HEAD = c5e28ea。Reviewer (sub-agent fresh-c
 **验证**: V0+V1-V5 7/7 PASS, smoke 11/11 PASS, regression infra-017/018/021 全 PASS。
 
 **status**: infra-022 → passing。phase-19 软件进度 1/5 (剩 robot-012 / interact-021 / infra-023 / robot-013)。下一候选 robot-012 priority=151。
+
+## Session 2026-05-17 — robot-012 closeout
+
+**robot-012 RobotSequencer SIGTERM/SIGINT signal handler + shutdown timeout 配置化** → **passing**
+
+实现：
+- `coco/robot/sequencer.py`: 新增 `shutdown_timeout_s` 参数, 默认 2.0; `__init__` 读 `COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S` env 兜底 (ValueError → 默认)
+- `coco/main.py`: 新增 `_install_sigterm_handler()` (default-OFF, 由 `COCO_ROBOT_SIGTERM_HANDLE` gate); ON 时注册 SIGTERM/SIGINT handler 调 `seq.shutdown()` + chain prev (跳过 SIG_DFL/SIG_IGN); Windows getattr+三重 except 兜底, 非 main thread 安全跳过
+- `scripts/verify_robot_012.py`: V0 import / V1 timeout 配置化 / V2 env 优先级 / V3 OFF 不注册 / V4 ON 注册并 chain / V5 cross-platform 兜底 — V0-V5 PASS
+
+Reviewer (sub-agent fresh context): **LGTM-with-caveats**
+- 2 backlog 已登:
+  - `robot-012-backlog-shutdown-timeout-inf-nan-hardening`: timeout 输入降级未拦 inf/nan, 需 math.isfinite()
+  - `robot-012-backlog-sigterm-swallow-doc`: ON 时 SIGTERM 默认终止被吞, 需 docstring 警告
+
+evidence:
+- smoke 11/11 PASS
+- regression robot-008/009/010/011 verify rc=0
+- merge HEAD=dfef9a6, feature HEAD=d1677cf
+- 真机 UAT pending (sim-first, 异步验收)
+
+**status**: robot-012 → passing。phase-19 软件进度 2/5 (剩 interact-021 / infra-023 / robot-013)。下一候选 interact-021 priority=152。
