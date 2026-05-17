@@ -3221,3 +3221,23 @@ robot-010 (set_robot_sequencer lifecycle 三档校验) closeout 完成:
 **Merge**: feat/companion-017 → main `--no-ff`, merge HEAD=d6d4066。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
 
 **下一步**: phase-18 priority=143 interact-020 (interact-019 trace contract 文档化白名单原子 token)。主会话持续开发模式派 Engineer sub-agent 在 feat/interact-020 推进。
+
+---
+
+## Session 2026-05-17 — interact-020 closeout
+
+**Feature**: interact-020 — trace status 字段白名单原子 token 文档化 (interact-019 closeout 承接, 纯文档化, 不改运行时)。default-OFF, sim-first, real_machine_uat=not_required。
+
+**改动**:
+- `research/proactive_trace_contract.md` — 新增 trace contract 单源真理文档, 显式登记 status 字段白名单原子 token = {error, errored, fail, failed, failure} (case-insensitive, strip 后整体匹配), 明文禁止 'RPC_FAILURE' / 'TASK_FAILED_RETRY' 等复合 token; 外部 proactive emit 调用者需遵守。
+- `coco/proactive_trace.py` — docstring 追加 contract 链接与白名单 token 引用, 不改运行时 (bytewise 等价 main, V0 same_obj=True 校验)。
+- `scripts/verify_interact_020.py` — V0-V5: V0 源码 STATUS_FAIL_TOKENS 锁 / V1 contract 文档存在 / V2 文档显式列出全部 5 token + 禁止复合示例 / V3 docstring 引用 contract / V4 interact-019 _is_fail regression (no_failure / failsafe 不误判) / V5 smoke。
+- `evidence/interact-020/verify_summary.json` — V0-V5 PASS 摘要。
+
+**Verification**: V0-V5 全 PASS, `./init.sh` smoke PASS, Reviewer (sub-agent) LGTM 干净 0 backlog 新增。V0 (源码 STATUS_FAIL_TOKENS) + V2 (contract 文档锁) 双锁防漂移, 任一侧改动单边都会被另一侧 verify 抓住。
+
+**承接**: 收割 interact-019 backlog `interact-019-backlog-trace-status-contract-doc`。
+
+**Merge**: feat/interact-020 → main `--no-ff`, merge HEAD=f38dbc3。closeout commit 覆盖 feature_list.json (status=passing + evidence) 与本日志。
+
+**下一步**: phase-18 priority=144 infra-021 (infra-020 rc_table V6 WARN+SKIP 共存断言)。主会话持续开发模式派 Engineer sub-agent 在 feat/infra-021 推进。
