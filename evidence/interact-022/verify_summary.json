@@ -1,0 +1,49 @@
+{
+  "direction": "contract-reaffirmation + type-strict 锁",
+  "feature": "interact-022",
+  "files_changed": [
+    "scripts/verify_interact_022.py"
+  ],
+  "ok": true,
+  "results": [
+    {
+      "detail": "frozenset locked: ['error', 'errored', 'fail', 'failed', 'failure']",
+      "name": "V0_fingerprint_lock",
+      "ok": true
+    },
+    {
+      "detail": "14 positives hit + 4 strict-negatives rejected",
+      "name": "V1_positive_strict_match",
+      "ok": true
+    },
+    {
+      "detail": "all 20 negative-status cases correctly rejected",
+      "name": "V2_negative_cases",
+      "ok": true
+    },
+    {
+      "detail": "all 10 non-str status types → False (no raise)",
+      "name": "V3_type_strict_non_str_status",
+      "ok": true
+    },
+    {
+      "detail": "emit-site audit clean — status 字段仅由 proactive_trace.is_fail 消费, 无业务码主动 emit",
+      "name": "V4_emit_site_audit",
+      "ok": true
+    },
+    {
+      "detail": "10 three-signal regression cases all PASS",
+      "name": "V5_three_signals_regression",
+      "ok": true
+    }
+  ],
+  "runtime_change": false,
+  "sha": "397284355ac1b88f0ccc2d06834af152eb197b2d",
+  "status_fail_tokens": [
+    "error",
+    "errored",
+    "fail",
+    "failed",
+    "failure"
+  ]
+}
