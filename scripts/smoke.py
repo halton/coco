@@ -460,36 +460,55 @@ def _finegrained_exit_enabled() -> bool:
     return os.environ.get("COCO_SMOKE_FINEGRAINED_EXIT", "").strip() in ("1", "true", "yes")
 
 
+# infra-023: list-prefix 规则表 (升级自 infra-019 _classify_stdout 硬编码 if-elif)
+#
+# 表语义:
+#   - 顺序即优先级 (从前往后, 命中即取). 当前 [SKIP, WARN] 保持 main 历史
+#     "SKIP 优先于 WARN" 的行为 (infra-019 V0-V5 / infra-020 V6 已锁).
+#   - 扩展新 state 只需 append 一项 (无需改 _classify_stdout 主体).
+#   - FAIL 不在此表: FAIL 由子检查 SystemExit 捕获, 走 areas[name]="FAIL"
+#     分支, _classify_stdout 永远拿不到 FAIL 文本.
+#
+# 同时 infra-023 把 backlog 'classifier-list-prefix' 一起带掉:
+# 行首允许 markdown 列表标记 '- ' / '* ' / '+ ' (lstrip 后再 prefix 判定),
+# 这样子检查若以 '- SKIP: xxx' / '* WARN: yyy' 形式输出也能正确分类.
+_CLASSIFIER_RULES: list[tuple[str, str]] = [
+    ("skip:", "SKIP"),
+    ("warn:", "WARN"),
+]
+
+# infra-023: markdown 列表项标记 (lstrip 这些字符 + 空白后再做 prefix 匹配)
+_LIST_BULLETS = "-*+ \t"
+
+
 def _classify_stdout(text: str) -> str:
-    """infra-018/019: 把子检查 stdout 映射到 WARN / SKIP / PASS。
+    """infra-018/019/023: 把子检查 stdout 映射到 WARN / SKIP / PASS。
 
-    infra-019 修复 C1：旧实现用 ``"skip" in text.lower()`` 子串匹配，会把含
-    "skipped" 字样的 WARN 行（例如 ``WARN: ASR model not downloaded, skipped``）
-    误判为 SKIP。改为**行级显式前缀 marker** 匹配：
+    实现要点 (infra-023):
+      - 规则表驱动: 见模块级 ``_CLASSIFIER_RULES``, 顺序即优先级.
+      - 行级 lstrip(``-*+`` + 空白) → strip() → lower() → 与 RULES 中 prefix
+        逐一 startswith. 一行至多命中一条规则 (startswith 互斥).
+      - 收集整段文本所有命中 state, 最后按 RULES 顺序返回首个命中.
+      - 默认 (无任何命中, 无 FAIL — FAIL 由 SystemExit 捕获): PASS.
 
-      - 任一行（去左右空白后）以 ``SKIP:`` 开头 → SKIP
-      - 任一行以 ``WARN:`` 开头 → WARN
-      - 其它（无 FAIL，FAIL 由 SystemExit 捕获）→ PASS
-
-    优先级：SKIP 优先于 WARN（部分子检查 print "SKIP: ..." 表示主动跳过）。
-    大小写不敏感前缀（``skip:`` / ``Skip:`` 亦匹配），与历史输出（全大写
-    ``SKIP:`` / ``WARN:``）一致；纯描述性 "skipped" / "warning" 不再误中。
+    与 infra-019 行为差异:
+      - 行为 bytewise 等价 main, 在 "无 markdown 列表标记" 的样本集上.
+      - 新增能力: '- SKIP: xxx' / '* WARN: yyy' 等列表项格式不再落回 PASS.
     """
-    has_skip = False
-    has_warn = False
+    hits: set[str] = set()
     for raw in text.splitlines():
-        line = raw.strip()
+        # 先 strip 整体, 再 lstrip markdown 列表标记, 再 strip 一次防 "- " 残留
+        line = raw.strip().lstrip(_LIST_BULLETS).strip()
         if not line:
             continue
         head_lo = line.lower()
-        if head_lo.startswith("skip:"):
-            has_skip = True
-        elif head_lo.startswith("warn:"):
-            has_warn = True
-    if has_skip:
-        return "SKIP"
-    if has_warn:
-        return "WARN"
+        for prefix, state in _CLASSIFIER_RULES:
+            if head_lo.startswith(prefix):
+                hits.add(state)
+                break  # 单行至多命中一条规则
+    for _prefix, state in _CLASSIFIER_RULES:
+        if state in hits:
+            return state
     return "PASS"
 
 

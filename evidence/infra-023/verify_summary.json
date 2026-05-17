@@ -1,0 +1,44 @@
+{
+  "feature": "infra-023",
+  "fingerprint": {
+    "rules": [
+      [
+        "skip:",
+        "SKIP"
+      ],
+      [
+        "warn:",
+        "WARN"
+      ]
+    ],
+    "bullets": "-*+ \t"
+  },
+  "v1_bytewise_samples": 53,
+  "v4_regression": [
+    {
+      "script": "verify_infra_019.py",
+      "rc": 0,
+      "elapsed_s": 0.04
+    },
+    {
+      "script": "verify_infra_020.py",
+      "rc": 0,
+      "elapsed_s": 0.03
+    },
+    {
+      "script": "verify_infra_021.py",
+      "rc": 0,
+      "elapsed_s": 0.07
+    },
+    {
+      "script": "verify_infra_022.py",
+      "rc": 0,
+      "elapsed_s": 0.1
+    }
+  ],
+  "v5_smoke": {
+    "rc": 0,
+    "elapsed_s": 7.73
+  },
+  "result": "PASS"
+}
