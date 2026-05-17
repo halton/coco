@@ -3354,3 +3354,23 @@ evidence:
 - 纯文档化, real_machine_uat=n/a
 
 **status**: interact-021 → passing。phase-19 软件进度 3/5 (剩 infra-023 / robot-013)。下一候选 infra-023 priority=153。
+
+## Session 2026-05-17 — infra-023 closeout
+
+**_classify_stdout 列表项 '- SKIP:' / '* WARN:' 前缀支持** → **passing**
+
+实现：
+- `scripts/smoke.py`: `_classify_stdout` 重构为表驱动 — `_CLASSIFIER_RULES` (顺序锁 SKIP > WARN, FAIL 走独立 substring path) + `_LIST_BULLETS = {'-', '*', '+'}` 用于 lstrip markdown 列表前缀后再做 prefix 判定; bytewise 行为对旧输入完全等价
+- `scripts/verify_infra_023.py`: V0 bytewise 等价 (53 sample) / V1 markdown 列表前缀 SKIP / V2 列表前缀 WARN / V3 列表前缀 FAIL / V4 顺序锁 SKIP>WARN / V5 hits set 去重 — V0-V5 PASS
+- `evidence/infra-023/verify_summary.json`: verify 摘要落盘
+
+Reviewer (sub-agent fresh context): **LGTM 干净, 0 backlog**
+
+evidence:
+- V0-V5 PASS (markdown 列表前缀 SKIP/WARN/FAIL + 顺序锁 + 53 sample bytewise 等价)
+- smoke PASS
+- regression infra-019/020/021/022 verify rc=0
+- merge HEAD=3d8e4a9, feature HEAD=b8106c8
+- 纯 classifier 重构, real_machine_uat=n/a
+
+**status**: infra-023 → passing。phase-19 软件进度 4/5 (剩 robot-013)。下一候选 robot-013 priority=154。

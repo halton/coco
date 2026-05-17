@@ -3567,11 +3567,25 @@
       "area": "infra",
       "priority": 153,
       "phase": 19,
-      "status": "not_started",
+      "status": "passing",
       "source_backlog": [
         "infra-019-backlog-classifier-list-prefix"
       ],
-      "description": "升级自 infra-019 Reviewer caveat：当前 _classify_stdout 严格 prefix 'SKIP:' / 'WARN:' / 'FAIL:' 匹配, 若子检查输出走 markdown 列表格式 (如 '- SKIP: xxx' / '* WARN: yyy') 会落回子串匹配或误分类。扩展 classifier 支持列表项前缀 (lstrip '-*+' + 空白后再 prefix 判定), 补 verify fixture 覆盖列表格式。来源 backlog: infra-019-backlog-classifier-list-prefix。"
+      "description": "升级自 infra-019 Reviewer caveat：当前 _classify_stdout 严格 prefix 'SKIP:' / 'WARN:' / 'FAIL:' 匹配, 若子检查输出走 markdown 列表格式 (如 '- SKIP: xxx' / '* WARN: yyy') 会落回子串匹配或误分类。扩展 classifier 支持列表项前缀 (lstrip '-*+' + 空白后再 prefix 判定), 补 verify fixture 覆盖列表格式。来源 backlog: infra-019-backlog-classifier-list-prefix。",
+      "evidence": {
+        "verify_script": "scripts/verify_infra_023.py",
+        "verify_summary": "evidence/infra-023/verify_summary.json",
+        "results": [
+          "Reviewer (sub-agent): LGTM 干净, 0 backlog",
+          "V0-V5 全 PASS (markdown 列表前缀 SKIP/WARN/FAIL + 顺序锁 + bytewise 等价)",
+          "smoke PASS",
+          "53 sample bytewise 等价 (新旧 classifier 输出一致)",
+          "regression infra-019/020/021/022 verify rc=0",
+          "表驱动 _CLASSIFIER_RULES + _LIST_BULLETS, 顺序锁 SKIP > WARN, FAIL 独立路径",
+          "markdown 列表前缀 ('-' / '*' / '+') 支持 lstrip 后再 prefix 判定"
+        ],
+        "real_machine_uat": "n/a (纯 classifier 重构, sim 即闭环, 无真机相关行为)"
+      }
     },
     {
       "id": "robot-013",
