@@ -4051,3 +4051,14 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/interact-028 各一次成功
 - phase-24 剩余：robot-022 (P204) source robot-012-backlog-sigterm-swallow-doc
 
+
+## Session 2026-05-18 — robot-022 closeout (phase-24 全部 passing)
+
+- robot-022 (P204) status → passing；Reviewer fresh-context LGTM with findings 写入 evidence
+- finding 处理：source backlog `robot-012-backlog-sigterm-swallow-doc` → status=upgraded (upgraded_to=robot-022, upgraded_phase=24)；V3 in-memory mutant 命名瑕疵不修
+- merge: feat/robot-022 → main (--no-ff)
+- main HEAD: 0616499
+- feat/robot-022 HEAD: ea9cd4c
+- smoke: 11/11 PASS（audio / ASR / TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish）
+- push: origin main / origin feat/robot-022 各一次成功
+- phase-24 状态：5/5 全 passing；下一步 phase-25 planning (priority 210-214)
