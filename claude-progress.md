@@ -3946,3 +3946,16 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
   - robot-020 PASS (warn-once keys spec 锁面 + verify-only)
 - 0 业务源码改动累计, 0 backlog 新增 (本 feature), mutant A/B/C 反证成功
 - 下一步: phase-24 planning 准备就绪, 主会话调度
+
+## Session 2026-05-18 phase-24 planning
+
+- main HEAD (前): 6052ef8 (phase-23 全 5/5 收官)
+- 现存 backlog 22 项, 其中 phase-23 已消化 5 项, 未消化 17 项 (interact 4 / robot 8 / infra 5; audio/vision/companion 无 backlog)
+- phase-24 候选 5 个 (priority 200-204, 全部 verify-only 主导, 跨 area 平衡 interact 2 / robot 2 / infra 1):
+  - P200 interact-027 ← interact-024-backlog-v1-anchor-per-stage-count (V1 anchor 按 stage 分别 anchor + 站点数==3 严格断言)
+  - P201 robot-021 ← robot-008-backlog-setter-lifecycle (sequencer setter 生命周期 doc + verify)
+  - P202 infra-028 ← infra-022-backlog-rotate-docstring-mismatch (rotate docstring 锁面)
+  - P203 interact-028 ← interact-016-backlog-doc-polish (doc polish + verify 锁面)
+  - P204 robot-022 ← robot-012-backlog-sigterm-swallow-doc (sigterm swallow doc + verify 锁面)
+- 选择理由: 严格抽自未消化 backlog, 不开新研究方向; verify-only 主导降低风险; area 分布在主要 3 个有 backlog 的领域间平衡
+- 下一步: 派 Engineer 执行 P200 interact-027
