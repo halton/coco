@@ -250,6 +250,155 @@ def v3_latency_monotonic_in_fixture() -> None:
         os.environ.pop("COCO_PROACTIVE_TRACE", None)
 
 
+def v3b_multi_emit_same_tick() -> None:
+    """V3b (interact-031): 同 tick 多 emit 场景覆盖.
+
+    构造 _preempt_boost=True + arbit_on + 最近 emotion_alert 窗口内 + cooldown
+    命中 三联条件, 触发 maybe_trigger 单次调用内两个 emit 站点:
+      站点 #2 (proactive.py line 991): fusion_boost preempt reject
+      站点 #4 (proactive.py line 1021): cooldown_hit reject
+    断言:
+      - traces_count >= 2 (同 tick 双 emit)
+      - 双 trace latency_ms 各自 >= 0 且 type 为非负 float
+      - 双 trace latency_ms 单调非降 (站点 #2 先于 #4)
+      - emit 顺序: fusion_boost 先于 cooldown_hit (站点 #2 → #4 文档顺序)
+    """
+    os.environ["COCO_PROACTIVE_TRACE"] = "1"
+    os.environ["COCO_PROACTIVE_ARBIT"] = "1"
+
+    from coco import proactive_trace as pt
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+    from coco.power_state import PowerState
+
+    captured: List[Dict[str, Any]] = []
+
+    def _emit(event: str, **payload: Any) -> None:
+        captured.append({"event": event, **payload})
+
+    pt.set_emit_override(_emit)
+    try:
+        class _FakePS:
+            current_state = PowerState.ACTIVE
+
+        class _FakeFace:
+            def latest(self):
+                class _S:
+                    present = True
+                return _S()
+
+        def _llm(text, *, system_prompt=None):
+            return "你好呀"
+
+        def _tts(text, blocking=True):
+            return None
+
+        cfg = ProactiveConfig(
+            enabled=True,
+            idle_threshold_s=10.0,
+            cooldown_s=120.0,  # 大 cooldown 让 _should_trigger 必返 cooldown
+            max_topics_per_hour=10,
+            tick_s=1.0,
+        )
+        sched = ProactiveScheduler(
+            config=cfg,
+            power_state=_FakePS(),
+            face_tracker=_FakeFace(),
+            llm_reply_fn=_llm,
+            tts_say_fn=_tts,
+            emit_fn=_emit,
+        )
+        now_t = sched.clock()
+        # 让 _should_trigger 命中 cooldown (last_proactive_ts 在窗口内)
+        sched._last_proactive_ts = now_t - 1.0
+        sched._last_interaction_ts = now_t - 60.0
+        # 触发 arbit emotion_alert preempt (窗口内 + boost True)
+        sched._last_emotion_alert_ts = now_t - 0.3
+        sched._next_priority_boost = True
+        sched._next_priority_boost_level = "L2"
+
+        ok_trigger = sched.maybe_trigger(now=now_t)
+        # 此路径 _should_trigger 应 reject; ok_trigger 应 False
+        traces = [
+            e for e in captured
+            if e.get("event") == "proactive.trace" and "latency_ms" in e
+        ]
+        stages_seq = [e.get("stage") for e in traces]
+        lats = [e.get("latency_ms") for e in traces]
+
+        # 断言: 至少 2 条 trace (同 tick 多 emit)
+        if len(traces) < 2:
+            _record("V3b_multi_emit_same_tick", False,
+                    reason="expected >= 2 traces (preempt + cooldown), got",
+                    traces_count=len(traces),
+                    stages_seq=stages_seq,
+                    captured_events=len(captured),
+                    ok_trigger=ok_trigger)
+            return
+
+        # 断言: 每个 latency_ms 为非负 float
+        bad_type: List[Dict[str, Any]] = []
+        for i, lat in enumerate(lats):
+            if not isinstance(lat, float):
+                bad_type.append({"idx": i, "value": repr(lat), "type": type(lat).__name__})
+                continue
+            if lat < 0:
+                bad_type.append({"idx": i, "value": lat, "reason": "negative"})
+        if bad_type:
+            _record("V3b_multi_emit_same_tick", False,
+                    reason="latency_ms type/sign invalid",
+                    bad=bad_type, lats=lats, stages_seq=stages_seq)
+            return
+
+        # 断言: 单调非降
+        violations: List[Dict[str, Any]] = []
+        for i in range(1, len(lats)):
+            if float(lats[i]) < float(lats[i - 1]) - 1e-6:
+                violations.append({
+                    "idx": i,
+                    "prev": lats[i - 1],
+                    "curr": lats[i],
+                    "stage_prev": stages_seq[i - 1],
+                    "stage_curr": stages_seq[i],
+                })
+        if violations:
+            _record("V3b_multi_emit_same_tick", False,
+                    reason="latency_ms non-monotonic across multi emit",
+                    violations=violations,
+                    lats=lats, stages_seq=stages_seq)
+            return
+
+        # 断言: emit 顺序 fusion_boost 先于 cooldown_hit (站点 #2 → #4)
+        try:
+            idx_fusion = stages_seq.index("fusion_boost")
+        except ValueError:
+            idx_fusion = -1
+        try:
+            idx_cooldown = stages_seq.index("cooldown_hit")
+        except ValueError:
+            idx_cooldown = -1
+        if idx_fusion < 0 or idx_cooldown < 0 or idx_fusion >= idx_cooldown:
+            _record("V3b_multi_emit_same_tick", False,
+                    reason="emit order not fusion_boost->cooldown_hit",
+                    idx_fusion=idx_fusion, idx_cooldown=idx_cooldown,
+                    stages_seq=stages_seq, lats=lats)
+            return
+
+        _record(
+            "V3b_multi_emit_same_tick",
+            ok=True,
+            traces_count=len(traces),
+            stages_seq=stages_seq,
+            lats=lats,
+            idx_fusion=idx_fusion,
+            idx_cooldown=idx_cooldown,
+            ok_trigger=ok_trigger,
+        )
+    finally:
+        pt.set_emit_override(None)
+        os.environ.pop("COCO_PROACTIVE_TRACE", None)
+        os.environ.pop("COCO_PROACTIVE_ARBIT", None)
+
+
 def v4_doc_stage_names_in_source() -> None:
     """V4: 文档 §5.3 列的 6 个 stage 名都能在 coco/proactive.py 找到 emit 站点字面量."""
     src = (ROOT / "coco" / "proactive.py").read_text(encoding="utf-8")
@@ -303,6 +452,7 @@ def main() -> int:
     v1_contract_doc_stage_section()
     v2_proactive_py_emit_sites()
     v3_latency_monotonic_in_fixture()
+    v3b_multi_emit_same_tick()
     v4_doc_stage_names_in_source()
     v5_regression()
 
