@@ -10,6 +10,9 @@ V2 ON warn-once dup: env=1 → 注入 A, 再注入 B, 再注入 B (相同 key) �
 V3 ON probe-raise warn-once: env=1 → is_shutdown 抛 → 第一次 WARNING; 再注入同 sequencer (同
    exc-type) → DEBUG (suppressed); _setter_audit_seen 含 ('probe-fail', id(seq), 'RuntimeError')
 V4 OFF probe-raise: env unset → is_shutdown 抛 → 每次 WARNING, _setter_audit_seen 仍空
+V_exc_type_discrim ON: env=1 → 同 sequencer 先 RuntimeError 探针再 ValueError 探针 →
+   不同 exc_type 各发 1 条 probe-fail WARNING (不被首次 RuntimeError 抑制),
+   _setter_audit_seen 含两条 probe-fail key, exc_type 各 1
 V5 regression: subprocess 跑 verify_robot_010 / verify_robot_015 rc==0
 """
 from __future__ import annotations
@@ -233,6 +236,66 @@ try:
         _detach_log_capture(lg, h)
 except Exception:  # noqa: BLE001
     errors.append("V4: " + traceback.format_exc())
+
+
+# =======================================================================
+# V_exc_type_discrim ON: env=1 → 同一 sequencer 先 RuntimeError 探针再 ValueError 探针
+#   key = ('probe-fail', id(seq), exc_type) — 不同 exc_type 是不同 key,
+#   不应被首次 RuntimeError 抑制, 两种 exc_type 各 1 条 WARNING (正面反证)
+# robot-027b backlog: robot-016 V3 当前未对不同 exc_type 各发 1 条 WARNING 做反证
+# =======================================================================
+print("V_exc_type_discrim: ON 同 seq 先 RuntimeError 再 ValueError → 两种 exc_type 各 1 条 WARNING")
+try:
+    os.environ["COCO_ROBOT_SETTER_LIFECYCLE_AUDIT"] = "1"
+    sched = _new_sched()
+    multi_seq = MagicMock()
+    multi_seq.is_shutdown = MagicMock(side_effect=RuntimeError("rt-boom"))
+    multi_seq.enqueue = MagicMock(return_value=True)
+
+    lg, h, buf = _attach_log_capture()
+    try:
+        # 第一次注入: probe 抛 RuntimeError → WARNING + key=('probe-fail', id, 'RuntimeError')
+        sched.set_robot_sequencer(multi_seq)
+        # 改 side_effect 为 ValueError, 再次注入同 sequencer →
+        # 不同 exc_type 不同 key → 应再发 1 条 WARNING (不被首次 RuntimeError 抑制)
+        multi_seq.is_shutdown = MagicMock(side_effect=ValueError("vl-boom"))
+        sched.set_robot_sequencer(multi_seq)
+
+        log_text = buf.getvalue()
+        warn_probe = _count_lines(log_text, "WARNING", "is_shutdown probe failed")
+        debug_probe = _count_lines(log_text, "DEBUG", "probe failed (suppressed warn-once)")
+        check("V_exc_type_discrim ON: probe-fail WARNING == 2 (RuntimeError + ValueError 各 1)",
+              warn_probe == 2, f"got={warn_probe}, log={log_text!r}")
+        check("V_exc_type_discrim ON: probe-fail DEBUG suppressed == 0 (不应被首次抑制)",
+              debug_probe == 0, f"got={debug_probe}")
+        # WARNING 文本各自含 exc_type 名
+        warn_rt = _count_lines(log_text, "WARNING", "is_shutdown probe failed: RuntimeError")
+        warn_vl = _count_lines(log_text, "WARNING", "is_shutdown probe failed: ValueError")
+        check("V_exc_type_discrim ON: RuntimeError WARNING == 1",
+              warn_rt == 1, f"got={warn_rt}")
+        check("V_exc_type_discrim ON: ValueError WARNING == 1",
+              warn_vl == 1, f"got={warn_vl}")
+        # _setter_audit_seen 应含两条 probe-fail key, exc_type 各 1
+        probe_keys = sorted(
+            [k for k in sched._setter_audit_seen if k[0] == "probe-fail"],
+            key=lambda k: k[2],
+        )
+        check("V_exc_type_discrim ON: audit_seen 含 2 条 probe-fail key",
+              len(probe_keys) == 2, f"got={probe_keys!r}")
+        if len(probe_keys) == 2:
+            exc_types = {k[2] for k in probe_keys}
+            check("V_exc_type_discrim ON: exc_type 集合 == {RuntimeError, ValueError}",
+                  exc_types == {"RuntimeError", "ValueError"},
+                  f"got={exc_types!r}")
+            check("V_exc_type_discrim ON: 两 key 同 id(seq)",
+                  probe_keys[0][1] == probe_keys[1][1] == id(multi_seq),
+                  f"got={probe_keys!r}, expect id={id(multi_seq)}")
+    finally:
+        _detach_log_capture(lg, h)
+    os.environ.pop("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", None)
+except Exception:  # noqa: BLE001
+    errors.append("V_exc_type_discrim: " + traceback.format_exc())
+    os.environ.pop("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", None)
 
 
 # =======================================================================

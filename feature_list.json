@@ -4983,7 +4983,7 @@
       "id": "robot-027b",
       "title": "verify_robot_016 V3 exc_type 区分性反证（RuntimeError vs ValueError 各计 1 次）",
       "priority": 233,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 27,
       "area": "robot",
       "source": "robot-016-backlog-exc-type-discrimination",
