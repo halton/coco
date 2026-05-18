@@ -4310,3 +4310,30 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 
 phase-27 全部 verify-only，0 业务源码改动。所有 source backlog 均已 resolved。
 下一步：主会话进入 phase-28 planning。
+
+### Session 2026-05-19 (phase-28 planning)
+
+phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
+
+**5 candidates（priority 235-239 / phase=28 / 全部 source 自现有 backlog）：**
+
+1. **robot-028** (235) ← robot-027-backlog-verify-self-hash-bump-helper
+   - scope: verify-only。新增 scripts/bump_verify_027_self_hash.py 助手脚本，自动同步 verify_robot_025.py 的 sha256 到 verify_robot_027.py 的 EXPECTED_VERIFY_025_SHA 常量。0 业务源码改动。
+
+2. **interact-034** (236) ← interact-033-backlog-v1d-arbit-fail-latency-coverage
+   - scope: verify-only。补 fixture 触发 arbit_fail / mm_proactive reject 路径，断言 trace 行 latency_ms 字段存在且语义合理。default-OFF 友好（COCO_PROACTIVE_TRACE gate）。0 业务源码改动。
+
+3. **infra-032** (237) ← infra-024-backlog-v0-extra-truthy-edges
+   - scope: verify-only。verify_infra_024.py V0 truthy 反证表补 "2" / "yes\n" / " 1 " 等 strip/数值边界。0 业务源码改动。
+
+4. **robot-029** (238) ← robot-010-backlog-bool-cast-typing
+   - scope: 业务源码 1-2 行。set_robot_sequencer 的 is_shutdown 探针 `rv is True` → `bool(rv) is True`，兼容 numpy.bool_ / int(1) 等 truthy 返回值，避免 fail-open。verify 补 numpy.bool_ / int(1) 反证用例。
+
+5. **interact-035** (239) ← interact-033b-backlog-line-number-drift-detection
+   - scope: verify-only。verify_interact_024.py V1 per-stage 锚点匹配补行号 ±N 窗口 sanity（warn-only，不影响 PASS/FAIL）。0 业务源码改动。
+
+**area 平衡：** robot×2 + interact×2 + infra×1
+**verify-only 占比：** 4/5（仅 robot-029 有 1-2 行业务源码改动，低风险）
+**首发：** robot-028 (priority=235，verify-only helper 脚本)
+
+5 个 source backlog 已标 selected_for + selected_phase=28。
