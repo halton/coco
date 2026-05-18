@@ -4012,10 +4012,11 @@
       "area": "vision",
       "priority": 181,
       "phase": 22,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "vision-012-backlog-time-source-and-validation",
       "description": "吸收 backlog vision-012-backlog-time-source-and-validation (C1+C2 子项): _gc_last_time 使用 time.time() (wall clock), NTP 回拨理论上影响 time_due 判断。phase-22 P181 verify-only 契约审计 + 设计文档 (不切 monotonic 避免改 verify 与 GC 语义变更风险): (a) V0 fingerprint _gc_last_time 站点 (b) V1 列出 wall vs monotonic 三维对比 (NTP 回拨 / 持久化 / 跨进程) — docs/vision-gc-time-source-design.md 新增 (c) V2 锁定 GC 300s 默认窗口对 NTP 回拨不敏感的设计选择 (d) V3 regression vision-012/013/014b rc=0 (e) V4 evidence 记录未来切 monotonic 的 verify monkey-patch 同步迁移代价。default-OFF, real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Engineer (sub-agent, feat/vision-015 HEAD 6def15f): verify_vision_015 V0-V5 6/6 PASS / 0 源码改动 (face_tracker.py sha bf3a053d... 与 main 一致) / V0 fingerprint git_head=befb3c4 + python=3.13.12 + face_tracker.py / design doc / verify_self sha256 / V1 字面量锁面 (`_gc_last_time = now_mono` x2, `now_mono = time.monotonic(` x1, `now_mono - self._gc_last_time` x1, 反证 `_gc_last_time = time.time(` = 0) / V2 设计文档 8 关键短语锁面 (wall vs monotonic / NTP 回拨 / 300s / 持久化 / last_seen / time.monotonic / time.time / _gc_last_time) / V3 regression vision-012/013/014b rc=0 / V4 migration_note evidence-only / V5 smoke 11 段 init.sh rc=0 + 'Smoke 通过' / 关键发现: brief 写 _gc_last_time 用 time.time(), 实际 vision-013 已切到 time.monotonic; 本 phase 以 code 为准锁面, 不切回 wall (避免引入 NTP 回拨敏感) / docs/vision-gc-time-source-design.md (5108B) + evidence/vision-015/migration_note.md (2055B) / source=vision-012-backlog-time-source-and-validation C1+C2 / 0 新增 backlog / 待 Reviewer 评审"
     },
     {
       "id": "companion-018",
