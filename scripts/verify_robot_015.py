@@ -7,7 +7,7 @@ robot-015 聚焦在 verify + evidence 锁定该 contract, 防止未来回归到 
 
 V1 contract: 注入后 trigger callback → seq.enqueue 真调 1 次 + 无 coco-proactive-robot-seq daemon thread spawn
 V2 fallback: mock 无 enqueue 属性 → 走 seq.run 同步兜底 + 同样无 daemon thread spawn
-V3 enqueue 抛异常: warn-once 吃掉 + 不起线程 + proactive emit 不阻断
+V3 enqueue 抛异常: warn-and-continue 吃掉 + 不起线程 + proactive emit 不阻断
 V4 default-OFF: 未注入 sequencer 时 _do_trigger_unlocked 全程不访问 enqueue/run/daemon thread
 V5 regression: verify_robot_007 / 008 / 012 / 013 子进程 rc==0
 """
@@ -163,7 +163,7 @@ except Exception:  # noqa: BLE001
 
 
 # =======================================================================
-# V3 enqueue 抛异常: warn-once 吃掉, 不起线程, proactive 流程不阻断
+# V3 enqueue 抛异常: warn-and-continue 吃掉, 不起线程, proactive 流程不阻断
 # =======================================================================
 print("V3: enqueue 抛异常 → fail-soft, 不起 daemon thread, proactive 不阻断")
 try:
@@ -287,7 +287,7 @@ summary = {
         "enqueue_first": "callable(seq.enqueue) → 调一次 enqueue(nod_action)",
         "fallback_sync_run": "缺 enqueue → 同步 seq.run([nod_action]), 不起线程",
         "no_daemon_thread_spawn": "_do_trigger_unlocked 不再 spawn coco-proactive-robot-seq daemon thread",
-        "exception_fail_soft": "enqueue 抛异常 → warn-once, 不回退 run, proactive emit 不阻断",
+        "exception_fail_soft": "enqueue 抛异常 → warn-and-continue, 不回退 run, proactive emit 不阻断",
         "default_off": "未注入 _robot_sequencer → 全程 no-op",
     },
     "source_backlog": ["robot-008-backlog-enqueue-not-daemon-thread"],

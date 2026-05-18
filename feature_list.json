@@ -4379,7 +4379,7 @@
       "id": "robot-023",
       "title": "verify_robot_015 V3 标题文案 warn-once → warn-and-continue (verify-only doc fix)",
       "priority": 212,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 25,
       "area": "robot",
       "source": "robot-015-backlog-v3-warn-once-rename",
