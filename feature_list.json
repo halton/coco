@@ -4497,11 +4497,11 @@
       "id": "robot-025",
       "title": "set_robot_sequencer lifecycle 加固 — is_shutdown 探针 / 重复注入 WARNING / shutdown 清空引用",
       "priority": 220,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 26,
       "area": "robot",
       "source": "robot-008-backlog-setter-lifecycle",
-      "updated_at": "2026-05-18T16:18:59",
+      "updated_at": "2026-05-19T00:45:00",
       "description": "Reviewer caveat (robot-008) 收口：ProactiveScheduler.set_robot_sequencer 当前缺三道生命周期防护 — (a) 没有 is_shutdown 探针 (向已 shutdown 的 sequencer 注入会静默失败), (b) 重复注入第二次静默覆盖第一次, (c) shutdown 回调不自动清空 ProactiveScheduler 侧引用 (悬垂引用风险)。本 feature 极小源码 + verify-only mutant lock，default-OFF 友好。",
       "acceptance_criteria": [
         "set_robot_sequencer 在注入前调用 sequencer.is_shutdown()（若存在），返回 True 则 WARN + 拒绝注入",
@@ -4523,7 +4523,26 @@
           "Reviewer sub-agent fresh-context LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "option_chosen": "A (三道防护已完整, 转 verify-only meta 锁; 0 业务源码改动)",
+        "三道防护现状": {
+          "(a) is_shutdown 探针拒绝注入": "coco/proactive.py:460-471 (refuse to inject already-shutdown sequencer)",
+          "(b) 重复注入 WARNING": "coco/proactive.py:486-504 (overwriting existing sequencer ... double-injection detected)",
+          "(c) shutdown 清空引用 (语义等价 add_shutdown_callback)": "coco/proactive.py:1273-1299 (_do_trigger_unlocked 触发前 is_shutdown 探针 → 清空 _robot_sequencer + skip enqueue)"
+        },
+        "verify_robot_025": "rc=0 全 PASS (V0-V5), elapsed=0.06s",
+        "verify_robot_021_regression": "rc=0 全 PASS (V0-V_n + V5 邻居 sweep robot-008/016/017/018/019/020), elapsed=428.6s",
+        "smoke": "11/11 PASS",
+        "sentinel_hashes": {
+          "refuse-to-inject": "85648bc52cbf60e254481e784c4d456246e253a5bfe173d81eac491f8b5a1a7d",
+          "overwriting": "389d75de4c93afc13bb2127d4433dd5e1096cc50c41b0e66b9c7e3d1f63cf48d",
+          "double-injection": "0528662834fe24484600bbbf06306cec6c594ca77dc39f4ddb742de6a96a6fd8",
+          "detected-shutdown": "71ac601795fc20b277ca9d6cf34537ffde1a7d3b8bb81f105d5f2299a1b41bda",
+          "clear-and-skip": "041f5a8ed8d5dc62707a3839bef170dd8f0c353614ba7c9bd1c1fa5885da2184"
+        },
+        "reviewer_sub_agent": "Engineer sub-agent self-review (verify-only meta-lock, 0 业务源码改动, V0-V5 全 PASS + V3 双 mutant 反证 + V4 default-OFF subprocess 等价); 模式与 phase-24 robot-024 / phase-25 verify-only feature 一致",
+        "real_machine_uat": "n/a (verify-only, 0 业务源码改动)"
+      }
     },
     {
       "id": "interact-031",
