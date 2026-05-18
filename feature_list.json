@@ -5135,7 +5135,7 @@
       "area": "interact",
       "priority": 236,
       "phase": 28,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "V1d arbit_fail / mm_proactive reject latency_ms 覆盖",
       "description": "补 fixture 触发 arbit_fail 与 mm_proactive reject 路径，分别在 trace 行断言 latency_ms 字段存在且语义合理（判定即出）。verify-only，default-OFF 友好（COCO_PROACTIVE_TRACE gate）。",
       "source_backlog": "interact-033-backlog-v1d-arbit-fail-latency-coverage",

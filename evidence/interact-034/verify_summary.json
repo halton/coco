@@ -1,0 +1,37 @@
+{
+  "feature_id": "interact-034",
+  "results": [
+    {
+      "name": "V0_syspath_root",
+      "ok": true,
+      "detail": "ROOT=coco, verify_018 + proactive.py 存在"
+    },
+    {
+      "name": "V1_v1d_v1e_source_anchors",
+      "ok": true,
+      "detail": "V1d/V1e 段函数 + fixture 字面量 + type-strict 断言 全命中 (14 项)"
+    },
+    {
+      "name": "V2_keyphrases",
+      "ok": true,
+      "detail": "8 关键短语全部命中"
+    },
+    {
+      "name": "V3_mutant_arbit_preempt_anchor_removal",
+      "ok": true,
+      "detail": "mutant 反证成功: 剥离 V1d arbit_emotion_preempt reason 断言锚后 V1e/V1d 函数本体仍在, 结构性证明该 reason 锚是 V1d 覆盖 arbit_fail 路径的必要字面量"
+    },
+    {
+      "name": "V4_sha256_locks",
+      "ok": true,
+      "detail": "sha256: scripts/verify_interact_018.py=325e8d1e6460, scripts/verify_interact_034.py=ca4915c253ed"
+    },
+    {
+      "name": "V5_e2e_verify_018",
+      "ok": true,
+      "detail": "rc=0; V1d/V1e PASS markers 命中; tail=[verify_interact_018] overall: PASS"
+    }
+  ],
+  "all_pass": true,
+  "sha": "4d87fed5d0756a880c29a666cf226ec1df0a045d"
+}
