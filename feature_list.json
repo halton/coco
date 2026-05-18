@@ -4180,11 +4180,12 @@
       "id": "interact-027",
       "title": "interact-024 V1 anchor 按 stage 字面量分别 anchor + 站点数==3 严格断言 (verify-only)",
       "priority": 200,
-      "status": "not_started",
+      "status": "passing",
       "phase": 24,
       "area": "interact",
       "source": "interact-024-backlog-v1-anchor-per-stage-count",
-      "updated_at": "2026-05-18T13:09:44"
+      "updated_at": "2026-05-18T13:30:00",
+      "evidence": "scripts/verify_interact_027.py 9/9 PASS (V0 sha256 fingerprint + V1 admit/arbit_winner count==1 @line1053 + V2 reject_main count==1 @line1022 + V3 reject_preempt count==1 @line994 + V4 global total==3 strict + V5 单点删除 3/3 模拟 detected + V6 default-OFF no emit + V7 邻近 7 verify rc=0 + V8 smoke rc=0); Reviewer (sub-agent): LGTM by fresh-context Reviewer sub-agent — verify 9/9 + smoke 11/11 + 0 业务源码改动 + mutant A (单点删除 line 1057)→V1+V4+V5 FAIL / mutant B (加第 4 处)→V4+V5 FAIL; 还原 clean; stage 实证 994/1024/1057 与 docs/interact-latency-stage-contract.md 一致, interact-024 spec 无需 backlog; 0 业务源码改动 (additive 不改 verify_interact_024.py)"
     },
     {
       "id": "robot-021",

@@ -3959,3 +3959,20 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
   - P204 robot-022 ← robot-012-backlog-sigterm-swallow-doc (sigterm swallow doc + verify 锁面)
 - 选择理由: 严格抽自未消化 backlog, 不开新研究方向; verify-only 主导降低风险; area 分布在主要 3 个有 backlog 的领域间平衡
 - 下一步: 派 Engineer 执行 P200 interact-027
+
+## Session 2026-05-18 (interact-027 P200 — V1 anchor per-stage 严格断言 verify-only)
+- 范围: V1 anchor 升级——按 stage 字面量分别 anchor + 站点数 ==3 严格断言, additive 不改 verify_interact_024.py
+- 源 backlog: interact-024-backlog-v1-anchor-per-stage-count
+- 调研: 读 coco/proactive.py 行 980-1060 锁定 3 个 latency_ms=_lat_ms() emit-site:
+  - site-A admit @line 1053 (`"arbit_winner", _candidate_id, "admit"`)
+  - site-B reject_main @line 1022 (`_stage_out, _candidate_id, "reject"`, cooldown_hit/normal 三元式)
+  - site-C reject_preempt @line 994 (锚 `arbit_emotion_preempt`, unique reason, 上下窗口覆盖跨行 _trace_emit)
+- 新增: scripts/verify_interact_027.py V0-V8 共 9 子项;
+  V5 单点删除模拟内存 patch 3 处, 全部被 per-stage/total 严格断言感知 (3/3 detected)
+- 结果: verify_interact_027.py 9/9 PASS;
+  邻近 verify 回归 interact-018/021/022/023/024/025/026 全 rc=0;
+  smoke ./init.sh rc=0
+- 0 业务源码 diff (仅动 scripts/ evidence/ feature_list.json claude-progress.md)
+- feature_list.json: interact-027 → passing (Reviewer pending)
+- backlog 新增: 0
+- 下一候选: robot-021 (P201) ← robot-008-backlog-setter-lifecycle

@@ -24,7 +24,7 @@
       "ok": true,
       "traces_count": 1,
       "latency_seq": [
-        0.014
+        0.017
       ],
       "stages_seq": [
         "arbit_winner"
