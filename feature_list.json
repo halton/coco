@@ -3010,7 +3010,10 @@
       "verification": null,
       "evidence": {},
       "upgraded_to": "robot-010",
-      "upgraded_phase": 17
+      "upgraded_phase": 17,
+      "selected_for": "robot-025",
+      "selected_phase": 26,
+      "updated_at": "2026-05-18T16:18:59"
     },
     {
       "id": "robot-008-backlog-groupmodecoord-wire",
@@ -3134,7 +3137,10 @@
       ],
       "description": "Reviewer caveat (interact-018): scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel / PyInstaller 等场景下健壮性未审计。需 audit 各执行路径 (直接 python / subprocess / -m / 打包) 下 sys.path 注入是否仍然定位到正确 repo 根, 或改用 importlib.resources / 包内显式导入。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "infra-030",
+      "selected_phase": 26,
+      "updated_at": "2026-05-18T16:18:59"
     },
     {
       "id": "infra-019-backlog-classifier-list-prefix",
@@ -3641,7 +3647,10 @@
       ],
       "description": "V3 单调性 verify 在 fixture 只捕 1 条 trace, 未覆盖同 tick 多 emit 场景 (例 _preempt_boost=True 触发站点 #2+#4 两 emit), 后续可补强 fixture 制造多 emit 路径并断言 latency_ms 序列单调或各自合理。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "interact-031",
+      "selected_phase": 26,
+      "updated_at": "2026-05-18T16:18:59"
     },
     {
       "id": "interact-021-backlog-stale-doc-numbers",
@@ -3784,7 +3793,10 @@
       ],
       "description": "scripts/verify_robot_015.py 错误路径打印 str(e)[:300] 截断, 长 traceback 被切; 建议放宽到 [:1500] 或改用 traceback.format_exc, 便于排障。非阻塞文案/工具改进。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "robot-026",
+      "selected_phase": 26,
+      "updated_at": "2026-05-18T16:18:59"
     },
     {
       "id": "robot-015-backlog-v3-warn-once-rename",
@@ -3980,7 +3992,10 @@
       ],
       "description": "verify_interact_023.py V3 函数名 v3_type_strict_and_monotonic 当前与实际断言 (仅 latency_ms 非负 + type-strict bool 排除, 不跨 call monotonic) 略有歧义。建议改名为 v3_type_strict_and_nonneg, 并在 docstring 明确 monotonic 仅作 emit 顺序契约层语义 (V2 负责), V3 不承担跨 call monotonic 断言。纯命名 + 文档清理, 非阻塞。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "interact-032",
+      "selected_phase": 26,
+      "updated_at": "2026-05-18T16:18:59"
     },
     {
       "id": "infra-025",
@@ -4477,6 +4492,174 @@
         "reviewer_lgtm": "fresh-context LGTM by Reviewer sub-agent — verify rc=0 (26 checks 全 PASS, 41.66s) + smoke 11/11 PASS；独立实证 coco/proactive.py L455 gate 严格 '=='1' 单值（全仓 grep 无第二处实现）；Engineer 处理 planning brief 偏差合理（按 backlog description 实际语义+源码事实校正，反向锁 16 个非 '1' 字符串变体均不命中）；亲手磁盘 mutant (L455 改 strip().lower() in {'1','true','yes','on'}) → V1 正确 FAIL 多个真值变体误命中走 ON 分支，与 prod 严格 '1' 可区分；还原 ALL PASS；V1/V4 扎实度高 (大小写三档/空格换行边界/前导0/single-letter y);  0 业务源码改动 bytewise 等价 main；无 fu chain (planning 偏差单一事件由 Engineer 校正，不衍生 backlog)",
         "reviewer_subagent": "LGTM (see reviewer_lgtm)"
       }
+    },
+    {
+      "id": "robot-025",
+      "title": "set_robot_sequencer lifecycle 加固 — is_shutdown 探针 / 重复注入 WARNING / shutdown 清空引用",
+      "priority": 220,
+      "status": "not_started",
+      "phase": 26,
+      "area": "robot",
+      "source": "robot-008-backlog-setter-lifecycle",
+      "updated_at": "2026-05-18T16:18:59",
+      "description": "Reviewer caveat (robot-008) 收口：ProactiveScheduler.set_robot_sequencer 当前缺三道生命周期防护 — (a) 没有 is_shutdown 探针 (向已 shutdown 的 sequencer 注入会静默失败), (b) 重复注入第二次静默覆盖第一次, (c) shutdown 回调不自动清空 ProactiveScheduler 侧引用 (悬垂引用风险)。本 feature 极小源码 + verify-only mutant lock，default-OFF 友好。",
+      "acceptance_criteria": [
+        "set_robot_sequencer 在注入前调用 sequencer.is_shutdown()（若存在），返回 True 则 WARN + 拒绝注入",
+        "若已存在引用则 WARN '重复注入，覆盖旧 sequencer' 并继续覆盖（保留 fail-open 兼容）",
+        "ProactiveScheduler 注册 shutdown 回调（若 sequencer 暴露 add_shutdown_callback），回调中清空 self._robot_sequencer 引用",
+        "scripts/verify_robot_025.py V0-V4 锁面：(V0) anchor 三道防护字面量；(V1) 注入到 is_shutdown=True 的 fake sequencer → 拒绝 + WARN 文案；(V2) 第二次注入触发 WARNING；(V3) shutdown 回调清空引用；(V4) 旧 default-OFF 路径仍 bytewise 等价 (无 sequencer 注入时不变)",
+        "smoke 11/11 PASS",
+        "Reviewer sub-agent fresh-context LGTM (磁盘 mutant 反证)"
+      ],
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_robot_025.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_robot_025 V0-V4 全 PASS",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价（未注入 sequencer 路径 0 行为变化）",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "interact-031",
+      "title": "verify_interact_021 V3 多 emit 同 tick 覆盖（_preempt_boost=True 双 emit fixture 补强）",
+      "priority": 221,
+      "status": "not_started",
+      "phase": 26,
+      "area": "interact",
+      "source": "interact-021-backlog-v3-multi-emit-coverage",
+      "updated_at": "2026-05-18T16:18:59",
+      "description": "Reviewer caveat (interact-021) 收口：V3 单调性 verify 当前 fixture 仅捕 1 条 trace，未覆盖同 tick 多 emit 场景（例 _preempt_boost=True 触发站点 #2+#4 两 emit）。本 feature 补强 fixture 制造多 emit 路径，断言 latency_ms 序列 per-emit 各自非负 + emit 顺序契约合理，0 业务源码改动，纯 verify-only。",
+      "acceptance_criteria": [
+        "scripts/verify_interact_021.py V3 扩展或新增 V3b：构造 _preempt_boost=True fixture 触发同 tick 双 emit",
+        "断言：双 trace 各自 latency_ms>=0 且 type 严格非负 float；emit 顺序与站点 #2→#4 文档顺序一致",
+        "scripts/verify_interact_031.py V0-V3 meta lock（新增 V3b anchor + 旧 V3 单 emit 路径仍 PASS）",
+        "smoke 11/11 PASS",
+        "0 业务源码改动 bytewise 等价 main",
+        "Reviewer sub-agent fresh-context LGTM"
+      ],
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_interact_021.py",
+          ".venv/bin/python scripts/verify_interact_031.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_interact_021 V0-V3(+V3b) 全 PASS",
+          "verify_interact_031 V0-V3 meta lock 全 PASS",
+          "smoke 11/11 PASS",
+          "0 业务源码改动",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "infra-030",
+      "title": "verify_*/proactive_trace_summary sys.path 注入路径 audit (verify-only 文档)",
+      "priority": 222,
+      "status": "not_started",
+      "phase": 26,
+      "area": "infra",
+      "source": "interact-018-backlog-syspath-injection-audit",
+      "updated_at": "2026-05-18T16:18:59",
+      "description": "Reviewer caveat (interact-018) 收口：scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑（__file__ 父目录上溯），在 subprocess / -m / 打包等场景下健壮性未审计。本 feature audit 各执行路径（直接 python / subprocess / python -m / 模拟非 cwd 调用），文档记录结论，必要时补 scripts/verify_infra_030.py meta lock 防回归。0 业务源码改动。",
+      "acceptance_criteria": [
+        "audit 列出所有 scripts/verify_*.py + scripts/proactive_trace_summary.py 的 sys.path 注入位置",
+        "实测四档：直接 .venv/bin/python / subprocess / python -m / 非 repo-root cwd 调用，各档 import coco.* 成功",
+        "结论写入 scripts/verify_infra_030.py docstring 或 docs/syspath-audit.md",
+        "scripts/verify_infra_030.py V0-V3：(V0) anchor sys.path.insert 字面量；(V1-V3) 四档调用各自 rc=0",
+        "smoke 11/11 PASS",
+        "0 业务源码改动 bytewise 等价 main",
+        "Reviewer sub-agent fresh-context LGTM"
+      ],
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_infra_030.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_infra_030 V0-V3 全 PASS（四档调用路径 import 均成功）",
+          "smoke 11/11 PASS",
+          "0 业务源码改动 bytewise 等价 main",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "robot-026",
+      "title": "verify_robot_015 错误打印放宽 [:300] → traceback.format_exc / [:1500]",
+      "priority": 223,
+      "status": "not_started",
+      "phase": 26,
+      "area": "robot",
+      "source": "robot-015-backlog-verify-error-print-truncation",
+      "updated_at": "2026-05-18T16:18:59",
+      "description": "Reviewer caveat (robot-015) 收口：scripts/verify_robot_015.py 错误路径打印 str(e)[:300] 截断，长 traceback 被切。本 feature 改为 traceback.format_exc()[:1500]（或全量 traceback），便于排障。verify-only，0 业务源码改动。",
+      "acceptance_criteria": [
+        "scripts/verify_robot_015.py 全部 str(e)[:300] 截断替换为 traceback.format_exc()[:1500]（或 logger.exception 模式）",
+        "正常路径 PASS 行为不变（rc=0, V1-V5 全 PASS）",
+        "scripts/verify_robot_026.py V0-V2 meta lock：anchor traceback.format_exc 字面量 + 旧 [:300] 字样 0 残留 + 反向 mutant（注入异常）能看到完整 traceback",
+        "smoke 11/11 PASS",
+        "0 业务源码改动 bytewise 等价 main",
+        "Reviewer sub-agent fresh-context LGTM"
+      ],
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_robot_015.py",
+          ".venv/bin/python scripts/verify_robot_026.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_robot_015 V1-V5 全 PASS（rc=0，行为不变）",
+          "verify_robot_026 V0-V2 全 PASS",
+          "smoke 11/11 PASS",
+          "0 业务源码改动 bytewise 等价 main",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "interact-032",
+      "title": "verify_interact_023 V3 函数名 rename v3_type_strict_and_monotonic → v3_type_strict_and_nonneg + docstring 清理",
+      "priority": 224,
+      "status": "not_started",
+      "phase": 26,
+      "area": "interact",
+      "source": "interact-023-backlog-v3-rename",
+      "updated_at": "2026-05-18T16:18:59",
+      "description": "Reviewer caveat (interact-023) 收口：scripts/verify_interact_023.py V3 函数名 v3_type_strict_and_monotonic 与实际断言略歧义（仅 latency_ms 非负 + type-strict bool 排除，不跨 call monotonic）。本 feature rename 为 v3_type_strict_and_nonneg，docstring 明确 monotonic 仅作 emit 顺序契约（V2 负责），V3 不承担跨 call monotonic 断言。纯命名 + 文档清理，0 业务源码改动。",
+      "acceptance_criteria": [
+        "scripts/verify_interact_023.py V3 函数名 rename 为 v3_type_strict_and_nonneg",
+        "docstring 明确 V3 仅断言 latency_ms>=0 + type-strict bool 排除；monotonic 由 V2 承担",
+        "verify_interact_023 V1-Vn 全 PASS（行为不变）",
+        "scripts/verify_interact_032.py V0-V2 meta lock：anchor 新函数名 + 旧函数名 0 残留 + docstring 关键短语 anchor",
+        "smoke 11/11 PASS",
+        "0 业务源码改动 bytewise 等价 main",
+        "Reviewer sub-agent fresh-context LGTM"
+      ],
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_interact_023.py",
+          ".venv/bin/python scripts/verify_interact_032.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_interact_023 全 PASS（rename 后语义不变）",
+          "verify_interact_032 V0-V2 全 PASS",
+          "smoke 11/11 PASS",
+          "0 业务源码改动 bytewise 等价 main",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
     }
   ],
   "_meta": {
