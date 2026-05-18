@@ -5267,7 +5267,8 @@
       "title": "V1 drift_report 跨 commit 历史趋势",
       "area": "interact",
       "priority": 999,
-      "status": "backlog",
+      "status": "resolved",
+      "resolved_by": "interact-036",
       "phase": null,
       "description": "把 v1_drift_report.<stage>.actual_line 写入 evidence/_history 或 smoke_history.jsonl，看跨 commit 行号漂移趋势，辅助提前发现锚点逐步失效。低优先级，不阻 merge。",
       "source": "interact-035 Reviewer suggestion",
@@ -5335,11 +5336,22 @@
       "area": "interact",
       "priority": 242,
       "phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "title": "V1 drift_report 跨 commit 历史趋势写入",
       "description": "把 v1_drift_report.<stage>.actual_line 写入 evidence/_history（或 smoke_history.jsonl），观测跨 commit 行号漂移趋势，辅助提前发现锚点逐步失效。warn-only 与 PASS/FAIL 解耦。",
       "source_backlog": "interact-035a-backlog-drift-report-history-trend",
-      "scope": "verify-only：扩展 scripts/verify_interact_024.py 或 verify_interact_035.py，将 drift_report 追加写入 evidence/interact-035-history.jsonl；新增 verify_interact_036.py 校验追加行格式 + 不影响 PASS/FAIL。0 业务源码改动。"
+      "scope": "verify-only：扩展 scripts/verify_interact_024.py 或 verify_interact_035.py，将 drift_report 追加写入 evidence/interact-035-history.jsonl；新增 verify_interact_036.py 校验追加行格式 + 不影响 PASS/FAIL。0 业务源码改动。",
+      "evidence": {
+        "merge_sha": "9a42249",
+        "feat_head": "45902ea",
+        "base_main": "7ff6221",
+        "verify_script": "scripts/verify_interact_036.py",
+        "verify_summary": "evidence/interact-036/verify_summary.json",
+        "business_source_changes": 0,
+        "verify_024_upgrade_sha256": "31ef9b97bae01a6fab44dfa7ea59ad70ec10466b55be68bb2318dc77d3234883",
+        "history_jsonl_path": "evidence/_history/interact_024_drift_history.jsonl",
+        "reviewer_subagent": "LGTM — verify-only meta-lock 升级 verify_interact_024.py 写 drift history jsonl + 新增 verify_interact_036.py 自锁；V0-V5 全 PASS；0 业务源码改动；default-OFF 不变，PASS/FAIL 与 history append 解耦。"
+      }
     },
     {
       "id": "robot-031",
@@ -5376,6 +5388,26 @@
       "description": "把 infra-033 在 scripts/verify_infra_024.py 上确立的\"运行环境约定 docstring + sha256 锁 + sentinel meta-verify\"模式推广到其他 scripts/verify_*.py 入口（如 verify_*.py 系列）。纯文档化，不改业务源码；每个被推广脚本配一份 sha256 锁与 meta-verify 校验项。",
       "verification": null,
       "evidence": {}
+    },
+    {
+      "id": "interact-036a-backlog-drift-jsonl-rotation",
+      "title": "interact_024_drift_history.jsonl rotation / retention",
+      "area": "interact",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "evidence/_history/interact_024_drift_history.jsonl 当前为 append-only，跨 commit 无界增长。补 size cap / N-行 rotation 或纳入 evidence/_history 整体 retention 策略，避免长期堆积。低优先级，不阻 merge。",
+      "source": "interact-036 closeout follow-up"
+    },
+    {
+      "id": "interact-036b-backlog-drift-trend-regression-alert",
+      "title": "drift 历史趋势可视化 / 单调上行回归告警",
+      "area": "interact",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "读取 evidence/_history/interact_024_drift_history.jsonl，若最近 N 条 drift 单调上行（或趋势斜率超阈值）则 stdout dump 警告；独立 verify_*.py 脚本跑 trend regression，不阻 merge，仅作早期预警。",
+      "source": "interact-036 closeout follow-up"
     }
   ],
   "_meta": {

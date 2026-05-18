@@ -4491,3 +4491,15 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **范围：** `coco/proactive.py` +17/-2；新增 `scripts/verify_robot_030.py` + `evidence/robot-030/verify_summary.json`。default-OFF 友好，无 env gate，无行为破坏。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 2/5（infra-033 + robot-030）。
+
+## Session interact-036 closeout (2026-05-19)
+
+**Feature：** interact-036 V1 drift_report 跨 commit 历史趋势写入（phase=29, priority=242, status=in_progress → passing），source_backlog=`interact-035a-backlog-drift-report-history-trend`（→ resolved，resolved_by=interact-036）。
+
+**Verify-only / 0 业务源码改动：** 升级 `scripts/verify_interact_024.py` 在 V1 drift 收集后把 `{ts, kind, git_head, drift_report{admit/reject_main/reject_preempt}}` append 到 `evidence/_history/interact_024_drift_history.jsonl`（PASS/FAIL 与 append 解耦，warn-only 趋势观测）；新增 `scripts/verify_interact_036.py` 自锁 V0-V5（preflight / sentinels / structural locks / mutant 反证 / sha256 lock / end-to-end append），其中 V4 锁 `verify_024 sha256=31ef9b97bae01a6f..`，V5 在 in-process 实跑追加 +1 行并断言字段齐全（top 4 字段 + 3 stages + per-stage 5 字段）。
+
+**Evidence：** merge_sha=9a42249, feat_head=45902ea, base_main=7ff6221；`verify_024_upgrade_sha256=31ef9b97bae01a6fab44dfa7ea59ad70ec10466b55be68bb2318dc77d3234883`；history_jsonl_path=`evidence/_history/interact_024_drift_history.jsonl`；Reviewer (sub-agent) LGTM — verify-only meta-lock 升级 + 自锁完备，V0-V5 全 PASS，default-OFF 不变，0 业务源码改动。
+
+**Backlog 派生：** 新增 `interact-036a-backlog-drift-jsonl-rotation`（jsonl append-only 无界增长 → size cap / rotation / retention）+ `interact-036b-backlog-drift-trend-regression-alert`（最近 N 条 drift 单调上行触发 stdout 趋势 dump，独立 verify trend regression）。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 3/5（infra-033 + robot-030 + interact-036），下一 candidate=robot-031（priority=243）。
