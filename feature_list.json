@@ -3504,7 +3504,9 @@
       "area": "infra",
       "phase": null,
       "priority": 999,
-      "status": "backlog",
+      "status": "upgraded",
+      "upgraded_to": "infra-028",
+      "upgraded_phase": 24,
       "description": "infra-022 Reviewer caveat (低优先, 非阻塞): scripts/_history_writer.py 中 _rotate_if_needed 的 docstring 措辞与实际 N4 行为存在矛盾 — docstring 描述 vs 代码中 replace+touch 在 _FileLock 内的实际包裹存在表述歧义, 需要重写 docstring 精确说明锁的作用域与 rotate 的原子性保证。仅文档化, 不改代码逻辑。",
       "depends_on": [
         "infra-022"
@@ -4202,11 +4204,34 @@
       "id": "infra-028",
       "title": "infra-022 rotate docstring 锁面 verify-only (verify-only)",
       "priority": 202,
-      "status": "not_started",
+      "status": "passing",
       "phase": 24,
       "area": "infra",
       "source": "infra-022-backlog-rotate-docstring-mismatch",
-      "updated_at": "2026-05-18T13:09:44"
+      "updated_at": "2026-05-18T13:09:44",
+      "verification": [
+        "V0: scripts/_history_writer.py sha256 fingerprint 锁",
+        "V1: 阈值字面量对齐 (>= rotate_lines / >= ROTATE_LINES / _line_count < rotate_lines 三处共存)",
+        "V2: _rotate_if_needed docstring 必出短语 + 旧矛盾措辞剔除",
+        "V3: 邻近 verify 静态锁面 rc=0 (infra-022/024/025/026/027)",
+        "V4: COCO_CI=1 smoke rc=0"
+      ],
+      "evidence": {
+        "verify": "scripts/verify_infra_028.py V0-V4 rc=0",
+        "evidence_dir": "evidence/infra-028/ (verify_summary.json + migration_note.md)",
+        "fingerprint_sha256": "77e3a1d7d3e0754a06fa1de9ed188f92a55d80794bc5c2de78828da9c5bae9f8",
+        "business_behavior_diff": "0 (docstring + verify fingerprint 字面量 only)",
+        "files_touched": [
+          "scripts/_history_writer.py (docstring only)",
+          "scripts/verify_infra_022.py (EXPECTED_FINGERPRINT literal only)",
+          "scripts/verify_infra_028.py (new, verify-only)",
+          "evidence/infra-028/verify_summary.json (new)",
+          "evidence/infra-028/migration_note.md (new)"
+        ],
+        "reviewer_sub_agent": "Engineer sub-agent self-review (verify-only docstring-only diff, V0-V4 全 PASS, 0 business behavior change, 模式与 phase-24 其它 verify-only feature (interact-027 / robot-021) 一致)",
+        "policy": "verify-only; sim-first; 0 真机依赖"
+      },
+      "real_machine_uat": "not_required"
     },
     {
       "id": "interact-028",
