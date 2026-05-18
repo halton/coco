@@ -57,7 +57,7 @@
       },
       "status": "PASS"
     },
-    "V5_stdout_real_chain": {
+    "V5_stdout_chain_assert": {
       "detail": {
         "skip_line_count": 1,
         "skip_sample": "  SKIP: COCO_CI=1，跳过真麦克录音（CI 无声卡）",
