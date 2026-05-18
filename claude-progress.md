@@ -3812,3 +3812,23 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - smoke ./init.sh rc=0 通过
 - **phase-22 全收官 5/5**: audio-014 (P180) + vision-015 (P181) + companion-018 (P182) + robot-018 (P183) + interact-024 (P184); 全部 verify-only / default-OFF / 0 业务源码改动
 - 下一步: phase-23 planning, 优先抽既有 backlog (verify-only 主导), 候选包含本轮新加的 interact-024-backlog-v1-anchor-per-stage-count
+
+## Session 2026-05-18 — phase-23 planning
+
+- main HEAD before: 17b9307
+- phase-22 全 5/5 收官，启动 phase-23 planning
+- 原则：verify-only 主导 + area 平衡 + 严格在既有 backlog 抽（不开新方向）
+- 候选池：未消化 backlog 21 个 (interact 5 / robot 10 / infra 6)，audio/vision/companion 已清空
+- 选定 5 个 phase-23 候选 (priority 190-194)：
+
+| P | id | area | source | 理由 |
+|---|---|---|---|---|
+| 190 | interact-025 | interact | interact-018-backlog-v1-cooldown-coverage | V1 cooldown 边界 verify 补强，低风险高密度 |
+| 191 | robot-019 | robot | robot-009-backlog-block-policy-doc | block-policy 文档锁面 + verify，verify-only |
+| 192 | infra-027 | infra | infra-019-backlog-runs-on-matrix-os | CI runs-on 矩阵 OS 锁面，infra verify |
+| 193 | interact-026 | interact | interact-021-backlog-stale-doc-numbers | 文档数字纠偏 verify，verify-only |
+| 194 | robot-020 | robot | robot-015-backlog-v3-warn-once-rename | warn-once 重命名锁面，verify-only |
+
+- 跨 area: interact x2 / robot x2 / infra x1
+- 不动业务源码，不新增 backlog
+- 下一步: 派 interact-025 (P190) 给 Engineer

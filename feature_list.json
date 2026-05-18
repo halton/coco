@@ -4066,6 +4066,51 @@
       "updated_at": "2026-05-18T18:47:12"
     },
     {
+      "id": "interact-025",
+      "title": "interact-018 V1 cooldown 边界 verify 补强 (verify-only)",
+      "priority": 190,
+      "status": "not_started",
+      "phase": 23,
+      "area": "interact",
+      "source": "interact-018-backlog-v1-cooldown-coverage"
+    },
+    {
+      "id": "robot-019",
+      "title": "robot-009 block-policy 文档锁面 + verify (verify-only)",
+      "priority": 191,
+      "status": "not_started",
+      "phase": 23,
+      "area": "robot",
+      "source": "robot-009-backlog-block-policy-doc"
+    },
+    {
+      "id": "infra-027",
+      "title": "infra-019 CI runs-on matrix OS 锁面 (verify-only)",
+      "priority": 192,
+      "status": "not_started",
+      "phase": 23,
+      "area": "infra",
+      "source": "infra-019-backlog-runs-on-matrix-os"
+    },
+    {
+      "id": "interact-026",
+      "title": "interact-021 文档数字纠偏 verify (verify-only)",
+      "priority": 193,
+      "status": "not_started",
+      "phase": 23,
+      "area": "interact",
+      "source": "interact-021-backlog-stale-doc-numbers"
+    },
+    {
+      "id": "robot-020",
+      "title": "robot-015 V3 warn-once 重命名锁面 (verify-only)",
+      "priority": 194,
+      "status": "not_started",
+      "phase": 23,
+      "area": "robot",
+      "source": "robot-015-backlog-v3-warn-once-rename"
+    },
+    {
       "id": "interact-024-backlog-v1-anchor-per-stage-count",
       "name": "V1 anchor 升级为按 stage 字面量分别 anchor + 站点数 ==3 严格断言",
       "area": "interact",
