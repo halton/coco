@@ -3042,7 +3042,7 @@
       "id": "robot-027-backlog-verify-self-hash-bump-helper",
       "name": "verify_robot_027 V4 self-sha256 锁 bump 助手脚本",
       "area": "robot",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3053,7 +3053,8 @@
       "evidence": {},
       "updated_at": "2026-05-19T13:00:00",
       "selected_for": "robot-028",
-      "selected_phase": 28
+      "selected_phase": 28,
+      "resolved_by": "robot-028"
     },
     {
       "id": "robot-008-backlog-groupmodecoord-wire",
@@ -5086,11 +5087,21 @@
       "selected_phase": 28
     },
     {
+      "id": "robot-028-backlog-bump-helper-self-hash-hard-lock",
+      "title": "bump_verify_027_self_hash 助手脚本自身 sha256 硬锁 + 递归 bump_verify_028",
+      "area": "robot",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "当 scripts/bump_verify_027_self_hash.py 稳定不再频繁微调时，将 verify_robot_028.py V4 中 bump_helper_sha256 的 placeholder 升级为硬锁字面常量，并新增同款 scripts/bump_verify_028_self_hash.py 递归助手，自动同步 verify_028 中的 helper sha 锁。仅当 helper 本身定型后再做，避免锁链频繁 churn。来源：robot-028 Reviewer 报告 followup 建议。",
+      "source": "robot-028 Reviewer suggestion"
+    },
+    {
       "id": "robot-028",
       "area": "robot",
       "priority": 235,
       "phase": 28,
-      "status": "in_progress",
+      "status": "passing",
       "branch": "feat/robot-028",
       "title": "verify-027 self-hash bump helper 脚本",
       "description": "verify-only / default-OFF 友好。新增 scripts/bump_verify_027_self_hash.py：自动读取 scripts/verify_robot_025.py 当前 sha256 并替换 verify_robot_027.py 中 EXPECTED_VERIFY_025_SHA 常量，避免人工同步漂移。无业务源码改动。",
@@ -5099,6 +5110,8 @@
       "evidence": {
         "branch": "feat/robot-028",
         "base_main_sha": "185271e",
+        "merge_sha": "d4777c5",
+        "feat_head": "7a0ea2d",
         "bump_helper": "scripts/bump_verify_027_self_hash.py",
         "bump_helper_sha256": "c29927bc3f920a761228440505ecdbe16969812704bfca0e3cabb77560132540",
         "bump_interface": "无参 = 计算 verify_025 sha256 并 in-place 替换 verify_027 中 VERIFY_025_EXPECTED_SHA 字面常量; --dry-run 只打印差异不落盘; rc=0 一致或更新成功",
@@ -5106,6 +5119,7 @@
         "verify_summary": "evidence/robot-028/verify_summary.json",
         "verify_local_result": "verify_robot_028 ALL PASS; verify_robot_027 ALL PASS; verify_robot_025 ALL PASS",
         "smoke": "11/11 PASS (./init.sh)",
+        "reviewer_subagent": "LGTM — verify-only helper + meta-lock V0-V5 PASS, 0 业务源码改动, default-OFF 友好, sim-first 合规",
         "files_changed": [
           "scripts/bump_verify_027_self_hash.py (new)",
           "scripts/verify_robot_028.py (new)",

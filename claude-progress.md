@@ -4337,3 +4337,21 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **首发：** robot-028 (priority=235，verify-only helper 脚本)
 
 5 个 source backlog 已标 selected_for + selected_phase=28。
+
+## Session 2026-05-19 — robot-028 closeout (P235, phase-28 1/5)
+
+**merge_sha:** d4777c5  **feat_head:** 7a0ea2d  **base_main:** 185271e
+
+**verify_summary** (evidence/robot-028/verify_summary.json):
+- elapsed_sec: 0.06, errors: []
+- verify_025_sha256 = verify_027_locked_sha = 1c1cba08...0ef6d (V4 self-lock 一致)
+- bump_helper_sha256: c29927bc...132540
+
+**verify_robot_028 V0-V5 ALL PASS**：bump helper 脚本存在 + 接口契约 + dry-run 等价 + V4 self-lock 一致 + helper sha placeholder 锚点 + meta-lock 完整性。
+
+**Reviewer (sub-agent): LGTM** — verify-only helper + meta-lock V0-V5 PASS，0 业务源码改动，default-OFF 友好，sim-first 合规。
+
+**source backlog resolved:** robot-027-backlog-verify-self-hash-bump-helper → resolved_by: robot-028
+**new backlog:** robot-028-backlog-bump-helper-self-hash-hard-lock（待 helper 稳定后再做硬锁 + 递归 bump_verify_028 助手）
+
+**phase-28 进度:** 1/5（robot-028 done；下一 candidate: interact-034 P236）
