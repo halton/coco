@@ -1,31 +1,31 @@
 """interact-021 verification: latency_ms 各 stage 语义文档化.
 
 承接 interact-018 Reviewer caveat (interact-018-backlog-latency-stage-semantics-doc):
-interact-018 把 latency_ms 在 5 个 emit 站点都接好后, Reviewer 指出 — 同一
-字段名在不同 stage 下语义粒度不同 (admit 端到端 vs reject 判定即出 vs
-arbit_winner 锁内预占即出 vs emotion_alert 独立路径自测量), 直接 p50/p95
-混合统计会误导。本 feature 把语义按 stage 分类文档化, **纯文档**, 不改
-运行时行为。
+interact-018 把 latency_ms 在 4 个 emit 站点都接好后 (1 个 emit_emotion_alert +
+3 个 maybe_trigger 内 _trace_emit), Reviewer 指出 — 同一字段名在不同 stage 下
+语义粒度不同 (admit 端到端 vs reject 判定即出 vs arbit_winner 锁内预占即出 vs
+emotion_alert 独立路径自测量), 直接 p50/p95 混合统计会误导。本 feature 把语义
+按 stage 分类文档化, **纯文档**, 不改运行时行为。
 
 产物:
 - research/proactive_trace_contract.md §5 (单源真理)
-- coco/proactive.py `_lat_start` 处 docstring/注释增强 (5 个 stage 名清单)
+- coco/proactive.py `_lat_start` 处 docstring/注释增强 (6 个 stage 名清单)
 
 子项::
 
-V0 fingerprint: 文档/源码含 5 个 stage 名 + 关键术语 (monotonic, cumulative,
+V0 fingerprint: 文档/源码含 6 个 stage 名 + 关键术语 (monotonic, cumulative,
    ms, latency_ms, _lat_start, _lat_ms)。
 
-V1 contract 文档段含 5 个 stage 名 + monotonic + cumulative + ms 关键词
+V1 contract 文档段含 6 个 stage 名 + monotonic + cumulative + ms 关键词
    (research/proactive_trace_contract.md §5)。
 
-V2 coco/proactive.py 仍含 5 处 latency_ms emit (与 interact-018 V2 锁同步,
-   防止文档化过程误删 emit)。
+V2 coco/proactive.py 仍含 4 处 latency_ms emit kwarg (与 interact-018 V2 锁
+   同步, 防止文档化过程误删 emit)。
 
 V3 latency_ms 单调非降 (cumulative): 在 fixture 跑 maybe_trigger, 收集所有
    emit 的 latency_ms (按 emit 顺序), 断言后发 emit >= 前发 emit。
 
-V4 docstring / 注释与代码 stage 名一致: 文档 §5.3 列的 5 个 stage 名
+V4 docstring / 注释与代码 stage 名一致: 文档 §5.3 列的 6 个 stage 名
    {emotion_alert, fusion_boost, mm_proactive, cooldown_hit, arbit_winner,
    normal} 都能在 coco/proactive.py 找到 emit 站点字面量。
 
@@ -57,7 +57,7 @@ def _record(name: str, ok: bool, **detail: Any) -> None:
     print(f"[{flag}] {name}: {detail}")
 
 
-# 5 个 stage 名权威清单 (文档 §5.3 同步)
+# 6 个 stage 名权威清单 (文档 §5.3 同步)
 STAGE_NAMES = {
     "emotion_alert",
     "fusion_boost",
@@ -69,7 +69,7 @@ STAGE_NAMES = {
 
 
 def v0_fingerprint() -> None:
-    """V0: 文档/源码含 5 个 stage 名 + latency_ms 语义关键词."""
+    """V0: 文档/源码含 6 个 stage 名 + latency_ms 语义关键词."""
     doc_path = ROOT / "research" / "proactive_trace_contract.md"
     proactive_src_path = ROOT / "coco" / "proactive.py"
     doc_text = doc_path.read_text(encoding="utf-8") if doc_path.exists() else ""
@@ -98,7 +98,7 @@ def v0_fingerprint() -> None:
 
 
 def v1_contract_doc_stage_section() -> None:
-    """V1: contract 文档 §5 段含 5 个 stage 名 + monotonic + cumulative + ms 关键词."""
+    """V1: contract 文档 §5 段含 6 个 stage 名 + monotonic + cumulative + ms 关键词."""
     doc_path = ROOT / "research" / "proactive_trace_contract.md"
     if not doc_path.exists():
         _record("V1_contract_doc_stage_section", False, reason="doc missing")
@@ -137,7 +137,7 @@ def v2_proactive_py_emit_sites() -> None:
     """V2: coco/proactive.py 仍含 4 处 latency_ms emit kwarg (与 interact-018 wire 同步).
 
     注: 实际 emit 站点 4 个 (1 个 emit_emotion_alert + 3 个 maybe_trigger 内
-    的 _trace_emit), 与 interact-018 V2 一致。文档 §5 仍登记 5 个 stage 名
+    的 _trace_emit), 与 interact-018 V2 一致。文档 §5 仍登记 6 个 stage 名
     清单 (含 normal — 是 fusion_boost / mm_proactive / normal 入口快照的
     default 分支, 不额外加 emit 站点)。
     """
@@ -251,7 +251,7 @@ def v3_latency_monotonic_in_fixture() -> None:
 
 
 def v4_doc_stage_names_in_source() -> None:
-    """V4: 文档 §5.3 列的 5 个 stage 名都能在 coco/proactive.py 找到 emit 站点字面量."""
+    """V4: 文档 §5.3 列的 6 个 stage 名都能在 coco/proactive.py 找到 emit 站点字面量."""
     src = (ROOT / "coco" / "proactive.py").read_text(encoding="utf-8")
     missing = []
     for stage in STAGE_NAMES:

@@ -3889,3 +3889,24 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: infra-027 status not_started → passing
 - 不 merge (Closeout 唯一)
 - 下一候选: interact-026 (P193)
+
+## Session 2026-05-18 interact-026 (P193) — interact-021 文档数字纠偏 + verify 锁面 (verify-only)
+- 任务: source backlog interact-021-backlog-stale-doc-numbers. interact-021 docstring 与 research/proactive_trace_contract.md §5.7/§6 内字面"5 处 emit / 5 个 stage 名"与代码真实值 (4 处 latency_ms= kwarg / 6 个 stage 名) 不一致, 纯文档纠偏 + verify 锁面.
+- 数字纠偏对照:
+  - latency_ms emit 站点: 旧 "5 处" → 新 **"4 处"** (代码 `src.count("latency_ms=") == 4`, 1 emit_emotion_alert + 3 maybe_trigger _trace_emit)
+  - stage 名清单: 旧 "5 个" → 新 **"6 个"** (verify_021.STAGE_NAMES set 真实大小, 含 normal)
+- 产物:
+  - scripts/verify_interact_021.py — docstring 5→4/5→6 文字纠偏 (注释 / docstring, 无运行时逻辑改动; V0-V5 仍 PASS)
+  - research/proactive_trace_contract.md — §5.7 + §6 文字纠偏 (4 处 emit / 6 个 stage 名 / 4 个 latency_ms emit 站点) + 补 verify_interact_026 锚点
+  - scripts/verify_interact_026.py — V0 fingerprint sha256 (3 文件) / V1 代码常量==doc 字面量 (4/6) / V2 doc 关键短语锁 (新字面命中 + 旧 stale 清零) / V3 邻近 verify 018/021/022/023/024/025 全 rc=0 / V4 smoke rc=0
+  - evidence/interact-026/verify_summary.json + migration_note.md
+- verify 结果: PASS 全部 5 项
+  - V1 latency_ms_kwarg_count=4 == 4; stage_names_count=6 == 6 (sorted: arbit_winner/cooldown_hit/emotion_alert/fusion_boost/mm_proactive/normal)
+  - V2 missing_phrases=[] leftover_stale_in_doc=[] leftover_stale_in_verify021=[]
+  - V3 邻近 6 个 verify 全 rc=0
+  - V4 ./init.sh rc=0
+- 0 业务源码改动: `git diff --stat coco/` 空; 仅动 scripts/ docs/ research/ evidence/ feature_list.json claude-progress.md
+- backlog 增量: 0 (V0-V4 全 PASS 干净)
+- feature_list.json: interact-026 status not_started → passing
+- 不 merge (Closeout 唯一)
+- 下一候选: robot-020 (P194, robot-015 V3 warn-once 重命名锁面 verify-only)

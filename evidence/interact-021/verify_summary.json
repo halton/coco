@@ -6,7 +6,7 @@
       "ok": true,
       "missing_anchors": [],
       "missing_stages": [],
-      "doc_size": 8728
+      "doc_size": 8930
     },
     "V1_contract_doc_stage_section": {
       "ok": true,
@@ -24,7 +24,7 @@
       "ok": true,
       "traces_count": 1,
       "latency_seq": [
-        0.02
+        0.014
       ],
       "stages_seq": [
         "arbit_winner"
