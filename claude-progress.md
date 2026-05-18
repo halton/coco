@@ -3910,3 +3910,27 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: interact-026 status not_started → passing
 - 不 merge (Closeout 唯一)
 - 下一候选: robot-020 (P194, robot-015 V3 warn-once 重命名锁面 verify-only)
+
+## Session 2026-05-18 robot-020 (P194) — robot-015 V3 warn-once 重命名锁面 (verify-only)
+- 任务: source backlog robot-015-backlog-v3-warn-once-rename. 锁 `coco/proactive.py` 中三种 warn-once dedup key 字面量 + set 属性名 + env 变量名, 防止重命名导致 dedup 静默失效.
+- 三种 warn-once 锁面对象:
+  - setter dup: key=`("dup", id(prev), id(new))` on `_setter_audit_seen` (env `COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1`)
+  - setter probe-fail: key=`("probe-fail", id(seq), type(e).__name__)` on `_setter_audit_seen`
+  - sync fallback: key=`("sync-fallback", id(_seq))` on `_sync_fallback_audit_seen` (env `COCO_ROBOT_SYNC_FALLBACK_AUDIT=1`)
+- 产物:
+  - docs/robot-warn-once-keys-spec.md — §1 三种 warn-once / §2 key tuple 结构 / §3 env gating / §4 重命名风险 / §5 default-OFF 不变式 / §6 不衍生 fu chain
+  - scripts/verify_robot_020.py V0-V_n
+  - evidence/robot-020/{verify_summary.json,migration_note.md}
+- verify 结果: PASS, 总耗时 221.97s
+  - V0 fingerprint 3 文件 sha256
+  - V1 11 项源码字面量锁全 PASS (key tag/set 属性名/env 变量名/key tuple 元素/env=="1" 写法/suppressed warn-once 文案)
+  - V2 17 项 spec doc 短语锁全 PASS
+  - V3 env=1 行为实证: 5 次注入 → 3 次 WARNING (新 key) + 1 次 DEBUG (重复 key) + set size==3 (s2→s2 自指算新 key)
+  - V4 env=0 default: `_setter_audit_seen` 与 `_sync_fallback_audit_seen` 始终空
+  - V5 邻近 verify 008/016/017/018/019 rc==0 (heavy 014/015 skip 留 closeout smoke)
+  - V6 smoke 占位; closeout ./init.sh smoke 11/11 PASS
+- 0 业务源码改动: `coco/proactive.py` 与其他业务模块 0 diff; 仅动 docs/ scripts/ evidence/ feature_list.json claude-progress.md
+- backlog 增量: 0
+- feature_list.json: robot-020 status not_started → passing
+- 不 merge (Closeout 唯一)
+- phase-23 进度: 5/5 全 passing (interact-025 + robot-019 + infra-027 + interact-026 + robot-020), 收官转 phase-24 planning

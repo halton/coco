@@ -1,0 +1,56 @@
+{
+  "feature_id": "robot-020",
+  "priority": 194,
+  "phase": 23,
+  "source_backlog": "robot-015-backlog-v3-warn-once-rename",
+  "verdict": "PASS",
+  "errors": [],
+  "elapsed_s": 221.97,
+  "fingerprints": {
+    "proactive.py_sha256": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
+    "spec_doc_sha256": "4e8f816518a208e31a76ae7a929a4e377d3808236a5b3f769e47264b1a6a7b1c",
+    "verify_self_sha256": "10a1d46f4387ced3d2f1596a46e0c519e373631b4fcc8e8a40068677e29abc8c"
+  },
+  "behavior_env1": {
+    "warn_overwrite_count": 3,
+    "debug_suppressed_count": 1,
+    "setter_audit_seen_size": 3
+  },
+  "default_off": {
+    "setter_audit_seen_size": 0,
+    "sync_fallback_audit_seen_size": 0
+  },
+  "neighbor_regression": [
+    {
+      "name": "verify_robot_008.py",
+      "rc": 0,
+      "elapsed_s": 10.9
+    },
+    {
+      "name": "verify_robot_016.py",
+      "rc": 0,
+      "elapsed_s": 41.8
+    },
+    {
+      "name": "verify_robot_017.py",
+      "rc": 0,
+      "elapsed_s": 63.1
+    },
+    {
+      "name": "verify_robot_018.py",
+      "rc": 0,
+      "elapsed_s": 14.5
+    },
+    {
+      "name": "verify_robot_019.py",
+      "rc": 0,
+      "elapsed_s": 91.6
+    }
+  ],
+  "heavy_skipped": [
+    "verify_robot_015.py (~457s, source backlog 锁; 留 closeout)",
+    "verify_robot_014.py (~573s)"
+  ],
+  "default_off_invariant": "spec evidence-only; 0 业务源码改动; env 未设 set 永远空 bytewise 等价 main",
+  "new_backlog_added": 0
+}
