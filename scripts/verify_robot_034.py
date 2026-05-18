@@ -58,7 +58,30 @@ VERIFY_LIB = REPO / "scripts" / "_verify_lib.py"
 
 HELPER_NAME = "_parse_headings_from_doc"  # verify_robot_032 中的本地别名 symbol
 LIB_HELPER_NAME = "parse_headings_from_doc"  # _verify_lib 中的公开 helper
-SENTINEL_LINE = "## 章节标题列表（供 verify_robot_032 用）"
+
+
+# robot-036: SENTINEL_LINE 不再 hardcode 重复, 改为从 verify_robot_032.py 中的
+# ``_HEADINGS_SECTION_SENTINEL`` 常量静态读取 (ast.literal_eval), 形成 single source。
+# 选择 ast 而非 ``from verify_robot_032 import ...`` 是为了避免 module-level
+# 副作用 (verify_robot_032 import 时会立即解析 docs 生成 EXPECTED_HEADINGS),
+# 让 verify_robot_034 顶层加载与 docs 文件状态完全解耦; V1/V3 仍走原有 importlib 路径。
+_SENTINEL_SRC_NAME = "_HEADINGS_SECTION_SENTINEL"
+
+
+def _read_sentinel_from_verify_032() -> str:
+    src = VERIFY_032.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == _SENTINEL_SRC_NAME:
+                    return ast.literal_eval(node.value)
+    raise RuntimeError(
+        f"constant {_SENTINEL_SRC_NAME!r} not found in {VERIFY_032}"
+    )
+
+
+SENTINEL_LINE = _read_sentinel_from_verify_032()
 
 # V2: hardcoded sha256 of _verify_lib.parse_headings_from_doc function body (ast source segment)
 # robot-035: 改锁共享 lib helper (helper 函数体新增 sentinel 形参 + 文档与原版有差异,

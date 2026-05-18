@@ -5808,7 +5808,7 @@
       "area": "robot",
       "phase": 31,
       "title": "verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "robot-034-backlog-sentinel-line-import-not-duplicate",
       "scope": "verify_robot_034.py 当前 hardcode SENTINEL_LINE 字面值；改为从 scripts.verify_robot_032 import SENTINEL_LINE，避免两处 drift。verify-only，0 业务源码改动。",
       "dependencies": [
