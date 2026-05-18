@@ -27,7 +27,7 @@ V3 OFF 显式 e2e: HOME=tmp + COCO_CI=1 + COCO_SMOKE_FINEGRAINED_EXIT=0
     → 子进程 rc==0 (显式 0 与未设值一致)。
 V4 ON 别名 e2e: HOME=tmp + COCO_CI=1 + COCO_SMOKE_FINEGRAINED_EXIT=true
     → 子进程 rc==2 (env 别名 1/true/yes 全部生效, 与 infra-018 文档对齐)。
-V5 stdout 真实链路: V1 子进程 stdout 含 "WARN:" 行 + "SKIP:" 行 + "Smoke 通过"
+V5 stdout chain assert: V1 子进程 stdout 含 "WARN:" 行 + "SKIP:" 行 + "Smoke 通过"
     收尾, 反证 classifier 经子检查 _run 包装真实触达 areas dict 并被
     fine-grained gate 消费。
 
@@ -157,7 +157,7 @@ def v4_on_alias_rc2() -> dict:
     return {"rc": rc}
 
 
-def v5_stdout_real_chain(stdout_buf: dict) -> dict:
+def v5_stdout_chain_assert(stdout_buf: dict) -> dict:
     """反证: V1 已跑过 ON 路径, 复用其 stdout 检查 classifier 链路真实触达。"""
     out = stdout_buf.get("v1", "")
     _ok("Smoke 通过" in out,
@@ -188,7 +188,7 @@ def main() -> int:
         ("V2_off_default_rc0", v2_off_default_rc0),
         ("V3_off_explicit_rc0", v3_off_explicit_rc0),
         ("V4_on_alias_rc2", v4_on_alias_rc2),
-        ("V5_stdout_real_chain", lambda: v5_stdout_real_chain(stdout_buf)),
+        ("V5_stdout_chain_assert", lambda: v5_stdout_chain_assert(stdout_buf)),
     ]
 
     for vname, fn in cases:

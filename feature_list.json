@@ -4349,7 +4349,7 @@
       "id": "infra-029",
       "title": "verify_infra_024 V5 命名清理 → V5_stdout_chain_assert (verify-only rename)",
       "priority": 211,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 25,
       "area": "infra",
       "source": "infra-024-backlog-v5-rename",
