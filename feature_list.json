@@ -5358,7 +5358,7 @@
       "area": "robot",
       "priority": 243,
       "phase": 29,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "verify_robot_028 V4 bump_helper sha256 硬锁 + bump_verify_028 助手",
       "description": "当 scripts/bump_verify_027_self_hash.py 稳定后，将 verify_robot_028.py V4 中 bump_helper_sha256 placeholder 升级为硬锁字面常量；新增 scripts/bump_verify_028_self_hash.py 递归助手自动同步 verify_028 helper sha 锁。来源 robot-028 Reviewer followup。",
       "source_backlog": "robot-028-backlog-bump-helper-self-hash-hard-lock",
