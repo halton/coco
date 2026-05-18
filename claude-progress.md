@@ -4628,3 +4628,17 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **下一步：** phase-31 planning。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。
+
+## Session P249 — 2026-05-19 — robot-035 closeout
+
+**robot-035 _verify_lib helper 抽取 (verify-only)**：
+- 抽取 `_parse_headings_from_doc` 到 `scripts/_verify_lib.py`，verify_robot_032 / verify_robot_034 改 import 复用
+- verify_robot_035 V0~V4 全 PASS：docstring+sha 自锁 / lib 模块导出 / 双 V2（grep + ast）import 锁 / regression / infra-034 V4 sha 同步
+- 5 cmd rc=0：verify_robot_035 + verify_robot_032 + verify_robot_034 + verify_infra_034 + smoke
+- 反证 rc=1：helper 改动 / import 缺失 / sha 漂移均能触发 V0/V1/V2 失败
+- Reviewer (sub-agent): LGTM；3 backlog（sentinel 默认参数 / V3 mutant ast 绑定 / lib import-time lazy 化）
+- feat sha f9de575；main HEAD 5c2e7e4
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** robot-036（verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重）。

@@ -5738,12 +5738,54 @@
       "verification": []
     },
     {
+      "id": "robot-035-backlog-publish-sentinel-as-arg",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "_verify_lib helper sentinel 下沉为可选默认参数 / DEFAULT_SENTINEL 常量",
+      "status": "backlog",
+      "source": "robot-035-reviewer",
+      "scope": "scripts/_verify_lib.py 当前 helper 由 caller 传 sentinel 字符串。下一步把 sentinel 下沉为 lib 内可选默认参数 / 暴露 DEFAULT_SENTINEL 常量，caller 默认不传即可，避免每个 verify 脚本重复硬编码 sentinel 字面值。",
+      "dependencies": [
+        "robot-035"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-035-backlog-v3-needle-bind-to-sha",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_035 V3 mutant needle 用 ast 节点替换替代字符串 replace",
+      "status": "backlog",
+      "source": "robot-035-reviewer",
+      "scope": "verify_robot_035 V3 反证当前用源串 `.replace(needle, mutant)` 注入 mutation；needle 与活体源解耦时易脆。改为 ast 解析 → 节点替换 → unparse，使 mutation 绑定 ast 节点而非字面 needle 字符串，提高 V3 在 helper 重排/重命名下的稳定性。",
+      "dependencies": [
+        "robot-035"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-035-backlog-lib-import-time-side-effect",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_032 import-time 调 _verify_lib helper 的 lazy 化评估",
+      "status": "backlog",
+      "source": "robot-035-reviewer",
+      "scope": "verify_robot_032 在 import-time 即调用 _verify_lib helper；未来 lib 若加入 IO / 重计算 helper，import-time 副作用会放大启动开销与失败面。考虑将 helper 调用 lazy 化（函数内首次使用时调用）或 lib 自身延迟到首次访问。",
+      "dependencies": [
+        "robot-035"
+      ],
+      "verification": []
+    },
+    {
       "id": "robot-035",
       "priority": 3101,
       "area": "robot",
       "phase": 31,
       "title": "verify_robot_032/034 _parse_headings_from_doc helper 抽取到 scripts/_verify_lib",
-      "status": "in_progress",
+      "status": "passing",
       "source": "robot-034-backlog-helper-extract-shared-lib",
       "scope": "verify_robot_032 与 verify_robot_034 各自维护一份 _parse_headings_from_doc helper（重复实现）。抽到 scripts/_verify_lib/doc_headings.py 共享模块；两 verify 改为 import 使用。verify-only，0 业务源码改动。注意：抽取会改 verify 脚本字节内容 → 触发 infra-034 V4 sha 锁表同步，与 infra-035 配合更新期望表。",
       "dependencies": [
@@ -5757,7 +5799,8 @@
         "V2: verify_robot_032.py / verify_robot_034.py 均 import 自共享模块（grep+ast 双层）",
         "V3: regression verify_robot_032 + verify_robot_034 + smoke 全 PASS",
         "V4: 与 infra-035 协调更新 infra-034 V4 sha 期望表"
-      ]
+      ],
+      "evidence": "5 cmd rc=0 (verify_robot_035 + verify_robot_032 + verify_robot_034 + verify_infra_034 + smoke 全 PASS) + 三 sha 复核 (_verify_lib/doc_headings.py + verify_robot_032 + verify_robot_034) + 双 V2 锁 mutant 同步 sha 证据 (grep + ast 双层断言均通过) + 反证 rc=1 (helper 被改/import 缺失/sha 漂移均能触发 V0/V1/V2 失败) + Reviewer (sub-agent): LGTM + feat sha f9de575 + main HEAD 5c2e7e4"
     },
     {
       "id": "robot-036",
