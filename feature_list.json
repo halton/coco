@@ -4191,11 +4191,12 @@
       "id": "robot-021",
       "title": "robot-008 sequencer setter 生命周期文档与 verify 锁面 (verify-only)",
       "priority": 201,
-      "status": "not_started",
+      "status": "passing",
       "phase": 24,
       "area": "robot",
       "source": "robot-008-backlog-setter-lifecycle",
-      "updated_at": "2026-05-18T13:09:44"
+      "updated_at": "2026-05-18T14:30:00",
+      "evidence": "scripts/verify_robot_021.py 全 PASS (V0 fingerprint + V1 setter 签名+源码 anchor 字面量锁 12 项 + V2 spec doc 关键短语 25 项 + V3 lifecycle 状态机实证 S1/S3/S4/S5/S2 env=1 trace + V4 env=0 default-OFF set 始终空 + V5 邻近 6 verify rc=0 (008/016/017/018/019/020) + V6 smoke 占位); spec doc docs/robot-scheduler-sequencer-lifecycle-spec.md (§1 setter 角色 / §2 状态机 S0-S7 / §3 warn-once / §4 env gating / §5 default-OFF 不变式 / §6 atexit 协作 / §7 不衍生 fu chain); 0 业务源码改动 (coco/proactive.py 未触碰, sha256=b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136); Reviewer (sub-agent): LGTM by fresh-context Reviewer sub-agent — verify rc=0 (430s, V0-V6 全 PASS) + smoke 11/11 PASS + 0 业务源码改动; mutant A (setter 签名重命名)→V1 FAIL / mutant B (spec doc 删 state machine 短语)→V2 FAIL / mutant C (S5 clear 也写 audit)→V3 FAIL; 三轮还原 clean; spec §2 状态机 S0-S7 与 V3 实证 S1/S2/S3/S4/S5 对齐; 邻近 008/016/017/018/019/020 rc=0"
     },
     {
       "id": "infra-028",

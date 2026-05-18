@@ -3976,3 +3976,19 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: interact-027 → passing (Reviewer pending)
 - backlog 新增: 0
 - 下一候选: robot-021 (P201) ← robot-008-backlog-setter-lifecycle
+
+## Session 2026-05-18 (robot-021, P201, phase-24 #2)
+- ProactiveScheduler→RobotSequencer setter lifecycle 文档锁面 + verify (verify-only, source robot-008-backlog-setter-lifecycle)
+- NEW docs/robot-scheduler-sequencer-lifecycle-spec.md (§1 setter 角色 / §2 状态机 S0-S7 / §3 warn-once / §4 env gating / §5 default-OFF / §6 atexit / §7 不衍生 fu chain)
+- NEW scripts/verify_robot_021.py V0-V_n 全 PASS (440.89s, 含 V5 邻近 6 verify 实跑)
+  V0 fingerprint sha256
+  V1 setter 签名 + 源码 anchor 字面量锁 12 项 (def set_robot_sequencer / refuse to inject / probe failed / overwriting existing sequencer / double-injection detected / id(self._robot_sequencer), id(sequencer) / type(e).__name__ / with self._lock / COCO_ROBOT_SETTER_LIFECYCLE_AUDIT == "1")
+  V2 spec doc 关键短语锁 25 项
+  V3 lifecycle 实证 env=1 (S1 first-set s1 → S3 re-set-same s1 audit=1 → S4 re-set-diff s2 audit=2 → S5 clear None audit=2 → S2 shutdown-refuse 仍 None)
+  V4 env=0 default-OFF _setter_audit_seen 始终空, 主路径不变
+  V5 邻近 verify rc=0: robot-008 (11s) / 016 (40.7s) / 017 (65.1s) / 018 (15s) / 019 (91.5s) / 020 (217.5s); heavy 014/015 skip 留 closeout smoke
+  V6 smoke 占位 (closeout ./init.sh)
+- 0 业务源码 diff (coco/proactive.py 未触碰; sha256=b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136)
+- feature_list.json: robot-021 → passing (Reviewer pending)
+- backlog 新增: 0
+- 下一候选: infra-028 (P202) ← infra-022-backlog-rotate-docstring-mismatch
