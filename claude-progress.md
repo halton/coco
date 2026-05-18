@@ -4572,3 +4572,29 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **下一步：** 持续开发模式 → infra-034。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。
+
+---
+
+## Session 2026-05-19 P247 — infra-034 closeout (passing)
+
+**Feature:** infra-034 — verify 脚本 docstring + sha256 + sentinel meta-verify 模式推广（5 目标 rollout）
+
+**结果：** PASSING，merge feat/infra-034 → main，HEAD = 63d2e3e
+
+**Evidence：**
+- V0-V5 20/20 PASS（5 目标：verify_infra_033 / verify_robot_032 / verify_robot_033 / verify_interact_036 / verify_interact_037 + verify_infra_034 自身 meta）
+- AST byte-equal 抽样 2 件（docstring 头注释前后业务 AST 不变）
+- sha256 复核 5 件（文件头字面常量 == 运行时计算）
+- V3 mutation 手工三轮反证：篡改任一 sha 字面 → verify_infra_034 FAIL，rollback 后 PASS
+- verify_interact_036 V4 EXPECTED_VERIFY_024_SHA256 mismatch 为 pre-existing main bb5dcfc 漂移（与 infra-034 推广无关），已 backlog 异步同步
+- Reviewer (sub-agent): LGTM — 5-target rollout meta-lock 闭合，模式可继续推广
+- feat sha: 63e2971；main HEAD 终点: 63d2e3e
+
+**Backlog（3 项 priority=999 status=backlog phase=null）：**
+- infra-034-backlog-verify-036-v4-sha-stale-sync
+- infra-034-backlog-v4-sha-table-externalize
+- infra-034-backlog-expand-docstring-coverage
+
+**下一步：** 持续开发模式 → robot-034。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。

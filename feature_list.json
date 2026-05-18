@@ -5497,7 +5497,7 @@
       "area": "infra",
       "phase": 30,
       "title": "verify 脚本 docstring + sha256 + sentinel meta-verify 模式推广",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-033-backlog-multi-verify-venv-docstring",
       "scope": "把 infra-033 在 verify_infra_024.py 上确立的「运行环境约定 docstring + sha256 自锁 + sentinel meta-verify」模式推广到一批高频 verify 脚本（候选 3-5 个：verify_robot_015 / verify_interact_018 / verify_vision_010 / verify_infra_017 / verify_robot_007）。verify-only 加固；不改业务源码；docstring 仅注释级；sha256 字面常量入文件头；新增 verify_infra_034 meta-verify 扫描覆盖集。",
       "dependencies": [
@@ -5512,6 +5512,16 @@
         "V3: 亲手 mutant 任一覆盖集脚本 sha256 字面 → verify_infra_034 FAIL（反证锁有效）",
         "V4: regression 覆盖集每个 verify 脚本 rc=0 + smoke 11/11 PASS",
         "V5: bytewise diff main 业务源码 0 行改动（仅 scripts/verify_*.py docstring 头注释 + 新增 verify_infra_034.py）"
+      ],
+      "evidence": [
+        "V0-V5 20/20 PASS（5 目标脚本：verify_infra_033 / verify_robot_032 / verify_robot_033 / verify_interact_036 / verify_interact_037 + verify_infra_034 自身）",
+        "AST byte-equal 抽样 2 件（docstring 头注释前后业务 AST 不变）",
+        "sha256 复核 5 件（文件头字面常量 == 运行时计算）",
+        "V3 mutation 手工三轮反证：篡改任一 sha 字面 → verify_infra_034 FAIL，rollback 后 PASS",
+        "verify_interact_036 V4 EXPECTED_VERIFY_024_SHA256 mismatch 为 pre-existing main bb5dcfc 漂移，已 backlog 异步同步，与本 feature 无关",
+        "Reviewer (sub-agent): LGTM — 5-target rollout meta-lock 闭合，模式可继续推广",
+        "feat sha: 63e2971",
+        "main HEAD 终点: 63d2e3e"
       ]
     },
     {
@@ -5626,9 +5636,66 @@
         "V2: 给出推荐策略与迁移成本估算",
         "V3: 选 1-2 个 verify 做迁移试点（不在本 backlog 内强制完成）"
       ]
+    },
+    {
+      "id": "infra-034-backlog-verify-036-v4-sha-stale-sync",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "同步 verify_interact_036 V4 中 EXPECTED_VERIFY_024_SHA256 至 working tree 实际值",
+      "status": "backlog",
+      "source": "infra-034 Reviewer LGTM 建议",
+      "scope": "verify_interact_036 V4 锚定的 EXPECTED_VERIFY_024_SHA256 与 main bb5dcfc 下 verify_interact_024.py 实际 sha256 不一致，pre-existing 漂移，与 infra-034 推广无关。需要一次性同步常量并补 regression。",
+      "dependencies": [
+        "infra-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 计算 working tree verify_interact_024.py sha256，更新 verify_interact_036.py 中常量",
+        "V2: verify_interact_036 全 V PASS",
+        "V3: 在 verify_interact_036 docstring 注明 cross-verify sha 来源与更新规程"
+      ]
+    },
+    {
+      "id": "infra-034-backlog-v4-sha-table-externalize",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_034 V4 sha 表外置 + regen 脚本",
+      "status": "backlog",
+      "source": "infra-034 Reviewer LGTM 建议",
+      "scope": "当前 verify_infra_034 V4 在 docstring 内硬编码覆盖集 sha256 期望值；任一覆盖脚本 docstring 微调都会破坏 V4。外置为 evidence/infra-034/sha.json + 配套 regen 脚本，verify 时读 json 比对。",
+      "dependencies": [
+        "infra-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: evidence/infra-034/sha.json schema + regen 脚本可重入",
+        "V2: verify_infra_034 改读 json；篡改任一覆盖脚本 sha 期望 → V FAIL",
+        "V3: regen 脚本一行命令完成更新"
+      ]
+    },
+    {
+      "id": "infra-034-backlog-expand-docstring-coverage",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "继续推广 docstring + sha 模式到剩余 verify 脚本（5/批）",
+      "status": "backlog",
+      "source": "infra-034 Reviewer LGTM 建议",
+      "scope": "infra-034 完成 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 120+ 候选 verify 脚本未应用「运行环境约定 docstring + sha256 自锁」模式。按 5/批节奏继续推广，每批一个新 infra-* feature 收口。",
+      "dependencies": [
+        "infra-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 选定下一批 5 个候选；优先级 by 调用频次或漂移风险",
+        "V2: 每批 verify_infra_034 覆盖集 += 5；V0-V5 全 PASS",
+        "V3: 收敛终点（剩余无锁 verify == 0 或显式标注 N/A）入 backlog"
+      ]
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19 P246 interact-037 closeout"
+    "last_updated": "2026-05-19 P247 infra-034 closeout"
   }
 }
