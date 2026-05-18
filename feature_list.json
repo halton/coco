@@ -4929,11 +4929,11 @@
       "id": "infra-031",
       "title": "infra-030 doc 锁单向性提示 + verify_infra_030 V3 docstring 微对齐",
       "priority": 232,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 27,
       "area": "infra",
       "source": "infra-030-backlog-doc-and-v3-polish",
-      "updated_at": "2026-05-19T12:00:00",
+      "updated_at": "2026-05-19T12:30:00",
       "description": "infra-030 收尾微调：(F1) docs/syspath-injection-audit.md §6 末追加明示'本锁只感知数量下降回归，不感知新增注入；新增 anti-pattern 由 code review 兜底'。(F2) scripts/verify_infra_030.py V3 docstring 改为与实现一致（'新增 mutant 时 grep 命中数应 +1'）。纯文档化 + docstring polish，0 业务源码改动 0 verify 行为变化（不影响 V0-V5 PASS）。",
       "acceptance_criteria": [
         "docs/syspath-injection-audit.md §6 末新增锁单向性说明段落",
@@ -4956,7 +4956,23 @@
           "Reviewer LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "docs_change": "docs/syspath-injection-audit.md §6 末追加锁单向性（infra-031 F1）段落（4 行）",
+        "verify_030_change": "scripts/verify_infra_030.py v3_mutant_detect docstring 与实现对齐（明示 +1 基础敏感性，不证 V1 锁拦截新增注入；引用 docs §6 锁单向性）",
+        "verify_script": "scripts/verify_infra_031.py V0-V5 meta-lock",
+        "verify_result": "V0-V5 全 PASS (overall PASS)",
+        "verify_030_rerun": "V0-V5 全 PASS (无回归)",
+        "smoke": "11/11 PASS (./init.sh)",
+        "business_diff": "0 业务源码改动（仅 docs/ + scripts/verify_infra_03x.py + feature_list.json）",
+        "sha256_lock": {
+          "scripts/verify_infra_030.py": "8dd69ca753e74de2415b7a37c70111478fc77303c747132a97f28b5e6a1ee623",
+          "docs/syspath-injection-audit.md": "0fcc35541d4432db1833ddd989a520dbd399e241149fa53e5e907a86239ba517"
+        },
+        "reviewer_status": "pending — Reviewer sub-agent fresh-context 评审待主会话调度",
+        "session_ts": "2026-05-19T12:30:00",
+        "main_base_head": "98d396f",
+        "feat_branch": "feat/infra-031"
+      }
     },
     {
       "id": "robot-027b",
