@@ -4805,7 +4805,7 @@
       "id": "robot-027",
       "title": "verify_robot_025 meta-lock 字面量行号锚定收紧（消除 'overwriting existing sequencer' 假阳性窗口）",
       "priority": 230,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 27,
       "area": "robot",
       "source": "robot-025-backlog-verify-meta-lock-tightening",
@@ -4822,16 +4822,29 @@
       "verification": {
         "commands": [
           ".venv/bin/python scripts/verify_robot_025.py",
+          ".venv/bin/python scripts/verify_robot_027.py",
           "./init.sh"
         ],
         "must_pass": [
           "verify_robot_025 升级后全档 PASS",
+          "verify_robot_027 V0-V5 全档 PASS",
           "smoke 11/11 PASS",
           "0 业务源码改动",
           "Reviewer LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "branch": "feat/robot-027",
+        "base_main_sha": "3ff13c629a97adedeb61897609f1d379820496b8",
+        "verify_robot_025_upgrade": {
+          "F1_count_lock": "(b) robot-027 F1: overwriting 字面 count>=2 (两个出现点都未被删): count=2 PASS",
+          "F1_setter_block_baseline_hash": "L489-L504 baseline (BASE=3ff13c62) sha256=c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f PASS",
+          "F2_expected_prefix_hardcoded": "EXPECTED_PREFIX 改为 16-hex 字面常量, 不再从 src 派生; 5 key 全 PASS"
+        },
+        "verify_robot_027_summary": "V0-V5 全 PASS (elapsed 0.10s); V5 端到端 invoke verify_robot_025 含 F1 count / setter baseline / hardcoded prefix 关键 PASS 行",
+        "smoke": "11/11 PASS (./init.sh)",
+        "business_source_diff": "0 (仅 scripts/verify_robot_025.py + scripts/verify_robot_027.py + feature_list.json)"
+      }
     },
     {
       "id": "interact-033",
