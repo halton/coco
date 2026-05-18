@@ -5743,7 +5743,7 @@
       "area": "robot",
       "phase": 31,
       "title": "verify_robot_032/034 _parse_headings_from_doc helper 抽取到 scripts/_verify_lib",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "robot-034-backlog-helper-extract-shared-lib",
       "scope": "verify_robot_032 与 verify_robot_034 各自维护一份 _parse_headings_from_doc helper（重复实现）。抽到 scripts/_verify_lib/doc_headings.py 共享模块；两 verify 改为 import 使用。verify-only，0 业务源码改动。注意：抽取会改 verify 脚本字节内容 → 触发 infra-034 V4 sha 锁表同步，与 infra-035 配合更新期望表。",
       "dependencies": [

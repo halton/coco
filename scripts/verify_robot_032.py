@@ -37,6 +37,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+# robot-035: 把 helper 抽到 scripts/_verify_lib.py 作共享 lib。
+# 顶部把 scripts 目录加入 sys.path 以便 import (与其它 scripts/verify_*.py
+# 风格保持一致, 不依赖 PYTHONPATH 配置)。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _verify_lib import parse_headings_from_doc as _parse_headings_from_doc  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
 DOC = REPO / "docs" / "proactive_scheduler_block_policy.md"
 
@@ -44,44 +50,15 @@ DOC = REPO / "docs" / "proactive_scheduler_block_policy.md"
 # 单一事实源: docs/proactive_scheduler_block_policy.md 中
 # "## 章节标题列表（供 verify_robot_032 用）" 段下的 bullet list (每行以 "- `" 起头, 反引号包裹标题字面)。
 # 解析窗口: 从 sentinel H2 行开始到文件末尾或下一 H2 行止。
+# robot-035: 解析逻辑统一到 _verify_lib.parse_headings_from_doc, 本地保留
+# ``_parse_headings_from_doc`` 别名以兼容 verify_robot_034 (V0 检测函数名 in src,
+# V1 in-process import 调用此 attr) 与历史 evidence。
 
 _HEADINGS_SECTION_SENTINEL = "## 章节标题列表（供 verify_robot_032 用）"
 
 
-def _parse_headings_from_doc(doc_path: Path) -> list[str]:
-    """从 docs 的 sentinel section 提取章节标题字面列表。
-
-    Raises:
-        RuntimeError: sentinel section 缺失 / 解析为空。
-    """
-    if not doc_path.exists():
-        raise RuntimeError(f"doc not found: {doc_path}")
-    text = doc_path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    try:
-        start = next(i for i, ln in enumerate(lines) if ln.strip() == _HEADINGS_SECTION_SENTINEL)
-    except StopIteration:
-        raise RuntimeError(f"sentinel section not found: {_HEADINGS_SECTION_SENTINEL!r}")
-    # 从 sentinel 下一行到下一个 H2 (## ...) 或文件末
-    headings: list[str] = []
-    for ln in lines[start + 1 :]:
-        s = ln.rstrip()
-        if s.startswith("## "):  # 进入下一 H2 段, 停
-            break
-        st = s.lstrip()
-        if st.startswith("- `") and st.endswith("`"):
-            # 提取反引号之间的字面
-            inner = st[3:-1]
-            headings.append(inner)
-    if not headings:
-        raise RuntimeError(
-            f"no headings parsed under sentinel section {_HEADINGS_SECTION_SENTINEL!r}"
-        )
-    return headings
-
-
 # 运行时加载; 失败让 import-time 即抛, sub-process 也会被传播
-EXPECTED_HEADINGS = _parse_headings_from_doc(DOC)
+EXPECTED_HEADINGS = _parse_headings_from_doc(DOC, _HEADINGS_SECTION_SENTINEL)
 
 EXPECTED_PHRASES = [
     "warn-once",
