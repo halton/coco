@@ -25,9 +25,11 @@ V2 cooldown_hit latency_ms 语义合理 — 同 maybe_trigger 内 cooldown_hit �
    断言 latency_ms 是有限 float (非 NaN/Inf), 数值 < 1000ms (上限宽松, 主要
    防 wire 退化为时间戳 ms 级别)。
 
-V3 type-strict + monotonic — cooldown_hit emit 的 latency_ms 类型严格为
-   int/float (不是 str/None); 多次 cooldown_hit (连发 3 次) latency_ms 单调
-   非降 (round 3 位精度内, 允许相等)。
+V3 type-strict + nonneg — cooldown_hit emit 的 latency_ms 类型严格为
+   int/float (不是 str/None, 且排除 bool); 多次 cooldown_hit (连发 3 次)
+   latency_ms 全部 >= 0。跨 call monotonic 不承担: 每次 maybe_trigger 内部
+   _lat_start 都会重置, cross-call 不可比; emit 顺序契约 (engine→business→
+   sentinel) 由 V2 负责。
 
 V4 _is_fail 闭环 — cooldown_hit 是 decision='reject' (非业务 failure), 拿到
    cooldown_hit trace record 喂 is_fail 应返回 False (不被误判为 failure)。
@@ -266,11 +268,17 @@ def v2_cooldown_hit_latency_semantics() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3 type-strict + monotonic (多次 cooldown_hit)
+# V3 type-strict + nonneg (多次 cooldown_hit)
 # ---------------------------------------------------------------------------
 
 
-def v3_type_strict_and_monotonic() -> None:
+def v3_type_strict_and_nonneg() -> None:
+    """V3: 仅断言 cooldown_hit latency_ms 为 type-strict 数值 (int/float, 排除 bool) 且 >=0。
+
+    monotonic 跨 call 不承担：每次 maybe_trigger 内部都会重置 _lat_start，
+    cooldown_hit latency 仅在单次 call 内部自洽；emit 顺序契约 (engine→
+    business→sentinel) 由 V2 承担。本 V3 不做跨 call monotonic 断言。
+    """
     def _run(captured):
         sched = _build_scheduler(cooldown_s=60.0)
         ok1 = sched.maybe_trigger()
@@ -288,7 +296,7 @@ def v3_type_strict_and_monotonic() -> None:
         and e.get("stage") == "cooldown_hit"
     ]
     if len(cooldown_hits) < 3:
-        _record("V3_type_strict_and_monotonic", False,
+        _record("V3_type_strict_and_nonneg", False,
                 f"expected >=3 cooldown_hit, got {len(cooldown_hits)}")
         return
 
@@ -299,18 +307,19 @@ def v3_type_strict_and_monotonic() -> None:
         if isinstance(l, bool) or not isinstance(l, (int, float))
     ]
     if bad_types:
-        _record("V3_type_strict_and_monotonic", False, f"非数值类型 latency: {bad_types}")
+        _record("V3_type_strict_and_nonneg", False, f"非数值类型 latency: {bad_types}")
         return
 
-    # monotonic 非降: 跨不同 maybe_trigger 调用, 每次 _lat_start 重置,
-    # 所以 cross-call 不可比; 改为断言每个 lat 单调内自洽 (>=0). 跨 call
-    # 间不要求关系。
+    # type-strict + nonneg: V3 不承担 cross-call monotonic 断言。
+    # 每次 maybe_trigger 内部 _lat_start 都会重置, 所以 cross-call 不可比,
+    # cooldown_hit latency 仅在单次 call 内部自洽 (>=0); emit 顺序契约
+    # (engine→business→sentinel) 由 V2 承担。
     neg = [l for l in lats if l < 0]
     if neg:
-        _record("V3_type_strict_and_monotonic", False, f"latency<0: {neg}")
+        _record("V3_type_strict_and_nonneg", False, f"latency<0: {neg}")
         return
 
-    _record("V3_type_strict_and_monotonic", True,
+    _record("V3_type_strict_and_nonneg", True,
             f"{len(cooldown_hits)} cooldown_hit 全部 numeric>=0, lats={lats}")
 
 
@@ -408,7 +417,7 @@ def main() -> int:
     v0_fingerprint_lock()
     v1_cooldown_hit_end_to_end()
     v2_cooldown_hit_latency_semantics()
-    v3_type_strict_and_monotonic()
+    v3_type_strict_and_nonneg()
     v4_is_fail_closure()
     v5_regression()
 
