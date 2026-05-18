@@ -5026,11 +5026,11 @@
       "id": "interact-033b",
       "title": "verify_interact_024 V1 anchor 按 admit/reject/cooldown 三段分别锚定 latency_ms",
       "priority": 234,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 27,
       "area": "interact",
       "source": "interact-024-backlog-v1-anchor-per-stage-count",
-      "updated_at": "2026-05-19T12:00:00",
+      "updated_at": "2026-05-19T13:00:00",
       "description": "interact-024 Reviewer minor finding 收口：V1 anchor 颗粒度偏粗——当前对 latency_ms=_lat_ms() 仅做整体短语 anchor，单点删除一处 latency_ms= 不能被 V1 直接捕获（靠 V5 邻近 verify 018/021/022/023 兜住）。升级方案：V1 按 admit/reject/cooldown 三段分别 anchor latency_ms= 字面量出现 ≥1 次。verify-only，0 业务源码改动。default-OFF 友好。",
       "acceptance_criteria": [
         "verify_interact_024.py V1 升级为 per-stage（admit/reject/cooldown）latency_ms= 字面量分别锚定",
@@ -5051,7 +5051,13 @@
           "Reviewer LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "verify_interact_024": "升级 V1 per-stage anchor 后 rc=0 (7/7 PASS); V1: admit@1053 reject_main@1022 reject_preempt@994; mutant A (删 admit latency_ms=_lat_ms())→V1 FAIL with missing=['admit']; 还原 clean",
+        "verify_interact_033b": "scripts/verify_interact_033b.py 6/6 PASS (V0 sys.path + V1 site_specs 三 stage key/锚点正则字面量/lat_line_re + V2 关键短语 7 项 + V3 mutant 反证 reject_preempt 移除 + V4 sha256 锁 + V5 端到端 subprocess verify_024 rc=0)",
+        "smoke": "11/11 PASS (./init.sh closeout)",
+        "business_diff": "0 业务源码改动 (coco/ diff stat = empty)",
+        "branch": "feat/interact-033b base main c059ac6"
+      }
     }
   ],
   "_meta": {

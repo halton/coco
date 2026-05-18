@@ -14,6 +14,8 @@ V0 fingerprint sha256 锁关键文件 — docs/interact-latency-stage-contract.m
 
 V1 三 stage 在源码中的 emit 位置字面量锁面 — admit (arbit_winner) +
    reject (cooldown_hit 三元式) + emotion_alert 独立路径 latency_ms wire 全部存在;
+   (interact-033b 升级: per-stage 锚点 admit/reject_main/reject_preempt 分别 ≥1
+    站点 latency_ms=_lat_ms() 字面量, 单点删除任一处即被 V1 直接捕获)
 
 V2 contract doc 关键短语锁面 — 至少 12 项 (确保 §1-§6 全段未被漂移);
 
@@ -39,10 +41,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -102,29 +105,61 @@ def v0_fingerprint_sha256() -> None:
 
 def v1_source_anchors() -> None:
     src = (ROOT / "coco" / "proactive.py").read_text(encoding="utf-8")
-    anchors = [
-        # admit 路径 — arbit_winner
-        '"arbit_winner", _candidate_id, "admit"',
-        # reject + cooldown_hit 三元式 — 共用 emit
-        '"cooldown_hit" if reason == "cooldown"',
-        '_stage_out, _candidate_id, "reject"',
-        # 共享 latency_ms 闭包
+    # interact-033b 升级: V1 anchor 从"整体短语 substring"升级为
+    # "per-stage 锚点 + 窗口内 latency_ms=_lat_ms() 字面量"分别锚定 admit /
+    # reject_main / reject_preempt 三 stage, 单点删除任一处都能被 V1 直接捕获,
+    # 不再依赖邻近 verify 018/021/022/023 兜底。
+    #
+    # site-A admit (arbit_winner emit) — 锚 '"arbit_winner", _candidate_id, "admit"'
+    # site-B reject_main (cooldown_hit/normal reject 三元式 emit) — 锚 '_stage_out, _candidate_id, "reject"'
+    # site-C reject_preempt (arbit_emotion_preempt 抢占 emit) — 锚 'arbit_emotion_preempt'
+    #
+    # 每个 site 的锚点字面量本身全 repo unique, 窗口取 ±12 行覆盖跨行 _trace_emit 调用。
+    site_specs: List[Tuple[str, str, int]] = [
+        ("admit", r'"arbit_winner",\s*_candidate_id,\s*"admit"', 12),
+        ("reject_main", r'_stage_out,\s*_candidate_id,\s*"reject"', 12),
+        ("reject_preempt", r"arbit_emotion_preempt", 12),
+    ]
+    lat_line_re = re.compile(r"latency_ms\s*=\s*_lat_ms\s*\(\s*\)\s*,")
+    lines = src.split("\n")
+    per_stage_hits: Dict[str, List[int]] = {key: [] for key, _, _ in site_specs}
+    for key, pat, win in site_specs:
+        prog = re.compile(pat)
+        for i, ln in enumerate(lines):
+            if prog.search(ln):
+                lo = max(0, i - win)
+                hi = min(len(lines), i + win + 1)
+                window_text = "\n".join(lines[lo:hi])
+                if lat_line_re.search(window_text):
+                    per_stage_hits[key].append(i + 1)
+    # 每个 stage 必须 >=1 个站点 (latency_ms=_lat_ms() 出现于锚点附近窗口)。
+    missing_stages = [k for k, hits in per_stage_hits.items() if len(hits) < 1]
+    if missing_stages:
+        _record(
+            "V1_source_anchors",
+            False,
+            f"missing per-stage latency_ms anchors: {missing_stages} (hits={per_stage_hits})",
+        )
+        return
+    # 额外锁面: emotion_alert 独立 latency 路径 + 共享 _lat_ms 闭包字面量。
+    extra_anchors = [
         "_lat_start = time.monotonic()",
         "round((time.monotonic() - _lat_start) * 1000.0, 3)",
-        "latency_ms=_lat_ms(),",
-        # emotion_alert 独立 latency 路径
         "_ea_lat_start = time.monotonic()",
         '"emotion_alert"',
         "round((time.monotonic() - _ea_lat_start) * 1000.0, 3)",
     ]
-    missing = [a for a in anchors if a not in src]
-    if missing:
-        _record("V1_source_anchors", False, f"missing anchors: {missing}")
+    missing_extra = [a for a in extra_anchors if a not in src]
+    if missing_extra:
+        _record("V1_source_anchors", False, f"missing extra anchors: {missing_extra}")
         return
     _record(
         "V1_source_anchors",
         True,
-        f"{len(anchors)} anchors 全部命中 (admit arbit_winner + reject + cooldown_hit + emotion_alert 独立路径)",
+        f"per-stage anchors 全部命中: admit@{per_stage_hits['admit']} "
+        f"reject_main@{per_stage_hits['reject_main']} "
+        f"reject_preempt@{per_stage_hits['reject_preempt']} "
+        f"+ emotion_alert 独立路径 + _lat_ms 闭包",
     )
 
 
