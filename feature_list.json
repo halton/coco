@@ -4048,10 +4048,22 @@
       "area": "interact",
       "priority": 184,
       "phase": 22,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "interact-018-backlog-latency-stage-semantics-doc",
       "description": "吸收 backlog interact-018-backlog-latency-stage-semantics-doc: latency_ms 在不同 stage 下语义不同 — admit 路径是端到端 (调度→执行完成), reject/cooldown 路径是判定即出 (调度→判定决定)。phase-22 P184 verify-only 文档锁面 (不改 emit 路径避免回归): (a) V0 fingerprint 三 stage emit 站点 (b) V1 contract 文档 research/proactive_trace_contract.md §latency_ms-stage-semantics 新增 / 同步 (c) V2 三 stage 各 1 fixture 锁面 latency_ms 语义 (d) V3 regression interact-018/021/022/023 rc=0 (e) V4 evidence 列出下游消费方在 stage 维度归类 latency_ms 的注意点。default-OFF, real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": {
+        "verify_summary": "evidence/interact-024/verify_summary.json",
+        "migration_note": "evidence/interact-024/migration_note.md",
+        "contract_doc": "docs/interact-latency-stage-contract.md",
+        "verify_script": "scripts/verify_interact_024.py",
+        "verify_result": "7/7 PASS (V0 sha256 锁面 + V1 9 源码 anchors + V2 17 doc 短语 + V3 default-OFF 不变式 + V4 ON 三 stage latency_ms wire + V5 邻近 verify 018/021/022/023 rc=0 + V6 smoke 11/11)",
+        "default_off_invariant": true,
+        "runtime_change": false,
+        "real_machine_uat": "n/a",
+        "Reviewer (sub-agent)": "pending — engineer 实施完毕, Closeout 阶段安排 fresh-context Reviewer 评审"
+      },
+      "updated_at": "2026-05-18T18:47:12"
     }
   ],
   "_meta": {
