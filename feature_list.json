@@ -4268,11 +4268,35 @@
       "id": "robot-022",
       "title": "robot-012 sigterm swallow 文档与 verify 锁面 (verify-only)",
       "priority": 204,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 24,
       "area": "robot",
       "source": "robot-012-backlog-sigterm-swallow-doc",
-      "updated_at": "2026-05-18T13:09:44"
+      "updated_at": "2026-05-18T13:09:44",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_robot_022.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_robot_022 V0-V5 全 PASS",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (env 未设 → register 返回 [], SIGTERM handler 不变)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {
+        "branch": "feat/robot-022",
+        "base": "main d586618",
+        "doc": "docs/robot-sigterm-swallow-spec.md (sha256 f65ff81c44cbddf4...)",
+        "verify_script": "scripts/verify_robot_022.py",
+        "verify_result": "rc=0 PASS in 0.53s (V0 fp + V1 doc tokens 15/15 + V2 code anchors 14/14 + V3 mutants A/B/C + V4 subprocess default-OFF invariant)",
+        "code_anchor_sha256": "coco/robot/sequencer.py 00c0e11132d5b7cd...",
+        "smoke": "./init.sh 11/11 PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish)",
+        "runtime_change": false,
+        "default_off_invariant": true,
+        "scope_note": "verify-only doc 收口; 0 业务源码改动; SIGTERM swallow 设计意图文档化 + ON 模式用户契约 (sys.exit / prev handler) 明确化"
+      }
     }
   ],
   "_meta": {
