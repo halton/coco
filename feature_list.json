@@ -4024,10 +4024,11 @@
       "area": "companion",
       "priority": 182,
       "phase": 22,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "companion-016-backlog-polish",
       "description": "吸收 backlog companion-016-backlog-polish (C1+C4 子项): brief 写 COCO_PREFERENCE_EMIT_INTERVAL_S 默认 30s 实现为 COCO_PERSIST_EMIT_MIN_INTERVAL_S 默认 10s, spec 与代码不一致; 模块级 WARN once 多进程各 warn 一次。phase-22 P182 verify-only doc 同步 (不改实现 env 名, 以代码为准): (a) V0 fingerprint env 实际站点 (b) V1 锁定 COCO_PERSIST_EMIT_MIN_INTERVAL_S 单一权威 + brief 文档同步 (c) V2 模块级 WARN once 多进程语义 docstring 标注 (d) V3 regression companion-015/016 rc=0 (e) V4 evidence 记录未来 alias env 支持的迁移成本。default-OFF, real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Engineer (sub-agent, feat/companion-018 HEAD 953375f): verify_companion_018 V0-V5 6/6 PASS / 0 业务源码改动 (coco/companion/preference_learner.py sha adffc033... 与 main 一致) / V0 fingerprint git_head=dc3b396 + python=3.13.12 + preference_learner.py / spec_doc / verify_self sha256 / V1 env 字面量锁 (`_PERSIST_EMIT_INTERVAL_ENV = \"COCO_PERSIST_EMIT_MIN_INTERVAL_S\"` x1 命中; 反证 `os.environ.get(\"COCO_PREFERENCE_EMIT_INTERVAL_S\"` = 0; spec doc 含权威名 + 旧名 deprecation) / V2 spec doc 12 关键短语锁面 (权威 env 名 / 旧名 / 10.0 / WARN once / 多进程 / 以代码为准 / verify-only / default-OFF / companion-016-backlog-polish / preference_learner.py / _PERSIST_EMIT_INTERVAL_ENV / from_env 函数名), bytes=7014 / V3 regression companion-015/016/017 rc=0 / V4 smoke 11 段 init.sh rc=0 pass_n=10 + 'Smoke 通过' (ASR 段不出 ok: 行属预期) / V5 migration_note alias 代价分析 evidence-only (2637B, has authoritative/legacy/verify_ref/freeze/alias_cost) / 关键发现: brief/backlog 文案 COCO_PREFERENCE_EMIT_INTERVAL_S 默认 30s 是 companion-016 规划期文案, 实现一直是 COCO_PERSIST_EMIT_MIN_INTERVAL_S 默认 10s; companion-017 已在 code 注释锁面, companion-018 外移到 docs/companion-preference-emit-env-spec.md 作权威 spec, 不为旧名 alias (§1.1 详述理由) / docs/companion-preference-emit-env-spec.md (7014B) + scripts/verify_companion_018.py + evidence/companion-018/{verify_summary.json,migration_note.md} / scripts/verify_companion_017.py allowlist 同步加入 verify_companion_018.py (verify 间 cross-reference, 非业务源码改动) / source=companion-016-backlog-polish C1+C4 / 0 新增 backlog / 不衍生 fu chain / 待 Reviewer 评审"
     },
     {
       "id": "robot-018",

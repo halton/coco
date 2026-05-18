@@ -34,7 +34,7 @@
     {
       "name": "V6 C3 docstring keywords (round/有损/feature)",
       "ok": true,
-      "info": "doc len=462"
+      "info": "doc len=430"
     },
     {
       "name": "V7 C4 module docstring keywords (C4/多进程/warn)",

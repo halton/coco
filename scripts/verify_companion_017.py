@@ -56,10 +56,14 @@ def v1_env_name_only_in_py() -> None:
 
     旧名 COCO_PREFERENCE_EMIT_INTERVAL_S 允许出现在 *文档化注释* 中（preference_learner.py
     与本 verify 脚本，作为 caveat 历史口径说明）；其他业务 .py 文件出现即算 stale。
+
+    companion-018: ``scripts/verify_companion_018.py`` 把 env 命名口径外移到独立
+    spec doc, verify 脚本内多处注释/docstring/正则需引用旧名字面量, 加入 allowlist。
     """
     allow_paths = {
         "coco/companion/preference_learner.py",
         "scripts/verify_companion_017.py",
+        "scripts/verify_companion_018.py",
     }
     hits: List[str] = []
     for p in ROOT.rglob("*.py"):
