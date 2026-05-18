@@ -5497,7 +5497,7 @@
       "area": "infra",
       "phase": 30,
       "title": "verify 脚本 docstring + sha256 + sentinel meta-verify 模式推广",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "infra-033-backlog-multi-verify-venv-docstring",
       "scope": "把 infra-033 在 verify_infra_024.py 上确立的「运行环境约定 docstring + sha256 自锁 + sentinel meta-verify」模式推广到一批高频 verify 脚本（候选 3-5 个：verify_robot_015 / verify_interact_018 / verify_vision_010 / verify_infra_017 / verify_robot_007）。verify-only 加固；不改业务源码；docstring 仅注释级；sha256 字面常量入文件头；新增 verify_infra_034 meta-verify 扫描覆盖集。",
       "dependencies": [
