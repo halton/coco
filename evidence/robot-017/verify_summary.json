@@ -1,0 +1,47 @@
+{
+  "feature_id": "robot-017",
+  "title": "ProactiveScheduler sync fallback warn-once + block policy 语义文档 (default-OFF)",
+  "branch": "feat/robot-017",
+  "additive": true,
+  "default_off": true,
+  "env_gate": "COCO_ROBOT_SYNC_FALLBACK_AUDIT=1",
+  "scope": [
+    "coco/proactive.py — ProactiveScheduler.__init__ 新加 self._sync_fallback_audit_seen: set",
+    "coco/proactive.py — _do_trigger_unlocked sync fallback 分支 (seq 无 enqueue → seq.run([_nod])) 加 env-gated warn-once: env=1 时同 sequencer 首次 logger.warning + 写 set, 再次同 key 降级 logger.debug suppressed; env=0 (默认) 跳过 audit, 不发任何 fallback-前置 WARNING, bytewise 等价 main",
+    "coco/robot/sequencer.py — RobotSequencer.enqueue docstring additive: 'block' overflow_policy 语义文档同步 — put(timeout=1.0) 短阻塞超时 drop, emit robot.enqueue_dropped(reason='block_timeout'); 'drop_new' / 'drop_oldest' 三策略对照"
+  ],
+  "verify_script": "scripts/verify_robot_017.py",
+  "verify_cases": {
+    "V0_default_off_bytewise": {
+      "desc": "env unset; 无 enqueue 的 seq 触发 sync fallback 2 次 → 0 条 fallback-前置 WARNING + 0 条 DEBUG suppressed + _sync_fallback_audit_seen 空 set + seq.run 仍被调 2 次",
+      "result": "PASS"
+    },
+    "V1_on_warn_once": {
+      "desc": "env=1; 同 seq 触发 sync fallback 2 次 → 1 条 fallback WARNING (首次) + 1 条 DEBUG suppressed (第二次) + _sync_fallback_audit_seen 含 ('sync-fallback', id(seq))",
+      "result": "PASS"
+    },
+    "V2_on_distinct_seq": {
+      "desc": "env=1; seq_a + seq_b 各触发一次 sync fallback → 2 条 WARNING (不同 key) + 0 DEBUG suppressed + _sync_fallback_audit_seen 含 2 个 sync-fallback key",
+      "result": "PASS"
+    },
+    "V3_block_policy_doc_and_bytewise": {
+      "desc": "docstring 含 'timeout=1.0' / 'block_timeout' / 'best-effort 短阻塞' / 'drop_new' / 'drop_oldest'; queue_max=1 + overflow_policy=block, 停 worker 后 a1 入队成功 (qsize=1), a2 满队 enqueue 阻塞 ~1.005s 后返回 False + _enqueue_dropped_n 至少 1",
+      "result": "PASS"
+    },
+    "V4_regression": {
+      "desc": "scripts/verify_robot_009.py / scripts/verify_robot_010.py 子进程各 rc==0 (verify_robot_013 / 015 自身递归链 ~3-7min, 单独跑会阻塞 sub-agent socket; 改由 ./init.sh smoke 整链覆盖)",
+      "result": "PASS"
+    }
+  },
+  "elapsed_seconds": 63.13,
+  "init_smoke": "11/11 PASS",
+  "reviewer_subagent": "pending — closeout 前由主会话派 Reviewer fresh-context 评审; evidence 当前为 Engineer 自验产物",
+  "notes": [
+    "default-OFF bytewise 严格语义: 与当前 main HEAD bytewise 等价 — sync fallback 路径仅在 seq.run 抛异常时 WARNING; env=1 时新增 fallback-前置 WARNING (首次) 与 DEBUG suppressed (后续)",
+    "key 设计用 id(_seq) 避免对 MagicMock / 真 sequencer 计算 hash 时触发副作用",
+    "warn-once set 不做 GC: sync fallback 为冷路径 (legacy/mock 兜底, 真 sequencer 走 enqueue), set 体积上限 = 历史 mock sequencer 实例数",
+    "V3 sequencer.py 改动仅 docstring 注释 (无逻辑改动); 'block' policy bytewise 锁定的是既有 main 行为",
+    "verify e[:200] 截断尾部仍受 robot-015/016 nit 同根因约束 (主 message 已含命中字段)",
+    "未引入 backlog 衍生项"
+  ]
+}

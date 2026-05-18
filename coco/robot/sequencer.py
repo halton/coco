@@ -338,6 +338,13 @@ class RobotSequencer:
 
         所有外部触发源（ProactiveScheduler / GroupModeCoord / Gesture）一律走
         本入口，统一调度，消除外部 daemon thread + queue/executor 双 fan-out。
+
+        robot-017: overflow_policy='block' 语义文档化 — 'block' 并非无限阻塞,
+        而是在内部队列 `_action_queue.put(action, timeout=1.0)` 最多等待 ~1s,
+        超时仍满 → emit `robot.enqueue_dropped`(reason='block_timeout') + 返回
+        False。即 'block' = "best-effort 短阻塞 1s 后 drop", 既保留 backpressure
+        语义又防止 enqueue 调用方被永久阻塞。其余两策略保持 nowait:
+        'drop_new' 立即丢新 action; 'drop_oldest' 出队最旧 → 入新 action。
         """
         if not isinstance(action, Action):
             raise TypeError(f"enqueue expects Action, got {type(action).__name__}")
