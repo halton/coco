@@ -3700,3 +3700,18 @@ merge: feat/infra-026 → main (--no-ff), merge commit 已生成。
 phase-21 主题: backlog 吸收 + verify-only 契约审计 (verify 加固 / docstring / 一致性审计)。0 风险源码改动占主导, 高 ROI 收尾。
 
 next: phase-22 规划 (待主会话编排)。
+
+## Session 2026-05-18 phase-22 planning
+
+phase-21 收官 (5/5 FULL: robot-016 / interact-023 / infra-025 / robot-017 / infra-026) 已 main HEAD=62397f7。
+phase-22 planning: 从 backlog 池 (51 项, area 含 robot/infra/interact/audio/vision/companion 全谱) 挑 5 候选 priority 180-184 跨 **5 area** (audio / vision / companion / robot / interact 全覆盖 — 真正打破 phase-21 robot/interact/infra 三 area 格局):
+
+- audio-013 (P180 audio): wake_word.py L463 跨模块 import vad_trigger._read_loss_window_override_ms 隐性耦合 verify-only 审计 + 设计 note + docstring 锁面, 不重构 (避免引入回归)。source: audio-012-backlog-coupling-and-doc (C1 子项)
+- vision-015 (P181 vision): _gc_last_time wall vs monotonic 时钟选型设计文档 + GC 300s 窗口对 NTP 回拨不敏感的契约锁面, 不切 monotonic (避开 verify monkey-patch 同步迁移代价)。source: vision-012-backlog-time-source-and-validation (C1+C2 子项)
+- companion-017 (P182 companion): preference emit env 命名 COCO_PERSIST_EMIT_MIN_INTERVAL_S spec/代码不一致 doc 同步 + 模块级 WARN once 多进程语义文档化, verify-only 不改 env 名 (以代码为准)。source: companion-016-backlog-polish (C1+C4 子项)
+- robot-018 (P183 robot): COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S 输入降级补 inf/nan 拦截, additive default-OFF, env=0 bytewise 等价 main + WARN once + 三 mutant (inf/nan/-1) 反证。source: robot-012-backlog-shutdown-timeout-inf-nan-hardening
+- interact-024 (P184 interact): latency_ms admit/reject/cooldown 三 stage 语义差异 contract 文档锁面 + 三 stage 各 1 fixture, verify-only 不改 emit 路径 (避免回归)。source: interact-018-backlog-latency-stage-semantics-doc
+
+area 分散: **5 area 全覆盖** (audio + vision + companion + robot + interact), 首次在单 phase 内触达全部沉默 area (audio/vision/companion 自 phase-13/14 后久未推进, phase-22 通过 verify-only / docstring 类候选低风险重启)。全部 verify-only 或 small additive default-OFF, real_machine_uat=n/a, sim-first 闭环, 0 SDK 升级 0 大重构。
+
+next: feature_list.json + claude-progress.md commit 直接落 main, push origin main 一次失败忽略, 然后进入持续开发模式起点 audio-013 (P180)。
