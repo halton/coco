@@ -4069,10 +4069,28 @@
       "id": "interact-025",
       "title": "interact-018 V1 cooldown 边界 verify 补强 (verify-only)",
       "priority": 190,
-      "status": "not_started",
+      "status": "passing",
       "phase": 23,
       "area": "interact",
-      "source": "interact-018-backlog-v1-cooldown-coverage"
+      "source": "interact-018-backlog-v1-cooldown-coverage",
+      "verification": [
+        "V0 fingerprint sha256 lock: `if since < cooldown:` / `\"cooldown_hit\" if reason == \"cooldown\"` / `latency_ms=_lat_ms(),` 三关键源码片段未漂移",
+        "V1 cooldown 刚到期边界: since=cd-0.5→reject; since==cd (strict<) → admit; since=cd+5→admit",
+        "V2 stats.skipped_cooldown == trace cooldown_hit emits 内外计数一致 (N=5)",
+        "V3 同次 maybe_trigger 内 cooldown_hit 与 arbit_winner 互斥 (4 次调用全验证)",
+        "V4 default-OFF 不变式: env 未设/=0 时 cooldown 路径无 proactive.trace emit",
+        "V5 邻近 verify 回归 interact-018/022/023/024 rc=0",
+        "V6 ./init.sh smoke rc=0"
+      ],
+      "evidence": {
+        "verify_summary": "evidence/interact-025/verify_summary.json",
+        "migration_note": "evidence/interact-025/migration_note.md",
+        "verify_script": "scripts/verify_interact_025.py",
+        "runtime_change": false,
+        "business_code_diff": "coco/ 零 diff (纯 verify-only)",
+        "reviewer_sub_agent": "Reviewer (sub-agent fresh-context): LGTM / verify 7/7 PASS rc=0 / smoke 11/11 PASS / mutant A (strict-< → <=) → V0+V1 FAIL / mutant B (cooldown→admit) → V1+V2+V3 FAIL / 还原 clean / 0 业务源码改动 / V0-V6 lock 面有效"
+      },
+      "updated_at": "2026-05-18T20:30:00"
     },
     {
       "id": "robot-019",

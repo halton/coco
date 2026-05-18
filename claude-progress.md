@@ -3832,3 +3832,27 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - 跨 area: interact x2 / robot x2 / infra x1
 - 不动业务源码，不新增 backlog
 - 下一步: 派 interact-025 (P190) 给 Engineer
+
+## Session 2026-05-18 — interact-025 V1 cooldown 边界 verify 补强 (verify-only)
+
+- main HEAD before: e351742
+- feat branch: feat/interact-025
+- source backlog: interact-018-backlog-v1-cooldown-coverage
+- 范围: 纯 verify-only, coco/ 零 diff
+- 新增:
+  - scripts/verify_interact_025.py (V0-V6, 7 子项)
+  - evidence/interact-025/verify_summary.json
+  - evidence/interact-025/migration_note.md
+- V0-V6 全 PASS (uv run python scripts/verify_interact_025.py → 7/7 PASS)
+- 覆盖边界:
+  - V1 cooldown 刚到期 (since==cd) → admit (strict-< 语义边界)
+  - V2 stats.skipped_cooldown == trace cooldown_hit emits 内外计数严格一致 (N=5)
+  - V3 同次 maybe_trigger 内 cooldown_hit 与 arbit_winner 互斥 (4 次调用)
+  - V4 default-OFF (env 未设 / =0) cooldown 路径无 proactive.trace emit
+- 关键发现:
+  - candidate_id = int(t*1000) 仅基于 ts, 同 1ms 内多次 maybe_trigger 会复用同 cid;
+    所以 V3 验证粒度是 "同次 maybe_trigger 内部" 而非 "跨次同 cid" (一开始假设错了, fixture 失败后修正)
+- backlog 增量: 0
+- feature_list.json: interact-025 status not_started → passing
+- 不 merge (Closeout 唯一)
+- 下一候选: robot-019 (P191, robot-009 block-policy 文档锁面 + verify)

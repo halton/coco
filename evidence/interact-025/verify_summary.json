@@ -1,0 +1,48 @@
+{
+  "feature": "interact-025",
+  "source_backlog": "interact-018-backlog-v1-cooldown-coverage",
+  "direction": "纯 verify-only 补丁 (无业务源码改动); cooldown 路径边界 + default-OFF 不变式 + 内外计数一致性 + candidate_id 互斥锁面",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_fingerprint_sha256_lock",
+      "ok": true,
+      "detail": "3 anchors present; sha256(16): {'cooldown_strict_lt': '79773a61d05497d8', 'cooldown_hit_stage_map': '43a7211f6a565ad7', 'cooldown_emit_latency_wire': 'f3b1af27692e7a27'}"
+    },
+    {
+      "name": "V1_cooldown_boundary_just_expired",
+      "ok": true,
+      "detail": "strict-<: case A(since=cd-0.5)→reject, case B(since==cd)→admit, case C(since=cd+5)→admit; cooldown_hits=1 winners=2"
+    },
+    {
+      "name": "V2_skipped_cooldown_counter_consistency",
+      "ok": true,
+      "detail": "N=5: stats.skipped_cooldown=5 == trace cooldown_hit emits=5 (内外计数一致)"
+    },
+    {
+      "name": "V3_cooldown_hit_and_admit_mutex_per_candidate",
+      "ok": true,
+      "detail": "4 maybe_trigger 调用, 同次内 cooldown_hit/arbit_winner 永不并存; per_call_stages=[['arbit_winner'], ['cooldown_hit'], ['cooldown_hit'], ['cooldown_hit']]"
+    },
+    {
+      "name": "V4_default_off_invariant_for_cooldown",
+      "ok": true,
+      "detail": "default-OFF (env 未设 / env='0') cooldown 路径均无 proactive.trace emit"
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "detail": "all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_022.py': 0, 'scripts/verify_interact_023.py': 0, 'scripts/verify_interact_024.py': 0}"
+    },
+    {
+      "name": "V6_smoke",
+      "ok": true,
+      "detail": "rc=0 (no X/Y pattern matched; tail='r dictDir for this model. Ignore this value.\\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓\\n/Users/halton/work/coco/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.\\n  sr, a = wavfile.read(str(fix_wav))\\n')"
+    }
+  ],
+  "files_changed": [
+    "scripts/verify_interact_025.py"
+  ],
+  "runtime_change": false,
+  "sha": "e3517426ed6a5c8af8ed4859b8617c19f9cf1f1b"
+}
