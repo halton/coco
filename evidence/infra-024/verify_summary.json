@@ -4,29 +4,53 @@
   "results": {
     "V0_static_gate": {
       "detail": {
-        "aliases_checked": [
+        "contract": "os.environ.get(...,\"\").strip() in (\"1\",\"true\",\"yes\")",
+        "missing_env_off": true,
+        "off_count": 28,
+        "off_variants": [
+          "",
+          " ",
+          "  ",
+          "\n",
+          "\t",
+          "0",
+          "2",
+          "no",
+          "false",
+          "off",
+          "on",
+          "on ",
+          "random",
+          "y",
+          "n",
+          "TRUE",
+          "True",
+          "Yes",
+          "YES",
+          "TrUe",
+          "enable",
+          "enabled",
+          "disable",
+          "1.0",
+          "01",
+          " 0 ",
+          "null",
+          "None"
+        ],
+        "on_count": 12,
+        "on_variants": [
           "1",
           "true",
           "yes",
           " 1 ",
           "  true  ",
-          "yes "
-        ],
-        "case_sensitive_negatives": [
-          "TRUE",
-          "Yes",
-          "YES",
-          "True"
-        ],
-        "off_values_checked": [
-          "",
-          " ",
-          "0",
-          "no",
-          "false",
-          "off",
-          "random",
-          "<missing>"
+          "yes ",
+          " yes",
+          "yes\n",
+          "1\n",
+          "true\t",
+          "\n1\n",
+          "\t true \t"
         ]
       },
       "status": "PASS"

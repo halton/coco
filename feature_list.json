@@ -5157,7 +5157,7 @@
       "area": "infra",
       "priority": 237,
       "phase": 28,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "verify-024 V0 truthy 反证表补边界",
       "description": "verify_infra_024.py V0 truthy 反证表补 \"2\" / \"yes\\n\" / \" 1 \" 等 strip/数值边界，进一步固化 classifier 行为契约。verify-only，default-OFF 友好。",
       "source_backlog": "infra-024-backlog-v0-extra-truthy-edges",

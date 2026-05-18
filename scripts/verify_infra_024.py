@@ -96,26 +96,76 @@ def _run_smoke(env_overrides: dict) -> tuple[int, str, str]:
 
 
 def v0_static_gate(smoke) -> dict:
+    """infra-032 升级: 把 truthy 反证表补满边界 case。
+
+    契约 (smoke.py L460):
+        os.environ.get("COCO_SMOKE_FINEGRAINED_EXIT", "").strip() in ("1", "true", "yes")
+
+    关键含义:
+      - .strip() → 前后空白 / 尾换行均剥离, " 1 " / "yes\\n" 视为 ON
+      - case-sensitive → "TRUE" / "True" / "YES" 均 OFF
+      - 白名单仅 {"1","true","yes"} → "on" / "y" / "2" / "enable" 均 OFF
+      - 空 / 未设 / 纯空白 → strip 后空串, OFF
+    """
     fn = smoke._finegrained_exit_enabled
 
-    # default-OFF: 缺省 env / 空值 / 杂值一律 False
+    # ON 变体（白名单 + strip 友好型）：每条都必须 truthy
+    on_variants = [
+        "1",
+        "true",
+        "yes",
+        " 1 ",        # 前后空白
+        "  true  ",   # 多重前后空白
+        "yes ",       # 尾单空白
+        " yes",       # 头单空白
+        "yes\n",      # 尾换行（infra-032 边界）
+        "1\n",        # 尾换行 + 数字
+        "true\t",     # 尾 tab
+        "\n1\n",      # 前后换行夹 1
+        "\t true \t", # 混合空白包 true
+    ]
+    # OFF 变体（任何 strip 后不在白名单的字符串 / 大小写不一致 / 误判候选）
+    off_variants = [
+        "",            # 空串
+        " ",           # 单空格
+        "  ",          # 多空格
+        "\n",          # 单换行
+        "\t",          # tab
+        "0",           # 显式 0
+        "2",           # infra-032 边界: 非空数字字符串但非 truthy
+        "no",
+        "false",
+        "off",          # 任务描述提到 "on"/"yes"; 实际白名单不含 on/off
+        "on",           # infra-032 边界: 用户直觉常以为 truthy, 实际 OFF
+        "on ",          # "on " strip 后仍 = "on", OFF
+        "random",
+        "y",            # 单字母简写, 不在白名单
+        "n",
+        "TRUE",         # 大写敏感反证
+        "True",
+        "Yes",
+        "YES",
+        "TrUe",         # 混合大小写
+        "enable",
+        "enabled",
+        "disable",
+        "1.0",          # 浮点字符串
+        "01",           # 带前导零
+        " 0 ",          # OFF + strip
+        "null",
+        "None",
+    ]
+
     orig = os.environ.pop("COCO_SMOKE_FINEGRAINED_EXIT", None)
     try:
-        for raw in ("", " ", "0", "no", "false", "off", "random"):
+        for raw in off_variants:
             os.environ["COCO_SMOKE_FINEGRAINED_EXIT"] = raw
             _ok(fn() is False,
-                f"V0 default-OFF: COCO_SMOKE_FINEGRAINED_EXIT={raw!r} should disable, got True")
-        # ON 别名: 1 / true / yes (与 smoke.py L460 .strip() in ("1","true","yes") 一致;
-        # case-sensitive — 大写 'TRUE' 不是 alias, 这点 V0 显式锁住, 与 infra-018 文档对齐)
-        for raw in ("1", "true", "yes", " 1 ", "  true  ", "yes "):
+                f"V0 OFF variant: COCO_SMOKE_FINEGRAINED_EXIT={raw!r} should disable, got True")
+        for raw in on_variants:
             os.environ["COCO_SMOKE_FINEGRAINED_EXIT"] = raw
             _ok(fn() is True,
-                f"V0 ON alias: COCO_SMOKE_FINEGRAINED_EXIT={raw!r} should enable, got False")
-        # 大小写敏感反证: 'TRUE' / 'Yes' 不属于 alias 集合
-        for raw in ("TRUE", "Yes", "YES", "True"):
-            os.environ["COCO_SMOKE_FINEGRAINED_EXIT"] = raw
-            _ok(fn() is False,
-                f"V0 case-sensitive: COCO_SMOKE_FINEGRAINED_EXIT={raw!r} should NOT enable (alias is lowercase), got True")
+                f"V0 ON variant: COCO_SMOKE_FINEGRAINED_EXIT={raw!r} should enable, got False")
         # 完全删除 env 也是 False
         os.environ.pop("COCO_SMOKE_FINEGRAINED_EXIT", None)
         _ok(fn() is False, "V0 missing env should be False")
@@ -123,9 +173,14 @@ def v0_static_gate(smoke) -> dict:
         os.environ.pop("COCO_SMOKE_FINEGRAINED_EXIT", None)
         if orig is not None:
             os.environ["COCO_SMOKE_FINEGRAINED_EXIT"] = orig
-    return {"aliases_checked": ["1", "true", "yes", " 1 ", "  true  ", "yes "],
-            "case_sensitive_negatives": ["TRUE", "Yes", "YES", "True"],
-            "off_values_checked": ["", " ", "0", "no", "false", "off", "random", "<missing>"]}
+    return {
+        "on_variants": on_variants,
+        "off_variants": off_variants,
+        "on_count": len(on_variants),
+        "off_count": len(off_variants),
+        "missing_env_off": True,
+        "contract": 'os.environ.get(...,"").strip() in ("1","true","yes")',
+    }
 
 
 def v1_on_path_rc2(stdout_buf: dict) -> dict:
