@@ -10,8 +10,13 @@
   "ok": true,
   "results": [
     {
-      "detail": "1 trace events with latency_ms; sample lat=0.013 stage=arbit_winner; arbit_winner=1",
+      "detail": "1 trace events with latency_ms; sample lat=0.014 stage=arbit_winner; arbit_winner=1",
       "name": "V1_latency_wire_in_production",
+      "ok": true
+    },
+    {
+      "detail": "1 cooldown_hit reject emit(s); lat=0.008 (type=float) reason=cooldown",
+      "name": "V1c_cooldown_hit_latency_wire",
       "ok": true
     },
     {
@@ -35,5 +40,5 @@
       "ok": true
     }
   ],
-  "sha": "46b9b743b3f07ca496a21ae3d6ec150622856347"
+  "sha": "a56544ef5ecbcfd8f3a280438d5f02707fb717f8"
 }

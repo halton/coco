@@ -10,6 +10,12 @@ V1 ProactiveScheduler.maybe_trigger 触发后, 至少一条 proactive.* emit 含
    latency_ms (float, >= 0)。生产路径中 emit_trace 自带 latency_ms extra
    kwarg (interact-018 wire)。开启 COCO_PROACTIVE_TRACE 后断言。
 
+V1c (interact-033 升级) cooldown_hit 路径 latency_ms 端到端断言: 同一
+   ProactiveScheduler 连续两次 maybe_trigger; 第一次 admit (arbit_winner),
+   第二次因 _last_proactive_ts 在 cooldown_s 窗口内 → reject reason=cooldown
+   emit stage=cooldown_hit 且 latency_ms 字段存在 (float/int, >= 0, 非 bool)。
+   覆盖 interact-018 Reviewer caveat 收口的 cooldown 路径 wire 断面。
+
 V2 _is_fail 三口约定: 对人工注入的 ``ok=False`` / ``error=...`` /
    ``failure_reason=...`` 三种独立 record, is_fail 都返回 True。
 
@@ -154,6 +160,122 @@ def v1_latency_wire_in_production() -> None:
                 f"sample lat={trace_events[0].get('latency_ms')} "
                 f"stage={trace_events[0].get('stage')}; "
                 f"arbit_winner={len(winners)}")
+    finally:
+        pt.set_emit_override(None)
+        os.environ.pop("COCO_PROACTIVE_TRACE", None)
+
+
+# ---------------------------------------------------------------------------
+# V1c (interact-033): cooldown_hit 路径 latency_ms 端到端断言
+# ---------------------------------------------------------------------------
+
+
+def v1c_cooldown_hit_latency_wire() -> None:
+    """V1c: cooldown_hit emit (decision=reject, reason=cooldown) 含 latency_ms wire.
+
+    interact-018 Reviewer caveat 收口 (interact-033): V1 admit 路径 latency_ms
+    wire 已覆盖, cooldown_hit reject 路径 latency_ms 端到端断言此前缺失。
+    fixture: 同一 ProactiveScheduler 连续两次 maybe_trigger:
+      - 第 1 次: admit (arbit_winner) → 写入 _last_proactive_ts
+      - 第 2 次: idle 复满足, 但 since < cooldown_s → reject reason=cooldown,
+        emit stage=cooldown_hit, latency_ms 字段必须存在 (type-strict 数值, >=0,
+        且非 bool)。"判定即出": cooldown_hit latency_ms 不含等待时间, 只是从
+        maybe_trigger 入口到 cooldown 命中那一刻的累积 monotonic ms。
+    """
+    os.environ["COCO_PROACTIVE_TRACE"] = "1"
+    from coco import proactive_trace as pt
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+    from coco.power_state import PowerState
+
+    captured: List[Dict[str, Any]] = []
+
+    def _emit(event: str, **payload: Any) -> None:
+        captured.append({"event": event, **payload})
+
+    pt.set_emit_override(_emit)
+
+    try:
+        class _FakePS:
+            current_state = PowerState.ACTIVE
+
+        class _FakeFace:
+            def latest(self):
+                class _S:
+                    present = True
+                return _S()
+
+        def _llm(text, *, system_prompt=None):
+            return "你好呀"
+
+        def _tts(text, blocking=True):
+            return None
+
+        cfg = ProactiveConfig(
+            enabled=True,
+            idle_threshold_s=10.0,
+            cooldown_s=30.0,
+            max_topics_per_hour=10,
+            tick_s=1.0,
+        )
+        sched = ProactiveScheduler(
+            config=cfg,
+            power_state=_FakePS(),
+            face_tracker=_FakeFace(),
+            llm_reply_fn=_llm,
+            tts_say_fn=_tts,
+            emit_fn=_emit,
+        )
+        sched._last_interaction_ts = sched.clock() - 600.0
+
+        ok1 = sched.maybe_trigger()
+        if not ok1:
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    "first maybe_trigger admit 失败, fixture 前置未满足")
+            return
+
+        # 让 idle 仍满足, 只剩 cooldown 抑制
+        sched._last_interaction_ts = sched.clock() - 600.0
+        ok2 = sched.maybe_trigger()
+        if ok2 is not False:
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    f"second maybe_trigger 未返回 False, ok2={ok2}")
+            return
+
+        trace_events = [
+            e for e in captured if e.get("event") == "proactive.trace"
+        ]
+        cooldown_hits = [
+            e for e in trace_events
+            if e.get("stage") == "cooldown_hit" and e.get("decision") == "reject"
+        ]
+        if not cooldown_hits:
+            stages = [(e.get("stage"), e.get("decision"), e.get("reason"))
+                      for e in trace_events]
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    f"no cooldown_hit reject in trace; stages={stages}")
+            return
+
+        sample = cooldown_hits[0]
+        lat = sample.get("latency_ms")
+        # type-strict: int/float, 排除 bool 与 None
+        if isinstance(lat, bool) or not isinstance(lat, (int, float)):
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    f"cooldown_hit latency_ms type 错误 type={type(lat).__name__} "
+                    f"val={lat!r} sample={sample}")
+            return
+        if lat < 0:
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    f"cooldown_hit latency_ms < 0 lat={lat} sample={sample}")
+            return
+        # reason 必须 'cooldown'
+        if sample.get("reason") != "cooldown":
+            _record("V1c_cooldown_hit_latency_wire", False,
+                    f"cooldown_hit reason={sample.get('reason')!r} expected='cooldown'")
+            return
+
+        _record("V1c_cooldown_hit_latency_wire", True,
+                f"{len(cooldown_hits)} cooldown_hit reject emit(s); "
+                f"lat={lat} (type={type(lat).__name__}) reason={sample.get('reason')}")
     finally:
         pt.set_emit_override(None)
         os.environ.pop("COCO_PROACTIVE_TRACE", None)
@@ -362,6 +484,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="verify_interact_018_") as td:
         tmp = Path(td)
         v1_latency_wire_in_production()
+        v1c_cooldown_hit_latency_wire()
         v2_is_fail_three_signals()
         v3_is_fail_not_false_positive()
         v4_trace_summary_latency_aggregation(tmp)

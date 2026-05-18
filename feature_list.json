@@ -4869,12 +4869,12 @@
       "id": "interact-033",
       "title": "verify_interact_018 V1 cooldown 路径 latency_ms 覆盖补全",
       "priority": 231,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 27,
       "area": "interact",
       "source": "interact-018-backlog-v1-cooldown-coverage",
       "updated_at": "2026-05-19T12:00:00",
-      "description": "interact-018 Reviewer caveat 收口：V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire，cooldown_hit 路径 latency_ms 端到端断言尚缺。补 fixture 触发 cooldown_hit（相同 task 在 cooldown 窗口内重入），断言 trace 行 latency_ms 字段存在且非负。verify-only，default-OFF 友好（COCO_PROACTIVE_TRACE gate）。",
+      "description": "interact-018 Reviewer caveat 收口：V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire，cooldown_hit 路径 latency_ms 端到端断言尚缺。补 fixture 触发 cooldown_hit（相同 task 在 cooldown 窗口内重入），断言 trace 行 latency_ms 字段存在且非负。verify-only,default-OFF 友好（COCO_PROACTIVE_TRACE gate）。",
       "acceptance_criteria": [
         "verify_interact_018.py 新增 V_cooldown_latency 档：触发 cooldown_hit 路径并断言 trace 行含 latency_ms 字段",
         "原有 V0-V5 全档 PASS 不退化",
@@ -4885,16 +4885,27 @@
       "verification": {
         "commands": [
           ".venv/bin/python scripts/verify_interact_018.py",
+          ".venv/bin/python scripts/verify_interact_033.py",
           "./init.sh"
         ],
         "must_pass": [
           "verify_interact_018 含新档全 PASS",
+          "verify_interact_033 V0-V5 全 PASS",
           "smoke 11/11 PASS",
           "0 业务源码改动",
           "Reviewer LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "v018_upgrade": "verify_interact_018.py 新增 V1c_cooldown_hit_latency_wire 档 (cooldown_hit emit decision=reject reason=cooldown latency_ms wire 端到端断言)",
+        "v018_run": "verify_interact_018.py 6 档 (V1/V1c/V2/V3/V4/V5) 全 PASS; V1c sample lat=0.008 type=float reason=cooldown",
+        "v033_meta_lock": "verify_interact_033.py V0-V5 全 PASS (file 存在 + V1c 字面 sentinel + 关键锁参数 + mutant 反证 + verify_interact_018.py sha256 锁 + subprocess 端到端 rc=0)",
+        "v033_sha256_v018": "775d5b09c6e4093c40d17a9f863c2f23cbdbdf1984b45d741ecf1e4e960fa18b",
+        "smoke": "11/11 PASS (./init.sh)",
+        "zero_business_diff": "git diff main -- coco/ = 0 行 (verify-only, 0 业务源码改动)",
+        "branch": "feat/interact-033",
+        "real_machine_uat": "n/a (verify-only, sim 已证)"
+      }
     },
     {
       "id": "infra-031",

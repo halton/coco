@@ -1,0 +1,63 @@
+{
+  "feature": "interact-033",
+  "all_pass": true,
+  "results": {
+    "V0_file_existence": {
+      "ok": true,
+      "missing": [],
+      "sizes": {
+        "verify_interact_018.py": 19846,
+        "verify_interact_033.py": 9522,
+        "coco/proactive.py": 76996,
+        "coco/proactive_trace.py": 17561
+      },
+      "syspath_root": "/Users/halton/work/coco"
+    },
+    "V1_literal_sentinel": {
+      "ok": true,
+      "missing": [],
+      "counts": {
+        "def v1c_cooldown_hit_latency_wire(": 1,
+        "V1c_cooldown_hit_latency_wire": 7,
+        "V1c (interact-033 升级)": 1,
+        "v1c_cooldown_hit_latency_wire()": 2,
+        "cooldown_hit emit (decision=reject, reason=cooldown) 含 latency_ms wire": 1
+      },
+      "total_anchors": 5
+    },
+    "V2_assertion_lock": {
+      "ok": true,
+      "missing": [],
+      "total": 7
+    },
+    "V3_mutant_anti_anchors": {
+      "ok": true,
+      "bad_present": [],
+      "counts": {
+        "V1c_cooldown_hit_latency_wire": 7,
+        "cooldown_hit": 26,
+        "_lat_start": 0
+      },
+      "bad_counts": []
+    },
+    "V4_v018_sha256_lock": {
+      "ok": true,
+      "expected": "775d5b09c6e4093c40d17a9f863c2f23cbdbdf1984b45d741ecf1e4e960fa18b",
+      "got": "775d5b09c6e4093c40d17a9f863c2f23cbdbdf1984b45d741ecf1e4e960fa18b",
+      "file_size": 19846,
+      "hint": ""
+    },
+    "V5_subprocess_v018": {
+      "ok": true,
+      "rc": 0,
+      "v1c_ok": true,
+      "v1c_detail": {
+        "detail": "1 cooldown_hit reject emit(s); lat=0.008 (type=float) reason=cooldown",
+        "name": "V1c_cooldown_hit_latency_wire",
+        "ok": true
+      },
+      "parse_err": "",
+      "stderr_tail": ""
+    }
+  }
+}
