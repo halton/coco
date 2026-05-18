@@ -4036,10 +4036,11 @@
       "area": "robot",
       "priority": 183,
       "phase": 22,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "robot-012-backlog-shutdown-timeout-inf-nan-hardening",
       "description": "吸收 backlog robot-012-backlog-shutdown-timeout-inf-nan-hardening: 当前 COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S 输入降级仅 try/except ValueError 兜底负值, 未拦 float('inf') / float('nan')。phase-22 P183 additive default-OFF 补 inf/nan 拦截 (env=0 bytewise 等价 main): (a) V0 fingerprint 输入降级站点 (b) V1 inf/nan 命中走默认 5.0s + WARN once (c) V2 三 mutant 反证 (inf / nan / -1) 全降级 (d) V3 env=0 bytewise 等价 (e) V4 regression robot-012/014/016/017 rc=0 (f) V5 smoke。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Engineer (sub-agent, feat/robot-018): verify_robot_018 V0-V6 全 PASS (13s) / 0 业务源码改动 (coco/robot/sequencer.py 与 main bytewise 等价) / 决策: robot-014 (commit cefa1d0, priority 160) 已完成 env+dataclass 双层硬化, 本任务退化为 verify-only doc 锁面 (新增 docs/robot-shutdown-timeout-hardening-spec.md 4357B 权威 spec + scripts/verify_robot_018.py 跨路径完整覆盖) / V0 fingerprint: math.isfinite + __post_init__ + COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S + 默认 2.0 同时命中 sequencer.py / V1 spec doc 12 关键短语锁面 (math.isfinite/2.0/__post_init__/COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S/thread.join/inf/nan/default-OFF/bytewise/robot-014/robot-018/verify-only) / V2 env 路径 11 case (inf/Infinity/+inf/INF/-inf/-Infinity/nan/NaN/NAN/+nan/-nan) 全降级 2.0 / V3 dataclass 路径 7 case (float inf/-inf/nan + 'inf'/'nan'/None/'not-a-number') 全降级 2.0 / V4 合法值 env+dataclass 双路径 10 case (0.5/1.0/30.0/0.001/2.0|5.0) 直通锁面 / V5 边界 env+dataclass 10 case (''/0/0.0/-1/-2.5/abc) 降级 2.0 / V6 regression 静态锁面 (邻近 verify_robot_012/013/014/015/016/017 存在 + sequencer.py 关键 token 不漂移; 真行为 chain 不内联避 N² 时间爆炸, 由 smoke 覆盖) / smoke ./init.sh 11 段 PASS 'Smoke 通过' / Default-OFF: 合法 float bytewise 等价 main, 行为变化仅在 inf/-inf/nan/非数值/<=0 异常输入路径 (robot-014 既有 fail-safe) / 不衍生 fu chain (0 新增 backlog) / source=robot-012-backlog-shutdown-timeout-inf-nan-hardening / 待 Reviewer 评审"
     },
     {
       "id": "interact-024",
