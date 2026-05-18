@@ -4447,3 +4447,27 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **phase-28 整体特征：** 5 个 feature 中仅 robot-029 有业务源码改动（且 env-gated default-OFF，env=0 bytewise 等价 main），其余 4 个全部 verify-only / 0 业务源码改动。main 持续保持 `./init.sh` 通过。phase-28 全部 sim-first 合规；唯一 uat 异步项 uat-robot-029-real-machine-is-shutdown-bool-cast 已登记不阻 merge。
 
 **下一步：** phase-29 planning。
+
+---
+
+## Session 2026-05-19 (phase-29 planning)
+
+**phase-29 candidates 选定（5 个，priority 240-244，全部 source 自既有 backlog）：**
+
+| id | area | priority | source backlog | scope 类别 |
+|---|---|---|---|---|
+| infra-033 | infra | 240 | infra-024-backlog-verify-venv-docstring | verify-only / docs-only：scripts/verify_infra_024.py 顶端 docstring 增补 venv 使用说明 |
+| robot-030 | robot | 241 | robot-009-backlog-sync-fallback-warning | 业务源码（**唯一含业务源码改动**）：ProactiveScheduler enqueue fallback 命中处 per-instance 单次 warn，default-OFF 友好 |
+| interact-036 | interact | 242 | interact-035a-backlog-drift-report-history-trend | verify-only：drift_report 追加写入 evidence/interact-035-history.jsonl，新增 verify_interact_036.py 校验 |
+| robot-031 | robot | 243 | robot-028-backlog-bump-helper-self-hash-hard-lock | verify-only / 脚手架硬化：verify_robot_028 V4 bump_helper sha256 placeholder 升级硬锁 + bump_verify_028_self_hash.py 递归助手 |
+| robot-032 | robot | 244 | robot-009-backlog-block-policy-doc | docs-only：新增 docs/proactive_scheduler_block_policy.md + verify_robot_032.py 章节标题断言 |
+
+**area 平衡：** infra=1 / robot=3 / interact=1（robot 偏多是因 robot 系列 backlog 池较大；其中 robot-030 为唯一业务源码项，robot-031/032 均 verify-only / docs-only）。
+
+**首发推荐：** **infra-033**（priority=240，verify-only docs-only，最低风险，可作为 phase-29 开门）。
+
+**source backlog 标注：** 5 个 source backlog 已加 `selected_for: <新 id>` + `selected_phase: 29`。
+
+**不衍生 fu chain：** 全部 candidate source 来自既有 backlog 池，未引入新链。
+
+**约束符合：** 不主动升级 reachy-mini SDK / 核心依赖；持续开发模式；commit 例外 + push 失败忽略一次。
