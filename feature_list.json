@@ -5530,7 +5530,7 @@
       "area": "robot",
       "phase": 30,
       "title": "verify_robot_032 从 docs 解析章节标题做 single-source",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "robot-032-backlog-doc-verify-single-source",
       "scope": "docs/proactive_scheduler_block_policy.md 章节标题与 scripts/verify_robot_032.py 中断言列表当前分两处手工同步。改造 verify：从 .md 用极简正则（^## 行）解析章节标题列表，作为 expected 集合断言代码侧（或反过来）一致；任一处增删章节即可被 verify 捕获，无需 2-place 同步。verify-only 改动。",
       "dependencies": [
