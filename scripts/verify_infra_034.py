@@ -48,13 +48,19 @@ from typing import Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# 5 个新增推广目标
+# 推广目标 (P240 infra-034 首批 5 + P252 infra-036 续推 5 = 10)
 TARGETS: Tuple[str, ...] = (
     "scripts/verify_robot_032.py",
     "scripts/verify_robot_033.py",
     "scripts/verify_interact_037.py",
     "scripts/verify_interact_036.py",
     "scripts/verify_infra_033.py",
+    # P252 infra-036 续推 (无 sha 锁链路耦合的安全目标)
+    "scripts/verify_robot_023.py",
+    "scripts/verify_robot_024.py",
+    "scripts/verify_interact_022.py",
+    "scripts/verify_interact_023.py",
+    "scripts/verify_infra_018.py",
 )
 
 # P240 baseline (不动它, 仅作 V2 regression guard)
