@@ -5,12 +5,17 @@ robot-034: 把 verify_robot_032 的 EXPECTED_HEADINGS 从 hardcoded list 改为
 运行时从 docs/proactive_scheduler_block_policy.md 的 sentinel section 解析,
 形成 docs → verify 单一事实源。本 verify 负责锁死这个约定本身。
 
-V0 docs sentinel section 存在; verify_robot_032 中存在 helper
-   ``_parse_headings_from_doc``。
-V1 helper 返回非空且 >=10 章节。
-V2 sha256 锁 verify_robot_032 中 helper 函数体源代码 (hardcoded)。
-V3 mutant 反证 (内存中): 把 sentinel 行替换为别的字面 → helper RuntimeError。
-   不写盘, finally 无需还原。
+robot-035: helper 函数体迁移到 scripts/_verify_lib.py 中 ``parse_headings_from_doc``
+公开 API。本 verify 的 V0/V1/V2 改为锁该共享 lib 函数, verify_robot_032 中保留
+``_parse_headings_from_doc`` 本地别名 (import as) 以维持调用面与 V0 函数名串检测。
+
+V0 docs sentinel section 存在; verify_robot_032 中存在名为
+   ``_parse_headings_from_doc`` 的本地 symbol; ``_verify_lib`` 模块存在且
+   暴露 ``parse_headings_from_doc``。
+V1 helper 返回非空且 >=10 章节 (经 verify_robot_032 import 后通过 attribute 调用)。
+V2 sha256 锁 _verify_lib.parse_headings_from_doc 函数体源代码 (hardcoded)。
+V3 mutant 反证 (临时文件): 把 sentinel 行替换为别的字面 → helper RuntimeError。
+   写到 /tmp 临时 doc, finally 清理, 不动真实 docs。
 V4 sha256 print docs 文件 (与 robot-032 V4 风格一致, print-only, 不 enforce)。
 V5 subprocess 自调用 rc=0 (sys.executable invoke 自身, 自洽通过)。
 
@@ -48,12 +53,17 @@ from typing import List, Tuple
 REPO = Path(__file__).resolve().parents[1]
 DOC = REPO / "docs" / "proactive_scheduler_block_policy.md"
 VERIFY_032 = REPO / "scripts" / "verify_robot_032.py"
+# robot-035: 共享 lib
+VERIFY_LIB = REPO / "scripts" / "_verify_lib.py"
 
-HELPER_NAME = "_parse_headings_from_doc"
+HELPER_NAME = "_parse_headings_from_doc"  # verify_robot_032 中的本地别名 symbol
+LIB_HELPER_NAME = "parse_headings_from_doc"  # _verify_lib 中的公开 helper
 SENTINEL_LINE = "## 章节标题列表（供 verify_robot_032 用）"
 
-# V2: hardcoded sha256 of helper function body (ast source segment)
-EXPECTED_HELPER_SHA = "33b728b8f5a07c7e652ebf66adca38552858814041ef3951b37110ca81997dc3"
+# V2: hardcoded sha256 of _verify_lib.parse_headings_from_doc function body (ast source segment)
+# robot-035: 改锁共享 lib helper (helper 函数体新增 sentinel 形参 + 文档与原版有差异,
+# 因此 sha 不同于 robot-034 时锁的 verify_robot_032 中函数体)。
+EXPECTED_HELPER_SHA = "98890e28f76d095217aa3edf70f229ea68cf535fac284747257e62a810916405"
 
 # V4: doc sha print (informational, not enforced)
 EXPECTED_DOC_SHA = "33f4484cc7108a3aba68e3ecef9d8419a2fca02ddb3665f754e8dc7667aa5f5a"
@@ -78,15 +88,16 @@ def _load_verify_032_module():
 
 
 def _helper_source_segment() -> str:
-    src = VERIFY_032.read_text(encoding="utf-8")
+    """robot-035: 从 _verify_lib.py 中提取 parse_headings_from_doc 函数体 ast 源段。"""
+    src = VERIFY_LIB.read_text(encoding="utf-8")
     tree = ast.parse(src)
     for n in tree.body:
-        if isinstance(n, ast.FunctionDef) and n.name == HELPER_NAME:
+        if isinstance(n, ast.FunctionDef) and n.name == LIB_HELPER_NAME:
             seg = ast.get_source_segment(src, n)
             if seg is None:
                 raise RuntimeError("ast.get_source_segment returned None")
             return seg
-    raise RuntimeError(f"helper {HELPER_NAME!r} not found in {VERIFY_032}")
+    raise RuntimeError(f"helper {LIB_HELPER_NAME!r} not found in {VERIFY_LIB}")
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +116,25 @@ def v0_presence() -> None:
         return
     _emit("V0_verify_032_exists", True, str(VERIFY_032))
     src = VERIFY_032.read_text(encoding="utf-8")
-    _emit("V0_helper_def_in_verify_032", f"def {HELPER_NAME}" in src, f"helper={HELPER_NAME}")
+    # robot-035: helper 现以 ``from _verify_lib import ... as _parse_headings_from_doc``
+    # 形式存在; V0 串检测仍要求该本地别名 symbol 出现, 以维持 verify_robot_032
+    # 调用面稳定 (EXPECTED_HEADINGS = _parse_headings_from_doc(DOC, ...))。
+    _emit(
+        "V0_helper_alias_in_verify_032",
+        f"as {HELPER_NAME}" in src or f"def {HELPER_NAME}" in src,
+        f"alias={HELPER_NAME}",
+    )
+    # robot-035: 新增检测 _verify_lib 文件与公开 helper
+    if not VERIFY_LIB.is_file():
+        _emit("V0_verify_lib_exists", False, f"missing {VERIFY_LIB}")
+        return
+    _emit("V0_verify_lib_exists", True, str(VERIFY_LIB))
+    lib_src = VERIFY_LIB.read_text(encoding="utf-8")
+    _emit(
+        "V0_lib_helper_def",
+        f"def {LIB_HELPER_NAME}" in lib_src,
+        f"lib_helper={LIB_HELPER_NAME}",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +150,9 @@ def v1_helper_nonempty() -> None:
         _emit("V1_helper_loads", False, f"attr {HELPER_NAME} missing")
         return
     try:
-        headings = getattr(mod, HELPER_NAME)(DOC)
+        # robot-035: helper 新签名 (doc_path, sentinel); 通过 verify_robot_032 中的
+        # 本地别名 _parse_headings_from_doc 调用, 等价于直接调 _verify_lib.parse_headings_from_doc。
+        headings = getattr(mod, HELPER_NAME)(DOC, SENTINEL_LINE)
     except Exception as e:
         _emit("V1_helper_call", False, f"helper raised: {e!r}")
         return
@@ -179,7 +210,7 @@ def v3_mutant_sentinel() -> None:
         raised = False
         err = ""
         try:
-            helper(tmp_path)
+            helper(tmp_path, SENTINEL_LINE)
         except RuntimeError as e:
             raised = True
             err = str(e)

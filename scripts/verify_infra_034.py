@@ -70,7 +70,7 @@ KEY_PHRASES: Tuple[str, ...] = (
 
 # V4 sha256 锁 (hardcoded; 一旦目标脚本未来再改, 需同步本表)
 EXPECTED_SHA: Dict[str, str] = {
-    "scripts/verify_robot_032.py": "c28b2a64f321794066ed20aebc325cd97c7110a6b2ab7660a2537fe0a82f1fd8",
+    "scripts/verify_robot_032.py": "2a4fcb7f065d53d9ed5398e9b2c2416167907be90b4f20aa784d7062b1c02069",
     "scripts/verify_robot_033.py": "72893cd29605a78ba3166d7328e9335440c87db285b9d94c3bfe37f95df09acb",
     "scripts/verify_interact_037.py": "e07db83b106f86f65b963ba45c5a5848723e9491c15aaaa992b16edb87bb9330",
     "scripts/verify_interact_036.py": "1ff0f3b3fac54529d57db024a8b9296ef4d056b182ae59ac6dc50591b4d95415",
