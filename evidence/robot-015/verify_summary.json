@@ -1,7 +1,7 @@
 {
   "feature": "robot-015",
   "title": "ProactiveScheduler→Sequencer callback 直 enqueue contract 锁定",
-  "elapsed_s": 442.734,
+  "elapsed_s": 436.924,
   "errors": [],
   "regression_rcs": {
     "scripts/verify_robot_007.py": 0,
