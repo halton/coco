@@ -36,6 +36,27 @@ Sim-first: 全程子进程隔离, HOME 临时目录, 不依赖真模型 / 不动
 
 default-OFF 严守: 本 verify 不修改 smoke.py 源码, 不引入新 env hook;
 未设置 COCO_SMOKE_FINEGRAINED_EXIT 时 smoke rc 与 main bytewise 等价 (V2 锁)。
+
+运行环境约定 (infra-033)
+------------------------
+本脚本及其 V1-V5 子进程**必须**在已激活的 .venv 下运行 (Python 解释器入口
+``.venv/bin/python``); 不要用系统 ``python3`` 直接调用本脚本, 否则
+``importlib.util.spec_from_file_location`` 加载 ``scripts/smoke.py`` 时
+依赖 (numpy / soundfile / onnxruntime 等) 可能解析到系统站点而非 venv 站点,
+导致与 ``./init.sh`` smoke 路径不一致, 进而 V1-V5 退出码漂移。
+
+约定细则:
+  - **Reviewer / CI / 手动复跑入口**: 一律 ``.venv/bin/python scripts/verify_infra_024.py``
+    (或先 ``source .venv/bin/activate`` 再 ``python scripts/verify_infra_024.py``)。
+  - **子进程 invoke**: ``_run_smoke`` 内的 ``subprocess.run`` 第一参数固定使用
+    ``sys.executable`` (即本脚本所属解释器); 不写死 ``"python"`` / ``"python3"`` 字面量,
+    确保子进程继承父进程同一个 venv Python, 避免 PATH 覆盖踩坑。
+  - **环境变量继承**: 子进程从 ``os.environ`` 拷贝 PATH / PYTHONPATH 等,
+    再叠加 HOME / XDG_CACHE_HOME / COCO_CI / GATE 覆盖; PATH 中 venv 的
+    ``bin`` 目录位置不可被人为打乱 (init.sh 已在激活时前置 venv bin)。
+  - **新会话注意事项**: 干净 shell 进来务必先 ``source .venv/bin/activate``
+    或显式 ``./.venv/bin/python scripts/verify_infra_024.py``, 否则即便代码 byte-equal
+    也可能因解释器漂移产生不可复现的 FAIL。
 """
 from __future__ import annotations
 

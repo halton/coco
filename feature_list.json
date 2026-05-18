@@ -5273,7 +5273,7 @@
       "area": "infra",
       "priority": 240,
       "phase": 29,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "verify_infra_024 venv 使用约束 docstring",
       "description": "scripts/verify_infra_024.py 顶端 docstring 明示需在 venv-activated python 下运行（subprocess 用同一 sys.executable），避免新会话误用系统 python。纯文档化 verify-only。",
       "source_backlog": "infra-024-backlog-verify-venv-docstring",

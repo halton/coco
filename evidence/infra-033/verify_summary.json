@@ -1,0 +1,94 @@
+{
+  "failures": [],
+  "feature": "infra-033",
+  "results": {
+    "V0_sys_path_and_target": {
+      "detail": {
+        "docstring_len": 2648,
+        "docstring_lines": 58,
+        "target": "/Users/halton/work/coco/scripts/verify_infra_024.py"
+      },
+      "status": "PASS"
+    },
+    "V1_literal_sentinels": {
+      "detail": {
+        "all_present": true,
+        "doc_len": 2648,
+        "phrases": [
+          ".venv",
+          "sys.executable",
+          "子进程",
+          "运行环境约定",
+          ".venv/bin/python"
+        ]
+      },
+      "status": "PASS"
+    },
+    "V2_lock_params": {
+      "detail": {
+        "phrase_counts": {
+          ".venv": 6,
+          ".venv/bin/python": 3,
+          "sys.executable": 1,
+          "子进程": 11,
+          "运行环境约定": 1
+        },
+        "section_lines": 20,
+        "total_lines": 58
+      },
+      "status": "PASS"
+    },
+    "V3_mutant_reject": {
+      "detail": {
+        "details": {
+          ".venv": {
+            "missing_after_mutation": [
+              ".venv",
+              ".venv/bin/python"
+            ]
+          },
+          ".venv/bin/python": {
+            "missing_after_mutation": [
+              ".venv/bin/python"
+            ]
+          },
+          "sys.executable": {
+            "missing_after_mutation": [
+              "sys.executable"
+            ]
+          },
+          "子进程": {
+            "missing_after_mutation": [
+              "子进程"
+            ]
+          },
+          "运行环境约定": {
+            "missing_after_mutation": [
+              "运行环境约定"
+            ]
+          }
+        },
+        "mutants_tested": 5
+      },
+      "status": "PASS"
+    },
+    "V4_sha256_full_file": {
+      "detail": {
+        "expected_locked": "eb61b07104dc68d54a9c88e2533b6ad37c392dd42a83338e095d6bc5c9d654b1",
+        "lock_path": "/Users/halton/work/coco/evidence/infra-033/verify_infra_024_sha256.lock",
+        "sha256": "eb61b07104dc68d54a9c88e2533b6ad37c392dd42a83338e095d6bc5c9d654b1"
+      },
+      "status": "PASS"
+    },
+    "V5_subprocess_invoke_verify_024": {
+      "detail": {
+        "interpreter": "/Users/halton/work/coco/.venv/bin/python",
+        "rc": 0,
+        "stderr_len": 0,
+        "stdout_len": 220
+      },
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
