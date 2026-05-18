@@ -1,0 +1,13 @@
+{
+  "feature_id": "robot-030",
+  "base_sha": "a299227",
+  "proactive_sha256": "929694d0fd56dd81505ab0c294a85b5848a7a1a91c479cee87f8cbdec2470364",
+  "self_sha256": "0a4873bd4187e4666b0457b19fd3493ad41045bd3c392035c5d52566f24490ae",
+  "block_baseline_expected_sha": "5b21effda24f28c435e2ff4b58c562b5aa068eb59d5b1bb1802283c25894b653",
+  "block_baseline_lines": [
+    1321,
+    1326
+  ],
+  "duration_s": 0.45,
+  "errors": []
+}
