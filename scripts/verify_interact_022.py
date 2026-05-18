@@ -23,6 +23,27 @@ no_failure/failsafe/failover) 实际已由 interact-019 实现并 interact-020 �
 
 retval：0 全 PASS；1 任一失败
 evidence 落 evidence/interact-022/verify_summary.json
+
+
+运行环境约定 (infra-036)
+------------------------
+本脚本及其 V0-V5 子进程**必须**在已激活的 .venv 下运行 (Python 解释器入口
+``.venv/bin/python``); 不要用系统 ``python3`` 直接调用本脚本, 否则
+``importlib`` 加载业务模块时依赖 (numpy / soundfile / onnxruntime 等) 可能
+解析到系统站点而非 venv 站点, 导致与 ``./init.sh`` smoke 路径不一致,
+进而 V0-V5 退出码漂移。
+
+约定细则:
+  - **Reviewer / CI / 手动复跑入口**: 一律 ``.venv/bin/python`` 启动 (或先
+    ``source .venv/bin/activate`` 再 ``python scripts/<本脚本名>.py``)。
+  - **子进程 invoke**: 任何 ``subprocess.run`` 第一参数固定使用 ``sys.executable``
+    (即本脚本所属解释器); 不写死 ``"python"`` / ``"python3"`` 字面量, 确保
+    子进程继承父进程同一个 venv Python, 避免 PATH 覆盖踩坑。
+  - **环境变量继承**: 子进程从 ``os.environ`` 拷贝 PATH / PYTHONPATH 等,
+    PATH 中 venv 的 ``bin`` 目录位置不可被人为打乱 (init.sh 已在激活时前置)。
+  - **新会话注意事项**: 干净 shell 进来务必先 ``source .venv/bin/activate``
+    或显式 ``./.venv/bin/python``, 否则即便代码 byte-equal 也可能因解释器
+    漂移产生不可复现的 FAIL。
 """
 
 from __future__ import annotations

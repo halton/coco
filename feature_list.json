@@ -5932,7 +5932,7 @@
       "area": "infra",
       "phase": 31,
       "title": "infra-034 V4 docstring sha 覆盖集扩展",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "infra-034-backlog-expand-docstring-coverage",
       "scope": "infra-034 当前 V4 锁定 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 12+ 历史 verify 脚本未纳入。本期挑 ≤5 高价值候选（robot-007/robot-008/robot-030/interact-024/interact-035）扩入 V4 期望表（与 infra-035 JSON 化配合）。docstring + 期望表 only，0 verify 业务逻辑改。",
       "dependencies": [
