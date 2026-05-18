@@ -3747,3 +3747,23 @@ evidence: feat/vision-015 HEAD=6def15f / V0-V5 6/6 PASS / 0 源码改动 (face_t
 0 新增 backlog。push origin feat/vision-015 一次成功。phase-22 5 候选剩 3 个 (companion-018 P182 / robot-018 P183 / interact-024 P184)。
 
 next: 派 Reviewer fresh-context 评审 vision-015, 通过后 Closeout merge feat/vision-015 → main, 然后持续开发模式派 companion-018 (P182, area=companion, preference emit env 命名 doc 同步)。
+
+## Session 2026-05-18 — companion-018 verify+docs PASS (phase-22 P182)
+
+companion-018 (P182, area=companion) Engineer 完成 verify-only 锁面, status=passing (待 Closeout merge)。承接 companion-016-backlog-polish 的 C1+C4 子项 — preference emit env 命名 (`COCO_PERSIST_EMIT_MIN_INTERVAL_S`) spec/代码不一致 + 模块级 WARN once 多进程语义外移到独立 spec 文档。
+
+关键发现: companion-016 brief / backlog 文案使用旧名 `COCO_PREFERENCE_EMIT_INTERVAL_S` 默认 30s, 实现一直是 `COCO_PERSIST_EMIT_MIN_INTERVAL_S` 默认 10s。companion-017 已在 `coco/companion/preference_learner.py` 内联注释里建立 "以代码为准" 口径, companion-018 把这层口径外移到 `docs/companion-preference-emit-env-spec.md` 作独立权威 spec 文档, **不为旧名提供 alias** (§1.1 详述: 旧名从未在代码路径被读出 / 外部无引用 / alias 会引入两个心智负担 / 默认值不一致直接 alias 反破坏兼容)。模块级 WARN once 多进程各 warn 一次的预期行为 (C4) 也明文锁定在 spec §2。
+
+evidence: feat/companion-018 HEAD=953375f / V0-V5 6/6 PASS / 0 业务源码改动 (preference_learner.py sha adffc033... 与 main dc3b396 一致):
+- V0 fingerprint git_head=dc3b396 + python=3.13.12 + 三处 sha256 (preference_learner.py / spec_doc / verify_self)
+- V1 env 字面量锁: `_PERSIST_EMIT_INTERVAL_ENV = "COCO_PERSIST_EMIT_MIN_INTERVAL_S"` x1 命中; 反证 `os.environ.get("COCO_PREFERENCE_EMIT_INTERVAL_S"` 读取路径 = 0; spec doc 含权威名 + 旧名 deprecation 注解
+- V2 spec doc 12 关键短语锁面 (权威 env / 旧名 / 10.0 / WARN once / 多进程 / 以代码为准 / verify-only / default-OFF / companion-016-backlog-polish / preference_learner.py / 常量名 / from_env 函数名), bytes=7014
+- V3 regression companion-015/016/017 全 rc=0
+- V4 smoke 11 段 init.sh rc=0 pass_n=10 + "Smoke 通过" (ASR 段不出 ok: 行属预期)
+- V5 migration_note alias 旧名代价分析 evidence-only (2637B, 含 authoritative/legacy/verify_ref/freeze/alias_cost)
+
+新文件: docs/companion-preference-emit-env-spec.md (7014B, §1 权威 env / §2 WARN once 多进程语义 / §3 spec↔code↔docstring 对照表 / §4 不一致点 doc-only 修复清单 / §5 verify-only 边界 / §6 alias 成本评估 / §7 引用) + scripts/verify_companion_018.py + evidence/companion-018/{verify_summary.json, migration_note.md}。`scripts/verify_companion_017.py` allowlist 同步加入 verify_companion_018.py (verify 间 cross-reference 必要同步, 非业务源码改动, 4 行)。
+
+0 新增 backlog, 不衍生 fu chain。push origin feat/companion-018 一次成功。phase-22 5 候选剩 2 个 (robot-018 P183 / interact-024 P184)。
+
+next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge feat/companion-018 → main, 然后持续开发模式派 robot-018 (P183, area=robot, `COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S` inf/nan 输入降级加固)。
