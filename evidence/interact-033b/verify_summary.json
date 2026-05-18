@@ -1,0 +1,36 @@
+{
+  "feature_id": "interact-033b",
+  "results": [
+    {
+      "name": "V0_syspath_root",
+      "ok": true,
+      "detail": "ROOT=coco, verify_024 + proactive.py 存在"
+    },
+    {
+      "name": "V1_per_stage_site_specs_literals",
+      "ok": true,
+      "detail": "per-stage site_specs 三 stage key + 锚点正则字面量 + lat_line_re 全命中 (7 项)"
+    },
+    {
+      "name": "V2_keyphrases",
+      "ok": true,
+      "detail": "7 关键短语全部命中"
+    },
+    {
+      "name": "V3_mutant_reject_preempt_removal",
+      "ok": true,
+      "detail": "mutant 反证成功: 剥离 reject_preempt 锚点后 admit/reject_main 仍在, 结构性证明 per-stage site_specs 三 key 缺一即 V1 不能再覆盖该 stage"
+    },
+    {
+      "name": "V4_sha256_locks",
+      "ok": true,
+      "detail": "sha256: scripts/verify_interact_024.py=9eb4e2d04f8e, scripts/verify_interact_033b.py=ad4ece13aab1"
+    },
+    {
+      "name": "V5_e2e_verify_024",
+      "ok": true,
+      "detail": "rc=0; SUMMARY tail=[verify_interact_024] SUMMARY all_pass=True (7/7)"
+    }
+  ],
+  "all_pass": true
+}
