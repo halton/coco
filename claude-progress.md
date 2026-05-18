@@ -4598,3 +4598,33 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **下一步：** 持续开发模式 → robot-034。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。
+
+---
+
+## Session P248 robot-034 closeout (phase-30 完整 4/4)
+
+**日期：** 2026-05-19
+
+**目标：** verify-only docs single-source — verify_robot_032 从 docs/proactive_scheduler_block_policy.md 解析 ^## / ### 章节标题做 single-source，配套 verify_robot_034 V0-V5 9/9 + verify_infra_034 sha sync。
+
+**结果：** PASSING，merge feat/robot-034 → main，HEAD = 2de649e
+
+**Evidence：**
+- 3 sha 三连 ✓：docs/proactive_scheduler_block_policy.md + scripts/verify_robot_032.py + scripts/verify_robot_034.py 各自 sha256 自锁 PASS
+- 4 cmd rc=0：verify_robot_032 PASS / verify_robot_034 9/9 PASS / verify_infra_034 20/20 PASS / ./init.sh smoke 11/11 PASS
+- 反证 sentinel mutant 两向锁：
+  - 删除 docs 中任一 ^## 章节标题 → verify_robot_032 rc=1 ✓（single-source 生效）
+  - verify expected 集合多一项 → verify_robot_032 rc=1 ✓（双向锁）
+- Reviewer (sub-agent): LGTM — docstring/env/sha 全合规，9 个 V0-V5 子断言完整覆盖 single-source 两向锁与 mutant 反证
+- feat sha: 4220553；main HEAD 终点: 2de649e
+
+**Backlog（3 项 priority=999 status=backlog phase=null）：**
+- robot-034-backlog-sentinel-content-cross-check
+- robot-034-backlog-sentinel-line-import-not-duplicate
+- robot-034-backlog-helper-extract-shared-lib
+
+**phase-30 收官：** 4/4 完成（robot-031 / robot-032 / robot-033 / robot-034 + 旁路 infra-033 / infra-034 verify-meta）。
+
+**下一步：** phase-31 planning。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。

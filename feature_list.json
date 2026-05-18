@@ -5530,7 +5530,7 @@
       "area": "robot",
       "phase": 30,
       "title": "verify_robot_032 从 docs 解析章节标题做 single-source",
-      "status": "in_progress",
+      "status": "passing",
       "source": "robot-032-backlog-doc-verify-single-source",
       "scope": "docs/proactive_scheduler_block_policy.md 章节标题与 scripts/verify_robot_032.py 中断言列表当前分两处手工同步。改造 verify：从 .md 用极简正则（^## 行）解析章节标题列表，作为 expected 集合断言代码侧（或反过来）一致；任一处增删章节即可被 verify 捕获，无需 2-place 同步。verify-only 改动。",
       "dependencies": [
@@ -5543,7 +5543,8 @@
         "V3: 亲手 mutant verify 脚本 expected 集合多一项 → FAIL（双向锁）",
         "V4: regression verify_robot_032 rc=0 + verify_robot_009 + smoke 11/11 PASS",
         "V5: bytewise diff main 业务源码 0 行改动（仅 verify_robot_032.py + docstring）"
-      ]
+      ],
+      "evidence": "P248 robot-034 closeout (phase-30 完整 4/4): verify-only docs single-source。feat sha 4220553；main merge HEAD 2de649e。3 sha 三连 ✓ (docs/proactive_scheduler_block_policy.md + scripts/verify_robot_032.py + scripts/verify_robot_034.py 各自 sha256 自锁 PASS)。4 cmd rc=0: verify_robot_032 PASS / verify_robot_034 9/9 PASS / verify_infra_034 20/20 PASS / ./init.sh smoke 11/11 PASS。反证 sentinel: 删除 docs 中任一 ^## 章节标题 → verify_robot_032 rc=1 ✓ (single-source 生效)；verify expected 集合多一项 → verify_robot_032 rc=1 ✓ (双向锁)。Reviewer (sub-agent): LGTM — docstring/env/sha 全合规，9 V0-V5 子断言完整覆盖 single-source 两向锁与 mutant 反证。"
     },
     {
       "id": "robot-033-backlog-bytecode-pattern-lock",
@@ -5693,6 +5694,48 @@
         "V2: 每批 verify_infra_034 覆盖集 += 5；V0-V5 全 PASS",
         "V3: 收敛终点（剩余无锁 verify == 0 或显式标注 N/A）入 backlog"
       ]
+    },
+    {
+      "id": "robot-034-backlog-sentinel-content-cross-check",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "sentinel 解析的 headings 须与 doc 中真实 ## / ### 行交叉断言",
+      "status": "backlog",
+      "source": "robot-034-reviewer",
+      "scope": "verify_robot_034 当前 sentinel 解析 docs/proactive_scheduler_block_policy.md headings 后未与文档中真实 ## / ### 行做内容交叉断言。若 sentinel 与代码同步被错误维护成相同字面循环，仍可能漏检。补一条断言：sentinel 集合 == 真实 doc heading 集合，防字面循环依赖盲点。",
+      "dependencies": [
+        "robot-034"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-034-backlog-sentinel-line-import-not-duplicate",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 复用",
+      "status": "backlog",
+      "source": "robot-034-reviewer",
+      "scope": "verify_robot_034.py 当前 hardcode SENTINEL_LINE 字面值；改为从 scripts.verify_robot_032 import 同一常量，避免重复硬编码导致两处字面不同步。",
+      "dependencies": [
+        "robot-034"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-034-backlog-helper-extract-shared-lib",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "_parse_headings_from_doc 抽到 scripts/_verify_lib.py 供复用",
+      "status": "backlog",
+      "source": "robot-034-reviewer",
+      "scope": "verify_robot_032 与 verify_robot_034 各自维护一份 _parse_headings_from_doc helper。抽到 scripts/_verify_lib.py 作为共享工具模块，两侧 import 复用。",
+      "dependencies": [
+        "robot-034"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
