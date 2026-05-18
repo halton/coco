@@ -1,0 +1,54 @@
+{
+  "feature": "interact-024",
+  "source_backlog": "interact-018-backlog-latency-stage-semantics-doc",
+  "direction": "verify-only 文档锁面 (0 业务源码改动): docs/interact-latency-stage-contract.md + scripts/verify_interact_024.py",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_fingerprint_sha256",
+      "ok": true,
+      "detail": "sha256 锁面 3 文件: docs/interact-latency-stage-contract.md=66401ee58053, coco/proactive.py=b35d47f503c5, research/proactive_trace_contract.md=d1361db79c5a"
+    },
+    {
+      "name": "V1_source_anchors",
+      "ok": true,
+      "detail": "9 anchors 全部命中 (admit arbit_winner + reject + cooldown_hit + emotion_alert 独立路径)"
+    },
+    {
+      "name": "V2_contract_doc_phrases",
+      "ok": true,
+      "detail": "17 关键短语全部命中 (§1-§6 覆盖)"
+    },
+    {
+      "name": "V3_default_off_no_emit",
+      "ok": true,
+      "detail": "default-OFF 无 trace 行 (ok_trigger=True, trace=0)"
+    },
+    {
+      "name": "V4_on_three_stages_latency",
+      "ok": true,
+      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.01 cooldown_hit=0.006"
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "detail": "all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_021.py': 0, 'scripts/verify_interact_022.py': 0, 'scripts/verify_interact_023.py': 0}"
+    },
+    {
+      "name": "V6_smoke",
+      "ok": true,
+      "detail": "init.sh rc=0 (stdout tail len=1680)"
+    }
+  ],
+  "files_changed": [
+    "docs/interact-latency-stage-contract.md",
+    "scripts/verify_interact_024.py",
+    "evidence/interact-024/verify_summary.json",
+    "evidence/interact-024/migration_note.md",
+    "feature_list.json",
+    "claude-progress.md"
+  ],
+  "runtime_change": false,
+  "default_off_invariant": true,
+  "sha": "deab14cbe3cfec276e5088c8524f2340fbd16edf"
+}

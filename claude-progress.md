@@ -3785,3 +3785,19 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - 0 新增 backlog / 不衍生 fu chain
 - 待 Reviewer fresh-context 评审 + Closeout merge
 - 下一候选: interact-024 (P184) — latency_ms admit/reject/cooldown 三 stage 语义差异文档锁面
+
+## Session 2026-05-18 — interact-024 (P184, phase-22 last) verify-only 文档锁面 完成
+- source backlog: interact-018-backlog-latency-stage-semantics-doc
+- 方向: latency_ms 在 admit (arbit_winner) / reject (fusion_boost/mm_proactive/normal) / cooldown_hit 三 stage 的起止语义差异权威 contract 文档锁面 (verify-only, 0 业务源码改动)
+- 交付:
+  - docs/interact-latency-stage-contract.md (§1 三 stage emit 路径 / §2 起止语义对照表 / §3 已知 caveat / §4 env gating default-OFF 不变式 / §5 不衍生 fu chain 收口约束 / §6 下游消费方 operational checklist)
+  - scripts/verify_interact_024.py (V0 sha256 锁面 / V1 9 源码 anchors / V2 17 doc 关键短语 / V3 subprocess default-OFF 不变式 / V4 subprocess ON 三 stage latency_ms wire / V5 邻近 verify 018/021/022/023 rc=0 / V6 smoke 11/11)
+  - evidence/interact-024/{verify_summary.json, migration_note.md}
+- verify 结果: 7/7 PASS
+- default-OFF 不变式: 维持 (V3 subprocess 验证 OFF 时 trace_count=0)
+- runtime_change: false
+- real_machine_uat: n/a (纯文档 + 静态/subprocess 锁面)
+- 0 新增 backlog / 不衍生 fu chain (本 contract 即 backlog 收口)
+- phase-22 收官: 5/5 完成 (audio-014 + vision-015 + companion-018 + robot-018 + interact-024)
+- 待 Reviewer fresh-context 评审 + Closeout merge
+- 下一步: phase-22 全收官后, 转 phase-23 planning
