@@ -5205,7 +5205,7 @@
       "area": "interact",
       "priority": 239,
       "phase": 28,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "V1 per-stage 锚点行号漂移 sanity",
       "description": "verify_interact_024.py V1 per-stage 锚点匹配抗局部漂移 OK，但大重构需手工同步。可选增强：记录上次命中行号，本次差 >N 即 warn，辅助早期发现锚点失效。低优先级，default-OFF 友好，不阻 merge。",
       "source_backlog": "interact-033b-backlog-line-number-drift-detection",

@@ -56,6 +56,7 @@ def _print(tag: str, msg: str) -> None:
 
 
 _results: List[Dict[str, Any]] = []
+_v1_drift_report: Dict[str, Dict[str, Any]] = {}
 
 
 def _record(name: str, ok: bool, detail: str = "") -> None:
@@ -115,15 +116,21 @@ def v1_source_anchors() -> None:
     # site-C reject_preempt (arbit_emotion_preempt 抢占 emit) — 锚 'arbit_emotion_preempt'
     #
     # 每个 site 的锚点字面量本身全 repo unique, 窗口取 ±12 行覆盖跨行 _trace_emit 调用。
-    site_specs: List[Tuple[str, str, int]] = [
-        ("admit", r'"arbit_winner",\s*_candidate_id,\s*"admit"', 12),
-        ("reject_main", r'_stage_out,\s*_candidate_id,\s*"reject"', 12),
-        ("reject_preempt", r"arbit_emotion_preempt", 12),
+    # interact-035: per-stage 锚点新增 expected_line / drift_tolerance 行号窗口 sanity
+    # (warn-only, 不影响 PASS/FAIL). baseline 取自 interact-035 开发时 (main a735a6b)
+    # 实际命中行号: admit=1056, reject_main=1025, reject_preempt=997.
+    # 若 proactive.py 大重构导致 emit 站点跨大段移动 (>drift_tolerance 行), V1 仍 PASS
+    # 但会 print warn + 在 evidence drift 字段记录, 便于早期发现锚点失效.
+    site_specs: List[Tuple[str, str, int, int, int]] = [
+        # (key, pat, win, expected_line=<int>, drift_tolerance=<int>)
+        ("admit", r'"arbit_winner",\s*_candidate_id,\s*"admit"', 12, 1056, 20),
+        ("reject_main", r'_stage_out,\s*_candidate_id,\s*"reject"', 12, 1025, 20),
+        ("reject_preempt", r"arbit_emotion_preempt", 12, 997, 20),
     ]
     lat_line_re = re.compile(r"latency_ms\s*=\s*_lat_ms\s*\(\s*\)\s*,")
     lines = src.split("\n")
-    per_stage_hits: Dict[str, List[int]] = {key: [] for key, _, _ in site_specs}
-    for key, pat, win in site_specs:
+    per_stage_hits: Dict[str, List[int]] = {key: [] for key, *_ in site_specs}
+    for key, pat, win, _exp, _tol in site_specs:
         prog = re.compile(pat)
         for i, ln in enumerate(lines):
             if prog.search(ln):
@@ -141,6 +148,30 @@ def v1_source_anchors() -> None:
             f"missing per-stage latency_ms anchors: {missing_stages} (hits={per_stage_hits})",
         )
         return
+    # interact-035 drift_check: warn-only 行号漂移 sanity. 不影响 PASS/FAIL.
+    drift_report: Dict[str, Dict[str, Any]] = {}
+    for key, _pat, _win, expected_line, drift_tolerance in site_specs:
+        hits = per_stage_hits[key]
+        # 取首个命中作为 actual_line (per-stage 站点天然 unique).
+        actual_line = hits[0] if hits else None
+        drift = (abs(actual_line - expected_line) if actual_line is not None else None)
+        within = (drift is not None and drift <= drift_tolerance)
+        drift_report[key] = {
+            "expected_line": expected_line,
+            "actual_line": actual_line,
+            "drift": drift,
+            "drift_tolerance": drift_tolerance,
+            "within_tolerance": within,
+        }
+        if actual_line is not None and drift is not None and drift > drift_tolerance:
+            _print(
+                "WARN",
+                f"V1 drift sanity: stage={key} expected_line={expected_line} "
+                f"actual_line={actual_line} drift={drift} > tolerance={drift_tolerance} (warn-only)",
+            )
+    # 把 drift_report 暴露到模块级, 便于 verify_summary 写入 evidence.
+    global _v1_drift_report
+    _v1_drift_report = drift_report
     # 额外锁面: emotion_alert 独立 latency 路径 + 共享 _lat_ms 闭包字面量。
     extra_anchors = [
         "_lat_start = time.monotonic()",
@@ -551,6 +582,7 @@ def main() -> int:
         ],
         "runtime_change": False,
         "default_off_invariant": True,
+        "v1_drift_report": _v1_drift_report,
     }
     try:
         head_sha = subprocess.check_output(
