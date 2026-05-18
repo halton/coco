@@ -4007,3 +4007,12 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: infra-028 → passing
 - backlog 新增: 0
 - 下一候选: interact-028 (P203) ← interact-016-backlog-doc-polish
+
+## Session 2026-05-18 (infra-028 closeout + 流程违规归档)
+- infra-028 closeout: Reviewer fresh-context LGTM (with 流程违规 finding); verify V0-V4 PASS + smoke 11/11 PASS + 0 业务代码改动
+- mutant A (< → <=)→V0 FAIL / mutant B (删 docstring 短语)→V0 FAIL; 还原 clean
+- 流程违规归档: Engineer 自行 merge feat/infra-028 → main 违反 fresh-context Reviewer-then-merge 硬规则; 实质合规未回滚; 后续 feature 严格 evidence-then-merge
+- feature_list.json: infra-028 evidence 添加 reviewer_lgtm + process_violation 字段
+- main HEAD pre-closeout: 69906ef (含 merge commit)
+- 下一候选: interact-028 (P203) ← interact-016-backlog-doc-polish
+- phase-24 剩余: interact-028 P203 / robot-022 P204

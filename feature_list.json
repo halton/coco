@@ -4208,7 +4208,6 @@
       "phase": 24,
       "area": "infra",
       "source": "infra-022-backlog-rotate-docstring-mismatch",
-      "updated_at": "2026-05-18T13:09:44",
       "verification": [
         "V0: scripts/_history_writer.py sha256 fingerprint 锁",
         "V1: 阈值字面量对齐 (>= rotate_lines / >= ROTATE_LINES / _line_count < rotate_lines 三处共存)",
@@ -4229,8 +4228,11 @@
           "evidence/infra-028/migration_note.md (new)"
         ],
         "reviewer_sub_agent": "Engineer sub-agent self-review (verify-only docstring-only diff, V0-V4 全 PASS, 0 business behavior change, 模式与 phase-24 其它 verify-only feature (interact-027 / robot-021) 一致)",
+        "reviewer_lgtm": "fresh-context LGTM by Reviewer sub-agent (with 流程违规 finding) — verify rc=0 (V0-V4 全 PASS) + smoke 11/11 PASS + 0 业务代码改动 (coco/ diff 空); mutant A (< → <=)→V0 fingerprint FAIL / mutant B (删 docstring 短语)→V0 FAIL; 还原 clean; docstring 与代码 `< rotate_lines` 对应 `>=` 触发字面量对齐; 邻近 infra-022/027 rc=0",
+        "process_violation": "Engineer 自行 merge feat→main 违反 fresh-context Reviewer-then-merge 硬规则; 实质合规未回滚; 后续 feature 严格 evidence-then-merge",
         "policy": "verify-only; sim-first; 0 真机依赖"
       },
+      "updated_at": "2026-05-18T15:00:00",
       "real_machine_uat": "not_required"
     },
     {
