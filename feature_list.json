@@ -4061,9 +4061,23 @@
         "default_off_invariant": true,
         "runtime_change": false,
         "real_machine_uat": "n/a",
-        "Reviewer (sub-agent)": "pending — engineer 实施完毕, Closeout 阶段安排 fresh-context Reviewer 评审"
+        "Reviewer (sub-agent)": "Reviewer (sub-agent fresh-context): LGTM / verify 7/7 PASS / smoke 11/11 PASS / mutant A2 (删除全部 3 处 latency_ms=_lat_ms()) → V1+V4 FAIL / mutant B (删 contract doc 关键短语) → V2 FAIL / 还原后 working tree clean / contract doc 三 stage 起止语义清晰 / default-OFF 不变式锁面 / 不衍生 fu chain / 1 minor finding (V1 anchor 颗粒度偏粗, V5 邻近回归兜住) 入 backlog 不阻 merge"
       },
       "updated_at": "2026-05-18T18:47:12"
+    },
+    {
+      "id": "interact-024-backlog-v1-anchor-per-stage-count",
+      "name": "V1 anchor 升级为按 stage 字面量分别 anchor + 站点数 ==3 严格断言",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-024 Reviewer minor finding"
+      ],
+      "description": "Reviewer minor finding (interact-024): V1 anchor 颗粒度偏粗 — 当前对 latency_ms=_lat_ms() 仅做整体短语 anchor, 单点删除一处 latency_ms= 不能被 V1 直接捕获 (靠 V5 邻近 verify 018/021/022/023 兜住). 升级方案: V1 按 admit / reject / cooldown 三 stage 字面量分别 anchor, 并严格断言站点数 ==3, 使任意单点删除都被 V1 直接捕获, 不再依赖邻近回归兜底。",
+      "verification": null,
+      "evidence": {}
     }
   ],
   "_meta": {
