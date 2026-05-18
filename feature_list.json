@@ -6013,7 +6013,7 @@
       "area": "interact",
       "phase": 31,
       "title": "verify self-file-sha vs func-level 策略对照 doc + 推荐",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "interact-037c-backlog-verify-self-file-sha-vs-func-level",
       "scope": "interact-037 verify 使用全文件 sha256 自锁；项目内其它 verify 多采用函数级双锁。两种策略各有 tradeoff（全文件 sha：易维护但 docstring 微调即 break；函数级：精准但 ast 解析成本高）。本期产出 docs/verify_sha_locking_strategy.md 对照表 + 推荐场景，并产 verify_interact_038.py 锁定 doc heading 单源。verify+docs only，0 业务源码改。",
       "dependencies": [
