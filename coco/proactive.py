@@ -462,7 +462,10 @@ class ProactiveScheduler:
                 is_fn = getattr(sequencer, "is_shutdown", None)
                 if callable(is_fn):
                     rv = is_fn()
-                    if isinstance(rv, bool) and rv is True:
+                    # robot-029: env=1 时用 bool(rv) 真值判定，兼容 numpy.bool_/int(1);
+                    # env=0 严格 rv is True，与 main 行为 bytewise 等价。
+                    _shut = (bool(rv) is True) if _audit_on else (isinstance(rv, bool) and rv is True)
+                    if _shut:
                         log.warning(
                             "[proactive] set_robot_sequencer: refuse to inject "
                             "already-shutdown sequencer (%r); keeping existing=%r",
@@ -1277,13 +1280,19 @@ class ProactiveScheduler:
         if _seq is not None:
             # robot-010: shutdown 自检 —— 已 shutdown → 清引用 + skip
             # 严格 bool True 才视为 shutdown（保护 MagicMock 默认 stub 场景）
+            # robot-029: env=1 时用 bool(rv) 兼容 numpy.bool_/int(1); env=0 维持严格判定
+            _audit_on_trigger = os.environ.get("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", "") == "1"
             try:
                 _is_fn = getattr(_seq, "is_shutdown", None)
                 _shutdown_detected = False
                 if callable(_is_fn):
                     _rv = _is_fn()
-                    if isinstance(_rv, bool) and _rv is True:
-                        _shutdown_detected = True
+                    if _audit_on_trigger:
+                        if bool(_rv) is True:
+                            _shutdown_detected = True
+                    else:
+                        if isinstance(_rv, bool) and _rv is True:
+                            _shutdown_detected = True
                 if _shutdown_detected:
                     log.warning(
                         "[proactive] _do_trigger_unlocked: detected shutdown "

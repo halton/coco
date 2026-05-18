@@ -203,6 +203,101 @@ except Exception:  # noqa: BLE001
 
 
 # =======================================================================
+# V3b robot-029: truthy 非 True 返回值在 env=1 时也视为 shutdown；env=0 不变
+# =======================================================================
+print("V3b (robot-029): is_shutdown truthy 非 True 返回值 env=1 拒绝 / env=0 接受")
+try:
+    import os as _os
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+
+    class _BoolLike:
+        """模拟 numpy.bool_(True): __bool__=True 但 isinstance(x, bool) is False"""
+        def __bool__(self):
+            return True
+        def __repr__(self):
+            return "_BoolLike(True)"
+
+    _truthy_cases = [_BoolLike(), 1, "truthy"]
+
+    # --- env=1: 三种 truthy 非 True 值都应被拒绝 ---
+    _prev_env = _os.environ.get("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT")
+    _os.environ["COCO_ROBOT_SETTER_LIFECYCLE_AUDIT"] = "1"
+    try:
+        for idx, rv in enumerate(_truthy_cases):
+            sched = ProactiveScheduler(
+                config=ProactiveConfig(),
+                power_state=None,
+                face_tracker=None,
+                llm_reply_fn=lambda seed, **kw: "hi",
+                tts_say_fn=lambda text, blocking=True: None,
+            )
+            seq = MagicMock()
+            seq.is_shutdown = MagicMock(return_value=rv)
+            seq.enqueue = MagicMock(return_value=True)
+            lg, h, buf = _attach_log_capture()
+            try:
+                sched.set_robot_sequencer(seq)
+                check(f"V3b[env=1] case#{idx} ({type(rv).__name__}={rv!r}) 拒绝注入 (_robot_sequencer is None)",
+                      sched._robot_sequencer is None,
+                      f"got={sched._robot_sequencer!r}")
+                log_text = buf.getvalue()
+                check(f"V3b[env=1] case#{idx} 出现 'refuse to inject' WARNING",
+                      "refuse to inject" in log_text,
+                      f"log_tail={log_text[-200:]!r}")
+            finally:
+                _detach_log_capture(lg, h)
+    finally:
+        if _prev_env is None:
+            _os.environ.pop("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", None)
+        else:
+            _os.environ["COCO_ROBOT_SETTER_LIFECYCLE_AUDIT"] = _prev_env
+
+    # --- env=0: 三种 truthy 非 True 值在严格 main 语义下均**不**视为 shutdown → 注入接受 ---
+    _os.environ.pop("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", None)
+    for idx, rv in enumerate(_truthy_cases):
+        sched = ProactiveScheduler(
+            config=ProactiveConfig(),
+            power_state=None,
+            face_tracker=None,
+            llm_reply_fn=lambda seed, **kw: "hi",
+            tts_say_fn=lambda text, blocking=True: None,
+        )
+        seq = MagicMock()
+        seq.is_shutdown = MagicMock(return_value=rv)
+        seq.enqueue = MagicMock(return_value=True)
+        sched.set_robot_sequencer(seq)
+        check(f"V3b[env=0] case#{idx} ({type(rv).__name__}={rv!r}) 严格语义接受注入 (_robot_sequencer is seq)",
+              sched._robot_sequencer is seq,
+              f"got={sched._robot_sequencer!r}")
+
+    # --- env=1: False / None 路径不变（仍接受注入），保护 fail-soft 语义 ---
+    _os.environ["COCO_ROBOT_SETTER_LIFECYCLE_AUDIT"] = "1"
+    try:
+        for idx, rv in enumerate([False, None]):
+            sched = ProactiveScheduler(
+                config=ProactiveConfig(),
+                power_state=None,
+                face_tracker=None,
+                llm_reply_fn=lambda seed, **kw: "hi",
+                tts_say_fn=lambda text, blocking=True: None,
+            )
+            seq = MagicMock()
+            seq.is_shutdown = MagicMock(return_value=rv)
+            seq.enqueue = MagicMock(return_value=True)
+            sched.set_robot_sequencer(seq)
+            check(f"V3b[env=1] falsy case#{idx} ({rv!r}) 不视为 shutdown → 接受注入",
+                  sched._robot_sequencer is seq,
+                  f"got={sched._robot_sequencer!r}")
+    finally:
+        if _prev_env is None:
+            _os.environ.pop("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", None)
+        else:
+            _os.environ["COCO_ROBOT_SETTER_LIFECYCLE_AUDIT"] = _prev_env
+except Exception:  # noqa: BLE001
+    errors.append("V3b: " + traceback.format_exc())
+
+
+# =======================================================================
 # V4 Default-OFF — 未注入 sequencer, _do_trigger_unlocked 不进 enqueue 分支
 # =======================================================================
 print("V4: Default-OFF — set_robot_sequencer 未调用时 bytewise 等价")
