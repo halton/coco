@@ -1,0 +1,78 @@
+{
+  "feature": "vision-015",
+  "scope": "_gc_last_time time-source 设计文档锁面 (verify-only)",
+  "verify_only": true,
+  "source_code_changes": 0,
+  "default_off": true,
+  "real_machine_uat": "n/a",
+  "fingerprint": {
+    "git_head": "befb3c43fb1388b2fda72135f9c44f360dc9de6c",
+    "python": "3.13.12",
+    "face_tracker_sha256": "bf3a053d6627510195ff84d7e6db95a882dd6866a238923b7884e01fa26dc8cd",
+    "design_doc_sha256": "b0ae5ae6d61e9ac61838dfd12a0cfd89200a6e92f948e272bffc599ab25be87a",
+    "verify_self_sha256": "572da40cf41fd681f227ef3f6bebb09103427b4919332318dc1e6719d2c2c798"
+  },
+  "results": [
+    {
+      "name": "V0_fingerprint",
+      "ok": true,
+      "git_head": "befb3c43fb1388b2fda72135f9c44f360dc9de6c",
+      "python": "3.13.12",
+      "face_tracker_sha256": "bf3a053d6627510195ff84d7e6db95a882dd6866a238923b7884e01fa26dc8cd",
+      "design_doc_sha256": "b0ae5ae6d61e9ac61838dfd12a0cfd89200a6e92f948e272bffc599ab25be87a",
+      "verify_self_sha256": "572da40cf41fd681f227ef3f6bebb09103427b4919332318dc1e6719d2c2c798"
+    },
+    {
+      "name": "V1_gc_last_time_monotonic_literal",
+      "ok": true,
+      "hit_mono_assign": 2,
+      "hit_now_mono": 1,
+      "hit_wall_assign": 0,
+      "hit_time_due_mono": 1
+    },
+    {
+      "name": "V2_design_doc_phrase_lock",
+      "ok": true,
+      "path": "docs/vision-gc-time-source-design.md",
+      "bytes": 5108,
+      "has_0": true,
+      "has_1": true,
+      "has_2": true,
+      "has_3": true,
+      "has_4": true,
+      "has_5": true,
+      "has_6": true,
+      "has_7": true
+    },
+    {
+      "name": "V3_regression_vision_012_013_014b",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_vision_012.py": 0,
+        "scripts/verify_vision_013.py": 0,
+        "scripts/verify_vision_014b.py": 0
+      }
+    },
+    {
+      "name": "V4_migration_evidence",
+      "ok": true,
+      "path": "evidence/vision-015/migration_note.md",
+      "bytes": 2055,
+      "has_monotonic": true,
+      "has_wall": true,
+      "has_verify_ref": true,
+      "has_freeze": true
+    },
+    {
+      "name": "V5_smoke_regression",
+      "ok": true,
+      "rc": 0,
+      "pass_n": 10,
+      "total_n": 11,
+      "smoke_done": true,
+      "dt_s": 8.4
+    }
+  ],
+  "all_ok": true,
+  "ts": 1779096511.482812
+}
