@@ -24,12 +24,27 @@
       "ok": true,
       "traces_count": 1,
       "latency_seq": [
-        0.019
+        0.016
       ],
       "stages_seq": [
         "arbit_winner"
       ],
       "violations": []
+    },
+    "V3b_multi_emit_same_tick": {
+      "ok": true,
+      "traces_count": 2,
+      "stages_seq": [
+        "fusion_boost",
+        "cooldown_hit"
+      ],
+      "lats": [
+        0.004,
+        0.016
+      ],
+      "idx_fusion": 0,
+      "idx_cooldown": 1,
+      "ok_trigger": false
     },
     "V4_doc_stage_names_in_source": {
       "ok": true,

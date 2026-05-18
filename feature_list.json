@@ -4566,11 +4566,11 @@
       "id": "interact-031",
       "title": "verify_interact_021 V3 多 emit 同 tick 覆盖（_preempt_boost=True 双 emit fixture 补强）",
       "priority": 221,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 26,
       "area": "interact",
       "source": "interact-021-backlog-v3-multi-emit-coverage",
-      "updated_at": "2026-05-18T16:18:59",
+      "updated_at": "2026-05-19T00:00:00",
       "description": "Reviewer caveat (interact-021) 收口：V3 单调性 verify 当前 fixture 仅捕 1 条 trace，未覆盖同 tick 多 emit 场景（例 _preempt_boost=True 触发站点 #2+#4 两 emit）。本 feature 补强 fixture 制造多 emit 路径，断言 latency_ms 序列 per-emit 各自非负 + emit 顺序契约合理，0 业务源码改动，纯 verify-only。",
       "acceptance_criteria": [
         "scripts/verify_interact_021.py V3 扩展或新增 V3b：构造 _preempt_boost=True fixture 触发同 tick 双 emit",
@@ -4594,7 +4594,22 @@
           "Reviewer sub-agent fresh-context LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "branch": "feat/interact-031",
+        "decision": "选项 B: V3 当前仅捕 1 条 trace (arbit_winner admit 路径), 缺多 emit 覆盖; 在 verify_interact_021.py 新增 V3b 子模块, 构造 _preempt_boost=True + COCO_PROACTIVE_ARBIT=1 + 最近 emotion_alert 窗口内 + cooldown 命中 fixture, 触发同 tick 双 emit (fusion_boost preempt at line 991 + cooldown_hit at line 1021)",
+        "key_file_lines": {
+          "coco/proactive.py#L991": "_trace_emit(_preempt_stage=fusion_boost, ... reason=arbit_emotion_preempt)",
+          "coco/proactive.py#L1021": "_trace_emit(_stage_out=cooldown_hit, ... reason=cooldown)",
+          "scripts/verify_interact_021.py": "新增 v3b_multi_emit_same_tick + main() 调用",
+          "scripts/verify_interact_031.py": "V0-V5 meta lock (V3b anchor + mutant inverse + subprocess + sha256 zero-diff)"
+        },
+        "verify_interact_021": "rc=0; V0/V1/V2/V3(arbit_winner traces=1)/V3b(fusion_boost->cooldown_hit traces=2 lats=[0.005,0.022])/V4/V5 全 PASS",
+        "verify_interact_031": "rc=0; V0/V1(anchors=6 def=1 call=2)/V2(boost=1 emo=1 cooldown=1)/V3(rc=0 v3b_traces=2)/V4(sha256 bytewise=main 53413ac)/V5 全 PASS",
+        "proactive_py_sha256": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136 (bytewise == main 53413ac)",
+        "smoke": "11/11 PASS",
+        "zero_business_diff": true,
+        "reviewer_lgtm": "pending (主会话派 Reviewer sub-agent)"
+      }
     },
     {
       "id": "infra-030",

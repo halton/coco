@@ -1,0 +1,51 @@
+{
+  "feature": "interact-031",
+  "all_pass": true,
+  "results": {
+    "V0_file_existence": {
+      "ok": true,
+      "missing": [],
+      "v021_size": 16790,
+      "v031_size": 8913
+    },
+    "V1_v3b_anchor_in_verify_021": {
+      "ok": true,
+      "missing_anchors": [],
+      "def_marker": "def v3b_multi_emit_same_tick",
+      "def_count": 1,
+      "call_count": 2,
+      "v3b_anchors_total": 6
+    },
+    "V2_mutant_inverse": {
+      "ok": true,
+      "counts": {
+        "boost_line": 1,
+        "emo_line": 1,
+        "cooldown_setup": 1
+      },
+      "bad": []
+    },
+    "V3_subprocess_v021": {
+      "ok": true,
+      "rc": 0,
+      "v3b_ok": true,
+      "v3b_traces": 2,
+      "v3b_stages": [
+        "fusion_boost",
+        "cooldown_hit"
+      ],
+      "stderr_tail": ""
+    },
+    "V4_zero_business_diff": {
+      "ok": true,
+      "cur_sha": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
+      "base_sha": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
+      "baseline_commit": "53413ac"
+    },
+    "V5_summary": {
+      "ok": true,
+      "total": 5,
+      "pass_count": 5
+    }
+  }
+}
