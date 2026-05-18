@@ -120,18 +120,17 @@ check("mutant3: rename verify_027 常量后正则匹配应失败 (反证常量�
 # =====================================================================
 print("[V4] bump helper sha256 锁 (working tree)")
 bump_sha = hashlib.sha256(BUMP.read_bytes()).hexdigest()
-BUMP_EXPECTED_SHA = "__BUMP_SHA_PLACEHOLDER__"
-# 启用真锁: 当落盘后, 把下行的 expected_sha 改为实际 sha256;
-# 这里以 working-tree sha 自洽 (placeholder 模式下软锁: 仅记录, 不 FAIL).
-check("bump helper sha256 计算成功 (>=64 hex)",
+# robot-031 升级: placeholder → 硬锁字面常量。
+# 由 scripts/bump_verify_028_self_hash.py 递归助手维护同步。
+BUMP_EXPECTED_SHA = (
+    "c29927bc3f920a761228440505ecdbe16969812704bfca0e3cabb77560132540"
+)
+check("bump helper sha256 计算成功 (=64 hex)",
       isinstance(bump_sha, str) and len(bump_sha) == 64)
 print(f"  bump_verify_027_self_hash.py sha256={bump_sha}")
-if BUMP_EXPECTED_SHA != "__BUMP_SHA_PLACEHOLDER__":
-    check("bump helper sha256 锁定 (字面一致)",
-          bump_sha == BUMP_EXPECTED_SHA,
-          f"got={bump_sha[:16]} expect={BUMP_EXPECTED_SHA[:16]}")
-else:
-    print("  (V4 placeholder 模式: bump helper sha 记录, 未启用字面锁)")
+check("bump helper sha256 硬锁 (字面一致)",
+      bump_sha == BUMP_EXPECTED_SHA,
+      f"got={bump_sha[:16]} expect={BUMP_EXPECTED_SHA[:16]}")
 
 
 # =====================================================================
