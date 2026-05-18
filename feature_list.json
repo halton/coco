@@ -3927,7 +3927,7 @@
       "id": "infra-024-backlog-v0-extra-truthy-edges",
       "name": "V0 truthy 表补 \"2\"/\"yes\\n\" 等额外边界",
       "area": "infra",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3937,7 +3937,8 @@
       "verification": null,
       "evidence": {},
       "selected_for": "infra-032",
-      "selected_phase": 28
+      "selected_phase": 28,
+      "resolved_by": "infra-032"
     },
     {
       "id": "infra-024-backlog-verify-venv-docstring",
@@ -5157,11 +5158,21 @@
       "area": "infra",
       "priority": 237,
       "phase": 28,
-      "status": "in_progress",
+      "status": "passing",
       "title": "verify-024 V0 truthy 反证表补边界",
       "description": "verify_infra_024.py V0 truthy 反证表补 \"2\" / \"yes\\n\" / \" 1 \" 等 strip/数值边界，进一步固化 classifier 行为契约。verify-only，default-OFF 友好。",
       "source_backlog": "infra-024-backlog-v0-extra-truthy-edges",
-      "scope": "verify-only：在 verify_infra_024.py 中补充 truthy 边界用例。0 业务源码改动。"
+      "scope": "verify-only：在 verify_infra_024.py 中补充 truthy 边界用例。0 业务源码改动。",
+      "evidence": {
+        "merge_sha": "6eaa536",
+        "feat_head": "0d25a9b",
+        "base_main": "bc5159d",
+        "business_src_diff": "0 业务源码改动（verify-only：scripts/verify_infra_024.py V0 反证表扩展 + 新增 scripts/verify_infra_032.py meta-lock）",
+        "contract_truthy_whitelist": "smoke.py 仅 (\"1\",\"true\",\"yes\") case-insensitive 计 ON；其余字符串（含 \"2\"/\"yes\\n\"/\" 1 \"/空串/纯空白/数字 2 等）一律 OFF",
+        "boundary_table": "V0 反证表 ON=12 例 / OFF=28 例，全部按契约白名单分类通过",
+        "reviewer_lgtm": "Reviewer (sub-agent) LGTM 无 finding 无 backlog：V0 truthy 边界扩展严格契约，OFF 类覆盖 trailing-newline / leading-space / 数值非 1 / 空白等代表性 strip 与白名单偏离；verify_infra_032 meta-lock 通过 V1 锚点 + V3 mutant_negation 双重自校验",
+        "real_machine_uat": "not_required (verify-only)"
+      }
     },
     {
       "id": "robot-029",

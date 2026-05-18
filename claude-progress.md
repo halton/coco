@@ -4371,3 +4371,23 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **source backlog resolved:** interact-033-backlog-v1d-arbit-fail-latency-coverage → resolved_by: interact-034
 
 **phase-28 进度:** 2/5（robot-028 / interact-034 done；下一 candidate: infra-032 P237 verify-024 V0 truthy 反证表补边界）
+
+---
+
+## Session 2026-05-19 (infra-032 closeout, P237)
+
+**infra-032 (verify-024 V0 truthy 反证表补边界) → passing**
+
+- merge_sha: 6eaa536（main）
+- feat_head: 0d25a9b（feat/infra-032）
+- base_main: bc5159d
+- business_src_diff: **0 业务源码改动**（verify-only：scripts/verify_infra_024.py V0 反证表扩展 + 新增 scripts/verify_infra_032.py meta-lock）
+- contract: smoke.py truthy 白名单 ("1","true","yes") case-insensitive；其余一律 OFF
+- boundary_table: V0 反证表 ON=12 / OFF=28，全部按契约白名单分类通过（"2"/"yes\n"/" 1 "/空串/纯空白/数字 2 等代表性 strip 与白名单偏离均归入 OFF）
+- verify: verify_infra_032.py meta-lock 通过（V1 锚点 + V3 mutant_negation 双重自校验）
+
+**Reviewer (sub-agent): LGTM** — V0 truthy 边界扩展严格契约；verify_infra_032 meta-lock 通过；0 业务源码改动；default-OFF 友好；sim-first 合规。
+
+**source backlog resolved:** infra-024-backlog-v0-extra-truthy-edges → resolved_by: infra-032
+
+**phase-28 进度:** 3/5（robot-028 / interact-034 / infra-032 done；下一 candidate: robot-029 P238 set_robot_sequencer is_shutdown bool cast 兼容性，业务源码 1-2 行）
