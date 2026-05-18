@@ -4286,7 +4286,7 @@
       "id": "interact-024-backlog-v1-anchor-per-stage-count",
       "name": "V1 anchor 升级为按 stage 字面量分别 anchor + 站点数 ==3 严格断言",
       "area": "interact",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -4296,7 +4296,8 @@
       "verification": null,
       "evidence": {},
       "selected_for": "interact-033b",
-      "selected_phase": 27
+      "selected_phase": 27,
+      "resolved_by": "interact-033b"
     },
     {
       "id": "interact-027",
@@ -5026,7 +5027,7 @@
       "id": "interact-033b",
       "title": "verify_interact_024 V1 anchor 按 admit/reject/cooldown 三段分别锚定 latency_ms",
       "priority": 234,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 27,
       "area": "interact",
       "source": "interact-024-backlog-v1-anchor-per-stage-count",
@@ -5056,8 +5057,23 @@
         "verify_interact_033b": "scripts/verify_interact_033b.py 6/6 PASS (V0 sys.path + V1 site_specs 三 stage key/锚点正则字面量/lat_line_re + V2 关键短语 7 项 + V3 mutant 反证 reject_preempt 移除 + V4 sha256 锁 + V5 端到端 subprocess verify_024 rc=0)",
         "smoke": "11/11 PASS (./init.sh closeout)",
         "business_diff": "0 业务源码改动 (coco/ diff stat = empty)",
-        "branch": "feat/interact-033b base main c059ac6"
+        "branch": "feat/interact-033b base main c059ac6",
+        "merge_sha": "9d6c9bf53756a2aa3660760972107684a3b20b1d",
+        "feat_head": "72d6aa0bbd7b8fec20755675b08989802b442864",
+        "reviewer": "Reviewer (sub-agent): LGTM (P233 fresh-context) — per-stage site_specs 三 stage (admit/reject_main/reject_preempt) 锚点字面量正则 + lat_line_re 全命中 (V1=7/7); mutant 反证 (V3) 结构性证明缺一 stage 锚点即 V1 fail; e2e verify_024 7/7 (V5)",
+        "business_source_changes": 0,
+        "note": "verify-only feature; 0 业务源码改动 (仅 scripts/verify_interact_024.py V1 升级 + scripts/verify_interact_033b.py 新增 + evidence/)"
       }
+    },
+    {
+      "id": "interact-033b-backlog-line-number-drift-detection",
+      "title": "V1 锚点行号漂移 sanity 检测（低优先级）",
+      "area": "interact",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "interact-033b 当前 V1 per-stage site_specs 用锚点字面量正则匹配，抗局部漂移 OK；但若 proactive.py 大重构（函数搬家/重命名）则需手工同步锚点。可选增强：在 verify_interact_024.py V1 中加锚点行号 ±N 窗口 sanity（例如记录上次命中行号，本次差 >N 即 warn），辅助早期发现锚点失效。低优先级，不阻 merge。来源：interact-033b Reviewer 报告建议。",
+      "source": "interact-033b Reviewer suggestion"
     }
   ],
   "_meta": {
