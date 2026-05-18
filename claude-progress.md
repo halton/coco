@@ -4062,3 +4062,17 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - smoke: 11/11 PASS（audio / ASR / TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish）
 - push: origin main / origin feat/robot-022 各一次成功
 - phase-24 状态：5/5 全 passing；下一步 phase-25 planning (priority 210-214)
+
+## Session 2026-05-18 — interact-029 closeout (P210, phase-25 1/5)
+
+- interact-029 (verify-only doc 一致性二次锁) → passing
+- main HEAD: 7167249（merge --no-ff feat/interact-029）
+- feat/interact-029 HEAD: 1be7915
+- verify_interact_029 V0-V4 全 PASS + smoke 11/11 PASS
+- Reviewer fresh-context LGTM with M-1 finding（backlog 收口惯例）
+  - finding 处理：interact-021-backlog-stale-doc-numbers status=upgraded（不是 closed_by）
+  - upgraded_to=interact-029，description 末尾附 → interact-026 (主纠偏) + interact-029 (verify-only 二次锁) 双链路
+- 0 业务源码改动 bytewise 等价 main；default-OFF 实证
+- push: origin main / origin feat/interact-029 各一次成功
+- phase-25 进度：1/5 done（interact-029），剩 4：infra-029 / robot-023 / vision-026 / companion-022
+- 下一候选：P211 infra-029（source infra-024-backlog-v5-rename, verify_infra_024 V5_stdout_chain_assert 命名清理）
