@@ -4274,3 +4274,17 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json：infra-031 → passing；infra-030-backlog-doc-and-v3-polish → resolved (resolved_by=infra-031)
 - push: 见下方报告 (按 push 策略各试一次, 失败忽略)
 - 下一步: phase-27 P233 robot-027b (verify_robot_016 V3 exc_type 区分性反证)
+
+### Session 2026-05-19 P233 robot-027b closeout (passing)
+
+- feature: robot-027b — verify_robot_016 V3 exc_type 区分性反证（RuntimeError vs ValueError 各计 1 次）
+- source backlog: robot-016-backlog-exc-type-discrimination → resolved (resolved_by=robot-027b)
+- base main=58e72ea; feat/robot-027b head=0fe57b5; merge --no-ff sha=d10b64e
+- verify_robot_027b.py V0-V5 全 PASS, 79.66s（V1 sentinel 全集 / V2 锚 WARNING==2 + DEBUG suppressed==0 + RuntimeError==1 + ValueError==1 + audit_seen 两 key 同 id / V3 mutant 反证 rc!=0 + V_exc_type_discrim FAIL 痕迹 / V4 sha256=037fd24 / V5 verify_robot_016 ALL PASS + verify_robot_010 regression rc==0）
+- verify_robot_016.py V0-V3 + V_exc_type_discrim 全 PASS, 39.36s（不退化）
+- smoke 11/11 PASS
+- Reviewer sub-agent fresh-context LGTM 无 finding：V_exc_type_discrim 档语义完整对齐 robot-016 nit-2 caveat，mutant 反证有效（ValueError → RuntimeError 后 rc!=0），sha256 lock 防 verify_robot_016 drift
+- 0 业务源码改动（bytewise 等价 main coco/）；仅 scripts/verify_robot_016.py +V_exc_type_discrim 档 + scripts/verify_robot_027b.py 新建 meta-lock + feature_list.json + claude-progress.md
+- feature_list.json：robot-027b → passing；robot-016-backlog-exc-type-discrimination → resolved
+- push: 见下方报告（按 push 策略各试一次，失败忽略）
+- 下一步: phase-27 P234 interact-033b (verify_interact_024 V1 anchor 按 admit/reject/cooldown 三段分别锚定 latency_ms)

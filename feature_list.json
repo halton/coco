@@ -3985,7 +3985,7 @@
       "id": "robot-016-backlog-exc-type-discrimination",
       "name": "robot-016 V3 exc-type 区分反证",
       "area": "robot",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3995,7 +3995,9 @@
       "verification": null,
       "evidence": {},
       "selected_for": "robot-027b",
-      "selected_phase": 27
+      "selected_phase": 27,
+      "resolved_by": "robot-027b",
+      "resolved_at": "2026-05-19T13:30:00"
     },
     {
       "id": "robot-016",
@@ -4983,11 +4985,11 @@
       "id": "robot-027b",
       "title": "verify_robot_016 V3 exc_type 区分性反证（RuntimeError vs ValueError 各计 1 次）",
       "priority": 233,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 27,
       "area": "robot",
       "source": "robot-016-backlog-exc-type-discrimination",
-      "updated_at": "2026-05-19T12:00:00",
+      "updated_at": "2026-05-19T13:30:00",
       "description": "robot-016 Reviewer caveat 收口：verify_robot_016.py V3 warn-key=('probe-fail',id,exc_type) 当前未对不同 exc_type 各发 1 条 WARNING 做正面反证（RuntimeError vs ValueError 应各计 1 次，不应被首次 RuntimeError 静默）。补一档反证 fixture，verify-only，0 业务源码改动。default-OFF 友好（离线脚本）。",
       "acceptance_criteria": [
         "verify_robot_016.py 新增 V_exc_type_discrim 档：注入 RuntimeError + ValueError 同 id，断言两种 exc_type 各产生 1 条 WARNING",
@@ -5008,7 +5010,17 @@
           "Reviewer LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "reviewer": "Reviewer (sub-agent): LGTM 无 finding — V_exc_type_discrim 档语义对齐 caveat (RuntimeError vs ValueError 各 1 WARNING + audit_seen 两 key 同 id), V3 mutant 反证有效 (rc!=0 + V_exc_type_discrim FAIL 痕迹), sha256 lock 037fd24, 0 业务源码改动",
+        "verify": "verify_robot_027b.py V0-V5 全 PASS, 79.66s (含 verify_robot_016 V_exc_type_discrim WARNING==2/DEBUG suppressed==0/RuntimeError WARNING==1/ValueError WARNING==1/audit_seen 两 key 同 id)",
+        "verify_016": "verify_robot_016.py V0-V3 + V_exc_type_discrim 全 PASS, 39.36s",
+        "smoke": "11/11 PASS",
+        "diff": "0 业务源码改动 (verify-only): scripts/verify_robot_016.py +V_exc_type_discrim 档, scripts/verify_robot_027b.py 新建 meta-lock",
+        "source_backlog": "robot-016-backlog-exc-type-discrimination (resolved_by=robot-027b)",
+        "feat_head": "0fe57b557dfe06885f7ab7f8429dbd488ed8e133",
+        "merge_sha": "d10b64ec376577a45f3a94e96c80ec726706e636",
+        "base_main": "58e72ea"
+      }
     },
     {
       "id": "interact-033b",
