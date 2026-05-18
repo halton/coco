@@ -1,0 +1,31 @@
+{
+  "feature": "robot-018",
+  "name": "COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S inf/nan 输入降级加固 (verify-only doc 锁面)",
+  "phase": 22,
+  "priority": 183,
+  "source_backlog": "robot-012-backlog-shutdown-timeout-inf-nan-hardening",
+  "git_head": "38bb684b4556ae81af8a481ce92e14fbe73c4ee3",
+  "branch": "feat/robot-018",
+  "decision": "verify-only doc 锁面 — robot-014 已双层硬化 (env + dataclass), 本任务跨路径完整覆盖 verify + spec doc 锁面, 0 业务源码改动",
+  "business_src_diff": "0 lines (coco/robot/sequencer.py 与 main 等价, sha8=00c0e111)",
+  "fingerprint": {
+    "sequencer_py_sha8": "00c0e111",
+    "spec_doc_sha8": "d8b24768",
+    "verify_script_sha8": "f07e919a"
+  },
+  "verify_results": {
+    "V0_fingerprint": "PASS (math.isfinite + __post_init__ + env token + 默认 2.0 同时命中 sequencer.py)",
+    "V1_spec_doc_lock": "PASS (12 关键短语命中 docs/robot-shutdown-timeout-hardening-spec.md, bytes=4357)",
+    "V2_env_inf_nan": "PASS (env: inf/Infinity/+inf/INF/-inf/-Infinity/nan/NaN/NAN/+nan/-nan 11 case 全降级 2.0)",
+    "V3_dataclass_inf_nan": "PASS (dataclass: float('inf')/-inf/nan + 'inf'/'nan'/None/'not-a-number' 7 case 全降级 2.0)",
+    "V4_legit_passthrough": "PASS (env+dataclass 双路径 0.5/1.0/30.0/0.001/2.0|5.0 10 case 直通)",
+    "V5_boundary": "PASS (env: ''/0/0.0/-1/-2.5/abc + dataclass: 0/0.0/-1/-2.5 10 case 降级 2.0)",
+    "V6_regression_static": "PASS (邻近 verify_robot_012/013/014/015/016/017 静态存在 + sequencer.py 关键 token 不漂移)",
+    "smoke": "PASS (./init.sh 11 段, 'Smoke 通过')"
+  },
+  "default_off": "合法 float 路径 bytewise 等价 main, 行为变化仅在 inf/-inf/nan/非数值/<=0 异常输入路径 (robot-014 既有 fail-safe)",
+  "regression_note": "邻近 verify_robot_*.py 内部都跑下游 chain (robot_013 单跑 ~300s), 嵌套 subprocess 调会 N² 时间爆炸. 故 V6 改静态锁面 + token 不漂移检查; 真行为回归由 smoke ./init.sh PASS 与按需手动跑下游 verify 覆盖",
+  "reviewer_status": "待 Reviewer fresh-context 评审",
+  "new_backlog": 0,
+  "fu_chain": "不衍生 — 后续任何降级行为变更需单独立 feature"
+}

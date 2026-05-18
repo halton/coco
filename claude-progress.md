@@ -3767,3 +3767,21 @@ evidence: feat/companion-018 HEAD=953375f / V0-V5 6/6 PASS / 0 业务源码改�
 0 新增 backlog, 不衍生 fu chain。push origin feat/companion-018 一次成功。phase-22 5 候选剩 2 个 (robot-018 P183 / interact-024 P184)。
 
 next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge feat/companion-018 → main, 然后持续开发模式派 robot-018 (P183, area=robot, `COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S` inf/nan 输入降级加固)。
+
+## Session 2026-05-18 robot-018 (P183 phase-22) — verify-only doc 锁面
+
+- 候选: robot-018 COCO_ROBOT_SEQ_SHUTDOWN_TIMEOUT_S inf/nan 输入降级加固 (source backlog: robot-012-backlog-shutdown-timeout-inf-nan-hardening)
+- 决策: 调研发现 robot-014 (commit cefa1d0, priority 160) 已对**两条入口路径**完成硬化:
+  - env 路径 `sequencer_config_from_env()` — `math.isfinite()` 检查
+  - dataclass 路径 `SequencerConfig.__post_init__` — 同样检查
+  → robot-018 退化为 **verify-only doc 锁面** (0 业务源码改动)
+- 新增:
+  - `docs/robot-shutdown-timeout-hardening-spec.md` (4357B, 权威 spec, 含降级矩阵 + Default-OFF 不变式)
+  - `scripts/verify_robot_018.py` (V0-V6, 13s, 全 PASS)
+  - `evidence/robot-018/{verify_summary.json,migration_note.md}`
+- verify 覆盖: env 路径 11 inf/nan case + dataclass 路径 7 case + 合法值 10 直通 + 边界 10 降级 + spec doc 12 关键短语 + 邻近 verify 存在 + token 不漂移
+- 关键工程发现: 邻近 verify_robot_*.py 内部都跑下游 chain (robot_013 单跑 ~300s), 嵌套 subprocess 调下游 verify 会 N² 时间爆炸 (V6 实测 robot_014 也超 420s). 故 V6 改静态锁面, 真行为回归由 smoke ./init.sh 覆盖
+- smoke: ./init.sh 11 段 PASS
+- 0 新增 backlog / 不衍生 fu chain
+- 待 Reviewer fresh-context 评审 + Closeout merge
+- 下一候选: interact-024 (P184) — latency_ms admit/reject/cooldown 三 stage 语义差异文档锁面
