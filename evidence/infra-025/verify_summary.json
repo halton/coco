@@ -1,0 +1,66 @@
+{
+  "feature": "infra-025",
+  "source_backlog": "interact-018-backlog-syspath-injection-audit",
+  "direction": "verify-only 审计 (无源码改动); sys.path 注入合法性 + ImportError fallback 模式 + subprocess 契约 + 幂等",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_grep_injection_sites",
+      "ok": true,
+      "detail": "verify_interact_018 hits=1 (expect 1), proactive_trace_summary hits=1 (expect 1)"
+    },
+    {
+      "name": "V1_injection_path_valid",
+      "ok": true,
+      "detail": "ROOT=/Users/halton/work/coco exists=True, coco/__init__.py=True, verify_018_pattern=True, proactive_summary_pattern=True"
+    },
+    {
+      "name": "V2_no_site_packages_pollution",
+      "ok": true,
+      "detail": "no PYTHONPATH/site-packages writes"
+    },
+    {
+      "name": "V3_import_error_fallback",
+      "ok": true,
+      "detail": "proactive_trace_summary has_fallback=True; verify_interact_018 raw_coco_imports=5 has_fallback=False (known-risk recorded: subprocess/wheel env 下 ROOT 注入失效时 import 爆栈; 建议调用方走 `python -m scripts.verify_interact_018` 或包安装后调用)"
+    },
+    {
+      "name": "V4_subprocess_independent_import",
+      "ok": true,
+      "detail": "rc=0, stdout_head='usage: proactive_trace_summary.py [-h] [--trace-jsonl TRACE_JSONL]\\n             '"
+    },
+    {
+      "name": "V5_regression_independent_run",
+      "ok": true,
+      "detail": "rcs={'verify_interact_018': 0, 'proactive_trace_summary_help': 0}"
+    },
+    {
+      "name": "V6_idempotent_injection_audit",
+      "ok": true,
+      "detail": "proactive_trace_summary idempotent_guard=True; verify_interact_018 idempotent_guard=False (lint-only; verify-only 不改源码; 影响仅多次 in-process import 头部多条 entry)"
+    }
+  ],
+  "injection_sites": {
+    "verify_interact_018": [
+      {
+        "line": 42,
+        "text": "sys.path.insert(0, str(ROOT))"
+      }
+    ],
+    "proactive_trace_summary": [
+      {
+        "line": 61,
+        "text": "sys.path.insert(0, str(_ROOT))"
+      }
+    ]
+  },
+  "files_changed": [
+    "scripts/verify_infra_025.py",
+    "evidence/infra-025/verify_summary.json"
+  ],
+  "known_risk_recorded": [
+    "verify_interact_018.py 三处 from coco.* import 无 ImportError fallback — subprocess/wheel 环境 ROOT 推断失效时直接爆栈; 建议调用方走 module-form 或包安装契约",
+    "verify_interact_018.py sys.path.insert(0, ROOT) 无 `if not in` 守护 — 多次 in-process import 同一 ROOT 会重复插入 (头部多条 entry); lint-only"
+  ],
+  "real_machine_uat": "n/a"
+}
