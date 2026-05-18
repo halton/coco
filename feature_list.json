@@ -3024,7 +3024,7 @@
       "id": "robot-025-backlog-verify-meta-lock-tightening",
       "name": "verify_robot_025 meta-lock 收紧 (F1 sha256 多字面 + F2 sentinel hardcoded)",
       "area": "robot",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3033,9 +3033,25 @@
       "description": "F1: V2 sha256 锁字面量出现 2 次时存在假阳性窗口（'overwriting existing sequencer' L493/L499），下一个 verify-only feature 应升级为'该字面在源码中至少出现 N 次'或对范围作行号锚定 hash。F2: verify_robot_025.py L102-115 sentinel_hashes 与 EXPECTED 同表达式自洽永真，建议改为 hardcoded 16-hex prefix 字符串字面常量。source: robot-025 Reviewer findings F1+F2",
       "verification": null,
       "evidence": {},
-      "updated_at": "2026-05-19T00:50:00",
+      "updated_at": "2026-05-19T13:00:00",
       "selected_for": "robot-027",
-      "selected_phase": 27
+      "selected_phase": 27,
+      "resolved_by": "robot-027"
+    },
+    {
+      "id": "robot-027-backlog-verify-self-hash-bump-helper",
+      "name": "verify_robot_027 V4 self-sha256 锁 bump 助手脚本",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-027 Reviewer 后续建议"
+      ],
+      "description": "当 verify_robot_025.py 再次升级（如新增 sentinel / 行号锚定 hash 调整）时，verify_robot_027.py V4 中的 verify_025_sha256 字面锁会失效；需要写一个助手脚本（如 scripts/bump_verify_027_self_hash.py）：自动读取当前 scripts/verify_robot_025.py 的 sha256 并替换 verify_robot_027.py 中的 EXPECTED_VERIFY_025_SHA 常量，避免手工同步漂移。verify-only，default-OFF 友好。source: robot-027 Reviewer 报告 followup 建议",
+      "verification": null,
+      "evidence": {},
+      "updated_at": "2026-05-19T13:00:00"
     },
     {
       "id": "robot-008-backlog-groupmodecoord-wire",
@@ -4805,11 +4821,11 @@
       "id": "robot-027",
       "title": "verify_robot_025 meta-lock 字面量行号锚定收紧（消除 'overwriting existing sequencer' 假阳性窗口）",
       "priority": 230,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 27,
       "area": "robot",
       "source": "robot-025-backlog-verify-meta-lock-tightening",
-      "updated_at": "2026-05-19T12:00:00",
+      "updated_at": "2026-05-19T13:00:00",
       "description": "robot-025 Reviewer 后续：verify_robot_025.py V2 sha256 锁字面量出现 2 次时存在假阳性窗口（'overwriting existing sequencer' L493/L499）。本 feature 升级 verify lock 为'该字面在源码中至少出现 N 次'或对范围作行号锚定 hash，并把 sentinel_hashes 与 EXPECTED 表达统一。0 业务源码改动，verify-only。default-OFF 友好（仅离线脚本）。",
       "acceptance_criteria": [
         "verify_robot_025.py 升级为 multi-count 字面量锁 或 行号锚定 hash 双口",
@@ -4836,14 +4852,17 @@
       "evidence": {
         "branch": "feat/robot-027",
         "base_main_sha": "3ff13c629a97adedeb61897609f1d379820496b8",
+        "feat_branch_head_sha": "9dbb408",
+        "merge_commit_sha": "1058c02",
         "verify_robot_025_upgrade": {
           "F1_count_lock": "(b) robot-027 F1: overwriting 字面 count>=2 (两个出现点都未被删): count=2 PASS",
           "F1_setter_block_baseline_hash": "L489-L504 baseline (BASE=3ff13c62) sha256=c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f PASS",
           "F2_expected_prefix_hardcoded": "EXPECTED_PREFIX 改为 16-hex 字面常量, 不再从 src 派生; 5 key 全 PASS"
         },
-        "verify_robot_027_summary": "V0-V5 全 PASS (elapsed 0.10s); V5 端到端 invoke verify_robot_025 含 F1 count / setter baseline / hardcoded prefix 关键 PASS 行",
+        "verify_robot_027_summary": "V0-V5 全 PASS (elapsed ~0.10s); V5 端到端 invoke verify_robot_025 含 F1 count / setter baseline / hardcoded prefix 关键 PASS 行",
         "smoke": "11/11 PASS (./init.sh)",
-        "business_source_diff": "0 (仅 scripts/verify_robot_025.py + scripts/verify_robot_027.py + feature_list.json)"
+        "business_source_diff": "0 (仅 scripts/verify_robot_025.py + scripts/verify_robot_027.py + feature_list.json + claude-progress.md + evidence/)",
+        "reviewer_subagent": "LGTM — F1 count-lock + setter-block sha256 双口锁实质闭合 'overwriting existing sequencer' 假阳性窗口；F2 EXPECTED_PREFIX 改为 hardcoded 16-hex 常量打破自洽永真；verify_robot_027 V0-V5 全 PASS；0 业务源码改动；建议入 1 backlog（verify-self-hash-bump-helper）"
       }
     },
     {
