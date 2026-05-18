@@ -1,0 +1,43 @@
+{
+  "feature": "interact-023",
+  "source_backlog": "interact-018-backlog-v1-cooldown-coverage",
+  "direction": "纯 verify-only 补丁 (无源码改动); cooldown_hit 路径 latency_ms 端到端 fixture 覆盖",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_fingerprint_lock",
+      "ok": true,
+      "detail": "3 anchors present (cooldown_hit stage map + latency_ms wire shared with arbit_winner)"
+    },
+    {
+      "name": "V1_cooldown_hit_end_to_end",
+      "ok": true,
+      "detail": "cooldown_hit reject 命中 lat=0.018ms reason=cooldown (trace_events=2, cooldown_hits=1)"
+    },
+    {
+      "name": "V2_cooldown_hit_latency_semantics",
+      "ok": true,
+      "detail": "lat=0.007ms (有限 float, <1000ms 判定即出语义); cooldown_hit 之后无 admit emit"
+    },
+    {
+      "name": "V3_type_strict_and_monotonic",
+      "ok": true,
+      "detail": "3 cooldown_hit 全部 numeric>=0, lats=[0.005, 0.007, 0.005]"
+    },
+    {
+      "name": "V4_is_fail_closure",
+      "ok": true,
+      "detail": "1 cooldown_hit + 1 synthetic 全部 is_fail=False (reject 非 failure)"
+    },
+    {
+      "name": "V5_regression",
+      "ok": true,
+      "detail": "all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_021.py': 0, 'scripts/verify_interact_022.py': 0}"
+    }
+  ],
+  "files_changed": [
+    "scripts/verify_interact_023.py"
+  ],
+  "runtime_change": false,
+  "sha": "43a9be5342d099193f5ce6b2a45ae91544b3d3ed"
+}
