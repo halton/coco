@@ -3727,3 +3727,23 @@ evidence: V0-V5 6/6 PASS / smoke 11/11 / 0 源码改动 (仅新增 scripts/verif
 0 新增 backlog。phase-22 5 候选剩 4 个 (vision-015 P181 / companion-018 P182 / robot-018 P183 / interact-019 P184)。
 
 next: 持续开发模式继续, 派下一个候选 vision-015 (P181, area=vision, vision GC 时钟选型设计文档锁面)。
+
+## Session 2026-05-18 — vision-015 verify+docs PASS (phase-22 P181)
+
+vision-015 (P181, area=vision) Engineer 完成 verify-only 锁面, status=passing (待 Closeout merge)。承接 vision-012-backlog-time-source-and-validation 的 C1+C2 子项 — `_gc_last_time` 时钟选型 (wall vs monotonic) 设计文档锁面。
+
+关键发现: brief 写 `_gc_last_time 使用 time.time() (wall clock)`, **实际** vision-013 已切到 `time.monotonic()`, GC 路径上 wall + monotonic 是有意混用 (`_gc_last_time` 走 monotonic 免 NTP / `run_gc_cycle` TTL 走 wall 与 `last_seen` 持久化字段同时基)。本 phase 以 code 为准锁面, **不切回 wall** (避免引入 NTP 回拨敏感 + verify monkey-patch 同步代价)。
+
+evidence: feat/vision-015 HEAD=6def15f / V0-V5 6/6 PASS / 0 源码改动 (face_tracker.py sha bf3a053d... 与 main befb3c4 一致):
+- V0 fingerprint git_head=befb3c4 + python=3.13.12 + 三处 sha256 (face_tracker.py / design doc / verify_self)
+- V1 字面量锁面: `_gc_last_time = now_mono` x2 + `now_mono = time.monotonic(` x1 + `now_mono - self._gc_last_time` x1; 反证 `_gc_last_time = time.time(` 直接赋值 = 0 命中
+- V2 设计文档 8 关键短语锁面 (wall vs monotonic / NTP 回拨 / 300s / 持久化 / last_seen / time.monotonic / time.time / _gc_last_time)
+- V3 regression vision-012/013/014b 全 rc=0
+- V4 migration_note evidence-only (未来切回 wall 的 verify monkey-patch 同步代价分析)
+- V5 smoke 11 段 init.sh rc=0 + "Smoke 通过"
+
+新文件: docs/vision-gc-time-source-design.md (5108B, 三维对比 + 300s 窗口不敏感性 + 未来切 wall 迁移代价) + scripts/verify_vision_015.py + evidence/vision-015/{verify_summary.json, migration_note.md}。
+
+0 新增 backlog。push origin feat/vision-015 一次成功。phase-22 5 候选剩 3 个 (companion-018 P182 / robot-018 P183 / interact-024 P184)。
+
+next: 派 Reviewer fresh-context 评审 vision-015, 通过后 Closeout merge feat/vision-015 → main, 然后持续开发模式派 companion-018 (P182, area=companion, preference emit env 命名 doc 同步)。
