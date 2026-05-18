@@ -5443,7 +5443,7 @@
       "area": "robot",
       "phase": 30,
       "title": "RobotSequencer enqueue except 块 _fallback_warned 锁覆盖收紧",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "robot-030-backlog-enqueue-fallback-lock-coverage",
       "scope": "robot-030 引入的 enqueue except 块在 _lock 外读写 _fallback_warned，与 _sync_fallback_audit_seen 同 race pattern；worst case 多发 1 次 fallback warn。把 _fallback_warned 读写收进 _lock，并补 verify_robot_033 fixture：N=50 并发 enqueue 触发 except 时只允许观察到 1 条 fallback warn。default-OFF（不引入新 env），bytewise 等价 main 主路径。",
       "dependencies": [
