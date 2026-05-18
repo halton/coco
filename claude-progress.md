@@ -3717,3 +3717,13 @@ area 分散: **5 area 全覆盖** (audio + vision + companion + robot + interact
 ID 冲突修正 — 原 audio-013 / companion-017 phase-18 已 passing (audio-013=1e00917 audio_resilience util 抽取; companion-017=d6d4066 preference_learner lazy load + COCO_PERSIST_EMIT_MIN_INTERVAL_S 命名), phase-22 候选改用未占用编号 audio-014 / companion-018。
 
 next: feature_list.json + claude-progress.md commit 直接落 main, push origin main 一次失败忽略, 然后进入持续开发模式起点 audio-014 (P180)。
+
+## Session 2026-05-18 — audio-014 closeout passing (phase-22 P180 起点)
+
+audio-014 (P180, area=audio) closeout 完成, status=passing, merge commit=787b4c7。承接 audio-012-backlog-coupling-and-doc 的 C1 子项 (wake_word.py L463 跨模块 import vad_trigger 私有函数 _read_loss_window_override_ms 的隐性耦合), verify-only 契约审计, 不重构。
+
+evidence: V0-V5 6/6 PASS / smoke 11/11 / 0 源码改动 (仅新增 scripts/verify_audio_014.py + evidence/audio-014/verify_summary.json + evidence/audio-014/migration_note.md)。V0 三文件 sha256 fingerprint (wake_word.py / vad_trigger.py / verify_audio_012.py) 锁面; V1 is-同对象关系 (wake_word._ar.read_loss_window_override_ms is vad_trigger._read_loss_window_override_ms) — 单 reader (wake_word) 单 owner (vad_trigger) 关系成立; V2 wake_word 字面量调用站点锁三档; V3 vad_trigger._read_loss_window_override_ms docstring 含 "shared with wake_word.py" 设计 note 锁面; V4 regression audio-011/012/013 三项 verify rc=0; V5 migration_note.md evidence-only 列出未来抽 coco.audio_common util 的迁移成本与触发条件 (不动手)。Reviewer (sub-agent fresh-context): LGTM 干净。
+
+0 新增 backlog。phase-22 5 候选剩 4 个 (vision-015 P181 / companion-018 P182 / robot-018 P183 / interact-019 P184)。
+
+next: 持续开发模式继续, 派下一个候选 vision-015 (P181, area=vision, vision GC 时钟选型设计文档锁面)。

@@ -4000,10 +4000,11 @@
       "area": "audio",
       "priority": 180,
       "phase": 22,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "audio-012-backlog-coupling-and-doc",
       "description": "吸收 backlog audio-012-backlog-coupling-and-doc (C1 子项): coco/audio/wake_word.py L463 跨模块 import vad_trigger 的私有函数 _read_loss_window_override_ms 形成隐性耦合。phase-22 P180 verify-only 契约审计 (不重构, 避免引入回归): (a) V0 fingerprint wake_word.py 与 vad_trigger.py 中 _read_loss_window_override_ms 站点 sha (b) V1 锁定单一 reader (wake_word) + 单一 owner (vad_trigger) 关系 (c) V2 docstring 在 vad_trigger._read_loss_window_override_ms 上标注 'shared with wake_word.py' 设计 note (d) V3 regression audio-011/012 rc=0 (e) V4 列出未来抽 coco.audio_common util 的迁移指引 (evidence-only 不动手)。default-OFF, real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Reviewer (sub-agent): LGTM 干净 / V0-V5 6/6 PASS / smoke 11/11 / 0 源码改动 (仅新增 scripts/verify_audio_014.py + evidence/audio-014/verify_summary.json + evidence/audio-014/migration_note.md) / V0 三文件 sha256 fingerprint (wake_word.py / vad_trigger.py / verify_audio_012.py) / V1 is-同对象 (wake_word _ar.read_loss_window_override_ms is _vt._read_loss_window_override_ms) / V2 wake_word 字面量锁三档 / V3 docstring 锁面 ('shared with wake_word.py') / V4 regression audio-011/012/013 rc=0 / V5 migration_note evidence-only (未来抽 coco.audio_common util 指引) / source=audio-012-backlog-coupling-and-doc / 0 新增 backlog"
     },
     {
       "id": "vision-015",
