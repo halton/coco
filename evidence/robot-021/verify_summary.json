@@ -1,0 +1,99 @@
+{
+  "feature_id": "robot-021",
+  "priority": 201,
+  "phase": 24,
+  "source_backlog": "robot-008-backlog-setter-lifecycle",
+  "verdict": "PASS",
+  "errors": [],
+  "elapsed_s": 440.89,
+  "fingerprints": {
+    "proactive.py_sha256": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
+    "spec_doc_sha256": "98c72455fa10b8f2a0edcc4b4b9a76e79f5ca217cdce789122c8ff9320d956b9",
+    "verify_self_sha256": "30ce8ba8f16d2957f4e17f254054b2f16e61d3239bf92280a4ee9b8a5cf2becc"
+  },
+  "lifecycle_trace": {
+    "trace": [
+      {
+        "label": "init",
+        "seq_is_none": true,
+        "seq_id": null,
+        "audit_size": 0
+      },
+      {
+        "label": "S1 first-set",
+        "seq_is_none": false,
+        "seq_id": 4320013888,
+        "audit_size": 0
+      },
+      {
+        "label": "S3 re-set-same",
+        "seq_is_none": false,
+        "seq_id": 4320013888,
+        "audit_size": 1
+      },
+      {
+        "label": "S4 re-set-diff",
+        "seq_is_none": false,
+        "seq_id": 4317723408,
+        "audit_size": 2
+      },
+      {
+        "label": "S5 clear",
+        "seq_is_none": true,
+        "seq_id": null,
+        "audit_size": 2
+      },
+      {
+        "label": "S2 shutdown-refuse",
+        "seq_is_none": true,
+        "seq_id": null,
+        "audit_size": 2
+      }
+    ],
+    "s1_id": 4320013888,
+    "s2_id": 4317723408,
+    "sx_id": 4320014224
+  },
+  "default_off": {
+    "setter_audit_seen_size": 0,
+    "final_seq_id_eq_s2": true
+  },
+  "neighbor_regression": [
+    {
+      "name": "verify_robot_008.py",
+      "rc": 0,
+      "elapsed_s": 11.0
+    },
+    {
+      "name": "verify_robot_016.py",
+      "rc": 0,
+      "elapsed_s": 40.7
+    },
+    {
+      "name": "verify_robot_017.py",
+      "rc": 0,
+      "elapsed_s": 65.1
+    },
+    {
+      "name": "verify_robot_018.py",
+      "rc": 0,
+      "elapsed_s": 15.0
+    },
+    {
+      "name": "verify_robot_019.py",
+      "rc": 0,
+      "elapsed_s": 91.5
+    },
+    {
+      "name": "verify_robot_020.py",
+      "rc": 0,
+      "elapsed_s": 217.5
+    }
+  ],
+  "heavy_skipped": [
+    "verify_robot_015.py (~457s, source backlog 锁; 留 closeout)",
+    "verify_robot_014.py (~573s)"
+  ],
+  "default_off_invariant": "spec evidence-only; 0 业务源码改动; env 未设 set 永远空 bytewise 等价 main",
+  "new_backlog_added": 0
+}
