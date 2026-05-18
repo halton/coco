@@ -3109,7 +3109,7 @@
       "id": "interact-033-backlog-v1d-arbit-fail-latency-coverage",
       "name": "V1 fixture 补 arbit_fail / mm_proactive reject 路径 latency_ms 端到端断言",
       "area": "interact",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3119,7 +3119,8 @@
       "verification": null,
       "evidence": {},
       "selected_for": "interact-034",
-      "selected_phase": 28
+      "selected_phase": 28,
+      "resolved_by": "interact-034"
     },
     {
       "id": "robot-012-backlog-shutdown-timeout-inf-nan-hardening",
@@ -5135,11 +5136,21 @@
       "area": "interact",
       "priority": 236,
       "phase": 28,
-      "status": "in_progress",
+      "status": "passing",
       "title": "V1d arbit_fail / mm_proactive reject latency_ms 覆盖",
       "description": "补 fixture 触发 arbit_fail 与 mm_proactive reject 路径，分别在 trace 行断言 latency_ms 字段存在且语义合理（判定即出）。verify-only，default-OFF 友好（COCO_PROACTIVE_TRACE gate）。",
       "source_backlog": "interact-033-backlog-v1d-arbit-fail-latency-coverage",
-      "scope": "verify-only：扩展 verify_interact_024.py 或新增 fixture，覆盖 arbit_fail / mm_proactive_reject 两个 reject 分支的 latency_ms wire 断言。0 业务源码改动。"
+      "scope": "verify-only：扩展 verify_interact_024.py 或新增 fixture，覆盖 arbit_fail / mm_proactive_reject 两个 reject 分支的 latency_ms wire 断言。0 业务源码改动。",
+      "evidence": {
+        "merge_sha": "42b65c8f56ceecde0d6f52e83784d4bb7f2e256b",
+        "feat_head": "c3163a61d95222d1412e7c89ec6700ff10960fa8",
+        "base_main": "5765b68b3df9e01a400bd024a3e11ee63d8a1428",
+        "branch": "feat/interact-034",
+        "verify_summary": "evidence/interact-034/verify_summary.json all_pass=true; verify_interact_018 V1d/V1e + verify_interact_034 meta-lock 全部 ok",
+        "business_src_diff": "0 业务源码改动（verify-only：verify_interact_018.py 扩 V1d/V1e + 新增 verify_interact_034.py meta-lock）",
+        "reviewer_lgtm": "Reviewer (sub-agent) LGTM 无 finding 无 backlog：V1d arbit_emotion_preempt + V1e mm_proactive rate_limit 两个 reject 分支 latency_ms wire 端到端断言通过；meta-lock 自校验通过；default-OFF 友好（COCO_PROACTIVE_TRACE gate）",
+        "real_machine_uat": "not_required (verify-only)"
+      }
     },
     {
       "id": "infra-032",
