@@ -5473,7 +5473,7 @@
       "area": "interact",
       "phase": 30,
       "title": "drift JSONL rotation / size cap",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "interact-036a-backlog-drift-jsonl-rotation",
       "scope": "evidence/_history/interact_024_drift_history.jsonl 当前 append-only 跨 commit 无界增长。复用 infra-016/infra-017 的 history jsonl rotate 模式（>N 行 → .archive/，filelock，retention），把 drift jsonl 纳入；verify-only fixture 验证 rotate 触发与 archive 命名稳定。不改业务源码（仅 evidence pipeline 与 verify-only 辅助）。",
       "dependencies": [
