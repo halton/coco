@@ -40,20 +40,48 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 DOC = REPO / "docs" / "proactive_scheduler_block_policy.md"
 
-EXPECTED_HEADINGS = [
-    "## 概述",
-    "## Block 策略",
-    "## Cooldown 策略",
-    "### `_last_proactive_ts`",
-    "### `_last_interaction_ts`",
-    "### `_last_emotion_alert_ts`",
-    "## Fallback 策略",
-    "### sync fallback warn-once (robot-017)",
-    "### enqueue fallback warn-once (robot-030)",
-    "### offline fallback (interact-012)",
-    "## Setter lifecycle 策略 (robot-016)",
-    "## Env gate 一览",
-]
+# robot-034: EXPECTED_HEADINGS 不再 hardcode, 改为运行时从 docs 解析。
+# 单一事实源: docs/proactive_scheduler_block_policy.md 中
+# "## 章节标题列表（供 verify_robot_032 用）" 段下的 bullet list (每行以 "- `" 起头, 反引号包裹标题字面)。
+# 解析窗口: 从 sentinel H2 行开始到文件末尾或下一 H2 行止。
+
+_HEADINGS_SECTION_SENTINEL = "## 章节标题列表（供 verify_robot_032 用）"
+
+
+def _parse_headings_from_doc(doc_path: Path) -> list[str]:
+    """从 docs 的 sentinel section 提取章节标题字面列表。
+
+    Raises:
+        RuntimeError: sentinel section 缺失 / 解析为空。
+    """
+    if not doc_path.exists():
+        raise RuntimeError(f"doc not found: {doc_path}")
+    text = doc_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    try:
+        start = next(i for i, ln in enumerate(lines) if ln.strip() == _HEADINGS_SECTION_SENTINEL)
+    except StopIteration:
+        raise RuntimeError(f"sentinel section not found: {_HEADINGS_SECTION_SENTINEL!r}")
+    # 从 sentinel 下一行到下一个 H2 (## ...) 或文件末
+    headings: list[str] = []
+    for ln in lines[start + 1 :]:
+        s = ln.rstrip()
+        if s.startswith("## "):  # 进入下一 H2 段, 停
+            break
+        st = s.lstrip()
+        if st.startswith("- `") and st.endswith("`"):
+            # 提取反引号之间的字面
+            inner = st[3:-1]
+            headings.append(inner)
+    if not headings:
+        raise RuntimeError(
+            f"no headings parsed under sentinel section {_HEADINGS_SECTION_SENTINEL!r}"
+        )
+    return headings
+
+
+# 运行时加载; 失败让 import-time 即抛, sub-process 也会被传播
+EXPECTED_HEADINGS = _parse_headings_from_doc(DOC)
 
 EXPECTED_PHRASES = [
     "warn-once",
@@ -71,9 +99,10 @@ EXPECTED_PHRASES = [
 ]
 
 
-def _run_checks(text: str) -> list[str]:
+def _run_checks(text: str, headings: list[str] | None = None) -> list[str]:
     fails: list[str] = []
-    for h in EXPECTED_HEADINGS:
+    hs = headings if headings is not None else EXPECTED_HEADINGS
+    for h in hs:
         if h not in text:
             fails.append(f"missing heading: {h!r}")
     for p in EXPECTED_PHRASES:
@@ -92,6 +121,12 @@ def main() -> int:
     print(f"[V0] PASS: {DOC} exists")
 
     text = DOC.read_text(encoding="utf-8")
+
+    # V1b sentinel 防御 (robot-034): EXPECTED_HEADINGS 不能为空
+    if not EXPECTED_HEADINGS:
+        fails.append("[V1b] FAIL: EXPECTED_HEADINGS parsed empty from sentinel section")
+    else:
+        print(f"[V1b] PASS: parsed {len(EXPECTED_HEADINGS)} headings from doc sentinel")
 
     # V1 + V2
     f1 = [x for x in _run_checks(text) if x.startswith("missing heading")]
@@ -141,11 +176,20 @@ def main() -> int:
 
 
 def _probe() -> int:
-    """Used by V3: only run V0+V1+V2 on the (possibly mutated) file."""
+    """Used by V3: only run V0+V1+V2 on the (possibly mutated) file.
+
+    robot-034: 子进程 fresh import 已经在 module top-level 重新调用
+    ``_parse_headings_from_doc(DOC)``; 这里直接用 EXPECTED_HEADINGS 即可,
+    它反映了 mutated doc 的 headings。
+    若 mutated doc 直接删了 sentinel section, module import 时 RuntimeError
+    会让子进程立即 rc!=0, 也算捕获。
+    """
     if not DOC.exists():
         return 1
     text = DOC.read_text(encoding="utf-8")
-    fails = _run_checks(text)
+    fails = _run_checks(text, EXPECTED_HEADINGS)
+    if not EXPECTED_HEADINGS:
+        return 1
     return 1 if fails else 0
 
 
