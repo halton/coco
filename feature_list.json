@@ -5780,6 +5780,48 @@
       "verification": []
     },
     {
+      "id": "robot-036-backlog-v3-mutant-atomic-rename",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_036 V3 mutant 改 atomic tempfile rename 避免 SIGKILL 残留",
+      "status": "backlog",
+      "source": "robot-036-reviewer",
+      "scope": "verify_robot_036 V3 反证当前直接覆写 verify_robot_034.py 再 restore；若进程被 SIGKILL 中断，残留 mutant 会污染 working tree。改为写入 tempfile 后 os.replace 原子 rename，并用 try/finally + 备份 sha 校验确保 restore 完整。",
+      "dependencies": [
+        "robot-036"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-036-backlog-read-sentinel-graceful-fallback",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_034 _read_sentinel_from_verify_032 顶层加载加 try/except 宽容",
+      "status": "backlog",
+      "source": "robot-036-reviewer",
+      "scope": "verify_robot_034 顶层执行 _read_sentinel_from_verify_032 读取 verify_robot_032.SENTINEL_LINE；若该 source 暂时 broken（如 verify_032 改名/移动），verify_034 顶层 import 即 fail，影响其它流程。加 try/except 让顶层加载更宽容，把错误延迟到 main() 执行期再抛出，保留诊断信息。",
+      "dependencies": [
+        "robot-036"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-036-backlog-extract-read-constant-helper",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "_read_constant_from helper 抽到 scripts/_verify_lib 去重",
+      "status": "backlog",
+      "source": "robot-036-reviewer",
+      "scope": "verify_robot_034 与 verify_robot_036 各自实现 _read_constant_from（ast 解析模块顶层常量）helper；属重复逻辑。抽到 scripts/_verify_lib/ 共享模块（如 ast_constants.py），两 verify 改为 import 使用。verify-only，0 业务源码改。注意会触发 infra-034 V4 sha 锁表同步。",
+      "dependencies": [
+        "robot-036"
+      ],
+      "verification": []
+    },
+    {
       "id": "robot-035",
       "priority": 3101,
       "area": "robot",
@@ -5808,7 +5850,7 @@
       "area": "robot",
       "phase": 31,
       "title": "verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重",
-      "status": "in_progress",
+      "status": "passing",
       "source": "robot-034-backlog-sentinel-line-import-not-duplicate",
       "scope": "verify_robot_034.py 当前 hardcode SENTINEL_LINE 字面值；改为从 scripts.verify_robot_032 import SENTINEL_LINE，避免两处 drift。verify-only，0 业务源码改动。",
       "dependencies": [
@@ -5819,7 +5861,8 @@
         "V0: docstring + sha256 自锁",
         "V1: verify_robot_034.py 不再 hardcode 字面值（ast 断言 SENTINEL_LINE 通过 import 获得）",
         "V2: regression verify_robot_032 + verify_robot_034 + smoke 全 PASS"
-      ]
+      ],
+      "evidence": "6 cmd rc=0 (verify_robot_036 V0-V5 + verify_robot_034 + verify_robot_032 + smoke 全 PASS) + 2 sha 复核 (verify_robot_034 + verify_robot_036) + V3 mutant 双保险还原 (SIGKILL 残留风险已识别，backlog 跟进 atomic rename) + Reviewer (sub-agent): LGTM + feat sha 08719d3 + main HEAD bcbc298"
     },
     {
       "id": "infra-035",

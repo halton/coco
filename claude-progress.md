@@ -4642,3 +4642,27 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** robot-036（verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重）。
+
+---
+
+## Session P250 — robot-036 closeout (2026-05-19)
+
+**feature：** robot-036 — verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重（verify-only，0 业务源码改动）
+
+**结果：** passing（merge --no-ff feat/robot-036 → main）
+
+**evidence：**
+- 6 cmd rc=0：verify_robot_036 V0-V5 + verify_robot_034 + verify_robot_032 + smoke 全 PASS
+- 2 sha 复核：verify_robot_034 + verify_robot_036
+- V3 mutant 双保险还原（SIGKILL 残留风险已识别，backlog 跟进 atomic rename）
+- Reviewer (sub-agent): LGTM
+- feat sha 08719d3；main HEAD bcbc298
+
+**新增 backlog（priority=999, phase=null, source=robot-036-reviewer）：**
+- robot-036-backlog-v3-mutant-atomic-rename：V3 mutant 改 atomic tempfile rename 避免 SIGKILL 残留
+- robot-036-backlog-read-sentinel-graceful-fallback：_read_sentinel_from_verify_032 顶层加 try/except 宽容
+- robot-036-backlog-extract-read-constant-helper：_read_constant_from 抽到 _verify_lib 去重
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** infra-035（verify_infra_034 V4 sha 期望表外部化到 JSON）。
