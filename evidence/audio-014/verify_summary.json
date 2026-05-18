@@ -1,0 +1,67 @@
+{
+  "feature": "audio-014",
+  "scope": "wake_word→vad_trigger 跨模块耦合 verify-only 审计",
+  "verify_only": true,
+  "source_code_changes": 0,
+  "default_off": true,
+  "real_machine_uat": "n/a",
+  "fingerprint": {
+    "git_head": "aaafaa9c7de6d183e06cafb2d0e3161498e91a49",
+    "python": "3.13.12",
+    "audio_resilience_sha256": "0a3f7eec8044461d295489be9ea812b842d2783ca5bfe242abe835072a172304",
+    "vad_trigger_sha256": "4e22b0766f742cf91bab0c229af79316b32bc751a05009afb144e7a91d012b54",
+    "wake_word_sha256": "960fd71ee58042e95994fddaebf2b71dc88bcf82954a9f47c0d82486a457b537"
+  },
+  "results": [
+    {
+      "name": "V0_fingerprint",
+      "ok": true,
+      "git_head": "aaafaa9c7de6d183e06cafb2d0e3161498e91a49",
+      "python": "3.13.12",
+      "audio_resilience_sha256": "0a3f7eec8044461d295489be9ea812b842d2783ca5bfe242abe835072a172304",
+      "vad_trigger_sha256": "4e22b0766f742cf91bab0c229af79316b32bc751a05009afb144e7a91d012b54",
+      "wake_word_sha256": "960fd71ee58042e95994fddaebf2b71dc88bcf82954a9f47c0d82486a457b537"
+    },
+    {
+      "name": "V1_single_owner_is_same_obj",
+      "ok": true,
+      "public_qualname": "coco.audio_resilience.read_loss_window_override_ms",
+      "alias_qualname": "coco.audio_resilience.read_loss_window_override_ms",
+      "is_same_obj": true
+    },
+    {
+      "name": "V2_wake_word_literal_lock",
+      "ok": true,
+      "hit_from_vt_count": 0,
+      "hit_private_literal_count": 0,
+      "hit_bare_import_count": 0
+    },
+    {
+      "name": "V3_docstring_lock",
+      "ok": true,
+      "doc_mentions_vad_trigger": true,
+      "src_mentions_wake_word": true,
+      "src_mentions_vad_trigger": true
+    },
+    {
+      "name": "V4_regression_audio_011_012_013",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_audio_011.py": 0,
+        "scripts/verify_audio_012.py": 0,
+        "scripts/verify_audio_013.py": 0
+      }
+    },
+    {
+      "name": "V5_migration_guidance_evidence",
+      "ok": true,
+      "path": "evidence/audio-014/migration_note.md",
+      "bytes": 2183,
+      "mentions_audio_common": true,
+      "mentions_migration": true,
+      "mentions_freeze_or_lock": true
+    }
+  ],
+  "all_ok": true,
+  "ts": 1779095574.0768719
+}
