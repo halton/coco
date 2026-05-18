@@ -4127,7 +4127,7 @@
       "phase": 23,
       "area": "infra",
       "source": "infra-019-backlog-runs-on-matrix-os",
-      "evidence": "evidence/infra-027/verify_summary.json (V0-V5 全 PASS); docs/ci-matrix-os-spec.md spec 锁面; matrix.os union=[ubuntu-latest] cardinality=1; 邻近 infra-019/024/025/026 回归 rc=0; smoke rc=0; Reviewer pending"
+      "evidence": "evidence/infra-027/verify_summary.json (V0-V5 全 PASS); docs/ci-matrix-os-spec.md spec 锁面; matrix.os union=[ubuntu-latest] cardinality=1; 邻近 infra-019/024/025/026 回归 rc=0; smoke rc=0; LGTM by fresh-context Reviewer sub-agent; verify V0-V5 PASS rc=0 + smoke 11/11 PASS; mutant A (matrix.os 加 macos-latest)→V1+V4 FAIL / B-v3 (runs-on 改非白名单 ubuntu-20.04)→V3+V4 FAIL / C (删 spec 短语)→V2 FAIL; 还原 clean; 邻近 infra-026 实跑 rc=0; 026/027 分工清晰 (026 一致性, 027 集合稳定性)"
     },
     {
       "id": "interact-026",
