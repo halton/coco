@@ -4016,3 +4016,23 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - main HEAD pre-closeout: 69906ef (含 merge commit)
 - 下一候选: interact-028 (P203) ← interact-016-backlog-doc-polish
 - phase-24 剩余: interact-028 P203 / robot-022 P204
+
+## Session 2026-05-18 phase-24 interact-028 (Engineer 提交, evidence-then-merge)
+
+- feature: interact-028 (P203) — interact-016 doc polish + verify 锁面 (verify-only)
+- source backlog: interact-016-backlog-doc-polish (N-1 缺 taskName / N-2 KeyError 描述过时)
+- scope: coco/proactive_trace.py docstring + 集合 polish, 0 业务运行时变更
+  - N-1: `_RESERVED_TRACE_KEYS` 集合新增 `"taskName"` (Python 3.12+ asyncio LogRecord 字段), 与 `coco.logging_setup.JsonlFormatter._RESERVED` 双向同步
+  - N-2: emit_trace 注释中"Python 3.13 KeyError"过时描述改为"所有受支持 CPython 版本一致 (3.10/3.11/3.12/3.13)", 加 cross-ref 强调与 `JsonlFormatter._RESERVED` 同源
+- default-OFF 不变式保持: `emit_trace` 在 `COCO_PROACTIVE_TRACE` 未设时立即 return, 不触达 `_RESERVED_TRACE_KEYS` 过滤; ON 时仅多过滤 1 个 key (更安全)
+- verify: scripts/verify_interact_028.py V0-V5 全 6 项 PASS
+  - V0 fingerprint sha256 (proactive_trace=ec57c93ffe94 / logging_setup=22711d7a0a44 / self=cc5b53318060)
+  - V1 doc polish 5 个短语锁 PASS
+  - V2 `_RESERVED_TRACE_KEYS ⊇ logging_setup._RESERVED` (|=27 ⊇ |=21, 含 taskName) PASS
+  - V3 cross-ref JsonlFormatter._RESERVED 实体存在 + type set + 最小 LogRecord 子集 PASS
+  - V4 邻近 verify 回归 (018/021..027 全 rc=0) PASS
+  - V5 smoke 11/11 PASS (./init.sh)
+- evidence: evidence/interact-028/verify_summary.json + migration_note.md
+- C-1/C-5 仍为 doc-only marker, 不在本任务范围 (真 LLM backend hook 接入再处理), 未新增 backlog
+- **Engineer 仅 commit + push feat/interact-028, 严格遵守"不得 merge main"硬规则**, 交 Reviewer 评审后 Closeout merge
+- 下一候选: robot-022 (P204), phase-24 余 1 项

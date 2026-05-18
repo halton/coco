@@ -1,0 +1,51 @@
+{
+  "feature": "interact-028",
+  "source_backlog": "interact-016-backlog-doc-polish",
+  "direction": "doc polish + 同源校验: emit_trace 注释精炼 (N-2 KeyError 版本描述) + _RESERVED_TRACE_KEYS 加 taskName 双向同步 logging_setup._RESERVED (N-1)",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_fingerprint_sha256",
+      "ok": true,
+      "detail": "sha256 锁面: coco/proactive_trace.py=ec57c93ffe94, coco/logging_setup.py=22711d7a0a44, scripts/verify_interact_028.py=cc5b53318060"
+    },
+    {
+      "name": "V1_doc_polish_phrases",
+      "ok": true,
+      "detail": "全部 5 个 polish 短语 present"
+    },
+    {
+      "name": "V2_reserved_keys_superset",
+      "ok": true,
+      "detail": "_RESERVED_TRACE_KEYS ⊇ logging_setup._RESERVED (trace|=27 ⊇ logging|=21, 含 taskName)"
+    },
+    {
+      "name": "V3_cross_ref_integrity",
+      "ok": true,
+      "detail": "cross-ref OK: JsonlFormatter._RESERVED 存在 (|=21, type=set, 含 LogRecord 最小子集)"
+    },
+    {
+      "name": "V4_regression",
+      "ok": true,
+      "detail": "all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_021.py': 0, 'scripts/verify_interact_022.py': 0, 'scripts/verify_interact_023.py': 0, 'scripts/verify_interact_024.py': 0, 'scripts/verify_interact_025.py': 0, 'scripts/verify_interact_026.py': 0, 'scripts/verify_interact_027.py': 0}"
+    },
+    {
+      "name": "V5_smoke",
+      "ok": true,
+      "detail": "init.sh rc=0 (stdout len=1680)"
+    }
+  ],
+  "files_changed": [
+    "coco/proactive_trace.py",
+    "scripts/verify_interact_028.py",
+    "evidence/interact-028/verify_summary.json",
+    "evidence/interact-028/migration_note.md",
+    "feature_list.json",
+    "claude-progress.md"
+  ],
+  "runtime_change": false,
+  "default_off_invariant": true,
+  "n1_addressed": "taskName 入 _RESERVED_TRACE_KEYS, 与 logging_setup 双向同步",
+  "n2_addressed": "注释中 'Python 3.13 KeyError' 改为 '所有受支持 CPython 版本一致'",
+  "c1_c5_status": "doc-only marker; 真 LLM backend hook 接入时再处理"
+}

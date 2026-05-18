@@ -4239,11 +4239,30 @@
       "id": "interact-028",
       "title": "interact-016 doc polish + verify 锁面 (verify-only)",
       "priority": 203,
-      "status": "not_started",
+      "status": "passing",
       "phase": 24,
       "area": "interact",
       "source": "interact-016-backlog-doc-polish",
-      "updated_at": "2026-05-18T13:09:44"
+      "updated_at": "2026-05-18T22:30:00",
+      "description": "interact-016 backlog doc-polish 升级 — emit_trace 注释精炼 + _RESERVED_TRACE_KEYS 加 taskName 双向同步 logging_setup._RESERVED (N-1/N-2)。0 业务运行时变更，verify-only 加 scripts/verify_interact_028.py V0..V5 锁面 (fingerprint / polish 短语 / 同源超集 / cross-ref / 邻近回归 / smoke)。",
+      "evidence": {
+        "verify_script": "scripts/verify_interact_028.py",
+        "verify_summary": "evidence/interact-028/verify_summary.json",
+        "migration_note": "evidence/interact-028/migration_note.md",
+        "verify_result": "V0..V5 全 6 项 PASS",
+        "files_changed": [
+          "coco/proactive_trace.py (doc polish + taskName 入 _RESERVED_TRACE_KEYS)",
+          "scripts/verify_interact_028.py (新建)",
+          "evidence/interact-028/verify_summary.json",
+          "evidence/interact-028/migration_note.md",
+          "feature_list.json",
+          "claude-progress.md"
+        ],
+        "runtime_change": false,
+        "default_off_invariant": true,
+        "reviewer_subagent": "LGTM (see reviewer_lgtm)",
+        "reviewer_lgtm": "fresh-context LGTM by Reviewer sub-agent — verify rc=0 (V0-V5 全 PASS) + smoke 11/11 PASS；N-1 (taskName 加入 _RESERVED_TRACE_KEYS) 在 backlog desc 范围合理收口非 scope creep；default-OFF safe (emit_trace OFF 时 line 251-252 立即 return 不触达)；mutant A (删 taskName)→V2 FAIL / mutant B (替换'双向同步')→V1 FAIL；还原 clean；trace 27 ⊇ logging 21 双向同步；流程合规 (Engineer 未 merge)"
+      }
     },
     {
       "id": "robot-022",

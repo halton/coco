@@ -65,14 +65,20 @@ except Exception:  # noqa: BLE001
 log = logging.getLogger("coco.proactive_trace")
 
 
-# interact-016 C-4: emit_trace reserved kwargs（业务侧禁止覆写；命中 WARN once）
+# interact-016 C-4 / interact-028 doc-polish: emit_trace reserved kwargs
+# （业务侧禁止覆写；命中 WARN once）。
+#
 # 包含两类：
 # (a) schema reserved: stage / candidate_id / decision / reason / ts —— 这些字段
 #     已在 emit_trace 显式参数中，Python 语法层面就不可能从 **extra 渠道注入；
 #     仍写入集合，便于未来扩展（例如改为 dict-extra API 时复用）。
-# (b) logging reserved: logging.LogRecord 的内置字段（msg / message / args /
-#     levelname / created / ...），如果从 extra 渠道注入会让 logger.info(extra=)
-#     抛 KeyError 把事件吞掉。把它们 pre-filter 掉。
+# (b) logging stdlib reserved: 与 ``logging.LogRecord.__dict__`` 内置 attr 同名
+#     的键。``logger.info(..., extra=...)`` 若 extra 中含与 LogRecord 内置同名的
+#     key，stdlib 在 ``LogRecord.__init__`` 内显式 ``raise KeyError(...)``（行为
+#     在所有受支持 CPython 版本上一致：3.10/3.11/3.12/3.13；非 3.13 特有）。
+#     未 pre-filter 会让本次 emit 事件被吞掉。本集合与
+#     :data:`coco.logging_setup.JsonlFormatter._RESERVED` 同源，新增字段须双向
+#     同步（interact-028 已对齐 ``taskName``，Python 3.12+ asyncio task 名）。
 _RESERVED_TRACE_KEYS = frozenset({
     # schema reserved
     "stage", "candidate_id", "decision", "reason", "ts",
@@ -82,6 +88,9 @@ _RESERVED_TRACE_KEYS = frozenset({
     "module", "exc_info", "exc_text", "stack_info", "lineno", "funcName",
     "created", "msecs", "relativeCreated", "thread", "threadName",
     "processName", "process", "message",
+    # interact-028 N-1: Python 3.12+ asyncio task 名（LogRecord 新增字段）；
+    # 与 logging_setup._RESERVED 双向同步保持。
+    "taskName",
 })
 _RESERVED_WARN_ONCE = {"warned": False}
 
