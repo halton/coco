@@ -4191,3 +4191,27 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/infra-030 各一次失败 403（Permission denied to haltonhuo_microsoft on halton/coco.git），按 push 策略忽略继续
 - phase-26 进度：**3/5**（robot-025 / interact-031 / infra-030）
 - 下一候选：P223 robot-026（source: robot-015-backlog-verify-error-print-truncation）
+
+## Session 2026-05-19 — robot-026 closeout (P223, phase-26 4/5)
+
+- robot-026 → passing：verify_robot_015 错误打印放宽 [:300] → [:1500]
+- 实际改动（Reviewer 准确措辞）：scripts/verify_robot_015.py L274 一行 `e[:300]` → `e[:1500]`（errors 元素本即 `traceback.format_exc()` 文本，截断长度从 300 放宽到 1500 字符；并非 `str(e)` → `traceback.format_exc()` 的 API 替换）
+- scripts/verify_robot_026.py V0-V4 全 PASS：
+  - V0 anchor 行存在
+  - V1a `[:1500]` 字面量出现 count=1
+  - V1b 旧 `[:300]` 字样 count=0 残留
+  - V2 import traceback 在场
+  - V3 反向 mutant：亲手磁盘改写 `[:1500]`→`[:300]` → verify_robot_026 V1a/V1b/V3 三项 FAIL rc=1，还原后 PASS
+  - V4 锁面：0 业务源码改动 bytewise 等价 main
+- meta-lock 策略：字面量集合 + 总数下限双层，不锁行号（F1/F2/F3 吸收）
+- Reviewer fresh-context LGTM by Reviewer sub-agent（亲手磁盘 mutant + verify_robot_026 + smoke 11/11 PASS）
+- findings：
+  - Engineer 自报措辞偏差（`str(e)[:300]` → `traceback.format_exc()[:1500]` 实际为 `e[:300]` → `e[:1500]`）→ 用准确措辞记录于 evidence/progress（本条）
+  - V1 全文件 count 锁字面量风险（若新增合法 `[:1500]`/`[:300]` 可能误判）→ 可接受，不修
+- 源 backlog `robot-015-backlog-verify-error-print-truncation` → upgraded(robot-026, phase 26)
+- main HEAD（merge 后）: 2ba227e
+- feat HEAD: b9cfa0b
+- smoke: 11/11 PASS（./init.sh 末尾 "Smoke 通过"）
+- push: origin main / origin feat/robot-026 各一次失败 403（Permission denied to haltonhuo_microsoft on halton/coco.git），按 push 策略忽略继续
+- phase-26 进度：**4/5**（robot-025 / interact-031 / infra-030 / robot-026）
+- 下一候选：P224 interact-032（source: interact-023-backlog-v3-rename）
