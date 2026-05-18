@@ -4722,7 +4722,7 @@
       "id": "interact-032",
       "title": "verify_interact_023 V3 函数名 rename v3_type_strict_and_monotonic → v3_type_strict_and_nonneg + docstring 清理",
       "priority": 224,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 26,
       "area": "interact",
       "source": "interact-023-backlog-v3-rename",

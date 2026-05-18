@@ -1,0 +1,55 @@
+{
+  "feature": "interact-032",
+  "all_pass": true,
+  "results": {
+    "V0_file_existence": {
+      "ok": true,
+      "missing": [],
+      "v023_size": 16993,
+      "v032_size": 8648
+    },
+    "V1_new_name_present": {
+      "ok": true,
+      "counts": {
+        "v3_type_strict_and_nonneg": 2,
+        "V3_type_strict_and_nonneg": 4,
+        "nonneg": 9
+      },
+      "bad_counts": [],
+      "missing_docstring": [],
+      "docstring_anchors_total": 3
+    },
+    "V2_old_name_absent": {
+      "ok": true,
+      "old_func_count": 0,
+      "old_label_count": 0,
+      "old_func": "v3_type_strict_and_monotonic",
+      "old_label": "V3_type_strict_and_monotonic"
+    },
+    "V3_subprocess_v023": {
+      "ok": true,
+      "rc": 0,
+      "v3_label": "V3_type_strict_and_nonneg",
+      "v3_ok": true,
+      "v3_detail": {
+        "name": "V3_type_strict_and_nonneg",
+        "ok": true,
+        "detail": "3 cooldown_hit 全部 numeric>=0, lats=[0.005, 0.005, 0.004]"
+      },
+      "parse_err": "",
+      "stderr_tail": ""
+    },
+    "V4_zero_business_diff": {
+      "ok": true,
+      "diff_lines": 0,
+      "baseline": "main",
+      "scope": "coco/",
+      "diff_head": ""
+    },
+    "V5_summary": {
+      "ok": true,
+      "total": 5,
+      "pass_count": 5
+    }
+  }
+}
