@@ -5822,6 +5822,48 @@
       "verification": []
     },
     {
+      "id": "infra-035-backlog-bump-atomic-write",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "bump_infra_034_v4_sha.py 写入改 tmp+os.replace 原子化",
+      "status": "backlog",
+      "source": "infra-035-reviewer",
+      "scope": "scripts/bump_infra_034_v4_sha.py 当前直接 open(json_path, 'w') 写 v4_sha.json；中途被 SIGKILL 或磁盘满会留半截 JSON。改为写 sibling tmp 文件 + os.replace 原子 rename，确保任何时刻 v4_sha.json 都是完整可解析状态。verify-only 工具脚本改动，0 业务源码影响。",
+      "dependencies": [
+        "infra-035"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-035-backlog-v4-sha-canonical-order",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "v4_sha.json bump 输出强制 sort_keys 规范序",
+      "status": "backlog",
+      "source": "infra-035-reviewer",
+      "scope": "scripts/bump_infra_034_v4_sha.py 当前 json.dump 未显式 sort_keys；不同 Python 版本或后续 dict 重构可能导致 v4_sha.json 键序漂移，干扰 diff 与 sha 锁。bump 输出统一 sort_keys=True + ensure_ascii=False + indent=2，保证 canonical 形式。verify-only。",
+      "dependencies": [
+        "infra-035"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-035-backlog-verify-infra-035-self-hash",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_035 加 V6 self-hash 锁防 docstring 漂移",
+      "status": "backlog",
+      "source": "infra-035-engineer",
+      "scope": "scripts/verify_infra_035.py 当前 V0-V5 不含自体 sha 锁；docstring 微调即可悄悄改变脚本而无 verify 红线。补 V6 self-hash 检查（与 verify_infra_034 / verify_robot_036 V0 同模式），将期望 sha 写入脚本 docstring。verify-only，0 业务影响。",
+      "dependencies": [
+        "infra-035"
+      ],
+      "verification": []
+    },
+    {
       "id": "robot-035",
       "priority": 3101,
       "area": "robot",
@@ -5870,7 +5912,7 @@
       "area": "infra",
       "phase": 31,
       "title": "verify_infra_034 V4 sha 期望表外部化到 JSON",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-034-backlog-v4-sha-table-externalize",
       "scope": "verify_infra_034 V4 当前在 docstring 内硬编码覆盖集 sha256 期望；任一覆盖脚本 docstring 微调即 break V4。外部化到 scripts/_verify_lib/infra_034_v4_expected.json，verify_infra_034 启动时读 JSON 与活体 sha 对比。降低 V4 维护成本，且为 robot-035 / 036 / infra-036 改动提供统一同步入口。",
       "dependencies": [
@@ -5881,7 +5923,8 @@
         "V1: scripts/_verify_lib/infra_034_v4_expected.json 存在且 schema 校验",
         "V2: verify_infra_034 V4 改为读 JSON（grep+ast 断言）",
         "V3: 与 robot-035 / robot-036 / infra-036 协调，JSON 期望与新 sha 一致，regression 全 PASS"
-      ]
+      ],
+      "evidence": "7 sha 复核 (v4_sha.json + bump_infra_034_v4_sha.py + verify_infra_034 + verify_infra_035 + 5 覆盖目标) + 4 cmd rc=0 (verify_infra_035 V0-V5 + verify_infra_034 + bump --check + smoke 全 PASS) + V3 mutant (JSON sha 篡改 → V4 fail) + V4 mutant (覆盖脚本 docstring 篡改 → V4 fail) 双反证 + Reviewer (sub-agent): LGTM + feat sha 0ce68cd + main HEAD cf6536a"
     },
     {
       "id": "infra-036",

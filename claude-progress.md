@@ -4666,3 +4666,27 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** infra-035（verify_infra_034 V4 sha 期望表外部化到 JSON）。
+
+---
+
+## Session P251 — infra-035 closeout（2026-05-19）
+
+**feature：** infra-035 — verify_infra_034 V4 sha 期望表外部化到 evidence/infra-034/v4_sha.json + bump helper + verify_infra_035 V0-V5（verify-only，0 业务源码改动）
+
+**结果：** passing（merge --no-ff feat/infra-035 → main）
+
+**evidence：**
+- 7 sha 复核：v4_sha.json + bump_infra_034_v4_sha.py + verify_infra_034 + verify_infra_035 + 5 覆盖目标
+- 4 cmd rc=0：verify_infra_035 V0-V5 + verify_infra_034 + bump --check + smoke 全 PASS
+- V3 mutant（JSON sha 篡改 → V4 fail）+ V4 mutant（覆盖脚本 docstring 篡改 → V4 fail）双反证
+- Reviewer (sub-agent): LGTM
+- feat sha 0ce68cd；main HEAD cf6536a
+
+**新增 backlog（priority=999, phase=null）：**
+- infra-035-backlog-bump-atomic-write（source=infra-035-reviewer）：bump_infra_034_v4_sha.py 写入改 tmp+os.replace 原子化
+- infra-035-backlog-v4-sha-canonical-order（source=infra-035-reviewer）：v4_sha.json bump 输出强制 sort_keys=True
+- infra-035-backlog-verify-infra-035-self-hash（source=infra-035-engineer）：verify_infra_035 加 V6 self-hash 锁防 docstring 漂移
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** infra-036（infra-034 V4 docstring sha 覆盖集扩展，5 候选）。
