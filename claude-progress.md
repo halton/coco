@@ -3662,3 +3662,41 @@ next: phase-21 P173 robot-017 (ProactiveScheduler sync fallback warn-once 节流
 merge: feat/robot-017 → main (--no-ff), merge commit 已生成。
 
 next: phase-21 P174 infra-026 (verify-matrix.yml runs-on 与 matrix.os 一致性审计)。
+
+## Session 2026-05-18 — infra-026 closeout (phase-21 P174, area=infra) — **phase-21 收官**
+
+- feature: infra-026 verify-matrix.yml runs-on 与 matrix.os 一致性审计 (verify-only)
+- branch: feat/infra-026 → main (--no-ff merge)
+- source: infra-019-backlog-runs-on-matrix-os
+- diff:
+  - scripts/verify_infra_026.py (新增)
+  - evidence/infra-026/verify_summary.json (新增)
+  - 0 源码改动
+- Reviewer (sub-agent): **LGTM 干净**, 3 微观可改进点都是非阻塞设计取舍, **不进 backlog**
+  - Reviewer 已 fresh-context 注入 3 mutant 验证 V1/V2/V4 各自 FAIL — verify 真有兜底力
+- verify: V0-V5 6/6 PASS
+  - V0 yaml.safe_load
+  - V1 退化等价 + matrix-os 一致性 (runs-on 与 matrix.os 占位对齐)
+  - V2 9 artifact name 占位锁面
+  - V3 regression infra-019 rc=0
+  - V4 GH-hosted runner 白名单
+  - V5 yaml fingerprint sha256
+- smoke: 11/11 PASS
+- expansion_guidance: 4 条 (扩 matrix 时 runs-on 改 ${{ matrix.os }} 路径)
+- 0 新增 backlog
+
+merge: feat/infra-026 → main (--no-ff), merge commit 已生成。
+
+### phase-21 收官确认 — 5/5 features 全 passing
+
+| # | feature | area | source |
+|---|---|---|---|
+| P170 | robot-016 | robot | robot-008 backlog |
+| P171 | interact-023 | interact | interact-018 backlog |
+| P172 | infra-025 | infra | interact-018 backlog (verify 加固) |
+| P173 | robot-017 | robot | robot-009 双 backlog (sync-fallback-warning + block-policy-doc) |
+| P174 | infra-026 | infra | infra-019 backlog (runs-on / matrix.os) |
+
+phase-21 主题: backlog 吸收 + verify-only 契约审计 (verify 加固 / docstring / 一致性审计)。0 风险源码改动占主导, 高 ROI 收尾。
+
+next: phase-22 规划 (待主会话编排)。

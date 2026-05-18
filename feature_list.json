@@ -3988,10 +3988,11 @@
       "area": "infra",
       "priority": 174,
       "phase": 21,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "infra-019-backlog-runs-on-matrix-os",
       "description": "吸收 backlog infra-019-backlog-runs-on-matrix-os: infra-019 已把 artifact name 加入 ${{ matrix.os }} 占位, 但 .github/workflows/verify-matrix.yml 的 runs-on 仍硬编码 ubuntu-latest。当 matrix 真正扩到多 os 时 runs-on 与 matrix.os 不一致会导致全部 job 跑同一 runner。phase-21 P174 verify-only 契约审计 (不扩 matrix, 避免真机依赖): (a) V0-V1 yaml parse + grep runs-on / matrix.os 一致性断言 (b) V2 文档化扩 matrix 路径建议 + 命名锁面 (c) V3-V5 regression infra-019/024 rc=0 + 当前单 os 行为 bytewise 等价。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Reviewer (sub-agent): LGTM 干净, 3 微观可改进点都是非阻塞设计取舍, 不进 backlog. Reviewer 已 fresh-context 注入 3 mutant 验证 V1/V2/V4 各自 FAIL — verify 真有兜底力. V0-V5 6/6 PASS. smoke 11/11. 0 源码改动 (仅新增 scripts/verify_infra_026.py + evidence/infra-026/verify_summary.json). V0 yaml.safe_load. V1 退化等价 + matrix-os 一致性 (runs-on 与 matrix.os 占位对齐). V2 9 artifact name 占位锁面. V3 regression infra-019 rc=0. V4 GH-hosted runner 白名单. V5 yaml fingerprint sha256. expansion_guidance 4 条 (扩 matrix 时 runs-on 改 ${{ matrix.os }} 路径). source=infra-019-backlog-runs-on-matrix-os. 0 新增 backlog."
     }
   ],
   "_meta": {
