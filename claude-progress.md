@@ -3639,3 +3639,26 @@ next: phase-21 P172 infra-025 (verify_interact_018 / proactive_trace_summary sys
 merge: feat/infra-025 → main (--no-ff), merge commit 已生成。
 
 next: phase-21 P173 robot-017 (ProactiveScheduler sync fallback warn-once 节流 + block policy 语义文档)。
+
+## Session 2026-05-18 — robot-017 closeout (phase-21 P173, area=robot)
+
+- feature: robot-017 ProactiveScheduler sync fallback warn-once 节流 + block policy 语义文档
+- branch: feat/robot-017 → main (--no-ff merge)
+- source: 双 backlog 吸收 — robot-009-backlog-sync-fallback-warning + robot-009-backlog-block-policy-doc
+- diff:
+  - coco/proactive.py +30 additive (default-OFF, env COCO_ROBOT_SYNC_FALLBACK_AUDIT=1 启 warn-once, key=('sync-fallback', id(_seq)))
+  - coco/robot/sequencer.py +7 纯 docstring (block policy timeout=1.0s 语义)
+  - scripts/verify_robot_017.py +377 (V0-V4)
+  - evidence/robot-017/verify_summary.json +47
+- Reviewer (sub-agent): **LGTM**, 1 条非阻塞 nit (evidence notes 更明确写 "V0-V2 锁 contract 而非源码路径") — 已在 evidence 文案吸收
+- verify: V0-V4 全 PASS 63s
+  - V0-V2: sync fallback warn-once 节流契约 (state machine, env=1 触发, env=0 静默)
+  - V3: sequencer 'block' policy timeout=1.0s + block_timeout reason 锁定
+  - V4: regression 缩范围 robot-009/010 (口径同 robot-016 V5)
+- smoke: 11/11 PASS
+- env=0 与 baseline bytewise 等价 (default-OFF)
+- 0 新增 backlog (Reviewer nit 是 evidence 文案优化, 直接吸收)
+
+merge: feat/robot-017 → main (--no-ff), merge commit 已生成。
+
+next: phase-21 P174 infra-026 (verify-matrix.yml runs-on 与 matrix.os 一致性审计)。

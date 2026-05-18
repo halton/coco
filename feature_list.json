@@ -3976,10 +3976,11 @@
       "area": "robot",
       "priority": 173,
       "phase": 21,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "robot-009-backlog-sync-fallback-warning + robot-009-backlog-block-policy-doc",
       "description": "吸收双 backlog: (a) robot-009-backlog-sync-fallback-warning — ProactiveScheduler 在 enqueue 缺失 fallback 走同步 run 时缺 warn-once 节流, 高频 mock 场景 log 噪音; (b) robot-009-backlog-block-policy-doc — RobotSequencer.enqueue 'block' overflow_policy 实际语义为最多阻塞 ~1s 等待 worker, 超时 drop, 与 brief 描述不一致。phase-21 P173 verify-only + docstring (无核心源码改动): (a) V0-V2 sync fallback warn-once 节流契约 verify (state machine) (b) V3 block policy timeout=1s drop 行为 bytewise 锁定 + docstring 同步 (c) V4-V5 regression robot-009/013/015 rc=0。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": "Reviewer (sub-agent): LGTM, 1 条非阻塞 nit (evidence notes 更明确写 'V0-V2 锁 contract 而非源码路径'). V0-V4 全 PASS 63s. smoke 11/11. proactive.py +30 行 additive (default-OFF, env COCO_ROBOT_SYNC_FALLBACK_AUDIT=1 启 warn-once, key=('sync-fallback', id(_seq))). sequencer.py +7 行纯 docstring (block policy timeout=1.0s 语义). env=0 与 baseline bytewise 等价. V3 sequencer 'block' policy timeout=1.0 + block_timeout reason 锁定. V4 regression 缩范围 robot-009/010 (口径同 robot-016 V5). source 双 backlog 吸收 (sync-fallback-warning + block-policy-doc). V0-V2 锁 contract 而非源码路径. 0 新增 backlog."
     },
     {
       "id": "infra-026",
@@ -3994,6 +3995,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-17"
+    "last_updated": "2026-05-18"
   }
 }
