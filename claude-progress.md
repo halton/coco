@@ -4265,3 +4265,12 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json：interact-033 → passing；interact-018-backlog-v1-cooldown-coverage → resolved (resolved_by=interact-033)；新增 interact-033-backlog-v1d-arbit-fail-latency-coverage (priority=999 backlog)
 - push: 见下方报告 (按 push 策略各试一次, 失败忽略)
 - 下一步: phase-27 P232 infra-031 (infra-030 doc 锁单向性提示 + verify_infra_030 V3 docstring 微对齐)
+
+## Session 2026-05-19 P232 infra-031 closeout (passing)
+- feature: infra-031 — infra-030 doc 锁单向性提示 + verify_infra_030 V3 docstring 微对齐 (verify-only + doc)
+- branch: feat/infra-031 (head 4c0cbc3) base main 98d396f → merge_sha e66aa5e (--no-ff)
+- Reviewer sub-agent fresh-context LGTM 无 finding：F1 docs §6 锁单向性段落明示"只感知数量下降回归，不感知新增注入"；F2 verify_030 V3 docstring 与实现一致；verify_infra_031 V0-V5 meta-lock（doc 字面 sentinel + verify_030 sha256 双口）全 PASS；verify_infra_030 V0-V5 无回归；smoke 11/11 PASS
+- 0 业务源码改动 (bytewise 等价 main coco/)；仅 docs/ + scripts/verify_infra_03x.py + feature_list.json + claude-progress.md + evidence/
+- feature_list.json：infra-031 → passing；infra-030-backlog-doc-and-v3-polish → resolved (resolved_by=infra-031)
+- push: 见下方报告 (按 push 策略各试一次, 失败忽略)
+- 下一步: phase-27 P233 robot-027b (verify_robot_016 V3 exc_type 区分性反证)
