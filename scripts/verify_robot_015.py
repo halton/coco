@@ -271,7 +271,7 @@ print()
 if errors:
     print(f"FAIL ({len(errors)} errors, {elapsed:.2f}s)")
     for e in errors:
-        print(f"  - {e[:300]}")
+        print(f"  - {e[:1500]}")
 else:
     print(f"PASS (all checks, {elapsed:.2f}s)")
 

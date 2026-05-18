@@ -4683,7 +4683,7 @@
       "id": "robot-026",
       "title": "verify_robot_015 错误打印放宽 [:300] → traceback.format_exc / [:1500]",
       "priority": 223,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 26,
       "area": "robot",
       "source": "robot-015-backlog-verify-error-print-truncation",
