@@ -5443,7 +5443,7 @@
       "area": "robot",
       "phase": 30,
       "title": "RobotSequencer enqueue except 块 _fallback_warned 锁覆盖收紧",
-      "status": "in_progress",
+      "status": "passing",
       "source": "robot-030-backlog-enqueue-fallback-lock-coverage",
       "scope": "robot-030 引入的 enqueue except 块在 _lock 外读写 _fallback_warned，与 _sync_fallback_audit_seen 同 race pattern；worst case 多发 1 次 fallback warn。把 _fallback_warned 读写收进 _lock，并补 verify_robot_033 fixture：N=50 并发 enqueue 触发 except 时只允许观察到 1 条 fallback warn。default-OFF（不引入新 env），bytewise 等价 main 主路径。",
       "dependencies": [
@@ -5456,7 +5456,16 @@
         "V2: subprocess fixture N=50 并发 enqueue 强制走 except path（monkey-patch _dispatch 抛异常），统计 fallback warn 行数==1",
         "V3: bytewise diff main 仅 sequencer.py 内 _fallback_warned 行被收锁，其他无改",
         "V4: regression verify_robot_007 + verify_robot_030 + smoke 全 PASS"
-      ]
+      ],
+      "evidence": {
+        "reviewer_sub_agent": "LGTM (fresh-context)",
+        "verify_robot_033_subcases": "V0-V5 全 PASS（V0 sha256 自锁 / V1 sequencer.py ast+grep 锁覆盖断言 / V2 N=50 并发 enqueue except path 仅 1 条 fallback warn / V3 bytewise diff main 局部约束 / V4 verify_robot_007 + verify_robot_030 + smoke regression / V5 per-instance mutant）",
+        "triple_lock": "三 sha256 锁：V0 self-sha256（verify script 自锁）+ V1 sequencer.py 静态锁 + V3 mutant per-instance（防 fixture 退化）",
+        "smoke": "11/11 PASS",
+        "feat_sha": "fa5871e",
+        "main_head": "ae19b70",
+        "merge_strategy": "no-ff (verify-only, 0 业务源码改动)"
+      }
     },
     {
       "id": "interact-037",
@@ -5523,6 +5532,42 @@
         "V3: 亲手 mutant verify 脚本 expected 集合多一项 → FAIL（双向锁）",
         "V4: regression verify_robot_032 rc=0 + verify_robot_009 + smoke 11/11 PASS",
         "V5: bytewise diff main 业务源码 0 行改动（仅 verify_robot_032.py + docstring）"
+      ]
+    },
+    {
+      "id": "robot-033-backlog-bytecode-pattern-lock",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_033 追加 dis bytecode pattern 锁作为第三道防线",
+      "status": "backlog",
+      "source": "robot-033 Reviewer LGTM 建议",
+      "scope": "在 V1 sha256 + V2 行为 fixture + V3 mutant 之外，追加 dis bytecode pattern 锁：用 dis 反汇编 RobotSequencer.enqueue 字节码，断言 _fallback_warned 的 LOAD/STORE 一定位于 lock contextmanager 字节码 frame 内。作为静态结构的第三道防线，对 ast 改写但 bytecode 仍泄漏的极端 mutation 提供额外覆盖。",
+      "dependencies": [
+        "robot-033"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: 在 verify_robot_033 中加 V6 子用例，dis.get_instructions(RobotSequencer.enqueue) 扫 _fallback_warned 相关 STORE_ATTR/LOAD_ATTR 全部在 SETUP_WITH..._self._lock... POP_BLOCK 区间内",
+        "V2: per-instance mutant 校验 V6 在锁外读写时 FAIL"
+      ]
+    },
+    {
+      "id": "robot-033-backlog-v3-fixture-strict-exception-discrim",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_033 V3 mutant fixture 严格区分预期 enqueue 异常 vs 其它异常",
+      "status": "backlog",
+      "source": "robot-033 Reviewer LGTM 建议",
+      "scope": "当前 V3 enqueue failure path fixture 通过 broad except 捕获，可能吞掉非预期异常（如 ImportError / AttributeError）导致 mutant 假阳过。改为：在 fixture 中用 type(e) is ExpectedDispatchError 精确匹配 monkey-patch 注入的异常类型，其它异常 re-raise 让 verify 失败。",
+      "dependencies": [
+        "robot-033"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 注入 ImportError 时 verify FAIL（旧 broad except 会 PASS）",
+        "V2: 注入预期 DispatchError 时 verify PASS 且 fallback warn 计数==1"
       ]
     }
   ],

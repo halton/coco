@@ -4525,3 +4525,22 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **Backlog 派生：** 新增 `robot-032-backlog-doc-verify-single-source`（priority=999, phase=null）— 改造 verify 脚本：从文档解析章节标题列表作为单一事实源，消除 docs↔verify 双侧手工同步漂移。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；**phase-29 收官（5/5：infra-033 + robot-030 + interact-036 + robot-031 + robot-032）**，待 phase-30 planning。
+
+### Session 2026-05-19 P245 robot-033 closeout
+
+**Feature：** robot-033 `RobotSequencer enqueue except 块 _fallback_warned 锁覆盖收紧`（verify-only，0 业务源码改动）
+
+**Workflow：** plan(phase-30) → feat/robot-033 sha=fa5871e → Reviewer (sub-agent) LGTM → main merge no-ff → ae19b70
+
+**Evidence：**
+- feat_sha=fa5871e；main HEAD=ae19b70
+- verify_robot_033 V0-V5 全 PASS：V0 sha256 自锁 / V1 sequencer.py ast+grep 静态锁断言 / V2 N=50 并发 enqueue except path fallback warn 计数==1 / V3 bytewise diff main 局部约束 / V4 verify_robot_007+verify_robot_030+smoke regression / V5 per-instance mutant
+- triple-lock：V0 verify self-sha256 + V1 sequencer.py 静态锁 + V3 mutant per-instance（防 fixture 退化）
+- smoke 11/11 PASS
+- Reviewer (sub-agent) LGTM — 三道锁 + per-instance mutant 设计合理；建议 2 个 backlog 提升健壮性
+
+**Backlog 派生：**
+- `robot-033-backlog-bytecode-pattern-lock`（priority=999, phase=null）— 在 V1 sha256+V2 行为+V3 mutant 之外追加 dis bytecode pattern 锁作为第三道防线，覆盖 ast 改写但 bytecode 仍泄漏的极端 mutation
+- `robot-033-backlog-v3-fixture-strict-exception-discrim`（priority=999, phase=null）— V3 mutant fixture 严格区分预期 enqueue 异常 vs 其它异常，避免 broad except 吞错
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险。
