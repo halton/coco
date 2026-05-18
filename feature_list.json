@@ -4096,10 +4096,28 @@
       "id": "robot-019",
       "title": "robot-009 block-policy 文档锁面 + verify (verify-only)",
       "priority": 191,
-      "status": "not_started",
+      "status": "passing",
       "phase": 23,
       "area": "robot",
-      "source": "robot-009-backlog-block-policy-doc"
+      "source": "robot-009-backlog-block-policy-doc",
+      "evidence": {
+        "verify_script": "scripts/verify_robot_019.py",
+        "spec_doc": "docs/robot-sequencer-block-policy-spec.md",
+        "summary": "evidence/robot-019/verify_summary.json",
+        "migration_note": "evidence/robot-019/migration_note.md",
+        "verdict": "PASS",
+        "verify_elapsed_s": 91,
+        "V0_fingerprint": "sha256 锁 sequencer.py + spec_doc + self",
+        "V1_literal": "_VALID_OVERFLOW + block 分支 + q.put(timeout=1.0) + reason=\"block_timeout\" + _busy_reasons",
+        "V2_spec_keys": 18,
+        "V3_behavior": "queue_max=1 + block policy → r3 enqueue 返回 False, drop reason=block_timeout, elapsed≈1.0s",
+        "V4_neighbors": "verify_robot_008/017/018 rc==0 (heavy 012/014/015 由 closeout smoke 间接覆盖)",
+        "V5_smoke": "./init.sh 11/11 PASS",
+        "business_src_diff_bytes": 0,
+        "default_off_invariant": "env 未开 bytewise 等价 main bef3ef6",
+        "new_backlog_added": 0,
+        "reviewer_lgtm": "pending (closeout Reviewer sub-agent fresh-context 评审)"
+      }
     },
     {
       "id": "infra-027",

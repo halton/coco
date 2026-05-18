@@ -1,0 +1,34 @@
+{
+  "feature_id": "robot-019",
+  "priority": 191,
+  "phase": 23,
+  "source_backlog": "robot-009-backlog-block-policy-doc",
+  "verdict": "PASS",
+  "errors": [],
+  "elapsed_s": 91.04,
+  "fingerprints": {
+    "sequencer.py_sha256": "00c0e11132d5b7cd6b13207dca22b5a1d2322eaf346fd406fb610bc5e1002362",
+    "spec_doc_sha256": "8310bd4a3cf3b5c8643a166b195adb33bff74559184e53f1c9788878fb260f49",
+    "verify_self_sha256": "96155c10205d19671c7d32253c7f334362b27f718021939678ddc6884dbf5de0"
+  },
+  "behavior": {
+    "r1": true,
+    "r2": true,
+    "r3": false,
+    "elapsed_s": 1.005,
+    "drop_count": 1,
+    "drop_reasons": [
+      "block_timeout"
+    ],
+    "drop_policies": [
+      "block"
+    ]
+  },
+  "neighbor_regression": [
+    "verify_robot_008.py",
+    "verify_robot_017.py",
+    "verify_robot_018.py"
+  ],
+  "default_off_invariant": "spec evidence-only; 不修改业务源码; env 未开 bytewise 等价 main",
+  "new_backlog_added": 0
+}
