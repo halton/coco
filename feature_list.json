@@ -4321,7 +4321,7 @@
       "id": "interact-029",
       "title": "interact-021/proactive_trace_contract 文档数字一致性清理 (doc-only)",
       "priority": 210,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 25,
       "area": "interact",
       "source": "interact-021-backlog-stale-doc-numbers",

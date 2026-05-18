@@ -1,0 +1,53 @@
+{
+  "feature": "interact-029",
+  "all_pass": true,
+  "authoritative": {
+    "emit_sites": 4,
+    "stage_count": 6
+  },
+  "results": {
+    "V0_file_existence": {
+      "ok": true,
+      "missing": [],
+      "checked": 4
+    },
+    "V1_doc_numbers_consistency": {
+      "ok": true,
+      "has_4_emit_doc": true,
+      "has_6_stage_doc": true,
+      "has_4_emit_v21": true,
+      "has_6_stage_v21": true,
+      "stale_in_doc": [],
+      "stale_in_v21": []
+    },
+    "V2_code_ground_truth": {
+      "ok": true,
+      "latency_ms_kwarg_count": 4,
+      "emit_call_sites": 4,
+      "expected_emit": 4,
+      "known_stages_count": 6,
+      "known_stages": [
+        "arbit_winner",
+        "cooldown_hit",
+        "emotion_alert",
+        "fusion_boost",
+        "mm_proactive",
+        "normal"
+      ],
+      "expected_stage_count": 6
+    },
+    "V3_mutant_rejection": {
+      "ok": true,
+      "mutant_stale_hits": [
+        "5 个 emit"
+      ],
+      "clean_stale_hits": []
+    },
+    "V4_default_off_bytewise": {
+      "ok": true,
+      "rc": 0,
+      "stdout_tail": "CALLS= 0\n",
+      "stderr_tail": ""
+    }
+  }
+}
