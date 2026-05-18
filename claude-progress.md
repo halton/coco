@@ -3856,3 +3856,19 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: interact-025 status not_started → passing
 - 不 merge (Closeout 唯一)
 - 下一候选: robot-019 (P191, robot-009 block-policy 文档锁面 + verify)
+
+## Session 2026-05-18 robot-019 (P191) — RobotSequencer block-policy 文档锁面 + verify (verify-only)
+- 任务: source backlog robot-009-backlog-block-policy-doc. 把 sequencer.py 中 overflow_policy='block' (timeout=1.0, 超时 drop reason='block_timeout') 语义固化为权威 spec doc + 锁面 verify.
+- 产物:
+  - docs/robot-sequencer-block-policy-spec.md — §1 三策略概述 / §2 block 行为契约 / §3 与 drop_new+drop_oldest 对比 / §4 caller guidance / §5 default-OFF / §6 不衍生 fu chain
+  - scripts/verify_robot_019.py — V0 fingerprint sha256 / V1 源码字面量 / V2 spec doc 短语 18 项 / V3 行为 subprocess (queue_max=1 + 长 duration 逼满 → r3=False reason=block_timeout elapsed≈1.0s) / V4 邻近 008/017/018 / V5 smoke
+  - evidence/robot-019/verify_summary.json + migration_note.md
+- verify 结果: PASS 全部, 91s 总耗
+  - V3 r3 elapsed=1.005s ≈ q.put(timeout=1.0) 锁面成立
+  - V4 邻居 008(11s)/017(63s)/018(13s) rc==0; heavy 012/014/015 由 closeout smoke 间接覆盖 (单独 145s/573s/457s, 单 Bash <5min 硬规则)
+  - V5 smoke ./init.sh 11/11 PASS
+- 0 业务源码改动: git diff main -- coco/ 应为空 (待 closeout 验证)
+- backlog 增量: 0
+- feature_list.json: robot-019 status not_started → passing
+- 不 merge (Closeout 唯一)
+- 下一候选: infra-027 (P192, infra-019 CI runs-on matrix OS 锁面 verify-only)
