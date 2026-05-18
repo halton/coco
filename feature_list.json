@@ -3255,7 +3255,8 @@
       "id": "robot-009-backlog-sync-fallback-warning",
       "name": "ProactiveScheduler enqueue getattr fallback 加 logger.warning + 移除时机评估",
       "area": "robot",
-      "status": "backlog",
+      "status": "resolved",
+      "resolved_by": "robot-030",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3266,6 +3267,20 @@
       "evidence": {},
       "selected_for": "robot-030",
       "selected_phase": 29
+    },
+    {
+      "id": "robot-030-backlog-enqueue-fallback-lock-coverage",
+      "name": "ProactiveScheduler enqueue fallback _fallback_warned 读写并发模型清扫",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-030 Reviewer caveat"
+      ],
+      "description": "robot-030 引入的 enqueue except 块在 _lock 外读写 _fallback_warned，与 _sync_fallback_audit_seen 同 race pattern，worst case 多发 1 次 WARNING（功能无害但语义不严格）。建议作为并发模型清扫与 robot-017 一并处理：统一 dedup flag 进 _lock 临界区或采用 atomic CAS。",
+      "verification": null,
+      "evidence": {}
     },
     {
       "id": "robot-009-backlog-busy-requeue-metric",
@@ -5297,11 +5312,23 @@
       "area": "robot",
       "priority": 241,
       "phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "title": "ProactiveScheduler sync fallback 命中 warn",
       "description": "ProactiveScheduler 在调用 _seq.enqueue 时使用 getattr fallback 兼容 mock/legacy sequencer；fallback 走同步 run 路径时静默掩盖真实生产 sequencer 缺失 enqueue 的回归。新增 per-instance 一次性 logger.warning，default-OFF / 不阻业务行为。",
       "source_backlog": "robot-009-backlog-sync-fallback-warning",
-      "scope": "业务源码：ProactiveScheduler fallback 命中处加 per-instance 单次 warn（dedupe via instance flag）；新增 verify_robot_030.py 覆盖 (a) 装备 enqueue 时不 warn；(b) fallback 时 warn 仅一次。default-OFF 友好。"
+      "scope": "业务源码：ProactiveScheduler fallback 命中处加 per-instance 单次 warn（dedupe via instance flag）；新增 verify_robot_030.py 覆盖 (a) 装备 enqueue 时不 warn；(b) fallback 时 warn 仅一次。default-OFF 友好。",
+      "evidence": {
+        "merge_sha": "c133b83",
+        "feat_head": "7800753",
+        "base_main": "a299227",
+        "verify_script": "scripts/verify_robot_030.py",
+        "verify_summary": "evidence/robot-030/verify_summary.json",
+        "business_source_changes": "17_lines_2_sites (init _fallback_warned + enqueue except if/else)",
+        "main_path_bytewise_equivalent": true,
+        "per_instance_dedup": true,
+        "mutant_反证": "PASS (去掉 dedup flag → 多次 warn 被测试捕获)",
+        "reviewer_subagent": "LGTM — per-instance warn-once 实现正确；主路径在 fallback 未命中时整段 if/else 不进入，bytewise 等价；唯一 caveat 为 _fallback_warned 读写在 _lock 外（与 _sync_fallback_audit_seen 同 race pattern，worst case 多发 1 次 WARNING），登记为并发模型清扫 backlog 与 robot-017 一并处理"
+      }
     },
     {
       "id": "interact-036",

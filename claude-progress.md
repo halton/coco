@@ -4481,3 +4481,13 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **范围：** verify-only / docs-only — 仅 `scripts/verify_infra_024.py` 顶端 docstring 增补 venv 使用约束，并新增 `scripts/verify_infra_033.py` meta-verify。无业务源码改动。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK。
+
+## Session — 2026-05-19 — robot-030 closeout (phase-29 P241)
+
+**ProactiveScheduler enqueue fallback per-instance warn-once** → `passing` (源 backlog: robot-009-backlog-sync-fallback-warning → resolved by robot-030)。
+
+**Evidence：** merge_sha=c133b83, feat_head=7800753, base_main=a299227；业务源码 17 lines / 2 sites（`__init__._fallback_warned` 初始化 + enqueue except 块 if/else dedup warn）；主路径在 fallback 未命中时整段 if/else 不进入，bytewise 等价；mutant 反证 PASS（去掉 dedup flag → 多次 warn 被测试捕获）；Reviewer (sub-agent) LGTM，caveat 仅为 _fallback_warned 读写在 _lock 外（与 _sync_fallback_audit_seen 同 race pattern，worst case 多 1 次 WARNING），登记为 `robot-030-backlog-enqueue-fallback-lock-coverage` 与 robot-017 一并清扫。
+
+**范围：** `coco/proactive.py` +17/-2；新增 `scripts/verify_robot_030.py` + `evidence/robot-030/verify_summary.json`。default-OFF 友好，无 env gate，无行为破坏。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 2/5（infra-033 + robot-030）。
