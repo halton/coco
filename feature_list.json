@@ -4409,11 +4409,11 @@
       "id": "interact-030",
       "title": "interact-016 logging _RESERVED 集合 + emit_trace 注释文档对齐 (doc/comment-only)",
       "priority": 213,
-      "status": "not_started",
+      "status": "passing",
       "phase": 25,
       "area": "interact",
       "source": "interact-016-backlog-doc-polish",
-      "updated_at": "2026-05-18T22:43:46",
+      "updated_at": "2026-05-18T23:10:00",
       "verification": {
         "commands": [
           ".venv/bin/python scripts/verify_interact_030.py",
@@ -4426,7 +4426,15 @@
           "Reviewer sub-agent fresh-context LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "decision": "选项 D：verify-only meta 锁面。interact-028 (P125) 已完成 backlog 主要工作（trace + logging 双层 _RESERVED 加 taskName；emit_trace 注释更新 Python 3.10-3.13 KeyError 一致行为），interact-030 二次复查确认全部对齐，仅锁面，0 业务/注释改动。",
+        "verify_interact_030": "V0-V4 全 PASS (rc=0)；trace=27 ⊇ logging=21（与 interact-028 evidence 一致）；mutant 单边删 taskName 触发 V2 diff={'taskName'} 反证成立。",
+        "smoke": "11/11 PASS（audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish）",
+        "files_touched": "scripts/verify_interact_030.py (新增 verify-only 锁面)；coco/proactive_trace.py 与 coco/logging_setup.py 未改 (interact-028 已对齐)。",
+        "anchors": "coco/proactive_trace.py:75-94 (emit_trace 注释 + _RESERVED_TRACE_KEYS frozenset，含 taskName line 93)；coco/logging_setup.py:98-120 (JsonlFormatter._RESERVED，含 taskName line 119)。",
+        "real_machine_uat": "n/a (doc/verify-only)",
+        "Reviewer (sub-agent)": "pending"
+      }
     },
     {
       "id": "robot-024",
