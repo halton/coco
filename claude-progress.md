@@ -4076,3 +4076,14 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/interact-029 各一次成功
 - phase-25 进度：1/5 done（interact-029），剩 4：infra-029 / robot-023 / vision-026 / companion-022
 - 下一候选：P211 infra-029（source infra-024-backlog-v5-rename, verify_infra_024 V5_stdout_chain_assert 命名清理）
+
+## Session 2026-05-18 (infra-029 closeout — P211)
+- infra-029 → passing：verify_infra_024 V5 rename V5_stdout_chain_assert + meta-verify lock (新 scripts/verify_infra_029.py V0-V3)
+- verify_infra_024 rc=0 + verify_infra_029 rc=0 + smoke 11/11 PASS
+- Reviewer (sub-agent fresh-context) LGTM：亲手磁盘 mutant 反证（L160 函数名改回 v5_stdout_real_chain）→ V2_no_stale + V3_subprocess_passes 双 FAIL rc=1，还原后再 rc=0；rename 名实相符（V5 函数体语义=subprocess stdout 链路断言 Smoke 通过 + WARN + SKIP）；scripts/ docs/ 旧名 0 残留；0 业务源码改动 bytewise 等价 main；无 fu chain；finding=无阻塞
+- backlog infra-024-backlog-v5-rename → upgraded (upgraded_to=infra-029, upgraded_phase=25)
+- merge: 8b0944c (feat/infra-029 → main, --no-ff)
+- main HEAD=8b0944c；smoke 11/11 PASS
+- push: origin main / origin feat/infra-029 各一次成功
+- phase-25 进度：2/5 done（interact-029 / infra-029），剩 3：robot-023 / vision-026 / companion-022
+- 下一候选：P212 robot-023（source robot-015-backlog-v3-warn-once-rename, verify_robot_015 V3 warn-once → warn-and-continue 文案）
