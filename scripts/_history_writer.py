@@ -27,8 +27,9 @@ Phase-14 infra-017 加固
 3. 写入失败不阻塞主流程：捕获所有异常，stderr 警告一次即返回。
 4. **运行期零影响**：附加写入发生在 `main()` 返回值确定之后，不修改 rc / stdout
    语义。infra-016 V 项以"前后两次 run 同输入下行号差 ==1 且字段集稳定"自证。
-5. 行数 >ROTATE_LINES (默认 5000) 自动滚到 `.archive/` 下时间戳命名；主 jsonl 立即
-   recreate 空文件（infra-017 C2）。
+5. 行数 >= ROTATE_LINES (默认 5000) 自动滚到 `.archive/` 下时间戳命名；主 jsonl 立即
+   recreate 空文件（infra-017 C2）。infra-028: 字面量与 `_rotate_locked` 内
+   ``_line_count(...) < rotate_lines`` 判定对齐（即 ``>=`` 触发, 非 ``>``）。
 
 依赖
 ----
@@ -323,11 +324,30 @@ def _rotate_locked(jsonl_path: Path, *, rotate_lines: int | None = None) -> Path
 
 
 def _rotate_if_needed(jsonl_path: Path, *, rotate_lines: int | None = None) -> Path | None:
-    """无锁版本——保留对外签名兼容（测试和老调用方继续用），自带加锁。
+    """对外公共 API: rotate 入口, **自带 _FileLock**（infra-022 N4 起）。
 
-    infra-022 N4: 该入口自身加 _FileLock，确保 replace+touch+retention 与同进程
-    其它 append/rotate 串行化。``rotate_lines=None`` 时运行时读 module-level
-    ``ROTATE_LINES``。
+    名义上是"无锁版本对外签名"以保留向后兼容（老调用方和 verify 测试继续按
+    `_rotate_if_needed(path)` 调用），但 **实际实现自 infra-022 N4 起内部已加
+    _FileLock**, 把 ``_rotate_locked`` 的 replace+touch+retention 三步全部包入
+    同一把进程级 advisory 锁，与同进程其它 append/rotate 路径 (`_append_line` /
+    `_emit_safe`) 互斥串行化, 杜绝以下竞态:
+
+    - rename(主→archive) 与 append 到老 fd 之间的 lost-write
+    - touch(主) 与 append 到不存在主文件之间的 ENOENT
+    - 同秒多 worker 同时 rename 撞名 (由 ``_archive_stamp`` 单调 seq 兜底)
+
+    锁作用域 (infra-028 锁面)
+    -------------------------
+    本函数 **进入 with _FileLock(jsonl_path)** → 调用 ``_rotate_locked`` →
+    ``_rotate_locked`` 内部完成 replace+touch+_enforce_retention 三步 →
+    退出 with → 释放锁。即 rotate 的 **原子边界 = _FileLock 的整段 with-block**。
+
+    阈值判定 (infra-028 字面量锁)
+    -----------------------------
+    ``_rotate_locked`` 内 ``_line_count(jsonl_path) < rotate_lines: return None``
+    即 **行数 >= rotate_lines 才触发** rotate（不是 ``>``）。
+    ``rotate_lines=None`` 时运行时读 module-level ``ROTATE_LINES``（默认 5000），
+    允许测试 monkeypatch 改 module 属性。
     """
     if not jsonl_path.exists():
         return None

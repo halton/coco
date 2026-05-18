@@ -1,0 +1,77 @@
+{
+  "feature_id": "infra-028",
+  "source_backlog": "infra-022-backlog-rotate-docstring-mismatch",
+  "fingerprint_sha256": "77e3a1d7d3e0754a06fa1de9ed188f92a55d80794bc5c2de78828da9c5bae9f8",
+  "results": [
+    {
+      "v": "V0",
+      "ok": true,
+      "detail": {
+        "sha256": "77e3a1d7d3e0754a06fa1de9ed188f92a55d80794bc5c2de78828da9c5bae9f8"
+      }
+    },
+    {
+      "v": "V1",
+      "ok": true,
+      "detail": {
+        "thresholds_literal_ok": true
+      }
+    },
+    {
+      "v": "V2",
+      "ok": true,
+      "detail": {
+        "phrases_ok": true,
+        "required": [
+          "自带 _FileLock",
+          "锁作用域",
+          "rotate 的 **原子边界 = _FileLock 的整段 with-block**",
+          "infra-028 锁面",
+          "infra-028 字面量锁"
+        ]
+      }
+    },
+    {
+      "v": "V3",
+      "ok": true,
+      "detail": {
+        "verify_infra_022.py": {
+          "rc": 0,
+          "ok": true,
+          "duration_s": 0.14
+        },
+        "verify_infra_024.py": {
+          "rc": 0,
+          "ok": true,
+          "duration_s": 18.51
+        },
+        "verify_infra_025.py": {
+          "rc": 0,
+          "ok": true,
+          "duration_s": 0.26
+        },
+        "verify_infra_026.py": {
+          "rc": 0,
+          "ok": true,
+          "duration_s": 0.14
+        },
+        "verify_infra_027.py": {
+          "rc": 0,
+          "ok": true,
+          "duration_s": 26.18
+        }
+      }
+    },
+    {
+      "v": "V4",
+      "ok": true,
+      "detail": {
+        "rc": 0,
+        "duration_s": 7.0,
+        "tail_excerpt": "-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓\n/Users/halton/work/coco/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, a = wavfile.read(str(fix_wav))\n"
+      }
+    }
+  ],
+  "rc": 0,
+  "policy": "verify-only; docstring 字面量对齐, 0 业务行为改动"
+}

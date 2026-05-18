@@ -35,7 +35,7 @@ SCRIPTS_DIR = REPO_ROOT / "scripts"
 EVIDENCE_DIR = REPO_ROOT / "evidence" / "infra-022"
 EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
-EXPECTED_FINGERPRINT = "0300e618d227472eb41938ef06b36314cb8384135dc81d780f76ec0fd779c5b0"
+EXPECTED_FINGERPRINT = "77e3a1d7d3e0754a06fa1de9ed188f92a55d80794bc5c2de78828da9c5bae9f8"
 
 
 def _ok(cond: bool, msg: str) -> None:

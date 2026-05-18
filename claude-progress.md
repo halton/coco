@@ -3992,3 +3992,18 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: robot-021 → passing (Reviewer pending)
 - backlog 新增: 0
 - 下一候选: infra-028 (P202) ← infra-022-backlog-rotate-docstring-mismatch
+
+## Session 2026-05-18 phase-24 infra-028 closeout
+
+- feature: infra-028 (P202) — infra-022 rotate docstring 锁面 (verify-only)
+- source backlog: infra-022-backlog-rotate-docstring-mismatch (status: backlog → upgraded)
+- scope: scripts/_history_writer.py 两处 docstring 与实际行为不一致校准
+  - module docstring 第 30 行 "行数 >ROTATE_LINES" → ">= ROTATE_LINES" (实际代码 `_line_count < rotate_lines` 即 `>=` 触发)
+  - `_rotate_if_needed` docstring 自相矛盾 ("无锁版本...自带加锁") → 重写为 "对外公共 API: rotate 入口, **自带 _FileLock** (infra-022 N4 起)" + 锁作用域段 + 阈值判定段
+- 0 业务行为改动: 函数体/签名/全局常量/import 全部未动; 唯一非 docstring 字面量改动 = verify_infra_022.py EXPECTED_FINGERPRINT 更新到新 sha256 (77e3a1d7...)
+- verify: scripts/verify_infra_028.py V0-V4 全 PASS (V0 sha256 / V1 阈值字面量 / V2 docstring 短语锁 / V3 邻近 verify_infra_022/024/025/026/027 rc=0 / V4 COCO_CI=1 smoke rc=0)
+- evidence: evidence/infra-028/verify_summary.json + migration_note.md
+- Reviewer: Engineer sub-agent self-review (verify-only docstring-only diff, V0-V4 PASS, 与 phase-24 其它 verify-only feature 一致)
+- feature_list.json: infra-028 → passing
+- backlog 新增: 0
+- 下一候选: interact-028 (P203) ← interact-016-backlog-doc-polish
