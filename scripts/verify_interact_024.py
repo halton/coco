@@ -58,6 +58,39 @@ def _print(tag: str, msg: str) -> None:
 _results: List[Dict[str, Any]] = []
 _v1_drift_report: Dict[str, Dict[str, Any]] = {}
 
+# interact-036: drift_report 跨 commit 历史趋势 append jsonl 文件名常量
+# 写入位置: evidence/_history/interact_024_drift_history.jsonl (与 smoke_history.jsonl 同目录)
+# 只 append, 不读旧记录; try/except 包裹避免影响 verify PASS/FAIL.
+_DRIFT_HISTORY_PATH = ROOT / "evidence" / "_history" / "interact_024_drift_history.jsonl"
+
+
+def _append_drift_history(drift_report: Dict[str, Dict[str, Any]]) -> None:
+    """append jsonl 一行: per-stage actual_line / drift / within_tolerance + git_head + ts.
+
+    interact-036: 只 append, 不读旧记录; 全 try/except 包裹, 任何失败都不影响 verify。
+    """
+    try:
+        import datetime as _dt
+
+        try:
+            _head = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=str(ROOT), text=True
+            ).strip()
+        except Exception:  # noqa: BLE001
+            _head = None
+        record: Dict[str, Any] = {
+            "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+            "kind": "interact_024_v1_drift",
+            "git_head": _head,
+            "drift_report": drift_report,
+        }
+        _DRIFT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with _DRIFT_HISTORY_PATH.open("a", encoding="utf-8") as _fh:
+            _fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:  # noqa: BLE001
+        # interact-036 硬约束: history 写入失败必须静默 swallow, 不影响 verify。
+        pass
+
 
 def _record(name: str, ok: bool, detail: str = "") -> None:
     _results.append({"name": name, "ok": bool(ok), "detail": detail})
@@ -172,6 +205,9 @@ def v1_source_anchors() -> None:
     # 把 drift_report 暴露到模块级, 便于 verify_summary 写入 evidence.
     global _v1_drift_report
     _v1_drift_report = drift_report
+    # interact-036: append 到 evidence/_history/interact_024_drift_history.jsonl
+    # 跨 commit 行号漂移趋势观测; try/except 包裹, 不影响 verify PASS/FAIL.
+    _append_drift_history(drift_report)
     # 额外锁面: emotion_alert 独立 latency 路径 + 共享 _lat_ms 闭包字面量。
     extra_anchors = [
         "_lat_start = time.monotonic()",

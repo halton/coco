@@ -5335,7 +5335,7 @@
       "area": "interact",
       "priority": 242,
       "phase": 29,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "V1 drift_report 跨 commit 历史趋势写入",
       "description": "把 v1_drift_report.<stage>.actual_line 写入 evidence/_history（或 smoke_history.jsonl），观测跨 commit 行号漂移趋势，辅助提前发现锚点逐步失效。warn-only 与 PASS/FAIL 解耦。",
       "source_backlog": "interact-035a-backlog-drift-report-history-trend",
