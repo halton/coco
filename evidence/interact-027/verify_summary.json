@@ -1,0 +1,63 @@
+{
+  "feature": "interact-027",
+  "source_backlog": "interact-024-backlog-v1-anchor-per-stage-count",
+  "direction": "verify-only, additive (不改 scripts/verify_interact_024.py); V1 升级为 per-stage 严格站点数==3 + 单点删除可感知",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_fingerprint_sha256",
+      "ok": true,
+      "detail": "sha256 锁面: coco/proactive.py=b35d47f503c5, scripts/verify_interact_027.py=8a8f178935ca"
+    },
+    {
+      "name": "V1_admit_arbit_winner_count",
+      "ok": true,
+      "detail": "admit (arbit_winner) latency_ms=_lat_ms() emit-site == 1 at line 1053"
+    },
+    {
+      "name": "V2_reject_main_count",
+      "ok": true,
+      "detail": "reject main (cooldown_hit/normal 三元式) latency_ms=_lat_ms() emit-site == 1 at line 1022"
+    },
+    {
+      "name": "V3_reject_preempt_count",
+      "ok": true,
+      "detail": "reject preempt (arbit_emotion_preempt) latency_ms=_lat_ms() emit-site == 1 at line 994"
+    },
+    {
+      "name": "V4_global_total_count_strict",
+      "ok": true,
+      "detail": "全局 latency_ms=_lat_ms() == 3 严格; per-site={'admit': [1053], 'reject_main': [1022], 'reject_preempt': [994]}"
+    },
+    {
+      "name": "V5_single_delete_simulation",
+      "ok": true,
+      "detail": "3 单点删除模拟均被 per-stage/total 严格断言感知 (3/3 detected)"
+    },
+    {
+      "name": "V6_default_off_no_emit",
+      "ok": true,
+      "detail": "default-OFF 无 trace 行 (ok_trigger=True, trace=0)"
+    },
+    {
+      "name": "V7_regression",
+      "ok": true,
+      "detail": "all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_021.py': 0, 'scripts/verify_interact_022.py': 0, 'scripts/verify_interact_023.py': 0, 'scripts/verify_interact_024.py': 0, 'scripts/verify_interact_025.py': 0, 'scripts/verify_interact_026.py': 0}"
+    },
+    {
+      "name": "V8_smoke",
+      "ok": true,
+      "detail": "init.sh rc=0 (stdout len=1680)"
+    }
+  ],
+  "files_changed": [
+    "scripts/verify_interact_027.py",
+    "evidence/interact-027/verify_summary.json",
+    "evidence/interact-027/migration_note.md",
+    "feature_list.json",
+    "claude-progress.md"
+  ],
+  "runtime_change": false,
+  "default_off_invariant": true,
+  "sha": "2bfe726cdbf71b8afe9236afe094c21ee1fc6c41"
+}
