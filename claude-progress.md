@@ -3612,3 +3612,30 @@ phase-21 P171 interact-023 (area=interact, V1 cooldown_hit 路径 latency_ms 端
 merge: feat/interact-023 → main (--no-ff), merge commit 已生成。
 
 next: phase-21 P172 infra-025 (verify_interact_018 / proactive_trace_summary sys.path 注入审计)。
+
+## Session 2026-05-18 — phase-21 P172 infra-025 closeout
+
+- feature: infra-025 (verify_interact_018 / proactive_trace_summary sys.path 注入审计)
+- area: infra, priority: 172, phase: 21
+- source backlog: interact-018-backlog-syspath-injection-audit
+- status: not_started → passing
+- diff: 0 源码改动 (纯 verify-only)
+  - scripts/verify_infra_025.py +328
+  - evidence/infra-025/verify_summary.json +66
+- Reviewer (sub-agent): **LGTM 干净**, 0 nit, 同意 2 known-risk 登 evidence-only 而非 backlog (避免 fu chain 衍生)
+- verify: V0-V6 7/7 PASS
+  - V0 fingerprint: verify_interact_018.py:42 + proactive_trace_summary.py:60-61 sys.path 注入站点
+  - V1 ROOT: ROOT 父目录含 coco/__init__.py 校验
+  - V2 isolation: sys.path 注入不污染 site-packages
+  - V3 fallback: proactive_trace_summary 有 try/except ImportError fallback; verify_interact_018 无 fallback → evidence known-risk
+  - V4 subprocess: 无 PYTHONPATH 调用 rc=0
+  - V5 regression: interact-018 + proactive_trace_summary 单跑 rc=0
+  - V6 idempotent: lint-only 幂等
+- smoke: 11/11 PASS
+- known-risks (evidence-only, 0 新 backlog):
+  - (1) verify_interact_018 无 ImportError fallback (wheel 打包场景脆弱)
+  - (2) sys.path __file__ 父目录注入在 zip-import / wheel-only 环境失效
+
+merge: feat/infra-025 → main (--no-ff), merge commit 已生成。
+
+next: phase-21 P173 robot-017 (ProactiveScheduler sync fallback warn-once 节流 + block policy 语义文档)。

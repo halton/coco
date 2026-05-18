@@ -3950,10 +3950,25 @@
       "area": "infra",
       "priority": 172,
       "phase": 21,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "interact-018-backlog-syspath-injection-audit",
       "description": "吸收 backlog interact-018-backlog-syspath-injection-audit: scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑 (__file__ 父目录上溯), 在 subprocess 调用 / 打包成 wheel 环境下脆弱。phase-21 P172 verify-only 审计 (不改源码): (a) V0 grep sys.path 注入站点清单 + 文档化风险 (b) V1-V3 try/except ImportError fallback 模式建议 + module-form 调用替代路径论证 (c) V4 subprocess venv site-packages 引用契约固定 (d) V5 regression interact-018 + proactive_trace_summary 单跑 rc=0。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": {
+        "reviewer": "sub-agent fresh-context LGTM 干净, 同意 2 known-risk 登 evidence-only 不衍生 fu chain",
+        "verify": "scripts/verify_infra_025.py V0-V6 7/7 PASS",
+        "smoke": "./init.sh smoke 11/11 PASS",
+        "source_change": "0 行 (verify-only, 仅新增 scripts/verify_infra_025.py + evidence/infra-025/verify_summary.json)",
+        "V0_fingerprint": "verify_interact_018.py:42 + proactive_trace_summary.py:60-61 sys.path 注入站点",
+        "V1_ROOT": "ROOT 父目录含 coco/__init__.py 校验通过",
+        "V2_isolation": "sys.path 注入不污染 site-packages",
+        "V3_fallback": "proactive_trace_summary 有 try/except ImportError fallback; verify_interact_018 无 fallback → evidence known-risk (Reviewer 同意 evidence-only)",
+        "V4_subprocess": "subprocess 无 PYTHONPATH 调用 rc=0",
+        "V5_regression": "interact-018 + proactive_trace_summary 单跑 rc=0",
+        "V6_idempotent": "lint-only 幂等",
+        "known_risks_evidence_only": "(1) verify_interact_018 无 ImportError fallback; (2) wheel 打包场景 sys.path 注入失效 — 均 Reviewer 同意 evidence-only 不衍生 fu chain",
+        "source": "interact-018-backlog-syspath-injection-audit"
+      }
     },
     {
       "id": "robot-017",
