@@ -3011,7 +3011,11 @@
       "evidence": {},
       "upgraded_to": "robot-025",
       "upgraded_phase": 26,
-      "upgraded_to_history": ["robot-010", "robot-016", "robot-025"],
+      "upgraded_to_history": [
+        "robot-010",
+        "robot-016",
+        "robot-025"
+      ],
       "selected_for": "robot-025",
       "selected_phase": 26,
       "updated_at": "2026-05-19T00:50:00"
@@ -4618,11 +4622,11 @@
       "id": "infra-030",
       "title": "verify_*/proactive_trace_summary sys.path 注入路径 audit (verify-only 文档)",
       "priority": 222,
-      "status": "not_started",
+      "status": "passing",
       "phase": 26,
       "area": "infra",
       "source": "interact-018-backlog-syspath-injection-audit",
-      "updated_at": "2026-05-18T16:18:59",
+      "updated_at": "2026-05-19T01:12:32",
       "description": "Reviewer caveat (interact-018) 收口：scripts/verify_interact_018.py 与 scripts/proactive_trace_summary.py 均含 sys.path 注入逻辑（__file__ 父目录上溯），在 subprocess / -m / 打包等场景下健壮性未审计。本 feature audit 各执行路径（直接 python / subprocess / python -m / 模拟非 cwd 调用），文档记录结论，必要时补 scripts/verify_infra_030.py meta lock 防回归。0 业务源码改动。",
       "acceptance_criteria": [
         "audit 列出所有 scripts/verify_*.py + scripts/proactive_trace_summary.py 的 sys.path 注入位置",
@@ -4645,7 +4649,31 @@
           "Reviewer sub-agent fresh-context LGTM"
         ]
       },
-      "evidence": {}
+      "evidence": {
+        "docs": "docs/syspath-injection-audit.md",
+        "verify_script": "scripts/verify_infra_030.py",
+        "verify_result": "V0-V5 全 PASS (rc=0)",
+        "verify_output_tail": "[verify_infra_030] PASS V5_summary: all green (5 checks) / overall: PASS",
+        "smoke": "11/11 PASS (./init.sh)",
+        "four_path_test": {
+          "d1_direct": "PASS — .venv/bin/python scripts/verify_interact_018.py → overall PASS",
+          "d2_subprocess": "PASS — subprocess.run([sys.executable, script]) rc=0",
+          "d3_dash_m": "PASS — cd scripts && python -m verify_interact_018 → overall PASS",
+          "d4_non_root_cwd": "PASS — cd /tmp && abs python abs script → overall PASS"
+        },
+        "injection_stats": {
+          "total_hits": 136,
+          "type_a_repo_root": 92,
+          "type_b_scripts_dir": 24,
+          "type_c_literal_subprocess": 10,
+          "with_if_not_in_guard": 11
+        },
+        "business_diff": "0 (仅新增 docs/ + scripts/verify_infra_030.py + feature_list.json)",
+        "reviewer_status": "pending — Reviewer sub-agent fresh-context 评审待主会话调度",
+        "session_ts": "2026-05-19T01:12:32",
+        "main_base_head": "691dcc3",
+        "feat_branch": "feat/infra-030"
+      }
     },
     {
       "id": "robot-026",
