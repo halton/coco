@@ -1,0 +1,204 @@
+{
+  "feature": "infra-027",
+  "source_backlog": "infra-019-backlog-runs-on-matrix-os",
+  "direction": "verify-only: CI matrix.os 集合 (union over matrix-bearing jobs) 字面量 + cardinality 锁面; spec doc 关键短语锁; runs-on 成员资格锁; 邻近 infra-019/024/025/026 回归; smoke 通过",
+  "ok": true,
+  "spec_os_union": [
+    "ubuntu-latest"
+  ],
+  "results": [
+    {
+      "name": "V0_fingerprint",
+      "ok": true,
+      "detail": "workflow_present=True, spec_present=True"
+    },
+    {
+      "name": "V1_matrix_os_union",
+      "ok": true,
+      "detail": "spec=['ubuntu-latest'] observed=['ubuntu-latest'] jobs=8"
+    },
+    {
+      "name": "V2_spec_phrases",
+      "ok": true,
+      "detail": "checked=6 missing=[]"
+    },
+    {
+      "name": "V3_runs_on_membership",
+      "ok": true,
+      "detail": "checked=10 violations=0"
+    },
+    {
+      "name": "V4_adjacent_regression",
+      "ok": true,
+      "detail": "runs=4 violations=0"
+    },
+    {
+      "name": "V5_smoke",
+      "ok": true,
+      "detail": "rc=0"
+    }
+  ],
+  "audit": {
+    "v0_fingerprint": {
+      ".github/workflows/verify-matrix.yml": {
+        "present": true,
+        "size": 13268,
+        "sha256": "7d75a5b914c68b4ffe57232b0208ccf5896160519b0b9d5111d8bf627a034067"
+      },
+      "docs/ci-matrix-os-spec.md": {
+        "present": true,
+        "size": 5334,
+        "sha256": "08dcdaf96d6bab2e4d4ce5feca254f98e3c22e3e4288fdbf87043692a0f1adfc"
+      }
+    },
+    "v1_matrix_os_union": {
+      "spec_union": [
+        "ubuntu-latest"
+      ],
+      "observed_union": [
+        "ubuntu-latest"
+      ],
+      "per_job": {
+        "smoke": [
+          "ubuntu-latest"
+        ],
+        "verify-vision": [
+          "ubuntu-latest"
+        ],
+        "verify-interact": [
+          "ubuntu-latest"
+        ],
+        "verify-companion": [
+          "ubuntu-latest"
+        ],
+        "verify-audio": [
+          "ubuntu-latest"
+        ],
+        "verify-robot": [
+          "ubuntu-latest"
+        ],
+        "verify-infra": [
+          "ubuntu-latest"
+        ],
+        "verify-publish": [
+          "ubuntu-latest"
+        ]
+      },
+      "violations": []
+    },
+    "v2_spec_phrases": {
+      "phrases": [
+        "closed set",
+        "ubuntu-latest",
+        "verify-only",
+        "infra-026",
+        "SPEC_OS_UNION",
+        "不衍生 fu chain"
+      ],
+      "missing": []
+    },
+    "v3_runs_on_membership": {
+      "checked": [
+        {
+          "job": "lint",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "changes",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "smoke",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-vision",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-interact",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-companion",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-audio",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-robot",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-infra",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        },
+        {
+          "job": "verify-publish",
+          "runs_on": "ubuntu-latest",
+          "stripped": "ubuntu-latest",
+          "resolved_via": "literal in SPEC_OS_UNION ∪ ALLOWED_RUNNERS"
+        }
+      ],
+      "violations": []
+    },
+    "v4_adjacent_regression": {
+      "runs": [
+        {
+          "script": "scripts/verify_infra_019.py",
+          "rc": 0
+        },
+        {
+          "script": "scripts/verify_infra_024.py",
+          "rc": 0
+        },
+        {
+          "script": "scripts/verify_infra_025.py",
+          "rc": 0
+        },
+        {
+          "script": "scripts/verify_infra_026.py",
+          "rc": 0
+        }
+      ],
+      "violations": []
+    },
+    "v5_smoke": {
+      "rc": 0,
+      "ok": true
+    }
+  },
+  "expansion_guidance": [
+    "扩 matrix.os 时, 先改 docs/ci-matrix-os-spec.md §1 表格 + 字面量列表, 再改 SPEC_OS_UNION 常量, 最后改 verify-matrix.yml.",
+    "spec doc 删任一 SPEC_LOCKED_PHRASES 关键短语会让 V2 爆 FAIL — 改前请同步 verify.",
+    "runs-on / matrix.os 字段一致性由 infra-026 锁面, 本 verify 只锁集合本身."
+  ],
+  "files_changed": [
+    "docs/ci-matrix-os-spec.md",
+    "scripts/verify_infra_027.py",
+    "evidence/infra-027/verify_summary.json",
+    "evidence/infra-027/migration_note.md"
+  ],
+  "real_machine_uat": "n/a",
+  "default_off": "verify-only, 0 业务源码改动, 0 CI 行为改动"
+}
