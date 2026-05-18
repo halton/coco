@@ -5297,7 +5297,7 @@
       "area": "robot",
       "priority": 241,
       "phase": 29,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "ProactiveScheduler sync fallback 命中 warn",
       "description": "ProactiveScheduler 在调用 _seq.enqueue 时使用 getattr fallback 兼容 mock/legacy sequencer；fallback 走同步 run 路径时静默掩盖真实生产 sequencer 缺失 enqueue 的回归。新增 per-instance 一次性 logger.warning，default-OFF / 不阻业务行为。",
       "source_backlog": "robot-009-backlog-sync-fallback-warning",

@@ -9,7 +9,7 @@
   "results": {
     "V0_file_existence": {
       "detail": {
-        "bytes": 10999,
+        "bytes": 11000,
         "path": "/Users/halton/work/coco/scripts/verify_robot_015.py"
       },
       "status": "PASS"

@@ -381,6 +381,14 @@ class ProactiveScheduler:
         # key 形态: ("sync-fallback", id(seq))
         self._sync_fallback_audit_seen: set = set()
 
+        # robot-030: per-instance enqueue-fallback warn-once flag.
+        # robot-023 把 V3 enqueue try/except 改为 warn-and-continue (无 dedup);
+        # 真实部署中若 sequencer 持续 enqueue 失败会大量噪音。本 flag 让同一
+        # ProactiveScheduler 实例只 WARNING 一次, 后续命中降 DEBUG。
+        # 仅影响 enqueue 异常路径 (L1322-1326), 不改 main/emit/decision; env
+        # 未开/未注入 sequencer/enqueue 不抛异常 → 整段 if/else 不进入, 等价 main。
+        self._fallback_warned: bool = False
+
         # interact-012: MM proactive LLM 化（default-OFF）。MultimodalFusion 命中
         # 规则后通过 set_mm_llm_context({rule_id, hint, caption, emotion_label,
         # face_ids, ts}) 把上下文塞过来；下一次 maybe_trigger 命中时 _build_mm_system_prompt
@@ -1322,8 +1330,15 @@ class ProactiveScheduler:
                     try:
                         _enqueue_fn(_nod)
                     except Exception as _e:  # noqa: BLE001
-                        log.warning("[proactive] robot_sequencer.enqueue failed: %s: %s",
-                                    type(_e).__name__, _e)
+                        # robot-030: per-instance warn-once (避免持续失败时大量噪音)。
+                        # 首次 WARNING + 置位; 后续 DEBUG。不改 enqueue 调用 / 不 re-raise。
+                        if not self._fallback_warned:
+                            log.warning("[proactive] robot_sequencer.enqueue failed: %s: %s",
+                                        type(_e).__name__, _e)
+                            self._fallback_warned = True
+                        else:
+                            log.debug("[proactive] robot_sequencer.enqueue failed (suppressed warn-once): %s: %s",
+                                      type(_e).__name__, _e)
                 else:
                     # 兼容路径：sequencer 上没有 enqueue（不应出现，留兜底）。
                     # 同步调用 run，不再起 daemon thread。
