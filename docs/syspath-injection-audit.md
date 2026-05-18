@@ -124,6 +124,11 @@ verify 脚本把字面 repo 根路径写入到 subprocess 即时生成的子脚�
 不锁 sha256：吸收 robot-025 finding F1/F2，sha256 锁会与未来正常编辑冲突，
 改用「字面量集合双层 + 总数下限」更稳。
 
+**锁单向性（infra-031 F1）**：本锁仅感知数量**下降**回归（命中数 < 130 → FAIL），
+**不感知新增注入**——即新增 `sys.path.insert` anti-pattern 会让总数上升，
+锁仍 PASS。新增 anti-pattern 的兜底由 code review / Reviewer fresh-context
+评审承担，本 meta-lock 不替代 code review。
+
 ## 7. 实测命令重放
 
 ```bash

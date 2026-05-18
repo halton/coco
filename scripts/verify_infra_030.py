@@ -93,8 +93,9 @@ def v2_core_anchors() -> None:
 
 def v3_mutant_detect() -> None:
     """in-memory mutant：模拟在 scripts/ 新增一个临时 .py，含 sys.path.insert，
-    grep 命中数应增加 → 总数锁的下限策略可感知（命中数单调上升时锁仍 PASS，下降时锁 FAIL）。
-    本断言反证：剔除任一已知核心锚点后总数 < 当前实测时锁不变（防止锁失效）。
+    grep 命中数应 +1 → 验证 _grep_inserts() 可感知新增注入这一基础能力。
+    注意：本断言仅证 grep 命中数对新增敏感，**不**证 V1_grep_total 锁能拦截
+    新增注入（V1 锁仅设下限，命中数上升时仍 PASS——参见 docs §6 锁单向性说明）。
     """
     hits_before = _grep_inserts()
     # 临时往 scripts/ 写一个 mutant 文件
