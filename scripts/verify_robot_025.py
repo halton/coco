@@ -8,9 +8,20 @@ scope: 现状 (a)(b)(c) 三道防护已在 coco/proactive.py 内完整存在 —
       (语义等价 add_shutdown_callback 路径，避免悬垂引用)。
 本 feature 为 **选项 A** — 0 业务源码改动、纯 verify-only meta 锁面 + in-memory mutant 反证。
 
+robot-027 升级（F1+F2 假阳性窗口闭合）:
+  - F1: "overwriting existing sequencer" 字面在源码出现 **2 次** (L493 debug 路径 + L499 prod 路径)。
+        旧 V2 只 sha256 一段字面常量，若 Reviewer mutant 删一处保留一处，prod 行为已弱化但 V2 仍 PASS。
+        本次升级：
+          (a) V1 加 count>=2 lower-bound 锁；
+          (b) V2 增加 setter 关键 block (L489-504) 行号锚定 sha256，baseline 用 `git show <BASE>:coco/proactive.py`
+              取，避免 working-tree 污染；working-tree hash 也算一遍但仅做信息打印。
+  - F2: 旧 V2 中 sentinel_hashes 与 EXPECTED 用同一表达式重复计算，永真自洽。
+        本次升级：EXPECTED 改为 **hardcoded 16-hex prefix 字面常量**，断面直接拿 sentinel_hashes[k][:16] 比对，
+        EXPECTED 不再从当前 src 派生。
+
 V0 file existence + fingerprint sha256
-V1 三道防护 sentinel 行字面量存在
-V2 sentinel 行 sha256 锁 (任意 mutation → hash mismatch)
+V1 三道防护 sentinel 行字面量存在 (含 overwriting count>=2 锁)
+V2 sentinel 行 sha256 锁 (hardcoded 16-hex prefix) + setter block (L489-504) baseline 行号锚定 hash
 V3 mutant 反证 in-memory: 删除 dup-warn 分支 / 或 删除 is_shutdown 探针 → 行为可区分
 V4 default-OFF subprocess: 未设 env 时 setter 注入正常 sequencer bytewise 等价 main (无新 warn 文案变更, audit dedup 不触发)
 V5 summary
@@ -82,6 +93,15 @@ SENT_B_DOUBLE = "double-injection detected"
 check("(b) sentinel overwriting 存在", SENT_B_OVERWRITE in src)
 check("(b) sentinel double-injection 存在", SENT_B_DOUBLE in src)
 
+# robot-027 F1: overwriting 字面在源码必须出现 >=2 次
+# (L493 debug suppressed 路径 + L499 prod warn 路径). 任一被删 → count 退化为 1 → 锁失败.
+_overwrite_count = src.count(SENT_B_OVERWRITE)
+check(
+    "(b) robot-027 F1: overwriting 字面 count>=2 (两个出现点都未被删)",
+    _overwrite_count >= 2,
+    f"count={_overwrite_count}",
+)
+
 # (c) trigger-time shutdown 清空引用 (语义等价 shutdown_callback)
 SENT_C_DETECT = "detected shutdown "
 SENT_C_CLEAR = "clearing _robot_sequencer and skipping enqueue"
@@ -96,9 +116,14 @@ check("(c) sentinel self._robot_sequencer = None 存在",
 
 # =======================================================================
 # V2 sentinel 行 sha256 锁
+# robot-027 F2: EXPECTED 改为 **hardcoded 16-hex prefix 字面常量**, 不再从当前 src 派生.
+#   sentinel_hashes 由本文件运行时计算 (输入是 src 中存在性已经被 V1 锁住的字面常量).
+#   EXPECTED_PREFIX_*16 为发版时人工固化的 16-hex 前缀; 任意字面 mutation -> hash 前缀 mismatch.
+# robot-027 F1 二层: setter 关键 block (L489-504, 1-based) baseline 行号锚定 sha256.
+#   baseline 取 git show <BASE>:coco/proactive.py 而非 working tree, 避免上下文污染.
+#   BASE_SHA = 3ff13c629a97adedeb61897609f1d379820496b8 (main HEAD at robot-027 立 feat 时刻)
 # =======================================================================
-print("[V2] sentinel 行 sha256 锁")
-# 已知锁 (任一字符变更 hash 即变)
+print("[V2] sentinel 行 sha256 锁 + setter block 行号锚定 hash")
 sentinel_hashes = {
     "refuse-to-inject": sha256_str(SENT_A_REFUSE + SENT_A_ALREADY),
     "overwriting": sha256_str(SENT_B_OVERWRITE),
@@ -106,17 +131,63 @@ sentinel_hashes = {
     "detected-shutdown": sha256_str(SENT_C_DETECT),
     "clear-and-skip": sha256_str(SENT_C_CLEAR),
 }
-EXPECTED = {
-    "refuse-to-inject": sha256_str(SENT_A_REFUSE + SENT_A_ALREADY),
-    "overwriting": sha256_str(SENT_B_OVERWRITE),
-    "double-injection": sha256_str(SENT_B_DOUBLE),
-    "detected-shutdown": sha256_str(SENT_C_DETECT),
-    "clear-and-skip": sha256_str(SENT_C_CLEAR),
+# hardcoded 16-hex prefix (robot-027 F2 闭合: EXPECTED 不再从当前 src 表达式派生)
+EXPECTED_PREFIX = {
+    "refuse-to-inject":   "85648bc52cbf60e2",
+    "overwriting":        "389d75de4c93afc1",
+    "double-injection":   "0528662834fe2448",
+    "detected-shutdown":  "71ac601795fc20b2",
+    "clear-and-skip":     "041f5a8ed8d5dc62",
 }
-for k, expected in EXPECTED.items():
-    check(f"sentinel hash[{k}] 锁定", sentinel_hashes[k] == expected,
-          detail=f"got={sentinel_hashes[k][:16]} expect={expected[:16]}")
+for k, expected_prefix in EXPECTED_PREFIX.items():
+    got_prefix = sentinel_hashes[k][:16]
+    check(
+        f"sentinel hash[{k}] 锁定 (hardcoded prefix)",
+        got_prefix == expected_prefix,
+        detail=f"got={got_prefix} expect={expected_prefix}",
+    )
 print("  sentinel_hashes=" + json.dumps({k: v[:16] for k, v in sentinel_hashes.items()}))
+
+# --- robot-027 F1 二层: L489-504 baseline 行号锚定 hash ---
+SETTER_BLOCK_BASE_SHA = "3ff13c629a97adedeb61897609f1d379820496b8"  # main HEAD at robot-027 立 feat
+SETTER_BLOCK_LINE_START = 489  # 1-based
+SETTER_BLOCK_LINE_END = 504    # inclusive, 1-based
+# baseline 段 sha256 (从 `git show 3ff13c6:coco/proactive.py` 取 L489..L504 行, joined)
+SETTER_BLOCK_EXPECTED_SHA = (
+    "c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f"
+)
+setter_block_baseline_sha: str = ""
+setter_block_working_sha: str = ""
+try:
+    proc_show = subprocess.run(
+        ["git", "show", f"{SETTER_BLOCK_BASE_SHA}:coco/proactive.py"],
+        capture_output=True, text=True, timeout=15, cwd=str(REPO),
+    )
+    if proc_show.returncode != 0:
+        errors.append(
+            f"V2 git show baseline 失败: rc={proc_show.returncode} stderr={proc_show.stderr[-200:]!r}"
+        )
+    else:
+        base_lines = proc_show.stdout.splitlines(keepends=True)
+        # 1-based [START..END] inclusive → python slice [START-1:END]
+        base_block = "".join(base_lines[SETTER_BLOCK_LINE_START - 1: SETTER_BLOCK_LINE_END])
+        setter_block_baseline_sha = hashlib.sha256(base_block.encode("utf-8")).hexdigest()
+        check(
+            f"setter block baseline L{SETTER_BLOCK_LINE_START}-L{SETTER_BLOCK_LINE_END} sha256 锁 (BASE={SETTER_BLOCK_BASE_SHA[:8]})",
+            setter_block_baseline_sha == SETTER_BLOCK_EXPECTED_SHA,
+            detail=f"got={setter_block_baseline_sha[:16]} expect={SETTER_BLOCK_EXPECTED_SHA[:16]}",
+        )
+    # 同时算 working tree 同段 hash (信息打印, 不强制等价 baseline — main 本就可能改 working tree)
+    wt_lines = src.splitlines(keepends=True)
+    if len(wt_lines) >= SETTER_BLOCK_LINE_END:
+        wt_block = "".join(wt_lines[SETTER_BLOCK_LINE_START - 1: SETTER_BLOCK_LINE_END])
+        setter_block_working_sha = hashlib.sha256(wt_block.encode("utf-8")).hexdigest()
+    print(
+        f"  setter_block baseline_sha={setter_block_baseline_sha[:16]} "
+        f"working_sha={setter_block_working_sha[:16]}"
+    )
+except Exception:  # noqa: BLE001
+    errors.append("V2 setter block hash: " + traceback.format_exc())
 
 
 # =======================================================================
@@ -349,7 +420,15 @@ summary = {
     "proactive_sha256": proact_full,
     "self_sha256": self_full,
     "sentinel_hashes": sentinel_hashes,
-    "option": "A (三道防护已完整, 转 verify-only meta 锁)",
+    "robot_027": {
+        "overwrite_count": _overwrite_count,
+        "setter_block_base_sha": SETTER_BLOCK_BASE_SHA,
+        "setter_block_lines": f"L{SETTER_BLOCK_LINE_START}-L{SETTER_BLOCK_LINE_END}",
+        "setter_block_baseline_sha": setter_block_baseline_sha,
+        "setter_block_working_sha": setter_block_working_sha,
+        "setter_block_expected_sha": SETTER_BLOCK_EXPECTED_SHA,
+    },
+    "option": "A (三道防护已完整, 转 verify-only meta 锁) + robot-027 F1/F2 收紧",
 }
 (EVID_DIR / "verify_summary.json").write_text(
     json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
