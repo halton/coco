@@ -3857,15 +3857,53 @@
       "evidence": {}
     },
     {
+      "id": "robot-016-backlog-env-string-mutant-lock",
+      "name": "robot-016 env-string mutant-lock 反证补全",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-016 Reviewer nit-1"
+      ],
+      "description": "verify_robot_016.py 当前 env mutant-lock 仅覆盖 '1' 命中, 缺 'true'/'yes'/'on'/'True' 等真值字符串不命中反证 (确认 gate 仅认 '1' 单值, 防 future false-positive 扩展)。纯 verify 补丁。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
+      "id": "robot-016-backlog-exc-type-discrimination",
+      "name": "robot-016 V3 exc-type 区分反证",
+      "area": "robot",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "robot-016 Reviewer nit-2"
+      ],
+      "description": "verify_robot_016.py V3 warn-key=('probe-fail',id,exc_type) 当前未对不同 exc_type 各发 1 条 WARNING 做正面反证 (RuntimeError vs ValueError 应各计 1 次, 不应被首次 RuntimeError 静默)。纯 verify 补丁。",
+      "verification": null,
+      "evidence": {}
+    },
+    {
       "id": "robot-016",
       "name": "set_robot_sequencer lifecycle 校验 + 重复注入告警",
       "area": "robot",
       "priority": 170,
       "phase": 21,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "robot-008-backlog-setter-lifecycle",
       "description": "吸收 backlog robot-008-backlog-setter-lifecycle: set_robot_sequencer 缺 is_shutdown 探针 (向已 shutdown 的 sequencer 注入静默失败) + 重复注入静默覆盖第一次 + shutdown 回调不自动 detach。phase-21 P170 verify-only + 小 additive default-OFF: (a) is_shutdown 探针错误路径 warn-once 锁面 verify (V1) (b) duplicate inject WARN once env-gated (COCO_ROBOT_SETTER_LIFECYCLE) default-OFF (c) V2-V5 contract reaffirmation + regression robot-008/010/015 rc=0。bytewise 等价 main 路径。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": {
+        "reviewer": "Reviewer (sub-agent): LGTM, 2 minor (非阻塞, backlog): nit-1 env-string mutant-lock 缺 'true'/'yes'/'on'/'True' 不命中反证; nit-2 V3 缺不同 exc-type 不命中反证 (RuntimeError vs ValueError)",
+        "verify": "V1-V5 全 PASS, 41s (scripts/verify_robot_016.py)",
+        "smoke": "11/11 PASS",
+        "diff": "coco/proactive.py additive +42/-7 (default-OFF)",
+        "env_gate": "COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1 启 warn-once; env=0 bytewise 等价 main 路径",
+        "warn_key": "key=('dup',id,id) / ('probe-fail',id,exc_type)",
+        "source_backlog": "robot-008-backlog-setter-lifecycle",
+        "merge_commit": "fe274b0"
+      }
     },
     {
       "id": "interact-023",

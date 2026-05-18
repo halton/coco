@@ -3563,3 +3563,28 @@ area 分散: backlog 池现状仅余 robot/interact/infra 三 area (audio 池空
 
 next: feature_list.json + claude-progress.md commit 直接落 main, push origin main 一次失败忽略, 然后进入持续开发模式起点 robot-016 (P170)。
 
+
+## Session 2026-05-18 robot-016 closeout
+
+phase-21 P170 robot-016 (set_robot_sequencer lifecycle 校验 + 重复注入告警) — passing。
+
+实现: coco/proactive.py additive +42/-7 default-OFF。env COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1 启用 warn-once 路径; env=0 (默认) bytewise 等价 main 历史路径。warn-key=('dup',id,id) 覆盖 duplicate inject; warn-key=('probe-fail',id,exc_type) 覆盖 is_shutdown 探针错误路径。
+
+verify: scripts/verify_robot_016.py V1-V5 全 PASS, 41s。
+- V1: is_shutdown 探针错误路径 warn-once 锁面
+- V2: duplicate inject WARN once env-gated
+- V3: warn-key 三元组分组语义
+- V4: env=0 bytewise 等价 main
+- V5: regression robot-008/010/015 rc=0
+
+smoke: 11/11 PASS。
+
+Reviewer (sub-agent fresh-context): LGTM, 2 minor (非阻塞, 已入 backlog):
+- nit-1 env-string mutant-lock 缺 'true'/'yes'/'on'/'True' 不命中反证 → robot-016-backlog-env-string-mutant-lock
+- nit-2 V3 缺不同 exc_type 各 1 WARNING 反证 (RuntimeError vs ValueError) → robot-016-backlog-exc-type-discrimination
+
+source: robot-008-backlog-setter-lifecycle (已吸收)
+
+merge: feat/robot-016 → main (--no-ff), merge commit=fe274b0。
+
+next: phase-21 P171 interact-023 (V1 cooldown_hit 路径 latency_ms 端到端 fixture 覆盖)。
