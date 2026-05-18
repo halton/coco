@@ -7,12 +7,12 @@
     {
       "name": "V0_fingerprint_sha256",
       "ok": true,
-      "detail": "sha256 锁面 3 文件: docs/interact-latency-stage-contract.md=66401ee58053, coco/proactive.py=60ee54cac980, research/proactive_trace_contract.md=52bf4642d546"
+      "detail": "sha256 锁面 3 文件: docs/interact-latency-stage-contract.md=66401ee58053, coco/proactive.py=929694d0fd56, research/proactive_trace_contract.md=52bf4642d546"
     },
     {
       "name": "V1_source_anchors",
       "ok": true,
-      "detail": "per-stage anchors 全部命中: admit@[1056] reject_main@[1025] reject_preempt@[997] + emotion_alert 独立路径 + _lat_ms 闭包"
+      "detail": "per-stage anchors 全部命中: admit@[1064] reject_main@[1033] reject_preempt@[1005] + emotion_alert 独立路径 + _lat_ms 闭包"
     },
     {
       "name": "V2_contract_doc_phrases",
@@ -27,7 +27,7 @@
     {
       "name": "V4_on_three_stages_latency",
       "ok": true,
-      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.01 cooldown_hit=0.007"
+      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.016 reject(normal/no_face)=0.011 cooldown_hit=0.007"
     },
     {
       "name": "V5_regression",
@@ -53,25 +53,25 @@
   "v1_drift_report": {
     "admit": {
       "expected_line": 1056,
-      "actual_line": 1056,
-      "drift": 0,
+      "actual_line": 1064,
+      "drift": 8,
       "drift_tolerance": 20,
       "within_tolerance": true
     },
     "reject_main": {
       "expected_line": 1025,
-      "actual_line": 1025,
-      "drift": 0,
+      "actual_line": 1033,
+      "drift": 8,
       "drift_tolerance": 20,
       "within_tolerance": true
     },
     "reject_preempt": {
       "expected_line": 997,
-      "actual_line": 997,
-      "drift": 0,
+      "actual_line": 1005,
+      "drift": 8,
       "drift_tolerance": 20,
       "within_tolerance": true
     }
   },
-  "sha": "96fb1dcccc2a75cefb03e23798484355c9376b58"
+  "sha": "7ff6221c8c17de3c80d7bcaabd8ca22f79a4e5fa"
 }

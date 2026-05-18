@@ -1,0 +1,51 @@
+{
+  "feature": "interact-036",
+  "source_backlog": "interact-035a-backlog-drift-report-history-trend",
+  "direction": "verify-only meta-lock: 升级 scripts/verify_interact_024.py 写 drift history jsonl + 新增 scripts/verify_interact_036.py 自锁; 0 业务源码改动.",
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_preflight",
+      "ok": true,
+      "detail": "verify_024 + evidence/_history 目录就绪 (/Users/halton/work/coco/evidence/_history)"
+    },
+    {
+      "name": "V1_sentinels",
+      "ok": true,
+      "detail": "6 关键短语全部命中"
+    },
+    {
+      "name": "V2_structural_locks",
+      "ok": true,
+      "detail": "6 结构锁全部命中 + 函数体 try/except 包裹"
+    },
+    {
+      "name": "V3_mutant_proof",
+      "ok": true,
+      "detail": "mutant in-memory 演练: 删 try/except 包裹后函数体 wrap sanity FAIL (body_has_wrap_after_mutate=True unmasked_try=False)"
+    },
+    {
+      "name": "V4_sha256_lock",
+      "ok": true,
+      "detail": "verify_024 sha256=31ef9b97bae01a6f.. 锁面一致"
+    },
+    {
+      "name": "V5_end_to_end_append",
+      "ok": true,
+      "detail": "append +1 行 (before=4 after=5), 字段齐全 (top=['ts', 'kind', 'git_head', 'drift_report'], stages=['admit', 'reject_main', 'reject_preempt'], per-stage fields=['expected_line', 'actual_line', 'drift', 'drift_tolerance', 'within_tolerance'])"
+    }
+  ],
+  "files_changed": [
+    "scripts/verify_interact_024.py",
+    "scripts/verify_interact_036.py",
+    "evidence/_history/interact_024_drift_history.jsonl",
+    "evidence/interact-036/verify_summary.json",
+    "feature_list.json",
+    "claude-progress.md"
+  ],
+  "runtime_change": false,
+  "default_off_invariant": true,
+  "history_jsonl_path": "evidence/_history/interact_024_drift_history.jsonl",
+  "verify_024_sha256_expected": "31ef9b97bae01a6fab44dfa7ea59ad70ec10466b55be68bb2318dc77d3234883",
+  "sha": "7ff6221c8c17de3c80d7bcaabd8ca22f79a4e5fa"
+}
