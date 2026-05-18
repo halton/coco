@@ -4166,3 +4166,28 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/interact-031 各一次失败 403 (Permission denied to haltonhuo_microsoft on halton/coco.git)，按 push 策略忽略继续
 - phase-26 进度：**2/5** (robot-025 / interact-031)
 - 下一候选：P222 infra-030 (source: interact-018-backlog-syspath-injection-audit)
+
+## Session 2026-05-19 — infra-030 (P222) sys.path 注入四档 audit + verify-only meta-lock closeout
+
+- feature: infra-030 (priority 222, area=infra, phase 26, source=interact-018-backlog-syspath-injection-audit)
+- 目标：scripts/verify_*.py 与 proactive_trace_summary.py 的 sys.path 注入审计，verify-only 防回归 meta-lock，0 业务源码改动
+- 落地：
+  - docs/syspath-injection-audit.md（四档分类 + 四执行路径实测 PASS + 锁说明）
+  - scripts/verify_infra_030.py V0-V5 全 PASS（字面量集合 + 总数下限双层锁，不锁行号）
+  - 全仓 136 处注入：A repo 根 92 / B scripts/ 同级 24 / C 字面量 subprocess 10 / 守护 11
+- Reviewer fresh-context LGTM with findings（独立 grep 校验 + 双向 mutant 反证：新增 sys.path.insert→V3 PASS, 删 anchor→V2 FAIL）
+- findings 处理：
+  - F-INFRA030-1（doc 锁单向性提示）→ 入 backlog `infra-030-backlog-doc-and-v3-polish`
+  - F-INFRA030-2（V3 docstring 微对齐）→ 同上 backlog
+  - F-INFRA030-3（Engineer 误把 status 切 passing）→ closeout 保持 passing（实质合规），记录于此
+- 衍生 backlog（共 3 个）：
+  - `infra-backlog-syspath-guard-sweep`（~115 处缺 if-not-in 守护 sweep）
+  - `infra-backlog-syspath-typeC-windows-portability`（Windows 兼容性，低优先）
+  - `infra-030-backlog-doc-and-v3-polish`（F1+F2 微抛光）
+- 源 backlog `interact-018-backlog-syspath-injection-audit` → upgraded(infra-030, phase 26)
+- main HEAD（merge 后）: a089d7e
+- feat HEAD: bf6f157
+- smoke: 11/11 PASS（./init.sh 末尾"Smoke 通过"）
+- push: origin main / origin feat/infra-030 各一次失败 403（Permission denied to haltonhuo_microsoft on halton/coco.git），按 push 策略忽略继续
+- phase-26 进度：**3/5**（robot-025 / interact-031 / infra-030）
+- 下一候选：P223 robot-026（source: robot-015-backlog-verify-error-print-truncation）
