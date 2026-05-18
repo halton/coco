@@ -1,0 +1,75 @@
+{
+  "feature": "companion-018",
+  "scope": "preference emit env 命名 spec 文档同步锁面 (verify-only)",
+  "verify_only": true,
+  "source_code_changes": 0,
+  "default_off": true,
+  "real_machine_uat": "n/a",
+  "authoritative_env": "COCO_PERSIST_EMIT_MIN_INTERVAL_S",
+  "legacy_env_no_alias": "COCO_PREFERENCE_EMIT_INTERVAL_S",
+  "fingerprint": {
+    "git_head": "dc3b3960bb2942a27862c9a580e40e51d0d4ae70",
+    "python": "3.13.12",
+    "preference_learner_sha256": "adffc0337356690697c3ca7b8707f833a4f0b3f05e7b5b76a3551487eee9b0b6",
+    "spec_doc_sha256": "2ca42919840d6c289ad980d0d65f319f27bedc2d083389cf8f0957a80c24a103",
+    "verify_self_sha256": "1e4f8c85115cc36aabfd0fd25f619dc00132b157893a99f5ccc3a67e3f654f9c"
+  },
+  "results": [
+    {
+      "name": "V0_fingerprint",
+      "ok": true,
+      "git_head": "dc3b3960bb2942a27862c9a580e40e51d0d4ae70",
+      "python": "3.13.12",
+      "preference_learner_sha256": "adffc0337356690697c3ca7b8707f833a4f0b3f05e7b5b76a3551487eee9b0b6",
+      "spec_doc_sha256": "2ca42919840d6c289ad980d0d65f319f27bedc2d083389cf8f0957a80c24a103",
+      "verify_self_sha256": "1e4f8c85115cc36aabfd0fd25f619dc00132b157893a99f5ccc3a67e3f654f9c"
+    },
+    {
+      "name": "V1_env_name_literal_lock",
+      "ok": true,
+      "hit_const": 1,
+      "hit_legacy_read": 0,
+      "legacy_in_code_count": 1,
+      "doc_has_authoritative": true,
+      "doc_has_legacy_ref": true
+    },
+    {
+      "name": "V2_spec_doc_phrase_lock",
+      "ok": true,
+      "path": "docs/companion-preference-emit-env-spec.md",
+      "bytes": 7014,
+      "missing": []
+    },
+    {
+      "name": "V3_regression_companion_015_016_017",
+      "ok": true,
+      "rcs": {
+        "scripts/verify_companion_015.py": 0,
+        "scripts/verify_companion_016.py": 0,
+        "scripts/verify_companion_017.py": 0
+      }
+    },
+    {
+      "name": "V4_smoke_regression",
+      "ok": true,
+      "rc": 0,
+      "pass_n": 10,
+      "total_n": 11,
+      "smoke_done": true,
+      "dt_s": 8.4
+    },
+    {
+      "name": "V5_migration_evidence",
+      "ok": true,
+      "path": "evidence/companion-018/migration_note.md",
+      "bytes": 2637,
+      "has_authoritative": true,
+      "has_legacy_ref": true,
+      "has_verify_ref": true,
+      "has_freeze": true,
+      "has_alias_cost": true
+    }
+  ],
+  "all_ok": true,
+  "ts": 1779097514.560288
+}
