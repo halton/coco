@@ -3995,7 +3995,7 @@
       "evidence": "Reviewer (sub-agent): LGTM 干净, 3 微观可改进点都是非阻塞设计取舍, 不进 backlog. Reviewer 已 fresh-context 注入 3 mutant 验证 V1/V2/V4 各自 FAIL — verify 真有兜底力. V0-V5 6/6 PASS. smoke 11/11. 0 源码改动 (仅新增 scripts/verify_infra_026.py + evidence/infra-026/verify_summary.json). V0 yaml.safe_load. V1 退化等价 + matrix-os 一致性 (runs-on 与 matrix.os 占位对齐). V2 9 artifact name 占位锁面. V3 regression infra-019 rc=0. V4 GH-hosted runner 白名单. V5 yaml fingerprint sha256. expansion_guidance 4 条 (扩 matrix 时 runs-on 改 ${{ matrix.os }} 路径). source=infra-019-backlog-runs-on-matrix-os. 0 新增 backlog."
     },
     {
-      "id": "audio-013",
+      "id": "audio-014",
       "name": "wake_word 跨模块 import vad_trigger 私有函数耦合审计",
       "area": "audio",
       "priority": 180,
@@ -4017,7 +4017,7 @@
       "real_machine_uat": "n/a"
     },
     {
-      "id": "companion-017",
+      "id": "companion-018",
       "name": "preference emit env 命名 spec/代码不一致 doc 同步",
       "area": "companion",
       "priority": 182,
