@@ -4412,3 +4412,38 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **uat 异步项登记:** uat-robot-029-real-machine-is-shutdown-bool-cast（priority=999, status=backlog, type=uat, real_machine=required）— 真机 sequencer 实际 is_shutdown 返回类型 + env=1 audit truthy 非 True 拒绝注入物理验证（sim 不可证）；不阻 merge，sim-first 合规。
 
 **phase-28 进度:** 4/5（robot-028 / interact-034 / infra-032 / robot-029 done；下一 candidate: **interact-035** P239）
+
+---
+
+## Session 2026-05-19 (interact-035 closeout, P239 — phase-28 完成)
+
+**interact-035 (V1 per-stage 锚点行号漂移 sanity, warn-only) → passing**
+
+- merge_sha: 11c73f8（main）
+- feat_head: 96fb1dc（feat/interact-035）
+- base_main: a735a6b
+- business_src_diff: **0 业务源码改动**（verify-only：scripts/verify_interact_024.py V1 升级 + scripts/verify_interact_035.py 新增 + evidence/）
+- baseline lines: admit=1056 / reject_main=1025 / reject_preempt=997，tolerance=±20，warn-only 不影响 PASS/FAIL
+- verify: scripts/verify_interact_035.py PASS；verify_interact_024.py V1 per-stage drift_report 三 stage 命中
+
+**Reviewer (sub-agent): LGTM** — V1 per-stage actual_line vs baseline ±20 tolerance warn-only sanity 命中三 stage；warn-only 不影响 PASS/FAIL；2 个非阻塞 backlog 已登记。
+
+**source backlog resolved:** interact-033b-backlog-line-number-drift-detection → resolved_by: interact-035
+
+**新增 backlog（非阻塞，phase=null priority=999）:**
+- interact-035a-backlog-drift-report-history-trend — drift_report.actual_line 写入 _history 看跨 commit 趋势
+- interact-035b-backlog-drift-tolerance-tuning-heuristic — tolerance 用最近 N commits actual_line 标准差自动校准
+
+### Phase-28 完成总结（5/5 passing）
+
+| feature | area | status | business_src_diff | 关键点 |
+|---|---|---|---|---|
+| robot-028 | robot | passing | 0 (verify-only) | bump_verify_027_self_hash 助手 SHA 自锁链 |
+| interact-034 | interact | passing | 0 (verify-only) | proactive trace 三口规范化 sanity |
+| infra-032 | infra | passing | 0 (verify-only) | harness/init smoke 加固 |
+| robot-029 | robot | passing | **+12/-3 (2 sites)** | sequencer is_shutdown bool cast env-gated default-OFF |
+| interact-035 | interact | passing | 0 (verify-only) | V1 per-stage 行号漂移 warn-only sanity |
+
+**phase-28 整体特征：** 5 个 feature 中仅 robot-029 有业务源码改动（且 env-gated default-OFF，env=0 bytewise 等价 main），其余 4 个全部 verify-only / 0 业务源码改动。main 持续保持 `./init.sh` 通过。phase-28 全部 sim-first 合规；唯一 uat 异步项 uat-robot-029-real-machine-is-shutdown-bool-cast 已登记不阻 merge。
+
+**下一步：** phase-29 planning。

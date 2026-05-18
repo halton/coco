@@ -5082,7 +5082,8 @@
       "title": "V1 锚点行号漂移 sanity 检测（低优先级）",
       "area": "interact",
       "priority": 999,
-      "status": "backlog",
+      "status": "resolved",
+      "resolved_by": "interact-035",
       "phase": null,
       "description": "interact-033b 当前 V1 per-stage site_specs 用锚点字面量正则匹配，抗局部漂移 OK；但若 proactive.py 大重构（函数搬家/重命名）则需手工同步锚点。可选增强：在 verify_interact_024.py V1 中加锚点行号 ±N 窗口 sanity（例如记录上次命中行号，本次差 >N 即 warn），辅助早期发现锚点失效。低优先级，不阻 merge。来源：interact-033b Reviewer 报告建议。",
       "source": "interact-033b Reviewer suggestion",
@@ -5205,11 +5206,26 @@
       "area": "interact",
       "priority": 239,
       "phase": 28,
-      "status": "in_progress",
+      "status": "passing",
       "title": "V1 per-stage 锚点行号漂移 sanity",
       "description": "verify_interact_024.py V1 per-stage 锚点匹配抗局部漂移 OK，但大重构需手工同步。可选增强：记录上次命中行号，本次差 >N 即 warn，辅助早期发现锚点失效。低优先级，default-OFF 友好，不阻 merge。",
       "source_backlog": "interact-033b-backlog-line-number-drift-detection",
-      "scope": "verify-only：在 verify_interact_024.py V1 中加锚点行号 ±N 窗口 sanity（warn-only，不影响 PASS/FAIL）。0 业务源码改动。"
+      "scope": "verify-only：在 verify_interact_024.py V1 中加锚点行号 ±N 窗口 sanity（warn-only，不影响 PASS/FAIL）。0 业务源码改动。",
+      "evidence": {
+        "branch": "feat/interact-035 base main a735a6b",
+        "feat_head": "96fb1dcccc2a75cefb03e23798484355c9376b58",
+        "merge_sha": "11c73f8",
+        "business_source_changes": 0,
+        "business_diff": "0 业务源码改动 (verify-only：scripts/verify_interact_024.py V1 升级 + scripts/verify_interact_035.py 新增 + evidence/)",
+        "baseline_lines": {
+          "admit": 1056,
+          "reject_main": 1025,
+          "reject_preempt": 997,
+          "tolerance": 20
+        },
+        "reviewer": "Reviewer (sub-agent): LGTM — V1 per-stage actual_line vs baseline ±20 tolerance warn-only sanity 命中三 stage (admit=1056 / reject_main=1025 / reject_preempt=997)；warn-only 不影响 PASS/FAIL；2 个非阻塞 backlog (035a 历史趋势 / 035b tolerance 自动校准) 已登记。",
+        "note": "verify-only feature; phase-28 最后一个 feature; 0 业务源码改动"
+      }
     },
     {
       "id": "uat-robot-029-real-machine-is-shutdown-bool-cast",
@@ -5221,6 +5237,26 @@
       "real_machine": "required",
       "description": "真机 sequencer 实际 is_shutdown 返回类型确认 + env=1 audit 路径下 truthy 非 True 拒绝注入物理验证（sim 不可证）",
       "source": "robot-029"
+    },
+    {
+      "id": "interact-035a-backlog-drift-report-history-trend",
+      "title": "V1 drift_report 跨 commit 历史趋势",
+      "area": "interact",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "把 v1_drift_report.<stage>.actual_line 写入 evidence/_history 或 smoke_history.jsonl，看跨 commit 行号漂移趋势，辅助提前发现锚点逐步失效。低优先级，不阻 merge。",
+      "source": "interact-035 Reviewer suggestion"
+    },
+    {
+      "id": "interact-035b-backlog-drift-tolerance-tuning-heuristic",
+      "title": "drift tolerance 自动校准启发式",
+      "area": "interact",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "description": "当前 tolerance=20 凭直觉拍。可考虑用最近 N commits 的 actual_line 标准差自动校准 tolerance，降低误报/漏报。低优先级，不阻 merge。",
+      "source": "interact-035 Reviewer suggestion"
     }
   ],
   "_meta": {
