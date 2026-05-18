@@ -5090,11 +5090,31 @@
       "area": "robot",
       "priority": 235,
       "phase": 28,
-      "status": "not_started",
+      "status": "in_progress",
+      "branch": "feat/robot-028",
       "title": "verify-027 self-hash bump helper 脚本",
       "description": "verify-only / default-OFF 友好。新增 scripts/bump_verify_027_self_hash.py：自动读取 scripts/verify_robot_025.py 当前 sha256 并替换 verify_robot_027.py 中 EXPECTED_VERIFY_025_SHA 常量，避免人工同步漂移。无业务源码改动。",
       "source_backlog": "robot-027-backlog-verify-self-hash-bump-helper",
-      "scope": "verify-only：新增 helper 脚本 + 自更新 verify_robot_027.py 的 self-lock 常量。0 业务源码改动。"
+      "scope": "verify-only：新增 helper 脚本 + 自更新 verify_robot_027.py 的 self-lock 常量。0 业务源码改动。",
+      "evidence": {
+        "branch": "feat/robot-028",
+        "base_main_sha": "185271e",
+        "bump_helper": "scripts/bump_verify_027_self_hash.py",
+        "bump_helper_sha256": "c29927bc3f920a761228440505ecdbe16969812704bfca0e3cabb77560132540",
+        "bump_interface": "无参 = 计算 verify_025 sha256 并 in-place 替换 verify_027 中 VERIFY_025_EXPECTED_SHA 字面常量; --dry-run 只打印差异不落盘; rc=0 一致或更新成功",
+        "verify_robot_028": "scripts/verify_robot_028.py V0-V5 meta-lock",
+        "verify_summary": "evidence/robot-028/verify_summary.json",
+        "verify_local_result": "verify_robot_028 ALL PASS; verify_robot_027 ALL PASS; verify_robot_025 ALL PASS",
+        "smoke": "11/11 PASS (./init.sh)",
+        "files_changed": [
+          "scripts/bump_verify_027_self_hash.py (new)",
+          "scripts/verify_robot_028.py (new)",
+          "evidence/robot-028/verify_summary.json (new)",
+          "feature_list.json"
+        ],
+        "business_source_changes": 0,
+        "real_machine_uat": "not_required (verify-only)"
+      }
     },
     {
       "id": "interact-034",
