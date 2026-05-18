@@ -4133,3 +4133,22 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/robot-024 各一次失败 403 (Permission denied to haltonhuo_microsoft on halton/coco.git)，按 push 策略忽略继续
 - phase-25 进度：**5/5 全 passing 收官** (interact-029 / infra-029 / robot-023 / interact-030 / robot-024)
 - 下一步：phase-26 规划（持续开发模式，主会话派 phase-26 planning）
+
+## Session — 2026-05-19 robot-025 closeout (P220, phase-26 1/5)
+
+- robot-025 → passing (set_robot_sequencer lifecycle 三道防护 verify-only meta lock)
+- 三道防护现状（coco/proactive.py 0 业务源码改动 bytewise 等价 main）：
+  - (a) is_shutdown 探针 L460-471 strict bool True 才拒绝 + MagicMock fail-soft + env-gated warn-once L472-485
+  - (b) 重复注入 dup warn L489-504（env=OFF 每次 warn / env=ON warn-once）
+  - (c) shutdown 清空引用 lazy detect-on-trigger L1273-1299 identity guard 'is _seq' 防覆盖竞态
+- verify_robot_025 V0-V5 全 PASS 0.05s + smoke 11/11 PASS
+- Reviewer fresh-context LGTM with findings 亲手磁盘 mutant 删 'overwriting' 字面整段 → verify rc=1 FAIL 还原 sha 对齐；V4 subprocess 实证 env=OFF warn=0/1/2 + _setter_audit_seen size=0
+- Reviewer findings 入新 backlog（不阻 merge）：
+  - **F1** (minor) robot-025-backlog-verify-meta-lock-tightening：V2 sha256 锁字面量"overwriting existing sequencer"在 proactive.py 出现 2 次（L493/L499）→ 假阳性窗口；建议升级为"该字面在源码中至少出现 N 次"或行号锚定 hash
+  - **F2** (cosmetic) 同 backlog：verify_robot_025.py L102-115 sentinel_hashes 与 EXPECTED 同表达式构造自洽永真，建议改为 hardcoded 16-hex prefix 字符串字面常量
+- backlog robot-008-backlog-setter-lifecycle status=upgraded → robot-025 upgraded_phase=26（upgraded_to_history=[robot-010, robot-016, robot-025] 三轮闭环收口）
+- main HEAD: 1f9a4f3 (merge --no-ff feat/robot-025)
+- feat/robot-025 HEAD: 11ac565 (chore closeout)
+- push: origin main / origin feat/robot-025 各一次失败 403 (Permission denied to haltonhuo_microsoft on halton/coco.git)，按 push 策略忽略继续
+- phase-26 进度：**1/5** (robot-025)
+- 下一候选：P221 interact-031 (source: interact-021-backlog-v3-multi-emit-coverage)
