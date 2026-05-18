@@ -365,6 +365,12 @@ class ProactiveScheduler:
         # 注入后 _do_trigger_unlocked emit 之后会异步 run 一个简单的 nod 序列，
         # 让主动开口附带轻量肢体反馈。None 时整段 no-op，bytewise 与基线等价。
         self._robot_sequencer: Any = None
+        # robot-016: setter lifecycle audit (default-OFF, env-gated)。
+        # 仅当 COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1 时启用 warn-once 去重，
+        # 避免长生命周期 hot-restart 场景下 setter 反复触发 WARNING 日志泛滥；
+        # env=0 时 set() 始终空 + 完全跳过 dedup 检查 → bytewise 等价 main。
+        # key 形态: ("dup", id(prev), id(new)) / ("probe-fail", id(seq), exc_type)
+        self._setter_audit_seen: set = set()
 
         # interact-012: MM proactive LLM 化（default-OFF）。MultimodalFusion 命中
         # 规则后通过 set_mm_llm_context({rule_id, hint, caption, emotion_label,
@@ -429,7 +435,15 @@ class ProactiveScheduler:
         - (c) None 入参 → 清除（与 OFF 等价）；
         - 探测 is_shutdown 用 best-effort：sequencer 没有该方法 / 抛异常时按"未 shutdown"处理，
           避免对老/mock sequencer 产生反向破坏（与 default-OFF 不冲突）。
+
+        robot-016: setter lifecycle audit (env-gated, default-OFF)
+        - COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1 时启用 warn-once 去重 ——
+          duplicate inject (相同 prev/new 对) 与 is_shutdown probe failure
+          (相同 sequencer + 异常类型) 仅首次 logger.warning,
+          后续命中降为 logger.debug, 避免长生命周期 hot-restart 场景日志泛滥;
+          env=0 (默认) 时完全跳过 dedup, bytewise 等价 robot-010 行为 (始终 warning)。
         """
+        _audit_on = os.environ.get("COCO_ROBOT_SETTER_LIFECYCLE_AUDIT", "") == "1"
         # robot-010 (a): is_shutdown 探针 —— 拒绝注入已 shutdown 的 sequencer。
         # 注：仅当 is_shutdown() 返回**严格 bool True** 才视为 shutdown；返回非 bool
         # （如 MagicMock 默认 stub 出的 MagicMock 实例）按"未 shutdown"处理，
@@ -448,16 +462,37 @@ class ProactiveScheduler:
                         return
             except Exception as e:  # noqa: BLE001
                 # 探针自身异常 fail-soft —— 按"未 shutdown"继续注入
-                log.warning("[proactive] set_robot_sequencer: is_shutdown probe failed: %s: %s",
-                            type(e).__name__, e)
+                # robot-016: env=1 时同 (sequencer, exc-type) 仅 warn 一次
+                _key = ("probe-fail", id(sequencer), type(e).__name__)
+                if _audit_on and _key in self._setter_audit_seen:
+                    log.debug(
+                        "[proactive] set_robot_sequencer: is_shutdown probe failed "
+                        "(suppressed warn-once): %s: %s", type(e).__name__, e,
+                    )
+                else:
+                    log.warning("[proactive] set_robot_sequencer: is_shutdown probe failed: %s: %s",
+                                type(e).__name__, e)
+                    if _audit_on:
+                        self._setter_audit_seen.add(_key)
         with self._lock:
             # robot-010 (b): 重复注入 WARNING
+            # robot-016: env=1 时同 (prev, new) 对仅 warn 一次
             if self._robot_sequencer is not None and sequencer is not None:
-                log.warning(
-                    "[proactive] set_robot_sequencer: overwriting existing sequencer "
-                    "(prev=%r, new=%r) — double-injection detected",
-                    self._robot_sequencer, sequencer,
-                )
+                _key = ("dup", id(self._robot_sequencer), id(sequencer))
+                if _audit_on and _key in self._setter_audit_seen:
+                    log.debug(
+                        "[proactive] set_robot_sequencer: overwriting existing sequencer "
+                        "(suppressed warn-once, prev=%r, new=%r)",
+                        self._robot_sequencer, sequencer,
+                    )
+                else:
+                    log.warning(
+                        "[proactive] set_robot_sequencer: overwriting existing sequencer "
+                        "(prev=%r, new=%r) — double-injection detected",
+                        self._robot_sequencer, sequencer,
+                    )
+                    if _audit_on:
+                        self._setter_audit_seen.add(_key)
             self._robot_sequencer = sequencer
 
     # interact-010: 共享 cooldown API
