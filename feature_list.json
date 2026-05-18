@@ -5473,7 +5473,8 @@
       "area": "interact",
       "phase": 30,
       "title": "drift JSONL rotation / size cap",
-      "status": "in_progress",
+      "status": "passing",
+      "evidence": "scripts/verify_interact_037.py V0-V5 全 PASS（V0 sha256 自锁 + docstring，V1 静态断言 drift jsonl 写入走 rotate-aware helper / size cap 256KB single-gen，V2 subprocess fixture 触发 rotate 产出 .archive/ PID+ns 命名归档，V3 retention 单代行为（旧 archive 被替换），V4 regression: verify_interact_024 + smoke 全 PASS，V5 bytewise diff main 业务源码 0 行改动）。Reviewer (sub-agent) LGTM；followup backlog 三项: interact-037a (N 代 retention) / interact-037b (filelock 多进程并发) / interact-037c (verify 自锁全文件 sha vs 函数级双锁策略评估)。feat sha 175cbc5；merge main HEAD 71c0154。",
       "source": "interact-036a-backlog-drift-jsonl-rotation",
       "scope": "evidence/_history/interact_024_drift_history.jsonl 当前 append-only 跨 commit 无界增长。复用 infra-016/infra-017 的 history jsonl rotate 模式（>N 行 → .archive/，filelock，retention），把 drift jsonl 纳入；verify-only fixture 验证 rotate 触发与 archive 命名稳定。不改业务源码（仅 evidence pipeline 与 verify-only 辅助）。",
       "dependencies": [
@@ -5569,9 +5570,65 @@
         "V1: 注入 ImportError 时 verify FAIL（旧 broad except 会 PASS）",
         "V2: 注入预期 DispatchError 时 verify PASS 且 fallback warn 计数==1"
       ]
+    },
+    {
+      "id": "interact-037a-backlog-drift-rotation-N-generations",
+      "priority": 999,
+      "area": "interact",
+      "phase": null,
+      "title": "drift jsonl rotation 单代 → N 代 retention",
+      "status": "backlog",
+      "source": "interact-037 Reviewer LGTM 建议",
+      "scope": "interact-037 当前 rotation 为 single-generation（archive 触发即覆盖旧 archive），与 infra-016/017 的 N=20 retention 语义不一致。评估并扩展为 N 代保留：archive 目录维持 N 个最新 stamp 文件，超出按 PID+ns 时间序清理最旧。",
+      "dependencies": [
+        "interact-037"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 配置 N=3 写入触发 4 次 rotate → archive 目录保留最新 3 个",
+        "V2: 时间戳排序稳定，最旧被精确清理",
+        "V3: regression verify_interact_037 V0-V5 全 PASS"
+      ]
+    },
+    {
+      "id": "interact-037b-backlog-rotation-filelock",
+      "priority": 999,
+      "area": "interact",
+      "phase": null,
+      "title": "drift jsonl rotation 多进程并发 filelock",
+      "status": "backlog",
+      "source": "interact-037 Reviewer LGTM 建议",
+      "scope": "当前 rotate 在多进程并发写入下未加 filelock，可能产生 archive 命名冲突或丢行。引入 fcntl/filelock 包裹 rotate 临界区，确保 size 检查 → rename → 重置 三步原子。",
+      "dependencies": [
+        "interact-037"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 启动 N=8 子进程同时写满触发 rotate；总行数（current + archives）== 预期写入总数",
+        "V2: archive 文件名不冲突；无空 archive；无 truncated record"
+      ]
+    },
+    {
+      "id": "interact-037c-backlog-verify-self-file-sha-vs-func-level",
+      "priority": 999,
+      "area": "interact",
+      "phase": null,
+      "title": "verify 自锁策略评估: 全文件 sha vs 函数级双锁",
+      "status": "backlog",
+      "source": "interact-037 Reviewer LGTM 建议",
+      "scope": "interact-037 verify_interact_037.py 使用全文件 sha256 自锁；项目内其它 verify 多采用函数级双锁。评估两种策略在 false-positive（无关注释/格式改动触发）vs 漏检（局部业务函数被改而锁未变）上的权衡，给出项目级推荐与迁移路径。",
+      "dependencies": [
+        "interact-037"
+      ],
+      "verification": [
+        "V0: docstring + sha256",
+        "V1: 调研报告（research/ 或 notes）枚举全部 verify_*.py 当前自锁策略",
+        "V2: 给出推荐策略与迁移成本估算",
+        "V3: 选 1-2 个 verify 做迁移试点（不在本 backlog 内强制完成）"
+      ]
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19 P244 robot-032 closeout"
+    "last_updated": "2026-05-19 P246 interact-037 closeout"
   }
 }

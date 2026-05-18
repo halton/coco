@@ -4544,3 +4544,31 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 - `robot-033-backlog-v3-fixture-strict-exception-discrim`（priority=999, phase=null）— V3 mutant fixture 严格区分预期 enqueue 异常 vs 其它异常，避免 broad except 吞错
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险。
+
+## Session P246 — interact-037 closeout (drift jsonl rotation 256KB single-gen)
+
+**目标：** interact-037 in_progress → passing；将 evidence/_history/interact_024_drift_history.jsonl 的 append-only 无界增长收口为 256KB size cap + single-generation archive rotation；verify-only，业务源码 0 行改动。
+
+**结果：** PASSING。
+
+- feat sha：175cbc5（feat/interact-037）
+- merge base：941c80f → merge HEAD：71c0154（main）
+- scripts/verify_interact_037.py V0-V5 全 PASS：
+  - V0 docstring + 环境约定 + sha256 自锁
+  - V1 静态断言 drift jsonl 写入走 rotate-aware helper（size cap 256KB single-gen）
+  - V2 subprocess fixture >5000 行触发 rotate → .archive/ PID+ns stamp 命名归档
+  - V3 retention 单代行为：archive 触发即替换旧 archive
+  - V4 regression：verify_interact_024 + smoke 全 PASS
+  - V5 bytewise diff main 业务源码 0 行改动
+- Reviewer (sub-agent) LGTM；followup 不阻 merge
+- push origin main / feat/interact-037 各尝试一次（失败忽略，详见 closeout 报告）
+
+**新增 backlog（priority=999, phase=null, status=backlog）：**
+
+- `interact-037a-backlog-drift-rotation-N-generations` — 单代 → N 代 retention，对齐 infra-016/017 语义
+- `interact-037b-backlog-rotation-filelock` — 多进程并发 rotate 加 filelock，避免 archive 命名冲突 / 丢行
+- `interact-037c-backlog-verify-self-file-sha-vs-func-level` — 评估 verify 全文件 sha 锁 vs 函数级双锁的项目级策略
+
+**下一步：** 持续开发模式 → infra-034。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；verify-only 改动 0 业务源码风险；sim-first（无真机 UAT 项）。
