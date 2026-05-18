@@ -3872,3 +3872,20 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - feature_list.json: robot-019 status not_started → passing
 - 不 merge (Closeout 唯一)
 - 下一候选: infra-027 (P192, infra-019 CI runs-on matrix OS 锁面 verify-only)
+
+## Session 2026-05-18 infra-027 (P192) — CI matrix.os 集合稳定性 spec 锁面 + verify (verify-only)
+- 任务: source backlog infra-019-backlog-runs-on-matrix-os. 在 infra-026 (runs-on/matrix.os 字段一致性) 之上, 进一步锁 matrix.os 集合本身 (cardinality + 字面量 union + negative spec + SOP).
+- 产物:
+  - docs/ci-matrix-os-spec.md — §1 SPEC_OS_UNION=[ubuntu-latest] / §2 negative spec (mac/win/旧 ubuntu/self-hosted 不支持原因) / §3 引用 infra-026 不重复 / §4 OS 集合变更 SOP (spec→const→yml→verify) / §5 default-OFF / §6 不衍生 fu chain
+  - scripts/verify_infra_027.py — V0 fingerprint sha256 (workflow + spec) / V1 matrix.os union 字面量+cardinality 锁 (观测 ["ubuntu-latest"] 跨 8 个 matrix-bearing job) / V2 spec doc 6 关键短语锁 / V3 runs-on ∈ SPEC_OS_UNION ∪ ALLOWED_RUNNERS (剥占位, 10/10 PASS) / V4 邻近 infra-019/024/025/026 rc=0 / V5 smoke rc=0
+  - evidence/infra-027/verify_summary.json + migration_note.md
+- verify 结果: PASS 全部 6 项
+  - V1 jobs=8 (smoke + 7 verify-*), 全部 matrix.os=[ubuntu-latest]
+  - V3 checked=10 jobs runs-on, 全部 literal in ALLOWED_RUNNERS (含 lint/changes OS-fixed)
+  - V4 邻近 4 verify rc=0
+  - V5 ./init.sh rc=0
+- 0 业务源码改动: 仅 docs/ scripts/verify_infra_027.py / evidence/infra-027/ / feature_list.json / claude-progress.md (不动 .github/, 不动 coco/, 不动 tests/)
+- backlog 增量: 0
+- feature_list.json: infra-027 status not_started → passing
+- 不 merge (Closeout 唯一)
+- 下一候选: interact-026 (P193)
