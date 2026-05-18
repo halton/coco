@@ -5,7 +5,7 @@
   "source_backlog": "robot-009-backlog-block-policy-doc",
   "verdict": "PASS",
   "errors": [],
-  "elapsed_s": 91.04,
+  "elapsed_s": 89.7,
   "fingerprints": {
     "sequencer.py_sha256": "00c0e11132d5b7cd6b13207dca22b5a1d2322eaf346fd406fb610bc5e1002362",
     "spec_doc_sha256": "8310bd4a3cf3b5c8643a166b195adb33bff74559184e53f1c9788878fb260f49",
@@ -15,7 +15,7 @@
     "r1": true,
     "r2": true,
     "r3": false,
-    "elapsed_s": 1.005,
+    "elapsed_s": 1.01,
     "drop_count": 1,
     "drop_reasons": [
       "block_timeout"
