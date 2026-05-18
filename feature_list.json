@@ -5179,7 +5179,7 @@
       "area": "robot",
       "priority": 238,
       "phase": 28,
-      "status": "not_started",
+      "status": "in_progress",
       "title": "set_robot_sequencer is_shutdown bool cast 兼容性",
       "description": "set_robot_sequencer 的 is_shutdown 探针当前用 `rv is True` 严格判定，面对 numpy.bool_ / int(1) 等 truthy 但非 Python True 的返回值会被视为非 shutdown，导致 fail-open。改为 `bool(rv) is True` 或 `if bool(rv):` 显式转换，兼容 numpy/自定义 sequencer 实现。",
       "source_backlog": "robot-010-backlog-bool-cast-typing",

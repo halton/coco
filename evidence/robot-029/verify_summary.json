@@ -1,0 +1,11 @@
+{
+  "feature_id": "robot-029",
+  "base_sha": "909e704",
+  "proactive_sha256": "60ee54cac98074794744c6130fbbd8111fb0342665d368494bac3238a6a14866",
+  "verify_robot_010_sha256": "d58220977a814fdf127d9e9414d593bba280463f7c66b860f0bc2732cf20dc70",
+  "self_sha256": "e8b6e7a58b24a229d1ee7ad22d3b5266082f086b824e5b723c9e61270a254f3a",
+  "setter_baseline_expected_sha": "abbc501624d8b98545cce43e9822581fd0f4497534d5eff26dab700c56074982",
+  "v010_expected_sha": "d58220977a814fdf127d9e9414d593bba280463f7c66b860f0bc2732cf20dc70",
+  "duration_s": 0.08,
+  "errors": []
+}
