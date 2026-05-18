@@ -62,12 +62,15 @@ _v1_drift_report: Dict[str, Dict[str, Any]] = {}
 # 写入位置: evidence/_history/interact_024_drift_history.jsonl (与 smoke_history.jsonl 同目录)
 # 只 append, 不读旧记录; try/except 包裹避免影响 verify PASS/FAIL.
 _DRIFT_HISTORY_PATH = ROOT / "evidence" / "_history" / "interact_024_drift_history.jsonl"
+# interact-037: rotation size cap. 超过 _MAX_BYTES 时 rotate 到 .jsonl.1 (覆盖式; 仅保留 2 代).
+_MAX_BYTES = 256 * 1024
 
 
 def _append_drift_history(drift_report: Dict[str, Dict[str, Any]]) -> None:
     """append jsonl 一行: per-stage actual_line / drift / within_tolerance + git_head + ts.
 
     interact-036: 只 append, 不读旧记录; 全 try/except 包裹, 任何失败都不影响 verify。
+    interact-037: 在 append 前若当前文件 > _MAX_BYTES, rotate 到 .jsonl.1 (覆盖式).
     """
     try:
         import datetime as _dt
@@ -85,6 +88,20 @@ def _append_drift_history(drift_report: Dict[str, Dict[str, Any]]) -> None:
             "drift_report": drift_report,
         }
         _DRIFT_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # interact-037: size cap rotation. fail-soft 内层 try.
+        try:
+            if (
+                _DRIFT_HISTORY_PATH.exists()
+                and _DRIFT_HISTORY_PATH.stat().st_size > _MAX_BYTES
+            ):
+                _rotated = _DRIFT_HISTORY_PATH.with_suffix(
+                    _DRIFT_HISTORY_PATH.suffix + ".1"
+                )
+                if _rotated.exists():
+                    _rotated.unlink()
+                _DRIFT_HISTORY_PATH.rename(_rotated)
+        except Exception:  # noqa: BLE001
+            pass
         with _DRIFT_HISTORY_PATH.open("a", encoding="utf-8") as _fh:
             _fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception:  # noqa: BLE001
