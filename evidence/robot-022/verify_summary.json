@@ -1,0 +1,13 @@
+{
+  "feature": "robot-022",
+  "scope": "sigterm-swallow-doc + verify-only",
+  "ok": true,
+  "errors": [],
+  "elapsed_s": 0.534,
+  "anchors": {
+    "sequencer_sha256": "00c0e11132d5b7cd6b13207dca22b5a1d2322eaf346fd406fb610bc5e1002362",
+    "spec_doc_sha256": "f65ff81c44cbddf47c8c5006e90cb4396711fad305422509886e31bcd1ee1ce3",
+    "self_sha256": "0bea6b5edd2a3f3a0f5415ad5003d199959133fb092ddf662f109106fcd96c25"
+  },
+  "doc_tokens_checked": 15
+}
