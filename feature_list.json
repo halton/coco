@@ -3064,7 +3064,7 @@
       "id": "robot-012-backlog-sigterm-swallow-doc",
       "name": "SIGTERM handler chain prev 跳过 SIG_DFL/SIG_IGN 导致进程不终止, 需 docstring 警告",
       "area": "robot",
-      "status": "backlog",
+      "status": "upgraded",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3072,7 +3072,9 @@
       ],
       "description": "Reviewer caveat (robot-012): COCO_ROBOT_SIGTERM_HANDLE=ON 时 signal handler 调用 seq.shutdown() 后只 chain 可调用的 prev handler (跳过 SIG_DFL / SIG_IGN), 等于把 SIGTERM 默认终止行为吞掉, 进程不会因 SIGTERM 退出。需在 _install_sigterm_handler docstring 中明确警告该行为, 并文档化 ON 模式下用户层应自行 sys.exit() 或显式 raise SystemExit。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "upgraded_to": "robot-022",
+      "upgraded_phase": 24
     },
     {
       "id": "interact-018-backlog-status-fail-strict-match",
@@ -4268,7 +4270,7 @@
       "id": "robot-022",
       "title": "robot-012 sigterm swallow 文档与 verify 锁面 (verify-only)",
       "priority": 204,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 24,
       "area": "robot",
       "source": "robot-012-backlog-sigterm-swallow-doc",
@@ -4295,7 +4297,9 @@
         "smoke": "./init.sh 11/11 PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish)",
         "runtime_change": false,
         "default_off_invariant": true,
-        "scope_note": "verify-only doc 收口; 0 业务源码改动; SIGTERM swallow 设计意图文档化 + ON 模式用户契约 (sys.exit / prev handler) 明确化"
+        "scope_note": "verify-only doc 收口; 0 业务源码改动; SIGTERM swallow 设计意图文档化 + ON 模式用户契约 (sys.exit / prev handler) 明确化",
+        "reviewer_subagent": "LGTM with findings (see reviewer_lgtm)",
+        "reviewer_lgtm": "fresh-context LGTM with findings by Reviewer sub-agent — verify rc=0 (V0-V5 全 PASS, 0.49s) + smoke 11/11 PASS；亲手磁盘 mutant 反证（L201 swallow 条件改 `prev is None`）→ verify FAIL 2 errors，还原后再 PASS，V2 anchor 反证成立；doc 与 sequencer.py L154-218 + main.py L870-935 字面一致；default-OFF 不变性已亲证（subprocess env 未设时 register=[] 且 SIGTERM handler identity 不变）；0 业务源码改动，bytewise 等价 main；无 scope creep / fu chain；2 finding 不阻 merge (1) source backlog 状态未切 → closeout 处理 (2) V3 in-memory 命名瑕疵不修"
       }
     }
   ],
