@@ -3911,10 +3911,38 @@
       "area": "interact",
       "priority": 171,
       "phase": 21,
-      "status": "not_started",
+      "status": "passing",
       "origin_backlog": "interact-018-backlog-v1-cooldown-coverage",
       "description": "吸收 backlog interact-018-backlog-v1-cooldown-coverage: V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire, cooldown_hit 路径端到端断言尚缺。phase-21 P171 纯 verify 补丁 (无源码改动): (a) 新增 fixture 触发 cooldown_hit (相同 task 在 cooldown 窗口内连续 propose) (b) 断言 latency_ms wire 在 cooldown_hit emit 站点存在且数值合理 (c) V0-V5 含 monotonic / type-strict / 三口闭环 + regression interact-018/021/022 rc=0。real_machine_uat=n/a。",
-      "real_machine_uat": "n/a"
+      "real_machine_uat": "n/a",
+      "evidence": {
+        "reviewer": "Reviewer (sub-agent): LGTM, 1 nit (非阻塞, backlog): nit-1 V3 函数名 v3_type_strict_and_monotonic 与实际断言 (仅 nonneg, 不跨 call monotonic) 略有歧义, 建议改名 + docstring 明确",
+        "verify": "V0-V5 全 PASS (scripts/verify_interact_023.py 445 行)",
+        "smoke": "11/11 PASS",
+        "diff": "0 源码改动 (纯 verify-only): scripts/verify_interact_023.py +445 / evidence/interact-023/verify_summary.json +43",
+        "v0_fingerprint": "3 anchors cooldown_hit emit-site (latency_ms wire + _is_fail + emit 顺序)",
+        "v1_e2e": "fixture 触发 cooldown 抑制路径, 同 task 在 cooldown 窗口内连续 propose, 断言 cooldown_hit emit 含 latency_ms wire",
+        "v2_emit_order": "emit 顺序断言 (propose → cooldown_hit, 非乱序)",
+        "v3_type_strict": "type-strict bool 排除 (latency_ms 必须 int/float, 非 bool, 非 None)",
+        "v4_is_fail": "_is_fail 三口约定闭环验证",
+        "v5_regression": "interact-018 / interact-021 / interact-022 单跑 rc=0",
+        "source_backlog": "interact-018-backlog-v1-cooldown-coverage",
+        "merge_commit": "main HEAD 待回填"
+      }
+    },
+    {
+      "id": "interact-023-backlog-v3-rename",
+      "name": "interact-023 V3 函数名 + docstring 明确 monotonic 仅契约层",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-023 Reviewer nit-1"
+      ],
+      "description": "verify_interact_023.py V3 函数名 v3_type_strict_and_monotonic 当前与实际断言 (仅 latency_ms 非负 + type-strict bool 排除, 不跨 call monotonic) 略有歧义。建议改名为 v3_type_strict_and_nonneg, 并在 docstring 明确 monotonic 仅作 emit 顺序契约层语义 (V2 负责), V3 不承担跨 call monotonic 断言。纯命名 + 文档清理, 非阻塞。",
+      "verification": null,
+      "evidence": {}
     },
     {
       "id": "infra-025",
