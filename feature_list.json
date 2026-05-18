@@ -4452,7 +4452,7 @@
       "id": "robot-024",
       "title": "verify_robot_016 env 字符串 mutant-lock 补真值反证 (verify-only)",
       "priority": 214,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 25,
       "area": "robot",
       "source": "robot-016-backlog-env-string-mutant-lock",
