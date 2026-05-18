@@ -3089,7 +3089,7 @@
       "id": "interact-018-backlog-v1-cooldown-coverage",
       "name": "V1 fixture 补 cooldown_hit 路径 latency_ms 端到端断言",
       "area": "interact",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3099,7 +3099,22 @@
       "verification": null,
       "evidence": {},
       "selected_for": "interact-033",
-      "selected_phase": 27
+      "selected_phase": 27,
+      "resolved_by": "interact-033"
+    },
+    {
+      "id": "interact-033-backlog-v1d-arbit-fail-latency-coverage",
+      "name": "V1 fixture 补 arbit_fail / mm_proactive reject 路径 latency_ms 端到端断言",
+      "area": "interact",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "interact-033 Reviewer caveat"
+      ],
+      "description": "Reviewer caveat (interact-033): V1c 闭合了 cooldown_hit 路径 latency_ms wire, 但 arbit_fail / mm_proactive reject 等其它 reject 分支的 latency_ms 端到端断言仍未独立覆盖。需补 fixture 触发 arbit_fail 与 mm_proactive 拒绝路径, 分别断言 trace 行 latency_ms 字段存在且语义合理 (判定即出)。verify-only, default-OFF 友好 (COCO_PROACTIVE_TRACE gate)。",
+      "verification": null,
+      "evidence": {}
     },
     {
       "id": "robot-012-backlog-shutdown-timeout-inf-nan-hardening",
@@ -4869,11 +4884,11 @@
       "id": "interact-033",
       "title": "verify_interact_018 V1 cooldown 路径 latency_ms 覆盖补全",
       "priority": 231,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 27,
       "area": "interact",
       "source": "interact-018-backlog-v1-cooldown-coverage",
-      "updated_at": "2026-05-19T12:00:00",
+      "updated_at": "2026-05-19T18:30:00",
       "description": "interact-018 Reviewer caveat 收口：V1 当前 fixture 主要覆盖 admit/reject 路径的 latency_ms wire，cooldown_hit 路径 latency_ms 端到端断言尚缺。补 fixture 触发 cooldown_hit（相同 task 在 cooldown 窗口内重入），断言 trace 行 latency_ms 字段存在且非负。verify-only,default-OFF 友好（COCO_PROACTIVE_TRACE gate）。",
       "acceptance_criteria": [
         "verify_interact_018.py 新增 V_cooldown_latency 档：触发 cooldown_hit 路径并断言 trace 行含 latency_ms 字段",
@@ -4904,6 +4919,9 @@
         "smoke": "11/11 PASS (./init.sh)",
         "zero_business_diff": "git diff main -- coco/ = 0 行 (verify-only, 0 业务源码改动)",
         "branch": "feat/interact-033",
+        "feat_head": "4d380df",
+        "merge_sha": "7efec28",
+        "reviewer_lgtm": "Reviewer (sub-agent) fresh-context LGTM: V1c cooldown_hit latency_ms wire 端到端断言成立, meta-lock 双层 (V1c sentinel + sha256 v018) 闭合, 0 业务源码改动 bytewise 等价 main",
         "real_machine_uat": "n/a (verify-only, sim 已证)"
       }
     },
