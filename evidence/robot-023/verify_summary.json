@@ -1,0 +1,47 @@
+{
+  "failures": [],
+  "feature": "robot-023",
+  "rename": {
+    "from": "warn-once",
+    "target_file": "scripts/verify_robot_015.py",
+    "to": "warn-and-continue"
+  },
+  "results": {
+    "V0_file_existence": {
+      "detail": {
+        "bytes": 10999,
+        "path": "/Users/halton/work/coco/scripts/verify_robot_015.py"
+      },
+      "status": "PASS"
+    },
+    "V1_anchor_new_phrase": {
+      "detail": {
+        "new_phrase_count": 3
+      },
+      "status": "PASS"
+    },
+    "V2_no_stale_old_phrase": {
+      "detail": {
+        "old_phrase_count": 0
+      },
+      "status": "PASS"
+    },
+    "V3_subprocess_passes": {
+      "detail": {
+        "rc": 0,
+        "stdout_len": 1433
+      },
+      "status": "PASS"
+    },
+    "V4_mutant_old_phrase_should_fail": {
+      "detail": {
+        "v1_would_fail_on_mutant": true,
+        "v2_would_fail_on_mutant": true
+      },
+      "status": "PASS"
+    }
+  },
+  "source_backlog": "robot-015-backlog-v3-warn-once-rename",
+  "source_semantics_note": "coco/proactive.py:1313-1317 V3 enqueue-exception path 是 try/except + log.warning + 继续, 无 dedup/once-flag, 故 'warn-once' 命名误导, rename → 'warn-and-continue' 与实际语义对齐。",
+  "status": "PASS"
+}
