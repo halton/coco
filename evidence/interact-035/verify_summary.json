@@ -1,0 +1,58 @@
+{
+  "feature": "interact-035",
+  "source_backlog": "interact-033b-backlog-line-number-drift-detection",
+  "direction": "verify-only: 在 verify_interact_024.py V1 中加 expected_line + drift_tolerance 行号窗口 sanity (warn-only, 不影响 PASS/FAIL); 0 业务源码改动",
+  "baseline": {
+    "main_sha": "a735a6b",
+    "expected_lines": {
+      "admit": 1056,
+      "reject_main": 1025,
+      "reject_preempt": 997
+    },
+    "drift_tolerance": 20,
+    "verify_024_sha256": "9ea18966813f421ee82591de2549efe0abc20fac3b37f43abf0a1ea8316c7c97"
+  },
+  "ok": true,
+  "results": [
+    {
+      "name": "V0_sys_path",
+      "ok": true,
+      "detail": "ROOT in sys.path; verify_024 exists"
+    },
+    {
+      "name": "V1_sentinels",
+      "ok": true,
+      "detail": "9 sentinels 全部命中 (含三 EXPECTED_LINE)"
+    },
+    {
+      "name": "V2_lock_params",
+      "ok": true,
+      "detail": "site_specs 三 tuple 字面值锁面 OK (expected_line=1056/1025/997, drift_tolerance=20)"
+    },
+    {
+      "name": "V3_mutant_warn_only",
+      "ok": true,
+      "detail": "mutant admit expected_line=1 -> rc=0 (warn-only), drift=1055, within=False"
+    },
+    {
+      "name": "V4_sha256_lock",
+      "ok": true,
+      "detail": "verify_024 sha256=9ea18966813f421e... matches lock"
+    },
+    {
+      "name": "V5_end_to_end_invoke",
+      "ok": true,
+      "detail": "verify_024 rc=0; drift_report 三 stage within_tolerance=True (drift=0)"
+    }
+  ],
+  "files_changed": [
+    "scripts/verify_interact_024.py",
+    "scripts/verify_interact_035.py",
+    "evidence/interact-035/verify_summary.json",
+    "feature_list.json",
+    "claude-progress.md"
+  ],
+  "runtime_change": false,
+  "default_off_invariant": true,
+  "sha": "96fb1dcccc2a75cefb03e23798484355c9376b58"
+}
