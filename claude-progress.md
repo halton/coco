@@ -4036,3 +4036,18 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - C-1/C-5 仍为 doc-only marker, 不在本任务范围 (真 LLM backend hook 接入再处理), 未新增 backlog
 - **Engineer 仅 commit + push feat/interact-028, 严格遵守"不得 merge main"硬规则**, 交 Reviewer 评审后 Closeout merge
 - 下一候选: robot-022 (P204), phase-24 余 1 项
+
+## Session 2026-05-18 — interact-028 (P203) Closeout
+
+- 类型：closeout (Reviewer LGTM + merge + smoke)
+- 范围：interact-016 backlog doc-polish 升级 (verify-only)
+- Reviewer fresh-context sub-agent LGTM：verify rc=0 (V0-V5 全 PASS) + smoke 11/11 PASS；N-1 (taskName 加入 _RESERVED_TRACE_KEYS) 在 backlog desc 范围合理收口；default-OFF safe；mutant A/B 双向 FAIL；trace 27 ⊇ logging 21 双向同步
+- 流程：Engineer 严格未 merge（流程合规已恢复）
+- feature_list.json：evidence.reviewer_lgtm 写入完整 LGTM 摘要，status=passing
+- merge：`git merge --no-ff feat/interact-028` 到 main
+- main HEAD: 6edba12
+- feat/interact-028 HEAD: ae6aa26
+- smoke: 11/11 PASS（audio / ASR / TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish）
+- push: origin main / origin feat/interact-028 各一次成功
+- phase-24 剩余：robot-022 (P204) source robot-012-backlog-sigterm-swallow-doc
+
