@@ -372,6 +372,15 @@ class ProactiveScheduler:
         # key 形态: ("dup", id(prev), id(new)) / ("probe-fail", id(seq), exc_type)
         self._setter_audit_seen: set = set()
 
+        # robot-017: _do_trigger_unlocked sync fallback (legacy / mock 兜底, seq 上
+        # 无 enqueue 方法时走 seq.run([_nod]) 同步路径) warn-once 节流, env-gated。
+        # env COCO_ROBOT_SYNC_FALLBACK_AUDIT=1 时, 同一 sequencer 对象触发 sync
+        # fallback 首次 logger.warning + 写 set; 同 key 再次触发降为 logger.debug
+        # (suppressed); env=0 (默认) 完全跳过 audit, 不发任何额外 WARNING,
+        # bytewise 等价 main (sync fallback 路径仅在 seq.run 抛异常时 WARNING)。
+        # key 形态: ("sync-fallback", id(seq))
+        self._sync_fallback_audit_seen: set = set()
+
         # interact-012: MM proactive LLM 化（default-OFF）。MultimodalFusion 命中
         # 规则后通过 set_mm_llm_context({rule_id, hint, caption, emotion_label,
         # face_ids, ts}) 把上下文塞过来；下一次 maybe_trigger 命中时 _build_mm_system_prompt
@@ -1309,6 +1318,27 @@ class ProactiveScheduler:
                 else:
                     # 兼容路径：sequencer 上没有 enqueue（不应出现，留兜底）。
                     # 同步调用 run，不再起 daemon thread。
+                    # robot-017: env COCO_ROBOT_SYNC_FALLBACK_AUDIT=1 时, 对触发
+                    # sync fallback 路径本身做 warn-once 节流 (key=('sync-fallback',
+                    # id(_seq))); env=0 (默认) 完全跳过, bytewise 等价 main 行为
+                    # (即不发 fallback-前置 WARNING, 仅 seq.run 失败时 WARNING)。
+                    _sync_audit_on = os.environ.get(
+                        "COCO_ROBOT_SYNC_FALLBACK_AUDIT", ""
+                    ) == "1"
+                    if _sync_audit_on:
+                        _sf_key = ("sync-fallback", id(_seq))
+                        if _sf_key in self._sync_fallback_audit_seen:
+                            log.debug(
+                                "[proactive] _do_trigger_unlocked: sync fallback "
+                                "(suppressed warn-once, seq=%r)", _seq,
+                            )
+                        else:
+                            log.warning(
+                                "[proactive] _do_trigger_unlocked: sequencer lacks "
+                                "enqueue; falling back to sync seq.run (legacy/mock "
+                                "path, seq=%r)", _seq,
+                            )
+                            self._sync_fallback_audit_seen.add(_sf_key)
                     try:
                         _seq.run([_nod])
                     except Exception as _e:  # noqa: BLE001
