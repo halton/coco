@@ -214,17 +214,21 @@ interact-015/016 已落地, 此处一并登记以让下游 stage 聚合覆盖全
 
 ### 5.7 单元锚点 / 验证
 
-- `scripts/verify_interact_018.py`: V2/V3 锁"5 处 emit 都附 latency_ms";
+- `scripts/verify_interact_018.py`: V2/V3 锁"4 处 emit 都附 latency_ms"
+  (1 个 emit_emotion_alert + 3 个 maybe_trigger 内 _trace_emit);
   V4 锁 `latency_by_stage` 按 stage 聚合。
-- `scripts/verify_interact_021.py`: 锁本节 5 个 stage 名清单 + 单调非降 +
+- `scripts/verify_interact_021.py`: 锁本节 6 个 stage 名清单 + 单调非降 +
   文档关键词。
+- `scripts/verify_interact_026.py`: 锁本节文档字面量与代码字面量一致
+  (4 处 emit / 6 个 stage 名) — interact-021 backlog stale-doc-numbers
+  纠偏 + verify-only。
 
 ---
 
 ## 6. 相关源
 
 - 实现: `coco/proactive_trace.py` (常量 `STATUS_FAIL_TOKENS`, 函数 `is_fail`,
-  `emit_trace`, `emit_end`); `coco/proactive.py` (5 个 `latency_ms` emit 站点)
+  `emit_trace`, `emit_end`); `coco/proactive.py` (4 个 `latency_ms` emit 站点)
 - 验证: `scripts/verify_interact_019.py` (token 白名单回归),
   `scripts/verify_interact_020.py` (status contract),
   `scripts/verify_interact_021.py` (latency stage 语义)

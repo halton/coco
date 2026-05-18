@@ -1,0 +1,72 @@
+{
+  "feature": "interact-026",
+  "title": "interact-021 文档数字纠偏 + verify 锁面 (verify-only)",
+  "verify_only": true,
+  "business_source_diff": "none (coco/ untouched; only docs/ scripts/ touched)",
+  "expected_emit_sites": 4,
+  "expected_stage_names": 6,
+  "results": {
+    "V0_fingerprint_sha256": {
+      "ok": true,
+      "fingerprints": [
+        {
+          "path": "scripts/verify_interact_021.py",
+          "exists": true,
+          "size": 11149,
+          "sha256": "85ec53d00bc0"
+        },
+        {
+          "path": "research/proactive_trace_contract.md",
+          "exists": true,
+          "size": 12259,
+          "sha256": "52bf4642d546"
+        },
+        {
+          "path": "coco/proactive.py",
+          "exists": true,
+          "size": 76996,
+          "sha256": "b35d47f503c5"
+        }
+      ]
+    },
+    "V1_code_constants_match_doc": {
+      "ok": true,
+      "latency_ms_kwarg_count": 4,
+      "expected_emit_sites": 4,
+      "stage_names_count": 6,
+      "expected_stage_names": 6,
+      "stages": [
+        "arbit_winner",
+        "cooldown_hit",
+        "emotion_alert",
+        "fusion_boost",
+        "mm_proactive",
+        "normal"
+      ]
+    },
+    "V2_doc_phrases_lock": {
+      "ok": true,
+      "missing_phrases": [],
+      "leftover_stale_in_doc": [],
+      "leftover_stale_in_verify021": []
+    },
+    "V3_neighbor_verify_regression": {
+      "ok": true,
+      "rcs": {
+        "verify_interact_018.py": 0,
+        "verify_interact_021.py": 0,
+        "verify_interact_022.py": 0,
+        "verify_interact_023.py": 0,
+        "verify_interact_024.py": 0,
+        "verify_interact_025.py": 0
+      },
+      "bad": []
+    },
+    "V4_smoke": {
+      "ok": true,
+      "rc": 0,
+      "stdout_tail_len": 1000
+    }
+  },
+  "all_pass": true
+}

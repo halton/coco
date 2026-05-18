@@ -4133,10 +4133,11 @@
       "id": "interact-026",
       "title": "interact-021 文档数字纠偏 verify (verify-only)",
       "priority": 193,
-      "status": "not_started",
+      "status": "passing",
       "phase": 23,
       "area": "interact",
-      "source": "interact-021-backlog-stale-doc-numbers"
+      "source": "interact-021-backlog-stale-doc-numbers",
+      "evidence": "evidence/interact-026/verify_summary.json (V0-V4 全 PASS); 纠偏: latency_ms emit 站点 5→4 (代码真实 src.count('latency_ms=')==4); stage 名清单 5→6 (verify_021.STAGE_NAMES set 真实大小); 改动: scripts/verify_interact_021.py docstring + research/proactive_trace_contract.md §5.7/§6 + 新 scripts/verify_interact_026.py; 0 业务源码改动 (git diff --stat coco/ 空); 邻近 018/021/022/023/024/025 回归 rc=0; smoke 11/11 PASS; Reviewer (sub-agent): LGTM by fresh-context Reviewer sub-agent; V0-V4 全 PASS rc=0 + smoke 11/11 PASS; mutant A (proactive.py 多加 latency_ms=) → V1 FAIL / mutant B (doc 注入 stale \"5 处 emit\") → V2 FAIL; 还原 clean; coco/ diff 空; 邻近 018·021·022·023·024·025 verify rc=0; 全仓 grep 无其它 stale 残留"
     },
     {
       "id": "robot-020",

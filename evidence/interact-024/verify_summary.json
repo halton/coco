@@ -7,7 +7,7 @@
     {
       "name": "V0_fingerprint_sha256",
       "ok": true,
-      "detail": "sha256 锁面 3 文件: docs/interact-latency-stage-contract.md=66401ee58053, coco/proactive.py=b35d47f503c5, research/proactive_trace_contract.md=d1361db79c5a"
+      "detail": "sha256 锁面 3 文件: docs/interact-latency-stage-contract.md=66401ee58053, coco/proactive.py=b35d47f503c5, research/proactive_trace_contract.md=52bf4642d546"
     },
     {
       "name": "V1_source_anchors",
@@ -27,7 +27,7 @@
     {
       "name": "V4_on_three_stages_latency",
       "ok": true,
-      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.01 cooldown_hit=0.006"
+      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.014 reject(normal/no_face)=0.011 cooldown_hit=0.007"
     },
     {
       "name": "V5_regression",
@@ -50,5 +50,5 @@
   ],
   "runtime_change": false,
   "default_off_invariant": true,
-  "sha": "deab14cbe3cfec276e5088c8524f2340fbd16edf"
+  "sha": "548da30dc7564230ccc46393304dfdb398412fe3"
 }
