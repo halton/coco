@@ -15,6 +15,11 @@
       "ok": true
     },
     {
+      "detail": "1 cooldown_hit reject emit(s); lat=0.008 (type=float) reason=cooldown",
+      "name": "V1c_cooldown_hit_latency_wire",
+      "ok": true
+    },
+    {
       "detail": "三口+legacy 全识别为 fail",
       "name": "V2_is_fail_three_signals",
       "ok": true
@@ -35,5 +40,5 @@
       "ok": true
     }
   ],
-  "sha": "46b9b743b3f07ca496a21ae3d6ec150622856347"
+  "sha": "219d1ee37f58794512dccc5911472714e131a6db"
 }
