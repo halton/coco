@@ -5736,6 +5736,107 @@
         "robot-034"
       ],
       "verification": []
+    },
+    {
+      "id": "robot-035",
+      "priority": 3101,
+      "area": "robot",
+      "phase": 31,
+      "title": "verify_robot_032/034 _parse_headings_from_doc helper 抽取到 scripts/_verify_lib",
+      "status": "not_started",
+      "source": "robot-034-backlog-helper-extract-shared-lib",
+      "scope": "verify_robot_032 与 verify_robot_034 各自维护一份 _parse_headings_from_doc helper（重复实现）。抽到 scripts/_verify_lib/doc_headings.py 共享模块；两 verify 改为 import 使用。verify-only，0 业务源码改动。注意：抽取会改 verify 脚本字节内容 → 触发 infra-034 V4 sha 锁表同步，与 infra-035 配合更新期望表。",
+      "dependencies": [
+        "robot-032",
+        "robot-034",
+        "infra-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: scripts/_verify_lib/doc_headings.py 存在且导出 parse_headings_from_doc",
+        "V2: verify_robot_032.py / verify_robot_034.py 均 import 自共享模块（grep+ast 双层）",
+        "V3: regression verify_robot_032 + verify_robot_034 + smoke 全 PASS",
+        "V4: 与 infra-035 协调更新 infra-034 V4 sha 期望表"
+      ]
+    },
+    {
+      "id": "robot-036",
+      "priority": 3102,
+      "area": "robot",
+      "phase": 31,
+      "title": "verify_robot_034 SENTINEL_LINE 从 verify_robot_032 import 去重",
+      "status": "not_started",
+      "source": "robot-034-backlog-sentinel-line-import-not-duplicate",
+      "scope": "verify_robot_034.py 当前 hardcode SENTINEL_LINE 字面值；改为从 scripts.verify_robot_032 import SENTINEL_LINE，避免两处 drift。verify-only，0 业务源码改动。",
+      "dependencies": [
+        "robot-032",
+        "robot-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: verify_robot_034.py 不再 hardcode 字面值（ast 断言 SENTINEL_LINE 通过 import 获得）",
+        "V2: regression verify_robot_032 + verify_robot_034 + smoke 全 PASS"
+      ]
+    },
+    {
+      "id": "infra-035",
+      "priority": 3103,
+      "area": "infra",
+      "phase": 31,
+      "title": "verify_infra_034 V4 sha 期望表外部化到 JSON",
+      "status": "not_started",
+      "source": "infra-034-backlog-v4-sha-table-externalize",
+      "scope": "verify_infra_034 V4 当前在 docstring 内硬编码覆盖集 sha256 期望；任一覆盖脚本 docstring 微调即 break V4。外部化到 scripts/_verify_lib/infra_034_v4_expected.json，verify_infra_034 启动时读 JSON 与活体 sha 对比。降低 V4 维护成本，且为 robot-035 / 036 / infra-036 改动提供统一同步入口。",
+      "dependencies": [
+        "infra-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: scripts/_verify_lib/infra_034_v4_expected.json 存在且 schema 校验",
+        "V2: verify_infra_034 V4 改为读 JSON（grep+ast 断言）",
+        "V3: 与 robot-035 / robot-036 / infra-036 协调，JSON 期望与新 sha 一致，regression 全 PASS"
+      ]
+    },
+    {
+      "id": "infra-036",
+      "priority": 3104,
+      "area": "infra",
+      "phase": 31,
+      "title": "infra-034 V4 docstring sha 覆盖集扩展",
+      "status": "not_started",
+      "source": "infra-034-backlog-expand-docstring-coverage",
+      "scope": "infra-034 当前 V4 锁定 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 12+ 历史 verify 脚本未纳入。本期挑 ≤5 高价值候选（robot-007/robot-008/robot-030/interact-024/interact-035）扩入 V4 期望表（与 infra-035 JSON 化配合）。docstring + 期望表 only，0 verify 业务逻辑改。",
+      "dependencies": [
+        "infra-034",
+        "infra-035"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: 新增 ≤5 个目标 verify 脚本 sha 期望条目（grep+ast 计数）",
+        "V2: verify_infra_034 V4 PASS（新 + 旧覆盖集）",
+        "V3: smoke + 所选目标各自 regression PASS"
+      ]
+    },
+    {
+      "id": "interact-038",
+      "priority": 3105,
+      "area": "interact",
+      "phase": 31,
+      "title": "verify self-file-sha vs func-level 策略对照 doc + 推荐",
+      "status": "not_started",
+      "source": "interact-037c-backlog-verify-self-file-sha-vs-func-level",
+      "scope": "interact-037 verify 使用全文件 sha256 自锁；项目内其它 verify 多采用函数级双锁。两种策略各有 tradeoff（全文件 sha：易维护但 docstring 微调即 break；函数级：精准但 ast 解析成本高）。本期产出 docs/verify_sha_locking_strategy.md 对照表 + 推荐场景，并产 verify_interact_038.py 锁定 doc heading 单源。verify+docs only，0 业务源码改。",
+      "dependencies": [
+        "interact-037",
+        "robot-032",
+        "robot-034"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: docs/verify_sha_locking_strategy.md 存在且含 heading 单源",
+        "V2: verify_interact_038 heading 单源校验 PASS",
+        "V3: smoke PASS"
+      ]
     }
   ],
   "_meta": {
