@@ -4391,3 +4391,24 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **source backlog resolved:** infra-024-backlog-v0-extra-truthy-edges → resolved_by: infra-032
 
 **phase-28 进度:** 3/5（robot-028 / interact-034 / infra-032 done；下一 candidate: robot-029 P238 set_robot_sequencer is_shutdown bool cast 兼容性，业务源码 1-2 行）
+
+---
+
+## Session 2026-05-19 (robot-029 closeout, P238)
+
+**robot-029 (ProactiveScheduler.set_robot_sequencer is_shutdown bool cast typing) → passing**
+
+- merge_sha: 2ef5682（main）
+- feat_head: 804a9f7（feat/robot-029）
+- base_main: 909e704
+- business_src_diff: **coco/proactive.py +12/-3**（setter L467 三元 + trigger L1284-1295 if/else 共 **2 sites / 12 行**）
+- contract: `COCO_PROACTIVE_SEQUENCER_IS_SHUTDOWN_BOOL_CAST` env-gated；**default-OFF（env=0）env=1 bytewise 等价于 main**；env=1 时 truthy 非 True 在 audit 路径被显式拒绝注入并 log
+- verify: scripts/verify_robot_029.py 0.15s PASS（11-case 行为表 + `__bool__` 副作用计数双重校验；setter / verify-010 baseline SHA 三重锁；evidence/robot-029/verify_summary.json）
+
+**Reviewer (sub-agent): LGTM** — env=0 bytewise 等价已证；11-case 行为表 + __bool__ 副作用计数全 PASS；2 sites / 12 行业务改动最小面；env-gated default-OFF 合规；无 finding 无 backlog。
+
+**source backlog resolved:** robot-010-backlog-bool-cast-typing → resolved_by: robot-029
+
+**uat 异步项登记:** uat-robot-029-real-machine-is-shutdown-bool-cast（priority=999, status=backlog, type=uat, real_machine=required）— 真机 sequencer 实际 is_shutdown 返回类型 + env=1 audit truthy 非 True 拒绝注入物理验证（sim 不可证）；不阻 merge，sim-first 合规。
+
+**phase-28 进度:** 4/5（robot-028 / interact-034 / infra-032 / robot-029 done；下一 candidate: **interact-035** P239）

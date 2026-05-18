@@ -3299,7 +3299,7 @@
       "id": "robot-010-backlog-bool-cast-typing",
       "name": "is_shutdown 探针 bool 严格判定面对 numpy.bool_/int 返回时的 fail-open",
       "area": "robot",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3309,7 +3309,8 @@
       "verification": null,
       "evidence": {},
       "selected_for": "robot-029",
-      "selected_phase": 28
+      "selected_phase": 28,
+      "resolved_by": "robot-029"
     },
     {
       "id": "robot-010-backlog-setter-race-window",
@@ -5179,11 +5180,25 @@
       "area": "robot",
       "priority": 238,
       "phase": 28,
-      "status": "in_progress",
+      "status": "passing",
       "title": "set_robot_sequencer is_shutdown bool cast 兼容性",
       "description": "set_robot_sequencer 的 is_shutdown 探针当前用 `rv is True` 严格判定，面对 numpy.bool_ / int(1) 等 truthy 但非 Python True 的返回值会被视为非 shutdown，导致 fail-open。改为 `bool(rv) is True` 或 `if bool(rv):` 显式转换，兼容 numpy/自定义 sequencer 实现。",
       "source_backlog": "robot-010-backlog-bool-cast-typing",
-      "scope": "业务源码 1-2 行（is_shutdown 比较改为 bool() 转换）+ verify 补反证用例（numpy.bool_ / int(1) 触发拒绝注入）。低风险。"
+      "scope": "业务源码 1-2 行（is_shutdown 比较改为 bool() 转换）+ verify 补反证用例（numpy.bool_ / int(1) 触发拒绝注入）。低风险。",
+      "evidence": {
+        "merge_sha": "2ef5682",
+        "feat_head_sha": "804a9f7",
+        "base_sha": "909e704",
+        "reviewer_lgtm": "Reviewer (sub-agent): LGTM — env=0 bytewise 等价已证；setter L467 三元 + trigger L1284-1295 if/else 共 2 sites / 12 行；11-case 行为表 + __bool__ 副作用计数全 PASS；无 finding，无 backlog",
+        "business_source_changes": "2_lines_2_sites (coco/proactive.py: setter L467 三元, trigger L1284-1295 if/else)",
+        "env_default_off_bytewise_equivalent": true,
+        "verify_script": "scripts/verify_robot_029.py",
+        "verify_summary": "evidence/robot-029/verify_summary.json",
+        "verify_duration_s": 0.15,
+        "behavior_table_11_case": "PASS",
+        "bool_side_effect_count": "PASS",
+        "real_machine_uat": "pending (uat-robot-029-real-machine-is-shutdown-bool-cast)"
+      }
     },
     {
       "id": "interact-035",
@@ -5195,6 +5210,17 @@
       "description": "verify_interact_024.py V1 per-stage 锚点匹配抗局部漂移 OK，但大重构需手工同步。可选增强：记录上次命中行号，本次差 >N 即 warn，辅助早期发现锚点失效。低优先级，default-OFF 友好，不阻 merge。",
       "source_backlog": "interact-033b-backlog-line-number-drift-detection",
       "scope": "verify-only：在 verify_interact_024.py V1 中加锚点行号 ±N 窗口 sanity（warn-only，不影响 PASS/FAIL）。0 业务源码改动。"
+    },
+    {
+      "id": "uat-robot-029-real-machine-is-shutdown-bool-cast",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "type": "uat",
+      "area": "robot",
+      "real_machine": "required",
+      "description": "真机 sequencer 实际 is_shutdown 返回类型确认 + env=1 audit 路径下 truthy 非 True 拒绝注入物理验证（sim 不可证）",
+      "source": "robot-029"
     }
   ],
   "_meta": {
