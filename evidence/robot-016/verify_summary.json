@@ -1,0 +1,44 @@
+{
+  "feature_id": "robot-016",
+  "title": "set_robot_sequencer lifecycle audit warn-once (default-OFF)",
+  "branch": "feat/robot-016",
+  "additive": true,
+  "default_off": true,
+  "env_gate": "COCO_ROBOT_SETTER_LIFECYCLE_AUDIT=1",
+  "scope": [
+    "coco/proactive.py — ProactiveScheduler.__init__ 新加 self._setter_audit_seen: set",
+    "coco/proactive.py — set_robot_sequencer() 内读 env _audit_on, env=1 时对 duplicate inject (key=('dup', id(prev), id(new))) 与 is_shutdown probe failure (key=('probe-fail', id(seq), exc_type_name)) 做 warn-once 去重: 首次 logger.warning + 写 set, 再次同 key 降为 logger.debug; env=0 (默认) 时跳过 dedup, set 始终为空, bytewise 等价 robot-010 已落地行为"
+  ],
+  "verify_script": "scripts/verify_robot_016.py",
+  "verify_cases": {
+    "V1_default_off_bytewise": {
+      "desc": "env unset; 注入 A 再注入 B → 1 条 dup WARNING + 0 条 DEBUG suppressed + _setter_audit_seen 空 set + sequencer 已切到 seq_b",
+      "result": "PASS"
+    },
+    "V2_on_warn_once_dup": {
+      "desc": "env=1; toggle A→B→A→B → 2 条 dup WARNING (两个不同 (prev,new) key) + 1 条 DEBUG suppressed (第二次 A→B 同 key) + _setter_audit_seen 含 2 个 dup key",
+      "result": "PASS"
+    },
+    "V3_on_probe_raise_warn_once": {
+      "desc": "env=1; is_shutdown 抛 RuntimeError; 同 sequencer 两次注入 → 1 条 probe-fail WARNING (首次) + 1 条 DEBUG suppressed (第二次) + _setter_audit_seen 含 ('probe-fail', id(seq), 'RuntimeError')",
+      "result": "PASS"
+    },
+    "V4_off_probe_raise_bytewise": {
+      "desc": "env unset; is_shutdown 抛; 同 sequencer 两次注入 → 2 条 probe-fail WARNING + 0 DEBUG suppressed + _setter_audit_seen 仍空 set",
+      "result": "PASS"
+    },
+    "V5_regression": {
+      "desc": "scripts/verify_robot_010.py 子进程 rc==0 (verify_robot_015 自身递归调 007/008/012/013 链 ~7min, 单独跑会阻塞 sub-agent socket; 改由 ./init.sh smoke 整链覆盖 robot-015 回归)",
+      "result": "PASS"
+    }
+  },
+  "elapsed_seconds": 40.58,
+  "init_smoke": "pending — closeout 阶段跑 ./init.sh 11/11 验",
+  "reviewer_subagent": "pending — closeout 前由主会话派 Reviewer fresh-context 评审; evidence 当前为 Engineer 自验产物",
+  "notes": [
+    "default-OFF bytewise 严格语义: 与当前 main HEAD (含 robot-010 setter WARNING 行为) bytewise 等价, 而非与 robot-010 前的更早 main 等价",
+    "key 设计用 id() 而非对象本身, 避免对 MagicMock / 真 sequencer 计算 hash 时触发副作用",
+    "warn-once set 不做 GC / 上限: setter 调用是冷路径 (启动期 / hot-restart 时偶发, 不在 trigger 热路径), set 体积上限 = 历史 sequencer 实例对数, 工程量可忽略",
+    "未引入 backlog 衍生项"
+  ]
+}
