@@ -12,7 +12,7 @@
     {
       "name": "V1_cooldown_hit_end_to_end",
       "ok": true,
-      "detail": "cooldown_hit reject 命中 lat=0.012ms reason=cooldown (trace_events=2, cooldown_hits=1)"
+      "detail": "cooldown_hit reject 命中 lat=0.011ms reason=cooldown (trace_events=2, cooldown_hits=1)"
     },
     {
       "name": "V2_cooldown_hit_latency_semantics",
@@ -39,5 +39,5 @@
     "scripts/verify_interact_023.py"
   ],
   "runtime_change": false,
-  "sha": "a735a6b5d40a1be2419f0de2ff36656c6399115e"
+  "sha": "96fb1dcccc2a75cefb03e23798484355c9376b58"
 }

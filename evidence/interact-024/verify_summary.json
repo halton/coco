@@ -27,7 +27,7 @@
     {
       "name": "V4_on_three_stages_latency",
       "ok": true,
-      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.01 cooldown_hit=0.006"
+      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.01 cooldown_hit=0.007"
     },
     {
       "name": "V5_regression",
@@ -73,5 +73,5 @@
       "within_tolerance": true
     }
   },
-  "sha": "a735a6b5d40a1be2419f0de2ff36656c6399115e"
+  "sha": "96fb1dcccc2a75cefb03e23798484355c9376b58"
 }
