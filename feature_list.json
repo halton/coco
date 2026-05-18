@@ -5932,7 +5932,7 @@
       "area": "infra",
       "phase": 31,
       "title": "infra-034 V4 docstring sha 覆盖集扩展",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-034-backlog-expand-docstring-coverage",
       "scope": "infra-034 当前 V4 锁定 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 12+ 历史 verify 脚本未纳入。本期挑 ≤5 高价值候选（robot-007/robot-008/robot-030/interact-024/interact-035）扩入 V4 期望表（与 infra-035 JSON 化配合）。docstring + 期望表 only，0 verify 业务逻辑改。",
       "dependencies": [
@@ -5944,6 +5944,67 @@
         "V1: 新增 ≤5 个目标 verify 脚本 sha 期望条目（grep+ast 计数）",
         "V2: verify_infra_034 V4 PASS（新 + 旧覆盖集）",
         "V3: smoke + 所选目标各自 regression PASS"
+      ],
+      "evidence": "AST byte-equal 5/5 (verify_infra_018/interact_022/interact_023/robot_023/robot_024 docstring 注入前后 AST 等价) + 6 sha 复核 (v4_sha.json 5 新条目 + bump_infra_034_v4_sha.py + verify_infra_034 V4 期望) + 9 cmd rc=0 (verify_infra_034 V0-V4 + verify_infra_035 V0-V5 + 5 目标 regression + smoke + bump --check) + 反证 rc=1 (任一目标 docstring 篡改 → V4 fail) + Reviewer (sub-agent): LGTM + 选材跳过名单核对 (剩余 12+ 历史 verify 留下一波 backlog) + feat sha e8816d6 + main HEAD f148afd"
+    },
+    {
+      "id": "infra-036-backlog-bump-canonical-full-sort-keys",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "bump_infra_034_v4_sha.py 局部 canonical vs 全文 sort_keys=True 统一约定",
+      "status": "backlog",
+      "source": "infra-036-reviewer",
+      "scope": "bump_infra_034_v4_sha.py 当前对单条期望做局部 canonical 序列化，整 JSON 仍由 json.dumps 默认输出；与 infra-035 全文 sort_keys=True 风格不一致。建议统一为全文 sort_keys+indent 输出约定，避免后续 reviewer 反复纠结 key order。verify+helper only。",
+      "dependencies": [
+        "infra-035",
+        "infra-036"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: bump 输出 = json.dumps(sort_keys=True, indent=2) 全文",
+        "V2: smoke + verify_infra_034/035 PASS"
+      ]
+    },
+    {
+      "id": "infra-036-backlog-expand-docstring-batch-3",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "infra-034 V4 docstring 覆盖第 3 波（再 +5 target）",
+      "status": "backlog",
+      "source": "infra-036-reviewer",
+      "scope": "infra-036 完成第 2 波 5 target 后，仍剩 12+ 历史 verify 未纳入 V4 sha 锁。下一波再挑 ≤5 高价值候选扩入 v4_sha.json + verify_infra_034 期望表。docstring + 期望表 only，0 verify 业务逻辑改。",
+      "dependencies": [
+        "infra-034",
+        "infra-035",
+        "infra-036"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: v4_sha.json 新增 ≤5 条期望（AST byte-equal）",
+        "V2: verify_infra_034 V4 PASS",
+        "V3: smoke + 新增目标 regression PASS"
+      ]
+    },
+    {
+      "id": "infra-036-backlog-sha-lock-graph-dump",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V4 sha 锁链路 DAG dump helper",
+      "status": "backlog",
+      "source": "infra-036-engineer-idea",
+      "scope": "V4 sha 锁链路（v4_sha.json ↔ verify_infra_034 ↔ N 个目标 verify ↔ bump helper ↔ verify_infra_035）随覆盖集扩展耦合度上升。增 scripts/dump_v4_sha_graph.py：扫描 v4_sha.json + 目标 docstring sha 行 + verify_infra_034 期望表，输出 DAG (DOT 或 markdown 表)，便于推广前快速判耦合。dump only，0 业务源码改。",
+      "dependencies": [
+        "infra-034",
+        "infra-035",
+        "infra-036"
+      ],
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: dump_v4_sha_graph.py 输出 N target 全覆盖（计数匹配 v4_sha.json）",
+        "V2: smoke PASS"
       ]
     },
     {
@@ -5969,6 +6030,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19 P247 infra-034 closeout"
+    "last_updated": "2026-05-19 P252 infra-036 closeout"
   }
 }

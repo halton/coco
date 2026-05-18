@@ -4690,3 +4690,29 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** infra-036（infra-034 V4 docstring sha 覆盖集扩展，5 候选）。
+
+---
+
+## Session P252 — infra-036 closeout (2026-05-19)
+
+**Feature:** infra-036 — infra-034 V4 docstring sha 覆盖集扩展（5→10 target）
+
+**Status:** in_progress → passing
+
+**Evidence:**
+- AST byte-equal 5/5：verify_infra_018 / verify_interact_022 / verify_interact_023 / verify_robot_023 / verify_robot_024 docstring 注入前后 AST 等价
+- 6 sha 复核：v4_sha.json 5 新条目 + bump_infra_034_v4_sha.py + verify_infra_034 V4 期望
+- 9 cmd rc=0：verify_infra_034 V0-V4 + verify_infra_035 V0-V5 + 5 目标 regression + smoke + bump --check
+- 反证 rc=1：任一目标 docstring 篡改 → V4 fail
+- Reviewer (sub-agent): LGTM
+- 选材跳过名单核对：剩余 12+ 历史 verify 留下一波 backlog
+- feat sha e8816d6 + main HEAD f148afd
+
+**新增 backlog (priority=999, status=backlog, phase=null):**
+- infra-036-backlog-bump-canonical-full-sort-keys（source=infra-036-reviewer）：bump helper 全文 sort_keys=True 统一约定
+- infra-036-backlog-expand-docstring-batch-3（source=infra-036-reviewer）：下一波 +5 target 扩入 V4 覆盖
+- infra-036-backlog-sha-lock-graph-dump（source=infra-036-engineer-idea）：V4 sha 锁链路 DAG dump helper（infra-038 idea）
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** interact-038（verify self-file-sha vs func-level 策略对照 doc + 推荐）。
