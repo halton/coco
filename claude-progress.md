@@ -4513,3 +4513,15 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **Evidence：** merge_sha=5157c76, feat_head=76e2898（含 evidence refresh 595f0c3），main HEAD=5157c768b5308d7cad54f96e81f75043051514a4；smoke 11/11 PASS；verify_robot_031 V0-V5 rc=0；verify_robot_028 V0-V4 rc=0（V4 字面硬锁通过）；bump_verify_028_self_hash --dry-run rc=0；Reviewer (sub-agent) LGTM — 接口对称、V3 cleanup 兜底 OK、链路完整（verify_028 V4 硬锁 ↔ bump_028 助手 ↔ verify_031 三件套）。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 4/5（infra-033 + robot-030 + interact-036 + robot-031），下一 candidate=robot-032（priority=244, docs-only ProactiveScheduler block 策略文档化）。
+
+## Session — 2026-05-19 — robot-032 closeout (phase-29 P244 收官)
+
+**Feature：** robot-032 ProactiveScheduler block 策略文档化（phase=29, priority=244, status=in_progress → passing），source_backlog=`robot-009-backlog-block-policy-doc`。
+
+**Docs-only / 0 业务源码改动：** 新增 `docs/proactive_scheduler_block_policy.md`（集中描述 block 来源 / preempt 优先级 / enqueue fallback 行为）；新增 `scripts/verify_robot_032.py` 四道断言（文件存在 + 关键章节标题 + 关键短语 + mutant 反证），确保文档不退化。
+
+**Evidence：** feat_sha=1a35ac0, merge_sha=ecdd215；smoke 11/11 PASS；verify_robot_032 rc=0（docs-lock 全 PASS）；Reviewer (sub-agent) LGTM — docs-only 改动；verify 四道断言完备；0 业务源码改动。
+
+**Backlog 派生：** 新增 `robot-032-backlog-doc-verify-single-source`（priority=999, phase=null）— 改造 verify 脚本：从文档解析章节标题列表作为单一事实源，消除 docs↔verify 双侧手工同步漂移。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；**phase-29 收官（5/5：infra-033 + robot-030 + interact-036 + robot-031 + robot-032）**，待 phase-30 planning。

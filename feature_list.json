@@ -5380,11 +5380,28 @@
       "area": "robot",
       "priority": 244,
       "phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "title": "ProactiveScheduler block 策略文档化",
       "description": "ProactiveScheduler 现行 block / preempt / queue 策略目前散落在源码与零星 evidence 中，缺一份集中文档。新增 docs/proactive_scheduler_block_policy.md，描述 block 来源、preempt 优先级、enqueue fallback 行为；并通过 verify_robot_032.py 断言文档存在 + 关键章节标题。",
       "source_backlog": "robot-009-backlog-block-policy-doc",
-      "scope": "docs-only：新增 docs/proactive_scheduler_block_policy.md；新增 scripts/verify_robot_032.py 断言文件存在 + 关键标题 + 关键短语 + mutant 反证。0 业务源码改动。"
+      "scope": "docs-only：新增 docs/proactive_scheduler_block_policy.md；新增 scripts/verify_robot_032.py 断言文件存在 + 关键标题 + 关键短语 + mutant 反证。0 业务源码改动。",
+      "evidence": {
+        "feat_sha": "1a35ac0",
+        "merge_sha": "ecdd215",
+        "verify_robot_032": "rc=0 (docs-lock: file exists + 关键章节标题 + 关键短语 + mutant 反证 all PASS)",
+        "smoke": "11/11 PASS",
+        "reviewer_sub_agent": "LGTM — docs-only 改动；新增 docs/proactive_scheduler_block_policy.md 集中描述 block 来源/preempt 优先级/enqueue fallback；verify_robot_032.py 通过文件存在 + 章节标题 + 关键短语 + mutant 反证四道断言确保文档不退化；0 业务源码改动；backlog: robot-032-backlog-doc-verify-single-source 跟踪 verify 脚本以文档章节列表为单一事实源消除手工同步。"
+      }
+    },
+    {
+      "id": "robot-032-backlog-doc-verify-single-source",
+      "area": "robot",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "title": "verify_robot_032 以文档章节标题列表为单一事实源",
+      "description": "目前 docs/proactive_scheduler_block_policy.md 章节标题与 scripts/verify_robot_032.py 中的断言列表分两处手工同步。改造 verify 脚本：从文档解析出章节标题列表作为单一事实源，自动断言完备性，消除双侧手工同步漂移风险。",
+      "source": "robot-032 closeout follow-up (Reviewer 建议)"
     },
     {
       "id": "infra-033-backlog-multi-verify-venv-docstring",
@@ -5422,6 +5439,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19"
+    "last_updated": "2026-05-19 P244 robot-032 closeout"
   }
 }
