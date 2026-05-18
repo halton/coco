@@ -3949,7 +3949,7 @@
       "id": "infra-024-backlog-verify-venv-docstring",
       "name": "verify_infra_024.py 顶端 docstring 补 venv-activated python 提示",
       "area": "infra",
-      "status": "backlog",
+      "status": "resolved",
       "phase": null,
       "priority": 999,
       "origin_backlog": [
@@ -3959,7 +3959,8 @@
       "verification": null,
       "evidence": {},
       "selected_for": "infra-033",
-      "selected_phase": 29
+      "selected_phase": 29,
+      "resolved_by": "infra-033"
     },
     {
       "id": "infra-024-backlog-v5-rename",
@@ -5273,11 +5274,23 @@
       "area": "infra",
       "priority": 240,
       "phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "title": "verify_infra_024 venv 使用约束 docstring",
       "description": "scripts/verify_infra_024.py 顶端 docstring 明示需在 venv-activated python 下运行（subprocess 用同一 sys.executable），避免新会话误用系统 python。纯文档化 verify-only。",
       "source_backlog": "infra-024-backlog-verify-venv-docstring",
-      "scope": "verify-only / docs-only：仅在 scripts/verify_infra_024.py 文件顶端 docstring 增补 venv 使用说明。0 业务源码改动。"
+      "scope": "verify-only / docs-only：仅在 scripts/verify_infra_024.py 文件顶端 docstring 增补 venv 使用说明。0 业务源码改动。",
+      "evidence": {
+        "merge_sha": "370fd77",
+        "feat_head": "8ad6d52",
+        "reviewer": "Reviewer (sub-agent): LGTM — verify-only/docs-only docstring 增补与 V0-V5 meta-lock 一致，10 函数 ast.unparse byte-equal，0 业务源码改动。",
+        "business_source_changes": 0,
+        "function_byte_equal_count": 10,
+        "verify_scripts": [
+          "scripts/verify_infra_024.py",
+          "scripts/verify_infra_033.py"
+        ],
+        "meta_lock": "evidence/infra-033/verify_infra_024_sha256.lock"
+      }
     },
     {
       "id": "robot-030",
@@ -5322,6 +5335,20 @@
       "description": "ProactiveScheduler 现行 block / preempt / queue 策略目前散落在源码与零星 evidence 中，缺一份集中文档。新增 docs/proactive_scheduler_block_policy.md，描述 block 来源、preempt 优先级、enqueue fallback 行为；并通过 verify_robot_032.py 断言文档存在 + 关键章节标题。",
       "source_backlog": "robot-009-backlog-block-policy-doc",
       "scope": "docs-only：新增 docs/proactive_scheduler_block_policy.md；新增 scripts/verify_robot_032.py 断言文件存在 + 关键标题（'## block sources' / '## preempt' / '## enqueue fallback'）。0 业务源码改动。"
+    },
+    {
+      "id": "infra-033-backlog-multi-verify-venv-docstring",
+      "name": "将 verify_*.py venv 运行环境 docstring + sha256 lock 模式推广到其他 verify 入口",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "origin_backlog": [
+        "infra-033 closeout follow-up"
+      ],
+      "description": "把 infra-033 在 scripts/verify_infra_024.py 上确立的\"运行环境约定 docstring + sha256 锁 + sentinel meta-verify\"模式推广到其他 scripts/verify_*.py 入口（如 verify_*.py 系列）。纯文档化，不改业务源码；每个被推广脚本配一份 sha256 锁与 meta-verify 校验项。",
+      "verification": null,
+      "evidence": {}
     }
   ],
   "_meta": {

@@ -4471,3 +4471,13 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **不衍生 fu chain：** 全部 candidate source 来自既有 backlog 池，未引入新链。
 
 **约束符合：** 不主动升级 reachy-mini SDK / 核心依赖；持续开发模式；commit 例外 + push 失败忽略一次。
+
+## Session 2026-05-19 — infra-033 closeout (P240, docs-only)
+
+**结果：** infra-033 → `passing`；source backlog `infra-024-backlog-verify-venv-docstring` → `resolved` (resolved_by=infra-033)；新增 backlog `infra-033-backlog-multi-verify-venv-docstring`（推广 docstring+sha256+meta-verify 模式到其他 verify_*.py，priority=999 phase=null）。
+
+**Evidence：** merge_sha=370fd77, feat_head=8ad6d52；0 业务源码改动；10 函数 ast.unparse byte-equal；verify_infra_024 docstring + V0-V5 meta-lock（`evidence/infra-033/verify_infra_024_sha256.lock`）；Reviewer (sub-agent) LGTM。
+
+**范围：** verify-only / docs-only — 仅 `scripts/verify_infra_024.py` 顶端 docstring 增补 venv 使用约束，并新增 `scripts/verify_infra_033.py` meta-verify。无业务源码改动。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK。
