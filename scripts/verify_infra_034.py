@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -68,14 +69,24 @@ KEY_PHRASES: Tuple[str, ...] = (
     ".venv/bin/python",
 )
 
-# V4 sha256 锁 (hardcoded; 一旦目标脚本未来再改, 需同步本表)
-EXPECTED_SHA: Dict[str, str] = {
-    "scripts/verify_robot_032.py": "2a4fcb7f065d53d9ed5398e9b2c2416167907be90b4f20aa784d7062b1c02069",
-    "scripts/verify_robot_033.py": "72893cd29605a78ba3166d7328e9335440c87db285b9d94c3bfe37f95df09acb",
-    "scripts/verify_interact_037.py": "e07db83b106f86f65b963ba45c5a5848723e9491c15aaaa992b16edb87bb9330",
-    "scripts/verify_interact_036.py": "1ff0f3b3fac54529d57db024a8b9296ef4d056b182ae59ac6dc50591b4d95415",
-    "scripts/verify_infra_033.py": "ceeb65419ff9fa3f2cf030405bbc2f5d4145482f85df77bd9cb581084136ad6a",
-}
+# V4 sha256 锁 — infra-035 起从 evidence/infra-034/v4_sha.json 外置读取
+# (bump_infra_034_v4_sha.py 维护; verify_infra_035 V0-V5 守护 schema/锁)
+V4_SHA_JSON = "evidence/infra-034/v4_sha.json"
+
+
+def _load_expected_sha() -> Dict[str, str]:
+    """读取外置 v4_sha.json. 失败返回空 dict (V4 会全 FAIL)."""
+    p = ROOT / V4_SHA_JSON
+    if not p.is_file():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    targets = data.get("targets")
+    if not isinstance(targets, dict):
+        return {}
+    return {k: v for k, v in targets.items() if isinstance(k, str) and isinstance(v, str)}
 
 # baseline sha (P240 verify_infra_024.py 当前文件态; 漂了即 regress)
 BASELINE_SHA = ""  # 运行时计算并打印, 不硬锁 (P240 已有自己的 V4 锁住自身)
@@ -191,7 +202,12 @@ def v3_mutant() -> None:
 # V4: sha256 锁所有目标脚本
 # ---------------------------------------------------------------------------
 def v4_sha_lock() -> None:
-    for rel, expect in EXPECTED_SHA.items():
+    expected = _load_expected_sha()
+    if not expected:
+        _emit("V4_load_v4_sha_json", False, f"missing or invalid {V4_SHA_JSON}")
+        return
+    _emit("V4_load_v4_sha_json", True, f"targets={len(expected)}")
+    for rel, expect in expected.items():
         p = ROOT / rel
         if not p.is_file():
             _emit(f"V4_{rel}_sha", False, "file missing")

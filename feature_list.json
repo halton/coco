@@ -5870,7 +5870,7 @@
       "area": "infra",
       "phase": 31,
       "title": "verify_infra_034 V4 sha 期望表外部化到 JSON",
-      "status": "not_started",
+      "status": "in_progress",
       "source": "infra-034-backlog-v4-sha-table-externalize",
       "scope": "verify_infra_034 V4 当前在 docstring 内硬编码覆盖集 sha256 期望；任一覆盖脚本 docstring 微调即 break V4。外部化到 scripts/_verify_lib/infra_034_v4_expected.json，verify_infra_034 启动时读 JSON 与活体 sha 对比。降低 V4 维护成本，且为 robot-035 / 036 / infra-036 改动提供统一同步入口。",
       "dependencies": [
