@@ -2732,7 +2732,10 @@
       "priority": 999,
       "phase": null,
       "status": "backlog",
-      "description": "N-1 _RESERVED_TRACE_KEYS 集合缺 taskName（Python 3.12+ asyncio task 名），同步 logging_setup._RESERVED；N-2 emit_trace 注释中 Python 3.13 KeyError 描述过时需更新；C-1 cooldown_hit boost 重复入账精度（doc-only，接入真 LLM backend hook 时处理）；C-5 token chars/2 估算（接入真 LLM usage hook 时改用 backend 真值）"
+      "description": "N-1 _RESERVED_TRACE_KEYS 集合缺 taskName（Python 3.12+ asyncio task 名），同步 logging_setup._RESERVED；N-2 emit_trace 注释中 Python 3.13 KeyError 描述过时需更新；C-1 cooldown_hit boost 重复入账精度（doc-only，接入真 LLM backend hook 时处理）；C-5 token chars/2 估算（接入真 LLM usage hook 时改用 backend 真值）",
+      "selected_for": "interact-030",
+      "selected_phase": 25,
+      "updated_at": "2026-05-18T22:43:46"
     },
     {
       "id": "infra-017-backlog-history-residual",
@@ -3641,7 +3644,10 @@
       ],
       "description": "scripts/verify_interact_021.py docstring 与 research/proactive_trace_contract.md §5.7 内 '5 处/5 个' 文字与正文 (4 emit 站点 / 6 stage 名) 不一致, 也与 interact-018 V2/V3 真实意图 (_is_fail 三口) 不符, 纯文档化清理。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "interact-029",
+      "selected_phase": 25,
+      "updated_at": "2026-05-18T22:43:46"
     },
     {
       "id": "robot-014",
@@ -3779,7 +3785,10 @@
       ],
       "description": "verify_robot_015.py V3 标题与 contract 描述 \"warn-once\" 暗示去抖/单次, 但源码并无去抖语义 (每次缺 enqueue 都 warn 后 sync 调用); 建议改为 \"warn-and-continue\" 与实际行为一致。纯文案。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "robot-023",
+      "selected_phase": 25,
+      "updated_at": "2026-05-18T22:43:46"
     },
     {
       "id": "vision-014b",
@@ -3858,7 +3867,10 @@
       ],
       "description": "verify_infra_024.py V5 当前命名偏泛, 建议改为 V5_stdout_chain_assert 显式表达 \"subprocess stdout 链路断言\" 意图。纯命名清理。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "infra-029",
+      "selected_phase": 25,
+      "updated_at": "2026-05-18T22:43:46"
     },
     {
       "id": "robot-016-backlog-env-string-mutant-lock",
@@ -3872,7 +3884,10 @@
       ],
       "description": "verify_robot_016.py 当前 env mutant-lock 仅覆盖 '1' 命中, 缺 'true'/'yes'/'on'/'True' 等真值字符串不命中反证 (确认 gate 仅认 '1' 单值, 防 future false-positive 扩展)。纯 verify 补丁。",
       "verification": null,
-      "evidence": {}
+      "evidence": {},
+      "selected_for": "robot-024",
+      "selected_phase": 25,
+      "updated_at": "2026-05-18T22:43:46"
     },
     {
       "id": "robot-016-backlog-exc-type-discrimination",
@@ -4301,6 +4316,127 @@
         "reviewer_subagent": "LGTM with findings (see reviewer_lgtm)",
         "reviewer_lgtm": "fresh-context LGTM with findings by Reviewer sub-agent — verify rc=0 (V0-V5 全 PASS, 0.49s) + smoke 11/11 PASS；亲手磁盘 mutant 反证（L201 swallow 条件改 `prev is None`）→ verify FAIL 2 errors，还原后再 PASS，V2 anchor 反证成立；doc 与 sequencer.py L154-218 + main.py L870-935 字面一致；default-OFF 不变性已亲证（subprocess env 未设时 register=[] 且 SIGTERM handler identity 不变）；0 业务源码改动，bytewise 等价 main；无 scope creep / fu chain；2 finding 不阻 merge (1) source backlog 状态未切 → closeout 处理 (2) V3 in-memory 命名瑕疵不修"
       }
+    },
+    {
+      "id": "interact-029",
+      "title": "interact-021/proactive_trace_contract 文档数字一致性清理 (doc-only)",
+      "priority": 210,
+      "status": "not_started",
+      "phase": 25,
+      "area": "interact",
+      "source": "interact-021-backlog-stale-doc-numbers",
+      "updated_at": "2026-05-18T22:43:46",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_interact_029.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_interact_029 V0-V3 全 PASS",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (0 业务源码改动, 0 verify 行为改动)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "infra-029",
+      "title": "verify_infra_024 V5 命名清理 → V5_stdout_chain_assert (verify-only rename)",
+      "priority": 211,
+      "status": "not_started",
+      "phase": 25,
+      "area": "infra",
+      "source": "infra-024-backlog-v5-rename",
+      "updated_at": "2026-05-18T22:43:46",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_infra_024.py",
+          ".venv/bin/python scripts/verify_infra_029.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_infra_024 全 PASS 且 V5 rename 后语义不变",
+          "verify_infra_029 V0-V2 全 PASS (rename anchor + 旧名不再出现)",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (0 业务源码改动)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "robot-023",
+      "title": "verify_robot_015 V3 标题文案 warn-once → warn-and-continue (verify-only doc fix)",
+      "priority": 212,
+      "status": "not_started",
+      "phase": 25,
+      "area": "robot",
+      "source": "robot-015-backlog-v3-warn-once-rename",
+      "updated_at": "2026-05-18T22:43:46",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_robot_015.py",
+          ".venv/bin/python scripts/verify_robot_023.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_robot_015 全 PASS (rename 后语义不变)",
+          "verify_robot_023 V0-V2 全 PASS (新文案 anchor + 旧 warn-once 字样不复现)",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (0 业务源码改动)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "interact-030",
+      "title": "interact-016 logging _RESERVED 集合 + emit_trace 注释文档对齐 (doc/comment-only)",
+      "priority": 213,
+      "status": "not_started",
+      "phase": 25,
+      "area": "interact",
+      "source": "interact-016-backlog-doc-polish",
+      "updated_at": "2026-05-18T22:43:46",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_interact_030.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_interact_030 V0-V3 全 PASS (taskName 进入 _RESERVED_TRACE_KEYS / _RESERVED 对齐 + emit_trace 注释 Python 3.13 描述更新 anchor)",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (0 业务行为改动; _RESERVED 集合扩展仅影响 reserved-key 过滤, 业务 trace 字段不命中)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
+    },
+    {
+      "id": "robot-024",
+      "title": "verify_robot_016 env 字符串 mutant-lock 补真值反证 (verify-only)",
+      "priority": 214,
+      "status": "not_started",
+      "phase": 25,
+      "area": "robot",
+      "source": "robot-016-backlog-env-string-mutant-lock",
+      "updated_at": "2026-05-18T22:43:46",
+      "verification": {
+        "commands": [
+          ".venv/bin/python scripts/verify_robot_016.py",
+          ".venv/bin/python scripts/verify_robot_024.py",
+          "./init.sh"
+        ],
+        "must_pass": [
+          "verify_robot_016 原 V0-V5 全 PASS",
+          "verify_robot_024 V0-V2 全 PASS (env=true/yes/on/True/1 with 多余空格 等真值字符串均不命中 gate, 仅 strip 后 == '1' 命中)",
+          "smoke 11/11 PASS",
+          "default-OFF bytewise 等价 (0 业务源码改动)",
+          "Reviewer sub-agent fresh-context LGTM"
+        ]
+      },
+      "evidence": {}
     }
   ],
   "_meta": {
