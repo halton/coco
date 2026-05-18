@@ -4087,3 +4087,17 @@ next: 派 Reviewer fresh-context 评审 companion-018, 通过后 Closeout merge 
 - push: origin main / origin feat/infra-029 各一次成功
 - phase-25 进度：2/5 done（interact-029 / infra-029），剩 3：robot-023 / vision-026 / companion-022
 - 下一候选：P212 robot-023（source robot-015-backlog-v3-warn-once-rename, verify_robot_015 V3 warn-once → warn-and-continue 文案）
+
+## Session 2026-05-18 robot-023 closeout (P212, phase-25 3/5)
+
+- feature: robot-023 — verify_robot_015 V3 标题文案 warn-once → warn-and-continue (verify-only doc fix)
+- source: robot-015-backlog-v3-warn-once-rename (status → upgraded)
+- 内容：scripts/verify_robot_015.py V3 标题/contract/log 由 "warn-once" rename 为 "warn-and-continue"；与 coco/proactive.py L1311-1317 enqueue 异常路径每次 warn + sync-fallback 实际行为对齐（无 seen/dedup/once-flag）。新增 scripts/verify_robot_023.py V0-V4 meta-lock。0 业务源码改动 bytewise 等价 main。
+- 验证：verify_robot_015 rc=0 (V1-V5 全 PASS, 456.54s) + verify_robot_023 rc=0 (V0-V4) + smoke 11/11 PASS
+- Reviewer fresh-context LGTM by sub-agent — 独立实证 coco/proactive.py L1311-1317 V3 enqueue 异常路径无 seen/dedup/once-flag；亲手磁盘 mutant (L290 warn-and-continue→warn-once) → V2 锁 FAIL，还原 clean；rename 名实相符；无 fu chain；finding 仅 minor note V3 嵌套 timeout=900s 冗余但有价值
+- commits: dc54783 (chore closeout) → merge 408f762 (main)
+- main HEAD: 408f762
+- feat/robot-023 HEAD: dc54783
+- push: origin main / origin feat/robot-023 各一次失败 403 (Permission denied to haltonhuo_microsoft on halton/coco.git)，按 push 策略忽略继续
+- phase-25 进度：3/5 done (interact-029 / infra-029 / robot-023)，剩 2：interact-030 / robot-024
+- 下一候选：P213 interact-030 (source interact-016-backlog-doc-polish, logging _RESERVED_TRACE_KEYS + Python 3.13 KeyError doc/comment-only)
