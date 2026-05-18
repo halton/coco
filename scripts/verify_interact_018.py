@@ -16,6 +16,21 @@ V1c (interact-033 升级) cooldown_hit 路径 latency_ms 端到端断言: 同一
    emit stage=cooldown_hit 且 latency_ms 字段存在 (float/int, >= 0, 非 bool)。
    覆盖 interact-018 Reviewer caveat 收口的 cooldown 路径 wire 断面。
 
+V1d (interact-034 升级) arbit_emotion_preempt reject 路径 latency_ms 端到端
+   断言: 开启 COCO_PROACTIVE_ARBIT, 注入 _last_emotion_alert_ts=clock()-0.1
+   (在 ARBIT_EMOTION_WINDOW_S=1.0 窗口内) + _next_priority_boost=True, 调
+   maybe_trigger 触发仲裁层抢占抑制; 期望至少一条 emit decision=reject
+   reason="arbit_emotion_preempt" 且 latency_ms 存在/type-strict (非 bool)
+   />=0, stage ∈ {fusion_boost, mm_proactive}。覆盖 stage=fusion_boost
+   (boost 抢占) 路径 reject latency_ms wire。
+
+V1e (interact-034 升级) mm_proactive non-cooldown reject 路径 latency_ms
+   端到端断言: 注入 _mm_llm_context 使 _stage_in=mm_proactive, 用 rate_limit
+   reason 触发 reject (填满 _recent_triggers ≥ max_topics_per_hour); 期望
+   emit stage="mm_proactive" decision="reject" reason="rate_limit" 且
+   latency_ms type-strict/>=0/非 bool。覆盖 stage=mm_proactive 路径非
+   cooldown reject latency_ms wire。
+
 V2 _is_fail 三口约定: 对人工注入的 ``ok=False`` / ``error=...`` /
    ``failure_reason=...`` 三种独立 record, is_fail 都返回 True。
 
@@ -282,6 +297,232 @@ def v1c_cooldown_hit_latency_wire() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V1d (interact-034): arbit_emotion_preempt reject 路径 latency_ms 端到端
+# ---------------------------------------------------------------------------
+
+
+def v1d_arbit_emotion_preempt_latency_wire() -> None:
+    """V1d: COCO_PROACTIVE_ARBIT=1 + 近时 emotion_alert → fusion/mm 抢占 reject.
+
+    interact-034: arbit_fail 路径 (arbit_emotion_preempt reject) latency_ms
+    端到端断言。fixture: 启用仲裁 (COCO_PROACTIVE_ARBIT=1), 注入近时
+    _last_emotion_alert_ts (在 ARBIT_EMOTION_WINDOW_S=1.0 窗口内) +
+    _next_priority_boost=True; maybe_trigger 应进入 985-998 抢占分支,
+    emit stage=fusion_boost decision=reject reason="arbit_emotion_preempt"
+    且 latency_ms type-strict 数值 (>=0, 非 bool)。
+    """
+    os.environ["COCO_PROACTIVE_TRACE"] = "1"
+    os.environ["COCO_PROACTIVE_ARBIT"] = "1"
+    from coco import proactive_trace as pt
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+    from coco.power_state import PowerState
+
+    captured: List[Dict[str, Any]] = []
+
+    def _emit(event: str, **payload: Any) -> None:
+        captured.append({"event": event, **payload})
+
+    pt.set_emit_override(_emit)
+
+    try:
+        class _FakePS:
+            current_state = PowerState.ACTIVE
+
+        class _FakeFace:
+            def latest(self):
+                class _S:
+                    present = True
+                return _S()
+
+        def _llm(text, *, system_prompt=None):
+            return "你好呀"
+
+        def _tts(text, blocking=True):
+            return None
+
+        cfg = ProactiveConfig(
+            enabled=True,
+            idle_threshold_s=10.0,
+            cooldown_s=10.0,
+            max_topics_per_hour=10,
+            tick_s=1.0,
+        )
+        sched = ProactiveScheduler(
+            config=cfg,
+            power_state=_FakePS(),
+            face_tracker=_FakeFace(),
+            llm_reply_fn=_llm,
+            tts_say_fn=_tts,
+            emit_fn=_emit,
+        )
+        # 近时 emotion_alert (在 ARBIT_EMOTION_WINDOW_S 内) + boost
+        sched._last_emotion_alert_ts = sched.clock() - 0.1
+        sched._next_priority_boost = True
+        sched._next_priority_boost_level = "dark_silence"
+        sched._last_interaction_ts = sched.clock() - 600.0
+
+        sched.maybe_trigger()
+
+        trace_events = [
+            e for e in captured if e.get("event") == "proactive.trace"
+        ]
+        preempt_rejects = [
+            e for e in trace_events
+            if e.get("decision") == "reject"
+            and e.get("reason") == "arbit_emotion_preempt"
+        ]
+        if not preempt_rejects:
+            stages = [(e.get("stage"), e.get("decision"), e.get("reason"))
+                      for e in trace_events]
+            _record("V1d_arbit_emotion_preempt_latency_wire", False,
+                    f"no arbit_emotion_preempt reject in trace; stages={stages}")
+            return
+
+        sample = preempt_rejects[0]
+        lat = sample.get("latency_ms")
+        if isinstance(lat, bool) or not isinstance(lat, (int, float)):
+            _record("V1d_arbit_emotion_preempt_latency_wire", False,
+                    f"arbit_emotion_preempt latency_ms type 错误 "
+                    f"type={type(lat).__name__} val={lat!r} sample={sample}")
+            return
+        if lat < 0:
+            _record("V1d_arbit_emotion_preempt_latency_wire", False,
+                    f"arbit_emotion_preempt latency_ms < 0 lat={lat} sample={sample}")
+            return
+        # stage 必须在权威清单中
+        if sample.get("stage") not in ("fusion_boost", "mm_proactive"):
+            _record("V1d_arbit_emotion_preempt_latency_wire", False,
+                    f"arbit_emotion_preempt stage={sample.get('stage')!r} "
+                    f"expected in {{fusion_boost, mm_proactive}}")
+            return
+
+        _record("V1d_arbit_emotion_preempt_latency_wire", True,
+                f"{len(preempt_rejects)} arbit_emotion_preempt reject emit(s); "
+                f"stage={sample.get('stage')} lat={lat} "
+                f"(type={type(lat).__name__}) reason={sample.get('reason')}")
+    finally:
+        pt.set_emit_override(None)
+        os.environ.pop("COCO_PROACTIVE_TRACE", None)
+        os.environ.pop("COCO_PROACTIVE_ARBIT", None)
+
+
+# ---------------------------------------------------------------------------
+# V1e (interact-034): mm_proactive non-cooldown reject latency_ms 端到端
+# ---------------------------------------------------------------------------
+
+
+def v1e_mm_proactive_non_cooldown_reject_latency_wire() -> None:
+    """V1e: stage_in=mm_proactive + reason=rate_limit reject 路径 latency_ms wire.
+
+    interact-034: mm_proactive reject 路径 (非 cooldown) latency_ms 端到端
+    断言。fixture: 注入 _mm_llm_context 使 _stage_in='mm_proactive', 同时
+    填满 _recent_triggers 触发 rate_limit reason → emit stage=mm_proactive
+    decision=reject reason=rate_limit, latency_ms type-strict/>=0/非 bool。
+    """
+    os.environ["COCO_PROACTIVE_TRACE"] = "1"
+    from coco import proactive_trace as pt
+    from coco.proactive import ProactiveScheduler, ProactiveConfig
+    from coco.power_state import PowerState
+
+    captured: List[Dict[str, Any]] = []
+
+    def _emit(event: str, **payload: Any) -> None:
+        captured.append({"event": event, **payload})
+
+    pt.set_emit_override(_emit)
+
+    try:
+        class _FakePS:
+            current_state = PowerState.ACTIVE
+
+        class _FakeFace:
+            def latest(self):
+                class _S:
+                    present = True
+                return _S()
+
+        def _llm(text, *, system_prompt=None):
+            return "你好呀"
+
+        def _tts(text, blocking=True):
+            return None
+
+        cfg = ProactiveConfig(
+            enabled=True,
+            idle_threshold_s=10.0,
+            cooldown_s=10.0,
+            max_topics_per_hour=3,
+            tick_s=1.0,
+        )
+        sched = ProactiveScheduler(
+            config=cfg,
+            power_state=_FakePS(),
+            face_tracker=_FakeFace(),
+            llm_reply_fn=_llm,
+            tts_say_fn=_tts,
+            emit_fn=_emit,
+        )
+        # 注入 mm_ctx 使 _stage_in='mm_proactive'
+        sched.set_mm_llm_context({
+            "rule_id": "test_rule",
+            "hint": "test_hint",
+            "caption": "test_caption",
+            "emotion_label": "neutral",
+        })
+        # 填满 _recent_triggers 触发 rate_limit (max=3 → 注 3 条近时)
+        t_now = sched.clock()
+        sched._recent_triggers.extend([t_now - 10.0, t_now - 5.0, t_now - 1.0])
+        # idle 满足, 但 rate_limit 抑制; cooldown 通过: _last_proactive_ts=0
+        sched._last_interaction_ts = t_now - 600.0
+        sched._last_proactive_ts = 0.0
+
+        ok = sched.maybe_trigger()
+        if ok is not False:
+            _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", False,
+                    f"maybe_trigger 未返回 False, ok={ok}")
+            return
+
+        trace_events = [
+            e for e in captured if e.get("event") == "proactive.trace"
+        ]
+        mm_rejects = [
+            e for e in trace_events
+            if e.get("stage") == "mm_proactive"
+            and e.get("decision") == "reject"
+        ]
+        if not mm_rejects:
+            stages = [(e.get("stage"), e.get("decision"), e.get("reason"))
+                      for e in trace_events]
+            _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", False,
+                    f"no mm_proactive reject in trace; stages={stages}")
+            return
+
+        sample = mm_rejects[0]
+        lat = sample.get("latency_ms")
+        if isinstance(lat, bool) or not isinstance(lat, (int, float)):
+            _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", False,
+                    f"mm_proactive reject latency_ms type 错误 "
+                    f"type={type(lat).__name__} val={lat!r} sample={sample}")
+            return
+        if lat < 0:
+            _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", False,
+                    f"mm_proactive reject latency_ms < 0 lat={lat} sample={sample}")
+            return
+        if sample.get("reason") == "cooldown":
+            _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", False,
+                    f"unexpected reason=cooldown (应非 cooldown 路径) sample={sample}")
+            return
+
+        _record("V1e_mm_proactive_non_cooldown_reject_latency_wire", True,
+                f"{len(mm_rejects)} mm_proactive reject emit(s); "
+                f"lat={lat} (type={type(lat).__name__}) "
+                f"reason={sample.get('reason')}")
+    finally:
+        pt.set_emit_override(None)
+        os.environ.pop("COCO_PROACTIVE_TRACE", None)
+
+
+# ---------------------------------------------------------------------------
 # V2: _is_fail 三口约定 (ok=False / error / failure_reason)
 # ---------------------------------------------------------------------------
 
@@ -485,6 +726,8 @@ def main() -> int:
         tmp = Path(td)
         v1_latency_wire_in_production()
         v1c_cooldown_hit_latency_wire()
+        v1d_arbit_emotion_preempt_latency_wire()
+        v1e_mm_proactive_non_cooldown_reject_latency_wire()
         v2_is_fail_three_signals()
         v3_is_fail_not_false_positive()
         v4_trace_summary_latency_aggregation(tmp)

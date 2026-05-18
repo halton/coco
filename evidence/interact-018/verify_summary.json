@@ -20,6 +20,16 @@
       "ok": true
     },
     {
+      "detail": "1 arbit_emotion_preempt reject emit(s); stage=fusion_boost lat=0.003 (type=float) reason=arbit_emotion_preempt",
+      "name": "V1d_arbit_emotion_preempt_latency_wire",
+      "ok": true
+    },
+    {
+      "detail": "1 mm_proactive reject emit(s); lat=0.009 (type=float) reason=rate_limit",
+      "name": "V1e_mm_proactive_non_cooldown_reject_latency_wire",
+      "ok": true
+    },
+    {
       "detail": "三口+legacy 全识别为 fail",
       "name": "V2_is_fail_three_signals",
       "ok": true
@@ -40,5 +50,5 @@
       "ok": true
     }
   ],
-  "sha": "a56544ef5ecbcfd8f3a280438d5f02707fb717f8"
+  "sha": "5765b68b3df9e01a400bd024a3e11ee63d8a1428"
 }
