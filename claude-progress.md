@@ -4503,3 +4503,13 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **Backlog 派生：** 新增 `interact-036a-backlog-drift-jsonl-rotation`（jsonl append-only 无界增长 → size cap / rotation / retention）+ `interact-036b-backlog-drift-trend-regression-alert`（最近 N 条 drift 单调上行触发 stdout 趋势 dump，独立 verify trend regression）。
 
 **约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 3/5（infra-033 + robot-030 + interact-036），下一 candidate=robot-031（priority=243）。
+
+## Session — 2026-05-19 — robot-031 closeout (phase-29 P243)
+
+**Feature：** robot-031 verify_robot_028 V4 bump_helper sha256 硬锁 + bump_verify_028 助手（phase=29, priority=243, status=in_progress → passing），source_backlog=`robot-028-backlog-bump-helper-self-hash-hard-lock`。
+
+**Verify-only / 0 业务源码改动：** (a) `scripts/verify_robot_028.py` V4 将 bump_helper_sha256 placeholder 升级为当前 `scripts/bump_verify_027_self_hash.py` 字面硬锁常量；(b) 新增 `scripts/bump_verify_028_self_hash.py` 递归助手，自动同步 verify_028 helper sha 锁；(c) 新增 `scripts/verify_robot_031.py` 三件套 V0-V5（self-hash 字面、helper 存在、bump dry-run）。
+
+**Evidence：** merge_sha=5157c76, feat_head=76e2898（含 evidence refresh 595f0c3），main HEAD=5157c768b5308d7cad54f96e81f75043051514a4；smoke 11/11 PASS；verify_robot_031 V0-V5 rc=0；verify_robot_028 V0-V4 rc=0（V4 字面硬锁通过）；bump_verify_028_self_hash --dry-run rc=0；Reviewer (sub-agent) LGTM — 接口对称、V3 cleanup 兜底 OK、链路完整（verify_028 V4 硬锁 ↔ bump_028 助手 ↔ verify_031 三件套）。
+
+**约束符合：** 持续开发模式继续；commit 例外 + push 失败忽略一次；不升 SDK；phase-29 进度 4/5（infra-033 + robot-030 + interact-036 + robot-031），下一 candidate=robot-032（priority=244, docs-only ProactiveScheduler block 策略文档化）。

@@ -5358,11 +5358,22 @@
       "area": "robot",
       "priority": 243,
       "phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "title": "verify_robot_028 V4 bump_helper sha256 硬锁 + bump_verify_028 助手",
       "description": "当 scripts/bump_verify_027_self_hash.py 稳定后，将 verify_robot_028.py V4 中 bump_helper_sha256 placeholder 升级为硬锁字面常量；新增 scripts/bump_verify_028_self_hash.py 递归助手自动同步 verify_028 helper sha 锁。来源 robot-028 Reviewer followup。",
       "source_backlog": "robot-028-backlog-bump-helper-self-hash-hard-lock",
-      "scope": "verify-only / 脚手架硬化：(a) 在 verify_robot_028.py V4 中替换 placeholder 为当前 bump_verify_027_self_hash.py sha256 字面常量；(b) 新增 scripts/bump_verify_028_self_hash.py 递归助手；(c) 新增 verify_robot_031.py 三件套（self-hash 字面、helper 存在、运行 dry-run）。0 业务源码改动。"
+      "scope": "verify-only / 脚手架硬化：(a) 在 verify_robot_028.py V4 中替换 placeholder 为当前 bump_verify_027_self_hash.py sha256 字面常量；(b) 新增 scripts/bump_verify_028_self_hash.py 递归助手；(c) 新增 verify_robot_031.py 三件套（self-hash 字面、helper 存在、运行 dry-run）。0 业务源码改动。",
+      "evidence": {
+        "feat_sha": "76e2898",
+        "merge_sha": "5157c76",
+        "main_head": "5157c768b5308d7cad54f96e81f75043051514a4",
+        "smoke": "11/11 PASS",
+        "verify_robot_031": "V0-V5 PASS (rc=0)",
+        "verify_robot_028": "V0-V4 PASS (rc=0, V4 字面硬锁)",
+        "bump_verify_028_self_hash_dry_run": "rc=0",
+        "business_source_changes": 0,
+        "reviewer_subagent": "LGTM, no findings — 接口对称、V3 cleanup 兜底 OK、链路完整（verify_028 V4 硬锁 ↔ bump_028 助手 ↔ verify_031 三件套）"
+      }
     },
     {
       "id": "robot-032",
