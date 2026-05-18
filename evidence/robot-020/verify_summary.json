@@ -5,7 +5,7 @@
   "source_backlog": "robot-015-backlog-v3-warn-once-rename",
   "verdict": "PASS",
   "errors": [],
-  "elapsed_s": 217.42,
+  "elapsed_s": 213.47,
   "fingerprints": {
     "proactive.py_sha256": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
     "spec_doc_sha256": "4e8f816518a208e31a76ae7a929a4e377d3808236a5b3f769e47264b1a6a7b1c",
@@ -24,27 +24,27 @@
     {
       "name": "verify_robot_008.py",
       "rc": 0,
-      "elapsed_s": 10.7
+      "elapsed_s": 10.3
     },
     {
       "name": "verify_robot_016.py",
       "rc": 0,
-      "elapsed_s": 40.7
+      "elapsed_s": 40.8
     },
     {
       "name": "verify_robot_017.py",
       "rc": 0,
-      "elapsed_s": 63.6
+      "elapsed_s": 61.7
     },
     {
       "name": "verify_robot_018.py",
       "rc": 0,
-      "elapsed_s": 13.9
+      "elapsed_s": 12.5
     },
     {
       "name": "verify_robot_019.py",
       "rc": 0,
-      "elapsed_s": 88.4
+      "elapsed_s": 88.1
     }
   ],
   "heavy_skipped": [
