@@ -4940,3 +4940,54 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-33 规划（持续开发模式自动进入）。
+
+## Session P259 — infra-V6 pre-flight closeout (2026-05-20)
+
+**Scope：** infra-038-backlog-V6-pre-flight-grep-check closeout，phase-33 进度 1/5。
+
+**Merge：** `feat/infra-V6-pre-flight` (62abe69) → main = `99cb3b5`（merge --no-ff）。
+
+**Regression（main HEAD=99cb3b5）：**
+- `./init.sh` smoke = 11/11 PASS
+- `scripts/verify_infra_034.py` → rc=0（含 V6）
+- `scripts/verify_infra_035.py` → rc=0
+- `scripts/verify_infra_041.py` → rc=0
+- `scripts/verify_infra_032.py` → rc=0
+- `scripts/verify_robot_034.py` → rc=0
+
+**Reviewer (sub-agent) LGTM：** V6 9/10, cascade 10/10, verify-script 9/10, V3 mutant 9/10。
+
+**V6 三 func sha：**
+- `v6_reverse_sha_lock_consistency` = `a460f1bd`
+- `_v6_scan_constants` = `11cb2d84`
+- `_v6_target_id` = `8c4e9697`
+
+**V6 行为：** scanned_reverse_locks=7, live_verify_files=175, all match (PASS)。
+
+**Cascade bump（pre-existing stale 修复）：**
+- `verify_infra_035.EXPECTED_VERIFY_034_SHA` e6847e44→de034de4
+- `verify_infra_032.EXPECTED_VERIFY_024_SHA256` 18f86565→eb61b071
+
+**Mutant 重现：** 改 verify_robot_027 EXPECTED_VERIFY_025=dead0000 → V6 精确定位 file:line + 列出同 id 三候选（infra/interact/robot 025），证明 V6 能捕获外部反向 sha 锁漂移。
+
+**改动文件（5）：**
+- `scripts/verify_infra_034.py`（V6 三 func 新增）
+- `scripts/verify_infra_041.py`（V0-V5 新增）
+- `scripts/verify_infra_035.py`（cascade bump EXPECTED_VERIFY_034_SHA）
+- `scripts/verify_infra_032.py`（cascade bump EXPECTED_VERIFY_024_SHA256）
+- `feature_list.json`
+
+0 业务源码改动；verify-only。
+
+**Backlog（5 笔入账，priority=999, phase=null）：**
+- infra-V6-backlog-scope-extend-bump-helpers：V6 scope 扩到 bump_*.py + evidence/*/v4_sha.json
+- infra-V6-backlog-extract-to-verify-lib：V6 实现抽到 _verify_lib.scan_reverse_sha_locks 共享 helper
+- infra-V6-backlog-strict-area-match-mode：V6 加 NNN→area 强匹配 opt-in 严格模式
+- infra-V6-backlog-v7-author-intent-annotation：V7 同 id 多脚本一致性检查（通过 area / annotation 推断意图）
+- infra-V6-backlog-regex-unique-needle-discipline：V6 regex 放宽时应用 assert_unique_needle 原则
+
+**Phase-33 进度：** 1/5 passing（infra-V6-pre-flight）；剩 4：infra-039-backlog-target-inference-refine、infra-039-backlog-dump-mermaid-output、infra-040-backlog-mutant-needle-uniqueness-helper、robot-037-backlog-verify_robot_036-inline-helper-consolidate。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-33 剩余 4 feature（持续开发模式自动进入）。

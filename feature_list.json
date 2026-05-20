@@ -6478,14 +6478,23 @@
       "area": "infra",
       "phase": 33,
       "title": "verify_infra_034 加 V6 pre-flight grep 外部锁检查",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-038 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~60 LOC)",
       "scope": "verify_infra_034 新增 V6 pre-flight：grep 待加入覆盖集的新 target basename 是否被外部脚本字面锁引用，若有则提示需同步 bump，避免 cascade 漏改。",
       "dependencies": [
         "infra-038"
       ],
-      "verification": []
+      "verification": [
+        "Reviewer (sub-agent) LGTM: V6 9/10, cascade 10/10, verify-script 9/10, V3 mutant 9/10",
+        "10 cmd rc=0 + ./init.sh smoke 11/11 PASS",
+        "V6 三 func sha: v6_reverse_sha_lock_consistency=a460f1bd, _v6_scan_constants=11cb2d84, _v6_target_id=8c4e9697",
+        "V6 行为: scanned_reverse_locks=7, live_verify_files=175, all match (PASS)",
+        "cascade bump: verify_infra_035 EXPECTED_VERIFY_034_SHA e6847e44→de034de4; verify_infra_032 EXPECTED_VERIFY_024_SHA256 18f86565→eb61b071 (pre-existing stale 修复)",
+        "mutant 重现: 改 verify_robot_027 EXPECTED_VERIFY_025=dead0000 → V6 精确定位 file:line + 列出同 id 三候选 (infra/interact/robot 025)",
+        "feat_sha = 62abe69",
+        "merge_main_head = 99cb3b5"
+      ]
     },
     {
       "id": "infra-038-backlog-unified-bump-cli",
@@ -6667,9 +6676,84 @@
         "robot-037"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-scope-extend-bump-helpers",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V6 scope 扩到 bump_*.py + evidence/*/v4_sha.json",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 closeout Reviewer 建议",
+      "scope": "V6 当前只 scan scripts/verify_*.py 的外部反向 sha 锁；扩到 scripts/bump_*.py 与 evidence/*/v4_sha.json 等其它会引用 verify 文件 sha 的位点，减少 cascade 漏改盲区。",
+      "dependencies": [
+        "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-extract-to-verify-lib",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V6 实现抽到 _verify_lib.scan_reverse_sha_locks 共享 helper",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 closeout Reviewer 建议",
+      "scope": "verify_infra_034 V6 的 _v6_scan_constants / _v6_target_id 逻辑抽到 scripts/_verify_lib.py 的 scan_reverse_sha_locks(target) helper，其它 verify 脚本可复用。",
+      "dependencies": [
+        "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-strict-area-match-mode",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V6 加 NNN→area 强匹配 opt-in 严格模式",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 closeout Reviewer 建议",
+      "scope": "V6 当前同 id (NNN) 在 infra/interact/robot 多脚本会三候选列出；加 opt-in 严格模式：根据外部锁所在脚本的 area，只在同 area target 内匹配，降低假阳性候选数。",
+      "dependencies": [
+        "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-v7-author-intent-annotation",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V7 同 id 多脚本一致性检查 (通过 area / annotation 推断意图)",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 closeout Reviewer 建议",
+      "scope": "V6 的后续 V7：同 id (NNN) 多脚本同时存在时，通过 area / docstring annotation / 显式 # verify-target: 注释推断作者意图，做一致性检查，捕获 cascade 间矛盾。",
+      "dependencies": [
+        "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-regex-unique-needle-discipline",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V6 regex 放宽时应用 assert_unique_needle 原则",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 closeout Reviewer 建议",
+      "scope": "V6 未来若放宽 regex 识别更多锁式样（如 r'verify_(\\w+)_(\\d+)' 变体），同步应用 assert_unique_needle 原则，避免 regex 误抓非 sha 锁字面值。",
+      "dependencies": [
+        "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-20 P257 robot-037 closeout passing + 5 backlog 入账"
+    "last_updated": "2026-05-20 P259 infra-V6 closeout passing + 5 backlog 入账"
   }
 }
