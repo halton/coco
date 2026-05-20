@@ -5073,3 +5073,22 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 - `infra-042-backlog-cmpflipper-bidirectional` (priority=999, status=backlog, phase=null) — _CmpFlipper 支持 Eq ↔ NotEq 双向翻转, 避免 helper 改用 == 时 mutant 不 drift
 
 **phase-33 进度：** 3/5 passing（infra-038/infra-035-followup/infra-040-backlog-mutant-uniqueness-helper），剩 2 candidate。main HEAD=`b480ebe`。
+
+## Session P262 — 2026-05-20 — Engineer (infra-039-backlog-dump-mermaid-output in_progress)
+
+**任务**: phase-33 #4.33 backlog `infra-039-backlog-dump-mermaid-output` (priority=4.33)
+
+**变更**:
+- `scripts/dump_v4_sha_graph.py`: 新增 `render_mermaid(graph) -> str` 函数 + argparse `--mermaid` 旗标; 输出 `graph LR` mermaid 语法 (hub `v4_sha_json` + verify_* 节点 + 反向 sha lock 边). 与 `--json` 互斥 (同传 rc=2 + stderr).
+- `scripts/verify_infra_043.py` (新, 217 行): V0 scaffolding (render_mermaid + --mermaid + graph LR symbol) / V1 docstring sentinel + v4_behavior 自锁 / V2 dump file sha 双锁 + render_mermaid func sha / V3 in-memory ast mutant (render_mermaid body → `return ""`, sha drift) / V4 subprocess --mermaid 行为 (prefix / anchors verify_robot_025+v4_sha_json+`-->` / mutex with --json) / V5 Reviewer LGTM gate.
+- Cascade: dump_v4_sha_graph.py file sha 漂移 → `scripts/verify_infra_039.py::EXPECTED_DUMP_FILE_SHA` bump `89598a8f…` → `565d0cbe…`.
+- `feature_list.json`: `infra-039-backlog-dump-mermaid-output` status `not_started` → `in_progress`.
+
+**验证**:
+- `.venv/bin/python scripts/verify_infra_043.py` → ALL PASS 13 checks (含 V4 mermaid prefix / anchors / --mermaid×--json 互斥).
+- `.venv/bin/python scripts/verify_infra_039.py` → ALL PASS 10 checks (cascade bump 后).
+- `.venv/bin/python scripts/verify_infra_034.py` → total=53 failed=0 (V6 live_verify_files=177 自动认 verify_infra_043 进 live 集; orphan_reverse_locks scanned=7 all match).
+- `./init.sh` smoke → 11/11 PASS.
+
+**Engineer 阶段未切 status=passing / 未 merge** (P261 流程违规修复后的硬规则). 等 Closeout sub-agent fresh-context Reviewer LGTM 后切 passing + merge.
+
