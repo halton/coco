@@ -6013,7 +6013,7 @@
       "area": "interact",
       "phase": 31,
       "title": "verify self-file-sha vs func-level 策略对照 doc + 推荐",
-      "status": "in_progress",
+      "status": "passing",
       "source": "interact-037c-backlog-verify-self-file-sha-vs-func-level",
       "scope": "interact-037 verify 使用全文件 sha256 自锁；项目内其它 verify 多采用函数级双锁。两种策略各有 tradeoff（全文件 sha：易维护但 docstring 微调即 break；函数级：精准但 ast 解析成本高）。本期产出 docs/verify_sha_locking_strategy.md 对照表 + 推荐场景，并产 verify_interact_038.py 锁定 doc heading 单源。verify+docs only，0 业务源码改。",
       "dependencies": [
@@ -6026,10 +6026,59 @@
         "V1: docs/verify_sha_locking_strategy.md 存在且含 heading 单源",
         "V2: verify_interact_038 heading 单源校验 PASS",
         "V3: smoke PASS"
-      ]
+      ],
+      "evidence": {
+        "reviewer_sub_agent": "LGTM (fresh-context)，清晰度 9/10, 可操作性 9/10, 推荐合理 8/10；抽样核对通过: interact-037 V1 / robot-027 V2 / infra-034 V4 baseline 全匹配",
+        "commands": [
+          ".venv/bin/python scripts/verify_interact_038.py → rc=0 (V0-V5 全 PASS)",
+          ".venv/bin/python scripts/verify_infra_034.py → rc=0 (regress 36 PASS)",
+          "./init.sh smoke → 11/11 PASS"
+        ],
+        "v3_mutant_probe": "rc=1 反证：临时替换 'decision matrix' → __MUTATED__ 触发缺失探测，finally 还原原文（V3 PASS）",
+        "docs_sha": "2a9b4e5f97728ab7c2c5fb99800f5dd1d3977b20c0b410e176a9a9f63bd05a74",
+        "feat_sha": "b16026d",
+        "merge_main_head": "cc7076999784cc70bedfedd94b0fd97c66e4dcf4",
+        "real_machine_uat": "n/a (docs + verify-only, 0 业务源码改)"
+      }
+    },
+    {
+      "id": "interact-038-backlog-verify-lib-func-sha-helper",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "scripts/_verify_lib.py 增加 func_sha_by_name(path, func_name) helper",
+      "status": "backlog",
+      "source": "interact-038 closeout Reviewer 建议",
+      "scope": "扩展 scripts/_verify_lib.py 添加 func_sha_by_name(path, func_name) helper，封装 ast 解析 + 函数体规范化 + sha256 计算，方便后续 verify-script 复用 func-level sha 抽取，降低复制粘贴成本。",
+      "dependencies": ["interact-038"],
+      "verification": []
+    },
+    {
+      "id": "interact-038-backlog-interact-037-v2-refactor",
+      "priority": 999,
+      "area": "interact",
+      "phase": null,
+      "title": "interact-037 V2 EXPECTED_FILE_SHA → func-sha + phrase 重构",
+      "status": "backlog",
+      "source": "interact-038 closeout Reviewer 第 2 条建议",
+      "scope": "interact-037 当前 V2 使用全文件 sha256 自锁，docstring 微调即 break，痛点已在 interact-038 docs 决策矩阵中明示。本期还该笔技术债：把 EXPECTED_FILE_SHA 改为 func-sha + key phrase 双锁，降低 docstring 变更触发率。",
+      "dependencies": ["interact-038", "interact-038-backlog-verify-lib-func-sha-helper"],
+      "verification": []
+    },
+    {
+      "id": "interact-038-backlog-pr-template-decision-matrix-checkbox",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify-script PR 模板加 '请填决策矩阵那一行' check-box",
+      "status": "backlog",
+      "source": "interact-038 closeout Reviewer 第 3 条建议",
+      "scope": "新增 verify-script 类 PR 模板（.github/PULL_REQUEST_TEMPLATE/verify-script.md 或在主模板加 section），强制作者填 docs/verify_sha_lock_strategy.md 决策矩阵中对应一行，流程层防默认 file-sha 高耦合。",
+      "dependencies": ["interact-038"],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19 P252 infra-036 closeout"
+    "last_updated": "2026-05-19 P253 interact-038 closeout + phase-31 收官 5/5"
   }
 }

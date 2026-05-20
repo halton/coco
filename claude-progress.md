@@ -4716,3 +4716,33 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** interact-038（verify self-file-sha vs func-level 策略对照 doc + 推荐）。
+
+## Session P253 — 2026-05-19 — interact-038 closeout + phase-31 收官 5/5
+
+**Done：** interact-038（verify self-file-sha vs func-level 策略对照 doc + 推荐）passing → merge 回 main。
+
+**改动（feat/interact-038, 0 业务源码）：**
+- `docs/verify_sha_lock_strategy.md`（275 行，6 章节：背景 / file-sha vs func-sha 决策矩阵 / 适用场景 / 反模式 / 迁移指引 / 推荐流程）
+- `scripts/verify_interact_038.py` V0-V5（V0 docstring+sha 自锁 / V1 heading 6 / V1b sentinel 解析 / V2 8 phrase 覆盖 / V3 mutant 反证 / V4 doc sha 报告 / V5 subprocess --noop-probe）
+- `feature_list.json` interact-038: in_progress → passing + 3 backlog 入账
+
+**Reviewer (sub-agent fresh-context)：** LGTM。清晰度 9/10, 可操作性 9/10, 推荐合理 8/10；抽样核对通过（interact-037 V1 / robot-027 V2 / infra-034 V4 baseline 全匹配）。
+
+**Verification（merge 后 main 上跑）：**
+- `./init.sh` smoke → 11/11 PASS
+- `.venv/bin/python scripts/verify_interact_038.py` → rc=0
+- `.venv/bin/python scripts/verify_infra_034.py` → rc=0（regress 36 PASS）
+- V3 mutant 反证：'decision matrix' → __MUTATED__ 触发 rc=1，finally 还原 ✓
+
+**SHA：** docs_sha=2a9b4e5f97728ab7c2c5fb99800f5dd1d3977b20c0b410e176a9a9f63bd05a74；feat HEAD=b16026d；merge main HEAD=cc70769。
+
+**Backlog（3 笔，priority=999, phase=null）：**
+- interact-038-backlog-verify-lib-func-sha-helper：scripts/_verify_lib.py 增 func_sha_by_name(path, func_name) helper
+- interact-038-backlog-interact-037-v2-refactor：interact-037 V2 EXPECTED_FILE_SHA → func-sha + phrase 重构（Reviewer 第 2 建议）
+- interact-038-backlog-pr-template-decision-matrix-checkbox：verify-script PR 模板加决策矩阵 check-box（Reviewer 第 3 建议）
+
+**Phase-31 收官 5/5：** robot-035 / robot-036 / infra-035 / infra-036 / interact-038 全 passing。
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-32 规划 / 候选 feature 选取。
