@@ -45,7 +45,7 @@ SMOKE = REPO_ROOT / "scripts" / "smoke.py"
 
 # 锁住升级后 verify_infra_024.py 的 sha256 (V4)。
 # 任何修改 (含格式化) 都必须主动更新此值, 强制把"表的变化"提到 review 视野。
-EXPECTED_VERIFY_024_SHA256 = "18f86565406adfb16514389d5a6cae58bbc7d2562ab0c8e57f44ecc5e10ff533"
+EXPECTED_VERIFY_024_SHA256 = "eb61b07104dc68d54a9c88e2533b6ad37c392dd42a83338e095d6bc5c9d654b1"
 
 # 关键 sentinel 字面 (V1): 这些字符串字面 *必须* 仍在 verify_infra_024.py 内,
 # 缺一个就 FAIL — 防止未来重构静默吞掉表项。

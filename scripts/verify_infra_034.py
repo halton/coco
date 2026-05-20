@@ -15,6 +15,14 @@ V2 verify_infra_024.py P240 baseline 不能 regress —
 V3 mutant 反证: 在内存中删去任一目标某关键短语 → V1 该目标 FAIL (反证只读, 不写盘)。
 V4 sha256 锁所有 6 个目标脚本 (5 个新增 + verify_infra_024 baseline)。
 V5 subprocess 自调用 rc=0 (sys.executable invoke 自身, 自洽通过)。
+V6 pre-flight 反向 sha lock 一致性 (infra-038 backlog): 扫 scripts/verify_*.py
+    内所有 ``VERIFY_<NNN>_...SHA...`` / ``EXPECTED_VERIFY_<NNN>_...SHA...``
+    形式的反向 sha 锁常量, 对每个常量, 若其 64-hex 值不等于任意现存
+    scripts/verify_*.py / scripts/_verify_lib.py 文件的当前实际 sha → FAIL
+    (孤儿反向锁, 几乎一定是 cascade 漏改; 示意 phase-32 P255 暴露的
+    VERIFY_025_EXPECTED_SHA 在 verify_robot_025 sha bump 后未同步)。
+    在 v4_sha.json 中已列出且 sha 一致, 或常量 hex 等于任意现存 verify
+    脚本 sha → PASS。
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码。
 
@@ -41,6 +49,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -262,6 +271,120 @@ def v5_self_subprocess() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: pre-flight 反向 sha lock 一致性 (infra-038 backlog)
+# ---------------------------------------------------------------------------
+# 形如  CONST = "<64hex>"  或  CONST = (\n    "<64hex>"\n)
+_RE_V6_SINGLELINE = re.compile(
+    r'^([A-Z_][A-Z0-9_]*)\s*=\s*["\']([0-9a-f]{64})["\']\s*(?:#.*)?$'
+)
+_RE_V6_TUPLE_OPEN = re.compile(r'^([A-Z_][A-Z0-9_]*)\s*=\s*\(\s*$')
+_RE_V6_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
+
+
+def _v6_scan_constants(path: Path) -> List[Tuple[str, str, int]]:
+    """扫脚本顶层 64-hex sha 常量, 返回 [(const_name, sha_hex, lineno), ...]."""
+    out: List[Tuple[str, str, int]] = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return out
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = _RE_V6_SINGLELINE.match(line)
+        if m:
+            out.append((m.group(1), m.group(2), i + 1))
+            i += 1
+            continue
+        m2 = _RE_V6_TUPLE_OPEN.match(line)
+        if m2 and i + 1 < len(lines):
+            mh = _RE_V6_TUPLE_HEX.match(lines[i + 1])
+            if mh:
+                out.append((m2.group(1), mh.group(1), i + 1))
+                i += 2
+                continue
+        i += 1
+    return out
+
+
+def _v6_target_id(target_relpath: str) -> str:
+    """从 target 路径推断三位数字 id, e.g. scripts/verify_robot_025.py -> '025'."""
+    stem = Path(target_relpath).stem  # verify_robot_025
+    m = re.search(r"_(\d{3})$", stem)
+    return m.group(1) if m else ""
+
+
+# 反向锁常量名识别: 含 "VERIFY_<NNN>" 子串 (NNN = 3 位数字), 且名字中含 "SHA"
+_RE_V6_REVERSE_CONST = re.compile(r"VERIFY_(\d{3})")
+
+
+def v6_reverse_sha_lock_consistency() -> None:
+    """扫 scripts/verify_*.py + _verify_lib.py 内所有反向 sha lock 常量,
+    若其 64-hex 值不等于任意现存 verify_*.py / _verify_lib.py 当前实际 sha
+    → FAIL (孤儿反向锁, cascade 漏改信号)."""
+    scripts_dir = ROOT / "scripts"
+    all_scripts = sorted(scripts_dir.glob("verify_*.py"))
+    lib = scripts_dir / "_verify_lib.py"
+    if lib.is_file():
+        all_scripts.append(lib)
+
+    # 现存所有 verify 脚本 + _verify_lib 的实际文件 sha 集合
+    live_file_shas: Dict[str, str] = {}
+    for p in all_scripts:
+        rel = str(p.relative_to(ROOT))
+        try:
+            live_file_shas[rel] = _sha256(p)
+        except Exception:
+            continue
+    live_sha_set = set(live_file_shas.values())
+    _emit("V6_live_sha_set", True, f"live_verify_files={len(live_sha_set)}")
+
+    # 扫每个脚本的反向锁常量
+    total_xrefs = 0
+    orphan: List[str] = []
+    for src_rel, _src_sha in sorted(live_file_shas.items()):
+        p = ROOT / src_rel
+        consts = _v6_scan_constants(p)
+        for const, sha_val, lineno in consts:
+            if "SHA" not in const:
+                continue
+            m = _RE_V6_REVERSE_CONST.search(const)
+            if not m:
+                continue
+            tid = m.group(1)
+            # 该 const 暗示锁某 verify_*_<tid>.py file-sha
+            total_xrefs += 1
+            if sha_val in live_sha_set:
+                continue  # PASS: 等于某现存 verify 脚本实际 sha
+            # 找出同 id 的候选 target, 给出更详细错误信息
+            same_id_candidates = sorted(
+                rel for rel in live_file_shas
+                if re.search(rf"_{tid}\.py$", rel)
+            )
+            cand_shas = ", ".join(
+                f"{rel}={live_file_shas[rel][:12]}" for rel in same_id_candidates
+            ) or "<no same-id verify script found>"
+            orphan.append(
+                f"{src_rel}:{lineno} {const}={sha_val[:16]} (id={tid}; "
+                f"live same-id: {cand_shas})"
+            )
+    if orphan:
+        _emit(
+            "V6_orphan_reverse_locks",
+            False,
+            f"count={len(orphan)}; "
+            + " | ".join(orphan[:5])
+            + (" | ..." if len(orphan) > 5 else ""),
+        )
+    else:
+        _emit(
+            "V6_orphan_reverse_locks",
+            True,
+            f"scanned_reverse_locks={total_xrefs}; all match a live verify file sha",
+        )
+
+
 def main() -> int:
     v0_targets_exist()
     v1_key_phrases()
@@ -269,6 +392,7 @@ def main() -> int:
     v3_mutant()
     v4_sha_lock()
     v5_self_subprocess()
+    v6_reverse_sha_lock_consistency()
 
     failed = [t for t, ok, _ in _results if not ok]
     total = len(_results)
