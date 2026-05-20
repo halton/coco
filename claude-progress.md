@@ -5092,3 +5092,23 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 
 **Engineer 阶段未切 status=passing / 未 merge** (P261 流程违规修复后的硬规则). 等 Closeout sub-agent fresh-context Reviewer LGTM 后切 passing + merge.
 
+
+## Session P262 — infra-039-backlog-dump-mermaid-output Closeout (2026-05-20)
+
+- Closeout sub-agent fresh-context Reviewer LGTM:
+  - mermaid-design=8/10
+  - verify_043-quality=9/10
+  - cascade-accuracy=10/10
+  - process-compliance=10/10 (P261 流程违规已修复, Engineer 阶段 status 守在 in_progress 直到 Closeout 才切 passing + merge)
+- merge --no-ff feat/infra-039-backlog-dump-mermaid → main HEAD=97a179f
+- verify rc:
+  - `verify_infra_043.py` rc=0 (13 checks ALL PASS, V0 V1 V2 V3 V4 V5)
+  - `verify_infra_039.py` rc=0 (10 checks ALL PASS)
+  - `verify_infra_034.py` rc=0 (V6, total=53 failed=0, live_verify_files=177 自动含 verify_infra_043)
+  - `./init.sh` smoke 11/11 PASS
+- feature_list: infra-039-backlog-dump-mermaid-output `in_progress` → `passing`，evidence 记 Reviewer LGTM + 流程修复
+- phase-33 进度 4/5 passing (infra-039 / robot-037 / infra-040-backlog / infra-039-backlog-dump-mermaid)，剩 1 candidate
+- 入账 3 backlog (priority=999, phase=null, status=backlog):
+  - `infra-039-backlog-mermaid-unknown-target-id-collision` — unknown target 复合 key 避免合并
+  - `infra-039-backlog-mermaid-tuple-fanout` — 元组反向锁 1→N fanout 渲染
+  - `infra-039-backlog-mermaid-classDef-styling` — hub / verify_* / unknown 视觉分层

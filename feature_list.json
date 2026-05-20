@@ -6614,12 +6614,59 @@
       "area": "infra",
       "phase": 33,
       "title": "dump_v4_sha_graph 加 --mermaid 渲染模式",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~80 LOC)",
       "scope": "dump_v4_sha_graph.py 增加 --mermaid 输出模式，生成 mermaid graph TD 语法，便于嵌入文档/PR 描述做可视化耦合审查。",
       "dependencies": [
         "infra-039"
+      ],
+      "verification": [
+        "Reviewer (sub-agent fresh-context): LGTM. mermaid-design=8/10, verify_043-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10 (P261 流程违规已修复, status 守在 in_progress 直到 Closeout)"
+      ]
+    },
+    {
+      "id": "infra-039-backlog-mermaid-unknown-target-id-collision",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "render_mermaid unknown target id 用复合 key 避免跨 source 同 const 名合并",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
+      "scope": "render_mermaid 中 unknown target 的 node id 当前以 const 名命名，跨 source 同名 const 会被合并；改为 unknown_<src>_<const> 复合 key，保证唯一性。",
+      "dependencies": [
+        "infra-039-backlog-dump-mermaid-output"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-mermaid-tuple-fanout",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "元组形式反向锁在 mermaid 中 fanout 渲染（多边到多 target）",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
+      "scope": "build_graph 已展开 tuple-form 反向锁；render_mermaid 应将一个 source 节点 fanout 出多条边到各 target，呈现真正的 1→N 耦合而非单边。",
+      "dependencies": [
+        "infra-039-backlog-dump-mermaid-output"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-mermaid-classDef-styling",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "mermaid 输出加 classDef 视觉分层 (hub / verify_* / unknown)",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
+      "scope": "render_mermaid 增加 classDef 与 class 语句，对 hub 节点 (dump_v4_sha_graph)、verify_* 节点、unknown 节点分别上色，提升嵌入文档时的可读性。",
+      "dependencies": [
+        "infra-039-backlog-dump-mermaid-output"
       ],
       "verification": []
     },
