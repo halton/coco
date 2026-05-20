@@ -56,6 +56,10 @@ VERIFY_032 = REPO / "scripts" / "verify_robot_032.py"
 # robot-035: 共享 lib
 VERIFY_LIB = REPO / "scripts" / "_verify_lib.py"
 
+# robot-037: 复用 _verify_lib.read_constant 静态读 verify_032 中常量
+sys.path.insert(0, str(REPO / "scripts"))
+from _verify_lib import read_constant  # noqa: E402
+
 HELPER_NAME = "_parse_headings_from_doc"  # verify_robot_032 中的本地别名 symbol
 LIB_HELPER_NAME = "parse_headings_from_doc"  # _verify_lib 中的公开 helper
 
@@ -65,23 +69,11 @@ LIB_HELPER_NAME = "parse_headings_from_doc"  # _verify_lib 中的公开 helper
 # 选择 ast 而非 ``from verify_robot_032 import ...`` 是为了避免 module-level
 # 副作用 (verify_robot_032 import 时会立即解析 docs 生成 EXPECTED_HEADINGS),
 # 让 verify_robot_034 顶层加载与 docs 文件状态完全解耦; V1/V3 仍走原有 importlib 路径。
+# robot-037: 内部 _read_sentinel_from_verify_032 helper 提升到 _verify_lib.read_constant,
+# 形成通用入口; 此处仅保留常量名 + 一次调用。
 _SENTINEL_SRC_NAME = "_HEADINGS_SECTION_SENTINEL"
 
-
-def _read_sentinel_from_verify_032() -> str:
-    src = VERIFY_032.read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            for tgt in node.targets:
-                if isinstance(tgt, ast.Name) and tgt.id == _SENTINEL_SRC_NAME:
-                    return ast.literal_eval(node.value)
-    raise RuntimeError(
-        f"constant {_SENTINEL_SRC_NAME!r} not found in {VERIFY_032}"
-    )
-
-
-SENTINEL_LINE = _read_sentinel_from_verify_032()
+SENTINEL_LINE = read_constant(VERIFY_032, _SENTINEL_SRC_NAME)
 
 # V2: hardcoded sha256 of _verify_lib.parse_headings_from_doc function body (ast source segment)
 # robot-035: 改锁共享 lib helper (helper 函数体新增 sentinel 形参 + 文档与原版有差异,

@@ -52,7 +52,7 @@ EXPECTED_SENTINEL_LINE_SHA = (
 
 # V4: sha256 锁 verify_robot_034.py 整体
 EXPECTED_VERIFY_034_SHA = (
-    "e810306315f087b676e37e36cf3e88d600b8ed669f19eccd5096e94161079728"
+    "0e390ca10577016e24dc3f531a7a9aefa30a3305614cb609db4150d7db36eca2"
 )
 
 _results: List[Tuple[str, bool, str]] = []

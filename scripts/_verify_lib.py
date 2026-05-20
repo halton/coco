@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""_verify_lib: 共享 helper for scripts/verify_*.py (robot-035, infra-037).
+"""_verify_lib: 共享 helper for scripts/verify_*.py (robot-035, infra-037, robot-037).
 
 robot-035: 把 verify_robot_032 中 ``_parse_headings_from_doc`` 抽成本模块的公开
 helper ``parse_headings_from_doc``, 使多个 docs-lock verify 可复用 (单一事实源 +
@@ -8,6 +8,11 @@ sha 锁链路统一)。
 infra-037: 新增 ``func_sha_by_name(path, func_name)`` helper, 封装顶层
 function/method 的 ast 抽取 + 规范化 (``ast.unparse``) + sha256 计算, 让后续
 verify-script 复用 func-level sha 抽取的统一入口, 降低复制粘贴成本。
+
+robot-037: 新增 ``read_constant(path, const_name)`` helper, 封装"静态读取
+模块级常量字面值" (ast.literal_eval) 的通用模式, 收敛 verify_robot_034 /
+verify_robot_036 中各自内部的 ``_read_sentinel_from_verify_032`` /
+``_read_constant_from`` 复制实现。
 
 运行环境约定 (infra-034)
 ------------------------
@@ -20,8 +25,9 @@ from __future__ import annotations
 import ast
 import hashlib
 from pathlib import Path
+from typing import Any
 
-__all__ = ["parse_headings_from_doc", "func_sha_by_name"]
+__all__ = ["parse_headings_from_doc", "func_sha_by_name", "read_constant"]
 
 
 def parse_headings_from_doc(doc_path: Path, sentinel: str) -> list[str]:
@@ -91,3 +97,46 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
             canonical = ast.unparse(node)
             return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     raise ValueError(f"top-level function {func_name!r} not found in {p}")
+
+
+def read_constant(path: str | Path, const_name: str) -> Any:
+    """静态读取 path 中名为 const_name 的**模块级**常量字面值 (不 import, 不执行)。
+
+    实现:
+    - ``ast.parse`` 文件源码
+    - 扫描 Module.body, 找形如 ``const_name = <literal>`` 的 ``ast.Assign`` 节点
+      (target.id == const_name)
+    - 使用 ``ast.literal_eval(node.value)`` 安全求值, 只接受 str/bytes/num/tuple/
+      list/dict/set/bool/None 字面 (不会执行任意代码)
+
+    robot-037: 收敛 verify_robot_034._read_sentinel_from_verify_032 与
+    verify_robot_036._read_constant_from 的复制实现, 形成单一入口。让 verify
+    脚本静态读取另一 verify 脚本中的常量 (避免 import-time 副作用) 成为标准模式。
+
+    Args:
+        path: 源文件路径 (str 或 Path 均可)。
+        const_name: 模块顶层常量名。
+
+    Returns:
+        ``ast.literal_eval`` 求值后的常量值 (类型取决于字面)。
+
+    Raises:
+        FileNotFoundError: path 不存在。
+        ValueError: const_name 未在文件模块级找到, 或 value 非 literal。
+    """
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"source file not found: {p}")
+    src = p.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == const_name:
+                    try:
+                        return ast.literal_eval(node.value)
+                    except (ValueError, SyntaxError) as e:
+                        raise ValueError(
+                            f"constant {const_name!r} in {p} is not a literal: {e}"
+                        )
+    raise ValueError(f"module-level constant {const_name!r} not found in {p}")

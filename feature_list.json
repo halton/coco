@@ -6212,7 +6212,7 @@
       "phase": 32,
       "area": "robot",
       "title": "_read_constant_from helper 抽到 scripts/_verify_lib 去重",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; robot-036-backlog-extract-read-constant-helper",
       "scope": "verify_robot_034 与 verify_robot_036 各自实现 _read_constant_from（ast 解析模块顶层常量）helper；属重复逻辑。抽到 scripts/_verify_lib/ast_constants.py 共享模块，两 verify 改 import。verify-only，0 业务源码改。会触发 infra-034 V4 sha 锁表同步。",
