@@ -5032,3 +5032,30 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **V6 自动验证：** verify_infra_034 V6_orphan_reverse_locks scanned_reverse_locks=7 all match a live verify file sha；verify_robot_036 sha 变化已自动 cover。
 
 **约束符合：** sim-first；commit 例外 + Co-Authored-By；push 失败忽略一次；持续开发模式继续。
+
+## Session P261 — infra-040-backlog-mutant-needle-uniqueness-helper (2026-05-20)
+
+**Feature：** `infra-040-backlog-mutant-needle-uniqueness-helper` (phase-33 #3.33, priority 3.33)
+状态 `not_started → passing`。
+
+**动机：** P258 infra-040 V3 mutant 用 `text.replace(needle, ...)` 制造 sha 漂移, 初版 needle (「决策矩阵」) 在文档出现多次, 多重替换让 mutant 失效, 险些假阳性 PASS。引入 helper 让所有 V3 mutant 在 replace 前显式断言 needle 唯一性。
+
+**改动：**
+- `scripts/_verify_lib.py`: 新增 `assert_unique_needle(text, needle) -> None`，入 `__all__`。
+- `scripts/verify_infra_040.py`: import helper, V3 mutant `text.replace(needle, ...)` 前 call `assert_unique_needle(original, needle)`。
+- `scripts/verify_infra_042.py`: 新建 V0-V5 (13 checks)，锁 helper file+func sha、ast in-memory mutant sha drift、行为验 0/1/2/3 次出现。
+- Cascade bump: `verify_robot_035.py::EXPECTED_LIB_FILE_SHA` + `verify_infra_037.py::EXPECTED_VERIFY_LIB_FILE_SHA` 同步到 `d0fa3d5c..`。
+
+**验证：**
+- `verify_infra_042.py` ALL PASS (13 checks)
+- `verify_infra_040.py` ALL PASS (9 checks, V3 引入 helper 后行为不变)
+- `verify_robot_035.py` / `verify_infra_037.py` / `verify_infra_034.py` (含 V6 reverse-lock pre-flight, scanned_reverse_locks=7) ALL PASS
+- `./init.sh` smoke ALL PASS
+
+**业务源码改动：** 0 (verify-only + helper)
+
+**feat 分支：** `feat/infra-040-backlog-mutant-uniqueness-helper`
+
+**Reviewer：** pending closeout fresh-context LGTM（hard rule: Engineer 不 merge feat → main）。
+
+**约束符合：** sim-first；commit 例外 + Co-Authored-By；push 失败忽略一次；持续开发模式继续。
