@@ -6258,7 +6258,7 @@
       "phase": 32,
       "area": "infra",
       "title": "verify-script PR 模板加 '请填决策矩阵那一行' check-box",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; interact-038-backlog-pr-template-decision-matrix-checkbox",
       "scope": "新增 .github/PULL_REQUEST_TEMPLATE/verify-script.md（或在主模板加 section），强制作者填 docs/verify_sha_lock_strategy.md 决策矩阵中对应一行 (file-sha vs func-sha vs constant-sha vs no-lock)，流程层防默认 file-sha 高耦合。docs-only，0 源码改动。",
@@ -6275,7 +6275,96 @@
         "V4: smoke PASS",
         "V5: Reviewer (sub-agent) LGTM"
       ],
-      "evidence": {}
+      "evidence": {
+        "reviewer_lgtm": "Reviewer (sub-agent): LGTM 评分 PR 模板 9/10, verify-script 9/10, V3 mutant 9/10",
+        "cmd_rc": {
+          "smoke": "11/11 PASS",
+          "verify_infra_040": "rc=0",
+          "verify_infra_034": "rc=0",
+          "verify_infra_037": "rc=0",
+          "verify_infra_039": "rc=0"
+        },
+        "pr_template_sha": "8c50f240f7fd8ea4dd54b1cc6dc36b6cbd2509d42fc1677f9830796160d2326d",
+        "verify_infra_040_v4_func_sha": "29a26bae",
+        "feat_sha": "1d767a6",
+        "merge_main_head": "eeb8b45",
+        "real_machine_uat": "n/a (docs/verify-only, 0 业务源码改)"
+      }
+    },
+    {
+      "id": "infra-040-backlog-pr-template-real-github-uat",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "真 GitHub PR 实测 ?template=verify-script.md query 触发自定义模板",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040 closeout (异步 UAT)",
+      "scope": "在真实 GitHub PR 创建流程上，通过 ?template=verify-script.md query string 验证 .github/PULL_REQUEST_TEMPLATE/verify-script.md 是否真的被 GitHub UI 加载（sim 无法证明此 GitHub 端行为）。",
+      "dependencies": [
+        "infra-040"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-040-backlog-tmpl-reason-comment-style",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "PR 模板 '理由: ___________' 改为 HTML 注释风格",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040 closeout Reviewer 建议",
+      "scope": "把模板里的 '理由: ___________' 占位改为 <!-- 理由: --> HTML 注释风格，PR 渲染时不显示空占位行，作者填写后才出现在 PR 描述里。",
+      "dependencies": [
+        "infra-040"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-040-backlog-mutant-needle-uniqueness-helper",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_verify_lib.py 加 assert_unique_needle helper, mutant 前 assert needle 唯一",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040 closeout Reviewer 建议",
+      "scope": "在 scripts/_verify_lib.py 新增 assert_unique_needle(text, needle) helper，verify_infra_040 等 mutant-replace 风格 V 检查在替换前先 assert needle 在源文件中唯一出现，避免误替换。",
+      "dependencies": [
+        "infra-040"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-040-backlog-default-tmpl-minimal-mode",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "pull_request_template.md 缩到 5-6 行减少常规 PR 模板噪音",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040 closeout Reviewer 建议",
+      "scope": "把默认 .github/pull_request_template.md 缩到 5-6 行最小化模式（only 引导 verify-script 类 PR 切到 ?template=verify-script.md），减少常规非 verify-script PR 的模板噪音。",
+      "dependencies": [
+        "infra-040"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-040-backlog-v4-sha-graph-tmpl-edge",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_v4_sha_graph.py 把 PR 模板纳入 sha lock graph node",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040 closeout Reviewer 建议",
+      "scope": "扩展 scripts/dump_v4_sha_graph.py，把 .github/PULL_REQUEST_TEMPLATE/verify-script.md 与 .github/pull_request_template.md 作为 sha lock graph 的节点纳入，与 verify_infra_040 V4 sha lock 一致显示。",
+      "dependencies": [
+        "infra-040"
+      ],
+      "verification": []
     },
     {
       "id": "infra-037-backlog-class-method-support",

@@ -4898,3 +4898,45 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-32 第 5 个 candidate（infra-040 pr-template-decision-matrix-checkbox，priority=5.32）。
+
+---
+
+## Session P258 — infra-040 closeout (2026-05-20)
+
+**Scope：** infra-040 verify-script PR 模板加决策矩阵 check-box closeout，**phase-32 收官**。
+
+**Merge：** `feat/infra-040` (1d767a6) → main = `eeb8b45`（merge --no-ff）。
+
+**Regression（main HEAD=eeb8b45）：**
+- `./init.sh` smoke = 11/11 PASS
+- `scripts/verify_infra_040.py` → rc=0
+- `scripts/verify_infra_034.py` → rc=0
+- `scripts/verify_infra_037.py` → rc=0
+- `scripts/verify_infra_039.py` → rc=0
+
+**Reviewer (sub-agent) LGTM：** PR 模板 9/10, verify-script 9/10, V3 mutant 9/10。
+
+**SHA 锚定：**
+- `.github/PULL_REQUEST_TEMPLATE/verify-script.md` sha = `8c50f240...`
+- `verify_infra_040` V4 func sha = `29a26bae`
+- `feat_sha` = `1d767a6`
+
+**改动文件（3）：**
+- `.github/PULL_REQUEST_TEMPLATE/verify-script.md`（新增，44 行决策矩阵 + 4 选 1 check-box，链 docs/verify_sha_lock_strategy.md）
+- `.github/pull_request_template.md`（新增主模板，引导 verify-script PR 走 ?template=verify-script.md）
+- `scripts/verify_infra_040.py`（新增 V0-V5，docstring + sha256 自锁 + mutant-replace V3）
+
+0 业务源码改动；docs/verify-only。
+
+**Backlog（5 笔入账，priority=999, phase=null）：**
+- infra-040-backlog-pr-template-real-github-uat：真 GitHub PR 实测 ?template=verify-script.md 触发自定义模板（异步 UAT）
+- infra-040-backlog-tmpl-reason-comment-style："理由: ___________" 改 HTML 注释风格
+- infra-040-backlog-mutant-needle-uniqueness-helper：_verify_lib.py 加 assert_unique_needle helper
+- infra-040-backlog-default-tmpl-minimal-mode：pull_request_template.md 缩到 5-6 行
+- infra-040-backlog-v4-sha-graph-tmpl-edge：dump_v4_sha_graph.py 把 PR 模板纳入 sha lock graph node
+
+**Phase-32 收官 5/5 passing：** infra-037、infra-038、infra-039、robot-037、infra-040。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-33 规划（持续开发模式自动进入）。
