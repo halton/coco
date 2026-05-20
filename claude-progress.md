@@ -5122,3 +5122,48 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 - verify_infra_034 V6 自动认 verify_infra_044 (orphan_reverse_locks=7 全 live).
 - Smoke 11/11 PASS; verify_infra_034/039/043/044 全 PASS.
 - Engineer 阶段已完成, status 切 in_progress, 不切 passing, 不 merge, 等 Reviewer + Closeout.
+
+## Session P263 (2026-05-20) — infra-039-backlog-target-inference Closeout
+
+- Merge `feat/infra-039-backlog-target-inference` → main (`--no-ff`, merge commit `88ff0ac`).
+- main 验证全 PASS: verify_infra_044 rc=0 / verify_infra_039 rc=0 / verify_infra_043 rc=0 / verify_infra_034 rc=0 (V6) / `./init.sh` smoke 11/11 PASS.
+- `feature_list.json`:
+  - `infra-039-backlog-target-inference-refine` status in_progress → passing, evidence "Reviewer (sub-agent fresh-context): LGTM. refine-design=9/10, verify_044-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10. Unknown 节点 27→14, 13 个常量被识别"
+  - 入账 3 backlog (priority=999, phase=null, status=backlog):
+    - `infra-039-backlog-source-file-aware-inference` — (source_file, const_name) 二级查表 / per-file probe, 压缩剩余 14 unknown
+    - `infra-039-backlog-infer-target-auto-discovery` — 扫 EXPECTED_*_FUNC_SHA 自动推 func 名 + AST 验证, 让查表自维护
+    - `infra-039-backlog-bump-regex-normalize` — _RE_V_NUM_HINT / _RE_BUMP_HINT 位数策略统一 + docstring 标语义
+
+## phase-33 收官 (2026-05-20)
+
+5/5 passing:
+
+1. **infra-038-backlog-V6-pre-flight-grep-check** — V6 反向 sha lock pre-flight grep 守门
+2. **robot-037-backlog-verify_robot_036-inline-helper-consolidate** — read_constant 推广至 verify_robot_036
+3. **infra-040-backlog-mutant-needle-uniqueness-helper** — assert_unique_needle helper + verify_infra_042
+4. **infra-039-backlog-dump-mermaid-output** — dump_v4_sha_graph --mermaid 模式 + verify_infra_043
+5. **infra-039-backlog-target-inference-refine** — `_infer_target` refine (unknown 27→14) + verify_infra_044
+
+关键产出:
+- V4 sha lock graph: dump 工具 + 反向 pre-flight + mermaid 渲染 + target 推断 refine (4 处 verify-only 强化)
+- verify_lib / read_constant helper 推广至 verify_robot_036
+- assert_unique_needle helper 防 mutant needle 多匹配假阴性
+
+Process 改善:
+- P261 status 越权违规 → P262 (mermaid closeout) / P263 (target-inference closeout) 守住 (Engineer 不切 passing, Closeout 唯一可 merge + 切 status, Reviewer 评分 process-compliance=10/10)
+- 累积 verify-only 文件: ~178 live
+- 累积 backlog: ~315 (本 phase 入账 13 条)
+
+## phase-34 planning (2026-05-20)
+
+持续开发模式自动进入 phase-34。候选 5 个，互不依赖、聚焦"基础设施巩固"主题（不触业务源码 / 真机 / 主观决策）：
+
+| priority | id | 主题 |
+|---|---|---|
+| 1.34 | `infra-V6-backlog-extract-to-verify-lib` | V6 实现抽到 `_verify_lib.scan_reverse_sha_locks` 共享 helper |
+| 2.34 | `infra-V6-backlog-scope-extend-bump-helpers` | V6 scope 扩到 `bump_*.py` + `evidence/*/v4_sha.json` |
+| 3.34 | `infra-039-backlog-source-file-aware-inference` | _infer_target 引入 `(source_file, const_name)` 二级查表, 压缩 14 unknown |
+| 4.34 | `infra-039-backlog-mermaid-classDef-styling` | mermaid 输出加 classDef 视觉分层 (hub / verify_* / unknown) |
+| 5.34 | `infra-038-backlog-reverse-sha-lock-index` | `scripts/scan_verify_sha_locks.py` 输出反向引用 sha-lock 索引 |
+
+下一步: P264 Engineer 派 phase-34 candidate 1.34 (infra-V6-backlog-extract-to-verify-lib)。

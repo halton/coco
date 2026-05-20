@@ -6495,11 +6495,11 @@
     },
     {
       "id": "infra-038-backlog-reverse-sha-lock-index",
-      "priority": 999,
+      "priority": 5.34,
       "area": "infra",
-      "phase": null,
+      "phase": 34,
       "title": "scripts/scan_verify_sha_locks.py 输出反向引用 sha-lock 索引",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-038 closeout Reviewer 建议",
       "scope": "扩展 scan_verify_sha_locks.py：除正向 target→sha 外，额外输出 sha-lock 反向引用索引（target → 谁锁我），便于扩集前快速判断 cascade bump 影响范围。",
@@ -6569,14 +6569,16 @@
       "area": "infra",
       "phase": 33,
       "title": "dump_v4_sha_graph _infer_target 扩 fingerprint/bump 常量识别",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~50 LOC)",
       "scope": "scripts/dump_v4_sha_graph.py _infer_target 当前只识别有限模式；扩展对 fingerprint / bump-only 常量的目标推断，提高 DAG 边的完整度。",
       "dependencies": [
         "infra-039"
       ],
-      "verification": []
+      "verification": [
+        "Reviewer (sub-agent fresh-context): LGTM. refine-design=9/10, verify_044-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10. Unknown 节点 27→14, 13 个常量被识别"
+      ]
     },
     {
       "id": "infra-039-backlog-dump-filter-pattern",
@@ -6626,6 +6628,51 @@
       ]
     },
     {
+      "id": "infra-039-backlog-source-file-aware-inference",
+      "priority": 3.34,
+      "area": "infra",
+      "phase": 34,
+      "title": "_infer_target 引入 (source_file, const_name) 二级查表",
+      "status": "not_started",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
+      "scope": "_infer_target 当前按全局 const 名查表，跨 verify 文件同名常量易冲突；引入 (source_file, const_name) → target 二级查表 / per-file probe，把剩余 14 unknown 节点继续压缩。",
+      "dependencies": [
+        "infra-039-backlog-target-inference-refine"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-infer-target-auto-discovery",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_infer_target 扫 EXPECTED_*_FUNC_SHA 自动推 func 名 + AST 验证",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
+      "scope": "扫描 verify_*.py 内 EXPECTED_*_FUNC_SHA 常量，按命名规约自动推断 func 名，并用 AST 验证 target file 内确有对应 func，使查表可自维护、抗常量增删漂移。",
+      "dependencies": [
+        "infra-039-backlog-target-inference-refine"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-bump-regex-normalize",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_RE_V_NUM_HINT / _RE_BUMP_HINT 位数策略统一 + docstring 标语义",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
+      "scope": "_RE_V_NUM_HINT 与 _RE_BUMP_HINT 当前在位数 / 大小写边界上策略不完全一致；统一两者位数与边界规则，并在 docstring 中标注捕获语义，避免 V7/V10+ bump 时漏识别。",
+      "dependencies": [
+        "infra-039-backlog-target-inference-refine"
+      ],
+      "verification": []
+    },
+    {
       "id": "infra-039-backlog-mermaid-unknown-target-id-collision",
       "priority": 999,
       "area": "infra",
@@ -6657,11 +6704,11 @@
     },
     {
       "id": "infra-039-backlog-mermaid-classDef-styling",
-      "priority": 999,
+      "priority": 4.34,
       "area": "infra",
-      "phase": null,
+      "phase": 34,
       "title": "mermaid 输出加 classDef 视觉分层 (hub / verify_* / unknown)",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
       "scope": "render_mermaid 增加 classDef 与 class 语句，对 hub 节点 (dump_v4_sha_graph)、verify_* 节点、unknown 节点分别上色，提升嵌入文档时的可读性。",
@@ -6791,11 +6838,11 @@
     },
     {
       "id": "infra-V6-backlog-scope-extend-bump-helpers",
-      "priority": 999,
+      "priority": 2.34,
       "area": "infra",
-      "phase": null,
+      "phase": 34,
       "title": "V6 scope 扩到 bump_*.py + evidence/*/v4_sha.json",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "V6 当前只 scan scripts/verify_*.py 的外部反向 sha 锁；扩到 scripts/bump_*.py 与 evidence/*/v4_sha.json 等其它会引用 verify 文件 sha 的位点，减少 cascade 漏改盲区。",
@@ -6806,11 +6853,11 @@
     },
     {
       "id": "infra-V6-backlog-extract-to-verify-lib",
-      "priority": 999,
+      "priority": 1.34,
       "area": "infra",
-      "phase": null,
+      "phase": 34,
       "title": "V6 实现抽到 _verify_lib.scan_reverse_sha_locks 共享 helper",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "verify_infra_034 V6 的 _v6_scan_constants / _v6_target_id 逻辑抽到 scripts/_verify_lib.py 的 scan_reverse_sha_locks(target) helper，其它 verify 脚本可复用。",
