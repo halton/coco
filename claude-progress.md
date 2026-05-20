@@ -5230,3 +5230,20 @@ Process 改善:
 - dry-run 演示: `--target scripts/verify_robot_025.py` 找到 1 lock (verify_robot_027:VERIFY_025_EXPECTED_SHA), 当前 no-op
 - 0 业务源码改动; bump helper 默认 dry-run, 必须 `--apply` 才落盘 (安全)
 - 待 commit + push (一次, 失败忽略); 不 merge 不切 passing (Closeout 阶段)
+
+## Session P265 — infra-V6-backlog-scope-extend-bump-helpers Closeout
+
+- **status**: in_progress → **passing**
+- **main HEAD**: c5f0f96 (merge: infra-V6-backlog bump_reverse_sha_lock helper)
+- **phase-34 进度**: 2/5 passing (infra-V6-backlog-extract-to-verify-lib + infra-V6-backlog-scope-extend-bump-helpers)
+- **Reviewer (sub-agent fresh-context)**: LGTM — bump-helper-design=8/10, verify_046-quality=9/10, safety=9/10, process-compliance=10/10
+  - dry-run no-write 验证通过
+  - rc=2 (apply success)/3 (no locks) 退出码语义正确
+  - helper 默认 dry-run 安全; 必须显式 `--apply` 才落盘
+- **验证**:
+  - `verify_infra_046.py` rc=0 (21 checks PASS, V0-V5)
+  - `verify_infra_034.py` rc=0 (53 checks, V6 live=180, scanned=7, orphans=0)
+  - `./init.sh` smoke 11/11
+- **2 backlog 入账** (priority=999, status=backlog, phase=null):
+  1. `infra-V6-bump-helper-lib-target` — 扩展支持 `_verify_lib.py` 作为反向锁 target (NNN-agnostic fallback)
+  2. `infra-V6-bump-helper-atomic-apply` — `--apply` 引入 two-pass / 原子回滚, 防部分落盘
