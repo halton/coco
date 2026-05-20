@@ -6258,7 +6258,7 @@
       "phase": 32,
       "area": "infra",
       "title": "verify-script PR 模板加 '请填决策矩阵那一行' check-box",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; interact-038-backlog-pr-template-decision-matrix-checkbox",
       "scope": "新增 .github/PULL_REQUEST_TEMPLATE/verify-script.md（或在主模板加 section），强制作者填 docs/verify_sha_lock_strategy.md 决策矩阵中对应一行 (file-sha vs func-sha vs constant-sha vs no-lock)，流程层防默认 file-sha 高耦合。docs-only，0 源码改动。",
