@@ -273,115 +273,48 @@ def v5_self_subprocess() -> None:
 
 # ---------------------------------------------------------------------------
 # V6: pre-flight 反向 sha lock 一致性 (infra-038 backlog)
+# infra-V6-backlog (P264): 核心扫描+比对逻辑已抽到 _verify_lib, 这里只剩薄 wrapper
 # ---------------------------------------------------------------------------
-# 形如  CONST = "<64hex>"  或  CONST = (\n    "<64hex>"\n)
-_RE_V6_SINGLELINE = re.compile(
-    r'^([A-Z_][A-Z0-9_]*)\s*=\s*["\']([0-9a-f]{64})["\']\s*(?:#.*)?$'
-)
-_RE_V6_TUPLE_OPEN = re.compile(r'^([A-Z_][A-Z0-9_]*)\s*=\s*\(\s*$')
-_RE_V6_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
-
-
-def _v6_scan_constants(path: Path) -> List[Tuple[str, str, int]]:
-    """扫脚本顶层 64-hex sha 常量, 返回 [(const_name, sha_hex, lineno), ...]."""
-    out: List[Tuple[str, str, int]] = []
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except Exception:
-        return out
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        m = _RE_V6_SINGLELINE.match(line)
-        if m:
-            out.append((m.group(1), m.group(2), i + 1))
-            i += 1
-            continue
-        m2 = _RE_V6_TUPLE_OPEN.match(line)
-        if m2 and i + 1 < len(lines):
-            mh = _RE_V6_TUPLE_HEX.match(lines[i + 1])
-            if mh:
-                out.append((m2.group(1), mh.group(1), i + 1))
-                i += 2
-                continue
-        i += 1
-    return out
-
-
-def _v6_target_id(target_relpath: str) -> str:
-    """从 target 路径推断三位数字 id, e.g. scripts/verify_robot_025.py -> '025'."""
-    stem = Path(target_relpath).stem  # verify_robot_025
-    m = re.search(r"_(\d{3})$", stem)
-    return m.group(1) if m else ""
-
-
-# 反向锁常量名识别: 含 "VERIFY_<NNN>" 子串 (NNN = 3 位数字), 且名字中含 "SHA"
-_RE_V6_REVERSE_CONST = re.compile(r"VERIFY_(\d{3})")
+from _verify_lib import verify_reverse_sha_lock_consistency as _lib_v6_check
 
 
 def v6_reverse_sha_lock_consistency() -> None:
     """扫 scripts/verify_*.py + _verify_lib.py 内所有反向 sha lock 常量,
     若其 64-hex 值不等于任意现存 verify_*.py / _verify_lib.py 当前实际 sha
-    → FAIL (孤儿反向锁, cascade 漏改信号)."""
+    → FAIL (孤儿反向锁, cascade 漏改信号)。
+
+    核心逻辑见 ``_verify_lib.verify_reverse_sha_lock_consistency``。"""
     scripts_dir = ROOT / "scripts"
-    all_scripts = sorted(scripts_dir.glob("verify_*.py"))
-    lib = scripts_dir / "_verify_lib.py"
-    if lib.is_file():
-        all_scripts.append(lib)
-
-    # 现存所有 verify 脚本 + _verify_lib 的实际文件 sha 集合
-    live_file_shas: Dict[str, str] = {}
-    for p in all_scripts:
-        rel = str(p.relative_to(ROOT))
-        try:
-            live_file_shas[rel] = _sha256(p)
-        except Exception:
-            continue
-    live_sha_set = set(live_file_shas.values())
-    _emit("V6_live_sha_set", True, f"live_verify_files={len(live_sha_set)}")
-
-    # 扫每个脚本的反向锁常量
-    total_xrefs = 0
-    orphan: List[str] = []
-    for src_rel, _src_sha in sorted(live_file_shas.items()):
-        p = ROOT / src_rel
-        consts = _v6_scan_constants(p)
-        for const, sha_val, lineno in consts:
-            if "SHA" not in const:
-                continue
-            m = _RE_V6_REVERSE_CONST.search(const)
-            if not m:
-                continue
-            tid = m.group(1)
-            # 该 const 暗示锁某 verify_*_<tid>.py file-sha
-            total_xrefs += 1
-            if sha_val in live_sha_set:
-                continue  # PASS: 等于某现存 verify 脚本实际 sha
-            # 找出同 id 的候选 target, 给出更详细错误信息
-            same_id_candidates = sorted(
-                rel for rel in live_file_shas
-                if re.search(rf"_{tid}\.py$", rel)
-            )
+    result = _lib_v6_check(scripts_dir)
+    _emit(
+        "V6_live_sha_set",
+        True,
+        f"live_verify_files={result['live_count']}",
+    )
+    orphans = result["orphans"]
+    if orphans:
+        rendered = []
+        for o in orphans[:5]:
             cand_shas = ", ".join(
-                f"{rel}={live_file_shas[rel][:12]}" for rel in same_id_candidates
+                f"{rel}={sha[:12]}" for rel, sha in o["candidates"].items()
             ) or "<no same-id verify script found>"
-            orphan.append(
-                f"{src_rel}:{lineno} {const}={sha_val[:16]} (id={tid}; "
-                f"live same-id: {cand_shas})"
+            rendered.append(
+                f"{o['file']}:{o['lineno']} {o['const_name']}={o['sha_hex'][:16]} "
+                f"(id={o['target_id']}; live same-id: {cand_shas})"
             )
-    if orphan:
         _emit(
             "V6_orphan_reverse_locks",
             False,
-            f"count={len(orphan)}; "
-            + " | ".join(orphan[:5])
-            + (" | ..." if len(orphan) > 5 else ""),
+            f"count={len(orphans)}; "
+            + " | ".join(rendered)
+            + (" | ..." if len(orphans) > 5 else ""),
         )
     else:
         _emit(
             "V6_orphan_reverse_locks",
             True,
-            f"scanned_reverse_locks={total_xrefs}; all match a live verify file sha",
+            f"scanned_reverse_locks={result['scanned_count']}; "
+            f"all match a live verify file sha",
         )
 
 

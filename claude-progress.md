@@ -5167,3 +5167,23 @@ Process 改善:
 | 5.34 | `infra-038-backlog-reverse-sha-lock-index` | `scripts/scan_verify_sha_locks.py` 输出反向引用 sha-lock 索引 |
 
 下一步: P264 Engineer 派 phase-34 candidate 1.34 (infra-V6-backlog-extract-to-verify-lib)。
+
+## Session P264 Engineer — infra-V6-backlog-extract-to-verify-lib in_progress
+
+- 起点 main HEAD=5036e0d; 新 feat 分支 `feat/infra-V6-backlog-extract-to-verify-lib`。
+- _verify_lib.py 新增三个共享 helper (入 `__all__`):
+  - `scan_reverse_sha_locks(scripts_dir) -> list[dict]` (file/lineno/const_name/sha_hex)
+  - `live_verify_sha_set(scripts_dir) -> dict[file_rel, sha]`
+  - `verify_reverse_sha_lock_consistency(scripts_dir) -> {scanned_count, live_count, orphans, all_match}`
+- verify_infra_034.py V6: 删 inline `_v6_*` helper + 主 checker, 改为 `from _verify_lib import verify_reverse_sha_lock_consistency` 薄 wrapper 渲染 orphan 细节; rev V6 行为不变。
+- 新建 scripts/verify_infra_045.py V0-V5 (18 checks): docstring sentinel `INFRA_045_SHA_LOCKS` + file/3-func sha 四锁 + scan_reverse_sha_locks ast mutant 反证 + 行为 (scanned=7, live=179, all_match=True) + Reviewer gate。
+- Cascade sha bump (lib sha old=d0fa3d5c → new=f38115ea52eefd15; verify_infra_034 sha old=de034de4 → new=265f54b08d30):
+  - verify_robot_035.py EXPECTED_LIB_FILE_SHA
+  - verify_infra_037.py EXPECTED_VERIFY_LIB_FILE_SHA
+  - verify_infra_042.py EXPECTED_LIB_FILE_SHA
+  - verify_robot_037.py EXPECTED_VERIFY_LIB_FILE_SHA (顺便 5d37→f38115)
+  - verify_infra_035.py VERIFY_034_EXPECTED_SHA
+- 全量 verify 通过: infra_034/035/037/042/044/045 + robot_035/037 各 ALL PASS; V6 scanned=7 orphans=0 live=179。
+- `./init.sh` smoke 11/11 通过 ("Smoke 通过")。
+- 待 commit + push (一次, 失败忽略); 不 merge 不切 passing (Closeout 阶段)。
+

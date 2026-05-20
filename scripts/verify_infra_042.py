@@ -45,7 +45,8 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import assert_unique_needle, func_sha_by_name  # noqa: E402
 
 # infra-042 sha lock 常量 (V2)
-EXPECTED_LIB_FILE_SHA = "d0fa3d5c3c5923b57a2bcad76a72f506d3f79839641bb089fe3dee7b58514417"
+# infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 变更
+EXPECTED_LIB_FILE_SHA = "f38115ea52eefd155a8a2a73e277de1c1a1dadf0e731ac01ada0aaed7a8304f9"
 EXPECTED_HELPER_FUNC_SHA = "e3223584fbdb5f1bbe426a8f483ae74ab2d17c7586206db3578a83c233c1bcaf"
 
 DOCSTRING_SENTINEL = "INFRA_042_SHA_LOCKS"

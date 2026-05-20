@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import re
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +33,147 @@ __all__ = [
     "func_sha_by_name",
     "read_constant",
     "assert_unique_needle",
+    "scan_reverse_sha_locks",
+    "live_verify_sha_set",
+    "verify_reverse_sha_lock_consistency",
 ]
+
+
+# ---------------------------------------------------------------------------
+# infra-V6-backlog (P264): 反向 sha lock 扫描 helper, 从 verify_infra_034 抽出
+# ---------------------------------------------------------------------------
+# 顶层 64-hex sha 常量 (单行或元组形式)
+_RE_REVLOCK_SINGLELINE = re.compile(
+    r'^([A-Z_][A-Z0-9_]*)\s*=\s*["\']([0-9a-f]{64})["\']\s*(?:#.*)?$'
+)
+_RE_REVLOCK_TUPLE_OPEN = re.compile(r'^([A-Z_][A-Z0-9_]*)\s*=\s*\(\s*$')
+_RE_REVLOCK_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
+# 反向锁常量名识别: 含 "VERIFY_<NNN>" 子串 (NNN = 3 位数字)
+_RE_REVLOCK_VERIFY_ID = re.compile(r"VERIFY_(\d{3})")
+
+
+def scan_reverse_sha_locks(scripts_dir: str | Path) -> list[dict]:
+    """扫 scripts_dir 下所有 verify_*.py + _verify_lib.py 顶层 64-hex sha 常量。
+
+    返回 list of dict: {file, lineno, const_name, sha_hex}
+    其中只保留 const_name 含 'SHA' 且匹配 ``VERIFY_<NNN>`` 模式 (反向锁候选)
+    的条目, 用于 V6 类型一致性比对。
+
+    infra-V6-backlog (P264): 从 verify_infra_034 ``_v6_scan_constants`` 抽出。
+    """
+    base = Path(scripts_dir)
+    results: list[dict] = []
+    targets = sorted(base.glob("verify_*.py"))
+    lib = base / "_verify_lib.py"
+    if lib.is_file():
+        targets.append(lib)
+    for p in targets:
+        try:
+            lines = p.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            continue
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            const_name: str | None = None
+            sha_hex: str | None = None
+            lineno: int = i + 1
+            m = _RE_REVLOCK_SINGLELINE.match(line)
+            if m:
+                const_name, sha_hex = m.group(1), m.group(2)
+                i += 1
+            else:
+                m2 = _RE_REVLOCK_TUPLE_OPEN.match(line)
+                if m2 and i + 1 < len(lines):
+                    mh = _RE_REVLOCK_TUPLE_HEX.match(lines[i + 1])
+                    if mh:
+                        const_name, sha_hex = m2.group(1), mh.group(1)
+                        i += 2
+                    else:
+                        i += 1
+                else:
+                    i += 1
+            if const_name and sha_hex:
+                if "SHA" not in const_name:
+                    continue
+                if not _RE_REVLOCK_VERIFY_ID.search(const_name):
+                    continue
+                results.append({
+                    "file": str(p.relative_to(base.parent)) if base.parent in p.parents else str(p),
+                    "lineno": lineno,
+                    "const_name": const_name,
+                    "sha_hex": sha_hex,
+                })
+    return results
+
+
+def live_verify_sha_set(scripts_dir: str | Path) -> dict[str, str]:
+    """返回 {relative_file_path: sha256_hex} 含 scripts_dir 下所有 verify_*.py + _verify_lib.py。
+
+    infra-V6-backlog (P264): 配合 ``scan_reverse_sha_locks`` 形成 V6 实时 sha 基准。
+    """
+    base = Path(scripts_dir)
+    out: dict[str, str] = {}
+    targets = sorted(base.glob("verify_*.py"))
+    lib = base / "_verify_lib.py"
+    if lib.is_file():
+        targets.append(lib)
+    parent = base.parent
+    for p in targets:
+        try:
+            data = p.read_bytes()
+        except Exception:
+            continue
+        try:
+            rel = str(p.relative_to(parent))
+        except ValueError:
+            rel = str(p)
+        out[rel] = hashlib.sha256(data).hexdigest()
+    return out
+
+
+def verify_reverse_sha_lock_consistency(scripts_dir: str | Path) -> dict:
+    """V6 主入口: 扫所有反向锁 + 比对 live sha set, 返回结果 dict。
+
+    Returns:
+        {
+            "scanned_count": int,
+            "live_count": int,
+            "orphans": list[dict],  # {file, lineno, const_name, sha_hex, target_id, candidates}
+            "all_match": bool,
+        }
+
+    infra-V6-backlog (P264): 从 verify_infra_034 ``v6_reverse_sha_lock_consistency`` 抽出。
+    """
+    base = Path(scripts_dir)
+    live = live_verify_sha_set(base)
+    live_sha_values = set(live.values())
+    scanned = scan_reverse_sha_locks(base)
+    orphans: list[dict] = []
+    for item in scanned:
+        sha_val = item["sha_hex"]
+        if sha_val in live_sha_values:
+            continue
+        m = _RE_REVLOCK_VERIFY_ID.search(item["const_name"])
+        tid = m.group(1) if m else ""
+        same_id_candidates = sorted(
+            rel for rel in live
+            if re.search(rf"_{tid}\.py$", rel)
+        ) if tid else []
+        orphans.append({
+            "file": item["file"],
+            "lineno": item["lineno"],
+            "const_name": item["const_name"],
+            "sha_hex": sha_val,
+            "target_id": tid,
+            "candidates": {rel: live[rel] for rel in same_id_candidates},
+        })
+    return {
+        "scanned_count": len(scanned),
+        "live_count": len(live),
+        "orphans": orphans,
+        "all_match": not orphans,
+    }
 
 
 def assert_unique_needle(text: str, needle: str) -> None:
