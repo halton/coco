@@ -5204,3 +5204,29 @@ Process 改善:
   2. `infra-V6-backlog-helper-docstring-clarify-live-set` — helper docstring 显式说明 _verify_lib 自身参与 live set
 - phase-34 进度 1/5 passing；剩余候选 2.34 - 5.34
 - 持续开发模式: closeout 完成后即可继续派下一 phase-34 候选
+
+
+## Session P265 — infra-V6-backlog-scope-extend-bump-helpers (Engineer in_progress)
+
+- branch: `feat/infra-V6-backlog-scope-extend-bump-helpers` (off main HEAD=1cf6e31)
+- feature_list.json: not_started → in_progress (started_at=2026-05-20)
+- 新增 `scripts/bump_reverse_sha_lock.py`: 通用 V6 反向 sha lock bump helper
+  - argparse: `--target <path>` / `--apply` (默认 dry-run) / `--verify` (跑 verify_infra_034 sanity)
+  - 复用 `_verify_lib.scan_reverse_sha_locks` + `live_verify_sha_set`, 用 `VERIFY_<NNN>` 推断锁指向, regex 替换字面常量
+  - 单行 (`CONST = "<hex>"`) + 元组 (`CONST = (\n"<hex>"\n)`) 两种形式都支持
+  - 退出码 0=ok/no-op, 2=target 不存在, 3=无反向锁指向 (空操作), 4=regex 替换失败, 5=verify rc!=0
+- 新增 `scripts/verify_infra_046.py` V0-V5 (21 checks):
+  - V0 bump helper 存在 + 4 个 top func 都在源码
+  - V1 docstring sentinel `INFRA_046_SHA_LOCKS` 自锁
+  - V2 file sha + 4 func sha 五锁 (file/run_bump/find_locks_for_target/_bump_in_file/main)
+  - V3 ast in-memory mutant 替换 run_bump 函数体, sha 必漂移 (反证锁可破坏)
+  - V4 直接 import bump_reverse_sha_lock 模块 call API: 给定 verify_robot_025 应找到 1 条反向锁
+    (verify_robot_027.VERIFY_025_EXPECTED_SHA); dry-run 不写盘
+  - V5 Reviewer LGTM gate (print-only)
+- 全量验证:
+  - `verify_infra_046.py` ALL PASS 21/21
+  - `verify_infra_034.py` rc=0 (53 checks; V6 live=180 包含本次新增 verify_infra_046 + bump 不算 verify so 仍 180)
+  - `./init.sh` smoke 11/11 通过
+- dry-run 演示: `--target scripts/verify_robot_025.py` 找到 1 lock (verify_robot_027:VERIFY_025_EXPECTED_SHA), 当前 no-op
+- 0 业务源码改动; bump helper 默认 dry-run, 必须 `--apply` 才落盘 (安全)
+- 待 commit + push (一次, 失败忽略); 不 merge 不切 passing (Closeout 阶段)
