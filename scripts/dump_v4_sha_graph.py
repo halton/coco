@@ -9,6 +9,7 @@ verify_<id> 交叉锁 / _verify_lib file 锁 / v4_sha.json 表), 以文本或 JS
 用法:
     python scripts/dump_v4_sha_graph.py            # 文本 graph -> stdout
     python scripts/dump_v4_sha_graph.py --json     # JSON dump
+    python scripts/dump_v4_sha_graph.py --mermaid  # mermaid graph LR 语法
     python scripts/dump_v4_sha_graph.py --out F    # 写入文件 F
 
 本脚本是 *只读* 工具, 不修改任何文件, 不依赖 reachy-mini SDK。
@@ -171,14 +172,76 @@ def render_text(graph: Dict) -> str:
     return "\n".join(out)
 
 
+def render_mermaid(graph: Dict) -> str:
+    """渲染 mermaid graph LR 语法, 可直接 paste 到 mermaid.live."""
+    out: List[str] = []
+    out.append("graph LR")
+    nodes: set = set()
+
+    def _node_id(label: str) -> str:
+        # sanitize: 只留字母数字下划线
+        nid = re.sub(r"[^A-Za-z0-9_]", "_", label)
+        if nid and nid[0].isdigit():
+            nid = "n_" + nid
+        return nid or "anon"
+
+    # v4_sha.json hub 节点
+    v4 = graph.get("v4_sha_json")
+    if v4:
+        hub = "v4_sha_json"
+        if hub not in nodes:
+            out.append(f'    {hub}["v4_sha.json ({v4["count"]} targets)"]')
+            nodes.add(hub)
+        for tgt in sorted(v4["targets"].keys()):
+            # tgt 形如 scripts/verify_xxx.py
+            stem = Path(tgt).stem
+            nid = _node_id(stem)
+            if nid not in nodes:
+                out.append(f'    {nid}["{stem}"]')
+                nodes.add(nid)
+            out.append(f"    {hub} -->|file-sha| {nid}")
+
+    # 反向 sha lock 边: source --|const|--> target
+    for lock in graph.get("locks", []):
+        src_stem = Path(lock["source"]).stem
+        src_id = _node_id(src_stem)
+        if src_id not in nodes:
+            out.append(f'    {src_id}["{src_stem}"]')
+            nodes.add(src_id)
+        target = lock["target"]
+        # target 可能含多文件 (逗号分隔) 或描述; 取第一个 .py stem
+        m = re.search(r"([A-Za-z0-9_]+)\.py", target)
+        if m:
+            tgt_stem = m.group(1)
+            tgt_id = _node_id(tgt_stem)
+            if tgt_id not in nodes:
+                out.append(f'    {tgt_id}["{tgt_stem}"]')
+                nodes.add(tgt_id)
+            out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
+        else:
+            # unknown target — 用占位节点
+            tgt_id = _node_id("unknown_" + lock["const"])
+            if tgt_id not in nodes:
+                out.append(f'    {tgt_id}["?{lock["const"]}"]')
+                nodes.add(tgt_id)
+            out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
+    return "\n".join(out)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="V4 sha-lock graph dump")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    ap.add_argument("--mermaid", action="store_true", help="emit mermaid graph LR syntax")
     ap.add_argument("--out", type=str, default=None, help="write output to file")
     args = ap.parse_args()
+    if args.json and args.mermaid:
+        print("[dump_v4_sha_graph] --json and --mermaid are mutually exclusive", file=sys.stderr)
+        return 2
     graph = build_graph()
     if args.json:
         output = json.dumps(graph, indent=2, sort_keys=True)
+    elif args.mermaid:
+        output = render_mermaid(graph)
     else:
         output = render_text(graph)
     if args.out:
