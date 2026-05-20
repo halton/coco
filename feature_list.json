@@ -6653,14 +6653,39 @@
       "area": "robot",
       "phase": 33,
       "title": "verify_robot_036 _read_constant_from 改用 _verify_lib.read_constant",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "robot-037 closeout Reviewer 建议 / phase-33 promoted (helper-consolidate, ~40 LOC)",
       "scope": "robot-037 已抽 read_constant 到 _verify_lib，但 verify_robot_036 仍保留其本地 _read_constant_from 实现。第二轮去重：verify_robot_036 改 import _verify_lib.read_constant，删本地重复实现，触发 verify_robot_036 文件 sha bump 与依赖 cascade。",
       "dependencies": [
         "robot-037"
       ],
-      "verification": []
+      "verification": [
+        {
+          "step": "verify_robot_036.py _read_constant_from 改为薄 wrapper 委派给 _verify_lib.read_constant",
+          "evidence": "scripts/verify_robot_036.py diff: 删除 ast import + 删除本地 ast.parse+literal_eval 实现, 新增 from _verify_lib import read_constant, wrapper 直接 return read_constant(path, name)"
+        },
+        {
+          "step": "verify_robot_036.py rc=0 (V0/V1/V2/V3/V4/V5 全 PASS)",
+          "evidence": ".venv/bin/python scripts/verify_robot_036.py rc=0; summary total=11 failed=0"
+        },
+        {
+          "step": "verify_infra_034 V6 反向 sha lock 无 orphan (verify_robot_036 sha 变化已自动 cover)",
+          "evidence": ".venv/bin/python scripts/verify_infra_034.py rc=0; V6_orphan_reverse_locks PASS scanned_reverse_locks=7 all match a live verify file sha"
+        },
+        {
+          "step": "verify_infra_035 V4 (lock_bump v4_sha.json sha) 仍 PASS — verify_robot_036 不在 v4_sha.json targets 列表中, 无 cascade",
+          "evidence": ".venv/bin/python scripts/verify_infra_035.py rc=0; V4_lock_bump PASS"
+        },
+        {
+          "step": "verify_infra_032 (P259 锁) rc=0",
+          "evidence": ".venv/bin/python scripts/verify_infra_032.py rc=0; V0-V5 全 PASS"
+        },
+        {
+          "step": "./init.sh smoke 11/11 通过",
+          "evidence": "./init.sh rc=0; 全 smoke 通过 (TTS / vision / face-tracker / VAD / wake / power-state / config / publish 等)"
+        }
+      ]
     },
     {
       "id": "robot-037-backlog-mutant-eval-side-effect-payload",

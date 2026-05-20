@@ -4991,3 +4991,30 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-33 剩余 4 feature（持续开发模式自动进入）。
+
+---
+
+## Session 2026-05-20-robot-037-backlog-verify_robot_036-inline-helper-consolidate
+
+**任务：** phase-33 候选 robot-037-backlog-verify_robot_036-inline-helper-consolidate (priority 2.33)。把 `scripts/verify_robot_036.py` 中 inline 的 `_read_constant_from`（本地 ast.parse + ast.literal_eval 实现）改为委派至 `_verify_lib.read_constant` 单一入口，完成 P257 在 verify_robot_034 上做过的同种 consolidation 在 verify_robot_036 上的推广。
+
+**改动（verify-only, 0 业务源码改动）：**
+- `scripts/verify_robot_036.py`：删 `import ast`、删本地 `_read_constant_from` 中 ast.parse + literal_eval 实现；新增 `from _verify_lib import read_constant`；`_read_constant_from` 保留为薄 wrapper 直接 `return read_constant(path, name)`（维持原调用面 v1_byte_equal 内 `_read_constant_from(VERIFY_032, SENTINEL_CONST_NAME)` 不变）。
+- `feature_list.json`：该 feature status `not_started` → `in_progress`，verification[] 6 步证据。
+
+**验证（全 PASS）：**
+- `.venv/bin/python scripts/verify_robot_036.py` rc=0; summary total=11 failed=0（V0/V1/V2/V3 mutant/V4/V5 全 PASS，含 V1_byte_equal 通过 wrapper 路径读 sentinel 字面）
+- `.venv/bin/python scripts/verify_infra_034.py` rc=0; summary total=53 failed=0; **V6_orphan_reverse_locks PASS** scanned_reverse_locks=7 all match a live verify file sha（verify_robot_036 不在 V4 sha targets 列表 15 中, 但 V6 pre-flight 自动覆盖 robot_036 file sha 变更, 无 orphan）
+- `.venv/bin/python scripts/verify_infra_035.py` rc=0; V4_lock_bump PASS（无 cascade）
+- `.venv/bin/python scripts/verify_infra_032.py` rc=0; V0-V5 全 PASS
+- `./init.sh` smoke 11/11 PASS
+
+**关键确认：** verify_robot_036.py 的 sha 已变, 但 v4_sha.json targets 列表中**不含** verify_robot_036（仅 15 个其它 verify 文件），所以无须 bump v4_sha.json → 无 verify_infra_034 file sha 变 → 无 verify_infra_035 EXPECTED_VERIFY_034_SHA cascade。verify_infra_034 V6 反向 sha lock pre-flight 已自动校验所有 7 个反向 sha 锁仍指向 live verify 文件 sha（含本次新 sha 的 verify_robot_036）。
+
+**语义等价性：** 原 inline 在常量未找到时抛 `RuntimeError`，库版本抛 `ValueError`（文件不存在时抛 `FileNotFoundError`）。唯一调用点 `v1_byte_equal` 用 `except Exception as e` 捕获，向后兼容；happy path 全 PASS。
+
+**Feat 分支：** `feat/robot-037-backlog-helper-consolidate`，不 merge（Closeout sub-agent 唯一可 merge）。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续；helper-consolidate 推广至 verify_robot_036（P257 第二轮去重在第二个调用方落地）。
+
+**下一步：** Reviewer fresh-context 评审 → Closeout 合并 → phase-33 剩余 3 feature。

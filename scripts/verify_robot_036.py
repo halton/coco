@@ -30,7 +30,6 @@ V5 subprocess 自调用 rc=0。
 """
 from __future__ import annotations
 
-import ast
 import hashlib
 import importlib.util
 import re
@@ -38,6 +37,9 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List, Tuple
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _verify_lib import read_constant  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 VERIFY_032 = REPO / "scripts" / "verify_robot_032.py"
@@ -64,16 +66,14 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
     _results.append((tag, ok, detail))
 
 
-def _read_constant_from(path: Path, name: str) -> str:
-    """静态读取 path 中名为 name 的顶层常量字面值 (str)。"""
-    src = path.read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            for tgt in node.targets:
-                if isinstance(tgt, ast.Name) and tgt.id == name:
-                    return ast.literal_eval(node.value)
-    raise RuntimeError(f"constant {name!r} not found in {path}")
+def _read_constant_from(path: Path, name: str):
+    """robot-037 consolidation: 委派至 _verify_lib.read_constant 单一入口。
+
+    保留薄 wrapper 以维持原调用面 (v1_byte_equal 内的 _read_constant_from(...))
+    与函数名/签名稳定; 实现统一由 _verify_lib.read_constant 提供
+    (ast.parse + ast.literal_eval, 不 import, 不执行)。
+    """
+    return read_constant(path, name)
 
 
 def _sha256_bytes(b: bytes) -> str:
