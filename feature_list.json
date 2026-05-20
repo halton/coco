@@ -6323,13 +6323,13 @@
     },
     {
       "id": "infra-040-backlog-mutant-needle-uniqueness-helper",
-      "priority": 999,
+      "priority": 3.33,
       "area": "infra",
-      "phase": null,
+      "phase": 33,
       "title": "_verify_lib.py 加 assert_unique_needle helper, mutant 前 assert needle 唯一",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
-      "source": "infra-040 closeout Reviewer 建议",
+      "source": "infra-040 closeout Reviewer 建议 / phase-33 promoted (helper-extract, ~50 LOC)",
       "scope": "在 scripts/_verify_lib.py 新增 assert_unique_needle(text, needle) helper，verify_infra_040 等 mutant-replace 风格 V 检查在替换前先 assert needle 在源文件中唯一出现，避免误替换。",
       "dependencies": [
         "infra-040"
@@ -6474,13 +6474,13 @@
     },
     {
       "id": "infra-038-backlog-V6-pre-flight-grep-check",
-      "priority": 999,
+      "priority": 1.33,
       "area": "infra",
-      "phase": null,
+      "phase": 33,
       "title": "verify_infra_034 加 V6 pre-flight grep 外部锁检查",
-      "status": "backlog",
+      "status": "in_progress",
       "created_at": "2026-05-20",
-      "source": "infra-038 closeout Reviewer 建议",
+      "source": "infra-038 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~60 LOC)",
       "scope": "verify_infra_034 新增 V6 pre-flight：grep 待加入覆盖集的新 target basename 是否被外部脚本字面锁引用，若有则提示需同步 bump，避免 cascade 漏改。",
       "dependencies": [
         "infra-038"
@@ -6520,13 +6520,13 @@
     },
     {
       "id": "infra-039-backlog-target-inference-refine",
-      "priority": 999,
+      "priority": 5.33,
       "area": "infra",
-      "phase": null,
+      "phase": 33,
       "title": "dump_v4_sha_graph _infer_target 扩 fingerprint/bump 常量识别",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
-      "source": "infra-039 closeout Reviewer 建议",
+      "source": "infra-039 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~50 LOC)",
       "scope": "scripts/dump_v4_sha_graph.py _infer_target 当前只识别有限模式；扩展对 fingerprint / bump-only 常量的目标推断，提高 DAG 边的完整度。",
       "dependencies": [
         "infra-039"
@@ -6565,13 +6565,13 @@
     },
     {
       "id": "infra-039-backlog-dump-mermaid-output",
-      "priority": 999,
+      "priority": 4.33,
       "area": "infra",
-      "phase": null,
+      "phase": 33,
       "title": "dump_v4_sha_graph 加 --mermaid 渲染模式",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
-      "source": "infra-039 closeout Reviewer 建议",
+      "source": "infra-039 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~80 LOC)",
       "scope": "dump_v4_sha_graph.py 增加 --mermaid 输出模式，生成 mermaid graph TD 语法，便于嵌入文档/PR 描述做可视化耦合审查。",
       "dependencies": [
         "infra-039"
@@ -6640,13 +6640,13 @@
     },
     {
       "id": "robot-037-backlog-verify_robot_036-inline-helper-consolidate",
-      "priority": 999,
+      "priority": 2.33,
       "area": "robot",
-      "phase": null,
+      "phase": 33,
       "title": "verify_robot_036 _read_constant_from 改用 _verify_lib.read_constant",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
-      "source": "robot-037 closeout Reviewer 建议",
+      "source": "robot-037 closeout Reviewer 建议 / phase-33 promoted (helper-consolidate, ~40 LOC)",
       "scope": "robot-037 已抽 read_constant 到 _verify_lib，但 verify_robot_036 仍保留其本地 _read_constant_from 实现。第二轮去重：verify_robot_036 改 import _verify_lib.read_constant，删本地重复实现，触发 verify_robot_036 文件 sha bump 与依赖 cascade。",
       "dependencies": [
         "robot-037"
