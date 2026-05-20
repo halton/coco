@@ -5018,3 +5018,17 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续；helper-consolidate 推广至 verify_robot_036（P257 第二轮去重在第二个调用方落地）。
 
 **下一步：** Reviewer fresh-context 评审 → Closeout 合并 → phase-33 剩余 3 feature。
+
+## Session 2026-05-20 — robot-037-backlog-verify_robot_036-inline-helper-consolidate closeout
+
+**进度：** phase-33 → 2/5 passing（infra-038-backlog-V6-pre-flight-grep-check + robot-037-backlog-verify_robot_036-inline-helper-consolidate）。剩余 3 candidate: infra-040-backlog-mutant-needle-uniqueness-helper (3.33) / infra-039-backlog-dump-mermaid-output (4.33) / infra-039-backlog-target-inference-refine (5.33)。
+
+**main HEAD：** 见 closeout commit；merge 后再追加 closeout commit。
+
+**Reviewer LGTM（fresh-context）：** consolidation=9/10, cascade-inference=10/10, verify-coverage=9/10, risk=9/10。NH-1 noted: wrapper 严格冗余但 ROI 低，不入 backlog（主会话决议）。
+
+**业务源码改动：** 0（仅 scripts/verify_robot_036.py 改用 _verify_lib.read_constant，verify-only）。
+
+**V6 自动验证：** verify_infra_034 V6_orphan_reverse_locks scanned_reverse_locks=7 all match a live verify file sha；verify_robot_036 sha 变化已自动 cover。
+
+**约束符合：** sim-first；commit 例外 + Co-Authored-By；push 失败忽略一次；持续开发模式继续。

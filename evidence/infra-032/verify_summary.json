@@ -4,7 +4,7 @@
   "results": {
     "V0_paths_exist": {
       "detail": {
-        "size_bytes": 11096,
+        "size_bytes": 12564,
         "smoke": "/Users/halton/work/coco/scripts/smoke.py",
         "target": "/Users/halton/work/coco/scripts/verify_infra_024.py"
       },
@@ -47,13 +47,13 @@
     "V3_mutant_negation": {
       "detail": {
         "mutant_rc": 1,
-        "stdout_tail": "ipped (run scripts/fetch_tts_models.sh)\n==> Smoke: vision (face detect on single_face.jpg)\n\n==> Smoke FAIL. 详见上方第一个 FAIL 子检查输出。\n\n\nwrote /private/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/infra032-mutant-g5gzm79c/evidence/infra-024/verify_summary.json\n\nstderr tail:\n\n\nwrote /private/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/infra032-mutant-g5gzm79c/evidence/infra-032/verify_summary.json\n"
+        "stdout_tail": "ipped (run scripts/fetch_tts_models.sh)\n==> Smoke: vision (face detect on single_face.jpg)\n\n==> Smoke FAIL. 详见上方第一个 FAIL 子检查输出。\n\n\nwrote /private/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/infra032-mutant-d4oz2hse/evidence/infra-024/verify_summary.json\n\nstderr tail:\n\n\nwrote /private/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/infra032-mutant-d4oz2hse/evidence/infra-032/verify_summary.json\n"
       },
       "status": "PASS"
     },
     "V4_sha256_lock": {
       "detail": {
-        "sha256": "18f86565406adfb16514389d5a6cae58bbc7d2562ab0c8e57f44ecc5e10ff533"
+        "sha256": "eb61b07104dc68d54a9c88e2533b6ad37c392dd42a83338e095d6bc5c9d654b1"
       },
       "status": "PASS"
     },

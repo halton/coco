@@ -6653,7 +6653,7 @@
       "area": "robot",
       "phase": 33,
       "title": "verify_robot_036 _read_constant_from 改用 _verify_lib.read_constant",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "robot-037 closeout Reviewer 建议 / phase-33 promoted (helper-consolidate, ~40 LOC)",
       "scope": "robot-037 已抽 read_constant 到 _verify_lib，但 verify_robot_036 仍保留其本地 _read_constant_from 实现。第二轮去重：verify_robot_036 改 import _verify_lib.read_constant，删本地重复实现，触发 verify_robot_036 文件 sha bump 与依赖 cascade。",
@@ -6684,6 +6684,10 @@
         {
           "step": "./init.sh smoke 11/11 通过",
           "evidence": "./init.sh rc=0; 全 smoke 通过 (TTS / vision / face-tracker / VAD / wake / power-state / config / publish 等)"
+        },
+        {
+          "step": "Reviewer (sub-agent fresh-context): LGTM",
+          "evidence": "Reviewer (sub-agent fresh-context): LGTM. consolidation=9/10, cascade-inference=10/10, verify-coverage=9/10, risk=9/10. NH-1 noted: wrapper 严格冗余但 ROI 低, 不入 backlog (主会话决议)"
         }
       ]
     },
