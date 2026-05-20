@@ -52,7 +52,8 @@ VERIFY_LIB = SCRIPTS / "_verify_lib.py"
 VERIFY_034 = SCRIPTS / "verify_robot_034.py"
 
 # robot-037 sha lock 常量 (V2)
-EXPECTED_VERIFY_LIB_FILE_SHA = "5d37f9c5bbbfddbd63e111ad582a24378792126cf8fb3a45aa7d5dd73e5f65b0"
+# infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 变更
+EXPECTED_VERIFY_LIB_FILE_SHA = "f38115ea52eefd155a8a2a73e277de1c1a1dadf0e731ac01ada0aaed7a8304f9"
 EXPECTED_READ_CONSTANT_FUNC_SHA = "a06af8a80fe201ecb03acc7d8b04551e1875031447dd140582cf557b5de75bd2"
 
 # 本脚本关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)

@@ -6857,7 +6857,7 @@
       "area": "infra",
       "phase": 34,
       "title": "V6 实现抽到 _verify_lib.scan_reverse_sha_locks 共享 helper",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "verify_infra_034 V6 的 _v6_scan_constants / _v6_target_id 逻辑抽到 scripts/_verify_lib.py 的 scan_reverse_sha_locks(target) helper，其它 verify 脚本可复用。",
