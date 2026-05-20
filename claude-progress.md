@@ -5187,3 +5187,20 @@ Process 改善:
 - `./init.sh` smoke 11/11 通过 ("Smoke 通过")。
 - 待 commit + push (一次, 失败忽略); 不 merge 不切 passing (Closeout 阶段)。
 
+
+## Session P264 Closeout — infra-V6-backlog-extract-to-verify-lib passing
+
+- 已 merge feat/infra-V6-backlog-extract-to-verify-lib 到 main (--no-ff), main HEAD=38d5ef5
+- main 验证全绿:
+  - `verify_infra_034.py` rc=0 (V0-V6, 53 checks)
+  - `verify_infra_045.py` rc=0 (18 checks)
+  - `verify_infra_035.py` rc=0 (39 checks)
+  - `verify_infra_037.py` rc=0 (13 checks)
+  - `./init.sh` smoke 11/11 通过
+- Reviewer (sub-agent fresh-context): LGTM 评分 lib-extract-design=9/10, verify_045-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10
+- `feature_list.json` infra-V6-backlog-extract-to-verify-lib: in_progress → passing (含 evidence)
+- 2 backlog 候选入账 (priority=999, status=backlog, phase=null):
+  1. `infra-V6-backlog-scan-ast-based` — ast 替代 regex 规避注释/字符串假阳性
+  2. `infra-V6-backlog-helper-docstring-clarify-live-set` — helper docstring 显式说明 _verify_lib 自身参与 live set
+- phase-34 进度 1/5 passing；剩余候选 2.34 - 5.34
+- 持续开发模式: closeout 完成后即可继续派下一 phase-34 候选

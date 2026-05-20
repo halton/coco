@@ -6857,12 +6857,43 @@
       "area": "infra",
       "phase": 34,
       "title": "V6 实现抽到 _verify_lib.scan_reverse_sha_locks 共享 helper",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "verify_infra_034 V6 的 _v6_scan_constants / _v6_target_id 逻辑抽到 scripts/_verify_lib.py 的 scan_reverse_sha_locks(target) helper，其它 verify 脚本可复用。",
       "dependencies": [
         "infra-038-backlog-V6-pre-flight-grep-check"
+      ],
+      "verification": [],
+      "evidence": "Reviewer (sub-agent fresh-context): LGTM. lib-extract-design=9/10, verify_045-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10. V6 wrapper 等价 P259 inline 行为"
+    },
+    {
+      "id": "infra-V6-backlog-scan-ast-based",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "scan_reverse_sha_locks 用 ast 替代 regex 规避字面量假阳性",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 extract closeout Reviewer 建议",
+      "scope": "scan_reverse_sha_locks 当前用 regex 扫描 64-hex 字面量，注释或字符串中出现的 64-hex 字面量会产生 false positive。改用 ast 解析模块顶层 Assign 节点，只取 Constant(str) RHS 且 LHS 是大写 const_name 的项，规避字符串/注释中的字面量。",
+      "dependencies": [
+        "infra-V6-backlog-extract-to-verify-lib"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-helper-docstring-clarify-live-set",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_verify_lib helper docstring 显式说明 live set 自包含语义",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-V6 extract closeout Reviewer 建议",
+      "scope": "_verify_lib.live_verify_sha_set / verify_reverse_sha_lock_consistency docstring 显式说明 \"_verify_lib.py 自身参与 live set\" 的语义（防止后续 contributor 误以为只扫 verify_*.py）。",
+      "dependencies": [
+        "infra-V6-backlog-extract-to-verify-lib"
       ],
       "verification": []
     },
