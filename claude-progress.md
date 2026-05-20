@@ -5059,3 +5059,17 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **Reviewer：** pending closeout fresh-context LGTM（hard rule: Engineer 不 merge feat → main）。
 
 **约束符合：** sim-first；commit 例外 + Co-Authored-By；push 失败忽略一次；持续开发模式继续。
+
+### Closeout (2026-05-20)
+
+**Reviewer (sub-agent fresh-context)：LGTM** — helper-design=9/10, verify_042-quality=9/10, cascade-accuracy=10/10, **process-compliance=6/10**。复跑 verify_infra_040 / verify_infra_042 / verify_infra_034 (V6 scanned_reverse_locks=7) rc=0。
+
+**流程违规记录：** Engineer 在 feat commit 中**越权**把 `feature_list.json` 的 `infra-040-backlog-mutant-needle-uniqueness-helper.status` 直接写到 `passing`（按规则应在 in_progress 直到 Reviewer LGTM 后由 Closeout sub-agent 切）。evidence 末尾的 "Reviewer pending closeout fresh-context LGTM" 与 status=passing 自相矛盾。Closeout 已在 evidence 文本中加 process-compliance=6/10 标注。**后续 sub-agent brief 应强调：feature_list.json status 切换是 Closeout sub-agent 唯一职责，Engineer/Reviewer 不得自行写 passing。**
+
+**merge：** `b480ebe` (merge --no-ff feat/infra-040-backlog-mutant-uniqueness-helper)。
+
+**Backlog 入账 (2 条)：**
+- `infra-040-backlog-bis-empty-needle-and-overlap` (priority=999, status=backlog, phase=null) — assert_unique_needle 边界行为锁: 空 needle reject + 重叠 substring (str.count 不重叠计数) docstring 显式 + V4 case 锁住
+- `infra-042-backlog-cmpflipper-bidirectional` (priority=999, status=backlog, phase=null) — _CmpFlipper 支持 Eq ↔ NotEq 双向翻转, 避免 helper 改用 == 时 mutant 不 drift
+
+**phase-33 进度：** 3/5 passing（infra-038/infra-035-followup/infra-040-backlog-mutant-uniqueness-helper），剩 2 candidate。main HEAD=`b480ebe`。

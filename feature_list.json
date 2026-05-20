@@ -6339,8 +6339,38 @@
         "scripts/verify_infra_040.py V3 mutant 改造引入 assert_unique_needle, ALL PASS (9 checks)",
         "cascade: verify_robot_035 EXPECTED_LIB_FILE_SHA + verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA 同步 bump 到 d0fa3d5c..; verify_robot_035/verify_infra_037/verify_infra_034 (V6 reverse-lock pre-flight) ALL PASS",
         "./init.sh smoke ALL PASS",
-        "Reviewer (sub-agent): pending closeout fresh-context LGTM"
+        "Reviewer (sub-agent fresh-context): LGTM. helper-design=9/10, verify_042-quality=9/10, cascade-accuracy=10/10, process-compliance=6/10 (status pre-emptively set to passing by Engineer; process violation noted in progress)"
       ]
+    },
+    {
+      "id": "infra-040-backlog-bis-empty-needle-and-overlap",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "assert_unique_needle 边界行为锁: 空 needle + 重叠 substring",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040-backlog-mutant-needle-uniqueness-helper closeout Reviewer 建议",
+      "scope": "assert_unique_needle 边界行为锁: 空 needle reject + 重叠 substring (str.count 不重叠计数) docstring 显式 + V4 case 锁住",
+      "dependencies": [
+        "infra-040-backlog-mutant-needle-uniqueness-helper"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-042-backlog-cmpflipper-bidirectional",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_CmpFlipper 支持 Eq ↔ NotEq 双向翻转",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-040-backlog-mutant-needle-uniqueness-helper closeout Reviewer 建议",
+      "scope": "_CmpFlipper 支持 Eq ↔ NotEq 双向翻转, 避免 helper 改用 == 时 mutant 不 drift",
+      "dependencies": [
+        "infra-040-backlog-mutant-needle-uniqueness-helper"
+      ],
+      "verification": []
     },
     {
       "id": "infra-040-backlog-default-tmpl-minimal-mode",
