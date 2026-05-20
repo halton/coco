@@ -4827,3 +4827,36 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-32 第 3 个 candidate（按 priority 取 infra-039 sha-lock-graph-dump，priority=3.32）。
+
+## Session P256 — 2026-05-20 — infra-039 closeout merge 回 main
+
+**Phase-32 第 3 个 feature (sha-lock-graph-dump) closeout passing。**
+
+**改动：**
+- 新增 `scripts/dump_v4_sha_graph.py`（193 行）：扫描 v4_sha.json + verify 目标 docstring sha 行 + verify_infra_034 期望表，输出 DAG (markdown 表 / JSON)。
+- 新增 `scripts/verify_infra_039.py`（275 行）：V0 docstring sha 自锁 + V1-V5 dump 输出/JSON/anchor/Reviewer-gate 自检。
+- feature_list.json status 切换 + evidence 落盘
+- 0 业务源码改
+
+**Verification（merge 后 main 跑）：**
+- `./init.sh` → smoke 11/11 PASS
+- `scripts/verify_infra_039.py` → rc=0（ALL PASS 10 checks）
+- `scripts/verify_infra_034.py` → rc=0
+- `scripts/verify_infra_037.py` → rc=0
+
+**Reviewer (sub-agent) LGTM：** dump 质量 8/10，verify-script 9/10，V3 mutant 9/10。
+
+**Dump SUMMARY：** 34 sha-lock constants across 20 files；dump file sha = 89598a8fed49f5c9。
+
+**Backlog（5 笔入账，priority=999, phase=null）：**
+- infra-039-backlog-target-inference-refine：_infer_target 扩 fingerprint/bump 常量识别
+- infra-039-backlog-dump-filter-pattern：dump 加 --filter 选项
+- infra-039-backlog-dump-show-full-sha：dump 加 --show-full-sha 完整 sha 输出
+- infra-039-backlog-dump-mermaid-output：dump 加 --mermaid 渲染模式
+- infra-039-backlog-lib-hint-subconst-coverage：_RE_LIB_HINT 扩 _FUNC_SHA_BY_NAME_ 等子常量到 _verify_lib:func 映射
+
+**Phase-32 进度：** 3/5（infra-037、infra-038、infra-039 passing；剩 robot-037 / interact-039 在 not_started）。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-32 第 4 个 candidate（按 priority 取 robot-037 extract-read-constant-helper，priority=4.32）。

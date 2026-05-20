@@ -6173,7 +6173,7 @@
       "phase": 32,
       "area": "infra",
       "title": "V4 sha 锁链路 DAG dump helper",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; infra-036-backlog-sha-lock-graph-dump",
       "scope": "新增 scripts/dump_v4_sha_graph.py：扫描 v4_sha.json + 目标 docstring sha 行 + verify_infra_034 期望表，输出 DAG (markdown 表)。dump only，0 业务源码改，便于覆盖集扩展前快速判耦合。",
@@ -6192,7 +6192,19 @@
         "V4: smoke PASS",
         "V5: Reviewer (sub-agent) LGTM"
       ],
-      "evidence": {}
+      "evidence": {
+        "reviewer_lgtm": "sub-agent fresh-context Reviewer LGTM; 评分 dump 质量 8/10, verify-script 9/10, V3 mutant 9/10",
+        "smoke": "./init.sh 11/11 PASS",
+        "verify_infra_039_rc": 0,
+        "verify_infra_034_rc": 0,
+        "verify_infra_037_rc": 0,
+        "verify_infra_039_summary": "ALL PASS (10 checks)",
+        "dump_file_sha": "89598a8fed49f5c9",
+        "sha_lock_summary": "34 locks across 20 files",
+        "feat_branch_head": "0c3d18c",
+        "merge_main_head": "3e064f2d45f4077cab6b56b993d35fd771b553b5",
+        "real_machine_uat": "n/a (verify-only, 0 业务源码改)"
+      }
     },
     {
       "id": "robot-037-extract-read-constant-helper",
@@ -6395,9 +6407,84 @@
         "infra-038"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-039-backlog-target-inference-refine",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_v4_sha_graph _infer_target 扩 fingerprint/bump 常量识别",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039 closeout Reviewer 建议",
+      "scope": "scripts/dump_v4_sha_graph.py _infer_target 当前只识别有限模式；扩展对 fingerprint / bump-only 常量的目标推断，提高 DAG 边的完整度。",
+      "dependencies": [
+        "infra-039"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-dump-filter-pattern",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_v4_sha_graph 加 --filter 选项",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039 closeout Reviewer 建议",
+      "scope": "dump_v4_sha_graph.py 增加 --filter <pattern> 选项，按 verify-name 或 target-path 子串过滤输出，便于在大量 lock 时聚焦特定子集。",
+      "dependencies": [
+        "infra-039"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-dump-show-full-sha",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_v4_sha_graph 加 --show-full-sha 选项",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039 closeout Reviewer 建议",
+      "scope": "dump_v4_sha_graph.py 当前默认截断 sha；加 --show-full-sha 选项输出完整 sha256，便于在调试/审计场景下直接比对。",
+      "dependencies": [
+        "infra-039"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-dump-mermaid-output",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_v4_sha_graph 加 --mermaid 渲染模式",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039 closeout Reviewer 建议",
+      "scope": "dump_v4_sha_graph.py 增加 --mermaid 输出模式，生成 mermaid graph TD 语法，便于嵌入文档/PR 描述做可视化耦合审查。",
+      "dependencies": [
+        "infra-039"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-039-backlog-lib-hint-subconst-coverage",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump _RE_LIB_HINT 扩 _FUNC_SHA_BY_NAME_ 等子常量到 _verify_lib:func 映射",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-039 closeout Reviewer 建议",
+      "scope": "dump_v4_sha_graph.py 的 _RE_LIB_HINT 当前覆盖有限 _verify_lib 模块；扩展到识别 _FUNC_SHA_BY_NAME_ 等子常量到具体 lib:func 的映射，DAG 边粒度更细。",
+      "dependencies": [
+        "infra-039"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-20 P255 infra-038 closeout passing + 5 backlog 入账 (4 本feature + 1 cascade)"
+    "last_updated": "2026-05-20 P256 infra-039 closeout passing + 5 backlog 入账"
   }
 }
