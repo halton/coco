@@ -4786,3 +4786,44 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-32 第 2 个 candidate（按 priority 取 infra-038 docstring 覆盖 batch-3，priority=2.32）。
+
+## P255 — 2026-05-20 — infra-038 closeout passing（返工后）
+
+**Session 任务：** infra-038 expand-docstring-coverage-batch-3 收官（V4 docstring sha lock 10→15 targets，cascade 027/036 bump）。
+
+**Merge：** feat/infra-038 (2129b56, amend 自 6561aaa) → main，merge HEAD = `e49791778f198ae75cd5804a41e8050516898a62`。
+
+**改动范围：**
+- 新加 5 target docstring + sha 自锁：verify_robot_025（28ae86d1）/ _026（c231186e）/ _027（acd23104）/ verify_interact_024（9e5af286）/ _025（28b1842c）
+- cascade bump：verify_robot_027 `VERIFY_025_EXPECTED_SHA` + verify_interact_036 `EXPECTED_VERIFY_024_SHA256`
+- v4_sha.json 同步至 15 targets
+- verify_infra_035 V2 `EXPECTED_VERIFY_034_SHA` bump
+- feature_list.json status 切换 + evidence 落盘
+- 0 业务源码改
+
+**Verification（merge 后 main 跑）：**
+- `./init.sh` → smoke 11/11 PASS
+- `scripts/verify_infra_034.py` → rc=0
+- `scripts/verify_infra_035.py` → rc=0
+- `scripts/verify_infra_037.py` → rc=0
+- `scripts/verify_robot_027.py` → rc=0（cascade 锁验证）
+- `scripts/verify_interact_036.py` → rc=0（cascade 锁验证）
+
+**Reviewer (sub-agent) LGTM 复审（返工后）：** docstring 10/10，v4_sha canonical 10/10，cascade 9/10，target 稳定 8/10。
+
+**返工要点：** 首轮 Reviewer 抓出 cascade 锁未同步 → 返工补 verify_robot_027 / verify_interact_036 字面锁 bump，复审通过。
+
+**033b 独立 bug：** verify_interact_033b 仍按 3 元组锁 site_specs，与 interact-035 已扩 5 元组事实脱节。属 pre-existing bug，与 infra-038 改动无关，入 backlog `interact-033b-backlog-site-specs-5tuple-relock` 待修。
+
+**Backlog（5 笔入账，priority=999, phase=null）：**
+- interact-033b-backlog-site-specs-5tuple-relock（cascade 独立项）
+- infra-038-backlog-reverse-sha-lock-index：scan_verify_sha_locks.py 输出反向引用索引
+- infra-038-backlog-V6-pre-flight-grep-check：verify_infra_034 加 V6 pre-flight grep 外部锁
+- infra-038-backlog-unified-bump-cli：抽 bump_sha_lock.py 通用 CLI
+- infra-038-backlog-closeout-self-test-auto-expand：closeout 自验脚本 grep -l 自动扩展
+
+**Phase-32 进度：** 2/5（infra-037、infra-038 passing；剩 infra-039 / robot-037 / interact-039 在 not_started）。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-32 第 3 个 candidate（按 priority 取 infra-039 sha-lock-graph-dump，priority=3.32）。

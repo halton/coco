@@ -6131,7 +6131,7 @@
       "phase": 32,
       "area": "infra",
       "title": "infra-034 docstring + sha 覆盖集 10→15 (batch-3)",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; infra-034-backlog-expand-docstring-coverage",
       "scope": "继续推广「运行环境约定 docstring + sha256 自锁」模式到下一批 5 个 verify 脚本，verify_infra_034 覆盖集 10→15。verify-only，0 业务源码改。触发 v4_sha.json 同步与 verify_infra_035/036 自检。",
@@ -6150,7 +6150,22 @@
         "V4: smoke PASS",
         "V5: Reviewer (sub-agent) LGTM"
       ],
-      "evidence": {}
+      "evidence": {
+        "reviewer_lgtm": "Reviewer (sub-agent): LGTM 复审 (返工后) — docstring 10/10, v4_sha canonical 10/10, cascade 9/10, target 稳定 8/10",
+        "verifications": "11 cmd rc=0 + smoke 11/11 (smoke + verify_infra_034/035/037 + verify_robot_027 + verify_interact_036)",
+        "new_target_docstring_sha": {
+          "verify_robot_025": "28ae86d1",
+          "verify_robot_026": "c231186e",
+          "verify_robot_027": "acd23104",
+          "verify_interact_024": "9e5af286",
+          "verify_interact_025": "28b1842c"
+        },
+        "cascade_bump": "verify_robot_027 VERIFY_025_EXPECTED_SHA + verify_interact_036 EXPECTED_VERIFY_024_SHA256",
+        "v4_sha_total_targets": 15,
+        "feat_branch_head": "2129b56",
+        "merge_main_head": "e49791778f198ae75cd5804a41e8050516898a62",
+        "real_machine_uat": "n/a (verify-only, 0 业务源码改)"
+      }
     },
     {
       "id": "infra-039-sha-lock-graph-dump",
@@ -6303,9 +6318,86 @@
         "infra-037"
       ],
       "verification": []
+    },
+    {
+      "id": "interact-033b-backlog-site-specs-5tuple-relock",
+      "priority": 999,
+      "area": "interact",
+      "phase": null,
+      "title": "site_specs 3→5 元组扩展后同步 033b 字面锁",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-038 closeout (pre-existing bug; 与 infra-038 改动无关)",
+      "scope": "interact-035 已将 site_specs 扩展为 5 元组，但 verify_interact_033b 仍按 3 元组字面锁断言，需同步更新 033b 字面锁以反映 5 元组事实。",
+      "dependencies": [
+        "interact-033b",
+        "interact-035"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-038-backlog-reverse-sha-lock-index",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "scripts/scan_verify_sha_locks.py 输出反向引用 sha-lock 索引",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-038 closeout Reviewer 建议",
+      "scope": "扩展 scan_verify_sha_locks.py：除正向 target→sha 外，额外输出 sha-lock 反向引用索引（target → 谁锁我），便于扩集前快速判断 cascade bump 影响范围。",
+      "dependencies": [
+        "infra-038"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-038-backlog-V6-pre-flight-grep-check",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_034 加 V6 pre-flight grep 外部锁检查",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-038 closeout Reviewer 建议",
+      "scope": "verify_infra_034 新增 V6 pre-flight：grep 待加入覆盖集的新 target basename 是否被外部脚本字面锁引用，若有则提示需同步 bump，避免 cascade 漏改。",
+      "dependencies": [
+        "infra-038"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-038-backlog-unified-bump-cli",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "抽 bump_sha_lock.py 通用 CLI",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-038 closeout Reviewer 建议",
+      "scope": "将 cascade sha-lock bump 流程（计算新 sha + 改外部脚本字面锁 + 自检）抽成通用 CLI scripts/bump_sha_lock.py，参数化 target / 外部锁文件列表，减少手工漏改。",
+      "dependencies": [
+        "infra-036",
+        "infra-038"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-038-backlog-closeout-self-test-auto-expand",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "closeout 自验脚本最小集合 grep -l 自动扩展",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-038 closeout Reviewer 建议",
+      "scope": "closeout 自验脚本不再硬编码固定 verify 列表，改为 grep -l 待 bump 目标的 sha 串自动扩展受影响 verify 列表，减少人工漏跑。",
+      "dependencies": [
+        "infra-038"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-20 P254 infra-037 closeout passing + 5 backlog 入账"
+    "last_updated": "2026-05-20 P255 infra-038 closeout passing + 5 backlog 入账 (4 本feature + 1 cascade)"
   }
 }
