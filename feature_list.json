@@ -6173,7 +6173,7 @@
       "phase": 32,
       "area": "infra",
       "title": "V4 sha 锁链路 DAG dump helper",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; infra-036-backlog-sha-lock-graph-dump",
       "scope": "新增 scripts/dump_v4_sha_graph.py：扫描 v4_sha.json + 目标 docstring sha 行 + verify_infra_034 期望表，输出 DAG (markdown 表)。dump only，0 业务源码改，便于覆盖集扩展前快速判耦合。",
