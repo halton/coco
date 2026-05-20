@@ -27,12 +27,12 @@
     {
       "name": "V4_sha256_lock",
       "ok": true,
-      "detail": "verify_024 sha256=31ef9b97bae01a6f.. 锁面一致"
+      "detail": "verify_024 sha256=9e5af28633783184.. 锁面一致"
     },
     {
       "name": "V5_end_to_end_append",
       "ok": true,
-      "detail": "append +1 行 (before=4 after=5), 字段齐全 (top=['ts', 'kind', 'git_head', 'drift_report'], stages=['admit', 'reject_main', 'reject_preempt'], per-stage fields=['expected_line', 'actual_line', 'drift', 'drift_tolerance', 'within_tolerance'])"
+      "detail": "append +1 行 (before=15 after=16), 字段齐全 (top=['ts', 'kind', 'git_head', 'drift_report'], stages=['admit', 'reject_main', 'reject_preempt'], per-stage fields=['expected_line', 'actual_line', 'drift', 'drift_tolerance', 'within_tolerance'])"
     }
   ],
   "files_changed": [
@@ -46,6 +46,6 @@
   "runtime_change": false,
   "default_off_invariant": true,
   "history_jsonl_path": "evidence/_history/interact_024_drift_history.jsonl",
-  "verify_024_sha256_expected": "31ef9b97bae01a6fab44dfa7ea59ad70ec10466b55be68bb2318dc77d3234883",
-  "sha": "7ff6221c8c17de3c80d7bcaabd8ca22f79a4e5fa"
+  "verify_024_sha256_expected": "9e5af28633783184a3b27a71e1218948e7c32aa232d1dd5551aeff2d9cb19e37",
+  "sha": "6561aaa0966abfee4149d4f2f967b5af0f0e54d0"
 }

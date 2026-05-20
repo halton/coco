@@ -54,7 +54,7 @@ BUMP_034 = ROOT / "scripts" / "bump_infra_034_v4_sha.py"
 
 # V2/V4 整体 sha 锁 (本 infra-035 闭锚)
 VERIFY_034_EXPECTED_SHA = (
-    "643e503d19cb94df943363ee684fec388089d084d7511d77e65241921ea16119"
+    "e6847e44d0fffd24fe51d03f1243a16902b89d0c10ece616d1211fb3b2474129"
 )
 BUMP_034_EXPECTED_SHA = (
     "fe26902eb371872eb8e8227a3d0985ef71df2fb63cbbf60c88a9ea4d23b1e744"

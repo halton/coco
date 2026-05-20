@@ -71,7 +71,7 @@ HISTORY_PATH = ROOT / "evidence" / "_history" / "interact_024_drift_history.json
 # interact-036: verify_interact_024.py 升级后 sha256 锁面.
 # 任何 verify_024 改动 (即使 0 业务源码改动) 必须同步刷新此 hash, 否则 V4 FAIL.
 EXPECTED_VERIFY_024_SHA256 = (
-    "31ef9b97bae01a6fab44dfa7ea59ad70ec10466b55be68bb2318dc77d3234883"
+    "9e5af28633783184a3b27a71e1218948e7c32aa232d1dd5551aeff2d9cb19e37"
 )
 
 
