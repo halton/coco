@@ -5112,3 +5112,13 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
   - `infra-039-backlog-mermaid-unknown-target-id-collision` — unknown target 复合 key 避免合并
   - `infra-039-backlog-mermaid-tuple-fanout` — 元组反向锁 1→N fanout 渲染
   - `infra-039-backlog-mermaid-classDef-styling` — hub / verify_* / unknown 视觉分层
+
+## Session P263 (2026-05-20) — infra-039-backlog-target-inference Engineer
+
+- 改 `scripts/dump_v4_sha_graph.py::_infer_target`: 加 `_KNOWN_NON_NUMERIC_TARGETS` 查表 (11 项: EXPECTED_LIB_FILE_SHA / EXPECTED_VERIFY_LIB_FILE_SHA / EXPECTED_DUMP_FILE_SHA / EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA / EXPECTED_V6_SCAN_FUNC_SHA / EXPECTED_V6_TARGET_ID_FUNC_SHA / EXPECTED_READ_CONSTANT_FUNC_SHA / EXPECTED_RENDER_MERMAID_FUNC_SHA / EXPECTED_INFER_TARGET_FUNC_SHA / EXPECTED_VERIFY_TMPL_SHA), 加 `_RE_V_NUM_HINT` (V<NNN>_) + `_RE_BUMP_HINT` (BUMP_<NNN>_) 数字提取.
+- `dump_v4_sha_graph.py --json` unknown 从 27 → 14 (覆盖 13 个常量, 含任务指定全部目标; 剩余 fingerprint / block-sha 自锁 out of scope).
+- 新建 `scripts/verify_infra_044.py` V0-V5 (15 checks, ALL PASS): scaffolding / docstring sentinel + 自 func sha / dump file sha + _infer_target func sha / in-memory mutant / 行为验证 7 张查表 cases + numeric / V<NNN>_ / BUMP_<NNN>_ / unknown fallback / Reviewer gate.
+- Cascade: dump_v4_sha_graph.py file sha 改 → bump `verify_infra_039.EXPECTED_DUMP_FILE_SHA` 与 `verify_infra_043.EXPECTED_DUMP_FILE_SHA` 至 `c2be81be...`.
+- verify_infra_034 V6 自动认 verify_infra_044 (orphan_reverse_locks=7 全 live).
+- Smoke 11/11 PASS; verify_infra_034/039/043/044 全 PASS.
+- Engineer 阶段已完成, status 切 in_progress, 不切 passing, 不 merge, 等 Reviewer + Closeout.
