@@ -48,7 +48,8 @@ SCRIPTS = REPO / "scripts"
 VERIFY_LIB = SCRIPTS / "_verify_lib.py"
 
 # infra-037 sha lock 常量 (V2)
-EXPECTED_VERIFY_LIB_FILE_SHA = "5d37f9c5bbbfddbd63e111ad582a24378792126cf8fb3a45aa7d5dd73e5f65b0"
+# infra-040-backlog bump: 新增 assert_unique_needle helper 后 file sha 变更
+EXPECTED_VERIFY_LIB_FILE_SHA = "d0fa3d5c3c5923b57a2bcad76a72f506d3f79839641bb089fe3dee7b58514417"
 EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA = "c668f3d46c0b188adee8c087650f854e570a51f0ff1202cd5f1fe09c9e5a78db"
 
 # infra-037 自身关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)

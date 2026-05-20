@@ -6327,14 +6327,20 @@
       "area": "infra",
       "phase": 33,
       "title": "_verify_lib.py 加 assert_unique_needle helper, mutant 前 assert needle 唯一",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-040 closeout Reviewer 建议 / phase-33 promoted (helper-extract, ~50 LOC)",
       "scope": "在 scripts/_verify_lib.py 新增 assert_unique_needle(text, needle) helper，verify_infra_040 等 mutant-replace 风格 V 检查在替换前先 assert needle 在源文件中唯一出现，避免误替换。",
       "dependencies": [
         "infra-040"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_042.py V0-V5 ALL PASS (13 checks; helper exists in __all__, file+func sha lock, in-memory ast mutant sha drift, behavior 0/1/2/3 次出现 raise/return)",
+        "scripts/verify_infra_040.py V3 mutant 改造引入 assert_unique_needle, ALL PASS (9 checks)",
+        "cascade: verify_robot_035 EXPECTED_LIB_FILE_SHA + verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA 同步 bump 到 d0fa3d5c..; verify_robot_035/verify_infra_037/verify_infra_034 (V6 reverse-lock pre-flight) ALL PASS",
+        "./init.sh smoke ALL PASS",
+        "Reviewer (sub-agent): pending closeout fresh-context LGTM"
+      ]
     },
     {
       "id": "infra-040-backlog-default-tmpl-minimal-mode",

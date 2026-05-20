@@ -27,7 +27,32 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-__all__ = ["parse_headings_from_doc", "func_sha_by_name", "read_constant"]
+__all__ = [
+    "parse_headings_from_doc",
+    "func_sha_by_name",
+    "read_constant",
+    "assert_unique_needle",
+]
+
+
+def assert_unique_needle(text: str, needle: str) -> None:
+    """断言 needle 在 text 中恰好出现一次, 否则 raise ValueError。
+
+    infra-040-backlog: P258 暴露的坑——V3 mutant 用 ``text.replace(needle, ...)``
+    在文档/源码上制造 sha 漂移时, 若 needle 非唯一会同时替换多处, mutant 失效,
+    导致反证假阳性 PASS。所有 V3 mutant 在 replace 前应先 call 本 helper 显式
+    断言 needle 唯一性。
+
+    Args:
+        text: 待 mutant 的内容。
+        needle: 要替换的子串。
+
+    Raises:
+        ValueError: needle 在 text 中出现次数不为 1。
+    """
+    count = text.count(needle)
+    if count != 1:
+        raise ValueError(f"needle 不唯一: count={count}, needle={needle!r}")
 
 
 def parse_headings_from_doc(doc_path: Path, sentinel: str) -> list[str]:

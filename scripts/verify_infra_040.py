@@ -39,6 +39,9 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _verify_lib import assert_unique_needle  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
 GITHUB_DIR = REPO / ".github"
 VERIFY_TMPL = GITHUB_DIR / "PULL_REQUEST_TEMPLATE" / "verify-script.md"
@@ -142,6 +145,12 @@ def v3_mutant() -> None:
     needle = "### 锁类型选择"
     if needle not in original:
         _emit("V3_mutant_apply", False, f"baseline missing needle {needle!r}")
+        return
+    # infra-040-backlog: 显式断言 needle 唯一性, 避免静默多重替换让 mutant 失效
+    try:
+        assert_unique_needle(original, needle)
+    except ValueError as e:
+        _emit("V3_mutant_apply", False, f"needle uniqueness failed: {e}")
         return
     mutant = original.replace(needle, "### (mutant removed)", 1)
     if mutant == original:
