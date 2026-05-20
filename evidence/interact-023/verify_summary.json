@@ -12,17 +12,17 @@
     {
       "name": "V1_cooldown_hit_end_to_end",
       "ok": true,
-      "detail": "cooldown_hit reject 命中 lat=0.012ms reason=cooldown (trace_events=2, cooldown_hits=1)"
+      "detail": "cooldown_hit reject 命中 lat=0.014ms reason=cooldown (trace_events=2, cooldown_hits=1)"
     },
     {
       "name": "V2_cooldown_hit_latency_semantics",
       "ok": true,
-      "detail": "lat=0.006ms (有限 float, <1000ms 判定即出语义); cooldown_hit 之后无 admit emit"
+      "detail": "lat=0.007ms (有限 float, <1000ms 判定即出语义); cooldown_hit 之后无 admit emit"
     },
     {
       "name": "V3_type_strict_and_nonneg",
       "ok": true,
-      "detail": "3 cooldown_hit 全部 numeric>=0, lats=[0.005, 0.004, 0.004]"
+      "detail": "3 cooldown_hit 全部 numeric>=0, lats=[0.006, 0.005, 0.004]"
     },
     {
       "name": "V4_is_fail_closure",
@@ -39,5 +39,5 @@
     "scripts/verify_interact_023.py"
   ],
   "runtime_change": false,
-  "sha": "7ff6221c8c17de3c80d7bcaabd8ca22f79a4e5fa"
+  "sha": "6561aaa0966abfee4149d4f2f967b5af0f0e54d0"
 }

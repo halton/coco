@@ -1,8 +1,8 @@
 {
-  "elapsed_sec": 0.07,
+  "elapsed_sec": 0.05,
   "errors": [],
-  "proactive_sha256": "b35d47f503c533920ff9a43bc0cfeef0d2fa9cd5e384dd1ace968c96766f2136",
-  "self_sha256": "1c1cba08214e6a510ace376f0f9c06fd0eb21063c13c71442850a0d997f0ef6d",
+  "proactive_sha256": "929694d0fd56dd81505ab0c294a85b5848a7a1a91c479cee87f8cbdec2470364",
+  "self_sha256": "28ae86d1388d8f5584a89d65ec2f90ce190934f49a355d41cbf839195c897d10",
   "sentinel_hashes": {
     "refuse-to-inject": "85648bc52cbf60e254481e784c4d456246e253a5bfe173d81eac491f8b5a1a7d",
     "overwriting": "389d75de4c93afc13bb2127d4433dd5e1096cc50c41b0e66b9c7e3d1f63cf48d",
@@ -15,7 +15,7 @@
     "setter_block_base_sha": "3ff13c629a97adedeb61897609f1d379820496b8",
     "setter_block_lines": "L489-L504",
     "setter_block_baseline_sha": "c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f",
-    "setter_block_working_sha": "c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f",
+    "setter_block_working_sha": "68373e6ee97f28a145151d6eaddead731431afeedc6c9f67a1163685c35a1c23",
     "setter_block_expected_sha": "c812ddeaca77fca20435417608cbd904a1100c7a452f982dbb3e9fc61f6a7a1f"
   },
   "option": "A (三道防护已完整, 转 verify-only meta 锁) + robot-027 F1/F2 收紧"
