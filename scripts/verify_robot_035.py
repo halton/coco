@@ -63,7 +63,8 @@ MIN_HEADINGS = 10
 EXPECTED_HELPER_SHA = "98890e28f76d095217aa3edf70f229ea68cf535fac284747257e62a810916405"
 
 # V4: hardcoded sha256 of _verify_lib.py file
-EXPECTED_LIB_FILE_SHA = "7b0e78d86ffac3072f5180d920c095942da35f89fed127a6f2559ac87d08a648"
+# infra-037 bump: helper 扩展 (新增 func_sha_by_name) 后文件 sha 变更
+EXPECTED_LIB_FILE_SHA = "5d7e32c528baf7ff936fc284afcdb1abde10deac8f2da8a0aef3706571b24dfd"
 
 
 _results: List[Tuple[str, bool, str]] = []

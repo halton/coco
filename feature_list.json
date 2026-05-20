@@ -6050,7 +6050,9 @@
       "status": "backlog",
       "source": "interact-038 closeout Reviewer 建议",
       "scope": "扩展 scripts/_verify_lib.py 添加 func_sha_by_name(path, func_name) helper，封装 ast 解析 + 函数体规范化 + sha256 计算，方便后续 verify-script 复用 func-level sha 抽取，降低复制粘贴成本。",
-      "dependencies": ["interact-038"],
+      "dependencies": [
+        "interact-038"
+      ],
       "verification": []
     },
     {
@@ -6062,7 +6064,10 @@
       "status": "backlog",
       "source": "interact-038 closeout Reviewer 第 2 条建议",
       "scope": "interact-037 当前 V2 使用全文件 sha256 自锁，docstring 微调即 break，痛点已在 interact-038 docs 决策矩阵中明示。本期还该笔技术债：把 EXPECTED_FILE_SHA 改为 func-sha + key phrase 双锁，降低 docstring 变更触发率。",
-      "dependencies": ["interact-038", "interact-038-backlog-verify-lib-func-sha-helper"],
+      "dependencies": [
+        "interact-038",
+        "interact-038-backlog-verify-lib-func-sha-helper"
+      ],
       "verification": []
     },
     {
@@ -6074,8 +6079,139 @@
       "status": "backlog",
       "source": "interact-038 closeout Reviewer 第 3 条建议",
       "scope": "新增 verify-script 类 PR 模板（.github/PULL_REQUEST_TEMPLATE/verify-script.md 或在主模板加 section），强制作者填 docs/verify_sha_lock_strategy.md 决策矩阵中对应一行，流程层防默认 file-sha 高耦合。",
-      "dependencies": ["interact-038"],
+      "dependencies": [
+        "interact-038"
+      ],
       "verification": []
+    },
+    {
+      "id": "infra-037-verify-lib-func-sha-helper",
+      "priority": 1.32,
+      "phase": 32,
+      "area": "infra",
+      "title": "scripts/_verify_lib.py 增加 func_sha_by_name(path, func_name) helper",
+      "status": "in_progress",
+      "created_at": "2026-05-20",
+      "source": "phase-32 planning; interact-038 closeout Reviewer 建议",
+      "scope": "扩展 scripts/_verify_lib.py 添加 func_sha_by_name(path, func_name) helper，封装 ast 解析 + 函数体规范化 + sha256 计算。verify-only，0 业务源码改。后续 verify-script 复用 func-level sha 抽取的统一入口。",
+      "dependencies": [
+        "interact-038"
+      ],
+      "type": "verify-only",
+      "estimated_loc": 80,
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: func_sha_by_name 对已知函数返回稳定 hash；对不存在 func_name 抛 KeyError",
+        "V2: 单元测试覆盖 ast 解析 + 规范化 + sha256",
+        "V3: 至少一处现有 verify-script (interact-038 sample) 改用 helper 验证可替换性",
+        "V4: smoke PASS",
+        "V5: Reviewer (sub-agent) LGTM"
+      ],
+      "evidence": {}
+    },
+    {
+      "id": "infra-038-expand-docstring-coverage-batch-3",
+      "priority": 2.32,
+      "phase": 32,
+      "area": "infra",
+      "title": "infra-034 docstring + sha 覆盖集 10→15 (batch-3)",
+      "status": "not_started",
+      "created_at": "2026-05-20",
+      "source": "phase-32 planning; infra-034-backlog-expand-docstring-coverage",
+      "scope": "继续推广「运行环境约定 docstring + sha256 自锁」模式到下一批 5 个 verify 脚本，verify_infra_034 覆盖集 10→15。verify-only，0 业务源码改。触发 v4_sha.json 同步与 verify_infra_035/036 自检。",
+      "dependencies": [
+        "infra-034",
+        "infra-035",
+        "infra-036"
+      ],
+      "type": "verify-only",
+      "estimated_loc": 120,
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: 选定下一批 5 个候选；优先级 by 调用频次或漂移风险",
+        "V2: verify_infra_034 覆盖集 == 15；V0-V5 全 PASS",
+        "V3: v4_sha.json 同步；verify_infra_035 V2 / infra-036 bump helper 全 PASS",
+        "V4: smoke PASS",
+        "V5: Reviewer (sub-agent) LGTM"
+      ],
+      "evidence": {}
+    },
+    {
+      "id": "infra-039-sha-lock-graph-dump",
+      "priority": 3.32,
+      "phase": 32,
+      "area": "infra",
+      "title": "V4 sha 锁链路 DAG dump helper",
+      "status": "not_started",
+      "created_at": "2026-05-20",
+      "source": "phase-32 planning; infra-036-backlog-sha-lock-graph-dump",
+      "scope": "新增 scripts/dump_v4_sha_graph.py：扫描 v4_sha.json + 目标 docstring sha 行 + verify_infra_034 期望表，输出 DAG (markdown 表)。dump only，0 业务源码改，便于覆盖集扩展前快速判耦合。",
+      "dependencies": [
+        "infra-034",
+        "infra-035",
+        "infra-036"
+      ],
+      "type": "verify-only",
+      "estimated_loc": 100,
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: dump_v4_sha_graph.py 输出 N target 全覆盖（计数匹配 v4_sha.json）",
+        "V2: dump 含: sentinel path / docstring sha / v4_sha.json 值；三者一致性自检",
+        "V3: 输出格式可被 grep / human 直读",
+        "V4: smoke PASS",
+        "V5: Reviewer (sub-agent) LGTM"
+      ],
+      "evidence": {}
+    },
+    {
+      "id": "robot-037-extract-read-constant-helper",
+      "priority": 4.32,
+      "phase": 32,
+      "area": "robot",
+      "title": "_read_constant_from helper 抽到 scripts/_verify_lib 去重",
+      "status": "not_started",
+      "created_at": "2026-05-20",
+      "source": "phase-32 planning; robot-036-backlog-extract-read-constant-helper",
+      "scope": "verify_robot_034 与 verify_robot_036 各自实现 _read_constant_from（ast 解析模块顶层常量）helper；属重复逻辑。抽到 scripts/_verify_lib/ast_constants.py 共享模块，两 verify 改 import。verify-only，0 业务源码改。会触发 infra-034 V4 sha 锁表同步。",
+      "dependencies": [
+        "robot-036"
+      ],
+      "type": "verify-only",
+      "estimated_loc": 90,
+      "verification": [
+        "V0: docstring + sha256 自锁",
+        "V1: scripts/_verify_lib/ast_constants.py 新增 read_constant_from(path, name)",
+        "V2: verify_robot_034 / verify_robot_036 改 import，去掉本地重复实现",
+        "V3: 两 verify 全 PASS；v4_sha.json 同步",
+        "V4: smoke PASS",
+        "V5: Reviewer (sub-agent) LGTM"
+      ],
+      "evidence": {}
+    },
+    {
+      "id": "infra-040-pr-template-decision-matrix-checkbox",
+      "priority": 5.32,
+      "phase": 32,
+      "area": "infra",
+      "title": "verify-script PR 模板加 '请填决策矩阵那一行' check-box",
+      "status": "not_started",
+      "created_at": "2026-05-20",
+      "source": "phase-32 planning; interact-038-backlog-pr-template-decision-matrix-checkbox",
+      "scope": "新增 .github/PULL_REQUEST_TEMPLATE/verify-script.md（或在主模板加 section），强制作者填 docs/verify_sha_lock_strategy.md 决策矩阵中对应一行 (file-sha vs func-sha vs constant-sha vs no-lock)，流程层防默认 file-sha 高耦合。docs-only，0 源码改动。",
+      "dependencies": [
+        "interact-038"
+      ],
+      "type": "verify-only",
+      "estimated_loc": 40,
+      "verification": [
+        "V0: docstring + sha256 自锁（针对模板文件，sha 记录到 verify_infra_040 自检）",
+        "V1: 模板存在且含 4 行决策矩阵 check-box",
+        "V2: 模板链接到 docs/verify_sha_lock_strategy.md",
+        "V3: verify_infra_040 验证模板内容稳定",
+        "V4: smoke PASS",
+        "V5: Reviewer (sub-agent) LGTM"
+      ],
+      "evidence": {}
     }
   ],
   "_meta": {
