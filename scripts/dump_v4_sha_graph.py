@@ -37,6 +37,27 @@ _RE_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
 # 用于推断 target: 例如 EXPECTED_VERIFY_024_SHA256 -> verify_interact_024 / verify_robot_024 / verify_infra_024 等
 _RE_VERIFY_HINT = re.compile(r'VERIFY_(\d+)_')
 _RE_LIB_HINT = re.compile(r'(LIB|VERIFY_LIB|HELPER)')
+# infra-039-backlog-target-inference: 形如 V018_EXPECTED_SHA / EXPECTED_V024_SHA256 / V010_EXPECTED_SHA / BUMP_028_EXPECTED_SHA
+_RE_V_NUM_HINT = re.compile(r'V(\d{3})_')
+_RE_BUMP_HINT = re.compile(r'BUMP_(\d+)_')
+
+# infra-039-backlog-target-inference: 非数字常量名 → 文件路径 查表 (fingerprint / bump-only / dump 自锁)
+# 用于覆盖 _RE_VERIFY_HINT 无法识别的复合 sha 锁; 含通用文件 sha 与 func sha
+_KNOWN_NON_NUMERIC_TARGETS: Dict[str, str] = {
+    # _verify_lib 反向锁
+    "EXPECTED_LIB_FILE_SHA": "scripts/_verify_lib.py (file-sha)",
+    "EXPECTED_VERIFY_LIB_FILE_SHA": "scripts/_verify_lib.py (file-sha)",
+    "EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA": "scripts/_verify_lib.py:func_sha_by_name (func-sha)",
+    "EXPECTED_V6_SCAN_FUNC_SHA": "scripts/_verify_lib.py:_v6_scan_constants (func-sha)",
+    "EXPECTED_V6_TARGET_ID_FUNC_SHA": "scripts/_verify_lib.py:_v6_target_id (func-sha)",
+    "EXPECTED_READ_CONSTANT_FUNC_SHA": "scripts/_verify_lib.py:read_constant (func-sha)",
+    # dump_v4_sha_graph 自锁 (infra-039 / 043 / 044)
+    "EXPECTED_DUMP_FILE_SHA": "scripts/dump_v4_sha_graph.py (file-sha)",
+    "EXPECTED_RENDER_MERMAID_FUNC_SHA": "scripts/dump_v4_sha_graph.py:render_mermaid (func-sha)",
+    "EXPECTED_INFER_TARGET_FUNC_SHA": "scripts/dump_v4_sha_graph.py:_infer_target (func-sha)",
+    # verify_template 锁 (infra-040)
+    "EXPECTED_VERIFY_TMPL_SHA": "scripts/_verify_template.py (file-sha; if exists)",
+}
 
 
 def _scan_file(path: Path) -> List[Dict[str, str]]:
@@ -66,8 +87,15 @@ def _scan_file(path: Path) -> List[Dict[str, str]]:
 
 
 def _infer_target(const: str, source_file: str) -> str:
-    """从常量名推断锁定 target. 无把握时返回 '<unknown>'."""
-    # 优先 _verify_lib 锁
+    """从常量名推断锁定 target. 无把握时返回 '<unknown>'.
+
+    infra-039-backlog: 先查 _KNOWN_NON_NUMERIC_TARGETS, 再走 _RE_VERIFY_HINT,
+    再尝试 V<NNN>_ / BUMP_<NNN>_ 数字提取, 最后是 lib / self / unknown 兜底。
+    """
+    # 1) 非数字常量名查表 (fingerprint / bump-only / dump 自锁)
+    if const in _KNOWN_NON_NUMERIC_TARGETS:
+        return _KNOWN_NON_NUMERIC_TARGETS[const]
+    # 2) 优先 _verify_lib 锁
     if _RE_LIB_HINT.search(const):
         if "FILE" in const:
             return "scripts/_verify_lib.py (file-sha)"
@@ -78,17 +106,27 @@ def _infer_target(const: str, source_file: str) -> str:
         if "HELPER" in const:
             return "scripts/_verify_lib.py (helper sha)"
         return "scripts/_verify_lib.py"
-    # verify_XXX 交叉锁
+    # 3) VERIFY_<num>_ 交叉锁
     m = _RE_VERIFY_HINT.search(const)
     if m:
         num = m.group(1)
-        # 在仓库内找 verify_*_<num>.py
         candidates = sorted(SCRIPTS.glob(f"verify_*_{num}.py"))
         if candidates:
             rels = [str(c.relative_to(REPO)) for c in candidates]
             return f"{', '.join(rels)} (file-sha)"
         return f"scripts/verify_*_{num}.py (file-sha; not found)"
-    # 自锁 — checker 自身函数 sha
+    # 4) V<NNN>_ / BUMP_<NNN>_ 数字提取 (infra-039-backlog)
+    mv = _RE_V_NUM_HINT.search(const) or _RE_BUMP_HINT.search(const)
+    if mv:
+        num = mv.group(1).lstrip("0") or "0"
+        # 3 位 V018 -> 18; 直接补齐 3 位查找
+        num3 = num.zfill(3)
+        candidates = sorted(SCRIPTS.glob(f"verify_*_{num3}.py"))
+        if candidates:
+            rels = [str(c.relative_to(REPO)) for c in candidates]
+            return f"{', '.join(rels)} (file-sha)"
+        return f"scripts/verify_*_{num3}.py (file-sha; not found)"
+    # 5) 自锁 — checker 自身函数 sha
     if "CHECKER" in const or "SELF" in const:
         return f"{source_file} self-checker (func-sha)"
     return "<unknown target>"

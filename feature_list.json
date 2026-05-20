@@ -6569,7 +6569,7 @@
       "area": "infra",
       "phase": 33,
       "title": "dump_v4_sha_graph _infer_target 扩 fingerprint/bump 常量识别",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议 / phase-33 promoted (verify-only, ~50 LOC)",
       "scope": "scripts/dump_v4_sha_graph.py _infer_target 当前只识别有限模式；扩展对 fingerprint / bump-only 常量的目标推断，提高 DAG 边的完整度。",
