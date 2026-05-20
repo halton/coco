@@ -6090,7 +6090,7 @@
       "phase": 32,
       "area": "infra",
       "title": "scripts/_verify_lib.py 增加 func_sha_by_name(path, func_name) helper",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; interact-038 closeout Reviewer 建议",
       "scope": "扩展 scripts/_verify_lib.py 添加 func_sha_by_name(path, func_name) helper，封装 ast 解析 + 函数体规范化 + sha256 计算。verify-only，0 业务源码改。后续 verify-script 复用 func-level sha 抽取的统一入口。",
@@ -6107,7 +6107,23 @@
         "V4: smoke PASS",
         "V5: Reviewer (sub-agent) LGTM"
       ],
-      "evidence": {}
+      "evidence": {
+        "reviewer_sub_agent": "LGTM — 13/13 + 36/36 + 11/11 + 8/8 + smoke 全 PASS, V3 mutant 反证有效",
+        "reviewer_scores": "docstring 8/10, 锁合理性 9/10, V3 反证 9/10",
+        "sample_cross_check": "parse_headings_from_doc func_sha=9f8b37464dd25d15 与 V4 helper-call 输出一致",
+        "cmd_results": {
+          "./init.sh smoke": "11/11 PASS",
+          "scripts/verify_infra_037.py": "rc=0 (13 checks)",
+          "scripts/verify_infra_034.py": "rc=0 (36 checks)",
+          "scripts/verify_robot_035.py": "rc=0 (8 checks)"
+        },
+        "v3_mutant_proof": "ast.unparse → str(node) 篡改后 sha 从 c668f3d4... 变 5a52ceafca771e7b...，反证有效",
+        "file_sha_verify_lib": "5d7e32c528baf7ff936fc284afcdb1abde10deac8f2da8a0aef3706571b24dfd",
+        "func_sha_self": "c668f3d46c0b188adee8c087650f854e570a51f0ff1202cd5f1fe09c9e5a78db",
+        "feat_branch_head": "c6c662b",
+        "merge_main_head": "159cabd0ac7c25c2e69b14e2b8bd5552d768d1e5",
+        "real_machine_uat": "n/a (verify-only, 0 业务源码改)"
+      }
     },
     {
       "id": "infra-038-expand-docstring-coverage-batch-3",
@@ -6212,9 +6228,84 @@
         "V5: Reviewer (sub-agent) LGTM"
       ],
       "evidence": {}
+    },
+    {
+      "id": "infra-037-backlog-class-method-support",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "func_sha_by_name 支持 Cls.method dotted-name 解析",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-037 closeout Reviewer 建议（helper TODO 已留）",
+      "scope": "扩展 func_sha_by_name(path, name) 接受 'Cls.method' 形式 dotted-name，定位类内方法的 ast.FunctionDef，复用同一规范化 + sha256 路径。",
+      "dependencies": [
+        "infra-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-037-backlog-nested-name-error-clarity",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "嵌套同名函数歧义时 raise 更具体错误信息",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-037 closeout Reviewer 建议",
+      "scope": "当同一文件中存在多个同名顶层/嵌套 FunctionDef 时，func_sha_by_name 应 raise 含 line-no 列表的明确错误（而非默默返回第一个或 KeyError），降低误锁风险。",
+      "dependencies": [
+        "infra-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-037-backlog-canonical-algo-unify",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_robot_034/035 迁移到 func_sha_by_name 统一算法",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-037 closeout Reviewer 建议",
+      "scope": "verify_robot_034/035 仍用 get_source_segment 路径，与 infra-037 新增 unparse 路径并存。迁移到 func_sha_by_name 消除两套规范化算法，单一来源更易维护。",
+      "dependencies": [
+        "infra-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-037-backlog-v3-mutant-atomic-rename",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V3 mutant 用 tempfile + rename 原子替换",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-037 closeout Reviewer 建议",
+      "scope": "verify_infra_037 V3 mutant 当前直接 write + try/finally 还原；改为 tempfile.NamedTemporaryFile + os.replace 原子替换，避免 try 过程中断（如 Ctrl-C / OOM）留下污染。",
+      "dependencies": [
+        "infra-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-037-backlog-helper-doctest",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "func_sha_by_name 加 doctest example",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "infra-037 closeout Reviewer 建议",
+      "scope": "在 _verify_lib.func_sha_by_name docstring 末尾加 doctest（>>> 调用样例 + 期望 sha 前缀），提升可读性与离线自检能力。",
+      "dependencies": [
+        "infra-037"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-19 P253 interact-038 closeout + phase-31 收官 5/5"
+    "last_updated": "2026-05-20 P254 infra-037 closeout passing + 5 backlog 入账"
   }
 }

@@ -4746,3 +4746,43 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-32 规划 / 候选 feature 选取。
+
+## Session P254 — infra-037 closeout passing（2026-05-20）
+
+**Feature：** infra-037-verify-lib-func-sha-helper（scripts/_verify_lib.py 增加 func_sha_by_name(path, func_name) helper）
+**状态：** in_progress → passing；phase-32 进度 1/5。
+**类型：** verify-only，0 业务源码改动。
+
+**改动文件：**
+- `scripts/_verify_lib.py`（扩 func_sha_by_name + __all__）
+- `scripts/verify_infra_037.py`（新增 V0-V5，13 checks）
+- `scripts/verify_robot_035.py`（cascade bump file_sha 锁）
+- `feature_list.json`（passing + 5 backlog 入账）
+
+**关键 SHA：**
+- _verify_lib.py file_sha = `5d7e32c528baf7ff936fc284afcdb1abde10deac8f2da8a0aef3706571b24dfd`
+- func_sha_by_name 自身 func_sha = `c668f3d46c0b188adee8c087650f854e570a51f0ff1202cd5f1fe09c9e5a78db`
+- helper-call(parse_headings_from_doc) sha = `9f8b37464dd25d15...`（V4 输出与抽样核对一致）
+- feat HEAD = `c6c662b`；merge main HEAD = `159cabd0ac7c25c2e69b14e2b8bd5552d768d1e5`
+
+**Verification（merge 后 main 跑）：**
+- `./init.sh` → smoke 11/11 PASS
+- `scripts/verify_infra_037.py` → rc=0（13 checks）
+- `scripts/verify_infra_034.py` → rc=0（36 checks）
+- `scripts/verify_robot_035.py` → rc=0（8 checks）
+- V3 mutant `ast.unparse → str(node)` 反证有效（sha 漂移 → 触发 fail）
+
+**Reviewer (sub-agent) LGTM：** docstring 8/10，锁合理性 9/10，V3 反证 9/10。
+
+**Backlog（5 笔，priority=999, phase=null）：**
+- infra-037-backlog-class-method-support：func_sha_by_name 支持 Cls.method dotted-name 解析
+- infra-037-backlog-nested-name-error-clarity：嵌套同名函数歧义时 raise 含 line-no 列表
+- infra-037-backlog-canonical-algo-unify：verify_robot_034/035 迁移到 func_sha_by_name，消除两套算法
+- infra-037-backlog-v3-mutant-atomic-rename：V3 mutant 用 tempfile + os.replace 原子替换
+- infra-037-backlog-helper-doctest：func_sha_by_name 加 doctest example
+
+**Phase-32 进度：** 1/5（infra-037 passing；剩 infra-038 / infra-039 / robot-037 / interact-039 在 not_started）。
+
+**约束符合：** sim-first；verify-only 0 业务源码改动；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-32 第 2 个 candidate（按 priority 取 infra-038 docstring 覆盖 batch-3，priority=2.32）。
