@@ -6842,14 +6842,22 @@
       "area": "infra",
       "phase": 34,
       "title": "V6 scope 扩到 bump_*.py + evidence/*/v4_sha.json",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "V6 当前只 scan scripts/verify_*.py 的外部反向 sha 锁；扩到 scripts/bump_*.py 与 evidence/*/v4_sha.json 等其它会引用 verify 文件 sha 的位点，减少 cascade 漏改盲区。",
       "dependencies": [
         "infra-038-backlog-V6-pre-flight-grep-check"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_046.py 全部 21 checks PASS (V0-V5)",
+        "scripts/bump_reverse_sha_lock.py --target scripts/verify_robot_025.py dry-run 找到 1 lock (verify_robot_027:VERIFY_025_EXPECTED_SHA)",
+        "verify_infra_034.py V6 pre-flight ALL PASS (live=180 含 verify_infra_046, scanned=7 orphans=0)",
+        "./init.sh smoke 11/11 通过",
+        "0 业务源码改动; helper 默认 dry-run, 显式 --apply 才落盘",
+        "Reviewer (sub-agent): 待 Closeout 阶段 fresh-context 评审"
+      ],
+      "started_at": "2026-05-20"
     },
     {
       "id": "infra-V6-backlog-extract-to-verify-lib",
