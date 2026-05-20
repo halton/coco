@@ -4860,3 +4860,41 @@ phase-27 全部收官（5/5 passing）后进入 phase-28 planning。
 **约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
 
 **下一步：** phase-32 第 4 个 candidate（按 priority 取 robot-037 extract-read-constant-helper，priority=4.32）。
+
+## P257 — robot-037 closeout passing（2026-05-20）
+
+**Merge：** `feat/robot-037` (730db92) → main, no-ff. main HEAD = `ef9d873260e3400b2c2691556d9d8fb9b5145640`。
+
+**Regression（main 上跑，全 rc=0）：**
+- `./init.sh` smoke → 11/11 PASS
+- `scripts/verify_robot_037.py` → rc=0
+- `scripts/verify_robot_034.py` → rc=0
+- `scripts/verify_robot_035.py` → rc=0
+- `scripts/verify_robot_036.py` → rc=0
+- `scripts/verify_infra_037.py` → rc=0
+- `scripts/verify_infra_034.py` → rc=0
+
+**Reviewer (sub-agent) LGTM：** helper 9, 重构 9, verify 10, mutant 9, cascade 10。
+
+**SHA 锚定：**
+- `scripts/_verify_lib.py` file sha = `5d37f9c5...`
+- `read_constant` func sha = `a06af8a8...`
+- `scripts/verify_robot_034.py` file sha = `0e390ca1...`
+
+**Cascade 3 bump：**
+- `scripts/verify_robot_035.py` EXPECTED_LIB_FILE_SHA `5d7e32c5` → `5d37f9c5`
+- `scripts/verify_infra_037.py` EXPECTED_VERIFY_LIB_FILE_SHA `5d7e32c5` → `5d37f9c5`
+- `scripts/verify_robot_036.py` EXPECTED_VERIFY_034_SHA `e8103063` → `0e390ca1`
+
+**Backlog（5 笔入账，priority=999, phase=null）：**
+- robot-037-backlog-read-constant-type-matrix-test：V4 加 int/tuple/dict literal 类型覆盖
+- robot-037-backlog-import-time-fail-fallback：verify_robot_034 顶层 read_constant 调用 try/except 降级 V0 FAIL
+- robot-037-backlog-helper-docstring-module-only：read_constant docstring 显式声明"只扫 Module.body"
+- robot-037-backlog-verify_robot_036-inline-helper-consolidate：verify_robot_036 _read_constant_from 改用 _verify_lib.read_constant
+- robot-037-backlog-mutant-eval-side-effect-payload：V3 mutant 加带副作用 payload 测 eval 行为差异
+
+**Phase-32 进度：** 4/5（infra-037、infra-038、infra-039、robot-037 passing；剩 infra-040 not_started）。
+
+**约束符合：** sim-first；verify-only 0 业务源码改；commit 例外 + push 失败忽略一次；持续开发模式继续。
+
+**下一步：** phase-32 第 5 个 candidate（infra-040 pr-template-decision-matrix-checkbox，priority=5.32）。

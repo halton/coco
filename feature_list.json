@@ -6212,7 +6212,7 @@
       "phase": 32,
       "area": "robot",
       "title": "_read_constant_from helper 抽到 scripts/_verify_lib 去重",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "phase-32 planning; robot-036-backlog-extract-read-constant-helper",
       "scope": "verify_robot_034 与 verify_robot_036 各自实现 _read_constant_from（ast 解析模块顶层常量）helper；属重复逻辑。抽到 scripts/_verify_lib/ast_constants.py 共享模块，两 verify 改 import。verify-only，0 业务源码改。会触发 infra-034 V4 sha 锁表同步。",
@@ -6229,7 +6229,28 @@
         "V4: smoke PASS",
         "V5: Reviewer (sub-agent) LGTM"
       ],
-      "evidence": {}
+      "evidence": {
+        "reviewer_lgtm": "LGTM (helper 9, 重构 9, verify 10, mutant 9, cascade 10)",
+        "verify_robot_037_rc": 0,
+        "verify_robot_034_rc": 0,
+        "verify_robot_035_rc": 0,
+        "verify_robot_036_rc": 0,
+        "verify_infra_037_rc": 0,
+        "verify_infra_034_rc": 0,
+        "init_sh_smoke": "11/11 PASS",
+        "merged_to_main": "git merge --no-ff feat/robot-037 ok",
+        "_verify_lib_file_sha": "5d37f9c5",
+        "read_constant_func_sha": "a06af8a8",
+        "verify_robot_034_file_sha": "0e390ca1",
+        "cascade_bump_files": [
+          "scripts/verify_robot_035.py (EXPECTED_LIB_FILE_SHA 5d7e32c5->5d37f9c5)",
+          "scripts/verify_infra_037.py (EXPECTED_VERIFY_LIB_FILE_SHA 5d7e32c5->5d37f9c5)",
+          "scripts/verify_robot_036.py (EXPECTED_VERIFY_034_SHA e8103063->0e390ca1)"
+        ],
+        "feat_sha": "730db92",
+        "merge_main_head": "ef9d873260e3400b2c2691556d9d8fb9b5145640",
+        "real_machine_uat": "n/a (verify-only, 0 业务源码改)"
+      }
     },
     {
       "id": "infra-040-pr-template-decision-matrix-checkbox",
@@ -6482,9 +6503,84 @@
         "infra-039"
       ],
       "verification": []
+    },
+    {
+      "id": "robot-037-backlog-read-constant-type-matrix-test",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "read_constant V4 加 int/tuple/dict literal 类型覆盖",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "robot-037 closeout Reviewer 建议",
+      "scope": "verify_robot_037 V4 当前主要覆盖 str literal；扩展 int/tuple/dict literal 类型矩阵，加固 read_constant 对 ast.literal_eval 各 literal 类型的解析稳定性。",
+      "dependencies": [
+        "robot-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-037-backlog-import-time-fail-fallback",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_034 顶层 read_constant 调用包 try/except 降级 V0 FAIL",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "robot-037 closeout Reviewer 建议",
+      "scope": "verify_robot_034 当前在模块 import-time 调用 read_constant；若 _verify_lib 异常或目标常量缺失，整个 verify 直接 ImportError 崩溃。包 try/except 降级为 V0 FAIL 单测项，让其他 V 阶段仍可继续报告。",
+      "dependencies": [
+        "robot-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-037-backlog-helper-docstring-module-only",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "read_constant docstring 显式声明 '只扫 Module.body'",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "robot-037 closeout Reviewer 建议",
+      "scope": "read_constant 当前 docstring 未显式声明扫描范围；明确写 '只扫 Module.body 顶层 Assign 节点，不进入函数/类体内嵌套', 防误用调用方期望深扫。",
+      "dependencies": [
+        "robot-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-037-backlog-verify_robot_036-inline-helper-consolidate",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "verify_robot_036 _read_constant_from 改用 _verify_lib.read_constant",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "robot-037 closeout Reviewer 建议",
+      "scope": "robot-037 已抽 read_constant 到 _verify_lib，但 verify_robot_036 仍保留其本地 _read_constant_from 实现。第二轮去重：verify_robot_036 改 import _verify_lib.read_constant，删本地重复实现，触发 verify_robot_036 文件 sha bump 与依赖 cascade。",
+      "dependencies": [
+        "robot-037"
+      ],
+      "verification": []
+    },
+    {
+      "id": "robot-037-backlog-mutant-eval-side-effect-payload",
+      "priority": 999,
+      "area": "robot",
+      "phase": null,
+      "title": "V3 mutant 加带副作用 payload 测 eval 行为差异",
+      "status": "backlog",
+      "created_at": "2026-05-20",
+      "source": "robot-037 closeout Reviewer 建议",
+      "scope": "verify_robot_037 V3 mutant literal_eval->eval 反证当前仅做语法层替换；扩展用带副作用 payload（如调用 builtins）的输入测 literal_eval 与 eval 真实行为差异，更强证 helper 没用 eval。",
+      "dependencies": [
+        "robot-037"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-20 P256 infra-039 closeout passing + 5 backlog 入账"
+    "last_updated": "2026-05-20 P257 robot-037 closeout passing + 5 backlog 入账"
   }
 }
