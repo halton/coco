@@ -123,16 +123,25 @@ def render_text(entries: List[Dict[str, Any]], live_count: int) -> str:
 
 def render_json(entries: List[Dict[str, Any]], live_count: int, consistency: Dict[str, Any]) -> str:
     """机读 JSON: {entries, orphans, stats}.
+
+    infra-049-backlog-render-json-sort-stability (P269): entries 显式按
+    ``(file, lineno, const_name)`` 升序排序, 锁定 byte-wise 稳定性; stats 块
+    新增 ``sort_order`` 字段显式标注该排序契约, 防止后续无意改动悄悄改掉.
     """
+    sorted_entries = sorted(
+        entries,
+        key=lambda e: (e["file"], e["lineno"], e["const_name"]),
+    )
     payload: Dict[str, Any] = {
         "schema": "reverse_sha_lock_index/v1",
         "stats": {
-            "scanned_count": len(entries),
+            "scanned_count": len(sorted_entries),
             "live_verify_files": live_count,
             "orphan_count": len(consistency.get("orphans", [])),
             "all_match": bool(consistency.get("all_match", False)),
+            "sort_order": "verify_file,lineno,lock_name",
         },
-        "entries": entries,
+        "entries": sorted_entries,
         "orphans": consistency.get("orphans", []),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
