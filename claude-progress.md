@@ -5393,3 +5393,23 @@ Process 改善:
   1. `infra-053-backlog-classdef-fills-distinct-check` — 加 V4_all_classdef_fills_distinct 断言 6 色 set 大小 == 6
   2. `infra-053-backlog-doc-hub-color-update` — README/research/docs 中 V4 hub 配色描述同步 #f9f → #fc6
 - phase-35 进度 4/5 passing；剩 1 个 not_started（priority 5.35 infra-048-backlog-mermaid-palette-extract）。
+
+## 2026-05-22 — P273 infra-048-backlog-mermaid-palette-extract closeout (phase-35 5/5 收官)
+
+- Merge `feat/infra-048-backlog-mermaid-palette-extract` (06d135c) → main `--no-ff`，新 main HEAD=423519c。
+- Status: `in_progress` → `passing`；Reviewer sub-agent fresh-context round-2 LGTM 9/10。
+- Evidence 摘要：
+  - d0efe9c feat: 提取 mermaid 6 色到 `_MERMAID_PALETTE` module-level dict (hub/verify/module/uat/policy/unknown)，`render_mermaid` 引用
+  - 06d135c fix: 回填 `EXPECTED_V4_CHECKER_FUNC_SHA` (V1 自锁修复)
+  - Bytewise 等价性严证：同图源对比 refactor 前后 0 diff
+  - verify_infra_054 20/20 PASS (新增 V1 自锁 + V2-V5 锁)
+  - 回归 verify_infra_034/039/043/044/047/048/053 全 PASS
+  - ./init.sh smoke 11/11 PASS
+- 无 backlog 入账（Reviewer 报告无衍生项）
+- 处理 unstaged: `evidence/_history/smoke_history.jsonl` (pre-existing merge conflict 已解决) closeout 期间 stash → pop，未进 merge commit
+- **phase-35 收官 5/5 PASSING**：
+  1. #1.35 infra-049-backlog-render-json-sort-stability (P269)
+  2. #2.35 infra-049-backlog-check-coalesce-json (P270)
+  3. #3.35 infra-049-backlog-reverse-lock-pattern-expand (P271)
+  4. #4.35 infra-048-backlog-hub-color-distinguish (P272)
+  5. #5.35 infra-048-backlog-mermaid-palette-extract (P273)

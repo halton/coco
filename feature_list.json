@@ -6964,14 +6964,15 @@
       "area": "infra",
       "phase": "phase-35",
       "title": "提取 mermaid 6 色值到模块顶部常量 _MERMAID_PALETTE",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
       "scope": "render_mermaid 当前内联 6 个 classDef 色值字面量；提取到 dump_v4_sha_graph.py 模块顶部 _MERMAID_PALETTE dict (键为 hub/verify/module/uat/policy/unknown)，render_mermaid 引用之；便于后续调色与文档同步。",
       "dependencies": [
         "infra-039-backlog-mermaid-classDef-styling"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": "P273 closeout 2026-05-22. d0efe9c feat 提取 6 色到 _MERMAID_PALETTE module-level dict, render_mermaid 引用之; 06d135c fix 回填 EXPECTED_V4_CHECKER_FUNC_SHA (V1 自锁修复)。Bytewise 等价性严证: 同图源对比 refactor 前后 0 diff。verify_infra_054 20/20 PASS; verify_infra_034/039/043/044/047/048/053 全 PASS; smoke 11/11。Reviewer round-2 (sub-agent fresh-context) LGTM 9/10 — V1 自锁验证通过，无 backlog 衍生。"
     },
     {
       "id": "infra-039-backlog-lib-hint-subconst-coverage",
