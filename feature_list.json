@@ -6568,7 +6568,7 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "对 kind=expected_pattern 锁做独立一致性核验",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
       "scope": "scan_reverse_sha_locks 扩展后 52 个 expected_pattern 锁未参与 --check 一致性核验；建议增加独立路径，针对这些锁去比对 dump_*.py 文件 sha / func sha，弥补盲区。",
@@ -6579,8 +6579,73 @@
         "scripts/_verify_lib.py 新增 verify_expected_pattern_consistency(scripts_dir) helper, 返回 {total_expected_pattern_locks, unresolved, orphan_const_names, missing_assignment, sample, all_match}",
         "scripts/verify_infra_057.py V0-V5 完整锁 helper: V0 helper def + __all__ 注册; V1 docstring sentinel INFRA_057_SHA_LOCKS + v4_behavior 自锁; V2 _verify_lib.py file sha (7f1c0bb2...); V3 helper canonical func sha (092041818b...); V4 行为: real all_match + total>=30 (=65 现网) + sample schema + tmp 正例 + monkey-patch mutant 反证; V5 reviewer gate",
         "8 个引用旧 lib sha 的 verify 脚本 bump 到新 sha: infra-037, infra-042, infra-045, infra-052, infra-055, infra-056, robot-035, robot-037",
-        "verify_infra_057 [SUMMARY] ALL PASS (13 checks); 8 bumped verify ALL PASS; verify_infra_034 V6 一致性 53/53 PASS; ./init.sh smoke 通过"
-      ]
+        "verify_infra_057 [SUMMARY] ALL PASS (13 checks); 8 bumped verify ALL PASS; verify_infra_034 V6 一致性 53/53 PASS; ./init.sh smoke 通过",
+        "Reviewer (sub-agent): LGTM 8.5/10 — V0-V5 完整, helper 实现稳, mutant 反证有效; 4 个 followup 入账 P279-P282",
+        "P276 closeout merge sha = 71652f1; main HEAD post-merge = 71652f1",
+        "verify 尾行实测: verify_infra_057 ALL PASS (13); verify_infra_037 ALL PASS (13); verify_infra_042 ALL PASS (13); verify_infra_045 ALL PASS (18); verify_infra_052 ALL PASS (23); verify_infra_054 ALL PASS (20); verify_infra_055 ALL PASS (26); verify_infra_056 ALL PASS (21); verify_robot_035 summary total=8 failed=0; verify_robot_037 ALL PASS (18); verify_infra_034 summary total=53 failed=0; ./init.sh smoke 通过"
+      ],
+      "reviewer_lgtm": true,
+      "reviewer_subagent": true
+    },
+    {
+      "id": "infra-P279-helper-schema-naming-align",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "统一 helper 返回 dict key 命名约定",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
+      "scope": "verify_expected_pattern_consistency 返回 dict key 与既有 scan_reverse_sha_locks / dump_reverse_sha_lock_index 命名风格略不一致 (total_expected_pattern_locks vs scanned_count 等)；统一命名风格便于消费方使用。P2。",
+      "dependencies": [
+        "infra-049-backlog-expected-pattern-consistency-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-P280-v4-mutant-coverage-expand",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V4 mutant 覆盖扩展: missing_assignment + unresolved 分支反证",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
+      "scope": "verify_infra_057 V4 mutant 现仅 monkey-patch 一处返回值；建议补充 missing_assignment 分支与 unresolved 分支的反证 mutant，覆盖 helper 的全部判定路径。P2。",
+      "dependencies": [
+        "infra-049-backlog-expected-pattern-consistency-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-P281-expected-prefix-typo-guard",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "扫 EXPECTED_* 前缀但不符合 _(FILE|FUNC)_SHA$ 命名的常量",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
+      "scope": "现有锁规则只识别 EXPECTED_*_(FILE|FUNC)_SHA 命名；若有人写成 EXPECTED_XXX_SHASUM / EXPECTED_XXX_HASH 等 typo 会被静默放过。增加单独扫描器列出此类 'EXPECTED_* 前缀但不符合规范' 的常量，避免命名 typo 导致漏锁。P1 高价值。",
+      "dependencies": [
+        "infra-049-backlog-expected-pattern-consistency-check"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-P282-infra-046-grep-to-lib-sha-migration",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "infra-046 grep-based 锁迁移到 _verify_lib helper sha",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
+      "scope": "infra-046 部分锁仍走 grep pattern 而非 _verify_lib helper sha；迁移到统一 helper sha 提升可靠性。P3 可选。",
+      "dependencies": [
+        "infra-049-backlog-expected-pattern-consistency-check"
+      ],
+      "verification": []
     },
     {
       "id": "infra-V6-backlog-strengthen-mutant-targeting",

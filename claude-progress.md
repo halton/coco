@@ -5548,3 +5548,37 @@ Process 改善:
   - (b) helper 的 `_RE_REVLOCK_EXPECTED_PATTERN` 与 lib 内既有常量复用 (跨模块依赖), 若未来该 regex 改名/迁移会同时挂掉; 已通过 V2 lib file sha 锁兜底
   - (c) brief 提及 "verify_infra_046 也 bump" 但实测 046 无 EXPECTED_LIB_FILE_SHA 引用, 跳过 (grep 主导)
 - 待 Reviewer LGTM 后 closeout 入 passing
+
+## Session P276 — infra-049-backlog-expected-pattern-consistency-check closeout (2026-05-22)
+
+### Engineer
+- 接收 P275 Engineer 产出 (commit a84ae4b on feat/infra-049-backlog-expected-pattern-consistency-check), 起点 main 45887a7
+- 工作树仅 evidence/_history/smoke_history.jsonl 脏改 (豁免范围), 无需 stash
+
+### Reviewer (sub-agent, fresh-context)
+- LGTM 8.5/10
+- 摘要: V0-V5 完整锁, helper 实现稳, mutant monkey-patch 反证有效; 8 个 lib sha bump 一致; verify_infra_034 V6 一致性 53/53 PASS
+- 4 个 followup 建议:
+  - P279 (P2): helper 返回 dict key 命名风格统一 (total_expected_pattern_locks vs scanned_count)
+  - P280 (P2): V4 mutant 扩展覆盖 missing_assignment + unresolved 分支
+  - P281 (P1 高价值): 扫 EXPECTED_* 前缀但不符合 _(FILE|FUNC)_SHA$ 命名 (避免 typo 漏锁)
+  - P282 (P3 可选): infra-046 grep-based 锁迁移到 _verify_lib helper sha
+
+### Closeout (本 sub-agent)
+- merge --no-ff feat/infra-049-backlog-expected-pattern-consistency-check → main, merge sha = 71652f1
+- 实测尾行 (11 verify + smoke):
+  - verify_infra_057 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_037 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_042 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_045 [SUMMARY] ALL PASS (18 checks) rc=0
+  - verify_infra_052 [SUMMARY] ALL PASS (23 checks) rc=0
+  - verify_infra_054 [SUMMARY] ALL PASS (20 checks) rc=0
+  - verify_infra_055 [SUMMARY] ALL PASS (26 checks) rc=0
+  - verify_infra_056 [SUMMARY] ALL PASS (21 checks) rc=0
+  - verify_robot_035 summary total=8 failed=0 rc=0
+  - verify_robot_037 [SUMMARY] ALL PASS (18 checks) rc=0
+  - verify_infra_034 summary total=53 failed=0 rc=0 (V6 一致性)
+  - ./init.sh smoke 通过 rc=0
+- feature_list.json: infra-049-backlog-expected-pattern-consistency-check in_progress → passing
+- backlog 入账 4 项: infra-P279/P280/P281/P282 (status=backlog, phase=null, priority=999, area=infra)
+- commit on main + push origin main + push origin feat/infra-049-backlog-expected-pattern-consistency-check (各跑一次, 失败忽略)
