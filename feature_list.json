@@ -7311,7 +7311,7 @@
     {
       "id": "infra-053-backlog-classdef-fills-distinct-check",
       "priority": 4.36,
-      "status": "in_progress",
+      "status": "passing",
       "phase": "phase-36",
       "area": "infra",
       "description": "加 V4_all_classdef_fills_distinct 断言：6 个 classDef 色值集合 set 大小 == 6，永久防止未来 hub/milestone/其它色值再次撞色。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
@@ -7326,7 +7326,24 @@
         "branch: feat/infra-053-backlog-classdef-fills-distinct-check (from main cc441ef)",
         "helper: scripts/_verify_lib.py 新增 verify_palette_fills_distinct (func sha 8415eca01361eb6b...), 注册 __all__",
         "verify-only: scripts/verify_infra_058.py (V0-V5 完整, 16 checks)",
-        "lib file sha bump: 7f1c0bb2... → 8e0e0051..."
+        "lib file sha bump: 7f1c0bb2... → 8e0e0051...",
+        "feat commit: 71a8f48 on feat/infra-053-backlog-classdef-fills-distinct-check",
+        "merge sha: 36b5b3d (main HEAD) — merge --no-ff feat/infra-053-backlog-classdef-fills-distinct-check (P277)",
+        "Reviewer (sub-agent) LGTM: helper API 设计干净 (单 dict 返回, schema 完整), V4 三层 fixture (真 palette + tmp 正反 + 3-way) 反证强, 9 个 bump 链一致, V6 76 反向锁全 match",
+        "Closeout 实测尾行 (12 verify + smoke, main HEAD=36b5b3d, all rc=0):",
+        "  verify_infra_058: [SUMMARY] ALL PASS (16 checks)",
+        "  verify_infra_037: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_042: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_045: [SUMMARY] ALL PASS (18 checks)",
+        "  verify_infra_052: [SUMMARY] ALL PASS (23 checks)",
+        "  verify_infra_054: [SUMMARY] ALL PASS (20 checks)",
+        "  verify_infra_055: [SUMMARY] ALL PASS (26 checks)",
+        "  verify_infra_056: [SUMMARY] ALL PASS (21 checks)",
+        "  verify_infra_057: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_robot_035: summary total=8 failed=0",
+        "  verify_robot_037: [SUMMARY] ALL PASS (18 checks)",
+        "  verify_infra_034: summary total=53 failed=0 (V6 一致性, scanned_reverse_locks=76)",
+        "  ./init.sh smoke 11/11 PASS"
       ]
     },
     {
@@ -7337,6 +7354,34 @@
       "area": "infra",
       "description": "若 README / research / docs 中提到 V4 Mermaid hub 节点配色（旧 #f9f），需同步更新描述为 #fc6 并说明与 milestone 区分。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
       "origin_backlog": "infra-048-backlog-hub-color-distinguish"
+    },
+    {
+      "id": "infra-P283-palette-distinct-helper-edge-case-locks",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_palette_fills_distinct 边界静默契约显式锁入 V4",
+      "created_at": "2026-05-22",
+      "source": "P277 infra-053-backlog-classdef-fills-distinct-check closeout — helper 当前对边界输入静默返回 (空 dict / entry 缺 fill / entry 非 dict) 但无显式断言锁，未来若改实现可能静默漂移",
+      "scope": "verify_infra_058.py V4 追加 3 条断言: (a) 空 dict 输入 → distinct_fill_count=0/duplicates=[]/all_distinct=True; (b) entry 缺 fill 字段 (如 {a:{color:'#aaa'}}) → 静默跳过, distinct_fill_count 不计入; (c) entry 非 dict (如 {a:'#aaa'}) → 静默跳过, 不抛 TypeError。同步 bump verify_infra_058 自 sha 并触发 V6 反向锁链。",
+      "dependencies": [],
+      "verification": [],
+      "evidence": []
+    },
+    {
+      "id": "infra-P284-smoke-history-jsonl-policy",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "决定 smoke_history.jsonl 是否进 commit / .gitignore / 独立 evidence pipeline",
+      "created_at": "2026-05-22",
+      "source": "P277 infra-053-backlog-classdef-fills-distinct-check closeout — evidence/_history/smoke_history.jsonl 每次 smoke 都脏改, 每次 closeout 都要 stash 隔离, 噪声大",
+      "scope": "三选一定: (a) 进 .gitignore + 改写到 evidence/_local/ 完全本地化; (b) 保留入 commit 但用 _verify_lib helper 集中追加 + 限定 ring buffer 大小; (c) 拆到独立 evidence pipeline (例: evidence/smoke_runs/ 按日期分文件)。当前 closeout 流程默认 stash 处理是临时方案, 应有显式策略 + 文档化到 AGENTS.md 工作循环段。",
+      "dependencies": [],
+      "verification": [],
+      "evidence": []
     },
     {
       "id": "infra-P273-evidence-report-accuracy",

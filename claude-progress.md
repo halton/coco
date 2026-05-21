@@ -5626,3 +5626,31 @@ Process 改善:
 - 工作树起始仅 evidence/_history/smoke_history.jsonl 脏改 (已 stash 隔离)
 - feature_list.json: infra-053-backlog-classdef-fills-distinct-check not_started → in_progress + verification + evidence
 - 状态守住: 未切 passing, 未 merge, 待 Reviewer LGTM 后由 closeout sub-agent 收尾
+
+## Session P277 — infra-053-backlog-classdef-fills-distinct-check closeout (2026-05-22)
+
+### Reviewer (sub-agent, fresh-context)
+- LGTM
+- 摘要: helper API 设计干净 (单 dict 返回, schema {total_keys, distinct_fill_count, duplicates, all_distinct, fills}), V4 三层 fixture (真 _MERMAID_PALETTE + tmp 正反 + 3-way 三元组) 反证强, 9 个依赖 lib sha bump 一致, V6 一致性 53/53 PASS (76 反向锁全 match)
+
+### Closeout (本 sub-agent)
+- merge --no-ff feat/infra-053-backlog-classdef-fills-distinct-check → main, merge sha = 36b5b3d
+- 工作树起始 evidence/_history/smoke_history.jsonl 脏改 (豁免), 已 stash 隔离
+- 实测尾行 (12 verify + smoke, main HEAD=36b5b3d, all rc=0):
+  - verify_infra_058: [SUMMARY] ALL PASS (16 checks)
+  - verify_infra_037: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_042: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_045: [SUMMARY] ALL PASS (18 checks)
+  - verify_infra_052: [SUMMARY] ALL PASS (23 checks)
+  - verify_infra_054: [SUMMARY] ALL PASS (20 checks)
+  - verify_infra_055: [SUMMARY] ALL PASS (26 checks)
+  - verify_infra_056: [SUMMARY] ALL PASS (21 checks)
+  - verify_infra_057: [SUMMARY] ALL PASS (13 checks)
+  - verify_robot_035: summary total=8 failed=0
+  - verify_robot_037: [SUMMARY] ALL PASS (18 checks)
+  - verify_infra_034: summary total=53 failed=0 (V6 一致性, scanned_reverse_locks=76)
+  - ./init.sh smoke 11/11 PASS
+- feature_list.json: infra-053-backlog-classdef-fills-distinct-check in_progress → passing + 完整 evidence (merge sha + Reviewer LGTM 摘要 + 12 verify 尾行表)
+- backlog 入账 2 项 (priority=999, area=infra, status=backlog, phase=null):
+  - infra-P283-palette-distinct-helper-edge-case-locks (P2, verify_palette_fills_distinct 边界静默契约显式锁入 V4: 空 dict / entry 缺 fill / entry 非 dict)
+  - infra-P284-smoke-history-jsonl-policy (P2, smoke_history.jsonl 是否进 commit / .gitignore / 独立 evidence pipeline 三选一)
