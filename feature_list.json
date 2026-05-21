@@ -7514,7 +7514,7 @@
     {
       "id": "infra-P285-classifier-recognize-lib-func-locks",
       "priority": 1.37,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 37,
       "area": "infra",
       "title": "render_mermaid _classify_node 识别 _verify_lib 的 EXPECTED_*_FUNC_SHA 常量并归入 lib",
@@ -7523,9 +7523,9 @@
         "round": 2,
         "branch": "feat/infra-P285-classifier-recognize-lib-func-locks",
         "rebased_onto_main_sha": "ac2eaef",
-        "fix_commit_sha": "pending",
-        "merge_sha": "pending",
-        "reviewer_lgtm": "pending",
+        "fix_commit_sha": "018ba21",
+        "merge_sha": "a46c381",
+        "reviewer_lgtm": "Reviewer (sub-agent) fresh-context LGTM 88/100: round-2 fix 正确归因 V4 checker func sha 不一致 (P285 round-1 自身回填错误, 非 pre-existing); 双 source-of-truth 解耦 (_PER_FILE_LOCKS 真实 target 表 + _classify_node 节点分类) 设计干净; 行为锁 V4 完整覆盖 044/054/059/060 4 路 dump 输出 sha + unknown_count=1 上界. 扣分项: helper 自反 mutant detection 缺位 (已记 P286 backlog round-1); 13 unknown → 1 unknown 消除路径有效, 剩余 unknown_EXPECTED_DOC_SHA 属 robot_034 文档锁场景, _PER_FILE_LOCKS 未覆盖 (合理边界).",
         "round2_fix_summary": "Round-1 commit (50765ca) 声称 verify_infra_044/054 ALL PASS, 但 rebase 到 NEW_MAIN (ac2eaef, Part-A 修 robot_037 后) 实测两个 V1_self_checker_func_sha FAIL: 044 got=b9ae27aaddeb2a1d expect=91573152, 054 got=e8663f6598068100 expect=2c560e97. 归因: P285 commit author 当时计算的 EXPECTED_V4_CHECKER_FUNC_SHA 与 ast.unparse(v4_behavior) 实际结果不一致 (非 pre-existing, 是 P285 round-1 自身回填错误). Round-2 fix: bump 044/054 EXPECTED_V4_CHECKER_FUNC_SHA 到当前实测值. Part-A 已修 main 上 verify_robot_037 V2_lib_file_sha pre-existing FAIL.",
         "verify_tails_round2": {
           "verify_infra_042": "ALL PASS (13 checks) rc=0",
@@ -7547,8 +7547,46 @@
           "verify_infra_034_V6": "total=53 failed=0 rc=0",
           "smoke": "./init.sh rc=0 全 PASS"
         },
+        "dogfood_unknown_count": "dump_v4_sha_graph.py --mermaid 实测 unknown_count=1, 剩余 unknown_id={unknown_EXPECTED_DOC_SHA} (verify_robot_034 文档 sha 锁, 不在 _verify_lib helper 范围, 属合理边界); 较 P278 baseline 13 unknown 消除 12 个 (92.3%)",
+        "engineer_round1_to_round2_summary": "Round-1 (commit 50765ca) Engineer 主报告声称 verify_infra_044/054 ALL PASS, 实际是基于 OLD_MAIN sha 计算 EXPECTED_V4_CHECKER_FUNC_SHA. Round-2 rebase 到 NEW_MAIN (ac2eaef, Part-A 已修 robot_037) 后实测 V1_self_checker_func_sha FAIL: 044 got=b9ae27aaddeb2a1d expect=91573152, 054 got=e8663f6598068100 expect=2c560e97. 根因诚实归因: 非 pre-existing 漂移, 而是 P285 round-1 commit 自身回填 EXPECTED_V4_CHECKER_FUNC_SHA 时 ast.unparse(v4_behavior) 结果与最终 commit 内容不一致 (中间编辑产生的脏快照写入). Round-2 fix (commit 018ba21): bump 044/054 EXPECTED_V4_CHECKER_FUNC_SHA 到当前 ast.unparse 实测值, 验证 fix 后全 PASS. 教训已升级为 P288 backlog: sub-agent 任何 pre-existing FAIL 声明必须附 main HEAD 实测 rc + 锁值快照.",
         "real_machine_uat": "n/a (infra)"
       }
+    },
+    {
+      "id": "infra-P288-sub-agent-fact-vs-blame-checklist",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "sub-agent 任何 pre-existing FAIL 声明必须附 main HEAD 实测 rc + 锁值快照",
+      "rationale": "P285 round-1 sub-agent 报告把 V4 checker func sha FAIL 归因为 pre-existing (NEW_MAIN 上 robot_037 修复改变了上游 ast.unparse 结果), 实际是 round-1 自身回填错误 (中间编辑脏快照写入), 与 robot_037 无关. P278 闭环出过类似失误 (closeout 报 045/054 FAIL 但 main HEAD 实测全 PASS). 建议: 在 closeout / verify 报告模板中加硬性 checklist —— 任何 \"pre-existing FAIL\" 声明必须附 (a) 当前 main HEAD sha + (b) 在该 HEAD 上的 verify 实测 rc + 完整尾行 + (c) 涉及 EXPECTED_*_FUNC_SHA 时的 ast.unparse / file-sha 实测值快照, 三者齐备才接受归因. 否则视为 sub-agent 自身错误优先排查. 高价值: 切断 P275/P278/P285 三次复现的 fact-vs-blame 误报链路."
+    },
+    {
+      "id": "infra-P289-per-file-locks-auto-derive",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "_PER_FILE_LOCKS 从 verify 脚本 docstring 自动推导, 替代硬编码表",
+      "rationale": "P285 round-2 _PER_FILE_LOCKS 新增 14 项 (verify_infra_049/050/051/052/055/057/058/059/060 对应 _verify_lib helper / dump_reverse_sha_lock_index helper), 全部手工硬编码 (source_file, const) → target 映射. 真实 target 信息已在各 verify 脚本顶部 docstring 的 \"sha 锁清单\" 字段中. 建议: 在 dump_v4_sha_graph build 阶段 AST 解析每个 verify 脚本 docstring, 抽取 sha 锁清单, 自动 populate _PER_FILE_LOCKS, 把硬编码表压缩为仅余兜底特例 (如 _PER_FILE_SELF_LOCKS). 中等价值: 减少 P285 类 round-1/round-2 fragility, 消除 docstring 与 lock 表手动同步漂移源."
+    },
+    {
+      "id": "infra-P290-classify-node-family-sets",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "_classify_node 用 frozenset 替代 OR 表达式",
+      "rationale": "P285 _classify_node 当前用 \"if node_id == 'dump_v4_sha_graph' or node_id == 'dump_reverse_sha_lock_index'\" 形式 OR 链识别 dump 家族, 后续每新增一个 dump 工具都要加 or 分支. 建议: 定义 _DUMP_FAMILY = frozenset({\"dump_v4_sha_graph\", \"dump_reverse_sha_lock_index\"}) 与对应 _LIB_FAMILY / _HUB_FAMILY, 改用 \"if node_id in _DUMP_FAMILY\" 集合成员判断. 低优先级 (功能等价 + 风格优化), 但能让 dump-tool 家族扩展边界显式化, 配合 V4 行为锁更稳."
+    },
+    {
+      "id": "infra-P291-reviewer-gate-real-or-remove",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "V5_reviewer_lgtm_gate 实质检验或显式标注为占位 gate",
+      "rationale": "P285 跑各 verify 时所有 V5_reviewer_lgtm_gate 一律 PASS, 文案为 \"closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\". 但该 gate 实际未读 feature_list.json evidence.reviewer_lgtm 字段值, 是空 assert 占位. 风险: 名实不符 — 让 closeout 误以为已加 Reviewer LGTM 硬性 gate, 实际 verify 不 enforce. 建议二选一: (a) 升级为实检 —— gate 真正从 feature_list.json 读取 evidence.reviewer_lgtm, 校验非空 + 含 LGTM 字样 + 含 sub-agent 标识; 或 (b) 重命名为 V5_reviewer_lgtm_placeholder 并加注释明示 \"功能性占位, 实际 enforcement 在 closeout sub-agent 流程中\". 低-中价值, 涉及 V4/V5 命名诚信."
     },
     {
       "id": "infra-P286-total-nodes-lock",
@@ -7570,6 +7608,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P278 phase-36 #5.36 infra-048-backlog-docstring-unknown-zero-fact 入 passing + 入账 3 个 backlog (P285/P286/P287); phase-36 5/5 收官"
+    "last_updated": "2026-05-22 P285 phase-37 #1.37 infra-P285-classifier-recognize-lib-func-locks 入 passing (merge a46c381, Reviewer LGTM 88/100, dogfood unknown_count 13→1) + 入账 4 个 backlog (P288 fact-vs-blame checklist / P289 per-file-locks auto-derive / P290 family sets / P291 reviewer gate real-or-remove)"
   }
 }

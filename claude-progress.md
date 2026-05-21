@@ -5768,3 +5768,39 @@ Process 改善:
 - 实测尾行全部附完整尾行 (`/tmp/p285r2/*.log`).
 - 不切 passing, 不 merge feat→main, 等 Reviewer LGTM.
 - 没用 "pre-existing" 推诿 — 唯一 pre-existing (main 上 robot_037) 已在 Part A 修掉; feat 分支的 044/054 FAIL 已诚实归因为 P285 round-1 自身回填错误.
+
+---
+
+## Session 2026-05-22 — P285 closeout (Reviewer LGTM 88/100 → passing → 4 backlog 入账)
+
+### Reviewer
+- 派 fresh-context Reviewer sub-agent 对 round-2 fix 评审 (commit 018ba21 on feat/infra-P285-...).
+- 结果: **LGTM 88/100**. 要点:
+  - 双 source-of-truth 解耦 (_PER_FILE_LOCKS 真实 target 表 + _classify_node 节点分类) 设计干净.
+  - 行为锁 V4 完整覆盖 044/054/059/060 4 路 dump 输出 sha + unknown_count=1 上界.
+  - round-1→round-2 归因诚实 (P285 round-1 自身回填错误, 非 pre-existing 漂移).
+- 扣分项 → 4 个 backlog:
+  - P288 (P0): sub-agent fact-vs-blame checklist — 任何 "pre-existing FAIL" 声明必须附 main HEAD 实测 rc + 锁值快照. 切断 P275/P278/P285 三次复现的误报链路.
+  - P289 (P1): _PER_FILE_LOCKS 从 verify 脚本 docstring 自动推导, 替代 14 项硬编码.
+  - P290 (P1): _classify_node 用 frozenset 替代 OR 表达式.
+  - P291 (P2): V5_reviewer_lgtm_gate 升级为实检或重命名为占位.
+
+### Merge + closeout
+- `git checkout main && git merge --no-ff feat/infra-P285-...` → merge sha **a46c381** (ort strategy, 7 文件 +443/-7).
+- 跑全套 verify (在 a46c381 上):
+  - infra: 042/044/045/046/049/051/052/054/055/056/057/058/059/060 全 ALL PASS rc=0
+  - robot: robot_035 total=8 failed=0; robot_037 ALL PASS (18 checks)
+  - V6: verify_infra_034 total=53 failed=0
+  - smoke: `./init.sh` rc=0 全 PASS
+- **dogfood P285 目标**: `dump_v4_sha_graph.py --mermaid` 实测 **unknown_count=1**, 剩余 unknown ID = `unknown_EXPECTED_DOC_SHA` (verify_robot_034 文档锁, 不在 _verify_lib helper 范围, 属合理边界). 较 P278 baseline 13 unknown 消除 **12 个 (92.3%)**.
+- feature_list.json: P285 `in_progress` → `passing`, evidence 含 merge_sha + Reviewer LGTM 88/100 + 完整尾行表 + dogfood + round-1→round-2 诚实归因.
+- 入账 P288/P289/P290/P291 4 backlog (priority=999 status=backlog phase=null area=infra).
+
+### 防 P275/P278/P285 误报硬规则遵守
+- 跑 verify 前 `git log -1 --format=%H` 显式记录 = a46c381.
+- 工作树脏改仅 evidence/_history (smoke jsonl), 不需 stash.
+- 每个 verify 附完整 stdout 尾行 (V4_*/V5_*/SUMMARY 三行).
+
+### Git
+- closeout commit on main (chore + 4 backlog 入账).
+- push origin main + push origin feat/infra-P285-... 各一次, 失败不重试 (按规则).
