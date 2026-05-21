@@ -846,6 +846,19 @@ def verify_expected_prefix_typo_guard(
 _RE_HEX7 = re.compile(r"^[0-9a-f]{7,}$")
 
 
+# P294-R5: closeout-verify-trustworthy 内部 check 名表。total_checks 从此派生,
+# 新增 trust 检查时往这里加一条即可, 不再需要外部同步硬编码常量。
+# 注意: failed_checks 仍按 reasons 行数计 (向后兼容: 一个 check 内多个子项失败
+# 会 append 多条 reason, 例如 verify_runs 多 entry 多失败)。
+_CLOSEOUT_TRUSTWORTHY_CHECKS: tuple[str, ...] = (
+    "main_head_sha",                  # rule 1
+    "verify_runs_tail_and_baseline",  # rule 2 + 3 (合并: tail 非空 + FAIL 配套 baseline)
+    "smoke_tail",                     # rule 4
+    "reviewer_fresh_lgtm",            # rule 5
+    "evidence_dict_shape",            # rule 0: closeout_verify + reviewer dict 存在
+)
+
+
 def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
     """检查 feature evidence dict 是否满足 closeout-verify-trustworthy 硬规则.
 
@@ -968,8 +981,9 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
                 f"(expect kind='sub_agent_fresh_context' and lgtm=True)"
             )
 
-    # 总检查数固定 5: main_head + verify_runs + smoke + reviewer + (FAIL-baseline 集合视为一条)
-    total_checks = 5
+    # P294-R5: total_checks 从内部 _CHECKS 表派生, 未来新增 trust check 自动扩展,
+    # 不再依赖外部硬编码常量 (旧实现: total_checks = 5)。
+    total_checks = len(_CLOSEOUT_TRUSTWORTHY_CHECKS)
     failed = len(reasons)
     return {
         "total_checks": total_checks,
