@@ -6080,3 +6080,23 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - 5.38 `infra-P297-bootstrap-canary-edit-flow-docs` — P276 canary edit-flow 文档化
 
 下一步: 立即派 priority 1.38 `infra-P294-R4-fail-baseline-cross-check` Engineer sub-agent。
+
+## Session 2026-05-22 P294-R4 closeout (phase-38 #1.38)
+
+- 时间: 2026-05-22 (closeout sub-agent)
+- Feature: `infra-P294-R4-fail-baseline-cross-check` (priority 1.38, phase 38, area infra)
+- main HEAD before merge: `d69a594`
+- Feat commit (feat/infra-P294-R4-fail-baseline-cross-check): `6c8b75f`
+- Merge sha: `1cb97ab` (--no-ff merge: infra-P294-R4-fail-baseline-cross-check)
+- main HEAD after closeout commit: 待 closeout commit 后填
+- Verify on main HEAD `1cb97ab`:
+  - `./init.sh` smoke PASS (TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish 全 ok)
+  - `scripts/verify_infra_065.py` ALL PASS (13 checks: V0×3 + V1×2 + V2 + V3 + V4×5 + V5)
+  - `scripts/verify_infra_060.py` ALL PASS (14 checks)
+  - `scripts/verify_infra_034.py` total=53 failed=0
+- Reviewer (sub-agent fresh-context): LGTM with 3 minor findings, no blocker
+  - 全部 3 findings 已入 backlog (priority=999, phase=null, status=backlog):
+    - `infra-P299-baseline-fail-claim-regex-multiline` — FAIL claim regex `[^\n]{0,80}` 同行限定; 跨行漏报; 改 `[\s\S]{0,80}` 或显式契约
+    - `infra-P299-verify-infra-062-helper-func-sha-baseline-drift` — pre-existing V3_helper_func_sha got=d771fb0b expect=6cf263ee on main baseline; 单独追账重算
+    - `infra-P299-baseline-cross-check-v4-invalid-ref-coverage` — V4.4 仅 40-hex deadbeef 覆盖 invalid ref; 补纯非法字符串 / 含空格 / 含 .. 用例
+- 持续开发模式: 继续 phase-38 #2.38 `infra-P294-R5-total-checks-derived`

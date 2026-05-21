@@ -7762,11 +7762,34 @@
     {
       "id": "infra-P294-R4-fail-baseline-cross-check",
       "priority": 1.38,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 38,
       "area": "infra",
       "title": "FAIL run 的 baseline 字段加 sha 链交叉校验",
-      "rationale": "P278 round-1 helper 当前只检查 FAIL run 存在 pre_existing_baseline_sha + baseline_tail_stdout 字段非空, 不验证 baseline_tail_stdout 是否真在 baseline sha 上跑出来 (Engineer 仍可编). 建议: helper 接受 git repo 引用, 对 baseline_sha 做 git rev-parse + checkout 临时 worktree + re-run, sha256 比对 baseline_tail_stdout. 与 P294 stdout-sha 同源, 但聚焦 FAIL 归因."
+      "rationale": "P278 round-1 helper 当前只检查 FAIL run 存在 pre_existing_baseline_sha + baseline_tail_stdout 字段非空, 不验证 baseline_tail_stdout 是否真在 baseline sha 上跑出来 (Engineer 仍可编). 建议: helper 接受 git repo 引用, 对 baseline_sha 做 git rev-parse + checkout 临时 worktree + re-run, sha256 比对 baseline_tail_stdout. 与 P294 stdout-sha 同源, 但聚焦 FAIL 归因.",
+      "evidence": {
+        "main_head_sha": "1cb97ab",
+        "main_head_before_merge": "d69a594",
+        "merge_sha": "1cb97ab",
+        "feat_commit_sha": "6c8b75f",
+        "verify_runs": [
+          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
+          {"script": "scripts/verify_infra_065.py", "status": "ALL PASS (13 checks)", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM with findings",
+          "summary": "Reviewer (sub-agent fresh-context): LGTM. 实现新增 _verify_lib.verify_baseline_fail_claims + verify_infra_065 V0-V5 (13 checks, 含 V4.1 false-fail-detect / V4.2 true-fail-verified / V4.3 no-claim short-circuit / V4.4 invalid baseline ref errors / V4.5 mixed claims partial contradiction). 3 minor findings 入 backlog: (a) FAIL claim 正则 [^\\n]{0,80} 同行限定, 跨行 claim 漏报; (b) pre-existing verify_infra_062 V3_helper_func_sha baseline drift (got=d771fb0b expect=6cf263ee); (c) V4.4 用 40-hex deadbeef, 缺纯非法字符串覆盖. 无 blocker, 允许 passing.",
+          "findings_to_backlog": [
+            "infra-P299-baseline-fail-claim-regex-multiline",
+            "infra-P299-verify-infra-062-helper-func-sha-baseline-drift",
+            "infra-P299-baseline-cross-check-v4-invalid-ref-coverage"
+          ]
+        },
+        "commits": ["6c8b75f", "1cb97ab"]
+      }
     },
     {
       "id": "infra-P294-R5-total-checks-derived",
@@ -7857,9 +7880,36 @@
       "area": "infra",
       "title": "canary 模式抽象成可复用 helper",
       "rationale": "P276 Engineer 自报: 自校 canary 模式 (helper 内嵌 _CANARY_EXPECTED_SHA + --canary mode) 可推广到其它 self-verify 类脚本 (如 _verify_lib, dump_v4_sha_graph). 建议抽到 scripts/_canary_lib.py 提供 build_canary(expected_sha, compute_fn) helper, 减少重复代码."
+    },
+    {
+      "id": "infra-P299-baseline-fail-claim-regex-multiline",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_baseline_fail_claims regex 支持跨行 claim",
+      "rationale": "P294-R4 Reviewer finding: 当前 FAIL claim 解析 regex 用 `[^\\n]{0,80}` 同行限定 script 名与 'FAIL on baseline' 标记距离, 若 evidence reviewer 文本把 script 名与失败原因写在跨行 (例如 markdown bullet 折行) 会漏报 false-fail 主张. 建议改 `[\\s\\S]{0,80}` 或显式 docstring 写明 'claim 必须同行' 的契约。"
+    },
+    {
+      "id": "infra-P299-verify-infra-062-helper-func-sha-baseline-drift",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_062 V3_helper_func_sha 在 main baseline 上 pre-existing FAIL",
+      "rationale": "P294-R4 Reviewer finding: 跑 verify_infra_062 在 main baseline (d69a594 之前若干) 上 V3_helper_func_sha got=d771fb0b expect=6cf263ee, 属 pre-existing drift, 与 P294-R4 patch 无关但应单独立项追账重算 EXPECTED_*_FUNC_SHA 并 commit; 不修会一直污染 verify_baseline_fail_claims 的 true-fail 测试集。"
+    },
+    {
+      "id": "infra-P299-baseline-cross-check-v4-invalid-ref-coverage",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "V4.4 invalid baseline ref 用例补纯非法字符串覆盖",
+      "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。"
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P297 phase-37 #4.37 infra-P276-bootstrap-helper-self-mutant-detection 入 passing (merge ae6a556, Reviewer LGTM, canary mutant detect rc=2 + verify_infra_063 20 PASS + 060 cascade bump 修 V4_real_unknown_count_eq_one) + 入账 4 个 backlog (P297 canary-edit-flow-docs / P297 canary-mutant-parametrize / P297 multi-helper-coverage / P298 canary-pattern-generalize)"
+    "last_updated": "2026-05-22 P294-R4 phase-38 #1.38 infra-P294-R4-fail-baseline-cross-check 入 passing (merge 1cb97ab, Reviewer LGTM, verify_infra_065 ALL PASS 13 + 060 14 + 034 53/0 + smoke PASS) + 入账 3 个 backlog (P299 baseline-fail-claim-regex-multiline / P299 verify-infra-062-helper-func-sha-baseline-drift / P299 baseline-cross-check-v4-invalid-ref-coverage)"
   }
 }
