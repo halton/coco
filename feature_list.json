@@ -6660,7 +6660,9 @@
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R1",
       "scope": "helper docstring 称 EXPECTED_FUNC_HSA_SHA 不算 typo (因后缀含 _SHA), 但实测被 namepart 'HSA' 判 typo. 需对齐 docstring 与 impl: 要么实现改为只看尾后缀, 要么 docstring 改为 '任何 namepart 与 SHA 编辑距离=1 都算 typo'. 现状 impl 更严格 (更安全), 建议保留 impl, 改 docstring + 加单测说明该 case.",
-      "dependencies": ["infra-P281-expected-prefix-typo-guard"],
+      "dependencies": [
+        "infra-P281-expected-prefix-typo-guard"
+      ],
       "verification": [],
       "branch": "",
       "evidence": {}
@@ -6675,7 +6677,9 @@
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R2",
       "scope": "当前 typo 列表把 *_HASH 当 typo, 但未来若引入合法 BLAKE3 / MD5 hash 常量 (如 EXPECTED_FOO_BLAKE3_HASH) 会被错判. 建议: 1) allowlist 已知非 SHA hash 算法后缀, 或 2) 把 _HASH 降为 warn 级别非 fail. 当前无 P, 但写入 backlog 留痕.",
-      "dependencies": ["infra-P281-expected-prefix-typo-guard"],
+      "dependencies": [
+        "infra-P281-expected-prefix-typo-guard"
+      ],
       "verification": [],
       "branch": "",
       "evidence": {}
@@ -6690,7 +6694,9 @@
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R3",
       "scope": "verify_infra_061 SUMMARY 行写 ALL PASS (18 checks), Reviewer 拆解后实为 18 个 emit-paths 覆盖 17 个 unique tag. progress / doc / commit message 全部以 '18 checks' 行文不够精准, 建议统一为 '18 emit-paths / 17 unique check tags'. 纯文档对齐, 不动 impl.",
-      "dependencies": ["infra-P281-expected-prefix-typo-guard"],
+      "dependencies": [
+        "infra-P281-expected-prefix-typo-guard"
+      ],
       "verification": [],
       "branch": "",
       "evidence": {}
@@ -6705,7 +6711,9 @@
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R4",
       "scope": "scan_expected_prefix_typos helper 当前只在 verify_infra_061 主动调用, 若开发者只跑 smoke 不会触发 typo 扫描. 建议: 1) 把 typo 扫加进 init.sh smoke (秒级), 或 2) _verify_lib import 时 lazy 自检 main scope (cost 低). 提升触发频率即提升护栏价值. P3 可选.",
-      "dependencies": ["infra-P281-expected-prefix-typo-guard"],
+      "dependencies": [
+        "infra-P281-expected-prefix-typo-guard"
+      ],
       "verification": [],
       "branch": "",
       "evidence": {}
@@ -7583,12 +7591,31 @@
     {
       "id": "infra-P278-closeout-verify-trustworthy",
       "priority": 3.37,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 37,
       "area": "infra",
       "title": "closeout sub-agent verify 报告必须可信",
       "branch": "feat/infra-P278-closeout-verify-trustworthy",
-      "rationale": "P275 closeout 在主报告中声称 main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20, 但事后排查 main HEAD cee87d2 实测全 PASS, 且 93d91e9..cee87d2 区间内 045/054/_verify_lib/dump 文件 diff 为 0 字节, 不可能漂移. 推测 closeout 跑 verify 时工作树有未提交脏改动污染 sha 计算. 建议: closeout 在跑 verify 前 (a) git stash --include-untracked 除 evidence/_history 外的脏改, (b) 显式 git log -1 --format=%H 输出当前 HEAD 作 evidence 前缀, (c) 跑完 verify 必须附 stdout 完整尾行而非仅 PASS/FAIL 文字描述. 否则 closeout 报告视为不可信."
+      "rationale": "P275 closeout 在主报告中声称 main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20, 但事后排查 main HEAD cee87d2 实测全 PASS, 且 93d91e9..cee87d2 区间内 045/054/_verify_lib/dump 文件 diff 为 0 字节, 不可能漂移. 推测 closeout 跑 verify 时工作树有未提交脏改动污染 sha 计算. 建议: closeout 在跑 verify 前 (a) git stash --include-untracked 除 evidence/_history 外的脏改, (b) 显式 git log -1 --format=%H 输出当前 HEAD 作 evidence 前缀, (c) 跑完 verify 必须附 stdout 完整尾行而非仅 PASS/FAIL 文字描述. 否则 closeout 报告视为不可信.",
+      "evidence": {
+        "round": 2,
+        "branch": "feat/infra-P278-closeout-verify-trustworthy",
+        "engineer_round1_commit": "c0e19e5",
+        "engineer_round2_commit": "e1fa83b",
+        "merge_sha": "7f9e499",
+        "reviewer_round1": "Reviewer-1 (sub-agent a3fe2c99) REJECT with 3 阻 close findings; round-2 Engineer 修 R2 + 设计接受 R3, 事实反驳 R1/R3 baseline 声明",
+        "reviewer_round2_arbitration": "Reviewer-2 (sub-agent ac936ae2) 第三方仲裁 LGTM: Engineer baseline 事实正确, Reviewer-1 R1/R3 baseline 声明经实跑确认有误. 2 新 findings 入 backlog (P294-Rx-verify-summary-exit-propagation + P294-Ry-closeout-reviewer-text-scan)",
+        "verify_tails": {
+          "verify_infra_062": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)",
+          "verify_infra_037": "[verify_infra_037][SUMMARY] ALL PASS (13 checks) (cascade 修生效)",
+          "verify_infra_034_V6": "[verify_infra_034] summary total=53 failed=0",
+          "smoke": "./init.sh rc=0 全 PASS"
+        },
+        "dogfood": "改为纯合成样本 A-H (移除真实 evidence 单点谎言源)",
+        "agents_md": "AGENTS.md 'Closeout-verify-trustworthy 硬规则 (P278)' 段含 helper schema-only 边界声明 + P294 backlog 指向",
+        "p281_p285_reviewer_text_scan": "无 round-1 dogfood 字段引用残留",
+        "real_machine_uat": "pending (sim-first; infra 类不涉真机)"
+      }
     },
     {
       "id": "infra-P285-classifier-recognize-lib-func-locks",
@@ -7720,6 +7747,24 @@
       "area": "infra",
       "title": "verify_infra_059 加锁 13 个 unknown_ids 完整 frozenset",
       "rationale": "infra-048 (P278) V4 已锁 unknown_count=13 与 ≤max_allowed. 但 13 个 unknown_ids 的具体 ID 集合未锁; 若 _verify_lib 重构后某个 EXPECTED_*_FUNC_SHA 被改名 (例如 EXPECTED_VERIFY_UNKNOWN_NODE_COUNT_BOUND_FUNC_SHA → EXPECTED_VERIFY_UNKNOWN_BOUND_FUNC_SHA), 新名替换旧名, count 仍 13 不变, V4 检测不到成份漂移. 建议: verify_infra_059 加 EXPECTED_CURRENT_UNKNOWN_IDS=frozenset({...13 个 ID...}) 精确锁; 集合差异 (新增 / 缺失) 都报警. 中等价值, 捕获 count 锁掩盖不了的成份漂移."
+    },
+    {
+      "id": "infra-P294-Rx-verify-summary-exit-propagation",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify 脚本 [SUMMARY] FAIL 与 process exit code 解耦兜底",
+      "rationale": "round-2 Reviewer 仲裁 finding: closeout-verify-trustworthy helper 在 main HEAD re-run 时, 仅依赖 process exit code 判定 trustworthy, 若 verify 脚本 [SUMMARY] FAIL 但 exit code=0 (脚本异常处理吞掉 rc) 会被误判 PASS. 建议除 exit code 外, 同时 grep stdout '\\[SUMMARY\\] (FAIL|FAILED)' 作兜底; 任一命中即视 FAIL."
+    },
+    {
+      "id": "infra-P294-Ry-closeout-reviewer-text-scan",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "closeout 阶段顺手扫 reviewer 文本是否引用已撤回的 round-1 dogfood 字段",
+      "rationale": "round-2 Reviewer 仲裁 finding: 跨 feature reviewer 评语可能引用先前 round-1 dogfood 字段 (后被 round-2 改为纯合成样本), 导致叙述与 evidence 字段不一致. 建议 closeout 阶段对该 phase 已 passing feature 的 evidence.reviewer 字段做关键词扫描 (如 'dogfood 实测', 'closeout_verify 实测' 等), 命中则记录但不阻 close, 留待精修."
     }
   ],
   "_meta": {

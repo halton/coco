@@ -5955,3 +5955,35 @@ phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`
 ### Git
 - branch: feat/infra-P278-closeout-verify-trustworthy (continue)
 - round-2 commit: (see closeout step)
+
+## Session P295 — infra-P278-closeout-verify-trustworthy closeout (round-2 arbitration)
+
+**Goal**: 收尾 phase-37 #3.37 P278. Round-1 Reviewer (a3fe2c99) REJECT, round-2 Engineer 修 R2/R3 + 事实反驳 R1/R3 baseline 声明, round-2 Reviewer 第三方仲裁 (ac936ae2) LGTM with 2 backlog findings.
+
+### Round-2 Reviewer 仲裁结论
+- Engineer round-2 baseline 声明事实正确: baseline 90a23de 实测 045 FAIL 2/18, 052 FAIL 2/23, 057 FAIL 1/13, 058 FAIL 1/16 (与 round-1 一致), 061 baseline 实测 ALL PASS. Reviewer-1 R1/R3 baseline 声明经实跑确认有误.
+- 设计接受 R3: dogfood 改为纯合成样本 A-H, 移除真实 evidence 回填单点谎言源.
+- 2 新 backlog:
+  1. `infra-P294-Rx-verify-summary-exit-propagation` — verify 脚本 [SUMMARY] FAIL 与 process exit code 解耦兜底 (除 rc 外 grep stdout `\[SUMMARY\] (FAIL|FAILED)`)
+  2. `infra-P294-Ry-closeout-reviewer-text-scan` — closeout 阶段顺手扫 reviewer 文本是否引用已撤回的 round-1 dogfood 字段
+
+### Closeout 步骤
+- 干净化: stash evidence/_history/smoke_history.jsonl 脏改 (P278-closeout-stash)
+- P281/P285 reviewer 文本扫描: **无 round-1 dogfood 字段引用残留**
+- merge `feat/infra-P278-closeout-verify-trustworthy` → main no-ff, merge sha `7f9e499`
+- feature_list.json: P278 → passing, evidence 含 R1+R2 commit + arbitration 摘要 + verify tails + dogfood/agents_md/p281_p285 扫描结果
+- 2 backlog 入账 (P294-Rx, P294-Ry; priority=999, phase=null)
+
+### Closeout dogfood verify (main HEAD 7f9e499)
+- main HEAD: `7f9e499`
+- `verify_infra_062`: `[SUMMARY] ALL PASS (17 checks)` (含 V5_reviewer_lgtm_gate + 8 合成样本 A-H)
+- `verify_infra_037`: `[SUMMARY] ALL PASS (13 checks)` (cascade 修生效)
+- `verify_infra_034` V6: `summary total=53 failed=0` (live_verify_files=196, scanned_reverse_locks=88)
+- `./init.sh` smoke: 全 PASS
+
+### Git
+- merge commit: `7f9e499`
+- closeout commit: (next step)
+- push: 各一次 (失败忽略)
+
+DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant-detection.
