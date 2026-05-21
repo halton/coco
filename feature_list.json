@@ -7762,7 +7762,7 @@
     {
       "id": "infra-P294-R4-fail-baseline-cross-check",
       "priority": 1.38,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 38,
       "area": "infra",
       "title": "FAIL run 的 baseline 字段加 sha 链交叉校验",
