@@ -42,6 +42,7 @@ __all__ = [
     "verify_unknown_node_count_bound",
     "verify_expected_prefix_typo_guard",
     "verify_closeout_evidence_trustworthy",
+    "scan_reviewer_text",
     "verify_baseline_fail_claims",
     "assert_verify_passed",
     "verify_summary_exit",
@@ -1224,3 +1225,78 @@ def verify_summary_exit(failed_count: int) -> None:
     if failed_count < 0:
         raise ValueError(f"failed_count must be >= 0, got {failed_count}")
     sys.exit(2 if failed_count > 0 else 0)
+
+
+# ---------------------------------------------------------------------------
+# infra-P294-Ry (reviewer text scan): Closeout 阶段 Reviewer 文本红旗检测
+# ---------------------------------------------------------------------------
+# 背景: P278 verify_closeout_evidence_trustworthy 只看 evidence.reviewer.reviewer_kind
+# 字段是否字面 == "sub_agent_fresh_context", 若 Engineer 编造 reviewer_kind 字段但
+# Reviewer 实际内容空洞 ("我刚刚跑了 ... 全 PASS" 无任何命令/sha/file:line 证据),
+# P278 helper 无法识别。本 helper 扫 Reviewer 文本字符串本身, 检测 4 类硬证据信号,
+# 提高 closeout-verify-trustworthy 整体信号强度, 把"编造 reviewer 内容"的成本拉高。
+#
+# 设计原则:
+# - 纯字符串扫描, 不实跑命令, 不读真实 evidence (避免 P278 round-2 教训)。
+# - 检 4 类信号: verdict 行 / 命令引用 / sha 引用 / file:line 引用。
+# - signal_count >= 3 即 min_signals_met (允许 1 项缺失, 例如纯 doc-only review
+#   可能无 file:line 引用)。
+# - Default-OFF: 不在任何已有 verify 流程自动调用, 由 closeout sub-agent 或专用
+#   verify_infra_068 显式调用。
+_RE_REVIEWER_VERDICT = re.compile(r"\b(LGTM(?:\s+with\s+findings)?|REJECT)\b", re.IGNORECASE)
+_RE_REVIEWER_COMMAND = re.compile(
+    r"(\.venv/bin/python\b|\bgit\s+-C\b|scripts/verify_infra_\d{3}\b)"
+)
+_RE_REVIEWER_SHA = re.compile(r"\b[0-9a-f]{7,}\b")
+_RE_REVIEWER_FILE_LINE = re.compile(r"\b[\w./\-]+\.py:\d+\b")
+
+
+def scan_reviewer_text(reviewer_text: str) -> dict:
+    """扫 Reviewer evidence 文本块, 检测 4 类硬证据信号.
+
+    输入: reviewer 文本 (e.g. evidence.reviewer.summary / findings 拼接), 中英混合 OK.
+    输出 dict::
+
+        {
+          "has_verdict_line": bool,      # 含 LGTM / REJECT / LGTM with findings
+          "has_command_evidence": bool,  # 含 .venv/bin/python | git -C | scripts/verify_infra_NNN
+          "has_sha_evidence": bool,      # 含 7+ hex sha
+          "has_file_line_ref": bool,     # 含 file.py:NN 模式
+          "signal_count": int,           # 上 4 项 True 计数
+          "min_signals_met": bool,       # signal_count >= 3 (阈值)
+          "flags": list[str],            # 红旗 (e.g. "no_verdict" / "no_command" / "no_sha" / "no_file_line")
+        }
+
+    Default-OFF: 由 closeout sub-agent 或 verify_infra_068 显式调用, 不进入任何
+    自动 verify 流程。signal 阈值 3 允许 1 项缺失 (例: 纯文档 review 可能无 file:line)。
+    """
+    if not isinstance(reviewer_text, str):
+        reviewer_text = ""
+
+    has_verdict = bool(_RE_REVIEWER_VERDICT.search(reviewer_text))
+    has_command = bool(_RE_REVIEWER_COMMAND.search(reviewer_text))
+    has_sha = bool(_RE_REVIEWER_SHA.search(reviewer_text))
+    has_file_line = bool(_RE_REVIEWER_FILE_LINE.search(reviewer_text))
+
+    signal_count = sum([has_verdict, has_command, has_sha, has_file_line])
+    min_signals_met = signal_count >= 3
+
+    flags: list[str] = []
+    if not has_verdict:
+        flags.append("no_verdict")
+    if not has_command:
+        flags.append("no_command")
+    if not has_sha:
+        flags.append("no_sha")
+    if not has_file_line:
+        flags.append("no_file_line")
+
+    return {
+        "has_verdict_line": has_verdict,
+        "has_command_evidence": has_command,
+        "has_sha_evidence": has_sha,
+        "has_file_line_ref": has_file_line,
+        "signal_count": signal_count,
+        "min_signals_met": min_signals_met,
+        "flags": flags,
+    }
