@@ -5332,3 +5332,16 @@ Process 改善:
   - infra-049-backlog-render-json-sort-stability (render_json sort_order=target_asc 显式标注稳定排序契约)
 - phase-34 总结: 5 feature 全 PASSING, 共增 verify_infra_046/047/048/049 + dump_v4_sha_graph mermaid output + source-file aware inference + classDef styling + reverse sha lock index, 反向引用 cascade bump 影响范围工具链完备
 - 流程偏差自记: 本环境主会话直接执行 closeout (Read/Edit/Bash merge + feature_list.json + progress + commit + push), 业务结果与 evidence sha 全可追溯
+
+## Session P269 — phase-35 planning (planner sub-agent)
+
+- phase-34 收官 5/5 passing (main HEAD 起点=21cb1db), 持续开发模式进入 phase-35 规划
+- 选 5 候选 (priority 1.35 - 5.35), 全部从 phase-34 close-out 新入账 backlog 中挑, 聚焦 dump_reverse_sha_lock_index + dump_v4_sha_graph mermaid 配套硬化, 0 业务代码改动, sim-friendly, 不动 _verify_lib 公共签名
+- **phase-35 候选清单**:
+  1. **1.35 infra-049-backlog-render-json-sort-stability** — render_json sort_order=target_asc 显式标注稳定排序契约 (V4 加锁排序顺序, 防 dict 迭代序漂移)
+  2. **2.35 infra-049-backlog-check-coalesce-json** — `--check --json` 三档协同输出 consistency report (放宽 CLI 互斥, JSON schema 加 check_result 字段)
+  3. **3.35 infra-049-backlog-reverse-lock-pattern-expand** — scan pattern 放宽到 `EXPECTED_.*_(FILE|FUNC)_SHA` (覆盖更多反向锁形态, live_set 扩容验)
+  4. **4.35 infra-048-backlog-hub-color-distinguish** — mermaid classDef hub 配色与 module 拉开区分度 (palette 调色, classDef 行加锁)
+  5. **5.35 infra-048-backlog-mermaid-palette-extract** — 6 色值提到模块顶部常量 `_MERMAID_PALETTE` (集中维护, dump 文件 sha cascade bump 一次到位)
+- 立即开始 **#1.35 infra-049-backlog-render-json-sort-stability**
+
