@@ -6150,3 +6150,15 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
   - `infra-P299-shell-verify-rc-usage-doc` — AGENTS.md/CLAUDE.md 文档化 verify_*.py 调用 shell 必须 `; rc=$?` 紧跟或 `set -o pipefail`, 禁用 `| tail; echo $?` 模式 (本 feature 暴露根因)
   - `infra-P299-old-verify-summary-helper-migration` — 30 个 no_summary 旧 verify_infra_*.py (002-035) 渐进迁移到 verify_summary_exit helper + 统一 SUMMARY 行 (含 F2 verify_infra_061 顺手清理)
 - 持续开发模式: 继续 phase-38 #4.38 `infra-P294-Ry-closeout-reviewer-text-scan`
+
+## Session 2026-05-22 07:59 — phase-38 #4.38 `infra-P294-Ry-closeout-reviewer-text-scan` closeout
+- closeout 时间: 2026-05-22 07:59
+- main HEAD before: 68752d6
+- merge sha (after merge): 5be61ea
+- engineer commit: f0d4abb (branch feat/infra-P294-Ry-closeout-reviewer-text-scan, --no-ff merge into main)
+- Engineer 任务过大: 2 次 socket 断, 拆 A (建 verify_infra_068 跑 PASS) + B (cascade bump 16+ verify + commit + push) 后顺利完成
+- Reviewer (sub-agent fresh-context): LGTM 无 finding, 全 7 必查项 PASS, mutant 检出, Default-OFF, smoke PASS
+- 最终 main verify: init.sh PASS rc=0; verify_infra_{034,060,062,065,066,067,068} 全 ALL PASS rc=0
+- feature_list.json: infra-P294-Ry-closeout-reviewer-text-scan in_progress → passing (含 evidence: main_head_sha=5be61ea / engineer_commit=f0d4abb / verify_runs / reviewer_fresh_context=true / engineer_socket_disconnect_count=2)
+- backlog 入账 (1 项): infra-P299-engineer-task-size-guideline — Engineer 任务含 cascade bump 16+ 文件 + 新建 verify + commit + push 时单次易 socket 断, 写指导拆为 A+B 两步
+- 持续开发模式: 继续 phase-38 #5.38 `infra-P297-bootstrap-canary-edit-flow-docs`

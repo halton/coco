@@ -7892,11 +7892,35 @@
     {
       "id": "infra-P294-Ry-closeout-reviewer-text-scan",
       "priority": 4.38,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 38,
       "area": "infra",
       "title": "closeout 阶段顺手扫 reviewer 文本是否引用已撤回的 round-1 dogfood 字段",
-      "rationale": "round-2 Reviewer 仲裁 finding: 跨 feature reviewer 评语可能引用先前 round-1 dogfood 字段 (后被 round-2 改为纯合成样本), 导致叙述与 evidence 字段不一致. 建议 closeout 阶段对该 phase 已 passing feature 的 evidence.reviewer 字段做关键词扫描 (如 'dogfood 实测', 'closeout_verify 实测' 等), 命中则记录但不阻 close, 留待精修."
+      "rationale": "round-2 Reviewer 仲裁 finding: 跨 feature reviewer 评语可能引用先前 round-1 dogfood 字段 (后被 round-2 改为纯合成样本), 导致叙述与 evidence 字段不一致. 建议 closeout 阶段对该 phase 已 passing feature 的 evidence.reviewer 字段做关键词扫描 (如 'dogfood 实测', 'closeout_verify 实测' 等), 命中则记录但不阻 close, 留待精修.",
+      "evidence": {
+        "main_head_sha": "5be61ea",
+        "engineer_commit": "f0d4abb",
+        "branch": "feat/infra-P294-Ry-closeout-reviewer-text-scan",
+        "engineer_socket_disconnect_count": 2,
+        "engineer_socket_disconnect_note": "Engineer 任务过大 2 次 socket 断, 拆 A (建 068 跑 PASS) + B (cascade+commit+push) 后顺利",
+        "verify_runs": [
+          {"script": "init.sh", "status": "PASS", "rc": 0, "tail_stdout": "Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
+          {"script": "verify_infra_034.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_034] summary total=53 failed=0"},
+          {"script": "verify_infra_060.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "verify_infra_062.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+          {"script": "verify_infra_065.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+          {"script": "verify_infra_066.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "verify_infra_067.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+          {"script": "verify_infra_068.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "reviewer_fresh_context": true,
+          "verdict": "LGTM",
+          "findings": [],
+          "summary": "Reviewer fresh-context 评审: 无 finding, 全 7 必查项 PASS, mutant 检出, Default-OFF, smoke PASS."
+        }
+      }
     },
     {
       "id": "infra-P297-bootstrap-canary-edit-flow-docs",
@@ -7933,6 +7957,15 @@
       "area": "infra",
       "title": "canary 模式抽象成可复用 helper",
       "rationale": "P276 Engineer 自报: 自校 canary 模式 (helper 内嵌 _CANARY_EXPECTED_SHA + --canary mode) 可推广到其它 self-verify 类脚本 (如 _verify_lib, dump_v4_sha_graph). 建议抽到 scripts/_canary_lib.py 提供 build_canary(expected_sha, compute_fn) helper, 减少重复代码."
+    },
+    {
+      "id": "infra-P299-engineer-task-size-guideline",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "Engineer 任务尺寸指导: cascade+新建+commit+push 须拆 A+B",
+      "rationale": "P294-Ry Engineer 因任务含 cascade bump 16+ verify 文件 + 新建 verify_infra_068 + commit + push, 单次 sub-agent 调度 2 次 socket 断, 拆 (A) 新建+本地 verify PASS / (B) cascade+commit+push 后才完成. 建议在 AGENTS.md / CLAUDE.md 写明: 当 Engineer 任务同时含 (1) 新建 verify + (2) cascade bump 10+ 文件 + (3) commit/push 时, 应预先拆为两步 sub-agent 派发, 降低 socket 断概率."
     },
     {
       "id": "infra-P299-baseline-fail-claim-regex-multiline",
