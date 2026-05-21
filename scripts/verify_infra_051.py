@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
-"""verify_infra_049: dump_reverse_sha_lock_index 反向锁索引工具 V0-V5 meta-lock.
+"""verify_infra_051: dump_reverse_sha_lock_index --check --json coalesce V0-V5.
 
-infra-038-backlog-reverse-sha-lock-index (phase-34 #5.34, P268): 锁住
-``scripts/dump_reverse_sha_lock_index.py`` 这个新建的反向 sha lock 索引工具的
-关键行为, 防止后续无意改动悄悄改掉:
+infra-049-backlog-check-coalesce-json (phase-35 #2.35, P270): 锁住
+``scripts/dump_reverse_sha_lock_index.py`` 在 P270 引入的 ``--check --json`` 协同
+模式 + argparse 拓扑调整, 防止后续无意改动悄悄撤回:
 
-- ``build_entries``: 富化 inferred_target (复用 dump_v4_sha_graph._infer_target)
-- ``render_text``: 人读分组表格
-- ``render_json``: 机读 JSON payload (schema "reverse_sha_lock_index/v1")
-- ``--text/--json/--check`` 三档互斥 CLI 约定
+- argparse 由原 ``--text/--json/--check`` 三档互斥拓扑改为:
+  ``--text/--json`` 互斥 (输出格式), ``--check`` 独立 flag (行为开关)
+- ``render_check_json``: 新增 consistency report JSON 渲染函数
+  schema = ``reverse_sha_lock_consistency/v1``
+- ``cmd_check(as_json: bool)``: 接受 as_json 旗标; True 走 render_check_json,
+  False 维持原 stdout 文本 summary
 
-INFRA_049_SHA_LOCKS
+INFRA_051_SHA_LOCKS
 -------------------
 - ``scripts/dump_reverse_sha_lock_index.py`` file sha: EXPECTED_DUMP_INDEX_FILE_SHA
-- ``render_text`` func sha: EXPECTED_RENDER_TEXT_FUNC_SHA
-- ``render_json`` func sha: EXPECTED_RENDER_JSON_FUNC_SHA
+- ``render_check_json`` func sha: EXPECTED_RENDER_CHECK_JSON_FUNC_SHA
+- ``cmd_check`` func sha: EXPECTED_CMD_CHECK_FUNC_SHA
+- ``build_arg_parser`` func sha: EXPECTED_BUILD_ARG_PARSER_FUNC_SHA
 - 本脚本 v4_behavior 自 checker func sha: EXPECTED_V4_CHECKER_FUNC_SHA
 
 校验层级 (V0-V5):
 
 - V0 scaffolding: dump_reverse_sha_lock_index.py 存在 + 关键符号
-  (``build_entries`` / ``render_text`` / ``render_json`` / argparse mutex group)
-- V1 docstring sentinel ``INFRA_049_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
-- V2 dump_reverse_sha_lock_index.py file sha + render_text/render_json func sha
-- V3 in-memory mutant: 替换 render_text body 为 ``return "graph LR"``, sha 必漂移;
-  且原 baseline sha == EXPECTED_RENDER_TEXT_FUNC_SHA
-- V4 行为验证: subprocess 分别跑 ``--json`` / ``--text``, 断言:
-  - JSON 输出可 parse 为 dict 且 schema == "reverse_sha_lock_index/v1"
-  - stats.scanned_count >= 5 (现状 7; 留 buffer 防 mismatch)
-  - entries 每条含 6 个 key (file/lineno/const_name/sha_hex/sha_short/inferred_target)
-  - text 输出含 verify_infra_034 / verify_infra_035 等关键 needle
-  - ``--json --text`` 互斥 (argparse rc 非 0)
+  (``render_check_json`` / ``cmd_check`` 带 as_json 形参 / ``reverse_sha_lock_consistency/v1``)
+- V1 docstring sentinel ``INFRA_051_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
+- V2 dump_index file sha + render_check_json/cmd_check/build_arg_parser func sha
+- V3 in-memory mutant: render_check_json 替换 schema 常量, sha 必漂移
+- V4 行为验证 subprocess:
+  - ``--check``                   rc=0, stdout 含 "all_match=True"
+  - ``--check --json``            rc=0, stdout JSON parse 含 schema reverse_sha_lock_consistency/v1
+                                        + all_match: true + scanned_count/live_count int
+  - ``--check --text``            rc=0, 与 ``--check`` 文本输出等价
+  - ``--text --json``             rc=2 (argparse mutex 保留)
 - V5 Reviewer LGTM gate (print-only)
 
 退出码 0=ALL PASS / 1=任一 FAIL.
@@ -51,22 +53,23 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
-# infra-049 sha lock 常量 (V2) — 首跑 __BUMP_ME__ 占位, 再回填
+# infra-051 sha lock 常量 (V2) — 首跑 __BUMP_ME__ 占位, 再回填
 EXPECTED_DUMP_INDEX_FILE_SHA = "f3d93d4f79e6580a1aabaa419281ed8ba2ee4aeaf9e899ff425531429c9bddc0"
-EXPECTED_RENDER_TEXT_FUNC_SHA = "e2f4e931895f2f50a1ab6621045561b6c7b0cc377a5d9279e4b232e26f3e16c1"
-EXPECTED_RENDER_JSON_FUNC_SHA = "5e1bf67b5c3d66d15b2e9f42b66c06e9bf16549361080b518221b8a2bc2d2798"
+EXPECTED_RENDER_CHECK_JSON_FUNC_SHA = "310d1b6bda8ecebf01abed9064d895de33d351f9bac7405310f5ae75795b2011"
+EXPECTED_CMD_CHECK_FUNC_SHA = "5cc2173fe5eb11920f1fe92d5660bc8a02eb102cb03da3ddcfcd69c2d5d0b285"
+EXPECTED_BUILD_ARG_PARSER_FUNC_SHA = "9fd746f61a1705f69107a072736fe1272fca3260ed0c5567b7d59ef33d58092f"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "bdcd934165a47169a2b133d40b25d66443da3664007e808ee7f1d043e8ad3c2c"
+EXPECTED_V4_CHECKER_FUNC_SHA = "3c986d4bdeeee98812cd937f03f271b1871df861e7f91014891ab8fecd3cf0e4"
 
-DOCSTRING_SENTINEL = "INFRA_049_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_051_SHA_LOCKS"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_049][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_051][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, ok, detail))
 
 
@@ -90,20 +93,16 @@ def v0_scaffolding() -> None:
     _emit("V0_dump_index_exists", DUMP_INDEX_PY.is_file(), f"path={DUMP_INDEX_PY}")
     src = DUMP_INDEX_PY.read_text(encoding="utf-8")
     needed = [
-        "def build_entries",
-        "def render_text",
-        "def render_json",
-        "def cmd_check",
-        "add_mutually_exclusive_group",
-        '"--text"',
-        '"--json"',
-        '"--check"',
+        "def render_check_json",
+        "def cmd_check(as_json",
+        '"reverse_sha_lock_consistency/v1"',
+        "as_json=bool(args.json)",
     ]
     found = [n for n in needed if n in src]
     _emit(
         "V0_dump_index_symbols",
         len(found) == len(needed),
-        f"found {len(found)}/{len(needed)}",
+        f"found {len(found)}/{len(needed)} missing={[n for n in needed if n not in src]}",
     )
 
 
@@ -138,7 +137,7 @@ def v1_self_lock() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V2: dump_index file sha + render_text/render_json func sha
+# V2: dump_index file sha + render_check_json/cmd_check/build_arg_parser func sha
 # ---------------------------------------------------------------------------
 def v2_dump_locks() -> None:
     got_file = _file_sha(DUMP_INDEX_PY)
@@ -156,8 +155,9 @@ def v2_dump_locks() -> None:
         )
 
     for fn, expected in (
-        ("render_text", EXPECTED_RENDER_TEXT_FUNC_SHA),
-        ("render_json", EXPECTED_RENDER_JSON_FUNC_SHA),
+        ("render_check_json", EXPECTED_RENDER_CHECK_JSON_FUNC_SHA),
+        ("cmd_check", EXPECTED_CMD_CHECK_FUNC_SHA),
+        ("build_arg_parser", EXPECTED_BUILD_ARG_PARSER_FUNC_SHA),
     ):
         try:
             got = _func_sha(DUMP_INDEX_PY, fn)
@@ -179,24 +179,24 @@ def v2_dump_locks() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: in-memory mutant — 替换 render_text body, sha 必漂移
+# V3: in-memory mutant — render_check_json schema 常量篡改, sha 必漂移
 # ---------------------------------------------------------------------------
 def v3_mutant() -> None:
     src = DUMP_INDEX_PY.read_text(encoding="utf-8")
     tree = ast.parse(src)
     target = None
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == "render_text":
+        if isinstance(node, ast.FunctionDef) and node.name == "render_check_json":
             target = node
             break
     if target is None:
-        _emit("V3_mutant_apply", False, "render_text not found")
+        _emit("V3_mutant_apply", False, "render_check_json not found")
         return
     baseline_sha = hashlib.sha256(ast.unparse(target).encode("utf-8")).hexdigest()
     mutant = ast.FunctionDef(
         name=target.name,
         args=target.args,
-        body=[ast.Return(value=ast.Constant(value="graph LR"))],
+        body=[ast.Return(value=ast.Constant(value="MUTANT"))],
         decorator_list=[],
         returns=target.returns,
     )
@@ -207,101 +207,96 @@ def v3_mutant() -> None:
         baseline_sha != mutant_sha,
         f"baseline={baseline_sha[:16]} mutant={mutant_sha[:16]}",
     )
-    if EXPECTED_RENDER_TEXT_FUNC_SHA != "__BUMP_ME__":
+    if EXPECTED_RENDER_CHECK_JSON_FUNC_SHA != "__BUMP_ME__":
         _emit(
             "V3_baseline_matches_expected",
-            baseline_sha == EXPECTED_RENDER_TEXT_FUNC_SHA,
-            f"baseline={baseline_sha[:16]} expect={EXPECTED_RENDER_TEXT_FUNC_SHA[:16]}",
+            baseline_sha == EXPECTED_RENDER_CHECK_JSON_FUNC_SHA,
+            f"baseline={baseline_sha[:16]} expect={EXPECTED_RENDER_CHECK_JSON_FUNC_SHA[:16]}",
         )
 
 
 # ---------------------------------------------------------------------------
-# V4: 行为验证 — subprocess 跑 --json / --text / mutex
+# V4: 行为验证 — subprocess 跑 --check / --check --json / --check --text / mutex
 # ---------------------------------------------------------------------------
 def v4_behavior() -> None:
-    # --- --json ---
-    try:
-        res_json = subprocess.run(
-            [sys.executable, str(DUMP_INDEX_PY), "--json"],
+    def _run(args: List[str]) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(DUMP_INDEX_PY), *args],
             cwd=str(REPO),
             capture_output=True,
             text=True,
             timeout=30,
         )
-    except Exception as e:
-        _emit("V4_json_subprocess", False, f"err: {e!r}")
-        return
-    _emit("V4_json_subprocess", res_json.returncode == 0, f"rc={res_json.returncode}")
 
-    parsed: dict | None = None
+    # --- --check (默认文本) ---
     try:
-        parsed = json.loads(res_json.stdout)
+        r_check = _run(["--check"])
     except Exception as e:
-        _emit("V4_json_parse", False, f"err: {e!r}")
-    if parsed is not None:
-        _emit(
-            "V4_json_schema",
-            isinstance(parsed, dict) and parsed.get("schema") == "reverse_sha_lock_index/v1",
-            f"schema={parsed.get('schema')!r}",
-        )
-        stats = parsed.get("stats") or {}
-        scanned = stats.get("scanned_count", -1)
-        _emit(
-            "V4_json_scanned_count",
-            isinstance(scanned, int) and scanned >= 5,
-            f"scanned_count={scanned} (require >= 5)",
-        )
-        entries = parsed.get("entries") or []
-        required_keys = {"file", "lineno", "const_name", "sha_hex", "sha_short", "inferred_target"}
-        if entries:
-            missing = [k for k in required_keys if k not in entries[0]]
-            _emit(
-                "V4_json_entry_keys",
-                not missing,
-                f"missing={missing}" if missing else f"all {len(required_keys)} keys present (n={len(entries)})",
-            )
-        else:
-            _emit("V4_json_entry_keys", False, "entries empty")
-
-    # --- --text ---
-    try:
-        res_text = subprocess.run(
-            [sys.executable, str(DUMP_INDEX_PY), "--text"],
-            cwd=str(REPO),
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except Exception as e:
-        _emit("V4_text_subprocess", False, f"err: {e!r}")
+        _emit("V4_check_subprocess", False, f"err: {e!r}")
         return
-    _emit("V4_text_subprocess", res_text.returncode == 0, f"rc={res_text.returncode}")
-    text_out = res_text.stdout
-    # 关键 needle: 至少含一个 verify_infra_03X 锁主和反向锁常量前缀
-    needles = ["verify_infra_03", "VERIFY_", "Reverse sha lock index"]
-    miss = [n for n in needles if n not in text_out]
     _emit(
-        "V4_text_needles",
-        not miss,
-        f"miss={miss}" if miss else f"all {len(needles)} needles present",
+        "V4_check_rc_and_text",
+        r_check.returncode == 0 and "all_match=True" in r_check.stdout,
+        f"rc={r_check.returncode} stdout_head={r_check.stdout.splitlines()[0] if r_check.stdout else '<empty>'!r}",
     )
 
-    # --- mutex --json --text 互斥 ---
+    # --- --check --json (协同) ---
     try:
-        res_mx = subprocess.run(
-            [sys.executable, str(DUMP_INDEX_PY), "--json", "--text"],
-            cwd=str(REPO),
-            capture_output=True,
-            text=True,
-            timeout=30,
+        r_cj = _run(["--check", "--json"])
+    except Exception as e:
+        _emit("V4_check_json_subprocess", False, f"err: {e!r}")
+        return
+    _emit("V4_check_json_rc", r_cj.returncode == 0, f"rc={r_cj.returncode}")
+    parsed: dict | None = None
+    try:
+        parsed = json.loads(r_cj.stdout)
+    except Exception as e:
+        _emit("V4_check_json_parse", False, f"err: {e!r}")
+    if parsed is not None:
+        _emit(
+            "V4_check_json_schema",
+            isinstance(parsed, dict) and parsed.get("schema") == "reverse_sha_lock_consistency/v1",
+            f"schema={parsed.get('schema')!r}",
         )
+        _emit(
+            "V4_check_json_all_match",
+            parsed.get("all_match") is True,
+            f"all_match={parsed.get('all_match')!r}",
+        )
+        sc, lc = parsed.get("scanned_count"), parsed.get("live_count")
+        _emit(
+            "V4_check_json_counts",
+            isinstance(sc, int) and isinstance(lc, int) and sc >= 1 and lc >= 1,
+            f"scanned_count={sc} live_count={lc}",
+        )
+        _emit(
+            "V4_check_json_orphans_list",
+            isinstance(parsed.get("orphans"), list),
+            f"orphans_type={type(parsed.get('orphans')).__name__}",
+        )
+
+    # --- --check --text (等价 --check) ---
+    try:
+        r_ct = _run(["--check", "--text"])
+    except Exception as e:
+        _emit("V4_check_text_subprocess", False, f"err: {e!r}")
+        return
+    _emit(
+        "V4_check_text_equiv",
+        r_ct.returncode == 0 and r_ct.stdout == r_check.stdout,
+        f"rc={r_ct.returncode} equiv={r_ct.stdout == r_check.stdout}",
+    )
+
+    # --- --text --json 互斥保留 ---
+    try:
+        r_mx = _run(["--text", "--json"])
     except Exception as e:
         _emit("V4_mutex_subprocess", False, f"err: {e!r}")
         return
     _emit(
         "V4_mutex_rejected",
-        res_mx.returncode != 0 and "not allowed with" in (res_mx.stderr or ""),
-        f"rc={res_mx.returncode} stderr_tail={(res_mx.stderr or '').splitlines()[-1] if res_mx.stderr else '<empty>'!r}",
+        r_mx.returncode == 2 and "not allowed with" in (r_mx.stderr or ""),
+        f"rc={r_mx.returncode} stderr_tail={(r_mx.stderr or '').splitlines()[-1] if r_mx.stderr else '<empty>'!r}",
     )
 
 
@@ -326,9 +321,9 @@ def main() -> int:
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_049][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(f"[verify_infra_051][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
         return 1
-    print(f"[verify_infra_049][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(f"[verify_infra_051][SUMMARY] ALL PASS ({total} checks)", flush=True)
     return 0
 
 
