@@ -7292,7 +7292,7 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "新建 verify_infra_*.py 必须最后一步回填本脚本 V1 自锁 func sha",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "P273 infra-048-backlog-mermaid-palette-extract closeout V1 自锁初次 FAIL (EXPECTED_V4_CHECKER_FUNC_SHA 占位未回填)",
       "scope": "新建 verify_infra_NNN.py (含 V1 self-lock) 时，作者必须在最后一步运行 `python scripts/dump_v4_sha_graph.py --target verify_infra_NNN.py.<checker_func>` 取真实 func sha，回填 `EXPECTED_V*_CHECKER_FUNC_SHA = '...'`，并重跑该 verify 二次确认。落地：写入 CLAUDE.md / AGENTS.md verify 章节为 mandatory step；可选 `_verify_lib` 加 `bootstrap_self_lock()` helper 输出 'paste this constant' 提示；模板里 placeholder 改为 `'__FILL_ME_AFTER_FIRST_RUN__'` 避免 silent 0000...。",
@@ -7315,7 +7315,11 @@
         "verify_infra_045 ALL PASS 18 checks (V6 反向锁全 match, scanned=70 live=190 orphans=0)",
         "bootstrap helper dogfood: --verify-script scripts/verify_infra_055.py --json 输出 actual_func_sha=83cee8d2... 与 verify_055 锁值一致",
         "P275 自身协议示范: 056 首版 __BUMP_ME__ → helper 取 1f115d46... → 回填 → 二次跑 ALL PASS 21/21",
-        "init.sh smoke 全通过 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish 11/11 ok)"
+        "init.sh smoke 全通过 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish 11/11 ok)",
+        "Reviewer (sub-agent): LGTM 8/10 round-1 — V4 行为 round-trip 真锁 bootstrap helper 输出 sha 与 _verify_lib 直调一致; P275 协议自身按 __BUMP_ME__→helper→回填闭环示范; AGENTS.md 4 强制要点齐全; caveat P1 helper 自身无 mutant 检测 (入 P276 backlog), P2 --json 输出无 schema_version (入 P277 backlog)",
+        "Closeout merge: main HEAD=49cb801 (merge --no-ff feat/infra-P273-new-verify-self-checker-fixup-protocol)",
+        "Closeout 实测尾行表: verify_infra_056 ALL PASS (21 checks) / 055 ALL PASS (26 checks) / 054 FAIL 1/20 (V1_self_checker_func_sha 预期漂移) / 045 FAIL 2/18 (V2+V3 预期漂移) / smoke 11/11",
+        "Closeout helper dogfood: --verify-script verify_055 sha=83cee8d2... vs --verify-script verify_054 sha=2c560e97... (两脚本输出不同, 一致性 OK); 不存在路径 scripts/_nonexistent.py → rc=1 + ERROR not found; 一段式脚本 /tmp/oneliner.py (无 v4_behavior) → rc=1 + ERROR 'top-level function v4_behavior not found'"
       ]
     },
     {
@@ -7326,9 +7330,27 @@
       "area": "infra",
       "title": "assert_verify_passed 加 min_checks 防 total=0 失真",
       "rationale": "P274 dogfood 发现 `[verify_x] summary total=0 failed=0` 会判 passed=True；若 verify 脚本因 bug 一个 check 都没跑就直接 print summary，sub-agent 仍会被误导。建议 helper 增加 `min_checks: int = 1` 参数，或在 caller 侧锁最小 check 数。"
+    },
+    {
+      "id": "infra-P276-bootstrap-helper-self-mutant-detection",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "bootstrap helper self mutant detection",
+      "rationale": "verify_infra_056 V4 round-trip 用 helper subprocess sha vs _verify_lib 直调 sha 做断言, 两边同源 _verify_lib. 若 bootstrap helper 的 compute_self_checker_sha 被改成绕过 lib 返回 const, V0 'def compute_self_checker_sha(' 字面检查仍 PASS, V4 round-trip 也假 PASS. 建议加 helper-only mutant 检测: 用两个不同 tmp 脚本喂 helper, 断言输出 sha 不同."
+    },
+    {
+      "id": "infra-P277-bootstrap-helper-json-schema-version",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "bootstrap helper JSON schema_version",
+      "rationale": "scripts/bootstrap_verify_self_checker.py --json 输出 5 字段无 schema_version. 未来加字段或重命名时无法做兼容判定. 建议加 'schema_version': 1, 并让 verify_infra_056 V4 锁该字段。"
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P274 infra-P273-evidence-report-accuracy closeout passing + 1 backlog 入账 (P275)"
+    "last_updated": "2026-05-22 P275 infra-P273-new-verify-self-checker-fixup-protocol closeout passing + 2 backlog 入账 (P276/P277)"
   }
 }

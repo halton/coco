@@ -5468,3 +5468,37 @@ Process 改善:
   - bootstrap helper dogfood vs verify_055: 输出 actual_func_sha=83cee8d2... 与 055 已锁值一致
   - `./init.sh` smoke 11/11 通过
 - 守住：status 保持 `in_progress`（未 self-promote passing）；未 merge feat→main；未 push；待 Reviewer fresh-context sub-agent + Closeout
+
+## Session P275 — #2.36 infra-P273-new-verify-self-checker-fixup-protocol Reviewer round-1
+
+- Reviewer fresh-context sub-agent 完成评审：**LGTM 8/10**
+- 评审要点：
+  - V4 行为 round-trip 真锁 — bootstrap helper subprocess `--json` 输出 sha 与 `_verify_lib.func_sha_by_name` 直调一致；反例（函数名/路径不存在）rc!=0 覆盖到位
+  - P275 协议自身闭环示范完整：056 首版 `__BUMP_ME__` → helper 取 `1f115d46...` → 回填 → 二次跑 ALL PASS 21/21
+  - AGENTS.md 4 条强制要点齐全（位置在 "Sub-agent Evidence Report Accuracy" 之后，段标题/anchor/伪码模板 OK）
+- Caveat（不阻 merge，入 backlog）：
+  - **P1**: bootstrap helper 自身缺 mutant 检测 — 若 `compute_self_checker_sha` 被改成返回 const，V0 字面检查 + V4 round-trip 仍会假 PASS（同源 _verify_lib）。需要 helper-only mutant：两个不同 tmp 脚本喂 helper，断言输出 sha 不同 → 入 `infra-P276-bootstrap-helper-self-mutant-detection`
+  - **P2**: helper `--json` 输出 5 字段无 `schema_version`，未来字段演化无法兼容判定 → 入 `infra-P277-bootstrap-helper-json-schema-version`
+
+## Session P275 — #2.36 infra-P273-new-verify-self-checker-fixup-protocol Closeout
+
+- 起点 main HEAD=93d91e9 → merge --no-ff feat/infra-P273-new-verify-self-checker-fixup-protocol → main HEAD=**49cb801**
+- `./init.sh` smoke 11/11 通过（audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish 全 ok）
+- 实测尾行表（在 main HEAD=49cb801 上）：
+  - `verify_infra_056`: ALL PASS (21 checks) rc=0
+  - `verify_infra_055`: ALL PASS (26 checks) rc=0
+  - `verify_infra_054`: FAIL 1/20 (`V1_self_checker_func_sha` — 预期 sha 漂移，与 P273 无关)
+  - `verify_infra_045`: FAIL 2/18 (`V2_func_sha_scan_reverse_sha_locks` + `V3_baseline_matches_expected` — 预期漂移)
+- Closeout helper dogfood（实测一致性）：
+  - `--verify-script verify_055 --json` → actual_func_sha=`83cee8d2...` ✓
+  - `--verify-script verify_054 --json` → actual_func_sha=`2c560e97...` ✓（两脚本输出不同，证明 helper 真读源不返常量）
+  - `--verify-script scripts/_nonexistent.py` → rc=1 + `ERROR: --verify-script not found` ✓
+  - `--verify-script /tmp/oneliner.py`（无 v4_behavior 一段式脚本）→ rc=1 + `ERROR: top-level function 'v4_behavior' not found` ✓
+- Status 切换：`infra-P273-new-verify-self-checker-fixup-protocol` `in_progress` → **`passing`**；evidence 追加 Reviewer LGTM + merge sha + 尾行表 + helper dogfood
+- 入账 2 项 backlog（Reviewer caveat）：
+  - `infra-P276-bootstrap-helper-self-mutant-detection` (P1)
+  - `infra-P277-bootstrap-helper-json-schema-version` (P2)
+- commit `chore(infra-P273-new-verify-self-checker-fixup-protocol): closeout passing + 2 backlog 入账`
+- push origin main 与 feat 分支各一次（见 commit 报告）
+- 持续开发模式继续：下一 candidate 由主会话按 `feature_list.json` 中 priority 最低数字的 `not_started` 决定
+
