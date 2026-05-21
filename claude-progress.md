@@ -6123,3 +6123,30 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
     - `infra-P299-closeout-verify-trustworthy-helper-passed-checks-field` — helper dict 新增 `passed_checks` 字段, 让下游 V4 可严格 assert 守恒律 `passed + failed == total` (round-1 #3 minor)
     - 注: 本次发现的另一个共性问题 "verify_*.py [SUMMARY] FAIL 与 process exit code 解耦" 已映射至 phase-38 #3.38 `infra-P294-Rx-verify-summary-exit-propagation` (round-2 仲裁 finding), 此次不重复入账
 - 持续开发模式: 继续 phase-38 #3.38 `infra-P294-Rx-verify-summary-exit-propagation`
+
+## Session 2026-05-22 (P294-Rx closeout)
+
+- 完成 phase-38 #3.38 `infra-P294-Rx-verify-summary-exit-propagation` closeout
+- main HEAD before merge: `a2fa8e6`
+- merge sha (no-ff): `6ec3768`
+- feat commits: `05c553a` (round-1 feat: verify_summary_exit helper + verify_infra_067) + `58c6994` (round-2 fix: cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA)
+- closeout commit: 见下文 commit sha
+- **语义反转 (重要)**: 本 feature 原为 P294-R5 round-1 仲裁推断的 "verify_*.py rc=0 bug" 驱动, 但本 feature Engineer 机制化扫描 67 个 verify 脚本证实 rc 传播全部正确, **真因是 round-1 Engineer 用 shell `python verify_xxx.py | tail; echo $?` 模式读 rc, 被 tail 的 rc 覆盖**, 把上游真 FAIL 当 PASS. Deliverable 因此重定位为:
+  1. `_verify_lib.verify_summary_exit` helper + verify_infra_067 机制化校验所有 verify 脚本 SUMMARY 行 / exit 一致
+  2. cascade SHA bump 习惯 (helper 改动 → 重算 dump_file_sha)
+  3. 文档化 shell 用法陷阱 (入 P299 backlog)
+- F1 处理: round-1 Reviewer REJECT (verify_infra_060 EXPECTED_DUMP_FILE_SHA 未 cascade bump) → fix commit 58c6994 闭合 → round-2 LGTM
+- F2 处理: round-1 Reviewer nit (verify_infra_061 V3_helper_func_sha baseline stale, 与本 feature 无因果) → 记 `incidental_fix` 字段, 入 backlog P299-old-verify-summary-helper-migration 顺手清理
+- Reviewer (sub-agent fresh-context): round-1 REJECT (F1 blocker + F2 nit) → round-2 LGTM
+- final smoke + verify on main (`6ec3768`):
+  - `./init.sh` PASS rc=0
+  - verify_infra_060 ALL PASS (14 checks) rc=0
+  - verify_infra_062 ALL PASS (17 checks) rc=0
+  - verify_infra_065 ALL PASS (13 checks) rc=0
+  - verify_infra_066 ALL PASS (14 checks) rc=0
+  - verify_infra_067 ALL PASS (18 checks) rc=0
+  - verify_infra_034 total=53 failed=0 rc=0
+- 入 backlog (priority=999, phase=null, status=backlog):
+  - `infra-P299-shell-verify-rc-usage-doc` — AGENTS.md/CLAUDE.md 文档化 verify_*.py 调用 shell 必须 `; rc=$?` 紧跟或 `set -o pipefail`, 禁用 `| tail; echo $?` 模式 (本 feature 暴露根因)
+  - `infra-P299-old-verify-summary-helper-migration` — 30 个 no_summary 旧 verify_infra_*.py (002-035) 渐进迁移到 verify_summary_exit helper + 统一 SUMMARY 行 (含 F2 verify_infra_061 顺手清理)
+- 持续开发模式: 继续 phase-38 #4.38 `infra-P294-Ry-closeout-reviewer-text-scan`

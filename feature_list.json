@@ -7857,11 +7857,37 @@
     {
       "id": "infra-P294-Rx-verify-summary-exit-propagation",
       "priority": 3.38,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 38,
       "area": "infra",
       "title": "verify 脚本 [SUMMARY] FAIL 与 process exit code 解耦兜底",
-      "rationale": "round-2 Reviewer 仲裁 finding: closeout-verify-trustworthy helper 在 main HEAD re-run 时, 仅依赖 process exit code 判定 trustworthy, 若 verify 脚本 [SUMMARY] FAIL 但 exit code=0 (脚本异常处理吞掉 rc) 会被误判 PASS. 建议除 exit code 外, 同时 grep stdout '\\[SUMMARY\\] (FAIL|FAILED)' 作兜底; 任一命中即视 FAIL."
+      "rationale": "round-2 Reviewer 仲裁 finding: closeout-verify-trustworthy helper 在 main HEAD re-run 时, 仅依赖 process exit code 判定 trustworthy, 若 verify 脚本 [SUMMARY] FAIL 但 exit code=0 (脚本异常处理吞掉 rc) 会被误判 PASS. 建议除 exit code 外, 同时 grep stdout '\\[SUMMARY\\] (FAIL|FAILED)' 作兜底; 任一命中即视 FAIL.",
+      "evidence": {
+        "main_head_sha": "6ec3768",
+        "main_head_before_merge": "a2fa8e6",
+        "merge_sha": "6ec3768",
+        "feat_commit_sha": ["05c553a", "58c6994"],
+        "verify_runs": [
+          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
+          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "scripts/verify_infra_062.py", "status": "ALL PASS (17 checks)", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+          {"script": "scripts/verify_infra_065.py", "status": "ALL PASS (13 checks)", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+          {"script": "scripts/verify_infra_066.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "scripts/verify_infra_067.py", "status": "ALL PASS (18 checks)", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "rounds": 2,
+          "round_1": "REJECT - F1 blocker: round-1 commit 05c553a 改 verify_summary_exit helper 后未同步 verify_infra_060 EXPECTED_DUMP_FILE_SHA, 导致 V4_dump_includes_reverse_index FAIL. F2 nit: verify_infra_061 V3_helper_func_sha baseline drift (与本 feature 无因果).",
+          "round_2": "LGTM - F1 已闭合 (fix commit 58c6994 cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA), 9 verify ALL PASS rc=0, smoke PASS. F2 留作 incidental_fix 入 backlog.",
+          "summary": "Reviewer (sub-agent fresh-context, 2 轮): round-1 REJECT (F1 blocker SHA 未 cascade bump + F2 nit incidental) → round-2 LGTM (fix 58c6994 闭合 F1). 允许 passing."
+        },
+        "semantic_reversal": "原假设 'verify_*.py rc=0 bug' (P294-R5 round-1 仲裁推断) 被本 feature Engineer 机制化扫描 67 脚本推翻 — rc 传播全部正确, 真因是 round-1 Engineer 用 shell `| tail; echo $?` 模式读 rc, 被 tail 的 rc 覆盖 (吞了上游 verify 脚本的真 rc). Deliverable 因此重定位为: (a) verify_summary_exit helper + verify_infra_067 机制化校验所有 verify 脚本 SUMMARY/exit 一致, (b) cascade SHA bump 习惯, (c) 文档化 shell 用法陷阱 (入 P299 backlog).",
+        "incidental_fix": "verify_infra_061 V3_helper_func_sha baseline stale 是 pre-existing drift (与本 feature 无因果, F2 nit), 入 backlog infra-P299-old-verify-summary-helper-migration 顺手清理.",
+        "commits": ["05c553a", "58c6994", "6ec3768"]
+      }
     },
     {
       "id": "infra-P294-Ry-closeout-reviewer-text-scan",
@@ -7925,6 +7951,24 @@
       "area": "infra",
       "title": "verify_infra_062 V3_helper_func_sha 在 main baseline 上 pre-existing FAIL",
       "rationale": "P294-R4 Reviewer finding: 跑 verify_infra_062 在 main baseline (d69a594 之前若干) 上 V3_helper_func_sha got=d771fb0b expect=6cf263ee, 属 pre-existing drift, 与 P294-R4 patch 无关但应单独立项追账重算 EXPECTED_*_FUNC_SHA 并 commit; 不修会一直污染 verify_baseline_fail_claims 的 true-fail 测试集。"
+    },
+    {
+      "id": "infra-P299-shell-verify-rc-usage-doc",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "AGENTS.md / CLAUDE.md 文档化 verify_*.py 调用 shell 必须正确读 rc",
+      "rationale": "P294-Rx 根因暴露: round-1 Engineer 误判 'verify rc=0 bug' 实因 shell `python verify_xxx.py | tail; echo $?` 模式让 tail 的 rc 覆盖了上游 verify 脚本的真 rc, 把真 FAIL 当 PASS. 建议在 AGENTS.md / CLAUDE.md 显式写: (a) verify_*.py 必须 `python verify_xxx.py; rc=$?` 紧跟不通过任何管道, 或 (b) `set -o pipefail` 启用后再 pipe, 或 (c) 把 stdout 重定向到文件再 tail 文件 (`python verify_xxx.py > /tmp/v.log 2>&1; rc=$?; tail /tmp/v.log`). 显式禁用 `| tail; echo $?` 模式. 同步在 sub-agent brief 模板里加这条 reminder."
+    },
+    {
+      "id": "infra-P299-old-verify-summary-helper-migration",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "30 个 no_summary 旧 verify_infra_*.py (002-035) 渐进迁移到 verify_summary_exit helper",
+      "rationale": "P294-Rx Engineer 机制化扫描 (verify_infra_067) 报告: scripts/verify_infra_002.py-035.py 中 30 个老脚本未走 _verify_lib.verify_summary_exit helper, SUMMARY 行格式与 rc 传播不统一 (有的 print 'summary total=X failed=Y' 无 [SUMMARY] 前缀, 有的不调 sys.exit). 顺手项 F2 (verify_infra_061 V3_helper_func_sha baseline drift 也属此类). 建议渐进迁移: 每 phase 顺手把 1-2 个老脚本改用 verify_summary_exit helper + 统一 `[SUMMARY] ALL PASS (N checks)` / `[SUMMARY] FAIL (N/M fail)` 行, 配套 cascade bump 对应 verify_*.py 的 EXPECTED_*_FILE_SHA. 不阻塞主线, 长尾任务."
     },
     {
       "id": "infra-P299-baseline-cross-check-v4-invalid-ref-coverage",
