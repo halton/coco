@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""verify_infra_044: dump_v4_sha_graph _infer_target refine lock (verify-only).
+"""verify_infra_047: dump_v4_sha_graph source-file-aware self-lock inference (verify-only).
 
-infra-039-backlog (phase-33 #5.33): 锁住 ``scripts/dump_v4_sha_graph.py`` 的
-``_infer_target`` 推断逻辑及其 ``_KNOWN_NON_NUMERIC_TARGETS`` 查表, 确保 fingerprint
-/ bump-only / dump 自锁等非数字常量名能被正确识别。
+infra-039-backlog (phase-34 #3.34): 锁住 ``scripts/dump_v4_sha_graph.py`` 的
+``_infer_target`` 推断逻辑在 ``_PER_FILE_LOCKS`` (二级查表) 与 ``_PER_FILE_SELF_LOCKS``
+(真自锁) 上的新增支持。这两套表面向跨 verify 文件同名常量歧义场景, 例如:
+
+- ``EXPECTED_FILE_SHA`` 在 verify_interact_037.py 中锁 verify_interact_024.py;
+- ``SETTER_BLOCK_EXPECTED_SHA`` 在 verify_robot_025.py / 027 中锁 coco/proactive.py;
+- ``EXPECTED_FINGERPRINT`` 在 verify_infra_022 / 028 中是真自锁 (target = source_file 自身).
 
 本脚本验证:
-- V0 scaffolding: dump_v4_sha_graph.py 存在 + _infer_target / _KNOWN_NON_NUMERIC_TARGETS 符号在
-- V1 docstring sentinel ``INFRA_044_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
+- V0 scaffolding: dump_v4_sha_graph.py 存在 + _PER_FILE_LOCKS / _PER_FILE_SELF_LOCKS / _infer_target 符号在
+- V1 docstring sentinel ``INFRA_047_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
 - V2 dump_v4_sha_graph.py file sha + _infer_target func sha
 - V3 in-memory mutant: 替换 _infer_target 函数体为 ``return '<unknown>'``, sha 必漂移
-- V4 行为验证: import dump_v4_sha_graph 后直接调用 _infer_target, 对若干代表性 const
-  的返回必须命中查表 / numeric 推断分支
+- V4 行为验证: import dump_v4_sha_graph 后直接调用 _infer_target, 覆盖
+  per-file lock / per-file self-lock / numeric fallback / 表外 unknown 兜底
 - V5 Reviewer LGTM gate (print-only)
 
-INFRA_044_SHA_LOCKS
+INFRA_047_SHA_LOCKS
 -------------------
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
 - ``_infer_target`` func sha: EXPECTED_INFER_TARGET_FUNC_SHA
@@ -37,21 +41,21 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
-# infra-044 sha lock 常量 (V2)
+# infra-047 sha lock 常量 (V2)
 EXPECTED_DUMP_FILE_SHA = "20294bc8e83c8d29844d10340b36c8e6edf6628e9497dfdd82e6779bdf2c88a7"
 EXPECTED_INFER_TARGET_FUNC_SHA = "8fa29b811670d4f7642e2ca84d571bcf2bf77dbabf5b2a60efa17f4df08eb446"
 
-# 本脚本 v4_behavior 自锁 (V1)
-EXPECTED_V4_CHECKER_FUNC_SHA = "b9ae27aaddeb2a1d89171b4dfd1c66be7e0559be16555617b91879a5857bf41a"
+# 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
+EXPECTED_V4_CHECKER_FUNC_SHA = "321fca97bc45b4b2a77180aba7b7977d43740df79611643a47b38baa1c5859be"
 
-DOCSTRING_SENTINEL = "INFRA_044_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_047_SHA_LOCKS"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_044][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_047][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, ok, detail))
 
 
@@ -69,7 +73,7 @@ def _func_sha(path: Path, func_name: str) -> str:
 
 
 def _load_dump_module():
-    spec = importlib.util.spec_from_file_location("_dump_v4_sha_graph_under_test", DUMP_PY)
+    spec = importlib.util.spec_from_file_location("_dump_v4_sha_graph_under_test_047", DUMP_PY)
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(mod)
@@ -82,10 +86,14 @@ def _load_dump_module():
 def v0_scaffolding() -> None:
     _emit("V0_dump_exists", DUMP_PY.is_file(), f"path={DUMP_PY}")
     src = DUMP_PY.read_text(encoding="utf-8")
-    needed = ["def _infer_target", "_KNOWN_NON_NUMERIC_TARGETS", "EXPECTED_DUMP_FILE_SHA"]
+    needed = [
+        "def _infer_target",
+        "_PER_FILE_LOCKS",
+        "_PER_FILE_SELF_LOCKS",
+    ]
     found = [n for n in needed if n in src]
     _emit(
-        "V0_infer_target_symbols",
+        "V0_per_file_symbols",
         len(found) == len(needed),
         f"found {len(found)}/{len(needed)}: {found}",
     )
@@ -191,7 +199,7 @@ def v3_mutant() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V4: 行为验证 — import + 直接调用 _infer_target
+# V4: 行为验证 — per-file lock / per-file self-lock / numeric / unknown fallback
 # ---------------------------------------------------------------------------
 def v4_behavior() -> None:
     try:
@@ -200,49 +208,66 @@ def v4_behavior() -> None:
         _emit("V4_import_dump", False, f"err: {e!r}")
         return
     _emit("V4_import_dump", True, "module loaded")
-    # 查表条目: 非数字常量名
-    cases_table = [
-        ("EXPECTED_LIB_FILE_SHA", "_verify_lib.py"),
-        ("EXPECTED_VERIFY_LIB_FILE_SHA", "_verify_lib.py"),
-        ("EXPECTED_DUMP_FILE_SHA", "dump_v4_sha_graph.py"),
-        ("EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_V6_SCAN_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_READ_CONSTANT_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_RENDER_MERMAID_FUNC_SHA", "dump_v4_sha_graph.py"),
+
+    # per-file lock 命中: (source_file, const) 二级查表
+    per_file_cases = [
+        ("scripts/verify_infra_045.py", "EXPECTED_SCAN_FUNC_SHA", "_verify_lib.py"),
+        ("scripts/verify_infra_046.py", "EXPECTED_BUMP_FILE_SHA", "bump_reverse_sha_lock.py"),
+        ("scripts/verify_interact_037.py", "EXPECTED_FILE_SHA", "verify_interact_024.py"),
+        ("scripts/verify_interact_037.py", "EXPECTED_FUNC_SHA", "verify_interact_024.py"),
+        ("scripts/verify_robot_025.py", "SETTER_BLOCK_EXPECTED_SHA", "proactive.py"),
+        ("scripts/verify_robot_027.py", "SETTER_BLOCK_EXPECTED_SHA", "proactive.py"),
+        ("scripts/verify_robot_033.py", "FILE_SHA", "proactive.py"),
+        ("scripts/verify_robot_034.py", "EXPECTED_DOC_SHA", "doc"),
+        ("scripts/verify_robot_036.py", "EXPECTED_SENTINEL_LINE_SHA", "verify_robot_032.py"),
     ]
-    miss = []
-    for const, needle in cases_table:
-        got = mod._infer_target(const, "scripts/verify_infra_044.py")
-        if needle not in got:
-            miss.append((const, got))
+    miss_pf = []
+    for src_file, const, needle in per_file_cases:
+        got = mod._infer_target(const, src_file)
+        if needle.lower() not in got.lower():
+            miss_pf.append((src_file, const, got))
     _emit(
-        "V4_known_table_resolves",
-        not miss,
-        f"miss={miss}" if miss else f"all {len(cases_table)} table-targets resolved",
+        "V4_per_file_lock_resolves",
+        not miss_pf,
+        f"miss={miss_pf}" if miss_pf else f"all {len(per_file_cases)} per-file targets resolved",
     )
-    # numeric 路径: VERIFY_<NNN>_ 仍走原流程
+
+    # per-file self-lock: EXPECTED_FINGERPRINT 在 verify_infra_022 / 028 中锁 source_file 自身
+    self_cases = [
+        ("scripts/verify_infra_022.py", "EXPECTED_FINGERPRINT"),
+        ("scripts/verify_infra_028.py", "EXPECTED_FINGERPRINT"),
+    ]
+    miss_self = []
+    for src_file, const in self_cases:
+        got = mod._infer_target(const, src_file)
+        # 自锁结果必须包含 source_file basename
+        base = src_file.rsplit("/", 1)[-1]
+        if base not in got:
+            miss_self.append((src_file, const, got))
+    _emit(
+        "V4_per_file_self_lock_resolves",
+        not miss_self,
+        f"miss={miss_self}" if miss_self else f"all {len(self_cases)} self-lock resolved",
+    )
+
+    # numeric 路径不受影响: VERIFY_025 在 verify_robot_027.py 仍解析为 verify_*_025
     got_numeric = mod._infer_target("VERIFY_025_EXPECTED_SHA", "scripts/verify_robot_027.py")
     _emit(
-        "V4_numeric_verify_hint",
-        "025" in got_numeric and "verify" in got_numeric.lower(),
+        "V4_numeric_path_preserved",
+        "025" in got_numeric,
         f"got={got_numeric!r}",
     )
-    # V<NNN>_ 路径 (infra-039-backlog 扩展)
-    got_v = mod._infer_target("V018_EXPECTED_SHA", "scripts/verify_interact_033.py")
+
+    # _KNOWN_NON_NUMERIC_TARGETS 查表不受影响 (例: EXPECTED_LIB_FILE_SHA)
+    got_lib = mod._infer_target("EXPECTED_LIB_FILE_SHA", "scripts/verify_robot_035.py")
     _emit(
-        "V4_v_num_hint",
-        "018" in got_v,
-        f"got={got_v!r}",
+        "V4_known_table_preserved",
+        "_verify_lib.py" in got_lib,
+        f"got={got_lib!r}",
     )
-    # BUMP_<NNN>_ 路径
-    got_bump = mod._infer_target("BUMP_028_EXPECTED_SHA", "scripts/verify_robot_031.py")
-    _emit(
-        "V4_bump_num_hint",
-        "028" in got_bump,
-        f"got={got_bump!r}",
-    )
-    # unknown 回退仍然是 <unknown target>
-    got_unknown = mod._infer_target("TOTALLY_RANDOM_NAME", "scripts/anywhere.py")
+
+    # 表外仍走 unknown 兜底
+    got_unknown = mod._infer_target("TOTALLY_RANDOM_NAME_XYZ", "scripts/anywhere.py")
     _emit(
         "V4_unknown_fallback",
         "<unknown" in got_unknown,
@@ -271,9 +296,9 @@ def main() -> int:
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_044][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(f"[verify_infra_047][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
         return 1
-    print(f"[verify_infra_044][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(f"[verify_infra_047][SUMMARY] ALL PASS ({total} checks)", flush=True)
     return 0
 
 

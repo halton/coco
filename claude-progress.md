@@ -5247,3 +5247,35 @@ Process 改善:
 - **2 backlog 入账** (priority=999, status=backlog, phase=null):
   1. `infra-V6-bump-helper-lib-target` — 扩展支持 `_verify_lib.py` 作为反向锁 target (NNN-agnostic fallback)
   2. `infra-V6-bump-helper-atomic-apply` — `--apply` 引入 two-pass / 原子回滚, 防部分落盘
+
+## Session P266 — phase-34 #3.34 infra-039-backlog-source-file-aware-inference (Engineer)
+
+**目标**: scripts/dump_v4_sha_graph.py `_infer_target` 引入 (source_file_basename, const_name) → target 二级查表 + 真自锁集合，把剩余 unknown 节点继续压缩；新增 verify_infra_047.py 锁住该行为。
+
+**实现**:
+- scripts/dump_v4_sha_graph.py:
+  - 新增 `_PER_FILE_LOCKS: Dict[Tuple[str,str], str]` 21 条 (覆盖 verify_infra_045/046, verify_interact_037, verify_robot_025/027/028/029/030/033/034/036)
+  - 新增 `_PER_FILE_SELF_LOCKS: set` (含 EXPECTED_FINGERPRINT — verify_infra_022/028 真自锁)
+  - `_infer_target` 在 step 1 之前插入 step 0 (per-file lock) + step 0.5 (per-file self-lock)；source_file 取 basename 匹配
+- scripts/verify_infra_047.py 新增, V0-V5 (15 checks):
+  - V2 dump file sha = 20294bc8e83c8d29...; _infer_target func sha = 8fa29b811670d4f7...
+  - V4 per-file lock 9 cases / per-file self-lock 2 cases / numeric path / known-table / unknown fallback
+  - V1 v4_behavior 自 checker func sha = 321fca97bc45b4b2...
+
+**Cascade bump**:
+- dump file sha: c2be81be → 20294bc8 → bump EXPECTED_DUMP_FILE_SHA in verify_infra_039 / 043 / 044
+- _infer_target func sha: f0e78715 → 8fa29b81 → bump EXPECTED_INFER_TARGET_FUNC_SHA in verify_infra_044
+
+**unknown 压缩**:
+- 改动前 22 个 unknown (total 59 locks)
+- 改动后 0 个 unknown (total 62 locks; verify_infra_047 新增 3 锁)
+
+**Verify rc**:
+- verify_infra_039 rc=0 (10 checks)
+- verify_infra_043 rc=0 (13 checks)
+- verify_infra_044 rc=0 (15 checks)
+- verify_infra_047 rc=0 (15 checks)
+- verify_infra_034 rc=0 (53/0; V6 自动认 verify_infra_047)
+- ./init.sh smoke 11/11 PASS
+
+**status**: in_progress (留待 Reviewer + Closeout)
