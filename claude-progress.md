@@ -5738,3 +5738,33 @@ Process 改善:
   - P286/P287 故意压后, 等 P285 落地 unknown=0 后再做精确锁更有意义
   - infra-V6-backlog-strengthen-mutant-targeting 工作量大且收益已被 P281 覆盖
   - infra-P275-assert-verify-passed-min-checks 工作量小但 P278 已能覆盖大部分场景
+
+---
+
+## Session 2026-05-22 — Part A 修 main pre-existing FAIL + P285 round-2 fix
+
+### Part A (on main)
+- 现象: `python scripts/verify_robot_037.py` V2_lib_file_sha FAIL (got=11588d58... expect=8e0e0051...). `_verify_lib.py` 经 P273/P274/P276/P277/P278 多轮 bump 后 sha 已变, robot_037 锁未跟.
+- 复核"FAIL 时 rc=0 bug": 实测 rc=1 (`sys.exit(main())` 正常 propagate). 用户报告的 rc=0 来自 `| tail` pipe 的 $? 误差, 非真 bug, 不修.
+- Fix: bump `EXPECTED_VERIFY_LIB_FILE_SHA` 到 `11588d588e68f192...`.
+- 验证: verify_robot_037 ALL PASS (18 checks) rc=0; `./init.sh` smoke rc=0 全 PASS.
+- Commit: `ac2eaef fix(infra): verify_robot_037 bump EXPECTED_VERIFY_LIB_FILE_SHA` on main.
+- Push: `git push origin main` 失败 (403 halton/coco.git denied to haltonhuo_microsoft), 按规则忽略继续.
+
+### Part B (on feat/infra-P285-classifier-recognize-lib-func-locks)
+- Rebase: 干净 rebase 到 ac2eaef, 无冲突. 新 HEAD 含 50765ca (P285 round-1).
+- 重测 17 个 verify (P285 直接相关 + 声称 pre-existing FAIL 那批 + V6 + smoke):
+  - 14/17 ALL PASS, FAIL 2 个: verify_infra_044 / verify_infra_054 `V1_self_checker_func_sha`.
+  - verify_infra_044: got=b9ae27aaddeb2a1d expect=91573152a54f1012
+  - verify_infra_054: got=e8663f6598068100 expect=2c560e97d7e8b7e8
+- 归因核查: 独立把 044/054 checkout 到 NEW_MAIN 版本, 该版本 FAIL tag 是 `V2_dump_file_sha` (P278 之后的 dump 层 stale, 旧 pre-existing). P285 round-1 (50765ca) bump 了 044/054 的 EXPECTED_DUMP_FILE_SHA + EXPECTED_V4_CHECKER_FUNC_SHA, 修掉了 V2_dump_file_sha 那个 pre-existing, 但 EXPECTED_V4_CHECKER_FUNC_SHA bump 到了一个错误值 (与当前 ast.unparse(v4_behavior) 不符). 归因: **P285 round-1 自身回填错误**, 非 pre-existing.
+- Round-2 fix: bump 044/054 `EXPECTED_V4_CHECKER_FUNC_SHA` 到当前实测值 (b9ae27aaddeb2a1d... / e8663f659806810...).
+- 重测全套 17 个 verify + smoke: 全 PASS rc=0.
+- Status 切换: `infra-P285-classifier-recognize-lib-func-locks` `not_started` → `in_progress`, evidence 含 round-2 fix 摘要 + 17 项尾行表 + 诚实归因 (P285 round-1 引入).
+- Reviewer LGTM: pending (待主会话派独立 sub-agent fresh-context 评审).
+- Merge: pending.
+
+### 硬规则遵守
+- 实测尾行全部附完整尾行 (`/tmp/p285r2/*.log`).
+- 不切 passing, 不 merge feat→main, 等 Reviewer LGTM.
+- 没用 "pre-existing" 推诿 — 唯一 pre-existing (main 上 robot_037) 已在 Part A 修掉; feat 分支的 044/054 FAIL 已诚实归因为 P285 round-1 自身回填错误.
