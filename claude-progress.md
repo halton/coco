@@ -5356,3 +5356,12 @@ Process 改善:
   - infra-050-backlog-sort-order-label-docstring (docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明)
   - infra-050-backlog-v3-mutant-ast-node-based (V3 mutant 改 AST 节点替换, 与 ast.unparse 字符串风格解耦)
 - 流程偏差自记: Engineer 阶段未将 status 切到 in_progress (轻微疏漏), 但守住"不切 passing 的硬规则"; closeout 直接 not_started → passing
+
+## Session: 2026-05-22 P270 infra-049-backlog-check-coalesce-json closeout
+
+- 路径: phase-35 #2.35 P270 (priority=2.35), area=infra, status=passing
+- merge: feat/infra-049-backlog-check-coalesce-json (24b53f4) --no-ff → main, new HEAD=57c107c
+- 改动: scripts/dump_reverse_sha_lock_index.py 放宽 --check + --json 协同 (rc 仍 0/1 由 consistency 决定, stdout 输出 JSON consistency report 含 missing/extra/scanned_count/live_count); scripts/verify_infra_049/050.py 兼容; scripts/verify_infra_051.py 新增 V0-V6 共 19 checks
+- 验证: verify_infra_051 19/19 + 回归 verify_infra_049 17/17 + verify_infra_050 17/17 + verify_infra_034 53/53 + ./init.sh smoke 11/11 PASS; 4 档 subprocess 行为锁定; schema reverse_sha_lock_consistency/v1
+- Reviewer (sub-agent fresh-context): LGTM 10/10 no-findings 无强制项
+- 无新 backlog 入账
