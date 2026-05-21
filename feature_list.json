@@ -6568,14 +6568,19 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "对 kind=expected_pattern 锁做独立一致性核验",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
       "scope": "scan_reverse_sha_locks 扩展后 52 个 expected_pattern 锁未参与 --check 一致性核验；建议增加独立路径，针对这些锁去比对 dump_*.py 文件 sha / func sha，弥补盲区。",
       "dependencies": [
         "infra-049-backlog-reverse-lock-pattern-expand"
       ],
-      "verification": []
+      "verification": [
+        "scripts/_verify_lib.py 新增 verify_expected_pattern_consistency(scripts_dir) helper, 返回 {total_expected_pattern_locks, unresolved, orphan_const_names, missing_assignment, sample, all_match}",
+        "scripts/verify_infra_057.py V0-V5 完整锁 helper: V0 helper def + __all__ 注册; V1 docstring sentinel INFRA_057_SHA_LOCKS + v4_behavior 自锁; V2 _verify_lib.py file sha (7f1c0bb2...); V3 helper canonical func sha (092041818b...); V4 行为: real all_match + total>=30 (=65 现网) + sample schema + tmp 正例 + monkey-patch mutant 反证; V5 reviewer gate",
+        "8 个引用旧 lib sha 的 verify 脚本 bump 到新 sha: infra-037, infra-042, infra-045, infra-052, infra-055, infra-056, robot-035, robot-037",
+        "verify_infra_057 [SUMMARY] ALL PASS (13 checks); 8 bumped verify ALL PASS; verify_infra_034 V6 一致性 53/53 PASS; ./init.sh smoke 通过"
+      ]
     },
     {
       "id": "infra-V6-backlog-strengthen-mutant-targeting",
