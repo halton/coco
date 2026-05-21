@@ -6944,7 +6944,7 @@
       "area": "infra",
       "phase": "phase-35",
       "title": "mermaid hub 颜色调整, 与 module 拉开区分度",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
       "scope": "当前 hub (dump_v4_sha_graph) 与 module 节点配色在某些 mermaid 渲染器下视觉上接近；调整 hub 配色 (例如更高饱和度的对比色) 使其在 GitHub mermaid 渲染时一眼可辨。",
