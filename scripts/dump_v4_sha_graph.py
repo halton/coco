@@ -181,6 +181,11 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # verify_infra_064 (P284) — 锁 smoke_history.jsonl 不再 tracked 政策
     ("verify_infra_064.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
         "scripts/_verify_lib.py (file-sha)",
+    # verify_infra_065 (P294-R4) — 锁 verify_baseline_fail_claims helper
+    ("verify_infra_065.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_065.py", "EXPECTED_BASELINE_FAIL_CROSS_CHECK_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_baseline_fail_claims (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

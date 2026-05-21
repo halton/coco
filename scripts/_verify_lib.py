@@ -25,6 +25,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,7 @@ __all__ = [
     "verify_unknown_node_count_bound",
     "verify_expected_prefix_typo_guard",
     "verify_closeout_evidence_trustworthy",
+    "verify_baseline_fail_claims",
     "assert_verify_passed",
 ]
 
@@ -977,4 +979,201 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
         "main_head_present": main_head_present,
         "verify_runs_have_tail": verify_runs_have_tail,
         "reviewer_fresh_context": reviewer_fresh_context,
+    }
+
+
+# ---------------------------------------------------------------------------
+# infra-P294-R4 (fail-baseline-cross-check): Reviewer 报告中声称 "verify_infra_XXX
+# FAIL on baseline" 的脚本, closeout 阶段须实跑确认其在 main baseline ref 上确实
+# FAIL, 防止 Reviewer 凭空编造 baseline 状态 (P278 round-1 教训: Reviewer 误报
+# verify_infra_061 FAIL on baseline, 而 Engineer 实跑 PASS, 当时只能靠第三方
+# 仲裁实跑解决). 本 helper 把该交叉校验固化进 verify 框架, 接受 Reviewer 文本 +
+# baseline ref + repo root, 解析 "verify_infra_XXX (FAIL|fail|失败)" 模式, 在
+# baseline ref 上以 git worktree 隔离实跑对应脚本, 比对 claim 与实际 rc。
+# Default-OFF: 不在任何已有流程自动运行; 由调用方显式触发。
+# ---------------------------------------------------------------------------
+_RE_BASELINE_FAIL_CLAIM = re.compile(
+    r"verify_infra_(\d{3})\b[^\n]{0,80}?\b(FAIL|fail|失败)\b"
+)
+
+
+def verify_baseline_fail_claims(
+    reviewer_text: str,
+    baseline_ref: str,
+    repo_root: "Path | str",
+    timeout_per_script: int = 60,
+) -> dict:
+    """Cross-check Reviewer baseline FAIL claims against actual baseline runs.
+
+    输入:
+      reviewer_text: Reviewer sub-agent 返回的完整文本 (中英混合 OK)
+      baseline_ref: git ref (sha / branch / tag), 用 ``git rev-parse`` 校验
+      repo_root: 仓库根目录 (含 ``.git``)
+      timeout_per_script: 单脚本运行超时秒数 (默认 60s)
+
+    解析规则:
+      用 ``_RE_BASELINE_FAIL_CLAIM`` 抽取 "verify_infra_<NNN>" 与
+      "FAIL/fail/失败" 同行/近距离 (<=80 chars) 共现的所有 claim, 去重后逐一
+      在 baseline ref 上实跑。
+
+    实跑机制:
+      用 ``git worktree add --detach <tmpdir> <baseline_ref>`` 隔离, 在该
+      worktree 内 ``python scripts/verify_infra_XXX.py`` (若不存在则记为
+      missing); 比对 ``rc != 0`` 与 claim_fail (=True)。worktree 在 finally
+      中 ``git worktree remove --force`` 清理。
+
+    返回 dict::
+
+        {
+          "claims_total": int,
+          "claims_verified": int,        # 实测 FAIL 与 claim 一致
+          "claims_contradicted": int,    # 实测 PASS 但 claim 说 FAIL
+          "claims_missing": int,         # baseline 上脚本不存在
+          "baseline_ref": str,
+          "baseline_sha": str,           # rev-parse 结果 (空字符串若无效)
+          "contradictions": list[dict],  # [{script, claimed_fail, actual_fail, actual_rc, note}]
+          "missing_scripts": list[str],
+          "error": str | None,           # 顶层错误 (baseline_ref 无效等)
+        }
+
+    Default-OFF 约定: 本 helper 不在任何已有 verify 流程自动调用; 由 closeout
+    sub-agent 或专用 verify 脚本显式触发。
+    """
+    import subprocess  # noqa: WPS433 — 本 helper 自包含, 避免污染模块顶层
+    import tempfile
+
+    repo_root = Path(repo_root).resolve()
+
+    # 1) baseline_ref 校验: git rev-parse
+    proc_rp = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{baseline_ref}^{{commit}}"],
+        cwd=str(repo_root), capture_output=True, text=True, check=False,
+    )
+    if proc_rp.returncode != 0:
+        return {
+            "claims_total": 0,
+            "claims_verified": 0,
+            "claims_contradicted": 0,
+            "claims_missing": 0,
+            "baseline_ref": baseline_ref,
+            "baseline_sha": "",
+            "contradictions": [],
+            "missing_scripts": [],
+            "error": (
+                f"baseline_ref invalid: {baseline_ref!r} "
+                f"(git rev-parse stderr={proc_rp.stderr.strip()!r})"
+            ),
+        }
+    baseline_sha = proc_rp.stdout.strip()
+
+    # 2) 解析 claims (去重)
+    claim_ids: list[str] = []
+    seen: set[str] = set()
+    for m in _RE_BASELINE_FAIL_CLAIM.finditer(reviewer_text or ""):
+        nnn = m.group(1)
+        if nnn not in seen:
+            seen.add(nnn)
+            claim_ids.append(nnn)
+
+    if not claim_ids:
+        return {
+            "claims_total": 0,
+            "claims_verified": 0,
+            "claims_contradicted": 0,
+            "claims_missing": 0,
+            "baseline_ref": baseline_ref,
+            "baseline_sha": baseline_sha,
+            "contradictions": [],
+            "missing_scripts": [],
+            "error": None,
+        }
+
+    # 3) git worktree add 隔离实跑
+    contradictions: list[dict] = []
+    missing: list[str] = []
+    verified = 0
+    with tempfile.TemporaryDirectory(prefix="coco_p294r4_wt_") as tmpd:
+        wt_path = Path(tmpd) / "wt"
+        proc_add = subprocess.run(
+            ["git", "worktree", "add", "--detach", str(wt_path), baseline_sha],
+            cwd=str(repo_root), capture_output=True, text=True, check=False,
+        )
+        if proc_add.returncode != 0:
+            return {
+                "claims_total": len(claim_ids),
+                "claims_verified": 0,
+                "claims_contradicted": 0,
+                "claims_missing": 0,
+                "baseline_ref": baseline_ref,
+                "baseline_sha": baseline_sha,
+                "contradictions": [],
+                "missing_scripts": [],
+                "error": (
+                    f"git worktree add failed: "
+                    f"stderr={proc_add.stderr.strip()!r}"
+                ),
+            }
+        try:
+            for nnn in claim_ids:
+                script_rel = f"scripts/verify_infra_{nnn}.py"
+                script_abs = wt_path / script_rel
+                if not script_abs.is_file():
+                    missing.append(script_rel)
+                    contradictions.append({
+                        "script": script_rel,
+                        "claimed_fail": True,
+                        "actual_fail": None,
+                        "actual_rc": None,
+                        "note": "script missing on baseline",
+                    })
+                    continue
+                try:
+                    proc_run = subprocess.run(
+                        [sys.executable, script_rel],
+                        cwd=str(wt_path),
+                        capture_output=True, text=True, check=False,
+                        timeout=timeout_per_script,
+                    )
+                    actual_rc = proc_run.returncode
+                except Exception as e:  # noqa: BLE001
+                    contradictions.append({
+                        "script": script_rel,
+                        "claimed_fail": True,
+                        "actual_fail": None,
+                        "actual_rc": None,
+                        "note": f"run error: {e!r}",
+                    })
+                    continue
+                actual_fail = actual_rc != 0
+                if actual_fail:
+                    verified += 1
+                else:
+                    contradictions.append({
+                        "script": script_rel,
+                        "claimed_fail": True,
+                        "actual_fail": False,
+                        "actual_rc": actual_rc,
+                        "note": "Reviewer claimed FAIL but baseline run PASSED",
+                    })
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(wt_path)],
+                cwd=str(repo_root), capture_output=True, text=True, check=False,
+            )
+
+    # claims_contradicted 仅指 "claim FAIL 但实测 PASS" (不含 missing)
+    contradicted = sum(
+        1 for c in contradictions if c.get("actual_fail") is False
+    )
+
+    return {
+        "claims_total": len(claim_ids),
+        "claims_verified": verified,
+        "claims_contradicted": contradicted,
+        "claims_missing": len(missing),
+        "baseline_ref": baseline_ref,
+        "baseline_sha": baseline_sha,
+        "contradictions": contradictions,
+        "missing_scripts": missing,
+        "error": None,
     }
