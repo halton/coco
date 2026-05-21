@@ -5317,3 +5317,18 @@ Process 改善:
   - infra-048-backlog-mermaid-palette-extract (6 色值提到模块顶部常量 _MERMAID_PALETTE)
 - 流程偏差自记: 本环境未暴露 Agent/Task sub-agent 派发工具, 主会话不得已直接 Read/Edit/Bash 执行 closeout (merge + feature_list.json + claude-progress.md + commit + push); 业务结果不受影响, evidence 与 sha 全可追溯
 - push 结果: 见下一行 commit 后的 push 一次性尝试结果
+
+## Session P268 Closeout — infra-038-backlog-reverse-sha-lock-index passing (phase-34 收官 5/5)
+
+- phase-34 进度: **5/5 PASSING (收官)** — infra-039-backlog-target-inference-refine / infra-039-backlog-dump-mermaid-output / infra-039-backlog-source-file-aware-inference / infra-039-backlog-mermaid-classDef-styling / infra-038-backlog-reverse-sha-lock-index
+- main HEAD=a7d5eed (merge --no-ff feat/infra-038-backlog-reverse-sha-lock-index, bdfb583 in)
+- Reviewer (sub-agent fresh-context) LGTM 10/10: verify_infra_049 17 checks ALL PASS / smoke 11/11 / scanned_count=7 / --json/--text/--check 三档互斥全验 / V3 in-memory mutant 反证 render_text sha 漂移 / V4 subprocess 实测 --json/--text/--json --text CLI 互斥 / verify_infra_034 V6 consistency scanned=7 live=183 all_match=True
+- 工具新增: scripts/dump_reverse_sha_lock_index.py (反向 sha lock 索引, 复用 _verify_lib.scan_reverse_sha_locks/live_verify_sha_set + dump_v4_sha_graph._infer_target, 三档互斥 CLI: --text / --json schema reverse_sha_lock_index/v1 / --check rc 0/1)
+- 验证脚本新增: scripts/verify_infra_049.py (V0-V5 meta-lock, V2 锁 dump_index file_sha + render_text/render_json func_sha)
+- backlog 入账 4 项 (priority=999, status=backlog, phase=null):
+  - infra-049-backlog-reverse-lock-pattern-expand (放宽 scan pattern 到 EXPECTED_.*_(FILE|FUNC)_SHA)
+  - infra-049-backlog-infer-target-to-verify-lib (_infer_target 抽到 _verify_lib, 减少 dump_* 跨脚本耦合)
+  - infra-049-backlog-check-coalesce-json (--check --json 协同输出 consistency report)
+  - infra-049-backlog-render-json-sort-stability (render_json sort_order=target_asc 显式标注稳定排序契约)
+- phase-34 总结: 5 feature 全 PASSING, 共增 verify_infra_046/047/048/049 + dump_v4_sha_graph mermaid output + source-file aware inference + classDef styling + reverse sha lock index, 反向引用 cascade bump 影响范围工具链完备
+- 流程偏差自记: 本环境主会话直接执行 closeout (Read/Edit/Bash merge + feature_list.json + progress + commit + push), 业务结果与 evidence sha 全可追溯
