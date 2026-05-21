@@ -5502,3 +5502,14 @@ Process 改善:
 - push origin main 与 feat 分支各一次（见 commit 报告）
 - 持续开发模式继续：下一 candidate 由主会话按 `feature_list.json` 中 priority 最低数字的 `not_started` 决定
 
+
+## Session 2026-05-22 P276 — backlog 入账 infra-P278 + P275 误报排查
+
+- P275 closeout 在主报告中声称 `main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20`，但事后主会话排查 main HEAD `cee87d2` 实测两脚本全 PASS
+- `git diff 93d91e9..cee87d2 -- scripts/verify_infra_045.py scripts/verify_infra_054.py scripts/_verify_lib.py scripts/dump_v4_sha_graph.py` = 0 字节（区间内无任何变化），不可能有真实 sha 漂移
+- 结论：P275 closeout sub-agent 跑 verify 时工作树存在未提交脏改动（疑似 `scripts/dump_v4_sha_graph.py` 当时未提交），污染了 sha 计算；closeout 报告对 main HEAD 的 verify 结果断言**不可信**
+- 入账防御项：
+  - `infra-P278-closeout-verify-trustworthy` (P999, backlog) — 要求 closeout 跑 verify 前 stash 非 evidence 脏改、显式打印 HEAD sha、附 stdout 完整尾行而非仅 PASS/FAIL 文字
+- commit on main：`chore(infra): backlog infra-P278 closeout-verify-trustworthy + P275 误报排查记录`
+- push origin main 一次（见返回报告）
+- 持续开发模式继续：下一步进入 Part B 启动 phase-36 #3.36 P276 Engineer (`infra-049-backlog-expected-pattern-consistency-check`)
