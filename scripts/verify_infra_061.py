@@ -62,7 +62,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 # infra-061 sha lock 常量 (V2 / V3)
-EXPECTED_VERIFY_LIB_FILE_SHA = "d94afff3fc7faf7a9bbbc440ba9f2969a46a080a8aac58ec876082f0dd913b0a"
+EXPECTED_VERIFY_LIB_FILE_SHA = "6db89f013c0b815baa55b94ba108de079c1ecebf49b9adb192bcb262d1a53d93"
 EXPECTED_TYPO_GUARD_FUNC_SHA = "0771bf7f54d3b58afd4222e2b525677a26757f79842b29eeed133f448128f7cd"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填

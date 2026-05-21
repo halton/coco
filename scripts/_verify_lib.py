@@ -40,6 +40,7 @@ __all__ = [
     "verify_palette_fills_distinct",
     "verify_unknown_node_count_bound",
     "verify_expected_prefix_typo_guard",
+    "verify_closeout_evidence_trustworthy",
     "assert_verify_passed",
 ]
 
@@ -827,4 +828,153 @@ def verify_expected_prefix_typo_guard(
         "typo_count": len(typos),
         "typo_samples": typos[:10],
         "all_well_formed": len(typos) == 0,
+    }
+
+
+# ---------------------------------------------------------------------------
+# infra-P278 (closeout-verify-trustworthy): 把"Closeout-verify-trustworthy"做成
+# 机械化可验证的硬规则. 检查 feature 的 evidence dict 是否满足下列硬约束:
+# 1) closeout_verify.main_head_sha 存在且 >=7 hex (合并后实测必须在 main HEAD)
+# 2) closeout_verify.verify_runs 非空, 每项 tail_stdout 非空, status in {PASS,FAIL}
+# 3) 任一 FAIL 必须配套 pre_existing_baseline_sha + baseline_tail_stdout 字段
+#    (即必须先在 pre-merge main baseline 上独立复现, 否则不算 pre-existing)
+# 4) closeout_verify.smoke_tail_stdout 非空
+# 5) reviewer.reviewer_kind == 'sub_agent_fresh_context' 且 reviewer.lgtm == True
+# ---------------------------------------------------------------------------
+_RE_HEX7 = re.compile(r"^[0-9a-f]{7,}$")
+
+
+def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
+    """检查 feature evidence dict 是否满足 closeout-verify-trustworthy 硬规则.
+
+    输入 evidence schema (可选 key, 缺则记为不合规):
+
+      evidence = {
+        "closeout_verify": {
+            "main_head_sha": "<7+ hex>",
+            "smoke_tail_stdout": "<非空 str, >=1 行>",
+            "verify_runs": [
+                {
+                    "script": "scripts/verify_xxx.py",
+                    "tail_stdout": "<非空 str, >=1 行>",
+                    "status": "PASS" | "FAIL",
+                    # 若 status=="FAIL", 必须含:
+                    "pre_existing_baseline_sha": "<main pre-merge HEAD>",
+                    "baseline_tail_stdout": "<非空, 在 baseline 上独立复现>",
+                },
+                ...
+            ],
+        },
+        "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "lgtm": True,
+        },
+      }
+
+    返回 dict::
+
+        {
+          "total_checks": int,
+          "failed_checks": int,
+          "failed_reasons": list[str],
+          "all_trustworthy": bool,
+          "main_head_present": bool,
+          "verify_runs_have_tail": bool,
+          "reviewer_fresh_context": bool,
+        }
+    """
+    reasons: list[str] = []
+
+    main_head_present = False
+    verify_runs_have_tail = False
+    reviewer_fresh_context = False
+
+    cv = evidence.get("closeout_verify") if isinstance(evidence, dict) else None
+    if not isinstance(cv, dict):
+        reasons.append("missing closeout_verify dict")
+    else:
+        # rule 1: main_head_sha
+        sha = cv.get("main_head_sha")
+        if isinstance(sha, str) and _RE_HEX7.match(sha.strip().lower()):
+            main_head_present = True
+        else:
+            reasons.append(
+                f"closeout_verify.main_head_sha invalid (got {sha!r}, "
+                f"expect >=7 hex chars)"
+            )
+
+        # rule 2 + 3: verify_runs non-empty, each tail_stdout non-empty, FAIL → baseline
+        runs = cv.get("verify_runs")
+        if not isinstance(runs, list) or len(runs) == 0:
+            reasons.append("closeout_verify.verify_runs missing or empty")
+        else:
+            run_ok = True
+            for i, r in enumerate(runs):
+                if not isinstance(r, dict):
+                    reasons.append(f"verify_runs[{i}] not a dict")
+                    run_ok = False
+                    continue
+                tail = r.get("tail_stdout")
+                if not isinstance(tail, str) or not tail.strip():
+                    reasons.append(
+                        f"verify_runs[{i}] tail_stdout empty/missing "
+                        f"(script={r.get('script')!r})"
+                    )
+                    run_ok = False
+                status = r.get("status")
+                if status not in ("PASS", "FAIL"):
+                    reasons.append(
+                        f"verify_runs[{i}] status invalid: {status!r} "
+                        f"(expect PASS or FAIL)"
+                    )
+                    run_ok = False
+                if status == "FAIL":
+                    base_sha = r.get("pre_existing_baseline_sha")
+                    base_tail = r.get("baseline_tail_stdout")
+                    if not (isinstance(base_sha, str)
+                            and _RE_HEX7.match(base_sha.strip().lower())):
+                        reasons.append(
+                            f"verify_runs[{i}] FAIL lacks "
+                            f"pre_existing_baseline_sha (got {base_sha!r})"
+                        )
+                        run_ok = False
+                    if not (isinstance(base_tail, str) and base_tail.strip()):
+                        reasons.append(
+                            f"verify_runs[{i}] FAIL lacks baseline_tail_stdout"
+                        )
+                        run_ok = False
+            if run_ok:
+                verify_runs_have_tail = True
+
+        # rule 4: smoke_tail_stdout
+        smoke = cv.get("smoke_tail_stdout")
+        if not (isinstance(smoke, str) and smoke.strip()):
+            reasons.append("closeout_verify.smoke_tail_stdout empty/missing")
+
+    # rule 5: reviewer kind + lgtm
+    rv = evidence.get("reviewer") if isinstance(evidence, dict) else None
+    if not isinstance(rv, dict):
+        reasons.append("missing reviewer dict")
+    else:
+        kind = rv.get("reviewer_kind")
+        lgtm = rv.get("lgtm")
+        if kind == "sub_agent_fresh_context" and lgtm is True:
+            reviewer_fresh_context = True
+        else:
+            reasons.append(
+                f"reviewer not compliant: kind={kind!r} lgtm={lgtm!r} "
+                f"(expect kind='sub_agent_fresh_context' and lgtm=True)"
+            )
+
+    # 总检查数固定 5: main_head + verify_runs + smoke + reviewer + (FAIL-baseline 集合视为一条)
+    total_checks = 5
+    failed = len(reasons)
+    return {
+        "total_checks": total_checks,
+        "failed_checks": failed,
+        "failed_reasons": reasons,
+        "all_trustworthy": failed == 0,
+        "main_head_present": main_head_present,
+        "verify_runs_have_tail": verify_runs_have_tail,
+        "reviewer_fresh_context": reviewer_fresh_context,
     }

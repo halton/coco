@@ -5890,3 +5890,40 @@ phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`
 ### Git
 - closeout commit: (见 commit step)
 - push: origin main + feat/infra-P281-expected-prefix-typo-guard (失败忽略不重试)
+
+---
+
+## Session P294 (2026-05-22) — infra-P278-closeout-verify-trustworthy Engineer
+
+### Goal
+把 P275 closeout 误报事件的教训机械化: 新增 `verify_closeout_evidence_trustworthy` helper + `verify_infra_062` V0-V5, 让 Closeout sub-agent 的 evidence dict 可由 verify 脚本机械校验。
+
+### Changes
+- `scripts/_verify_lib.py`: 新增 `verify_closeout_evidence_trustworthy(evidence)` helper (~120 行), 含 __all__ 注册. file sha: `d94afff3...` → `6db89f01...`
+- `scripts/verify_infra_062.py`: 新建 V0-V5 (17 checks, 含 6 个 synthetic 样本 A-F + 2 个 dogfood 回溯 P281/P285 evidence)
+- `scripts/dump_v4_sha_graph.py`: `_PER_FILE_LOCKS` 新增 1 项 `(verify_infra_062.py, EXPECTED_CLOSEOUT_FUNC_SHA)` → `_verify_lib.verify_closeout_evidence_trustworthy (func-sha)`, 让 verify_infra_059 unknown 节点上界保持 1
+- `scripts/verify_infra_060.py`: bump EXPECTED_DUMP_FILE_SHA (dump 文件新增 1 项 _PER_FILE_LOCKS) → `8e66fc0c...`
+- cascade bump (11 个脚本) EXPECTED_VERIFY_LIB_FILE_SHA → `6db89f01...`: verify_infra_{042,045,052,055,056,057,058,059,061} + verify_robot_{035,037}
+- `feature_list.json`: 回填 infra-P281 与 infra-P285 evidence 的 `closeout_verify` + `reviewer` 结构化字段 (供 verify_infra_062 dogfood); P278 status: not_started → in_progress + branch
+- `CLAUDE.md` + `AGENTS.md`: 加 Closeout-verify-trustworthy 硬规则段, 5 条机械化校验列表
+
+### Verify (main HEAD baseline 90a23de, working tree clean)
+- `verify_infra_062`: ALL PASS (17 checks) — dogfood P281/P285 evidence 均 trustworthy=True
+- `verify_infra_034 V6`: total=53 failed=0, scanned_reverse_locks=88, live=196
+- cascade scripts: 042/055/056/059/060/061/robot_035/robot_037 ALL PASS
+- pre-existing FAIL (与 baseline 一致, 已记 P292 backlog):
+  - verify_infra_045 FAIL 2/18 (V2_func_sha_scan_reverse_sha_locks, V3_baseline_matches_expected)
+  - verify_infra_052 FAIL 2/23 (同 045)
+  - verify_infra_057 FAIL 1/13 (V3_helper_func_sha)
+  - verify_infra_058 FAIL 1/16 (V3_helper_func_sha)
+  baseline 90a23de 上 stash + 独立复现 stdout 已存档
+- `./init.sh` smoke ALL PASS (wake-word, power-state, config, publish)
+
+### Engineer 阶段产出 backlog 候选
+- 把 verify_infra_062 的 V4 dogfood 扩展为遍历所有 phase-37 passing feature evidence (不止 P281/P285)
+- helper 加 mutant-detection (改 helper 内部一行后 dogfood 应 FAIL)
+- closeout sub-agent 模板自动 emit closeout_verify+reviewer 字段, 避免 P281/P285 那种手工回填
+
+### Git
+- branch: feat/infra-P278-closeout-verify-trustworthy (from 90a23de)
+- commit: (see closeout step)

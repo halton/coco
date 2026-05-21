@@ -205,6 +205,18 @@ P273 / P275 还暴露过另一类失真：**新建 `scripts/verify_infra_NNN.py`
 - 证据记录在 `feature_list.json` 的 `evidence` 字段（可链 commit hash、log 片段、或 `research/` 文件路径）
 - 仓库仍然能按 `./init.sh` 重新开始工作
 
+## Closeout-verify-trustworthy 硬规则 (P278)
+
+Closeout sub-agent 提交的 verify 报告必须满足以下 5 条机械化校验，否则视为不可信：
+
+1. **main HEAD 显式锁**: evidence.closeout_verify.main_head_sha 存在且 >=7 hex (merge 后必须在 main HEAD 上跑，不能在 working tree)
+2. **verify_runs 完整尾行**: evidence.closeout_verify.verify_runs 非空，每项含 script + 非空 tail_stdout + status ∈ {PASS, FAIL}
+3. **pre-existing FAIL 需独立复现**: 任一 FAIL 必须配套 pre_existing_baseline_sha + baseline_tail_stdout 字段（在 pre-merge main baseline 上 stash 后独立复现）
+4. **smoke 尾行**: evidence.closeout_verify.smoke_tail_stdout 非空
+5. **Reviewer fresh-context**: evidence.reviewer.reviewer_kind == "sub_agent_fresh_context" 且 lgtm == True（主 context 自审不算）
+
+机械化校验由 `scripts/verify_infra_062.py` 调用 `_verify_lib.verify_closeout_evidence_trustworthy(evidence)` 实施。Closeout sub-agent 提交前应自检 dogfood。
+
 ## 收尾
 
 结束会话前：

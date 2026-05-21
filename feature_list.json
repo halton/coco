@@ -6647,7 +6647,28 @@
         "cascade_bump_scripts": "11 (9 verify_infra_*.py + verify_robot_035 + verify_robot_037, EXPECTED_LIB_FILE_SHA → d94afff... ; verify_infra_060 EXPECTED_DUMP_FILE_SHA bump + _PER_FILE_LOCKS +1)",
         "smoke": "PASS (entry-point + Coco 继承 ReachyMiniApp)",
         "dogfood_main_scan": "total_expected_consts=110 well_formed=110 typo_count=0 (samples=[])",
-        "real_machine_uat": "n/a (纯 infra helper, 无硬件路径)"
+        "real_machine_uat": "n/a (纯 infra helper, 无硬件路径)",
+        "closeout_verify": {
+          "main_head_sha": "90a23de",
+          "smoke_tail_stdout": "[smoke] ALL PASS\nrc=0\n",
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_061.py",
+              "tail_stdout": "[verify_infra_061][SUMMARY] ALL PASS (18 checks)\nrc=0\n",
+              "status": "PASS"
+            },
+            {
+              "script": "scripts/verify_infra_034.py (V6)",
+              "tail_stdout": "[verify_infra_034][V6_SUMMARY] total=53 failed=0\nrc=0\n",
+              "status": "PASS"
+            }
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "lgtm": true,
+          "findings": "4 findings (B-P281-R1..R4) — 已入 backlog (infra-P293-*) 不阻 close"
+        }
       }
     },
     {
@@ -7583,10 +7604,11 @@
     {
       "id": "infra-P278-closeout-verify-trustworthy",
       "priority": 3.37,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 37,
       "area": "infra",
       "title": "closeout sub-agent verify 报告必须可信",
+      "branch": "feat/infra-P278-closeout-verify-trustworthy",
       "rationale": "P275 closeout 在主报告中声称 main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20, 但事后排查 main HEAD cee87d2 实测全 PASS, 且 93d91e9..cee87d2 区间内 045/054/_verify_lib/dump 文件 diff 为 0 字节, 不可能漂移. 推测 closeout 跑 verify 时工作树有未提交脏改动污染 sha 计算. 建议: closeout 在跑 verify 前 (a) git stash --include-untracked 除 evidence/_history 外的脏改, (b) 显式 git log -1 --format=%H 输出当前 HEAD 作 evidence 前缀, (c) 跑完 verify 必须附 stdout 完整尾行而非仅 PASS/FAIL 文字描述. 否则 closeout 报告视为不可信."
     },
     {
@@ -7627,7 +7649,36 @@
         },
         "dogfood_unknown_count": "dump_v4_sha_graph.py --mermaid 实测 unknown_count=1, 剩余 unknown_id={unknown_EXPECTED_DOC_SHA} (verify_robot_034 文档 sha 锁, 不在 _verify_lib helper 范围, 属合理边界); 较 P278 baseline 13 unknown 消除 12 个 (92.3%)",
         "engineer_round1_to_round2_summary": "Round-1 (commit 50765ca) Engineer 主报告声称 verify_infra_044/054 ALL PASS, 实际是基于 OLD_MAIN sha 计算 EXPECTED_V4_CHECKER_FUNC_SHA. Round-2 rebase 到 NEW_MAIN (ac2eaef, Part-A 已修 robot_037) 后实测 V1_self_checker_func_sha FAIL: 044 got=b9ae27aaddeb2a1d expect=91573152, 054 got=e8663f6598068100 expect=2c560e97. 根因诚实归因: 非 pre-existing 漂移, 而是 P285 round-1 commit 自身回填 EXPECTED_V4_CHECKER_FUNC_SHA 时 ast.unparse(v4_behavior) 结果与最终 commit 内容不一致 (中间编辑产生的脏快照写入). Round-2 fix (commit 018ba21): bump 044/054 EXPECTED_V4_CHECKER_FUNC_SHA 到当前 ast.unparse 实测值, 验证 fix 后全 PASS. 教训已升级为 P288 backlog: sub-agent 任何 pre-existing FAIL 声明必须附 main HEAD 实测 rc + 锁值快照.",
-        "real_machine_uat": "n/a (infra)"
+        "real_machine_uat": "n/a (infra)",
+        "closeout_verify": {
+          "main_head_sha": "a46c381",
+          "smoke_tail_stdout": "[smoke] ALL PASS rc=0\n",
+          "verify_runs": [
+            {"script": "scripts/verify_infra_042.py", "tail_stdout": "ALL PASS (13 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_044.py", "tail_stdout": "ALL PASS (15 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_045.py", "tail_stdout": "ALL PASS (18 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_046.py", "tail_stdout": "ALL PASS (21 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_049.py", "tail_stdout": "ALL PASS (17 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_051.py", "tail_stdout": "ALL PASS (19 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_052.py", "tail_stdout": "ALL PASS (23 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_054.py", "tail_stdout": "ALL PASS (20 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_055.py", "tail_stdout": "ALL PASS (26 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_056.py", "tail_stdout": "ALL PASS (21 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_057.py", "tail_stdout": "ALL PASS (13 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_058.py", "tail_stdout": "ALL PASS (16 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_059.py", "tail_stdout": "ALL PASS (17 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_060.py", "tail_stdout": "ALL PASS (14 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_robot_035.py", "tail_stdout": "total=8 failed=0 rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_robot_037.py", "tail_stdout": "ALL PASS (18 checks) rc=0\n", "status": "PASS"},
+            {"script": "scripts/verify_infra_034.py (V6)", "tail_stdout": "total=53 failed=0 rc=0\n", "status": "PASS"}
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "lgtm": true,
+          "score": "88/100",
+          "findings": "round-2 fix 正确归因 V4 checker func sha 不一致; 双 source-of-truth 解耦设计干净; 扣分项: helper 自反 mutant detection 缺位 (P286 backlog) + 剩余 unknown_EXPECTED_DOC_SHA 属合理边界"
+        }
       }
     },
     {
