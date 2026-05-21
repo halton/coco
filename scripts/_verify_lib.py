@@ -50,16 +50,27 @@ _RE_REVLOCK_TUPLE_OPEN = re.compile(r'^([A-Z_][A-Z0-9_]*)\s*=\s*\(\s*$')
 _RE_REVLOCK_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
 # 反向锁常量名识别: 含 "VERIFY_<NNN>" 子串 (NNN = 3 位数字)
 _RE_REVLOCK_VERIFY_ID = re.compile(r"VERIFY_(\d{3})")
+# infra-049-backlog (P271): 拓宽 pattern, 也捕获 ``EXPECTED_*_(FILE|FUNC)_SHA``
+# 形式的反向锁常量 (verify-to-source-script / verify-to-func 锁), 用于完整索引视图。
+# 这类条目 kind="expected_pattern", V6 一致性 (orphan 检测) 跳过它们,
+# 因为其 hex 值多为外部 dump_*.py 文件 sha 或 ast.unparse 后的函数 sha,
+# 不属于 live_verify_sha_set 维度。
+_RE_REVLOCK_EXPECTED_PATTERN = re.compile(r"^EXPECTED_.*_(FILE|FUNC)_SHA$")
 
 
 def scan_reverse_sha_locks(scripts_dir: str | Path) -> list[dict]:
     """扫 scripts_dir 下所有 verify_*.py + _verify_lib.py 顶层 64-hex sha 常量。
 
-    返回 list of dict: {file, lineno, const_name, sha_hex}
-    其中只保留 const_name 含 'SHA' 且匹配 ``VERIFY_<NNN>`` 模式 (反向锁候选)
-    的条目, 用于 V6 类型一致性比对。
+    返回 list of dict: {file, lineno, const_name, sha_hex, kind}
+    其中 const_name 含 'SHA' 且满足下列任一模式的条目:
+      - kind="verify_id": 含 ``VERIFY_<NNN>`` 子串 (verify-to-verify 反向锁,
+        P264 起作为 V6 一致性比对的硬目标)
+      - kind="expected_pattern": 匹配 ``^EXPECTED_.*_(FILE|FUNC)_SHA$``
+        (verify-to-source-script / verify-to-func 锁, P271 起纳入索引视图,
+        但 V6 一致性比对**不**对其做 orphan 判定)
 
     infra-V6-backlog (P264): 从 verify_infra_034 ``_v6_scan_constants`` 抽出。
+    infra-049-backlog (P271): 拓宽 pattern + 引入 kind 字段。
     """
     base = Path(scripts_dir)
     results: list[dict] = []
@@ -96,13 +107,18 @@ def scan_reverse_sha_locks(scripts_dir: str | Path) -> list[dict]:
             if const_name and sha_hex:
                 if "SHA" not in const_name:
                     continue
-                if not _RE_REVLOCK_VERIFY_ID.search(const_name):
+                if _RE_REVLOCK_VERIFY_ID.search(const_name):
+                    kind = "verify_id"
+                elif _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
+                    kind = "expected_pattern"
+                else:
                     continue
                 results.append({
                     "file": str(p.relative_to(base.parent)) if base.parent in p.parents else str(p),
                     "lineno": lineno,
                     "const_name": const_name,
                     "sha_hex": sha_hex,
+                    "kind": kind,
                 })
     return results
 
@@ -144,6 +160,9 @@ def verify_reverse_sha_lock_consistency(scripts_dir: str | Path) -> dict:
         }
 
     infra-V6-backlog (P264): 从 verify_infra_034 ``v6_reverse_sha_lock_consistency`` 抽出。
+    infra-049-backlog (P271): pattern 放宽后, 只对 kind=="verify_id" 的条目做
+    orphan 检查; expected_pattern kind (verify-to-source / verify-to-func 锁)
+    的 hex 多不属于 live_verify_sha_set 维度, 不在此处校验。
     """
     base = Path(scripts_dir)
     live = live_verify_sha_set(base)
@@ -151,6 +170,8 @@ def verify_reverse_sha_lock_consistency(scripts_dir: str | Path) -> dict:
     scanned = scan_reverse_sha_locks(base)
     orphans: list[dict] = []
     for item in scanned:
+        if item.get("kind") != "verify_id":
+            continue
         sha_val = item["sha_hex"]
         if sha_val in live_sha_values:
             continue
