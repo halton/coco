@@ -5713,3 +5713,28 @@ Process 改善:
 - #5.36 infra-048-backlog-docstring-unknown-zero-fact (passing, 本次)
 - phase-36 全程累计新增 backlog: 本次 +3 (P285/P286/P287); 完整列表已入 feature_list.json
 - main HEAD 305c681; 所有 verify + smoke 通过
+
+## Session: phase-37 planning (5 candidates from backlog)
+
+- 候选池: 93 个 backlog (status=backlog, phase=null, priority=999)
+- 入选 5 个排入 phase-37 (priority N.37, status=not_started):
+  - #1.37 infra-P285-classifier-recognize-lib-func-locks
+    - 理由: **根因修复**。infra-048 V4 实测 unknown_count=13, 13/13 全部来自 _verify_lib 各 EXPECTED_*_FUNC_SHA 常量被 _classify_node 漏归 lib。改 _classify_node 反查 _verify_lib AST 同名 helper, 预期 unknown=13→0-1。**让后续 P286 (total_nodes 锁) / P287 (unknown_ids set 锁) 真正有意义**——根因不修, 上层精确锁只是把噪声固化。
+  - #2.37 infra-P281-expected-prefix-typo-guard
+    - 理由: **防御性抓漏**。扫全仓 EXPECTED_* 前缀但不符合 _(FILE|FUNC)_SHA$ 命名的常量, 防 typo 让 sha lock 静默失效。工作量小, 一次 verify_infra_NNN 即可固化。
+  - #3.37 infra-P278-closeout-verify-trustworthy
+    - 理由: **流程治理**。P275 closeout 自报告失真 (脏改污染 sha 计算)。强制 (a) stash 除 evidence/_history 外脏改, (b) 显式 git HEAD prefix, (c) 必须附 stdout 完整尾行而非文字描述。让 closeout 报告可信。
+  - #4.37 infra-P276-bootstrap-helper-self-mutant-detection
+    - 理由: **防御性**。bootstrap helper compute_self_checker_sha 若被改成绕过 lib 返回常量, V0 字面 + V4 round-trip 双重盲点。加 helper-only mutant 检测 (两个不同 tmp 脚本喂 helper, 断言 sha 不同)。
+  - #5.37 infra-P284-smoke-history-jsonl-policy
+    - 理由: **流程治理**。decide smoke_history.jsonl 是 commit / .gitignore / 独立 evidence pipeline。当前每次 smoke 改动且会污染 git status, 必须有明确归宿。
+
+- 排序逻辑:
+  1. P285 根因修复 → unknown 13→0, 解锁后续 P286/P287 真正价值
+  2. P281 防御性抓漏 → 命名 typo 静默失效, 抓潜在隐藏 bug
+  3. P278 流程治理 (closeout 可信) > P276 (单点 helper 防御) > P284 (低风险归档决策)
+
+- 跳过的高优先级理由:
+  - P286/P287 故意压后, 等 P285 落地 unknown=0 后再做精确锁更有意义
+  - infra-V6-backlog-strengthen-mutant-targeting 工作量大且收益已被 P281 覆盖
+  - infra-P275-assert-verify-passed-min-checks 工作量小但 P278 已能覆盖大部分场景
