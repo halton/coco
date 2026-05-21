@@ -59,6 +59,65 @@ _KNOWN_NON_NUMERIC_TARGETS: Dict[str, str] = {
     "EXPECTED_VERIFY_TMPL_SHA": "scripts/_verify_template.py (file-sha; if exists)",
 }
 
+# infra-039-backlog-source-file-aware: (source_file_basename, const_name) → target 二级查表
+# 用于跨 verify 文件同名常量歧义场景 (如 EXPECTED_FILE_SHA / EXPECTED_FUNC_SHA / SETTER_BLOCK_EXPECTED_SHA),
+# 单纯按 const 名无法判定; 必须结合 source_file 才能锁出唯一 target。
+_PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
+    # verify_infra_045 — 锁 _verify_lib.py 的具体 func sha
+    ("verify_infra_045.py", "EXPECTED_SCAN_FUNC_SHA"):
+        "scripts/_verify_lib.py:scan_reverse_sha_locks (func-sha)",
+    ("verify_infra_045.py", "EXPECTED_LIVE_FUNC_SHA"):
+        "scripts/_verify_lib.py:live_verify_sha_set (func-sha)",
+    ("verify_infra_045.py", "EXPECTED_CHECK_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_reverse_sha_lock_consistency (func-sha)",
+    # verify_infra_046 — 锁 bump_reverse_sha_lock.py 的 file / func sha
+    ("verify_infra_046.py", "EXPECTED_BUMP_FILE_SHA"):
+        "scripts/bump_reverse_sha_lock.py (file-sha)",
+    ("verify_infra_046.py", "EXPECTED_RUN_BUMP_FUNC_SHA"):
+        "scripts/bump_reverse_sha_lock.py:run_bump (func-sha)",
+    ("verify_infra_046.py", "EXPECTED_FIND_LOCKS_FUNC_SHA"):
+        "scripts/bump_reverse_sha_lock.py:find_locks_for_target (func-sha)",
+    ("verify_infra_046.py", "EXPECTED_BUMP_IN_FILE_FUNC_SHA"):
+        "scripts/bump_reverse_sha_lock.py:_bump_in_file (func-sha)",
+    ("verify_infra_046.py", "EXPECTED_MAIN_FUNC_SHA"):
+        "scripts/bump_reverse_sha_lock.py:main (func-sha)",
+    # verify_interact_037 — 锁 verify_interact_024.py 的 func / file sha
+    ("verify_interact_037.py", "EXPECTED_FUNC_SHA"):
+        "scripts/verify_interact_024.py:_append_drift_history (func-sha)",
+    ("verify_interact_037.py", "EXPECTED_FILE_SHA"):
+        "scripts/verify_interact_024.py (file-sha)",
+    # verify_robot_025 / 027 — coco/proactive.py setter block
+    ("verify_robot_025.py", "SETTER_BLOCK_EXPECTED_SHA"):
+        "coco/proactive.py (setter block sha)",
+    ("verify_robot_027.py", "SETTER_BLOCK_EXPECTED_SHA"):
+        "coco/proactive.py (setter block sha)",
+    ("verify_robot_028.py", "BUMP_EXPECTED_SHA"):
+        "coco/proactive.py (bump-only block sha)",
+    ("verify_robot_029.py", "SETTER_BASELINE_EXPECTED_SHA"):
+        "coco/proactive.py (setter baseline sha)",
+    ("verify_robot_030.py", "BLOCK_BASELINE_EXPECTED_SHA"):
+        "coco/proactive.py (block baseline sha)",
+    # verify_robot_033 — coco/proactive.py 多锚点
+    ("verify_robot_033.py", "INIT_LINE_SHA"):
+        "coco/proactive.py (init line sha)",
+    ("verify_robot_033.py", "EXCEPT_BLOCK_SHA"):
+        "coco/proactive.py (except block sha)",
+    ("verify_robot_033.py", "FILE_SHA"):
+        "coco/proactive.py (file-sha)",
+    # verify_robot_034 — docs file
+    ("verify_robot_034.py", "EXPECTED_DOC_SHA"):
+        "docs (robot-032 headings doc) (file-sha)",
+    # verify_robot_036 — verify_robot_032.py sentinel line
+    ("verify_robot_036.py", "EXPECTED_SENTINEL_LINE_SHA"):
+        "scripts/verify_robot_032.py:_HEADINGS_SECTION_SENTINEL (line-sha)",
+}
+
+# infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
+# 当 (source_file, const_name) 未命中 _PER_FILE_LOCKS 时, 这里命中则返回 source_file 自锁标记。
+_PER_FILE_SELF_LOCKS: set = {
+    "EXPECTED_FINGERPRINT",  # verify_infra_022 / verify_infra_028 自我 fingerprint
+}
+
 
 def _scan_file(path: Path) -> List[Dict[str, str]]:
     """返回 [{const, sha, line}] 列表."""
@@ -92,6 +151,14 @@ def _infer_target(const: str, source_file: str) -> str:
     infra-039-backlog: 先查 _KNOWN_NON_NUMERIC_TARGETS, 再走 _RE_VERIFY_HINT,
     再尝试 V<NNN>_ / BUMP_<NNN>_ 数字提取, 最后是 lib / self / unknown 兜底。
     """
+    # 0) source-file-aware 查表 (infra-039-backlog)
+    # 同一 const 名在不同 verify 脚本中锁不同 target 的歧义场景, 必须结合 source_file 锁定
+    src_base = source_file.rsplit("/", 1)[-1] if source_file else ""
+    if src_base and (src_base, const) in _PER_FILE_LOCKS:
+        return _PER_FILE_LOCKS[(src_base, const)]
+    # 0.5) source-file self-lock (target = source_file 自身)
+    if src_base and const in _PER_FILE_SELF_LOCKS:
+        return f"{source_file} (self file-sha)"
     # 1) 非数字常量名查表 (fingerprint / bump-only / dump 自锁)
     if const in _KNOWN_NON_NUMERIC_TARGETS:
         return _KNOWN_NON_NUMERIC_TARGETS[const]

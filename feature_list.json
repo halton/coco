@@ -6633,14 +6633,21 @@
       "area": "infra",
       "phase": 34,
       "title": "_infer_target 引入 (source_file, const_name) 二级查表",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "_infer_target 当前按全局 const 名查表，跨 verify 文件同名常量易冲突；引入 (source_file, const_name) → target 二级查表 / per-file probe，把剩余 14 unknown 节点继续压缩。",
       "dependencies": [
         "infra-039-backlog-target-inference-refine"
       ],
-      "verification": []
+      "verification": [
+        "Session P266 Engineer: scripts/dump_v4_sha_graph.py 引入 _PER_FILE_LOCKS (Dict[Tuple[str,str], str], 21 条 (source_file, const) 二级查表) + _PER_FILE_SELF_LOCKS (set, 真自锁如 EXPECTED_FINGERPRINT); _infer_target 在 step 1 之前新增 step 0/0.5 优先消费这两表; source_file 取 basename 匹配。新增 scripts/verify_infra_047.py V0-V5 (15 checks ALL PASS)。",
+        "unknown 节点对比: 改动前 22 个 (verify_infra_022/028 EXPECTED_FINGERPRINT, verify_infra_045/046 EXPECTED_*_FUNC_SHA, verify_interact_037 EXPECTED_FILE_SHA/FUNC_SHA, verify_robot_025/027/028/029/030/033/034/036 SETTER_BLOCK / BUMP / SETTER_BASELINE / BLOCK_BASELINE / INIT_LINE_SHA / EXCEPT_BLOCK_SHA / FILE_SHA / EXPECTED_DOC_SHA / EXPECTED_SENTINEL_LINE_SHA); 改动后 0; total locks 59→62 (verify_infra_047 三个新锁)。",
+        "Cascade bump: scripts/dump_v4_sha_graph.py file sha c2be81be→20294bc8 触发 EXPECTED_DUMP_FILE_SHA bump in verify_infra_039 / 043 / 044; _infer_target func sha f0e78715→8fa29b81 触发 EXPECTED_INFER_TARGET_FUNC_SHA bump in verify_infra_044。",
+        "verify rc: verify_infra_039 rc=0 (10 checks), verify_infra_043 rc=0 (13 checks), verify_infra_044 rc=0 (15 checks), verify_infra_047 rc=0 (15 checks), verify_infra_034 rc=0 (53/0; V6 自动发现 verify_infra_047 reverse locks 一致)。",
+        "./init.sh smoke 11/11 PASS (TTS / ASR / VAD / KWS / face-tracker / power-state / config / publish / wake-word 等全绿)。",
+        "Reviewer (sub-agent): 待 closeout 阶段执行 fresh-context 评审。"
+      ]
     },
     {
       "id": "infra-039-backlog-infer-target-auto-discovery",
