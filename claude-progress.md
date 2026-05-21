@@ -5862,3 +5862,31 @@ phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`
 ### Git
 - branch: feat/infra-P281-expected-prefix-typo-guard (from main 6b8707f)
 - commit: feat(infra-P281-expected-prefix-typo-guard): EXPECTED_* typo guard helper + V0-V5
+
+## Session P293 — infra-P281-expected-prefix-typo-guard closeout (2026-05-22)
+
+### Merge
+- branch: feat/infra-P281-expected-prefix-typo-guard (HEAD=5509561) → main (no-ff)
+- merge commit: 843bf24
+- main 基线: 6b8707f → 843bf24
+
+### Closeout verify (在 merge 后 main 843bf24 上实跑)
+- ``verify_infra_061`` (P281 主): ALL PASS (18 checks) — V0 helper-sha lock / V1 well-formed / V2 typo synthesis / V3 helper api / V4 dogfood main scan total=110 well_formed=110 typo_count=0 / V5 Reviewer LGTM gate
+- ``verify_infra_034`` V6: total=53 failed=0; live_verify_files=195; scanned_reverse_locks=85 all match
+- ``./init.sh`` smoke: 通过 (entry-point + Coco 继承 ReachyMiniApp)
+
+### 预先存在 FAIL (与 P281 无关 — Reviewer 已核实, baseline 6b8707f 即存在)
+- verify_infra_037 / verify_infra_045 / verify_infra_052 / verify_infra_057 / verify_infra_058 — 已记 P292-stale-locks-cleanup backlog
+
+### Status 切换
+- infra-P281-expected-prefix-typo-guard: in_progress → passing
+
+### Backlog 入账 (Reviewer fresh-context findings B-P281-R1..R4)
+- infra-P293-typo-guard-docstring-vs-impl-mismatch (priority=999) — helper docstring 称 EXPECTED_FUNC_HSA_SHA 不算 typo 但实测被判 typo, 需对齐 docstring 与 impl
+- infra-P293-typo-guard-hash-suffix-policy (priority=999) — _HASH$ 进 typo 列可能误伤未来合法 non-sha hash 常量, 建议 allowlist 或 warn
+- infra-P293-typo-guard-check-count-doc-reconcile (priority=999) — '18 checks' 用语精准化为 '18 emit-paths / 17 unique tags'
+- infra-P293-typo-guard-ci-integration (priority=999) — helper 仅 verify_infra_061 调用, 考虑 smoke / lib import lazy 自检
+
+### Git
+- closeout commit: (见 commit step)
+- push: origin main + feat/infra-P281-expected-prefix-typo-guard (失败忽略不重试)
