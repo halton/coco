@@ -36,6 +36,7 @@ __all__ = [
     "scan_reverse_sha_locks",
     "live_verify_sha_set",
     "verify_reverse_sha_lock_consistency",
+    "verify_expected_pattern_consistency",
     "assert_verify_passed",
 ]
 
@@ -195,6 +196,110 @@ def verify_reverse_sha_lock_consistency(scripts_dir: str | Path) -> dict:
         "live_count": len(live),
         "orphans": orphans,
         "all_match": not orphans,
+    }
+
+
+def verify_expected_pattern_consistency(scripts_dir: str | Path) -> dict:
+    """V7 主入口: 对 kind=="expected_pattern" 锁做独立一致性核验, 返回结果 dict。
+
+    Returns:
+        {
+            "total_expected_pattern_locks": int,
+            "unresolved": list[dict],         # const_name 无法解析出 <NAME> 部分 (理论应为 0)
+            "orphan_const_names": list[dict], # scripts/_verify_lib 顶层赋值含 EXPECTED_*_(FILE|FUNC)_SHA 模式
+                                              # 但 scan_reverse_sha_locks 未扫到的孤儿
+            "missing_assignment": list[dict], # scan 报告的 const_name 在所在 file 里找不到顶层 ast.Assign 定义
+            "sample": list[dict],             # 抽样前 5 条
+            "all_match": bool,
+        }
+
+    背景 (infra-049-backlog-expected-pattern-consistency-check, P276):
+    P271 拓宽 scan_reverse_sha_locks pattern 后, kind=="expected_pattern" 的 52+
+    锁条目目前没有独立的一致性 check (V6 一致性 verify_reverse_sha_lock_consistency
+    只对 kind=="verify_id" 做硬比对)。本 helper 弥补该盲区:
+
+    - 校验 scan 输出 schema 自洽: 每条 const_name 必须 match
+      ``^EXPECTED_.+_(FILE|FUNC)_SHA$`` 且 sha_hex 必须 64-hex lowercase。
+    - 校验 const_name 可在其声明文件 (item["file"]) 中以**顶层 ast.Assign**
+      形式找到 (防 scan 把字符串/局部变量误识为反向锁)。
+    - 校验 scan 没漏扫: 重新做一次顶层 ast.Assign 全量扫描, 找出所有形如
+      ``^EXPECTED_.+_(FILE|FUNC)_SHA$`` 的常量定义, 与 scan 输出做对照, 任何只在
+      ast 扫到、scan 没扫到的 (file, const_name) pair 即为 orphan_const_names。
+    """
+    base = Path(scripts_dir)
+    scanned = scan_reverse_sha_locks(base)
+    ep_items = [x for x in scanned if x.get("kind") == "expected_pattern"]
+
+    unresolved: list[dict] = []
+    missing_assignment: list[dict] = []
+
+    # 预扫所有 verify_*.py + _verify_lib.py 顶层 Assign, 索引 const 名集合 by file
+    targets = sorted(base.glob("verify_*.py"))
+    lib = base / "_verify_lib.py"
+    if lib.is_file():
+        targets.append(lib)
+    parent = base.parent
+
+    def _rel(p: Path) -> str:
+        try:
+            return str(p.relative_to(parent))
+        except ValueError:
+            return str(p)
+
+    file_const_names: dict[str, set[str]] = {}
+    ast_observed_ep: set[tuple[str, str]] = set()  # (rel_file, const_name)
+    for p in targets:
+        try:
+            src = p.read_text(encoding="utf-8")
+            tree = ast.parse(src)
+        except Exception:
+            continue
+        rel = _rel(p)
+        names: set[str] = set()
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                for tgt in node.targets:
+                    if isinstance(tgt, ast.Name):
+                        names.add(tgt.id)
+                        if _RE_REVLOCK_EXPECTED_PATTERN.match(tgt.id):
+                            # 值必须为 64-hex 字符串字面 (排除非 sha 常量)
+                            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                                v = node.value.value
+                                if len(v) == 64 and all(c in "0123456789abcdef" for c in v):
+                                    ast_observed_ep.add((rel, tgt.id))
+        file_const_names[rel] = names
+
+    # 检查每条 scan 输出 item 的 schema 自洽 + assignment 存在
+    for item in ep_items:
+        const_name = item.get("const_name", "")
+        file_rel = item.get("file", "")
+        m = _RE_REVLOCK_EXPECTED_PATTERN.match(const_name)
+        if not m:
+            unresolved.append({"file": file_rel, "const_name": const_name, "reason": "pattern not match"})
+            continue
+        sha_val = item.get("sha_hex", "")
+        if not (len(sha_val) == 64 and all(c in "0123456789abcdef" for c in sha_val)):
+            unresolved.append({"file": file_rel, "const_name": const_name, "reason": f"bad sha_hex={sha_val!r}"})
+            continue
+        names = file_const_names.get(file_rel, set())
+        if const_name not in names:
+            missing_assignment.append({"file": file_rel, "const_name": const_name})
+
+    # orphan: ast 扫到 EP 但 scan 没扫到
+    scan_observed_ep: set[tuple[str, str]] = {(x["file"], x["const_name"]) for x in ep_items}
+    orphan_const_names: list[dict] = [
+        {"file": f, "const_name": n}
+        for (f, n) in sorted(ast_observed_ep - scan_observed_ep)
+    ]
+
+    all_match = not unresolved and not missing_assignment and not orphan_const_names
+    return {
+        "total_expected_pattern_locks": len(ep_items),
+        "unresolved": unresolved,
+        "orphan_const_names": orphan_const_names,
+        "missing_assignment": missing_assignment,
+        "sample": ep_items[:5],
+        "all_match": all_match,
     }
 
 

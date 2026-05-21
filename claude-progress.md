@@ -5513,3 +5513,38 @@ Process 改善:
 - commit on main：`chore(infra): backlog infra-P278 closeout-verify-trustworthy + P275 误报排查记录`
 - push origin main 一次（见返回报告）
 - 持续开发模式继续：下一步进入 Part B 启动 phase-36 #3.36 P276 Engineer (`infra-049-backlog-expected-pattern-consistency-check`)
+
+## Session 2026-05-22 P276 — phase-36 #3.36 Engineer infra-049 expected_pattern 一致性 (in_progress)
+
+- branch: `feat/infra-049-backlog-expected-pattern-consistency-check`, base main=`45887a7`
+- 新增 `scripts/_verify_lib.py` helper `verify_expected_pattern_consistency(scripts_dir) -> dict`
+  - schema: `{total_expected_pattern_locks, unresolved, orphan_const_names, missing_assignment, sample, all_match}`
+  - 校验 3 维: (1) scan 输出 schema 自洽 (const_name pattern + 64-hex sha_hex); (2) const_name 在声明 file 顶层 ast.Assign 实存在 (防字符串误识); (3) 反扫所有 verify_*.py + _verify_lib.py 顶层 EXPECTED_*_(FILE|FUNC)_SHA 赋值, 与 scan 输出对照, scan 漏扫即 orphan
+  - lib file sha bump: `3790367e...` → `7f1c0bb21cb2ad62b8383d002f89bf6b119187a62334a3e2223af8a40c8e01d8`
+  - helper canonical func sha: `092041818bd1bcd3232b250d064aa52ff7d125112389629b1e3aecbab3d5754c`
+- 新增 `scripts/verify_infra_057.py` V0-V5 (13 checks):
+  - V0 helper def + `__all__` 注册
+  - V1 docstring sentinel `INFRA_057_SHA_LOCKS` + v4_behavior 自锁
+  - V2 _verify_lib.py file sha
+  - V3 verify_expected_pattern_consistency canonical func sha
+  - V4 行为: 真 scripts 目录 all_match=True/total=65; sample schema; tmp 正例 scan 命中; monkey-patch scan→[] mutant 反证 → all_match=False + orphan=1
+  - V5 Reviewer LGTM gate
+- bump 8 个引用旧 lib sha 的 verify 脚本: infra-037 / infra-042 / infra-045 / infra-052 / infra-055 / infra-056 / robot-035 / robot-037
+- 实测尾行 (全部 PASS):
+  - verify_infra_037: ALL PASS (13 checks)
+  - verify_infra_042: ALL PASS (13 checks)
+  - verify_infra_045: ALL PASS (18 checks)
+  - verify_infra_052: ALL PASS (23 checks)
+  - verify_infra_055: ALL PASS (26 checks)
+  - verify_infra_056: ALL PASS (21 checks)
+  - verify_infra_057: ALL PASS (13 checks)
+  - verify_robot_035: total=8 failed=0
+  - verify_robot_037: ALL PASS (18 checks)
+  - verify_infra_034 (V6 一致性): total=53 failed=0
+  - ./init.sh smoke 通过
+- feature status: `not_started` → `in_progress`; 不切 passing, 不 merge, 不 push (按 Engineer brief 硬规则)
+- 自检漏点:
+  - (a) `verify_infra_057.V4_mutant_scan_returns_empty` 用 monkey-patch `_verify_lib.scan_reverse_sha_locks=lambda _d:[]`; 这是函数注入级别 mutant, 比文件 sha mutant 弱, 但能直接覆盖 helper 内部 `scan_observed_ep` 分支 → orphan 检测路径; 后续可考虑用 `unittest.mock.patch.object` 升级
+  - (b) helper 的 `_RE_REVLOCK_EXPECTED_PATTERN` 与 lib 内既有常量复用 (跨模块依赖), 若未来该 regex 改名/迁移会同时挂掉; 已通过 V2 lib file sha 锁兜底
+  - (c) brief 提及 "verify_infra_046 也 bump" 但实测 046 无 EXPECTED_LIB_FILE_SHA 引用, 跳过 (grep 主导)
+- 待 Reviewer LGTM 后 closeout 入 passing
