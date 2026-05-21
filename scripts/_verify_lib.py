@@ -44,6 +44,7 @@ __all__ = [
     "verify_closeout_evidence_trustworthy",
     "verify_baseline_fail_claims",
     "assert_verify_passed",
+    "verify_summary_exit",
 ]
 
 
@@ -1191,3 +1192,35 @@ def verify_baseline_fail_claims(
         "missing_scripts": missing,
         "error": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# infra-P294-Rx (phase-38 #3.38): verify_*.py 退出码统一约定 helper
+# ---------------------------------------------------------------------------
+# 背景: phase-38 #2.38 round-1 Engineer 误信 shell 复合命令的 ``$?`` 判断
+# verify_*.py 是否 PASS, 导致仲裁触发。机制化校验 (verify_infra_067) 实测:
+# 现存 67 个 verify_infra_*.py 全部正确传播非 0 rc, 但缺统一 API,
+# 后续脚本若手抄 ``if FAILURES: return 1`` 模式存在回归风险。
+#
+# 本 helper 提供单一入口: 调用方传入 failed_count, helper 负责
+# ``sys.exit(2 if failed_count > 0 else 0)``。退出码约定:
+#   - 0  : 全 PASS
+#   - 2  : 至少 1 个 FAIL (非 1, 与 ``sys.exit(main())`` 的 return 1 区分,
+#         便于上层 (subprocess) 判别 "verify 业务 FAIL" vs "Python 通用错误")
+def verify_summary_exit(failed_count: int) -> None:
+    """退出码 helper: failed_count>0 → sys.exit(2); 否则 sys.exit(0)。
+
+    用法 (推荐):
+        failed = sum(1 for _, ok, _ in _results if not ok)
+        print(f"[verify_infra_NNN][SUMMARY] {'FAIL '+str(failed)+'/'+str(total) if failed else 'ALL PASS ('+str(total)+' checks)'}", flush=True)
+        verify_summary_exit(failed)
+
+    现存 67 个 verify_infra_*.py 仍可保留 ``sys.exit(main())`` + ``return 1``
+    旧模式, 新脚本一律走本 helper。verify_infra_067 机制化校验所有脚本
+    SUMMARY/summary FAIL 时 rc != 0 (无论走哪种实现)。
+    """
+    if not isinstance(failed_count, int):
+        raise TypeError(f"failed_count must be int, got {type(failed_count).__name__}")
+    if failed_count < 0:
+        raise ValueError(f"failed_count must be >= 0, got {failed_count}")
+    sys.exit(2 if failed_count > 0 else 0)
