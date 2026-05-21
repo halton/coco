@@ -169,6 +169,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # verify_infra_062 (P278) — 锁 verify_closeout_evidence_trustworthy func sha
     ("verify_infra_062.py", "EXPECTED_CLOSEOUT_FUNC_SHA"):
         "scripts/_verify_lib.py:verify_closeout_evidence_trustworthy (func-sha)",
+    # verify_infra_063 (P276) — 锁 bootstrap_verify_self_checker.py file / func / const sha
+    ("verify_infra_063.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_063.py", "EXPECTED_BOOTSTRAP_FILE_SHA"):
+        "scripts/bootstrap_verify_self_checker.py (file-sha)",
+    ("verify_infra_063.py", "EXPECTED_CANARY_FUNC_SHA"):
+        "scripts/bootstrap_verify_self_checker.py:run_canary_self_check (func-sha)",
+    ("verify_infra_063.py", "EXPECTED_CANARY_CONST_SHA"):
+        "scripts/bootstrap_verify_self_checker.py:_CANARY_EXPECTED_SHA (const-lock)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

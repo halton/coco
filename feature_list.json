@@ -7573,7 +7573,7 @@
     {
       "id": "infra-P276-bootstrap-helper-self-mutant-detection",
       "priority": 4.37,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 37,
       "area": "infra",
       "title": "bootstrap helper self mutant detection",
