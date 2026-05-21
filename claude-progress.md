@@ -5365,3 +5365,15 @@ Process 改善:
 - 验证: verify_infra_051 19/19 + 回归 verify_infra_049 17/17 + verify_infra_050 17/17 + verify_infra_034 53/53 + ./init.sh smoke 11/11 PASS; 4 档 subprocess 行为锁定; schema reverse_sha_lock_consistency/v1
 - Reviewer (sub-agent fresh-context): LGTM 10/10 no-findings 无强制项
 - 无新 backlog 入账
+
+## Session P271 Closeout — infra-049-backlog-reverse-lock-pattern-expand passing (phase-35 3/5)
+
+- phase-35 进度: **3/5 PASSING** — #1.35 render-json-sort-stability + #2.35 check-coalesce-json + #3.35 reverse-lock-pattern-expand
+- main HEAD=b7f586d (merge --no-ff feat/infra-049-backlog-reverse-lock-pattern-expand, 766bdeb in)
+- Reviewer (sub-agent fresh-context) LGTM 10/10: verify_infra_052 23 checks PASS; V6 scanned 7→59 (verify_id=7, expected_pattern=52), live=186, orphans=0; cascade 3 sha × 5 verify 全 PASS (infra_037/042/045/046, robot_035/037); P268/P269/P270 verify (infra_049/050/051) 无 silent break; ./init.sh smoke 11/11 PASS; kind 字段 schema 演进 (kind=verify_id|expected_pattern) 被 Reviewer 评为优于双函数拆分
+- 改动: scripts/_verify_lib.py scan_reverse_sha_locks 放宽 pattern 到 EXPECTED_.*_(FILE|FUNC)_SHA 并附 kind 字段; scripts/verify_infra_{037,042,045,046}.py + verify_robot_{035,037}.py 兼容; scripts/verify_infra_052.py 新增 (V0-V6 共 23 checks)
+- backlog 入账 4 项 (priority=999, status=backlog, phase=null):
+  - infra-049-backlog-expected-pattern-consistency-check (对 52 个 expected_pattern 锁做独立一致性核验, 弥补 --check 盲区)
+  - infra-V6-backlog-strengthen-mutant-targeting (V3 mutant 提级到针对性删 elif 分支)
+  - infra-049-backlog-dump-index-expose-kind (评估 dump_reverse_sha_lock_index entries 是否加 kind 字段, 涉及 schema v2 + V4 keys)
+  - infra-049-backlog-dump-index-kind-stats (stats 加 verify_id_count / expected_pattern_count 拆解)

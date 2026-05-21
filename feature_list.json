@@ -6545,12 +6545,80 @@
       "area": "infra",
       "phase": "phase-35",
       "title": "放宽 reverse sha lock scan pattern 到 EXPECTED_.*_(FILE|FUNC)_SHA",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
+      "closed_at": "2026-05-22",
       "source": "infra-049 (P268) Reviewer 建议",
       "scope": "scan_reverse_sha_locks 当前仅匹配 EXPECTED_VERIFY_*_SHA / EXPECTED_*_FILE_SHA / EXPECTED_*_FUNC_SHA 等固定前缀，放宽到通用模式 EXPECTED_.*_(FILE|FUNC)_SHA，覆盖未来非 verify_* 引用源。",
       "dependencies": [
         "infra-049"
+      ],
+      "verification": [],
+      "evidence": [
+        "Reviewer (sub-agent, fresh-context): LGTM 10/10. verify_infra_052 23 checks PASS; V6 scanned 7→59 (verify_id=7, expected_pattern=52), live=186, orphans=0; cascade 3 sha × 5 verify 全 PASS (infra_037/042/045/046, robot_035/037); P268/P269/P270 verify (infra_049/050/051) 无 silent break; ./init.sh smoke 11/11 PASS; kind 字段 schema 演进（kind=verify_id|expected_pattern）被 Reviewer 评为优于双函数拆分。",
+        "feat_sha = 766bdeb",
+        "merge_main_head = b7f586d"
+      ],
+      "reviewer_lgtm": true,
+      "reviewer_subagent": true
+    },
+    {
+      "id": "infra-049-backlog-expected-pattern-consistency-check",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "对 kind=expected_pattern 锁做独立一致性核验",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
+      "scope": "scan_reverse_sha_locks 扩展后 52 个 expected_pattern 锁未参与 --check 一致性核验；建议增加独立路径，针对这些锁去比对 dump_*.py 文件 sha / func sha，弥补盲区。",
+      "dependencies": [
+        "infra-049-backlog-reverse-lock-pattern-expand"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-V6-backlog-strengthen-mutant-targeting",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V3 mutant 从函数体替换提级到针对性删 elif 分支",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
+      "scope": "现有 V3 mutant 将 _infer_target 函数体替为 return []；建议提级到针对性删除 elif 分支，更精确覆盖 kind 分支路径，提升 mutant 杀伤力。",
+      "dependencies": [
+        "infra-049-backlog-reverse-lock-pattern-expand"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-049-backlog-dump-index-expose-kind",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "评估 dump_reverse_sha_lock_index entries 是否暴露 kind 字段",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
+      "scope": "scan_reverse_sha_locks 已带 kind=verify_id|expected_pattern；评估 dump_reverse_sha_lock_index entries 是否加 kind 字段，便于消费者区分两类锁。涉及 schema v2 + V4 keys 更新。",
+      "dependencies": [
+        "infra-049-backlog-reverse-lock-pattern-expand"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-049-backlog-dump-index-kind-stats",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_reverse_sha_lock_index stats 加 kind 拆解",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Engineer 自报",
+      "scope": "dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解，便于观测两类锁规模演化。",
+      "dependencies": [
+        "infra-049-backlog-reverse-lock-pattern-expand"
       ],
       "verification": []
     },
