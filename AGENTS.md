@@ -128,6 +128,17 @@
 - 文档 / harness 加固类改动也走同样规则（豁免会让仪式失去意义）
 - Reviewer 不能是主 context 自审（"换帽子"伪 fresh-context）——必须 Task tool delegate 独立 context
 
+### Sub-agent Evidence Report Accuracy（P273 防御，硬规则）
+
+P273 暴露过一类失真模式：sub-agent 报告 "verify PASS" 但并未真正执行该 verify 脚本 / 未读 stdout / 凭印象编造，并把失败错误归因为 "pre-existing"。为防御此模式，**所有 sub-agent 上报 verify 结果时必须**：
+
+1. **实际执行**该 verify 脚本（`.venv/bin/python scripts/verify_xxx.py`），Bash 真正跑过；
+2. 报告中**附实测 stdout 尾行**，即 `[verify_infra_NNN][SUMMARY] ALL PASS (N checks)` 字面行（FAIL 时附 `FAIL k/N: [...]` 行 + 关键 FAIL emit 行）；
+3. **不允许"pre-existing"归因**，除非显式在 main HEAD 复现并附两份 stdout 对比（main vs. feat 分支）；
+4. 推荐用 `scripts/_verify_lib.assert_verify_passed(stdout, verify_name)` 机器辅助校验 stdout，并在 evidence 中贴出 `res["summary_line"]` + `res["passed"]` 双字段。
+
+新建 verify 脚本时应在 V4 行为段为本 helper 做正/反例 round-trip（PASS stdout 进 → passed=True；FAIL stdout 进 → passed=False；缺 SUMMARY 进 → passed=False）。当前参考实现：`scripts/verify_infra_055.py`。
+
 ### Reviewer 材料包（每次 delegate 时显式传入）
 
 - `feature_id`

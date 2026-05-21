@@ -36,6 +36,7 @@ __all__ = [
     "scan_reverse_sha_locks",
     "live_verify_sha_set",
     "verify_reverse_sha_lock_consistency",
+    "assert_verify_passed",
 ]
 
 
@@ -327,3 +328,128 @@ def read_constant(path: str | Path, const_name: str) -> Any:
                             f"constant {const_name!r} in {p} is not a literal: {e}"
                         )
     raise ValueError(f"module-level constant {const_name!r} not found in {p}")
+
+
+# ---------------------------------------------------------------------------
+# infra-P273-evidence-report-accuracy (P274): sub-agent 反失真 helper
+# ---------------------------------------------------------------------------
+# verify_*.py 的 SUMMARY 尾行格式正则:
+#   [verify_infra_055][SUMMARY] ALL PASS (18 checks)
+#   [verify_infra_055][SUMMARY] FAIL 2/18: ['V2_xxx', 'V4_yyy']
+_RE_VERIFY_SUMMARY = re.compile(
+    r"^\[(?P<name>verify_[a-z0-9_]+)\]\[SUMMARY\]\s+"
+    r"(?P<verdict>ALL PASS|FAIL)\b.*?(?:\((?P<checks>\d+)\s+checks?\))?\s*$"
+)
+# 单行 PASS/FAIL emit 行 (用于 FAIL 子串扫描豁免)
+_RE_VERIFY_EMIT_LINE = re.compile(
+    r"^\[(?P<name>verify_[a-z0-9_]+)\]\[(?P<mark>PASS|FAIL)\]\s+"
+)
+
+
+def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
+    """校验一份 ``scripts/verify_*.py`` 的实测 stdout 是否真的 ALL PASS。
+
+    infra-P273-evidence-report-accuracy (P274): P273 暴露 sub-agent 上报
+    "verify PASS" 但实际未跑 / 未读 stdout / 编造结论的失真模式 (典型: 把
+    054 V1 FAIL 错误归因到 044/047 称 "pre-existing"). 本 helper 提供机器辅助
+    的反失真校验入口, 让 sub-agent 在 evidence 中附 stdout 与 helper 结论形成
+    双重锚, 减少凭印象编造的空间。
+
+    校验规则:
+      1. 必须找到形如
+         ``[<verify_name>][SUMMARY] ALL PASS (N checks)`` 的 SUMMARY 尾行;
+         缺失 SUMMARY → ``passed=False``。
+      2. SUMMARY 行 verdict 必须是 ``ALL PASS`` (不允许 ``FAIL``).
+      3. 扫描整 stdout, 不允许出现 ``[<name>][FAIL]`` 形式的 emit 行 (即任何
+         单个 check FAIL 都视为整体 FAIL, 即便 SUMMARY 显示 PASS——防止
+         SUMMARY 行被独立伪造). FAIL 子串若仅出现在 SUMMARY 行或非 emit 上下文
+         (例如 docstring / 行内说明), 由步骤 1/2 已经独立判定, 不在此处误伤。
+      4. ``verify_name`` 必须精确匹配 SUMMARY 行中的 ``[verify_xxx]`` 名字
+         (防止把 A 脚本的 stdout 当 B 脚本的证据上报).
+
+    Args:
+        stdout_text: ``subprocess.run(...).stdout`` 或文件 cat 出来的字面文本。
+        verify_name: 期望脚本名 (不含 ``.py``), 例如 ``"verify_infra_055"``。
+
+    Returns:
+        dict 结构:
+
+        ::
+
+            {
+                "name": str,           # 实际 SUMMARY 行里 parse 到的名字 (缺失则 "")
+                "passed": bool,        # 综合判定
+                "checks": int,         # SUMMARY 报告的 check 总数 (缺失则 0)
+                "summary_line": str,   # 命中的 SUMMARY 字面行 (缺失则 "")
+                "fail_emits": list,    # 单行 FAIL emit 命中列表 (含 tag 名)
+                "reason": str,         # passed=False 时的人类可读原因摘要
+            }
+
+    设计注:
+      - 不 raise——返回 dict 即可让调用者 (例如 verify_infra_055 自己) 用
+        ``_emit("V4_helper_pass_case", res["passed"], res["summary_line"])``
+        把校验结果纳入 verify 链条。
+      - sub-agent 在 evidence 段使用方式: 把整段 stdout 喂 helper, 在报告中
+        贴出 ``res["summary_line"]`` + ``res["passed"]`` 双字段, 避免凭印象
+        声称 "PASS"。
+
+    Examples:
+        >>> ok = "[verify_infra_055][PASS] V0_x\\n[verify_infra_055][SUMMARY] ALL PASS (1 checks)\\n"
+        >>> r = assert_verify_passed(ok, "verify_infra_055")
+        >>> r["passed"], r["checks"]
+        (True, 1)
+        >>> bad = "[verify_infra_055][FAIL] V2 got=abc\\n[verify_infra_055][SUMMARY] FAIL 1/2: ['V2']\\n"
+        >>> assert_verify_passed(bad, "verify_infra_055")["passed"]
+        False
+        >>> assert_verify_passed("", "verify_infra_055")["passed"]
+        False
+    """
+    summary_line = ""
+    parsed_name = ""
+    verdict = ""
+    checks = 0
+    for line in stdout_text.splitlines():
+        m = _RE_VERIFY_SUMMARY.match(line.strip())
+        if m:
+            summary_line = line.rstrip()
+            parsed_name = m.group("name") or ""
+            verdict = m.group("verdict") or ""
+            try:
+                checks = int(m.group("checks") or 0)
+            except (TypeError, ValueError):
+                checks = 0
+            # 只取首个 SUMMARY (一份 stdout 理应仅有一条)
+            break
+
+    fail_emits: list[str] = []
+    for line in stdout_text.splitlines():
+        m = _RE_VERIFY_EMIT_LINE.match(line.strip())
+        if m and m.group("mark") == "FAIL":
+            fail_emits.append(line.rstrip())
+
+    reasons: list[str] = []
+    if not summary_line:
+        reasons.append("missing SUMMARY line")
+    else:
+        if parsed_name != verify_name:
+            reasons.append(f"name mismatch: got={parsed_name!r} expect={verify_name!r}")
+        if verdict != "ALL PASS":
+            reasons.append(f"verdict={verdict!r} not ALL PASS")
+    if fail_emits:
+        reasons.append(f"fail_emits={len(fail_emits)}")
+
+    passed = (
+        bool(summary_line)
+        and parsed_name == verify_name
+        and verdict == "ALL PASS"
+        and not fail_emits
+    )
+
+    return {
+        "name": parsed_name,
+        "passed": passed,
+        "checks": checks,
+        "summary_line": summary_line,
+        "fail_emits": fail_emits,
+        "reason": "; ".join(reasons) if reasons else "",
+    }

@@ -7262,7 +7262,7 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "Sub-agent 上报 verify 结果前必须 grep FAIL 实际输出",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "P273 infra-048-backlog-mermaid-palette-extract closeout 流程偏差 (Engineer 首轮报 PASS 但 V1 自锁实际 FAIL)",
       "scope": "Engineer / Reviewer / verify-runner sub-agent 在向主会话回报 'verify_infra_NNN.py 全 PASS' 之前，必须执行 `python scripts/verify_infra_NNN.py 2>&1 | grep -E 'FAIL|Error'` 并将原始 stdout 末尾 5 行同步 paste 到 brief；禁止仅凭子任务返回值或目测断言通过。落地形式：在 AGENTS.md / CLAUDE.md 加入硬规则段；可选 _verify_lib helper 提供 `assert_verify_clean(name)` 工具函数走 subprocess.run + 关键字扫描。",
