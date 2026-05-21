@@ -5682,3 +5682,34 @@ Process 改善:
 - 守住的硬规则: 不切 passing / 不 merge / push 一次失败忽略; 真实 unknown_count 来自实测 dump (非 scope 描述)
 - 自检漏点: brief 第 4 项原文写 "unknown_count <= 1", 与现状 13 矛盾, 已忠实记录现实并文档化 (天花板模式 vs 零容忍模式); brief 提到 9-10 个 verify bump LIB_FILE_SHA, 实际顶层定义仅 8 个 (044/047 未顶层定义该常量); helper 接口默认 max_unknown=1 保留 (供未来 dump 改进后收紧, 不影响当前 V4 显式传 13)
 - 下一步: 由 Closer 派 Reviewer fresh-context sub-agent → LGTM 后切 passing + merge main + 尝试 push (失败忽略)
+
+## Session P278 (2026-05-22) — phase-36 #5.36 infra-048-backlog-docstring-unknown-zero-fact closeout + phase-36 收官
+
+- Reviewer (sub-agent, fresh context): LGTM 9.4/10 — V0-V5 scaffolding/sentinel/file-sha/func-sha/behavior/gate 全闭环, unknown_count 双向锁 (max_allowed 上界 + EXPECTED 精确锁) + 4 tmp 变异覆盖正/边界/超额/零容忍
+- merge --no-ff feat/infra-048-backlog-docstring-unknown-zero-fact → main (merge sha 305c681, pre-merge main 619398a)
+- verify 全 PASS (HEAD 30e012b on feat 分支 → 305c681 on main, 工作树 evidence/_history 已 stash 隔离):
+  - verify_infra_059: [SUMMARY] ALL PASS (17 checks)
+  - verify_infra_042: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_045: [SUMMARY] ALL PASS (18 checks)
+  - verify_infra_052: [SUMMARY] ALL PASS (23 checks)
+  - verify_infra_055: [SUMMARY] ALL PASS (26 checks)
+  - verify_infra_056: [SUMMARY] ALL PASS (21 checks)
+  - verify_infra_057: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_058: [SUMMARY] ALL PASS (16 checks)
+  - verify_robot_035: summary total=8 failed=0
+  - verify_infra_034 (V6): summary total=53 failed=0 (scanned_reverse_locks=79)
+  - ./init.sh smoke 全 PASS
+- feature_list.json: infra-048-backlog-docstring-unknown-zero-fact in_progress → passing; evidence 加 merge sha + Reviewer LGTM 9.4/10 + unknown_count=13 (13/13=100% unknown_EXPECTED_*_FUNC_SHA 形态, 主因 _classify_node 不识别 _verify_lib func sha 常量)
+- 入账 backlog 3 项 (priority=999, status=backlog, phase=null, area=infra):
+  - infra-P285-classifier-recognize-lib-func-locks (P1 高价值, 改 _classify_node 反查 EXPECTED_*_FUNC_SHA 归 lib, 预期 unknown=13→0-1)
+  - infra-P286-total-nodes-lock (P2, verify_infra_059 加锁 total_nodes=76 或 unknown/total 比例)
+  - infra-P287-unknown-ids-set-lock (P2, 锁 13 个 unknown_ids 完整 frozenset 捕获成份漂移)
+
+### phase-36 5/5 收官总结 (P270-P278)
+- #1.36 infra-044-backlog-render-mermaid-helper-extract (passing)
+- #2.36 infra-045-backlog-rev-sha-bump-helper (passing)
+- #3.36 infra-046-backlog-verify-lib-extract-V6-helpers (passing)
+- #4.36 infra-047-backlog-bootstrap-helper-extract (passing)
+- #5.36 infra-048-backlog-docstring-unknown-zero-fact (passing, 本次)
+- phase-36 全程累计新增 backlog: 本次 +3 (P285/P286/P287); 完整列表已入 feature_list.json
+- main HEAD 305c681; 所有 verify + smoke 通过

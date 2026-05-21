@@ -6999,7 +6999,7 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "V4 行为锁: dump mermaid 输出 unknown_ 节点数 ≤ N",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
       "scope": "verify_infra_048 V4 加行为事实锁——render_mermaid 实际输出 unknown_ 前缀节点数有上界硬断言；防止后续重构引入新的 unknown_* 节点而无人发现。helper verify_unknown_node_count_bound 由 verify_infra_059 V0-V5 锁。实测当前 unknown_count=13 (远超原 scope 假设的 1, 主因 _verify_lib 的 func 锁 target 描述无 .py stem 导致 render_mermaid 落入 unknown_<CONST> 占位; 现状作为 max_allowed=EXPECTED_CURRENT_UNKNOWN_COUNT=13 硬天花板锁定, 后续涨即报警, 缩则需主动 bump 常量)。",
@@ -7014,11 +7014,12 @@
       ],
       "evidence": [
         "branch: feat/infra-048-backlog-docstring-unknown-zero-fact (from main 619398a)",
+        "merged into main: 305c681 (P278 closeout, merge --no-ff)",
         "helper: scripts/_verify_lib.py 新增 verify_unknown_node_count_bound (func sha fd311e570696f415...), 注册 __all__",
         "verify-only: scripts/verify_infra_059.py (V0-V5 完整, 17 checks)",
         "lib file sha bump: 8e0e0051... → 11588d58...",
-        "真实 dump 实测 unknown_count=13 (主因 _verify_lib func 锁描述无 .py stem); EXPECTED_CURRENT_UNKNOWN_COUNT=13 作为天花板精确锁定",
-        "Reviewer (sub-agent): pending — closeout 前需 fresh-context Reviewer LGTM",
+        "真实 dump 实测 unknown_count=13, 13/13 (100%) 全部为 unknown_EXPECTED_*_FUNC_SHA 形态 (主因 _verify_lib func 锁描述无 .py stem); EXPECTED_CURRENT_UNKNOWN_COUNT=13 作为天花板精确锁定",
+        "Reviewer (sub-agent): LGTM 9.4/10 — V0-V5 scaffolding/sentinel/file-sha/func-sha/behavior/gate 全闭环, unknown_count 双向锁 (max_allowed 上界 + EXPECTED 精确锁) + 4 tmp 变异覆盖正/边界/超额/零容忍",
         "实测尾行 (9 verify + V6 + smoke, all rc=0):",
         "  verify_infra_059: [SUMMARY] ALL PASS (17 checks)",
         "  verify_infra_042: [SUMMARY] ALL PASS (13 checks)",
@@ -7509,9 +7510,36 @@
       "area": "infra",
       "title": "closeout sub-agent verify 报告必须可信",
       "rationale": "P275 closeout 在主报告中声称 main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20, 但事后排查 main HEAD cee87d2 实测全 PASS, 且 93d91e9..cee87d2 区间内 045/054/_verify_lib/dump 文件 diff 为 0 字节, 不可能漂移. 推测 closeout 跑 verify 时工作树有未提交脏改动污染 sha 计算. 建议: closeout 在跑 verify 前 (a) git stash --include-untracked 除 evidence/_history 外的脏改, (b) 显式 git log -1 --format=%H 输出当前 HEAD 作 evidence 前缀, (c) 跑完 verify 必须附 stdout 完整尾行而非仅 PASS/FAIL 文字描述. 否则 closeout 报告视为不可信."
+    },
+    {
+      "id": "infra-P285-classifier-recognize-lib-func-locks",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "render_mermaid _classify_node 识别 _verify_lib 的 EXPECTED_*_FUNC_SHA 常量并归入 lib",
+      "rationale": "infra-048 (P278) 实测 dump --mermaid 输出 unknown_count=13, 13/13 (100%) 全部来自 _verify_lib 各 verify 脚本里的 EXPECTED_<HELPER>_FUNC_SHA 常量 (例: EXPECTED_VERIFY_UNKNOWN_NODE_COUNT_BOUND_FUNC_SHA). _classify_node 当前仅按文件 stem / 路径前缀分类, 无法反查这些 func sha 常量对应 _verify_lib helper 而落入 unknown_<CONST> 占位. 改 _classify_node: 对 unknown_<CONST> 节点反查 _verify_lib.py AST 中是否定义同名 helper 函数, 若是则归 lib 分组. 预期 unknown_count: 13 → 0-1. 高价值: 直接消除主要噪声源, 让 V4 行为锁的 max_allowed 可以下沉到接近 0."
+    },
+    {
+      "id": "infra-P286-total-nodes-lock",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_059 加锁 dump --mermaid total_nodes 当前实测 76",
+      "rationale": "infra-048 (P278) V4 已锁 unknown_count=13 精确值与 ≤max_allowed 上界. 但 render_mermaid 总节点数 total_nodes=76 未锁; 若后续重构丢失节点 (例: nodes-only render 跳过 hub/module) 但 unknown_count 维持 13 不变, V4 检测不到. 建议: verify_infra_059 加 EXPECTED_CURRENT_TOTAL_NODES=76 精确锁 + 比例锁 unknown_count/total_nodes ≤ 当前 13/76=17.1%; 任何方向漂移都触发. 中等价值, 增强 V4 行为锁覆盖完整度."
+    },
+    {
+      "id": "infra-P287-unknown-ids-set-lock",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_059 加锁 13 个 unknown_ids 完整 frozenset",
+      "rationale": "infra-048 (P278) V4 已锁 unknown_count=13 与 ≤max_allowed. 但 13 个 unknown_ids 的具体 ID 集合未锁; 若 _verify_lib 重构后某个 EXPECTED_*_FUNC_SHA 被改名 (例如 EXPECTED_VERIFY_UNKNOWN_NODE_COUNT_BOUND_FUNC_SHA → EXPECTED_VERIFY_UNKNOWN_BOUND_FUNC_SHA), 新名替换旧名, count 仍 13 不变, V4 检测不到成份漂移. 建议: verify_infra_059 加 EXPECTED_CURRENT_UNKNOWN_IDS=frozenset({...13 个 ID...}) 精确锁; 集合差异 (新增 / 缺失) 都报警. 中等价值, 捕获 count 锁掩盖不了的成份漂移."
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P276 backlog infra-P278 closeout-verify-trustworthy 入账 + P275 误报排查记录"
+    "last_updated": "2026-05-22 P278 phase-36 #5.36 infra-048-backlog-docstring-unknown-zero-fact 入 passing + 入账 3 个 backlog (P285/P286/P287); phase-36 5/5 收官"
   }
 }
