@@ -163,6 +163,9 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # verify_infra_060 — 锁 dump_v4_sha_graph.py 自身 _classify_node func sha
     ("verify_infra_060.py", "EXPECTED_CLASSIFY_FUNC_SHA"):
         "scripts/dump_v4_sha_graph.py:_classify_node (func-sha)",
+    # verify_infra_061 (P281) — 锁 verify_expected_prefix_typo_guard func sha
+    ("verify_infra_061.py", "EXPECTED_TYPO_GUARD_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_expected_prefix_typo_guard (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

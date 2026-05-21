@@ -6623,14 +6623,22 @@
       "area": "infra",
       "phase": 37,
       "title": "扫 EXPECTED_* 前缀但不符合 _(FILE|FUNC)_SHA$ 命名的常量",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
       "scope": "现有锁规则只识别 EXPECTED_*_(FILE|FUNC)_SHA 命名；若有人写成 EXPECTED_XXX_SHASUM / EXPECTED_XXX_HASH 等 typo 会被静默放过。增加单独扫描器列出此类 'EXPECTED_* 前缀但不符合规范' 的常量，避免命名 typo 导致漏锁。P1 高价值。",
       "dependencies": [
         "infra-049-backlog-expected-pattern-consistency-check"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_061.py: V0-V5 18/18 PASS",
+        "cascade bump: 9 verify_*.py + verify_robot_037.py EXPECTED_LIB_FILE_SHA bumped to d94afff...",
+        "cascade bump: verify_infra_060.py EXPECTED_DUMP_FILE_SHA bumped (+1 _PER_FILE_LOCKS entry for P281)",
+        "verify_infra_034 V6 ALL PASS",
+        "evidence: see claude-progress.md P292"
+      ],
+      "branch": "feat/infra-P281-expected-prefix-typo-guard",
+      "evidence": {}
     },
     {
       "id": "infra-P282-infra-046-grep-to-lib-sha-migration",
