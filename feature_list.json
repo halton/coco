@@ -7583,10 +7583,11 @@
     {
       "id": "infra-P278-closeout-verify-trustworthy",
       "priority": 3.37,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 37,
       "area": "infra",
       "title": "closeout sub-agent verify 报告必须可信",
+      "branch": "feat/infra-P278-closeout-verify-trustworthy",
       "rationale": "P275 closeout 在主报告中声称 main HEAD verify_infra_045 FAIL 2/18 + verify_infra_054 FAIL 1/20, 但事后排查 main HEAD cee87d2 实测全 PASS, 且 93d91e9..cee87d2 区间内 045/054/_verify_lib/dump 文件 diff 为 0 字节, 不可能漂移. 推测 closeout 跑 verify 时工作树有未提交脏改动污染 sha 计算. 建议: closeout 在跑 verify 前 (a) git stash --include-untracked 除 evidence/_history 外的脏改, (b) 显式 git log -1 --format=%H 输出当前 HEAD 作 evidence 前缀, (c) 跑完 verify 必须附 stdout 完整尾行而非仅 PASS/FAIL 文字描述. 否则 closeout 报告视为不可信."
     },
     {
@@ -7665,6 +7666,42 @@
       "area": "infra",
       "title": "V5_reviewer_lgtm_gate 实质检验或显式标注为占位 gate",
       "rationale": "P285 跑各 verify 时所有 V5_reviewer_lgtm_gate 一律 PASS, 文案为 \"closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\". 但该 gate 实际未读 feature_list.json evidence.reviewer_lgtm 字段值, 是空 assert 占位. 风险: 名实不符 — 让 closeout 误以为已加 Reviewer LGTM 硬性 gate, 实际 verify 不 enforce. 建议二选一: (a) 升级为实检 —— gate 真正从 feature_list.json 读取 evidence.reviewer_lgtm, 校验非空 + 含 LGTM 字样 + 含 sub-agent 标识; 或 (b) 重命名为 V5_reviewer_lgtm_placeholder 并加注释明示 \"功能性占位, 实际 enforcement 在 closeout sub-agent 流程中\". 低-中价值, 涉及 V4/V5 命名诚信."
+    },
+    {
+      "id": "infra-P294-closeout-stdout-sha-verification",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "closeout evidence 的 tail_stdout 加 sha256 防伪机制",
+      "rationale": "P278 round-1 dogfood 设计踩坑: 回填 P281/P285 evidence 的 tail_stdout 字符串后, helper 只验字段非空就判 trustworthy, 等于把单点谎言换地方放 (Engineer 可写任意 'ALL PASS' 文本绕过). Round-2 设计修: 移除真实 evidence dogfood, helper 只验 schema. 真正解药: evidence 加 tail_stdout_sha 字段 (sha256 of canonical stdout), 由 helper 在 main HEAD 现场 re-run verify 并比对 sha256, 不一致即 untrustworthy. 涉及: (a) closeout sub-agent 模板自动 emit tail_stdout_sha, (b) helper 接口扩展为 verify_closeout_evidence_trustworthy(evidence, scripts_dir=None, rerun=True), (c) re-run 时机/并发/缓存策略."
+    },
+    {
+      "id": "infra-P294-R4-fail-baseline-cross-check",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "FAIL run 的 baseline 字段加 sha 链交叉校验",
+      "rationale": "P278 round-1 helper 当前只检查 FAIL run 存在 pre_existing_baseline_sha + baseline_tail_stdout 字段非空, 不验证 baseline_tail_stdout 是否真在 baseline sha 上跑出来 (Engineer 仍可编). 建议: helper 接受 git repo 引用, 对 baseline_sha 做 git rev-parse + checkout 临时 worktree + re-run, sha256 比对 baseline_tail_stdout. 与 P294 stdout-sha 同源, 但聚焦 FAIL 归因."
+    },
+    {
+      "id": "infra-P294-R5-total-checks-derived",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "helper total_checks 从 per-rule emit 派生而非硬编码 5",
+      "rationale": "P278 round-1 helper 返回 total_checks=5 是常量硬编码, 与 failed_reasons 长度解耦. 修后无法区分 '5 条 rule 哪条 fail 几次' (一个 verify_runs 有 3 个 FAIL 都缺 baseline, failed_reasons 长 6 但 total_checks 仍 5). 建议: 改为 per-rule 累加器 (rule1/rule2/.../rule5 各自 pass/fail count), total_checks = sum, 让 verify_infra_062 V4 能直接 assert 单 rule 命中数."
+    },
+    {
+      "id": "infra-P294-R6-sample-count-doc",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_062 SUMMARY '17 checks' 用语精准化",
+      "rationale": "Round-2 V4 改为 8 个合成样本 (A-H) + V0(4) + V1(2) + V2(1) + V3(1) + V5(1) = 17 emit-paths. 与 verify_infra_061 'N checks vs N emit-paths' 同质问题 (见 infra-P293-typo-guard-check-count-doc-reconcile). 建议未来统一用 '17 emit-paths / unique check tags'. 纯文档对齐, 不动 impl."
     },
     {
       "id": "infra-P286-total-nodes-lock",

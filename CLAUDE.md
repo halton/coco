@@ -138,6 +138,8 @@
 
 只有在要求的验证成功且 evidence 被记录后，功能状态才可以切换到 `passing`。
 
+**Closeout-verify-trustworthy 硬规则 (P278)**: Closeout sub-agent 提交的 verify 报告必须含 `closeout_verify.main_head_sha` (7+ hex) + `verify_runs` (含 tail_stdout + status) + 任一 FAIL 需 `pre_existing_baseline_sha` + `baseline_tail_stdout` + `smoke_tail_stdout` + `reviewer.reviewer_kind == sub_agent_fresh_context`。机械化校验由 `scripts/verify_infra_062.py` 实施。详见 AGENTS.md「Closeout-verify-trustworthy 硬规则」段。
+
 ## 结束前
 
 1. 更新进度日志（追加 Session 条目）
