@@ -56,7 +56,7 @@ AGENTS_MD = REPO / "AGENTS.md"
 sys.path.insert(0, str(SCRIPTS))
 
 # infra-056 sha lock 常量 (V2)
-EXPECTED_LIB_FILE_SHA = "8e0e005150cd3e543642edc94952ae5d0a73540468e9bc2d979e810c05152664"
+EXPECTED_LIB_FILE_SHA = "11588d588e68f192d1ee085ed343d127b209247d5cfb9c8b9f09a04a597407e7"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 用 bootstrap helper 取真值后回填
 EXPECTED_V4_CHECKER_FUNC_SHA = "1f115d4689e26bc053494c3cb4759eab6b5be0417dda01883e522e357afabc28"

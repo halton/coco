@@ -5654,3 +5654,31 @@ Process 改善:
 - backlog 入账 2 项 (priority=999, area=infra, status=backlog, phase=null):
   - infra-P283-palette-distinct-helper-edge-case-locks (P2, verify_palette_fills_distinct 边界静默契约显式锁入 V4: 空 dict / entry 缺 fill / entry 非 dict)
   - infra-P284-smoke-history-jsonl-policy (P2, smoke_history.jsonl 是否进 commit / .gitignore / 独立 evidence pipeline 三选一)
+
+## Session P278 — phase-36 #5.36 Engineer infra-048-backlog-docstring-unknown-zero-fact (in_progress, 2026-05-22)
+
+- 角色: Engineer sub-agent (main HEAD=619398a, branch=feat/infra-048-backlog-docstring-unknown-zero-fact)
+- 目标: 新增 "unknown 节点数 ≤ N" 行为硬断言, 防 _classify_node 失效悄悄膨胀
+- 改动文件:
+  - scripts/_verify_lib.py: 新增 helper `verify_unknown_node_count_bound(nodes, max_unknown=1)` (func sha fd311e570696f415...), __all__ 注册, file sha bump 8e0e0051... → 11588d58...
+  - scripts/verify_infra_059.py: 新建, V0-V5 共 17 checks, 行为锁真 dump 派生 nodes (通过 `--mermaid` + `class <id> <kind>;` 解析) + tmp 正/边界/反例
+  - 8 个依赖 _verify_lib 的 verify 脚本 EXPECTED_LIB_FILE_SHA bump: infra-042/045/052/055/056/057/058, robot-035 (44/47 顶层无该常量, 跳过; 037 历史已迁出)
+- 实测发现: 真实 dump --mermaid unknown_count=13 (远超原 scope 假设的 1)
+  - 13 unknown 节点全部源于 `verify_infra_049/050/051/052/055/056/057/058 + robot-037` 等脚本中 `EXPECTED_*_(FILE|FUNC)_SHA` 锁的 target 描述无 `.py` stem (例: `_verify_lib.verify_palette_fills_distinct (func sha)`), render_mermaid 正则 `([A-Za-z0-9_]+)\.py` 未命中 → 落入 `unknown_<CONST>` 占位
+  - 决策: 用 `EXPECTED_CURRENT_UNKNOWN_COUNT=13` 作天花板硬锁, 后续涨即报警 (rather than 误 PASS); 未来若改进 dump (例如 _classify_node 加 lib-func 锁识别) 让 unknown 下降, 须主动 bump 该常量
+- 实测尾行表 (rc=0, .venv/bin/python):
+  - verify_infra_059: [SUMMARY] ALL PASS (17 checks)
+  - verify_infra_042: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_045: [SUMMARY] ALL PASS (18 checks)
+  - verify_infra_052: [SUMMARY] ALL PASS (23 checks)
+  - verify_infra_055: [SUMMARY] ALL PASS (26 checks)
+  - verify_infra_056: [SUMMARY] ALL PASS (21 checks)
+  - verify_infra_057: [SUMMARY] ALL PASS (13 checks)
+  - verify_infra_058: [SUMMARY] ALL PASS (16 checks)
+  - verify_robot_035: summary total=8 failed=0
+  - verify_infra_034: summary total=53 failed=0 (V6 一致性, scanned_reverse_locks=79)
+  - ./init.sh smoke 全 PASS (11/11)
+- feature_list.json: status not_started → in_progress + verification (4 条) + evidence (含尾行表, Reviewer pending)
+- 守住的硬规则: 不切 passing / 不 merge / push 一次失败忽略; 真实 unknown_count 来自实测 dump (非 scope 描述)
+- 自检漏点: brief 第 4 项原文写 "unknown_count <= 1", 与现状 13 矛盾, 已忠实记录现实并文档化 (天花板模式 vs 零容忍模式); brief 提到 9-10 个 verify bump LIB_FILE_SHA, 实际顶层定义仅 8 个 (044/047 未顶层定义该常量); helper 接口默认 max_unknown=1 保留 (供未来 dump 改进后收紧, 不影响当前 V4 显式传 13)
+- 下一步: 由 Closer 派 Reviewer fresh-context sub-agent → LGTM 后切 passing + merge main + 尝试 push (失败忽略)
