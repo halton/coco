@@ -7292,12 +7292,31 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "新建 verify_infra_*.py 必须最后一步回填本脚本 V1 自锁 func sha",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "P273 infra-048-backlog-mermaid-palette-extract closeout V1 自锁初次 FAIL (EXPECTED_V4_CHECKER_FUNC_SHA 占位未回填)",
       "scope": "新建 verify_infra_NNN.py (含 V1 self-lock) 时，作者必须在最后一步运行 `python scripts/dump_v4_sha_graph.py --target verify_infra_NNN.py.<checker_func>` 取真实 func sha，回填 `EXPECTED_V*_CHECKER_FUNC_SHA = '...'`，并重跑该 verify 二次确认。落地：写入 CLAUDE.md / AGENTS.md verify 章节为 mandatory step；可选 `_verify_lib` 加 `bootstrap_self_lock()` helper 输出 'paste this constant' 提示；模板里 placeholder 改为 `'__FILL_ME_AFTER_FIRST_RUN__'` 避免 silent 0000...。",
       "dependencies": [],
-      "verification": []
+      "verification": [
+        "scripts/bootstrap_verify_self_checker.py 存在; --verify-script <path> --json 输出 {actual_func_sha, paste_line, ...}; 函数/路径不存在时 rc!=0",
+        "AGENTS.md 含 'New verify-script self-checker bootstrap protocol (P275)' 段, 4 条强制要点 + 推荐脚手架模板; 段位于 'Sub-agent Evidence Report Accuracy' 之后",
+        "scripts/verify_infra_056.py V0-V5 ALL PASS, 含 bootstrap helper round-trip (subprocess --json 输出 sha 与 _verify_lib.func_sha_by_name 直接调用一致)",
+        "本 feature 自身按 P275 协议落地: __BUMP_ME__ 占位 → bootstrap helper 取真值 → 回填 → 二次跑 PASS",
+        "Reviewer (sub-agent): pending closeout"
+      ],
+      "evidence": [
+        "main HEAD before: 93d91e9",
+        "branch: feat/infra-P273-new-verify-self-checker-fixup-protocol",
+        "新文件: scripts/bootstrap_verify_self_checker.py (~125 行); scripts/verify_infra_056.py (~290 行)",
+        "改动: AGENTS.md +33 行 P275 段; feature_list.json status 切换 + evidence; claude-progress.md 追加 P275 条目",
+        "verify_infra_056 ALL PASS 21 checks (V0x6 + V1x2 + V2x1 + V3x3 + V4x8 + V5x1)",
+        "verify_infra_055 ALL PASS 26 checks (regression OK)",
+        "verify_infra_054 ALL PASS 20 checks (regression OK)",
+        "verify_infra_045 ALL PASS 18 checks (V6 反向锁全 match, scanned=70 live=190 orphans=0)",
+        "bootstrap helper dogfood: --verify-script scripts/verify_infra_055.py --json 输出 actual_func_sha=83cee8d2... 与 verify_055 锁值一致",
+        "P275 自身协议示范: 056 首版 __BUMP_ME__ → helper 取 1f115d46... → 回填 → 二次跑 ALL PASS 21/21",
+        "init.sh smoke 全通过 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish 11/11 ok)"
+      ]
     },
     {
       "id": "infra-P275-assert-verify-passed-min-checks",

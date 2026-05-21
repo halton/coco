@@ -139,6 +139,34 @@ P273 暴露过一类失真模式：sub-agent 报告 "verify PASS" 但并未真�
 
 新建 verify 脚本时应在 V4 行为段为本 helper 做正/反例 round-trip（PASS stdout 进 → passed=True；FAIL stdout 进 → passed=False；缺 SUMMARY 进 → passed=False）。当前参考实现：`scripts/verify_infra_055.py`。
 
+### New verify-script self-checker bootstrap protocol (P275)
+
+P273 / P275 还暴露过另一类失真：**新建 `scripts/verify_infra_NNN.py`（含 V1 self-lock）时，作者把 `EXPECTED_V4_CHECKER_FUNC_SHA` 锁的是"自身 v4_behavior 实现写完之前"的 sha**，因为之后又改了 V4 实现，导致 self-check 首跑 FAIL；作者再错误归因到 pre-existing 而非自己锁错。本协议机械化掉这一步：
+
+1. **先写所有 check 函数 + `_v4_behavior_*` 实现 + `main()`**，最后一步才填 `EXPECTED_V4_CHECKER_FUNC_SHA` 常量；占位用 `"__BUMP_ME__"` 或 `"__FILL_ME_AFTER_FIRST_RUN__"`，**不允许**用全 0 / 全 f 的 silent 占位（让 V1 静默通过）。
+2. **回填前必须先跑一次脚本**（让 V1 因 placeholder/sha 不一致 FAIL，从 FAIL 信息读 actual func sha），或直接跑 `python scripts/bootstrap_verify_self_checker.py --verify-script scripts/verify_infra_NNN.py --func-name v4_behavior` 取真值。
+3. **回填后必须再跑一次确认 PASS**（`.venv/bin/python scripts/verify_infra_NNN.py`，末行须 `[verify_infra_NNN][SUMMARY] ALL PASS (M checks)`）。
+4. **推荐脚手架步骤模板**（伪码）：
+
+   ```text
+   # step 1: 占位
+   EXPECTED_V4_CHECKER_FUNC_SHA = "__BUMP_ME__"
+
+   # step 2: 写完所有 V0..V5 + main()
+
+   # step 3: bootstrap helper 取真值
+   $ python scripts/bootstrap_verify_self_checker.py \\
+       --verify-script scripts/verify_infra_NNN.py --json
+   # → {"actual_func_sha": "abcd...", "paste_line": "EXPECTED_V4_CHECKER_FUNC_SHA = \\"abcd...\\""}
+
+   # step 4: paste paste_line 回填本脚本
+
+   # step 5: 再跑一次确认 ALL PASS
+   $ .venv/bin/python scripts/verify_infra_NNN.py
+   ```
+
+当前参考实现：`scripts/bootstrap_verify_self_checker.py` + `scripts/verify_infra_056.py`。
+
 ### Reviewer 材料包（每次 delegate 时显式传入）
 
 - `feature_id`

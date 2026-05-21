@@ -5450,3 +5450,21 @@ Process 改善:
   - 入账 1 项 backlog：`infra-P275-assert-verify-passed-min-checks` (P2 caveat)
   - push main 与 feat 分支各一次（结果见 commit 报告）
 - 持续开发模式继续：下一 candidate 应为 **#2.36 infra-P273-new-verify-self-checker-fixup-protocol**
+
+## Session P275 — #2.36 infra-P273-new-verify-self-checker-fixup-protocol Engineer round-1
+
+- 起点 main HEAD=93d91e9，feat 分支 `feat/infra-P273-new-verify-self-checker-fixup-protocol`
+- **目标**：P273 防御第 3 层 — 机械化"新建 verify_infra_*.py V1 self-checker 占位回填"协议，避免作者再犯"V4 实现写完前就锁旧 sha → 首跑 FAIL → 错误归因 pre-existing"
+- **改动**:
+  - 新增 `scripts/bootstrap_verify_self_checker.py` (~125 行)：`--verify-script <path> [--func-name v4_behavior] [--const-name EXPECTED_V4_CHECKER_FUNC_SHA] [--json]`，薄 wrap `_verify_lib.func_sha_by_name`，输出建议 `paste_line`；只读不改源文件
+  - AGENTS.md +33 行：紧跟 "Sub-agent Evidence Report Accuracy" 段后新增 "New verify-script self-checker bootstrap protocol (P275)" 段，4 条强制 + 推荐脚手架步骤模板（含伪码段）
+  - 新增 `scripts/verify_infra_056.py` (~290 行) V0-V5：V0 scaffolding（helper + 3 顶层函数存在）/ V1 docstring sentinel + 本脚本 v4_behavior 自锁 / V2 `_verify_lib.py` file sha 锁 (3790367e...) / V3 AGENTS.md sentinel + 4 anchor + 段顺序 / V4 行为 round-trip：构造 tmp verify 脚本→subprocess 跑 bootstrap helper --json→断言 sha 与 `func_sha_by_name` 一致；反例覆盖：函数名不存在 / 路径不存在 → rc!=0 / V5 Reviewer LGTM gate
+- **P275 协议自身落地**：056 首版 `EXPECTED_V4_CHECKER_FUNC_SHA = "__BUMP_ME__"` → `python scripts/bootstrap_verify_self_checker.py --verify-script scripts/verify_infra_056.py --json` 取 `1f115d4689e26bc0...` → 回填 → 二次 PASS
+- **实测**：
+  - `verify_infra_056`: `[verify_infra_056][SUMMARY] ALL PASS (21 checks)` rc=0
+  - `verify_infra_055`: `[verify_infra_055][SUMMARY] ALL PASS (26 checks)` rc=0
+  - `verify_infra_054`: `[verify_infra_054][SUMMARY] ALL PASS (20 checks)` rc=0
+  - `verify_infra_045`: `[verify_infra_045][SUMMARY] ALL PASS (18 checks)` rc=0 (scanned=70 live=190 orphans=0)
+  - bootstrap helper dogfood vs verify_055: 输出 actual_func_sha=83cee8d2... 与 055 已锁值一致
+  - `./init.sh` smoke 11/11 通过
+- 守住：status 保持 `in_progress`（未 self-promote passing）；未 merge feat→main；未 push；待 Reviewer fresh-context sub-agent + Closeout
