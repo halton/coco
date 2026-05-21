@@ -15,3 +15,6 @@ models/
 
 # infra-017: per-file advisory lock files for jsonl history writer (runtime-only)
 evidence/_history/*.lock
+
+# infra-P284: smoke history is local runtime evidence, never tracked
+evidence/_history/smoke_history.jsonl
