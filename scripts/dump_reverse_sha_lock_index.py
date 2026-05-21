@@ -17,12 +17,15 @@ audit 时快速 overview——"哪个 verify 文件锁哪个 target 文件/函�
 - ``scripts/dump_v4_sha_graph.py:_infer_target``: 复用其常量名 → target
   推断逻辑 (infra-039-backlog source-file-aware 增强后版本)
 
-输出形式互斥:
+输出形式:
 
 - ``--text`` (默认): 按 verify_file 分组的人读表格
 - ``--json``: 机读 dict; 含 entries[], orphans[], stats
 - ``--check``: 调 verify_reverse_sha_lock_consistency, all_match → rc 0, 否则 1
-  与 --text/--json 互斥
+  - 默认 (隐含 --text) 输出 stdout 文本 summary + orphan 行
+  - 与 ``--json`` 协同 → stdout 输出 JSON consistency report
+    (schema ``reverse_sha_lock_consistency/v1``), rc 语义不变
+- ``--text`` / ``--json`` 互斥 (输出格式选择, rc=2)
 
 退出码: 0 = 正常列出 (或 --check 通过); 1 = --check 失败 / 解析错.
 
@@ -147,6 +150,28 @@ def render_json(entries: List[Dict[str, Any]], live_count: int, consistency: Dic
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
 
 
+def render_check_json(consistency: Dict[str, Any]) -> str:
+    """机读 JSON consistency report (infra-049-backlog-check-coalesce-json, P270).
+
+    供 ``--check --json`` 协同模式使用: rc 语义保持 (all_match → 0, 否则 1),
+    但 stdout 输出结构化 consistency report 便于 CI / 运维抓取.
+
+    schema: ``reverse_sha_lock_consistency/v1``; 字段:
+    - scanned_count: scan_reverse_sha_locks 命中的反向锁条目数
+    - live_count: live_verify_sha_set 实时枚举的 verify 文件数
+    - orphans: list[dict] (file/lineno/const_name/sha_hex/target_id, 可能 [])
+    - all_match: bool, scanned ⊆ live 时 True
+    """
+    payload: Dict[str, Any] = {
+        "schema": "reverse_sha_lock_consistency/v1",
+        "scanned_count": int(consistency.get("scanned_count", 0)),
+        "live_count": int(consistency.get("live_count", 0)),
+        "orphans": list(consistency.get("orphans", [])),
+        "all_match": bool(consistency.get("all_match", False)),
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -158,19 +183,27 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "Read-only. Reuses _verify_lib + dump_v4_sha_graph._infer_target."
         ),
     )
+    # --text / --json 互斥: 输出格式选择 (P270 调整, 原三档互斥)
     mx = p.add_mutually_exclusive_group()
     mx.add_argument("--text", action="store_true", help="human-readable grouped table (default)")
     mx.add_argument("--json", action="store_true", help="machine-readable JSON payload")
-    mx.add_argument(
+    # --check 独立 flag: 行为开关; 可与 --json 协同 (rc 语义不变, stdout 走 JSON report)
+    p.add_argument(
         "--check",
         action="store_true",
-        help="run reverse-sha-lock consistency check; rc 0 = all_match, rc 1 = orphans",
+        help=(
+            "run reverse-sha-lock consistency check; rc 0 = all_match, rc 1 = orphans. "
+            "with --json: stdout = JSON consistency report (schema reverse_sha_lock_consistency/v1)"
+        ),
     )
     return p
 
 
-def cmd_check() -> int:
+def cmd_check(as_json: bool = False) -> int:
     result = verify_reverse_sha_lock_consistency(SCRIPTS)
+    if as_json:
+        sys.stdout.write(render_check_json(result))
+        return 0 if result["all_match"] else 1
     summary = (
         f"[dump_reverse_sha_lock_index][--check] "
         f"scanned={result['scanned_count']} live={result['live_count']} "
@@ -191,7 +224,7 @@ def cmd_check() -> int:
 def main(argv: List[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
     if args.check:
-        return cmd_check()
+        return cmd_check(as_json=bool(args.json))
     entries = build_entries()
     live = live_verify_sha_set(SCRIPTS)
     if args.json:

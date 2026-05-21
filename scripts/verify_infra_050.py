@@ -55,7 +55,7 @@ SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
 # cascade-locked with verify_infra_049 (P268/P269)
-EXPECTED_DUMP_INDEX_FILE_SHA = "dc0944f842e98a96c71ed521ae47b23448b0aa539c0a411a4e9ac1c975d1344b"
+EXPECTED_DUMP_INDEX_FILE_SHA = "f3d93d4f79e6580a1aabaa419281ed8ba2ee4aeaf9e899ff425531429c9bddc0"
 EXPECTED_RENDER_JSON_FUNC_SHA = "5e1bf67b5c3d66d15b2e9f42b66c06e9bf16549361080b518221b8a2bc2d2798"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
