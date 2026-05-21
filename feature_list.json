@@ -6944,14 +6944,19 @@
       "area": "infra",
       "phase": "phase-35",
       "title": "mermaid hub 颜色调整, 与 module 拉开区分度",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
       "scope": "当前 hub (dump_v4_sha_graph) 与 module 节点配色在某些 mermaid 渲染器下视觉上接近；调整 hub 配色 (例如更高饱和度的对比色) 使其在 GitHub mermaid 渲染时一眼可辨。",
       "dependencies": [
         "infra-039-backlog-mermaid-classDef-styling"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "reviewer_subagent": "LGTM 9.5/10",
+        "reviewer_summary": "verify_infra_053 17 checks PASS; cascade 7 处 sha 同步; smoke 11/11 PASS; 6 classDef 色值列表锁定 (hub=#fc6 已与 milestone=#f9f 区分); V3 mutant 精确替换 hub 色值验证锚定可信; 0 业务源码改动 bytewise 等价 main",
+        "reviewer_lgtm": true
+      }
     },
     {
       "id": "infra-048-backlog-mermaid-palette-extract",
@@ -7231,6 +7236,24 @@
         "infra-038-backlog-V6-pre-flight-grep-check"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-053-backlog-classdef-fills-distinct-check",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "description": "加 V4_all_classdef_fills_distinct 断言：6 个 classDef 色值集合 set 大小 == 6，永久防止未来 hub/milestone/其它色值再次撞色。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
+      "origin_backlog": "infra-048-backlog-hub-color-distinguish"
+    },
+    {
+      "id": "infra-053-backlog-doc-hub-color-update",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "description": "若 README / research / docs 中提到 V4 Mermaid hub 节点配色（旧 #f9f），需同步更新描述为 #fc6 并说明与 milestone 区分。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
+      "origin_backlog": "infra-048-backlog-hub-color-distinguish"
     }
   ],
   "_meta": {

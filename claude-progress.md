@@ -5377,3 +5377,19 @@ Process 改善:
   - infra-V6-backlog-strengthen-mutant-targeting (V3 mutant 提级到针对性删 elif 分支)
   - infra-049-backlog-dump-index-expose-kind (评估 dump_reverse_sha_lock_index entries 是否加 kind 字段, 涉及 schema v2 + V4 keys)
   - infra-049-backlog-dump-index-kind-stats (stats 加 verify_id_count / expected_pattern_count 拆解)
+
+## 2026-05-22 — P272 infra-048-backlog-hub-color-distinguish closeout (phase-35 4/5)
+
+- Merge `feat/infra-048-backlog-hub-color-distinguish` (38b550e) → main `--no-ff`，新 main HEAD 见 git log。
+- Status: `in_progress` → `passing`；Reviewer sub-agent fresh-context LGTM 9.5/10。
+- Evidence 摘要：
+  - verify_infra_053 共 17 checks 全 PASS
+  - V4 Mermaid SHA cascade 7 处同步更新（hub 色 #f9f → #fc6）
+  - smoke 11/11 PASS
+  - 6 classDef 色值列表锁定，hub 色与 milestone (#f9f) 区分
+  - V3 mutant 精确替换 hub 色值，锚定 verify 真实生效
+  - 0 业务源码改动 bytewise 等价 main
+- 2 backlog 入账（priority=999 status=backlog phase=null）：
+  1. `infra-053-backlog-classdef-fills-distinct-check` — 加 V4_all_classdef_fills_distinct 断言 6 色 set 大小 == 6
+  2. `infra-053-backlog-doc-hub-color-update` — README/research/docs 中 V4 hub 配色描述同步 #f9f → #fc6
+- phase-35 进度 4/5 passing；剩 1 个 not_started（priority 5.35 infra-048-backlog-mermaid-palette-extract）。
