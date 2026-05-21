@@ -47,8 +47,8 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-048 sha lock 常量 (V2)
-EXPECTED_DUMP_FILE_SHA = "f99f9079d7277d4d0031617e651d27d4a4850d0ab3b2bee1af71a5d2973f9090"
-EXPECTED_RENDER_MERMAID_FUNC_SHA = "c05d5b9609d43ce95f16b955f08a07efb098f2f71bf132baf5c9ea226e21aa8c"
+EXPECTED_DUMP_FILE_SHA = "60232fe8eccd11117bee4d8314b98f4231370351027c0676bc4d7e606c58acb0"
+EXPECTED_RENDER_MERMAID_FUNC_SHA = "4a6e52392548fa257b8eb5cd3bef1cd48c222364031da0f0e14f191aef7ec695"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
 EXPECTED_V4_CHECKER_FUNC_SHA = "9c47345119ce380e4dd1edd1322a4167f40ef1288e31f972d2fab451a0a8fc35"
@@ -83,15 +83,20 @@ def _func_sha(path: Path, func_name: str) -> str:
 def v0_scaffolding() -> None:
     _emit("V0_dump_exists", DUMP_PY.is_file(), f"path={DUMP_PY}")
     src = DUMP_PY.read_text(encoding="utf-8")
+    # infra-048-backlog-mermaid-palette-extract (P273): classDef 行改为 f-string
+    # 从 _MERMAID_PALETTE 迭代生成; 源码不再含 6 个 "classDef hub" 等字面 token,
+    # 改为检查 _MERMAID_PALETTE 6 个键 + classDef f-string 构造符
     needed = [
         "def _classify_node",
         "def render_mermaid",
-        "classDef hub",
-        "classDef verify",
-        "classDef lib",
-        "classDef dump",
-        "classDef module",
-        "classDef unknown",
+        "_MERMAID_PALETTE",
+        '"hub"',
+        '"verify"',
+        '"lib"',
+        '"dump"',
+        '"module"',
+        '"unknown"',
+        'classDef {',
     ]
     found = [n for n in needed if n in src]
     _emit(

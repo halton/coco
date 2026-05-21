@@ -42,8 +42,8 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-053 sha lock 常量 (V2)
-EXPECTED_DUMP_FILE_SHA = "f99f9079d7277d4d0031617e651d27d4a4850d0ab3b2bee1af71a5d2973f9090"
-EXPECTED_RENDER_MERMAID_FUNC_SHA = "c05d5b9609d43ce95f16b955f08a07efb098f2f71bf132baf5c9ea226e21aa8c"
+EXPECTED_DUMP_FILE_SHA = "60232fe8eccd11117bee4d8314b98f4231370351027c0676bc4d7e606c58acb0"
+EXPECTED_RENDER_MERMAID_FUNC_SHA = "4a6e52392548fa257b8eb5cd3bef1cd48c222364031da0f0e14f191aef7ec695"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
 EXPECTED_V4_CHECKER_FUNC_SHA = "1a3d90228607698c842830b67c5984f22e8fe02e516a688e98244c90781df7d1"
@@ -82,10 +82,14 @@ def _func_sha(path: Path, func_name: str) -> str:
 def v0_scaffolding() -> None:
     _emit("V0_dump_exists", DUMP_PY.is_file(), f"path={DUMP_PY}")
     src = DUMP_PY.read_text(encoding="utf-8")
+    # infra-048-backlog-mermaid-palette-extract (P273): hub / module 色值移入
+    # 模块顶部 _MERMAID_PALETTE; render_mermaid 用 f-string 生成 classDef 行,
+    # 源码不再含 "classDef hub" 字面。改为检查 _MERMAID_PALETTE 与色值字面。
     needed = [
         "def render_mermaid",
-        "classDef hub",
-        "classDef module",
+        "_MERMAID_PALETTE",
+        '"hub"',
+        '"module"',
         EXPECTED_HUB_FILL,
         EXPECTED_MODULE_FILL,
     ]
@@ -160,46 +164,46 @@ def v2_dump_locks() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: in-memory mutant — 把 render_mermaid 内 hub 色值 #fc6 替回 #f9f, sha 必漂移
+# V3: in-memory mutant — 把 _MERMAID_PALETTE 内 hub 色值 #fc6 替回 #f9f, 输出必漂移
+# infra-048-backlog-mermaid-palette-extract (P273): 色值移至模块顶部 _MERMAID_PALETTE,
+# render_mermaid 函数体不再含 hub 色值字面; 不能再用 func sha drift 反证,
+# 改为整源 mutate + exec, 验证 render_mermaid 输出 hub 色值漂移。
 # ---------------------------------------------------------------------------
 def v3_mutant() -> None:
     src = DUMP_PY.read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    target = None
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == "render_mermaid":
-            target = node
-            break
-    if target is None:
-        _emit("V3_mutant_apply", False, "render_mermaid not found")
+    # 替换 _MERMAID_PALETTE 内 hub fill 值
+    needle = f'"fill": "{EXPECTED_HUB_FILL}"'
+    if needle not in src:
+        _emit("V3_mutant_apply", False, f"needle {needle!r} not in dump src")
         return
-    baseline_sha = hashlib.sha256(ast.unparse(target).encode("utf-8")).hexdigest()
+    mutated = src.replace(needle, '"fill": "#f9f"', 1)
+    _emit("V3_mutant_apply", mutated != src, f"hub {EXPECTED_HUB_FILL} -> #f9f in palette")
 
-    # 深拷贝并把 hub 色值字符串里的 EXPECTED_HUB_FILL 替换回 #f9f
-    import copy
-    mutant = copy.deepcopy(target)
-
-    class _HubColorReverter(ast.NodeTransformer):
-        def visit_Constant(self, node: ast.Constant):  # type: ignore[override]
-            if isinstance(node.value, str) and "classDef hub" in node.value and EXPECTED_HUB_FILL in node.value:
-                new_val = node.value.replace(EXPECTED_HUB_FILL, "#f9f")
-                return ast.copy_location(ast.Constant(value=new_val), node)
-            return node
-
-    _HubColorReverter().visit(mutant)
-    ast.fix_missing_locations(mutant)
-    mutant_sha = hashlib.sha256(ast.unparse(mutant).encode("utf-8")).hexdigest()
-    _emit(
-        "V3_mutant_sha_drift",
-        baseline_sha != mutant_sha,
-        f"baseline={baseline_sha[:16]} mutant={mutant_sha[:16]}",
-    )
-    if EXPECTED_RENDER_MERMAID_FUNC_SHA != "__BUMP_ME__":
+    ns: dict = {"__name__": "_infra053_mutant", "__file__": str(DUMP_PY)}
+    try:
+        exec(compile(mutated, str(DUMP_PY) + ".mutant", "exec"), ns)
+        out = ns["render_mermaid"]({})
+        hub_lines = [ln for ln in out.splitlines() if "classDef hub" in ln]
+        ok = len(hub_lines) == 1 and EXPECTED_HUB_FILL not in hub_lines[0] and "#f9f" in hub_lines[0]
         _emit(
-            "V3_baseline_matches_expected",
-            baseline_sha == EXPECTED_RENDER_MERMAID_FUNC_SHA,
-            f"baseline={baseline_sha[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
+            "V3_mutant_sha_drift",
+            ok,
+            f"hub_line={hub_lines[0] if hub_lines else '<missing>'}",
         )
+    except Exception as e:
+        _emit("V3_mutant_sha_drift", False, f"exec err: {e!r}")
+
+    # baseline render_mermaid func sha 与 EXPECTED 仍应匹配 (palette 提取不改函数体本身)
+    if EXPECTED_RENDER_MERMAID_FUNC_SHA != "__BUMP_ME__":
+        try:
+            baseline_sha = _func_sha(DUMP_PY, "render_mermaid")
+            _emit(
+                "V3_baseline_matches_expected",
+                baseline_sha == EXPECTED_RENDER_MERMAID_FUNC_SHA,
+                f"baseline={baseline_sha[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
+            )
+        except Exception as e:
+            _emit("V3_baseline_matches_expected", False, f"compute err: {e!r}")
 
 
 # ---------------------------------------------------------------------------
