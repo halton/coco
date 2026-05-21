@@ -5413,3 +5413,20 @@ Process 改善:
   3. #3.35 infra-049-backlog-reverse-lock-pattern-expand (P271)
   4. #4.35 infra-048-backlog-hub-color-distinguish (P272)
   5. #5.35 infra-048-backlog-mermaid-palette-extract (P273)
+
+## Session P274 — phase-36 planning (planner sub-agent)
+
+- phase-35 收官 5/5 PASSING (起点 main HEAD=8792fdb)，持续开发模式进入 phase-36 规划
+- 选 5 候选 (priority 1.36 - 5.36)，全部 0 业务代码改动 / sim-friendly / 不动 _verify_lib 公共签名 / 沿用 verify-only meta-lock V0-V5 标准
+- **P273 流程项补登**：上轮 closeout 漏入账，本轮补登 2 项（status=backlog→not_started 一次到位）：
+  - `infra-P273-evidence-report-accuracy` — sub-agent 上报 verify 结果前必须 grep FAIL 实际 stdout
+  - `infra-P273-new-verify-self-checker-fixup-protocol` — 新建 verify_infra_*.py 必须最后回填本脚本 V1 自锁 func sha
+- **phase-36 候选清单**：
+  1. **1.36 infra-P273-evidence-report-accuracy** — 防御性流程项 P1：grep FAIL 实证 + paste stdout 末尾，杜绝 sub-agent 误报 PASS（P273 已暴露的同类失误）
+  2. **2.36 infra-P273-new-verify-self-checker-fixup-protocol** — 防御性流程项 P1：V1 自锁占位回填强制流程，避免新 verify 首跑 silent FAIL
+  3. **3.36 infra-049-backlog-expected-pattern-consistency-check** — 52 个 expected_pattern 锁加独立一致性核验路径，弥补 --check 盲区（P271 Reviewer 建议）
+  4. **4.36 infra-053-backlog-classdef-fills-distinct-check** — V4 加 `all_classdef_fills_distinct` 断言（6 色 set 大小==6），永久防撞色（P272 caveat）
+  5. **5.36 infra-048-backlog-docstring-unknown-zero-fact** — V4 行为锁 dump mermaid unknown_ 节点数 ≤ 1，防重构引新 unknown_*（P267 Reviewer 建议）
+- 选择理由：P273 流程项两项 ROI 最高（防同类失误，影响所有未来 feature 的 evidence 可信度），所以排 #1.36 / #2.36；后三项为 phase-35 / phase-34 close-out caveat 的具体技术债，范围小、单 Engineer round 可完成
+- 排除：infra-V6-backlog-strengthen-mutant-targeting（cascade 风险偏高，留 phase-37）、SDK 升级类、改 _verify_lib 公共签名的项
+- 立即开始 **#1.36 infra-P273-evidence-report-accuracy**

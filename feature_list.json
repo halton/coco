@@ -6564,11 +6564,11 @@
     },
     {
       "id": "infra-049-backlog-expected-pattern-consistency-check",
-      "priority": 999,
+      "priority": 3.36,
       "area": "infra",
-      "phase": null,
+      "phase": "phase-36",
       "title": "对 kind=expected_pattern 锁做独立一致性核验",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
       "scope": "scan_reverse_sha_locks 扩展后 52 个 expected_pattern 锁未参与 --check 一致性核验；建议增加独立路径，针对这些锁去比对 dump_*.py 文件 sha / func sha，弥补盲区。",
@@ -6925,11 +6925,11 @@
     },
     {
       "id": "infra-048-backlog-docstring-unknown-zero-fact",
-      "priority": 999,
+      "priority": 5.36,
       "area": "infra",
-      "phase": null,
+      "phase": "phase-36",
       "title": "V4 行为锁: dump mermaid 输出 unknown_ 节点数 ≤ 1",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
       "scope": "verify_infra_048 V4 加行为事实锁——render_mermaid 实际输出中 unknown_ 前缀节点数 ≤ 1 (当前固定为 unknown_EXPECTED_DOC_SHA)；防止后续重构引入新的 unknown_* 节点而无人发现。",
@@ -7240,9 +7240,9 @@
     },
     {
       "id": "infra-053-backlog-classdef-fills-distinct-check",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 4.36,
+      "status": "not_started",
+      "phase": "phase-36",
       "area": "infra",
       "description": "加 V4_all_classdef_fills_distinct 断言：6 个 classDef 色值集合 set 大小 == 6，永久防止未来 hub/milestone/其它色值再次撞色。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
       "origin_backlog": "infra-048-backlog-hub-color-distinguish"
@@ -7255,6 +7255,32 @@
       "area": "infra",
       "description": "若 README / research / docs 中提到 V4 Mermaid hub 节点配色（旧 #f9f），需同步更新描述为 #fc6 并说明与 milestone 区分。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
       "origin_backlog": "infra-048-backlog-hub-color-distinguish"
+    },
+    {
+      "id": "infra-P273-evidence-report-accuracy",
+      "priority": 1.36,
+      "area": "infra",
+      "phase": "phase-36",
+      "title": "Sub-agent 上报 verify 结果前必须 grep FAIL 实际输出",
+      "status": "not_started",
+      "created_at": "2026-05-22",
+      "source": "P273 infra-048-backlog-mermaid-palette-extract closeout 流程偏差 (Engineer 首轮报 PASS 但 V1 自锁实际 FAIL)",
+      "scope": "Engineer / Reviewer / verify-runner sub-agent 在向主会话回报 'verify_infra_NNN.py 全 PASS' 之前，必须执行 `python scripts/verify_infra_NNN.py 2>&1 | grep -E 'FAIL|Error'` 并将原始 stdout 末尾 5 行同步 paste 到 brief；禁止仅凭子任务返回值或目测断言通过。落地形式：在 AGENTS.md / CLAUDE.md 加入硬规则段；可选 _verify_lib helper 提供 `assert_verify_clean(name)` 工具函数走 subprocess.run + 关键字扫描。",
+      "dependencies": [],
+      "verification": []
+    },
+    {
+      "id": "infra-P273-new-verify-self-checker-fixup-protocol",
+      "priority": 2.36,
+      "area": "infra",
+      "phase": "phase-36",
+      "title": "新建 verify_infra_*.py 必须最后一步回填本脚本 V1 自锁 func sha",
+      "status": "not_started",
+      "created_at": "2026-05-22",
+      "source": "P273 infra-048-backlog-mermaid-palette-extract closeout V1 自锁初次 FAIL (EXPECTED_V4_CHECKER_FUNC_SHA 占位未回填)",
+      "scope": "新建 verify_infra_NNN.py (含 V1 self-lock) 时，作者必须在最后一步运行 `python scripts/dump_v4_sha_graph.py --target verify_infra_NNN.py.<checker_func>` 取真实 func sha，回填 `EXPECTED_V*_CHECKER_FUNC_SHA = '...'`，并重跑该 verify 二次确认。落地：写入 CLAUDE.md / AGENTS.md verify 章节为 mandatory step；可选 `_verify_lib` 加 `bootstrap_self_lock()` helper 输出 'paste this constant' 提示；模板里 placeholder 改为 `'__FILL_ME_AFTER_FIRST_RUN__'` 避免 silent 0000...。",
+      "dependencies": [],
+      "verification": []
     }
   ],
   "_meta": {
