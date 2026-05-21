@@ -6021,3 +6021,27 @@ DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant
   - ./init.sh smoke PASS
 - real_machine_uat: pending (sim-first)
 - 继续 phase-37 #5.37 P284 smoke-history-jsonl-policy
+
+## Session P298 — phase-37 #5.37 infra-P284-smoke-history-jsonl-policy (Engineer)
+
+- branch: feat/infra-P284-smoke-history-jsonl-policy (from b78ea1d)
+- commit: 2357841 feat(infra-P284): smoke_history.jsonl ignore policy + verify_infra_064
+- 方向: A — .gitignore 加 `evidence/_history/smoke_history.jsonl` + `git rm --cached`,
+  消除每次 closeout 都要 stash 该文件的流程噪音; 磁盘文件保留作本机调试
+- 文件:
+  - .gitignore: +3 行 (infra-P284 注释 + 1 ignore 模式)
+  - scripts/verify_infra_064.py: 新增 ~300 行 V0-V5 (15 checks)
+  - scripts/dump_v4_sha_graph.py: _PER_FILE_LOCKS 加 064 条 (+3 行)
+  - scripts/verify_infra_060.py: bump EXPECTED_DUMP_FILE_SHA (cascade)
+  - feature_list.json: P284 not_started → in_progress + verification 5 条
+  - evidence/_history/smoke_history.jsonl: deleted from index (磁盘保留)
+- verify:
+  - verify_infra_064 ALL PASS (15 checks)
+  - verify_infra_060 ALL PASS (14 checks; dump file sha bump 后)
+  - verify_infra_034 V6 PASS (orphan_reverse_locks 0 / live_verify_files=198)
+  - ./init.sh smoke PASS; smoke 后 `git status --porcelain` 空 → jsonl 不再 dirty
+- writer scripts/_history_writer.py 已自带 mkdir(parents=True, exist_ok=True),
+  init.sh 无须改
+- push: feat 分支推 origin 失败 (403 personal fork 权限), 按 CLAUDE.md 规则忽略继续
+- 待 Reviewer fresh-context 评审 → closeout merge
+- real_machine_uat: N/A (纯 infra 流程)

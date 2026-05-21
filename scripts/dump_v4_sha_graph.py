@@ -178,6 +178,9 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/bootstrap_verify_self_checker.py:run_canary_self_check (func-sha)",
     ("verify_infra_063.py", "EXPECTED_CANARY_CONST_SHA"):
         "scripts/bootstrap_verify_self_checker.py:_CANARY_EXPECTED_SHA (const-lock)",
+    # verify_infra_064 (P284) — 锁 smoke_history.jsonl 不再 tracked 政策
+    ("verify_infra_064.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
