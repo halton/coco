@@ -6100,3 +6100,26 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
     - `infra-P299-verify-infra-062-helper-func-sha-baseline-drift` — pre-existing V3_helper_func_sha got=d771fb0b expect=6cf263ee on main baseline; 单独追账重算
     - `infra-P299-baseline-cross-check-v4-invalid-ref-coverage` — V4.4 仅 40-hex deadbeef 覆盖 invalid ref; 补纯非法字符串 / 含空格 / 含 .. 用例
 - 持续开发模式: 继续 phase-38 #2.38 `infra-P294-R5-total-checks-derived`
+
+## Session 2026-05-22 (phase-38 #2.38 infra-P294-R5-total-checks-derived passing)
+
+- Feature: `infra-P294-R5-total-checks-derived` (phase=38, priority=2.38, area=infra)
+- Goal: closeout-verify-trustworthy helper 内 `total_checks` 从硬编码 5 改为从内部 _CHECKS 列表派生, 让 verify_infra_062/066 V4 能直接 assert 单 rule 命中数
+- 实现 commits:
+    - `3fae1b9` feat: 在 `scripts/_verify_lib.py` 中将 `total_checks` 改为 `len(_CHECKS)` 派生 (round-1)
+    - `2de74bf` fix: helper 重构后同步更新 `verify_infra_062.py` / `verify_infra_066.py` 中 `EXPECTED_CLOSEOUT*_FUNC_SHA` SHA-pin 常量 (round-2)
+- Reviewer 全过程 (sub-agent fresh-context, 2 轮):
+    - **round-1 REJECT**: 2 blocker — round-1 commit 改 helper 函数后未同步两个下游 verify_infra_*.py 的 EXPECTED SHA-pin, 致 verify_infra_062 / verify_infra_066 中 SHA-pin 校验 FAIL
+    - **第三方仲裁**: Reviewer 正确 — helper 函数体变动必须 cascade 更新引用其 SHA 的所有锁点, 不能跳过
+    - **round-2 LGTM**: fix commit 2de74bf 修正两个 EXPECTED SHA 后, 所有 verify ALL PASS, 无 finding, 1 个 round-1 #3 minor 入 backlog
+- Closeout merge: `5e4ffe6` (no-ff merge `feat/infra-P294-R5-total-checks-derived` → main, main HEAD 8f05e20 → 5e4ffe6)
+- Final verify on main HEAD 5e4ffe6:
+    - `./init.sh` smoke PASS
+    - `scripts/verify_infra_066.py` [SUMMARY] ALL PASS (14 checks)
+    - `scripts/verify_infra_062.py` [SUMMARY] ALL PASS (17 checks)
+    - `scripts/verify_infra_060.py` [SUMMARY] ALL PASS (14 checks)
+    - `scripts/verify_infra_034.py` summary total=53 failed=0
+- Backlog 入账 (1 个 P299):
+    - `infra-P299-closeout-verify-trustworthy-helper-passed-checks-field` — helper dict 新增 `passed_checks` 字段, 让下游 V4 可严格 assert 守恒律 `passed + failed == total` (round-1 #3 minor)
+    - 注: 本次发现的另一个共性问题 "verify_*.py [SUMMARY] FAIL 与 process exit code 解耦" 已映射至 phase-38 #3.38 `infra-P294-Rx-verify-summary-exit-propagation` (round-2 仲裁 finding), 此次不重复入账
+- 持续开发模式: 继续 phase-38 #3.38 `infra-P294-Rx-verify-summary-exit-propagation`

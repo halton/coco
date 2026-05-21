@@ -7794,11 +7794,38 @@
     {
       "id": "infra-P294-R5-total-checks-derived",
       "priority": 2.38,
-      "status": "not_started",
+      "status": "passing",
       "phase": 38,
       "area": "infra",
       "title": "helper total_checks 从 per-rule emit 派生而非硬编码 5",
-      "rationale": "P278 round-1 helper 返回 total_checks=5 是常量硬编码, 与 failed_reasons 长度解耦. 修后无法区分 '5 条 rule 哪条 fail 几次' (一个 verify_runs 有 3 个 FAIL 都缺 baseline, failed_reasons 长 6 但 total_checks 仍 5). 建议: 改为 per-rule 累加器 (rule1/rule2/.../rule5 各自 pass/fail count), total_checks = sum, 让 verify_infra_062 V4 能直接 assert 单 rule 命中数."
+      "rationale": "P278 round-1 helper 返回 total_checks=5 是常量硬编码, 与 failed_reasons 长度解耦. 修后无法区分 '5 条 rule 哪条 fail 几次' (一个 verify_runs 有 3 个 FAIL 都缺 baseline, failed_reasons 长 6 但 total_checks 仍 5). 建议: 改为 per-rule 累加器 (rule1/rule2/.../rule5 各自 pass/fail count), total_checks = sum, 让 verify_infra_062 V4 能直接 assert 单 rule 命中数.",
+      "evidence": {
+        "main_head_sha": "5e4ffe6",
+        "main_head_before_merge": "8f05e20",
+        "merge_sha": "5e4ffe6",
+        "feat_commit_sha": ["3fae1b9", "2de74bf"],
+        "verify_runs": [
+          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
+          {"script": "scripts/verify_infra_066.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "scripts/verify_infra_062.py", "status": "ALL PASS (17 checks)", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "rounds": 2,
+          "round_1": "REJECT - 2 blocker: round-1 commit 3fae1b9 改 helper 后未同步 verify_infra_062 / verify_infra_066 中 EXPECTED_CLOSEOUT*_FUNC_SHA, 导致 SHA-pin 校验 FAIL.",
+          "arbitrator_invoked": true,
+          "arbitrator_verdict": "Reviewer 正确 - 2 处 expected sha 必须随 helper 重构同步更新",
+          "round_2": "LGTM - 无 finding. fix commit 2de74bf 修正 verify_infra_062 与 verify_infra_066 EXPECTED_CLOSEOUT*_FUNC_SHA 后, 所有 verify ALL PASS, smoke PASS.",
+          "summary": "Reviewer (sub-agent fresh-context, 2 轮): round-1 REJECT (2 blocker SHA 不同步) → 第三方仲裁 Reviewer 正确 → round-2 fix 后 LGTM 无 finding. helper 内部 _CHECKS 列表派生 total_checks (而非硬编码 5), 让 verify_infra_062 V4 能 assert 单 rule 命中. round-1 #3 minor 入 backlog (P299 helper passed_checks 字段以便严格守恒律验证). 允许 passing.",
+          "findings_to_backlog": [
+            "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field"
+          ]
+        },
+        "commits": ["3fae1b9", "2de74bf", "5e4ffe6"]
+      }
     },
     {
       "id": "infra-P294-R6-sample-count-doc",
@@ -7907,9 +7934,18 @@
       "area": "infra",
       "title": "V4.4 invalid baseline ref 用例补纯非法字符串覆盖",
       "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。"
+    },
+    {
+      "id": "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证",
+      "rationale": "P294-R5 Reviewer round-1 #3 minor: helper 已派生 total_checks (P294-R5), 但 dict 返回仅含 total_checks + failed_reasons; 下游验证若想严格 assert 守恒律 (passed + failed == total), 需自行算 passed=total-len(failed_reasons). 建议 helper 同步暴露 passed_checks 字段, 让 verify_infra_062/066 V4 可直接 assert passed+failed==total 三量一致, 把守恒律从'推导'升级到'锁'. 纯增强, 不动现有 caller."
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P294-R4 phase-38 #1.38 infra-P294-R4-fail-baseline-cross-check 入 passing (merge 1cb97ab, Reviewer LGTM, verify_infra_065 ALL PASS 13 + 060 14 + 034 53/0 + smoke PASS) + 入账 3 个 backlog (P299 baseline-fail-claim-regex-multiline / P299 verify-infra-062-helper-func-sha-baseline-drift / P299 baseline-cross-check-v4-invalid-ref-coverage)"
+    "last_updated": "2026-05-22 P294-R5 phase-38 #2.38 infra-P294-R5-total-checks-derived 入 passing (merge 5e4ffe6, Reviewer round-1 REJECT (2 SHA 不同步 blocker) → 第三方仲裁 Reviewer 正确 → round-2 fix LGTM, verify_infra_066 ALL PASS 14 + 062 ALL PASS 17 + 060 ALL PASS 14 + 034 53/0 + smoke PASS) + 入账 1 个 backlog (P299 helper passed_checks field)"
   }
 }
