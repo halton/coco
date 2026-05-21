@@ -39,6 +39,7 @@ __all__ = [
     "verify_expected_pattern_consistency",
     "verify_palette_fills_distinct",
     "verify_unknown_node_count_bound",
+    "verify_expected_prefix_typo_guard",
     "assert_verify_passed",
 ]
 
@@ -711,4 +712,119 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
         "summary_line": summary_line,
         "fail_emits": fail_emits,
         "reason": "; ".join(reasons) if reasons else "",
+    }
+
+
+# ---------------------------------------------------------------------------
+# infra-P281-expected-prefix-typo-guard: 扫 EXPECTED_* 常量名 typo
+# ---------------------------------------------------------------------------
+# 规范 sha 锁后缀 (well-formed); 命中即视为合法 sha 反向锁。
+_RE_EXPECTED_WELL_FORMED_SHA = re.compile(r"_(SHA|SHA256|SHA512)$")
+# 明确的 typo 后缀族: 看起来想写 _SHA 但拼错。
+# 注意: 这里只列高置信度 typo 变体, 避免误伤合法非 sha 常量
+# (如 EXPECTED_PALETTE / EXPECTED_LINES / EXPECTED_FINGERPRINT)。
+_RE_EXPECTED_TYPO_SUFFIX = re.compile(
+    r"_(SHAH|HSA|HASH|HASHSUM|SHASUM|SH|SAH|SAH256|SHAA|SHAS|SAHA)$"
+)
+# 进一步: 名字中部包含 sha-ish 拼写但末尾不是规范的也算 typo
+# 例: EXPECTED_LIB_SHAH_FILE, EXPECTED_FUNC_HSA_SHA (后者最终落到 _SHA 不算 typo)
+_RE_EXPECTED_NAMEPART_TYPO = re.compile(
+    r"(SHAH|HSA|HASHSUM|SHASUM|SAH256|SHAA|SHAS|SAHA)(?![A-Z0-9])"
+)
+
+
+def verify_expected_prefix_typo_guard(
+    scripts_dir: "Path | None" = None,
+) -> dict:
+    """扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`` 前缀的模块级常量名 typo。
+
+    规则
+    ----
+    - 收集每个 verify_*.py 顶层 ``Assign`` / ``AnnAssign`` 目标且名字 ``startswith("EXPECTED_")``。
+    - **well-formed sha lock**: 名字末尾匹配 ``_(SHA|SHA256|SHA512)$``。
+    - **non-sha legitimate**: 名字不含任何 sha-ish 后缀/中部 (e.g. ``EXPECTED_PALETTE``,
+      ``EXPECTED_LINES``, ``EXPECTED_FINGERPRINT``) — 不视为 typo。
+    - **typo**: 名字命中 ``_RE_EXPECTED_TYPO_SUFFIX`` (末尾 typo 变体) 或
+      ``_RE_EXPECTED_NAMEPART_TYPO`` (中部 typo 拼写)。
+      典型: ``EXPECTED_LIB_FILE_SHAH``, ``EXPECTED_FUNC_HSA``, ``EXPECTED_FILE_SH``。
+
+    返回 schema::
+
+        {
+          "total_expected_consts": int,
+          "well_formed": int,         # well-formed sha + legitimate non-sha 之和
+          "typo_count": int,
+          "typo_samples": list[{"path": str, "lineno": int,
+                                "name": str, "reason": str}],  # 最多 10 条
+          "all_well_formed": bool,    # typo_count == 0
+        }
+
+    P281 (infra-P281-expected-prefix-typo-guard): 源自 P276 Reviewer blind spot —
+    现有锁规则只识别规范命名, typo 命名 (``_SHAH`` / ``_HSA`` / ``_SH``) 看似存在
+    但实际从未参与一致性校验。本 helper 提供 ast-level 扫描器, 让 typo 在
+    verify-time 直接被打出。
+    """
+    if scripts_dir is None:
+        scripts_dir = Path(__file__).resolve().parent
+    scripts_dir = Path(scripts_dir)
+
+    total = 0
+    well_formed = 0
+    typos: list[dict] = []
+
+    for py in sorted(scripts_dir.glob("verify_*.py")):
+        try:
+            tree = ast.parse(py.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            target_names: list[tuple[int, str]] = []
+            if isinstance(node, ast.Assign):
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        target_names.append((t.lineno, t.id))
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                target_names.append((node.target.lineno, node.target.id))
+            for lineno, name in target_names:
+                if not name.startswith("EXPECTED_"):
+                    continue
+                total += 1
+                # 命中 typo: 末尾或中部含 typo 拼写
+                m_sfx = _RE_EXPECTED_TYPO_SUFFIX.search(name)
+                m_part = _RE_EXPECTED_NAMEPART_TYPO.search(name)
+                # 但若末尾仍是规范 _SHA/_SHA256/_SHA512, 视为良好
+                if _RE_EXPECTED_WELL_FORMED_SHA.search(name) and not m_part:
+                    well_formed += 1
+                    continue
+                if m_sfx or m_part:
+                    bad = (m_sfx or m_part).group(0).lstrip("_")
+                    # 建议最接近的合法后缀
+                    suggest = "_SHA"
+                    if "256" in bad:
+                        suggest = "_SHA256"
+                    elif "512" in bad:
+                        suggest = "_SHA512"
+                    reason = (
+                        f"suffix/part '{bad}' looks like a typo of SHA family; "
+                        f"suggest renaming to canonical '{suggest}' (well-formed = "
+                        f"^EXPECTED_[A-Z0-9_]+(_(SHA|SHA256|SHA512))$)."
+                    )
+                    typos.append(
+                        {
+                            "path": str(py),
+                            "lineno": lineno,
+                            "name": name,
+                            "reason": reason,
+                        }
+                    )
+                else:
+                    # 不含 sha-ish 拼写: 合法非 sha 常量
+                    well_formed += 1
+
+    return {
+        "total_expected_consts": total,
+        "well_formed": well_formed,
+        "typo_count": len(typos),
+        "typo_samples": typos[:10],
+        "all_well_formed": len(typos) == 0,
     }

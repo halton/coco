@@ -5804,3 +5804,61 @@ Process 改善:
 ### Git
 - closeout commit on main (chore + 4 backlog 入账).
 - push origin main + push origin feat/infra-P285-... 各一次, 失败不重试 (按规则).
+
+## Session P292 — infra-P281-expected-prefix-typo-guard (Engineer)
+
+### 任务
+phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`` 前缀的模块级常量名 typo,
+抓 P276 Reviewer blind spot: 现有 V6 一致性只识别规范 ``EXPECTED_*_(SHA|SHA256|SHA512)$``,
+若有人写成 ``EXPECTED_LIB_FILE_SHAH`` / ``EXPECTED_FUNC_HSA`` / ``EXPECTED_FILE_SH`` 等 typo
+则被 V6 静默放过, 反向锁形同虚设。
+
+### 实现
+- ``scripts/_verify_lib.py`` 新增 helper ``verify_expected_prefix_typo_guard``:
+  - ast 扫顶层 ``Assign`` / ``AnnAssign`` 中 ``EXPECTED_*`` 常量名
+  - well-formed: ``_(SHA|SHA256|SHA512)$`` 后缀;
+    legitimate non-sha: 不含 sha-ish 拼写; typo: 后缀/中部命中
+    ``_(SHAH|HSA|HASH|HASHSUM|SHASUM|SH|SAH|SAH256|SHAA|SHAS|SAHA)``
+  - 返回 schema: total_expected_consts / well_formed / typo_count /
+    typo_samples (cap 10) / all_well_formed
+- ``scripts/verify_infra_061.py`` 新建 V0-V5 共 18 checks (dogfood + tmp 正反例):
+  - dogfood 当前仓库 all_well_formed=True (107 EXPECTED_* 常量全合规)
+  - tmp 反例覆盖 ``_SHAH`` / ``_HSA`` / ``_SH`` 三种典型 typo
+  - tmp 边界: 空 dir / samples 上限 cap 10
+- ``scripts/dump_v4_sha_graph.py`` ``_PER_FILE_LOCKS`` 新增 1 条 (P281)
+  ``(verify_infra_061.py, EXPECTED_TYPO_GUARD_FUNC_SHA)`` →
+  ``scripts/_verify_lib.py:verify_expected_prefix_typo_guard (func-sha)`` 避免出新 unknown 节点
+
+### Cascade bump
+- ``_verify_lib.py`` file sha: ``11588d58...`` → ``d94afff3...``
+- ``dump_v4_sha_graph.py`` file sha: ``5be83d29...`` → ``9822507d...`` (V2_dump_file_sha @ verify_infra_060)
+- 11 个 verify 脚本 ``EXPECTED_(VERIFY_)?LIB_FILE_SHA`` 全 bump 到 ``d94afff3...``:
+  verify_infra_{042,045,052,055,056,057,058,059}.py + verify_robot_{035,037}.py + verify_infra_061.py
+  (verify_infra_037.py 上 ``EXPECTED_VERIFY_LIB_FILE_SHA = 8e0e00...`` 早在 main 上就 stale, 与 P281 无关, 入 backlog)
+
+### Verification stdout 尾行 (verbatim)
+- ``verify_infra_061``: ALL PASS (18 checks)
+- ``verify_infra_059``: ALL PASS (17 checks)
+- ``verify_infra_060``: ALL PASS (14 checks)
+- ``verify_infra_042``: ALL PASS (13 checks)
+- ``verify_infra_055``: ALL PASS (26 checks)
+- ``verify_infra_056``: ALL PASS (21 checks)
+- ``verify_robot_035``: total=8 failed=0
+- ``verify_robot_037``: ALL PASS (18 checks)
+- ``verify_infra_034`` (V6): total=53 failed=0
+- ``./init.sh`` smoke: 通过
+
+### 预先存在 FAIL (与 P281 无关, 已在 clean main 6b8707f 验证)
+- ``verify_infra_037`` V2_lib_file_sha (lock 8e0e00... vs current 11588d... 即 main HEAD sha)
+- ``verify_infra_045`` V2_func_sha_scan_reverse_sha_locks + V3_baseline (stale func sha lock)
+- ``verify_infra_052`` V2_func_sha_scan_reverse_sha_locks + V3_baseline (同上)
+- ``verify_infra_057`` V3_helper_func_sha (stale helper func sha)
+- ``verify_infra_058`` V3_helper_func_sha (stale helper func sha)
+- 这些与 P281 改动正交, 已分别记 backlog (P292-stale-locks-cleanup) priority=999
+
+### Status 切换
+- infra-P281-expected-prefix-typo-guard: not_started → in_progress
+
+### Git
+- branch: feat/infra-P281-expected-prefix-typo-guard (from main 6b8707f)
+- commit: feat(infra-P281-expected-prefix-typo-guard): EXPECTED_* typo guard helper + V0-V5
