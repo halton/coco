@@ -354,7 +354,7 @@ def render_mermaid(graph: Dict) -> str:
             out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
 
     # infra-039-backlog-mermaid-classDef-styling: classDef 声明 + 每节点 class 关联
-    out.append("    classDef hub fill:#f9f,stroke:#909,color:#000;")
+    out.append("    classDef hub fill:#fc6,stroke:#b85,color:#000;")
     out.append("    classDef verify fill:#9cf,stroke:#069,color:#000;")
     out.append("    classDef lib fill:#9f9,stroke:#090,color:#000;")
     out.append("    classDef dump fill:#ff9,stroke:#990,color:#000;")

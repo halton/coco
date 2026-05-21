@@ -1,29 +1,23 @@
 #!/usr/bin/env python3
-"""verify_infra_048: dump_v4_sha_graph mermaid classDef styling (verify-only).
+"""verify_infra_053: dump_v4_sha_graph mermaid hub color distinguish (verify-only).
 
-infra-039-backlog-mermaid-classDef-styling (phase-34 #4.34): 锁住
-``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 在末尾 emit 的 6 类
-``classDef`` 与每个节点 ``class <node_id> <className>`` 关联语句, 以及新增的
-``_classify_node`` 分类函数:
-
-- hub: v4_sha_json
-- verify: scripts/verify_*.py
-- lib: _verify_lib
-- dump: dump_v4_sha_graph (self-ref)
-- module: 业务模块 (如 proactive)
-- unknown: unknown_* 兜底 (P266 后理论为 0, 但 classDef 保留兼容)
+infra-048-backlog-hub-color-distinguish (phase-35 #4.35 P272): P267 落地的
+6 类 classDef 中 hub (``#f9f`` 粉品红) 与 module (``#c9f`` 淡紫) 色相相邻,
+小尺寸渲染下区分度不足。本 feature 把 hub 色值改为橙黄系 ``#fc6``, 拉开
+与 module 视觉距离, 同时避开红/绿色盲冲突。
 
 本脚本验证:
-- V0 scaffolding: dump_v4_sha_graph.py 存在 + ``_classify_node`` / ``render_mermaid`` /
-  ``classDef hub`` / ``classDef verify`` 等符号在
-- V1 docstring sentinel ``INFRA_048_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
+- V0 scaffolding: dump_v4_sha_graph.py 存在 + hub/module classDef 在
+- V1 docstring sentinel ``INFRA_053_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
 - V2 dump_v4_sha_graph.py file sha + ``render_mermaid`` func sha
-- V3 in-memory mutant: 替换 render_mermaid body 为 ``return 'graph LR'``, sha 必漂移
+- V3 in-memory mutant: 把 render_mermaid 内 hub 色值字符串改回 ``#f9f``,
+  sha 必漂移
 - V4 行为验证: subprocess 调用 ``python scripts/dump_v4_sha_graph.py --mermaid``,
-  stdout 必含 6 行 classDef + 关键节点 ``class`` 关联 (hub/verify/lib/dump)
+  stdout 必含 hub 新色值 ``#fc6``; hub 色值与 module 色值字面不同;
+  classDef 行总数 = 6
 - V5 Reviewer LGTM gate (print-only)
 
-INFRA_048_SHA_LOCKS
+INFRA_053_SHA_LOCKS
 -------------------
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
 - ``render_mermaid`` func sha: EXPECTED_RENDER_MERMAID_FUNC_SHA
@@ -37,6 +31,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -46,21 +41,25 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
-# infra-048 sha lock 常量 (V2)
+# infra-053 sha lock 常量 (V2)
 EXPECTED_DUMP_FILE_SHA = "f99f9079d7277d4d0031617e651d27d4a4850d0ab3b2bee1af71a5d2973f9090"
 EXPECTED_RENDER_MERMAID_FUNC_SHA = "c05d5b9609d43ce95f16b955f08a07efb098f2f71bf132baf5c9ea226e21aa8c"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "9c47345119ce380e4dd1edd1322a4167f40ef1288e31f972d2fab451a0a8fc35"
+EXPECTED_V4_CHECKER_FUNC_SHA = "1a3d90228607698c842830b67c5984f22e8fe02e516a688e98244c90781df7d1"
 
-DOCSTRING_SENTINEL = "INFRA_048_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_053_SHA_LOCKS"
+
+# 新 hub 色值 (橙黄, 与紫色 module #c9f 区分度高, 避免红/绿色盲冲突)
+EXPECTED_HUB_FILL = "#fc6"
+EXPECTED_MODULE_FILL = "#c9f"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_048][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_053][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, ok, detail))
 
 
@@ -84,18 +83,15 @@ def v0_scaffolding() -> None:
     _emit("V0_dump_exists", DUMP_PY.is_file(), f"path={DUMP_PY}")
     src = DUMP_PY.read_text(encoding="utf-8")
     needed = [
-        "def _classify_node",
         "def render_mermaid",
         "classDef hub",
-        "classDef verify",
-        "classDef lib",
-        "classDef dump",
         "classDef module",
-        "classDef unknown",
+        EXPECTED_HUB_FILL,
+        EXPECTED_MODULE_FILL,
     ]
     found = [n for n in needed if n in src]
     _emit(
-        "V0_classdef_symbols",
+        "V0_hub_module_symbols",
         len(found) == len(needed),
         f"found {len(found)}/{len(needed)}",
     )
@@ -164,7 +160,7 @@ def v2_dump_locks() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: in-memory mutant — 替换 render_mermaid body, sha 必漂移
+# V3: in-memory mutant — 把 render_mermaid 内 hub 色值 #fc6 替回 #f9f, sha 必漂移
 # ---------------------------------------------------------------------------
 def v3_mutant() -> None:
     src = DUMP_PY.read_text(encoding="utf-8")
@@ -178,13 +174,19 @@ def v3_mutant() -> None:
         _emit("V3_mutant_apply", False, "render_mermaid not found")
         return
     baseline_sha = hashlib.sha256(ast.unparse(target).encode("utf-8")).hexdigest()
-    mutant = ast.FunctionDef(
-        name=target.name,
-        args=target.args,
-        body=[ast.Return(value=ast.Constant(value="graph LR"))],
-        decorator_list=[],
-        returns=target.returns,
-    )
+
+    # 深拷贝并把 hub 色值字符串里的 EXPECTED_HUB_FILL 替换回 #f9f
+    import copy
+    mutant = copy.deepcopy(target)
+
+    class _HubColorReverter(ast.NodeTransformer):
+        def visit_Constant(self, node: ast.Constant):  # type: ignore[override]
+            if isinstance(node.value, str) and "classDef hub" in node.value and EXPECTED_HUB_FILL in node.value:
+                new_val = node.value.replace(EXPECTED_HUB_FILL, "#f9f")
+                return ast.copy_location(ast.Constant(value=new_val), node)
+            return node
+
+    _HubColorReverter().visit(mutant)
     ast.fix_missing_locations(mutant)
     mutant_sha = hashlib.sha256(ast.unparse(mutant).encode("utf-8")).hexdigest()
     _emit(
@@ -201,7 +203,7 @@ def v3_mutant() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V4: 行为验证 — subprocess 调用 dump --mermaid, 检查 classDef + class 关联
+# V4: 行为验证 — subprocess 调用 dump --mermaid, 检查 hub 色值变更
 # ---------------------------------------------------------------------------
 def v4_behavior() -> None:
     try:
@@ -218,39 +220,61 @@ def v4_behavior() -> None:
     _emit("V4_subprocess", res.returncode == 0, f"rc={res.returncode}")
     out = res.stdout
 
-    classdef_needles = [
-        "classDef hub",
-        "classDef verify",
-        "classDef lib",
-        "classDef dump",
-        "classDef module",
-        "classDef unknown",
-    ]
-    miss_cd = [n for n in classdef_needles if n not in out]
+    # hub classDef 行: 必含新色值 EXPECTED_HUB_FILL (#fc6)
+    hub_lines = [ln for ln in out.splitlines() if "classDef hub" in ln]
     _emit(
-        "V4_classdef_lines",
-        not miss_cd,
-        f"miss={miss_cd}" if miss_cd else f"all {len(classdef_needles)} classDef present",
+        "V4_hub_classdef_present",
+        len(hub_lines) == 1,
+        f"hub_lines={len(hub_lines)}",
+    )
+    hub_line = hub_lines[0] if hub_lines else ""
+    _emit(
+        "V4_hub_fill_value",
+        EXPECTED_HUB_FILL in hub_line,
+        f"expect_fill={EXPECTED_HUB_FILL} line={hub_line!r}",
     )
 
-    class_assoc_needles = [
-        "class v4_sha_json hub",
-        "class verify_robot_025 verify",
-        "class _verify_lib lib",
-        "class dump_v4_sha_graph dump",
-    ]
-    miss_cls = [n for n in class_assoc_needles if n not in out]
+    # module classDef 行
+    module_lines = [ln for ln in out.splitlines() if "classDef module" in ln]
     _emit(
-        "V4_class_associations",
-        not miss_cls,
-        f"miss={miss_cls}" if miss_cls else f"all {len(class_assoc_needles)} class assocs present",
+        "V4_module_classdef_present",
+        len(module_lines) == 1,
+        f"module_lines={len(module_lines)}",
+    )
+    module_line = module_lines[0] if module_lines else ""
+    _emit(
+        "V4_module_fill_value",
+        EXPECTED_MODULE_FILL in module_line,
+        f"expect_fill={EXPECTED_MODULE_FILL} line={module_line!r}",
     )
 
-    # head 必须仍是 graph LR (mermaid syntax)
+    # hub 与 module 色值字面不同 (核心 distinguish 断言)
+    def _extract_fill(line: str) -> str:
+        m = re.search(r"fill:(#[0-9a-fA-F]+)", line)
+        return m.group(1) if m else ""
+
+    hub_fill = _extract_fill(hub_line)
+    module_fill = _extract_fill(module_line)
     _emit(
-        "V4_graph_lr_header",
-        out.lstrip().startswith("graph LR"),
-        f"first_line={out.splitlines()[0] if out else '<empty>'!r}",
+        "V4_hub_module_fill_distinct",
+        bool(hub_fill) and bool(module_fill) and hub_fill != module_fill,
+        f"hub={hub_fill} module={module_fill}",
+    )
+
+    # 旧 hub 色值 #f9f 必须不再出现在任何 classDef 行
+    classdef_lines = [ln for ln in out.splitlines() if "classDef " in ln]
+    old_hub_residue = [ln for ln in classdef_lines if "#f9f" in ln]
+    _emit(
+        "V4_no_old_hub_color_residue",
+        not old_hub_residue,
+        f"residue={old_hub_residue}" if old_hub_residue else "no #f9f in any classDef line",
+    )
+
+    # classDef 总行数仍 = 6
+    _emit(
+        "V4_classdef_total_count",
+        len(classdef_lines) == 6,
+        f"got={len(classdef_lines)} expect=6",
     )
 
 
@@ -275,9 +299,9 @@ def main() -> int:
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_048][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(f"[verify_infra_053][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
         return 1
-    print(f"[verify_infra_048][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(f"[verify_infra_053][SUMMARY] ALL PASS ({total} checks)", flush=True)
     return 0
 
 
