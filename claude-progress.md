@@ -6045,3 +6045,24 @@ DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant
 - push: feat 分支推 origin 失败 (403 personal fork 权限), 按 CLAUDE.md 规则忽略继续
 - 待 Reviewer fresh-context 评审 → closeout merge
 - real_machine_uat: N/A (纯 infra 流程)
+
+## Session P299 — phase-37 #5.37 infra-P284 closeout (2026-05-22)
+
+- closeout 时间: 2026-05-22
+- main HEAD before merge: b78ea1d
+- feat branch HEAD: fe84783 (Engineer 最终 commit; 含 round-2 修订)
+- merge commit (--no-ff): ac0ed4c (main HEAD after merge)
+- Reviewer (sub-agent fresh-context) verdict: LGTM
+  - 必查 7 项全 PASS, smoke 后 git status 不再 dirty
+  - 2 minor findings: V3 仅锁 2/4 helper func sha (→ backlog P298)
+- verify on main (post-merge):
+  - ./init.sh smoke: PASS 11/11 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish)
+  - python scripts/verify_infra_064.py: [SUMMARY] ALL PASS (15 checks) — V0x4 + V1x2 + V2x1 + V3x2 + V4x5 + V5x1
+  - python scripts/verify_infra_060.py: [SUMMARY] ALL PASS (14 checks) — cascade V2_dump_file_sha=1a417254b4de16f6 / V3_per_file_locks_p285_present total_required=15
+  - python scripts/dump_v4_sha_graph.py: SUMMARY 119 sha-lock constants across 47 files (no failure)
+- feature_list.json: infra-P284 in_progress → passing + evidence 完整 (含 main_head_sha/verify_runs/reviewer_fresh_context=true)
+- backlog 入账 1 条:
+  - infra-P298-verify-infra-064-helper-sha-full-coverage (priority=999, phase=null, status=backlog) — V3 补 _file_sha / _emit 两 helper 自锁
+- phase-37 #5.37 收官; 下一步 phase-37 持续推进或 phase-38 planning
+- real_machine_uat: N/A (纯 infra 流程)
+

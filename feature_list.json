@@ -7484,7 +7484,7 @@
     {
       "id": "infra-P284-smoke-history-jsonl-policy",
       "priority": 5.37,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 37,
       "area": "infra",
       "title": "决定 smoke_history.jsonl 是否进 commit / .gitignore / 独立 evidence pipeline",
@@ -7500,7 +7500,40 @@
         "./init.sh smoke PASS",
         "smoke 后 git status --porcelain evidence/_history/smoke_history.jsonl 输出为空"
       ],
-      "evidence": []
+      "evidence": [
+        "main HEAD before merge: b78ea1d",
+        "feat branch HEAD: fe84783",
+        "merge commit (--no-ff): ac0ed4c (main HEAD after merge)",
+        "Engineer commit: fe84783 on feat/infra-P284-smoke-history-jsonl-policy — .gitignore +3 / scripts/verify_infra_064.py 新增 326 行 / scripts/verify_infra_060.py EXPECTED_DUMP_FILE_SHA bump / scripts/dump_v4_sha_graph.py _PER_FILE_LOCKS 加 064 条 / evidence/_history/smoke_history.jsonl git rm --cached (231 行删除)",
+        "Reviewer (sub-agent fresh-context): LGTM — 必查 7 项全 PASS, smoke 后 git status 不再 dirty; 2 minor findings 入 backlog (helper func sha 部分未锁)",
+        "reviewer_fresh_context: true",
+        "verify_runs:",
+        "  ./init.sh smoke: PASS 11/11 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish)",
+        "  python scripts/verify_infra_064.py: [SUMMARY] ALL PASS (15 checks) — V0 x4 + V1 x2 + V2 x1 + V3 x2 + V4 x5 + V5 x1",
+        "  python scripts/verify_infra_060.py: [SUMMARY] ALL PASS (14 checks) — cascade V2_dump_file_sha=1a417254b4de16f6 V3_per_file_locks_p285_present total_required=15",
+        "  python scripts/dump_v4_sha_graph.py: SUMMARY 119 sha-lock constants across 47 files (no failure)",
+        "closeout_verify.main_head_sha: ac0ed4c (after merge)",
+        "backlog 入账: infra-P298-verify-infra-064-helper-sha-full-coverage (priority=999, V3 只锁 2/4 helper)"
+      ]
+    },
+    {
+      "id": "infra-P298-verify-infra-064-helper-sha-full-coverage",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "verify_infra_064.py V3 helper func sha 补全 (_file_sha / _emit 自锁)",
+      "created_at": "2026-05-22",
+      "source": "P284 infra-P284-smoke-history-jsonl-policy Reviewer (sub-agent fresh-context) minor finding — V3 当前只锁 _gitignore_helper / _file_ignored_helper 两个 helper 的 func sha, 还有 _file_sha 与 _emit 两个内部 helper 未锁; cascade 等级偏低",
+      "scope": "在 scripts/verify_infra_064.py V3 段追加 EXPECTED_V3_FILE_SHA_FUNC_SHA / EXPECTED_V3_EMIT_FUNC_SHA 两个常量并在 V3 self-check 段断言, 同步 scripts/dump_v4_sha_graph.py _PER_FILE_LOCKS 加 2 条; cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA; 总 checks 从 15 → 17",
+      "dependencies": [],
+      "verification": [
+        "scripts/verify_infra_064.py V3 段含 _file_sha / _emit 两 helper 的 func sha lock",
+        "python scripts/verify_infra_064.py 全 PASS (17 checks)",
+        "python scripts/verify_infra_060.py 全 PASS (cascade)"
+      ],
+      "evidence": [],
+      "notes": "low-risk followup, 不阻 phase 推进; 待后续 phase backlog review 时入 milestone"
     },
     {
       "id": "infra-P273-evidence-report-accuracy",
