@@ -5927,3 +5927,31 @@ phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`
 ### Git
 - branch: feat/infra-P278-closeout-verify-trustworthy (from 90a23de)
 - commit: (see closeout step)
+
+---
+
+## Session P294 round-2 (2026-05-22) — Reviewer REJECT 3 条修
+
+### Reviewer 给出的 3 条事实声明独立复核 (baseline 90a23de 实测)
+- **R1 拒绝**: Reviewer 称 verify_infra_062 V3 EXPECTED_CLOSEOUT_FUNC_SHA 应为 `d771fb0b...`. 本分支 c0e19e5 实测 verify_infra_062 `ALL PASS (17 checks)`, 实测 ast.unparse(verify_closeout_evidence_trustworthy) sha = `6cf263ee9d9e590bc2304c0af2269f7554212e04d7cea6c194e9bdb370ede2b1` (与 round-1 锁值一致). R1 是错误声明, 不修.
+- **R2 接受**: Reviewer 称 verify_infra_037 在 90a23de FAIL V2_lib_file_sha, round-1 cascade 漏. 复核确认 (baseline + 当前分支均 FAIL). 修.
+- **R3 接受设计修, 反驳 Reviewer 事实理由**: Reviewer 称 baseline 90a23de 上 verify_infra_{045,052,057,058} 实际 PASS, 是 Engineer round-1 错列 pre-existing FAIL. 复核 baseline 实测: 045 FAIL 2/18, 052 FAIL 2/23, 057 FAIL 1/13, 058 FAIL 1/16 (与 round-1 主报告一致, **Reviewer R3 baseline 声明错**). 另 Reviewer 称 verify_infra_061 baseline FAIL, 复核 baseline 实测 `ALL PASS (18 checks)`, 同样错. 但 R3 的**设计修方向仍正确**: 真实历史 evidence dogfood 让回填字段成为单点谎言源, 应只用合成样本.
+
+### 实际修动 (round-2)
+- `scripts/verify_infra_037.py`: bump EXPECTED_VERIFY_LIB_FILE_SHA `8e0e0051...` → `6db89f01...` (cascade 漏)
+- `scripts/verify_infra_062.py`: V4 移除真实 P281/P285 evidence dogfood, 新增 2 个合成边界样本 G (main_head 短) + H (status 非法), 共 6+2=8 合成样本; 删除 _load_feature_evidence/_walk + json import + FEATURE_LIST 常量; docstring 加 "只验 schema 不验 stdout 真伪" 边界说明; bump EXPECTED_V4_CHECKER_FUNC_SHA `27cc1c20...` → `66a2cdb2...`
+- `feature_list.json`: 回滚 P281 + P285 的 closeout_verify + reviewer 字段回填, 恢复 round-1 之前原状
+- `AGENTS.md`: Closeout 硬规则段加边界说明 (只验 schema 不验 stdout 真伪 + P294 backlog 引用)
+- 新增 4 个 backlog: infra-P294-closeout-stdout-sha-verification / -R4-fail-baseline-cross-check / -R5-total-checks-derived / -R6-sample-count-doc (Reviewer R4/R5/R6 + 主设计 P294)
+
+### Verify (本分支 round-2 commit 后, main HEAD 仍 90a23de)
+- verify_infra_062: ALL PASS (17 checks) — 含样本 G/H 边界
+- verify_infra_037: ALL PASS (13 checks) — round-1 cascade 漏的 037 现修
+- verify_infra_061: ALL PASS (18 checks)
+- verify_infra_034 V6: total=53 failed=0
+- 已知 pre-existing FAIL (baseline 90a23de 实测复现, 与 round-1 一致): verify_infra_{045,052,057,058} (与本 PR 修复范围无关, 记入历史 P292)
+- ./init.sh smoke ALL PASS
+
+### Git
+- branch: feat/infra-P278-closeout-verify-trustworthy (continue)
+- round-2 commit: (see closeout step)

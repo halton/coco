@@ -217,6 +217,8 @@ Closeout sub-agent 提交的 verify 报告必须满足以下 5 条机械化校�
 
 机械化校验由 `scripts/verify_infra_062.py` 调用 `_verify_lib.verify_closeout_evidence_trustworthy(evidence)` 实施。Closeout sub-agent 提交前应自检 dogfood。
 
+**已知边界 (P278 round-2 显式承认)**: 当前 helper **只验 schema 不验 stdout 字符串真伪** —— 即 Engineer 可在 evidence 里写任意 `tail_stdout = "ALL PASS"` 字符串而 helper 不会反查 main HEAD 实测。tail_stdout 真伪验证留待 backlog `infra-P294-closeout-stdout-sha-verification` (sha256-of-stdout + main HEAD re-run 比对) 与 `infra-P294-R4-fail-baseline-cross-check` (FAIL run 的 baseline_tail_stdout 交叉校验)。当前阶段 trust gate 仍由 Reviewer fresh-context 人工对照实测 stdout 把关。
+
 ## 收尾
 
 结束会话前：

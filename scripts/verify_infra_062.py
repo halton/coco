@@ -31,15 +31,20 @@ INFRA_062_SHA_LOCKS
 - V1 docstring sentinel ``INFRA_062_SHA_LOCKS`` + 本脚本 v4_behavior func sha 自锁
 - V2 _verify_lib.py file sha
 - V3 verify_closeout_evidence_trustworthy canonical func sha (ast.unparse)
-- V4 行为 (dogfood + 5 种合成样本):
+- V4 行为 (合成样本 A-H 全覆盖每条 rule 的 PASS/FAIL 路径):
   - 样本 A (compliant): 全字段齐全, 期望 all_trustworthy=True
   - 样本 B (missing main_head): 缺 main_head_sha, 期望 False
   - 样本 C (empty verify_runs): verify_runs=[], 期望 False
   - 样本 D (FAIL no baseline): 单个 FAIL run 无 baseline_tail_stdout, 期望 False
   - 样本 E (reviewer not fresh): reviewer.kind != sub_agent_fresh_context, 期望 False
-  - dogfood: 读 feature_list.json 中 infra-P281 / infra-P285 的 evidence dict,
-    跑 helper, 期望 all_trustworthy=True (P278 回填了这两个 feature 的
-    closeout_verify + reviewer 结构化字段, dogfood 等于回溯校验最近 2 个 Closeout)
+  - 样本 F (FAIL with baseline): 配齐 baseline, 期望 True
+  - 样本 G (main_head 长度不足 7 hex): 边界, 期望 False
+  - 样本 H (status 字段值非法 MAYBE): 边界, 期望 False
+  - **不**做真实 feature evidence dogfood: helper 只验 schema, 不验
+    stdout 字符串真伪 (round-1 设计踩坑教训: 回填的 tail_stdout 可被
+    编造, 等于把单点谎言换地方放). stdout 真伪验证留待 backlog
+    ``infra-P294-closeout-stdout-sha-verification`` 提供 sha256-of-stdout
+    防伪机制后再回归。
 - V5 Reviewer LGTM gate (print-only)
 
 退出码 0=ALL PASS / 1=任一 FAIL.
@@ -50,7 +55,6 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import json
 import sys
 from pathlib import Path
 from typing import List, Tuple
@@ -58,7 +62,6 @@ from typing import List, Tuple
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 LIB = SCRIPTS / "_verify_lib.py"
-FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
@@ -68,7 +71,7 @@ from _verify_lib import (  # noqa: E402
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "6db89f013c0b815baa55b94ba108de079c1ecebf49b9adb192bcb262d1a53d93"
 EXPECTED_CLOSEOUT_FUNC_SHA = "6cf263ee9d9e590bc2304c0af2269f7554212e04d7cea6c194e9bdb370ede2b1"
-EXPECTED_V4_CHECKER_FUNC_SHA = "27cc1c205eaad7344832c6d061b2010dffb02d76ccf463579753e3f1f3a44b5c"
+EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
 DOCSTRING_SENTINEL = "INFRA_062_SHA_LOCKS"
 
@@ -83,30 +86,6 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
 
 def _file_sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _load_feature_evidence(feature_id: str) -> dict | None:
-    data = json.loads(FEATURE_LIST.read_text(encoding="utf-8"))
-    # feature_list.json 的 features 在 'features' 顶层 key 下 (按 phase 分组的 list)
-    # 但实际项目里它是单一扁平 list 或 nested; 用通用扫描.
-    def _walk(obj):
-        if isinstance(obj, dict):
-            if obj.get("id") == feature_id:
-                return obj
-            for v in obj.values():
-                r = _walk(v)
-                if r is not None:
-                    return r
-        elif isinstance(obj, list):
-            for v in obj:
-                r = _walk(v)
-                if r is not None:
-                    return r
-        return None
-    feat = _walk(data)
-    if feat is None:
-        return None
-    return feat.get("evidence") or {}
 
 
 # ---------------------------------------------------------------------------
@@ -336,21 +315,56 @@ def v4_behavior() -> None:
         f"r_f={r_f}",
     )
 
-    # dogfood: 回溯 P281 / P285 evidence (需 P278 commit 已回填 closeout_verify + reviewer)
-    for fid in (
-        "infra-P281-expected-prefix-typo-guard",
-        "infra-P285-classifier-recognize-lib-func-locks",
-    ):
-        ev = _load_feature_evidence(fid)
-        if ev is None:
-            _emit(f"V4_dogfood_{fid}_loaded", False, "feature not found")
-            continue
-        r = verify_closeout_evidence_trustworthy(ev)
-        _emit(
-            f"V4_dogfood_{fid}_trustworthy",
-            r.get("all_trustworthy") is True,
-            f"failed_reasons={r.get('failed_reasons')}",
-        )
+    # 样本 G (P278 round-2): main_head_sha 长度不足 7 hex (rule 1 边界)
+    sample_g = {
+        "closeout_verify": {
+            "main_head_sha": "abc123",  # 6 hex, 不足 7
+            "smoke_tail_stdout": "ok\n",
+            "verify_runs": [
+                {
+                    "script": "scripts/verify_infra_001.py",
+                    "tail_stdout": "ALL PASS\n",
+                    "status": "PASS",
+                },
+            ],
+        },
+        "reviewer": {"reviewer_kind": "sub_agent_fresh_context", "lgtm": True},
+    }
+    r_g = verify_closeout_evidence_trustworthy(sample_g)
+    _emit(
+        "V4_sample_G_main_head_short_false",
+        r_g.get("all_trustworthy") is False
+        and r_g.get("main_head_present") is False,
+        f"failed_reasons={r_g.get('failed_reasons')}",
+    )
+
+    # 样本 H (P278 round-2): status 字段值非法 (rule 2 边界)
+    sample_h = {
+        "closeout_verify": {
+            "main_head_sha": "90a23de",
+            "smoke_tail_stdout": "ok\n",
+            "verify_runs": [
+                {
+                    "script": "scripts/verify_infra_001.py",
+                    "tail_stdout": "??\n",
+                    "status": "MAYBE",  # 非法
+                },
+            ],
+        },
+        "reviewer": {"reviewer_kind": "sub_agent_fresh_context", "lgtm": True},
+    }
+    r_h = verify_closeout_evidence_trustworthy(sample_h)
+    _emit(
+        "V4_sample_H_status_invalid_false",
+        r_h.get("all_trustworthy") is False
+        and any("status invalid" in s for s in r_h.get("failed_reasons", [])),
+        f"failed_reasons={r_h.get('failed_reasons')}",
+    )
+
+    # P278 round-2: 移除真实 P281/P285 evidence dogfood — helper 只验 schema, 不验
+    # stdout 真伪 (tail_stdout 可被编造); 留待 backlog infra-P294-closeout-stdout-
+    # sha-verification 提供 sha256-of-stdout 防伪机制后再回归。当前 V4 只跑合成
+    # 样本 A-H, 覆盖每条 rule 的 PASS/FAIL 路径。
 
 
 # ---------------------------------------------------------------------------
