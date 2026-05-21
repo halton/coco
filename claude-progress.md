@@ -5987,3 +5987,17 @@ phase-37 #2.37 (priority 2.37) — 扫 ``scripts/verify_*.py`` 中 ``EXPECTED_*`
 - push: 各一次 (失败忽略)
 
 DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant-detection.
+
+## Session P296 — phase-37 #4.37 infra-P276 bootstrap-helper-self-mutant-detection Engineer (round-1)
+
+- branch: feat/infra-P276-bootstrap-helper-self-mutant-detection from 8268e5d
+- status: not_started → in_progress
+- 改动:
+  - scripts/bootstrap_verify_self_checker.py: 加 `_CANARY_VERIFY_SRC`/`_CANARY_EXPECTED_SHA`/`run_canary_self_check()` + `--canary` 子模式 (exit 2 on mutant). file sha 旧 → 新 335b03feadc4ba07
+  - scripts/verify_infra_063.py: 新建 V0-V5 共 20 checks; V4 通过 ast 改坏 helper 副本做真实 mutant dogfood
+  - scripts/dump_v4_sha_graph.py: _PER_FILE_LOCKS 加 verify_infra_063 → 4 个 const → target 映射 (lib file / bootstrap file / canary func / canary const)
+  - scripts/verify_infra_060.py: cascade bump EXPECTED_DUMP_FILE_SHA
+- _verify_lib.py: 未改 (canary 全放 bootstrap 内, 减少 cascade 面)
+- verify 全 PASS: 063 (20/20), 056 (21/21), 060 (14/14), 034 V6 (53/53)
+- smoke ALL PASS
+- 等 Reviewer fresh-context 评审后再切 passing / merge
