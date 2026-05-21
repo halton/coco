@@ -38,6 +38,7 @@ __all__ = [
     "verify_reverse_sha_lock_consistency",
     "verify_expected_pattern_consistency",
     "verify_palette_fills_distinct",
+    "verify_unknown_node_count_bound",
     "assert_verify_passed",
 ]
 
@@ -364,6 +365,68 @@ def verify_palette_fills_distinct(palette: dict[str, dict[str, str]]) -> dict:
         "duplicates": duplicates,
         "all_distinct": not duplicates,
         "fills": fills,
+    }
+
+
+def verify_unknown_node_count_bound(
+    nodes: list[dict], max_unknown: int = 1
+) -> dict:
+    """断言一组分类后节点中 ``kind == "unknown"`` 的节点数 ≤ max_unknown。
+
+    背景 (infra-048-backlog-docstring-unknown-zero-fact, P278):
+    P266 / P273 之后, ``scripts/dump_v4_sha_graph.py`` 用 ``_classify_node``
+    把 mermaid 节点分 6 类: hub / verify / lib / dump / module / unknown。
+    其中 ``unknown`` 是兜底分类——仅当 ``node_id.startswith("unknown_")``
+    (即 lock target 无法解析出 ``.py`` stem, render_mermaid 退化成
+    ``unknown_<CONST>`` 占位节点) 时才命中。理想情况下分类规则覆盖全部
+    节点, unknown 节点数应为 0 或极少 (当前仅 ``unknown_EXPECTED_DOC_SHA``)。
+
+    verify_infra_048 (palette extract 锁) 已锁分类逻辑存在 + 颜色字面,
+    但**没断言 unknown 节点数 ≤ 1** 作为行为锁。如果未来分类规则失效
+    (例如 target 解析正则破损 / 大量 lock target 无法 stem-resolve),
+    unknown 节点会悄悄膨胀, verify 仍 PASS。本 helper 补该硬断言, 由
+    verify_infra_059 V4 真实喂入 dump 派生的 nodes 做行为锁, 同时构造
+    tmp 正/反例锁定 helper 行为面。
+
+    Args:
+        nodes: 已分类节点列表, 每个 entry 必须含 ``kind`` (str) 与 ``id``
+            (str)。其余字段忽略。非 dict 或缺 ``kind``/``id`` 的 entry
+            跳过统计 (不会 crash, 让上层 verify 自己显式做 schema 检查)。
+        max_unknown: ``kind == "unknown"`` 节点数上限 (含等号), 默认 1。
+            ≤ max_unknown 视为 ``within_bound=True``。
+
+    Returns:
+        dict 结构:
+
+        ::
+
+            {
+                "total_nodes": int,         # 输入合法节点总数
+                "unknown_count": int,       # kind == "unknown" 节点数
+                "unknown_ids": list[str],   # unknown 节点 id (插入顺序)
+                "max_allowed": int,         # 回填 max_unknown
+                "within_bound": bool,       # unknown_count <= max_allowed
+            }
+    """
+    total = 0
+    unknown_ids: list[str] = []
+    for entry in nodes:
+        if not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind")
+        nid = entry.get("id")
+        if not isinstance(kind, str) or not isinstance(nid, str):
+            continue
+        total += 1
+        if kind == "unknown":
+            unknown_ids.append(nid)
+    unknown_count = len(unknown_ids)
+    return {
+        "total_nodes": total,
+        "unknown_count": unknown_count,
+        "unknown_ids": unknown_ids,
+        "max_allowed": max_unknown,
+        "within_bound": unknown_count <= max_unknown,
     }
 
 

@@ -6998,15 +6998,40 @@
       "priority": 5.36,
       "area": "infra",
       "phase": "phase-36",
-      "title": "V4 行为锁: dump mermaid 输出 unknown_ 节点数 ≤ 1",
-      "status": "not_started",
+      "title": "V4 行为锁: dump mermaid 输出 unknown_ 节点数 ≤ N",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "P267 infra-048 closeout Reviewer 建议",
-      "scope": "verify_infra_048 V4 加行为事实锁——render_mermaid 实际输出中 unknown_ 前缀节点数 ≤ 1 (当前固定为 unknown_EXPECTED_DOC_SHA)；防止后续重构引入新的 unknown_* 节点而无人发现。",
+      "scope": "verify_infra_048 V4 加行为事实锁——render_mermaid 实际输出 unknown_ 前缀节点数有上界硬断言；防止后续重构引入新的 unknown_* 节点而无人发现。helper verify_unknown_node_count_bound 由 verify_infra_059 V0-V5 锁。实测当前 unknown_count=13 (远超原 scope 假设的 1, 主因 _verify_lib 的 func 锁 target 描述无 .py stem 导致 render_mermaid 落入 unknown_<CONST> 占位; 现状作为 max_allowed=EXPECTED_CURRENT_UNKNOWN_COUNT=13 硬天花板锁定, 后续涨即报警, 缩则需主动 bump 常量)。",
       "dependencies": [
         "infra-039-backlog-mermaid-classDef-styling"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_059.py V0-V5 全 PASS (17 checks): V0 scaffolding (lib + helper def + __all__), V1 docstring sentinel INFRA_059_SHA_LOCKS + v4_behavior 自 func sha (ec6f2e8c...), V2 _verify_lib.py file sha (11588d58...), V3 verify_unknown_node_count_bound canonical func sha (fd311e57...), V4 行为 — 真 dump --mermaid 解析 class 行派生 nodes=76 (unknown=13) helper(max=13) within_bound=True + unknown_count==EXPECTED_CURRENT_UNKNOWN_COUNT==13 精确锁 + tmp 正例 (2 非 unknown @max=1) + tmp 边界 (1 unknown @max=1) + tmp mutant 超额 (2 unknown @max=1 → within_bound=False unknown_ids=[x,y]) + tmp mutant 零容忍 (1 unknown @max=0 → within_bound=False), V5 Reviewer LGTM gate",
+        "8 个依赖 _verify_lib 的 verify 脚本 EXPECTED_LIB_FILE_SHA bump 至 11588d58...: infra-042/045/052/055/056/057/058, robot-035",
+        "verify_infra_034 V6 反向 sha lock 一致性 PASS (53/53, scanned_reverse_locks=79)",
+        "./init.sh smoke 全 PASS"
+      ],
+      "evidence": [
+        "branch: feat/infra-048-backlog-docstring-unknown-zero-fact (from main 619398a)",
+        "helper: scripts/_verify_lib.py 新增 verify_unknown_node_count_bound (func sha fd311e570696f415...), 注册 __all__",
+        "verify-only: scripts/verify_infra_059.py (V0-V5 完整, 17 checks)",
+        "lib file sha bump: 8e0e0051... → 11588d58...",
+        "真实 dump 实测 unknown_count=13 (主因 _verify_lib func 锁描述无 .py stem); EXPECTED_CURRENT_UNKNOWN_COUNT=13 作为天花板精确锁定",
+        "Reviewer (sub-agent): pending — closeout 前需 fresh-context Reviewer LGTM",
+        "实测尾行 (9 verify + V6 + smoke, all rc=0):",
+        "  verify_infra_059: [SUMMARY] ALL PASS (17 checks)",
+        "  verify_infra_042: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_045: [SUMMARY] ALL PASS (18 checks)",
+        "  verify_infra_052: [SUMMARY] ALL PASS (23 checks)",
+        "  verify_infra_055: [SUMMARY] ALL PASS (26 checks)",
+        "  verify_infra_056: [SUMMARY] ALL PASS (21 checks)",
+        "  verify_infra_057: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_058: [SUMMARY] ALL PASS (16 checks)",
+        "  verify_robot_035: summary total=8 failed=0",
+        "  verify_infra_034: summary total=53 failed=0 (V6 一致性, scanned_reverse_locks=79)",
+        "  ./init.sh smoke 全 PASS"
+      ]
     },
     {
       "id": "infra-048-backlog-hub-color-distinguish",
