@@ -27,6 +27,18 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 V4_SHA_JSON = REPO / "evidence" / "infra-034" / "v4_sha.json"
 
+# infra-048-backlog-mermaid-palette-extract: 6 类 classDef 色值常量化
+# render_mermaid 按固定顺序 (hub/verify/lib/dump/module/unknown) 迭代生成 classDef 行；
+# 输出必须与提取前 P272 状态 bytewise 完全一致 (6 个 verify 依赖此输出)。
+_MERMAID_PALETTE: Dict[str, Dict[str, str]] = {
+    "hub":     {"fill": "#fc6", "stroke": "#b85", "color": "#000"},
+    "verify":  {"fill": "#9cf", "stroke": "#069", "color": "#000"},
+    "lib":     {"fill": "#9f9", "stroke": "#090", "color": "#000"},
+    "dump":    {"fill": "#ff9", "stroke": "#990", "color": "#000"},
+    "module":  {"fill": "#c9f", "stroke": "#609", "color": "#000"},
+    "unknown": {"fill": "#f99", "stroke": "#900", "color": "#000"},
+}
+
 # 形如  CONST = "abc...64..."  或  CONST = (\n    "abc...64..."\n)
 _RE_SINGLELINE = re.compile(
     r'^([A-Z_][A-Z0-9_]*)\s*=\s*["\']([0-9a-f]{64})["\']\s*(?:#.*)?$'
@@ -354,12 +366,12 @@ def render_mermaid(graph: Dict) -> str:
             out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
 
     # infra-039-backlog-mermaid-classDef-styling: classDef 声明 + 每节点 class 关联
-    out.append("    classDef hub fill:#fc6,stroke:#b85,color:#000;")
-    out.append("    classDef verify fill:#9cf,stroke:#069,color:#000;")
-    out.append("    classDef lib fill:#9f9,stroke:#090,color:#000;")
-    out.append("    classDef dump fill:#ff9,stroke:#990,color:#000;")
-    out.append("    classDef module fill:#c9f,stroke:#609,color:#000;")
-    out.append("    classDef unknown fill:#f99,stroke:#900,color:#000;")
+    # infra-048-backlog-mermaid-palette-extract: 色值来自 _MERMAID_PALETTE, 固定顺序
+    for _cls in ("hub", "verify", "lib", "dump", "module", "unknown"):
+        _p = _MERMAID_PALETTE[_cls]
+        out.append(
+            f"    classDef {_cls} fill:{_p['fill']},stroke:{_p['stroke']},color:{_p['color']};"
+        )
     for nid in sorted(nodes):
         out.append(f"    class {nid} {_classify_node(nid)};")
     return "\n".join(out)
