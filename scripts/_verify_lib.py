@@ -37,6 +37,7 @@ __all__ = [
     "live_verify_sha_set",
     "verify_reverse_sha_lock_consistency",
     "verify_expected_pattern_consistency",
+    "verify_palette_fills_distinct",
     "assert_verify_passed",
 ]
 
@@ -300,6 +301,69 @@ def verify_expected_pattern_consistency(scripts_dir: str | Path) -> dict:
         "missing_assignment": missing_assignment,
         "sample": ep_items[:5],
         "all_match": all_match,
+    }
+
+
+def verify_palette_fills_distinct(palette: dict[str, dict[str, str]]) -> dict:
+    """断言 mermaid palette 中所有 entry 的 ``fill`` 字段两两互不相同。
+
+    背景 (infra-053-backlog-classdef-fills-distinct-check, P277):
+    P273 (infra-054-classdef-palette-extract) 把 scripts/dump_v4_sha_graph.py
+    的 6 类 classDef 颜色提到 module-top ``_MERMAID_PALETTE`` (dict[str,
+    dict[str, str]], 6 个 key: hub/verify/lib/dump/module/unknown)。
+    verify_infra_054 锁了 palette 结构与颜色 hex 字面, 但没断言 "6 色 fill
+    互不相同" — 未来若误把两个 key 写成同色, verify 会 PASS 但 mermaid 图
+    会失去可读性。本 helper 补该硬断言, 不依赖具体色值列表, 只对 palette
+    自身做 set 去重检测。
+
+    Args:
+        palette: dict[key, dict[字段名, 字段值]]。helper 只读 ``fill`` 字段。
+            每个 value entry 必须含 ``fill`` (str), 否则该 key 跳过 (不会
+            crash, 让上层 verify 自己显式做 schema 检查)。
+
+    Returns:
+        dict 结构:
+
+        ::
+
+            {
+                "total_keys": int,             # palette 顶层 key 总数
+                "distinct_fill_count": int,    # 去重后 fill 值数量
+                "duplicates": list[tuple],     # [(key1, key2, shared_fill), ...]
+                                               # key 字典序排序, 同 fill 内部 key 对再字典序
+                "all_distinct": bool,          # 综合判定 (== duplicates 为空)
+                "fills": list[tuple[str, str]],# [(key, fill), ...] 按输入插入顺序
+            }
+    """
+    fills: list[tuple[str, str]] = []
+    for key, entry in palette.items():
+        if not isinstance(entry, dict):
+            continue
+        fill = entry.get("fill")
+        if not isinstance(fill, str):
+            continue
+        fills.append((key, fill))
+    # 按 fill 值聚合 key 列表
+    by_fill: dict[str, list[str]] = {}
+    for k, f in fills:
+        by_fill.setdefault(f, []).append(k)
+    duplicates: list[tuple] = []
+    for fill_val, keys in by_fill.items():
+        if len(keys) <= 1:
+            continue
+        ks = sorted(keys)
+        # 生成所有两两组合 (字典序)
+        for i in range(len(ks)):
+            for j in range(i + 1, len(ks)):
+                duplicates.append((ks[i], ks[j], fill_val))
+    duplicates.sort()
+    distinct_fill_count = len(by_fill)
+    return {
+        "total_keys": len(fills),
+        "distinct_fill_count": distinct_fill_count,
+        "duplicates": duplicates,
+        "all_distinct": not duplicates,
+        "fills": fills,
     }
 
 

@@ -7311,11 +7311,23 @@
     {
       "id": "infra-053-backlog-classdef-fills-distinct-check",
       "priority": 4.36,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": "phase-36",
       "area": "infra",
       "description": "加 V4_all_classdef_fills_distinct 断言：6 个 classDef 色值集合 set 大小 == 6，永久防止未来 hub/milestone/其它色值再次撞色。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
-      "origin_backlog": "infra-048-backlog-hub-color-distinguish"
+      "origin_backlog": "infra-048-backlog-hub-color-distinguish",
+      "verification": [
+        "scripts/verify_infra_058.py V0-V5 全 PASS (16 checks): V0 scaffolding (lib+helper def+__all__), V1 docstring sentinel INFRA_058_SHA_LOCKS + v4_behavior 自 func sha, V2 lib file sha, V3 verify_palette_fills_distinct canonical func sha, V4 真 _MERMAID_PALETTE all_distinct=True/distinct=6/duplicates=[] + tmp 正例 ({a:#aaa,b:#bbb}) all_distinct=True + tmp 反例 ({a:#aaa,b:#aaa}) all_distinct=False/duplicates=[(a,b,#aaa)] + 3-way 反例 duplicates 三元组完整, V5 Reviewer LGTM gate",
+        "9 个依赖 _verify_lib 的 verify 脚本 EXPECTED_(VERIFY_)LIB_FILE_SHA bump 至 8e0e0051...: infra-037/042/045/052/055/056/057, robot-035/037 (verify_infra_054 不锁 lib 故未涉及)",
+        "verify_infra_034 V6 反向 sha lock 一致性 PASS (53/53, scanned_reverse_locks=76)",
+        "./init.sh smoke 11/11 PASS"
+      ],
+      "evidence": [
+        "branch: feat/infra-053-backlog-classdef-fills-distinct-check (from main cc441ef)",
+        "helper: scripts/_verify_lib.py 新增 verify_palette_fills_distinct (func sha 8415eca01361eb6b...), 注册 __all__",
+        "verify-only: scripts/verify_infra_058.py (V0-V5 完整, 16 checks)",
+        "lib file sha bump: 7f1c0bb2... → 8e0e0051..."
+      ]
     },
     {
       "id": "infra-053-backlog-doc-hub-color-update",
