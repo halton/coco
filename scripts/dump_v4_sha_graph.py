@@ -122,6 +122,47 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # verify_robot_036 — verify_robot_032.py sentinel line
     ("verify_robot_036.py", "EXPECTED_SENTINEL_LINE_SHA"):
         "scripts/verify_robot_032.py:_HEADINGS_SECTION_SENTINEL (line-sha)",
+    # ── P285 phase-37 #1.37 ──
+    # infra-P285-classifier-recognize-lib-func-locks: 补全 13 个 unknown 中可消除项的 (source, const) → target
+    # 真实 target 取自各 verify 脚本 docstring 头部 ``sha 锁清单`` 字段; 落地后这些 const
+    # 在 render_mermaid 中可解析到正确文件 stem (而非 unknown_<CONST> 占位), 并按 _classify_node
+    # 归 lib (_verify_lib helper) / dump (dump_reverse_sha_lock_index helper) 两类。
+    # verify_infra_049 / 050 / 051 — 锁 dump_reverse_sha_lock_index.py file / func sha
+    ("verify_infra_049.py", "EXPECTED_DUMP_INDEX_FILE_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py (file-sha)",
+    ("verify_infra_049.py", "EXPECTED_RENDER_TEXT_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:render_text (func-sha)",
+    ("verify_infra_049.py", "EXPECTED_RENDER_JSON_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:render_json (func-sha)",
+    ("verify_infra_050.py", "EXPECTED_DUMP_INDEX_FILE_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py (file-sha)",
+    ("verify_infra_050.py", "EXPECTED_RENDER_JSON_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:render_json (func-sha)",
+    ("verify_infra_051.py", "EXPECTED_DUMP_INDEX_FILE_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py (file-sha)",
+    ("verify_infra_051.py", "EXPECTED_RENDER_CHECK_JSON_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:render_check_json (func-sha)",
+    ("verify_infra_051.py", "EXPECTED_CMD_CHECK_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:cmd_check (func-sha)",
+    ("verify_infra_051.py", "EXPECTED_BUILD_ARG_PARSER_FUNC_SHA"):
+        "scripts/dump_reverse_sha_lock_index.py:build_arg_parser (func-sha)",
+    # verify_infra_052 — _verify_lib helper sha (与 045 同名 const, 同 lib helper)
+    ("verify_infra_052.py", "EXPECTED_SCAN_FUNC_SHA"):
+        "scripts/_verify_lib.py:scan_reverse_sha_locks (func-sha)",
+    ("verify_infra_052.py", "EXPECTED_CHECK_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_reverse_sha_lock_consistency (func-sha)",
+    # verify_infra_055 / 057 / 058 / 059 — _verify_lib helper sha (各 1 个)
+    ("verify_infra_055.py", "EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_verify_passed (func-sha)",
+    ("verify_infra_057.py", "EXPECTED_VERIFY_EP_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_expected_pattern_consistency (func-sha)",
+    ("verify_infra_058.py", "EXPECTED_PALETTE_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_palette_fills_distinct (func-sha)",
+    ("verify_infra_059.py", "EXPECTED_UNKNOWN_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_unknown_node_count_bound (func-sha)",
+    # verify_infra_060 — 锁 dump_v4_sha_graph.py 自身 _classify_node func sha
+    ("verify_infra_060.py", "EXPECTED_CLASSIFY_FUNC_SHA"):
+        "scripts/dump_v4_sha_graph.py:_classify_node (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
@@ -300,7 +341,9 @@ def _classify_node(node_id: str) -> str:
         return "unknown"
     if node_id == "_verify_lib":
         return "lib"
-    if node_id == "dump_v4_sha_graph":
+    # infra-P285-classifier-recognize-lib-func-locks: dump_v4_sha_graph 与
+    # dump_reverse_sha_lock_index 同属 dump 工具家族, 同归 dump classDef。
+    if node_id == "dump_v4_sha_graph" or node_id == "dump_reverse_sha_lock_index":
         return "dump"
     if node_id.startswith("verify_"):
         return "verify"

@@ -82,7 +82,12 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "ec6f2e8cbea19488ce4916a450c428e8efdb385edcc38715
 # "^\s*class " | awk '{print $3}' | sort | uniq -c`` (P278 实测)。
 # 未来若有新 lock 引入新 unknown_ 节点, 该常量应有意识地 bump (并复审是否
 # 应改进 _classify_node / render_mermaid 让该 lock 被正确归类)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 13
+# infra-P285-classifier-recognize-lib-func-locks (phase-37 #1.37): 由 13 → 1。
+# 13 个原 unknown_EXPECTED_*_FUNC_SHA / FILE_SHA 通过补全 _PER_FILE_LOCKS 13 条
+# (source, const) → target 映射, 现可被 render_mermaid 解析到正确 .py stem
+# 并按 _classify_node 归 lib / dump。仅剩 EXPECTED_DOC_SHA (verify_robot_034)
+# 因 target 是 docs/ 非 .py 文件, 继续保留 unknown 占位。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 1
 
 DOCSTRING_SENTINEL = "INFRA_059_SHA_LOCKS"
 
