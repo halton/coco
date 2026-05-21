@@ -6001,3 +6001,23 @@ DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant
 - verify 全 PASS: 063 (20/20), 056 (21/21), 060 (14/14), 034 V6 (53/53)
 - smoke ALL PASS
 - 等 Reviewer fresh-context 评审后再切 passing / merge
+
+## Session P297 — phase-37 #4.37 infra-P276 closeout (2026-05-22)
+
+- feature `infra-P276-bootstrap-helper-self-mutant-detection` closeout
+- Reviewer (sub-agent a0366e833) fresh-context LGTM with 2 findings
+- merge --no-ff: feat/infra-P276-bootstrap-helper-self-mutant-detection → main, merge sha `ae6a556`
+- status: in_progress → passing, evidence 含 engineer commit ba4dcb2 + Reviewer LGTM + canary mutant detect rc=2 + verify_infra_063 20 PASS + 056 PASS + 060 cascade bump 修 V4_real_unknown_count_eq_one
+- 4 backlog 入账:
+  - infra-P297-bootstrap-canary-edit-flow-docs (Reviewer finding #1: 文档化 canary helper 编辑流程)
+  - infra-P297-canary-mutant-parametrize (Reviewer finding #2: V4.2 多种 mutant 形式)
+  - infra-P297-bootstrap-canary-multi-helper-coverage (Engineer 自报: 推广到其他 helper)
+  - infra-P298-canary-pattern-generalize (Engineer 自报: 抽 _canary_lib.py)
+- closeout dogfood (main HEAD post-merge):
+  - canary rc=0
+  - verify_infra_063 ALL PASS (20 checks)
+  - verify_infra_062 ALL PASS (closeout-verify-trustworthy 自检)
+  - verify_infra_034 V6 total=53 failed=0
+  - ./init.sh smoke PASS
+- real_machine_uat: pending (sim-first)
+- 继续 phase-37 #5.37 P284 smoke-history-jsonl-policy

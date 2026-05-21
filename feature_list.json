@@ -7573,11 +7573,27 @@
     {
       "id": "infra-P276-bootstrap-helper-self-mutant-detection",
       "priority": 4.37,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 37,
       "area": "infra",
+      "branch": "feat/infra-P276-bootstrap-helper-self-mutant-detection",
       "title": "bootstrap helper self mutant detection",
-      "rationale": "verify_infra_056 V4 round-trip 用 helper subprocess sha vs _verify_lib 直调 sha 做断言, 两边同源 _verify_lib. 若 bootstrap helper 的 compute_self_checker_sha 被改成绕过 lib 返回 const, V0 'def compute_self_checker_sha(' 字面检查仍 PASS, V4 round-trip 也假 PASS. 建议加 helper-only mutant 检测: 用两个不同 tmp 脚本喂 helper, 断言输出 sha 不同."
+      "rationale": "verify_infra_056 V4 round-trip 用 helper subprocess sha vs _verify_lib 直调 sha 做断言, 两边同源 _verify_lib. 若 bootstrap helper 的 compute_self_checker_sha 被改成绕过 lib 返回 const, V0 'def compute_self_checker_sha(' 字面检查仍 PASS, V4 round-trip 也假 PASS. 建议加 helper-only mutant 检测: 用两个不同 tmp 脚本喂 helper, 断言输出 sha 不同.",
+      "evidence": {
+        "engineer_commit": "ba4dcb2",
+        "merge_sha": "ae6a556",
+        "reviewer": "Reviewer (sub-agent a0366e833) LGTM with 2 findings (入 backlog: P297-bootstrap-canary-edit-flow-docs + P297-canary-mutant-parametrize)",
+        "engineer_self_backlog": "Engineer 自报 2 条: P297-bootstrap-canary-multi-helper-coverage + P298-canary-pattern-generalize",
+        "bootstrap_canary_mutant_detect": "真 mutant detect 验证 rc=2 + stderr 'MUTANT DETECTED'",
+        "verify_tails": {
+          "verify_infra_063": "20 checks ALL PASS",
+          "verify_infra_056": "PASS (无需 cascade)",
+          "verify_infra_060": "cascade bump 修 baseline FAIL V4_real_unknown_count_eq_one → PASS"
+        },
+        "v6_total": "53 failed=0",
+        "smoke": "PASS",
+        "real_machine_uat": "pending (sim-first)"
+      }
     },
     {
       "id": "infra-P277-bootstrap-helper-json-schema-version",
@@ -7765,9 +7781,45 @@
       "area": "infra",
       "title": "closeout 阶段顺手扫 reviewer 文本是否引用已撤回的 round-1 dogfood 字段",
       "rationale": "round-2 Reviewer 仲裁 finding: 跨 feature reviewer 评语可能引用先前 round-1 dogfood 字段 (后被 round-2 改为纯合成样本), 导致叙述与 evidence 字段不一致. 建议 closeout 阶段对该 phase 已 passing feature 的 evidence.reviewer 字段做关键词扫描 (如 'dogfood 实测', 'closeout_verify 实测' 等), 命中则记录但不阻 close, 留待精修."
+    },
+    {
+      "id": "infra-P297-bootstrap-canary-edit-flow-docs",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "文档化 bootstrap canary helper 编辑流程",
+      "rationale": "P276 Reviewer finding: 改 scripts/bootstrap_verify_self_checker.py helper 后必须重算 _CANARY_EXPECTED_SHA 与 verify_infra_063 EXPECTED_BOOTSTRAP_FILE_SHA, 否则 canary 自检/round-trip 会 false-positive FAIL. 建议在 helper 文件顶端 docstring + CONTRIBUTING/AGENTS.md 写明 '改本文件必须 (a) 跑 --print-canary-sha 重算 const, (b) 跑 verify_infra_063 重算 EXPECTED_BOOTSTRAP_FILE_SHA' 的流程."
+    },
+    {
+      "id": "infra-P297-canary-mutant-parametrize",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_063 V4.2 参数化多种 mutant 形式",
+      "rationale": "P276 Reviewer finding: 当前 verify_infra_063 V4.2 仅覆盖一种 mutant 形式 (返回常量). 建议参数化补充 (a) return None, (b) raise RuntimeError, (c) 用错误哈希算法 (md5 vs sha256), 确保 canary 对常见绕过手段都能 rc=2 detect."
+    },
+    {
+      "id": "infra-P297-bootstrap-canary-multi-helper-coverage",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "canary 模式覆盖到其他 bootstrap helper",
+      "rationale": "P276 Engineer 自报: 当前 self-mutant canary 仅覆盖 compute_self_checker_sha 一个 helper. scripts/bootstrap_verify_self_checker.py 还有其它 helper (如 read/print/verify 等), 同样有被 mutant 绕过风险. 建议把 canary 模式推广到其它 critical helper."
+    },
+    {
+      "id": "infra-P298-canary-pattern-generalize",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "canary 模式抽象成可复用 helper",
+      "rationale": "P276 Engineer 自报: 自校 canary 模式 (helper 内嵌 _CANARY_EXPECTED_SHA + --canary mode) 可推广到其它 self-verify 类脚本 (如 _verify_lib, dump_v4_sha_graph). 建议抽到 scripts/_canary_lib.py 提供 build_canary(expected_sha, compute_fn) helper, 减少重复代码."
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P285 phase-37 #1.37 infra-P285-classifier-recognize-lib-func-locks 入 passing (merge a46c381, Reviewer LGTM 88/100, dogfood unknown_count 13→1) + 入账 4 个 backlog (P288 fact-vs-blame checklist / P289 per-file-locks auto-derive / P290 family sets / P291 reviewer gate real-or-remove)"
+    "last_updated": "2026-05-22 P297 phase-37 #4.37 infra-P276-bootstrap-helper-self-mutant-detection 入 passing (merge ae6a556, Reviewer LGTM, canary mutant detect rc=2 + verify_infra_063 20 PASS + 060 cascade bump 修 V4_real_unknown_count_eq_one) + 入账 4 个 backlog (P297 canary-edit-flow-docs / P297 canary-mutant-parametrize / P297 multi-helper-coverage / P298 canary-pattern-generalize)"
   }
 }
