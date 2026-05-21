@@ -5582,3 +5582,47 @@ Process 改善:
 - feature_list.json: infra-049-backlog-expected-pattern-consistency-check in_progress → passing
 - backlog 入账 4 项: infra-P279/P280/P281/P282 (status=backlog, phase=null, priority=999, area=infra)
 - commit on main + push origin main + push origin feat/infra-049-backlog-expected-pattern-consistency-check (各跑一次, 失败忽略)
+
+## Session P277 — phase-36 #4.36 Engineer infra-053-backlog-classdef-fills-distinct-check (in_progress, 2026-05-22)
+
+### 背景
+- P273 (infra-054-classdef-palette-extract) 把 dump_v4_sha_graph.py 6 类 classDef 颜色提到 module-top `_MERMAID_PALETTE` (hub/verify/lib/dump/module/unknown)
+- verify_infra_054 只锁了 palette 结构 + 颜色 hex 字面, 没断言 "6 色 fill 互不相同" — 未来误写同色 verify 会 PASS 但 mermaid 图失去可读性
+- 本 feature 加 helper `_verify_lib.verify_palette_fills_distinct` 弥补盲区
+
+### Engineer (本 sub-agent)
+- 分支 feat/infra-053-backlog-classdef-fills-distinct-check from main cc441ef
+- 新增 helper `verify_palette_fills_distinct(palette) -> dict` 在 scripts/_verify_lib.py:
+  - schema: total_keys, distinct_fill_count, duplicates (list[tuple[k1,k2,fill]]), all_distinct, fills
+  - 实现: 按 fill 聚合 key, 任何 len>1 的 bucket 生成所有两两组合 (字典序)
+  - `__all__` 注册
+- helper func sha: 8415eca01361eb6b...
+- lib file sha bump: 7f1c0bb2... → 8e0e0051...
+- 新建 scripts/verify_infra_058.py V0-V5 (16 checks):
+  - V0 scaffolding (lib+helper def+__all__)
+  - V1 docstring sentinel INFRA_058_SHA_LOCKS + v4_behavior func sha 自锁 (9a6b74bd...)
+  - V2 lib file sha (8e0e0051...)
+  - V3 verify_palette_fills_distinct canonical func sha (8415eca0...)
+  - V4 行为: 真 _MERMAID_PALETTE all_distinct=True/distinct=6/duplicates=[] + tmp 正例 ({a:#aaa,b:#bbb}) all_distinct=True + tmp 反例 ({a:#aaa,b:#aaa}) all_distinct=False/duplicates=[(a,b,#aaa)] + 3-way 反例 duplicates 三元组完整
+  - V5 Reviewer LGTM gate (print-only)
+- 9 个依赖 _verify_lib 的 verify 脚本同步 bump:
+  - EXPECTED_LIB_FILE_SHA: infra-042/045/052/055/056/057, robot-035 (7)
+  - EXPECTED_VERIFY_LIB_FILE_SHA: infra-037, robot-037 (2)
+  - 注: 任务 brief 称 "8 个 bump"; 实际计数 9 (verify_infra_054 不锁 lib, 只锁 dump_v4_sha_graph.py)
+- 实测尾行 (11 verify + V6 + smoke):
+  - verify_infra_037 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_042 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_045 [SUMMARY] ALL PASS (18 checks) rc=0
+  - verify_infra_052 [SUMMARY] ALL PASS (23 checks) rc=0
+  - verify_infra_054 [SUMMARY] ALL PASS (20 checks) rc=0
+  - verify_infra_055 [SUMMARY] ALL PASS (26 checks) rc=0
+  - verify_infra_056 [SUMMARY] ALL PASS (21 checks) rc=0
+  - verify_infra_057 [SUMMARY] ALL PASS (13 checks) rc=0
+  - verify_infra_058 [SUMMARY] ALL PASS (16 checks) rc=0
+  - verify_robot_035 summary total=8 failed=0 rc=0
+  - verify_robot_037 [SUMMARY] ALL PASS (18 checks) rc=0
+  - verify_infra_034 summary total=53 failed=0 rc=0 (V6 一致性, scanned_reverse_locks=76)
+  - ./init.sh smoke 通过 rc=0
+- 工作树起始仅 evidence/_history/smoke_history.jsonl 脏改 (已 stash 隔离)
+- feature_list.json: infra-053-backlog-classdef-fills-distinct-check not_started → in_progress + verification + evidence
+- 状态守住: 未切 passing, 未 merge, 待 Reviewer LGTM 后由 closeout sub-agent 收尾
