@@ -5279,3 +5279,13 @@ Process 改善:
 - ./init.sh smoke 11/11 PASS
 
 **status**: in_progress (留待 Reviewer + Closeout)
+
+## Session P266 Closeout — infra-039-backlog-source-file-aware-inference passing
+
+- phase-34 进度: 3/5 passing (infra-039-backlog-target-inference-refine, infra-039-backlog-dump-mermaid-output, infra-039-backlog-source-file-aware-inference)
+- main HEAD=1bfbee7 (merge feat/infra-039-backlog-source-file-aware --no-ff)
+- Reviewer (sub-agent fresh-context) LGTM: inference-design=8/10, verify_047-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10
+- 关键产出: unknown 节点 22 → 0 彻底消灭; _PER_FILE_LOCKS 21 条 (source_file, const) 二级查表 + _PER_FILE_SELF_LOCKS; verify_infra_047 V0-V5 15 checks ALL PASS
+- backlog 入账: infra-047-backlog-per-file-self-locks-comment (priority=999, 注释微调说明 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 为何不在 self-lock 集合)
+- verifies on main: verify_infra_047 / 044 / 039 / 043 / 034 全 rc=0
+- ./init.sh smoke 11/11 PASS

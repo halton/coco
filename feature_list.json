@@ -6633,7 +6633,7 @@
       "area": "infra",
       "phase": 34,
       "title": "_infer_target 引入 (source_file, const_name) 二级查表",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "_infer_target 当前按全局 const 名查表，跨 verify 文件同名常量易冲突；引入 (source_file, const_name) → target 二级查表 / per-file probe，把剩余 14 unknown 节点继续压缩。",
@@ -6646,8 +6646,24 @@
         "Cascade bump: scripts/dump_v4_sha_graph.py file sha c2be81be→20294bc8 触发 EXPECTED_DUMP_FILE_SHA bump in verify_infra_039 / 043 / 044; _infer_target func sha f0e78715→8fa29b81 触发 EXPECTED_INFER_TARGET_FUNC_SHA bump in verify_infra_044。",
         "verify rc: verify_infra_039 rc=0 (10 checks), verify_infra_043 rc=0 (13 checks), verify_infra_044 rc=0 (15 checks), verify_infra_047 rc=0 (15 checks), verify_infra_034 rc=0 (53/0; V6 自动发现 verify_infra_047 reverse locks 一致)。",
         "./init.sh smoke 11/11 PASS (TTS / ASR / VAD / KWS / face-tracker / power-state / config / publish / wake-word 等全绿)。",
-        "Reviewer (sub-agent): 待 closeout 阶段执行 fresh-context 评审。"
+        "Reviewer (sub-agent): 待 closeout 阶段执行 fresh-context 评审。",
+        "Reviewer (sub-agent fresh-context): LGTM. inference-design=8/10, verify_047-quality=9/10, cascade-accuracy=10/10, process-compliance=10/10. unknown 节点 22→0 彻底消灭, _PER_FILE_LOCKS 21 条二级查表 cover SETTER_BLOCK / EXCEPT_BLOCK / DUMP_FILE / VERIFY_LIB / INFER_TARGET_FUNC 等异构常量"
       ]
+    },
+    {
+      "id": "infra-047-backlog-per-file-self-locks-comment",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_PER_FILE_SELF_LOCKS 旁加注释解释为何 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 不在 self-lock 集合",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-039-backlog-source-file-aware-inference closeout Reviewer 建议",
+      "scope": "scripts/dump_v4_sha_graph.py 中 _PER_FILE_SELF_LOCKS 仅含真自锁 (如 EXPECTED_FINGERPRINT);SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 等虽形似自锁但实际指向 target file,留在 _PER_FILE_LOCKS。注释解释这一边界,降低后续维护误归类风险。",
+      "dependencies": [
+        "infra-039-backlog-source-file-aware-inference"
+      ],
+      "verification": []
     },
     {
       "id": "infra-039-backlog-infer-target-auto-discovery",
