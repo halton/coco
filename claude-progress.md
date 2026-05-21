@@ -5345,3 +5345,14 @@ Process 改善:
   5. **5.35 infra-048-backlog-mermaid-palette-extract** — 6 色值提到模块顶部常量 `_MERMAID_PALETTE` (集中维护, dump 文件 sha cascade bump 一次到位)
 - 立即开始 **#1.35 infra-049-backlog-render-json-sort-stability**
 
+
+## Session P269 Closeout — infra-049-backlog-render-json-sort-stability passing (phase-35 1/5)
+
+- phase-35 进度: **1/5 PASSING** — infra-049-backlog-render-json-sort-stability
+- main HEAD=86730e3 (merge --no-ff feat/infra-049-backlog-render-json-sort-stability, b7a47e8 in)
+- Reviewer (sub-agent fresh-context) LGTM 10/10: verify_infra_050 17 checks ALL PASS (schema_version/sort_order=target_asc 顶层字段/V2 file_sha lock 注释/3 次 render_json bytewise 一致/V3 mutant drift 反证) + verify_infra_049 17 checks ALL PASS (兼容性回归) + smoke 11/11 PASS
+- 改动: scripts/dump_reverse_sha_lock_index.py.render_json 输出加 sort_order=target_asc 顶层字段 + V2 file_sha lock 注释依赖 sort_order; scripts/verify_infra_049.py 兼容更新; scripts/verify_infra_050.py 新增 (V0-V5 meta-lock + V3 AST mutant drift)
+- backlog 入账 2 项 (priority=999, status=backlog, phase=null):
+  - infra-050-backlog-sort-order-label-docstring (docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明)
+  - infra-050-backlog-v3-mutant-ast-node-based (V3 mutant 改 AST 节点替换, 与 ast.unparse 字符串风格解耦)
+- 流程偏差自记: Engineer 阶段未将 status 切到 in_progress (轻微疏漏), 但守住"不切 passing 的硬规则"; closeout 直接 not_started → passing

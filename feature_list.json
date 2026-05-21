@@ -6590,12 +6590,43 @@
       "area": "infra",
       "phase": "phase-35",
       "title": "render_json sort_order 显式标注",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-049 (P268) Reviewer 建议",
       "scope": "dump_reverse_sha_lock_index.render_json 输出 schema reverse_sha_lock_index/v1，未来若 dict 顺序变化可能扰动 file_sha；建议在 JSON 顶层加 sort_order 字段（target_asc / source_asc）显式标注稳定排序契约，并在 V2 file_sha lock 上加注释说明依赖 sort_order=target_asc。",
       "dependencies": [
         "infra-049"
+      ],
+      "verification": [],
+      "evidence": "P269 (phase-35 #1.35): verify_infra_050 17 checks PASS (schema_version/sort_order=target_asc/V2 注释/3 次 render_json bytewise 一致/V3 mutant drift 检测) + verify_infra_049 17 checks PASS (兼容性回归) + smoke 11/11 PASS。Reviewer (sub-agent): LGTM 10/10。merge commit 86730e3。"
+    },
+    {
+      "id": "infra-050-backlog-sort-order-label-docstring",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-render-json-sort-stability (P269) Reviewer 建议",
+      "scope": "scripts/dump_reverse_sha_lock_index.py 顶部 docstring 显式补充：sort_order=target_asc 是外部稳定排序契约标签，对应 JSON 内部 indexed_by=target_sha + 字典按 target_sha 升序遍历的实际行为；避免未来读者误以为 sort_order 是动态计算字段。",
+      "dependencies": [
+        "infra-049-backlog-render-json-sort-stability"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-050-backlog-v3-mutant-ast-node-based",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_050 V3 mutant 改 AST 节点替换",
+      "status": "backlog",
+      "created_at": "2026-05-22",
+      "source": "infra-049-backlog-render-json-sort-stability (P269) Reviewer 建议",
+      "scope": "scripts/verify_infra_050.py 中 V3 mutant drift 检测目前依赖 ast.unparse 输出的字符串风格做 source-level 替换，与 Python 版本/AST 库格式化习惯耦合。改用 ast.NodeTransformer 替换具体节点（如把 sorted() 调用替换为 reversed(sorted()) 或将 keys 列表 reverse），更稳健且与字符串风格解耦。",
+      "dependencies": [
+        "infra-049-backlog-render-json-sort-stability"
       ],
       "verification": []
     },
