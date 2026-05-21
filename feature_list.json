@@ -6731,7 +6731,7 @@
       "area": "infra",
       "phase": 34,
       "title": "mermaid 输出加 classDef 视觉分层 (hub / verify_* / unknown)",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
       "scope": "render_mermaid 增加 classDef 与 class 语句，对 hub 节点 (dump_v4_sha_graph)、verify_* 节点、unknown 节点分别上色，提升嵌入文档时的可读性。",
