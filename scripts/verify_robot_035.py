@@ -66,7 +66,7 @@ EXPECTED_HELPER_SHA = "98890e28f76d095217aa3edf70f229ea68cf535fac284747257e62a81
 # infra-037 bump: helper 扩展 (新增 func_sha_by_name) 后文件 sha 变更
 # infra-040-backlog bump: 新增 assert_unique_needle helper 后文件 sha 再变更
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后文件 sha 再变更
-EXPECTED_LIB_FILE_SHA = "d91ab742543a7dcaca6327e44b59f55e6c41db3cc9aeb841539b4876e1c1ea9e"
+EXPECTED_LIB_FILE_SHA = "3790367e872fd64b1adb5457b2ab6ddb0ed9168b173b2fb02e078ce2e90cf727"
 
 
 _results: List[Tuple[str, bool, str]] = []
