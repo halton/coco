@@ -57,11 +57,11 @@ AGENTS_MD = REPO / "AGENTS.md"
 sys.path.insert(0, str(SCRIPTS))
 
 # infra-055 sha lock 常量 (V2)
-EXPECTED_LIB_FILE_SHA = "4973051e86e9665a6a062a84596a3a9a1bdfe581367d2ffd2fbdede4780567a4"
-EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA = "80181418d45eb3bcde841fe5d06f0c88ab7dc20a62a74966c5e511fc520430f0"
+EXPECTED_LIB_FILE_SHA = "3790367e872fd64b1adb5457b2ab6ddb0ed9168b173b2fb02e078ce2e90cf727"
+EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA = "918a4e5ab40aad3b49e635081902ddc41e0ab47e394610c8f63a9df0d59febb5"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "d7ec00da68b6a94c857224a815c737bfc22510ee4824090cb2cfb2e7a559f562"
+EXPECTED_V4_CHECKER_FUNC_SHA = "83cee8d276bec9c1f596ea83bb96283627a4654fdf38627ebf61f1cf166f7414"
 
 DOCSTRING_SENTINEL = "INFRA_055_SHA_LOCKS"
 
@@ -297,6 +297,41 @@ def v4_behavior() -> None:
     # 反例 4: 空字符串 → passed=False
     r5 = assert_verify_passed("", "verify_infra_055")
     _emit("V4_empty_stdin_passed_false", r5["passed"] is False, f"r={r5}")
+
+    # 正例 B (P274 Reviewer fix): 一段式 SUMMARY (旧脚本 infra_034 / robot_035 格式)
+    #   ``[verify_infra_034] summary total=N failed=0`` → passed=True / checks=N
+    good_b = (
+        "[verify_infra_034][PASS] V0_x ok\n"
+        "[verify_infra_034] summary total=53 failed=0\n"
+    )
+    r6 = assert_verify_passed(good_b, "verify_infra_034")
+    _emit("V4_oneline_summary_pass_case", r6["passed"] is True, f"r={r6}")
+    _emit("V4_oneline_summary_checks_count", r6["checks"] == 53, f"checks={r6['checks']} expect=53")
+
+    good_b2 = "[verify_robot_035] summary total=8 failed=0\n"
+    r7 = assert_verify_passed(good_b2, "verify_robot_035")
+    _emit("V4_oneline_summary_robot_pass", r7["passed"] is True, f"r={r7}")
+
+    # 反例 B: 一段式 failed=N>0 → passed=False
+    bad_b = (
+        "[verify_infra_034][FAIL] V2_xxx err\n"
+        "[verify_infra_034] summary total=10 failed=2\n"
+    )
+    r8 = assert_verify_passed(bad_b, "verify_infra_034")
+    _emit(
+        "V4_oneline_summary_fail_case",
+        r8["passed"] is False and len(r8["fail_emits"]) >= 1,
+        f"r={r8}",
+    )
+
+    # 反例 B2: 一段式 failed>0 但无 FAIL emit (verdict 单独把关)
+    bad_b2 = "[verify_robot_035] summary total=5 failed=3\n"
+    r9 = assert_verify_passed(bad_b2, "verify_robot_035")
+    _emit(
+        "V4_oneline_summary_fail_no_emit",
+        r9["passed"] is False and "not ALL PASS" in r9["reason"],
+        f"r={r9}",
+    )
 
     # AGENTS.md 关键字断言
     if not AGENTS_MD.is_file():

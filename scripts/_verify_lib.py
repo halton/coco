@@ -333,12 +333,23 @@ def read_constant(path: str | Path, const_name: str) -> Any:
 # ---------------------------------------------------------------------------
 # infra-P273-evidence-report-accuracy (P274): sub-agent 反失真 helper
 # ---------------------------------------------------------------------------
-# verify_*.py 的 SUMMARY 尾行格式正则:
+# verify_*.py 的 SUMMARY 尾行格式正则 (双格式兼容):
+# 格式 A (两段式 / 主流, infra-045+ / robot-037+):
 #   [verify_infra_055][SUMMARY] ALL PASS (18 checks)
 #   [verify_infra_055][SUMMARY] FAIL 2/18: ['V2_xxx', 'V4_yyy']
-_RE_VERIFY_SUMMARY = re.compile(
+# 格式 B (一段式 / 旧, infra-034 / robot-035 沿用至今):
+#   [verify_infra_034] summary total=53 failed=0
+#   [verify_robot_035] summary total=8 failed=2
+# infra-P273-evidence-report-accuracy (P274 Reviewer fix): 旧脚本的一段式
+# summary 也须被 helper 识别, 否则 sub-agent 严格 dogfood 时会对 034/robot_035
+# 这批旧脚本误报 FAIL。格式 B 的 passed 判定: failed == 0; checks 回填 total。
+_RE_VERIFY_SUMMARY_A = re.compile(
     r"^\[(?P<name>verify_[a-z0-9_]+)\]\[SUMMARY\]\s+"
     r"(?P<verdict>ALL PASS|FAIL)\b.*?(?:\((?P<checks>\d+)\s+checks?\))?\s*$"
+)
+_RE_VERIFY_SUMMARY_B = re.compile(
+    r"^\[(?P<name>verify_[a-z0-9_]+)\]\s+summary\s+"
+    r"total=(?P<total>\d+)\s+failed=(?P<failed>\d+)\s*$"
 )
 # 单行 PASS/FAIL emit 行 (用于 FAIL 子串扫描豁免)
 _RE_VERIFY_EMIT_LINE = re.compile(
@@ -357,8 +368,10 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
 
     校验规则:
       1. 必须找到形如
-         ``[<verify_name>][SUMMARY] ALL PASS (N checks)`` 的 SUMMARY 尾行;
-         缺失 SUMMARY → ``passed=False``。
+         ``[<verify_name>][SUMMARY] ALL PASS (N checks)`` (格式 A, 两段式) **或**
+         ``[<verify_name>] summary total=N failed=M`` (格式 B, 一段式, 旧脚本)
+         的 SUMMARY 尾行; 缺失 SUMMARY → ``passed=False``。
+         格式 B 的 verdict 由 ``failed == 0`` 推导, checks 取 ``total``.
       2. SUMMARY 行 verdict 必须是 ``ALL PASS`` (不允许 ``FAIL``).
       3. 扫描整 stdout, 不允许出现 ``[<name>][FAIL]`` 形式的 emit 行 (即任何
          单个 check FAIL 都视为整体 FAIL, 即便 SUMMARY 显示 PASS——防止
@@ -409,7 +422,8 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
     verdict = ""
     checks = 0
     for line in stdout_text.splitlines():
-        m = _RE_VERIFY_SUMMARY.match(line.strip())
+        stripped = line.strip()
+        m = _RE_VERIFY_SUMMARY_A.match(stripped)
         if m:
             summary_line = line.rstrip()
             parsed_name = m.group("name") or ""
@@ -419,6 +433,19 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
             except (TypeError, ValueError):
                 checks = 0
             # 只取首个 SUMMARY (一份 stdout 理应仅有一条)
+            break
+        mb = _RE_VERIFY_SUMMARY_B.match(stripped)
+        if mb:
+            summary_line = line.rstrip()
+            parsed_name = mb.group("name") or ""
+            try:
+                total = int(mb.group("total") or 0)
+                failed = int(mb.group("failed") or 0)
+            except (TypeError, ValueError):
+                total = 0
+                failed = 1  # 保守: 解析异常视为 FAIL
+            checks = total
+            verdict = "ALL PASS" if failed == 0 else "FAIL"
             break
 
     fail_emits: list[str] = []
