@@ -7761,18 +7761,18 @@
     },
     {
       "id": "infra-P294-R4-fail-baseline-cross-check",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 1.38,
+      "status": "not_started",
+      "phase": 38,
       "area": "infra",
       "title": "FAIL run 的 baseline 字段加 sha 链交叉校验",
       "rationale": "P278 round-1 helper 当前只检查 FAIL run 存在 pre_existing_baseline_sha + baseline_tail_stdout 字段非空, 不验证 baseline_tail_stdout 是否真在 baseline sha 上跑出来 (Engineer 仍可编). 建议: helper 接受 git repo 引用, 对 baseline_sha 做 git rev-parse + checkout 临时 worktree + re-run, sha256 比对 baseline_tail_stdout. 与 P294 stdout-sha 同源, 但聚焦 FAIL 归因."
     },
     {
       "id": "infra-P294-R5-total-checks-derived",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 2.38,
+      "status": "not_started",
+      "phase": 38,
       "area": "infra",
       "title": "helper total_checks 从 per-rule emit 派生而非硬编码 5",
       "rationale": "P278 round-1 helper 返回 total_checks=5 是常量硬编码, 与 failed_reasons 长度解耦. 修后无法区分 '5 条 rule 哪条 fail 几次' (一个 verify_runs 有 3 个 FAIL 都缺 baseline, failed_reasons 长 6 但 total_checks 仍 5). 建议: 改为 per-rule 累加器 (rule1/rule2/.../rule5 各自 pass/fail count), total_checks = sum, 让 verify_infra_062 V4 能直接 assert 单 rule 命中数."
@@ -7806,27 +7806,27 @@
     },
     {
       "id": "infra-P294-Rx-verify-summary-exit-propagation",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 3.38,
+      "status": "not_started",
+      "phase": 38,
       "area": "infra",
       "title": "verify 脚本 [SUMMARY] FAIL 与 process exit code 解耦兜底",
       "rationale": "round-2 Reviewer 仲裁 finding: closeout-verify-trustworthy helper 在 main HEAD re-run 时, 仅依赖 process exit code 判定 trustworthy, 若 verify 脚本 [SUMMARY] FAIL 但 exit code=0 (脚本异常处理吞掉 rc) 会被误判 PASS. 建议除 exit code 外, 同时 grep stdout '\\[SUMMARY\\] (FAIL|FAILED)' 作兜底; 任一命中即视 FAIL."
     },
     {
       "id": "infra-P294-Ry-closeout-reviewer-text-scan",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 4.38,
+      "status": "not_started",
+      "phase": 38,
       "area": "infra",
       "title": "closeout 阶段顺手扫 reviewer 文本是否引用已撤回的 round-1 dogfood 字段",
       "rationale": "round-2 Reviewer 仲裁 finding: 跨 feature reviewer 评语可能引用先前 round-1 dogfood 字段 (后被 round-2 改为纯合成样本), 导致叙述与 evidence 字段不一致. 建议 closeout 阶段对该 phase 已 passing feature 的 evidence.reviewer 字段做关键词扫描 (如 'dogfood 实测', 'closeout_verify 实测' 等), 命中则记录但不阻 close, 留待精修."
     },
     {
       "id": "infra-P297-bootstrap-canary-edit-flow-docs",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 5.38,
+      "status": "not_started",
+      "phase": 38,
       "area": "infra",
       "title": "文档化 bootstrap canary helper 编辑流程",
       "rationale": "P276 Reviewer finding: 改 scripts/bootstrap_verify_self_checker.py helper 后必须重算 _CANARY_EXPECTED_SHA 与 verify_infra_063 EXPECTED_BOOTSTRAP_FILE_SHA, 否则 canary 自检/round-trip 会 false-positive FAIL. 建议在 helper 文件顶端 docstring + CONTRIBUTING/AGENTS.md 写明 '改本文件必须 (a) 跑 --print-canary-sha 重算 const, (b) 跑 verify_infra_063 重算 EXPECTED_BOOTSTRAP_FILE_SHA' 的流程."

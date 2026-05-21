@@ -6066,3 +6066,17 @@ DONE: phase-37 #3.37 P278 closed, 继续 #4.37 P276 bootstrap-helper-self-mutant
 - phase-37 #5.37 收官; 下一步 phase-37 持续推进或 phase-38 planning
 - real_machine_uat: N/A (纯 infra 流程)
 
+
+## Session phase-38 planning (2026-05-22)
+
+phase-37 closeout: 5/5 passing (P285/P281/P278/P276/P284), main HEAD=0412df2.
+
+phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / canary 加固, 全部 sim-able):
+
+- 1.38 `infra-P294-R4-fail-baseline-cross-check` — P278 closeout-verify FAIL baseline 交叉检查
+- 2.38 `infra-P294-R5-total-checks-derived` — total_checks 从 verify_runs 派生 (避免硬编码)
+- 3.38 `infra-P294-Rx-verify-summary-exit-propagation` — verify summary 退出码传递
+- 4.38 `infra-P294-Ry-closeout-reviewer-text-scan` — closeout reviewer 文本扫描加固
+- 5.38 `infra-P297-bootstrap-canary-edit-flow-docs` — P276 canary edit-flow 文档化
+
+下一步: 立即派 priority 1.38 `infra-P294-R4-fail-baseline-cross-check` Engineer sub-agent。
