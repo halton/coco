@@ -5289,3 +5289,19 @@ Process 改善:
 - backlog 入账: infra-047-backlog-per-file-self-locks-comment (priority=999, 注释微调说明 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 为何不在 self-lock 集合)
 - verifies on main: verify_infra_047 / 044 / 039 / 043 / 034 全 rc=0
 - ./init.sh smoke 11/11 PASS
+
+## Session P267 — phase-34 #4.34 infra-039-backlog-mermaid-classDef-styling (Engineer)
+
+- 分支: feat/infra-039-backlog-mermaid-classdef (起点 main HEAD=ba765f3)
+- feature_list.json: infra-039-backlog-mermaid-classDef-styling not_started → in_progress
+- 改 scripts/dump_v4_sha_graph.py::
+  - 新增 `_classify_node(node_id) -> str` 分类函数 (hub / verify / lib / dump / module / unknown 6 类)
+  - render_mermaid 末尾 emit 6 行 classDef 声明 (粉/浅蓝/浅绿/浅黄/浅紫/浅红配色) + 每节点 `class <id> <className>` 关联
+- 新增 scripts/verify_infra_048.py V0-V5 (13 checks, sentinel=INFRA_048_SHA_LOCKS)
+  - V2 locks: EXPECTED_DUMP_FILE_SHA / EXPECTED_RENDER_MERMAID_FUNC_SHA
+  - V4 行为: subprocess `python scripts/dump_v4_sha_graph.py --mermaid`, stdout 必含 6 个 classDef + 4 组 class 关联 (hub/verify/lib/dump) + 首行 graph LR
+- Cascade EXPECTED_DUMP_FILE_SHA bump (20294bc8 → 8a896a8e): verify_infra_039 / 043 / 044 / 047
+- Cascade EXPECTED_RENDER_MERMAID_FUNC_SHA bump (59480ea8 → ac5c4910): verify_infra_043
+- 验证: verify_infra_048 ALL PASS (13/13) / 034 PASS / 039 PASS / 043 PASS / 044 PASS / 047 PASS / ./init.sh smoke 11/11 PASS
+- Reviewer (sub-agent fresh-context) LGTM: 待 closeout 阶段同步评审
+- 不 merge, 不切 passing (Engineer 阶段)

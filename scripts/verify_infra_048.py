@@ -1,23 +1,32 @@
 #!/usr/bin/env python3
-"""verify_infra_044: dump_v4_sha_graph _infer_target refine lock (verify-only).
+"""verify_infra_048: dump_v4_sha_graph mermaid classDef styling (verify-only).
 
-infra-039-backlog (phase-33 #5.33): 锁住 ``scripts/dump_v4_sha_graph.py`` 的
-``_infer_target`` 推断逻辑及其 ``_KNOWN_NON_NUMERIC_TARGETS`` 查表, 确保 fingerprint
-/ bump-only / dump 自锁等非数字常量名能被正确识别。
+infra-039-backlog-mermaid-classDef-styling (phase-34 #4.34): 锁住
+``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 在末尾 emit 的 6 类
+``classDef`` 与每个节点 ``class <node_id> <className>`` 关联语句, 以及新增的
+``_classify_node`` 分类函数:
+
+- hub: v4_sha_json
+- verify: scripts/verify_*.py
+- lib: _verify_lib
+- dump: dump_v4_sha_graph (self-ref)
+- module: 业务模块 (如 proactive)
+- unknown: unknown_* 兜底 (P266 后理论为 0, 但 classDef 保留兼容)
 
 本脚本验证:
-- V0 scaffolding: dump_v4_sha_graph.py 存在 + _infer_target / _KNOWN_NON_NUMERIC_TARGETS 符号在
-- V1 docstring sentinel ``INFRA_044_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
-- V2 dump_v4_sha_graph.py file sha + _infer_target func sha
-- V3 in-memory mutant: 替换 _infer_target 函数体为 ``return '<unknown>'``, sha 必漂移
-- V4 行为验证: import dump_v4_sha_graph 后直接调用 _infer_target, 对若干代表性 const
-  的返回必须命中查表 / numeric 推断分支
+- V0 scaffolding: dump_v4_sha_graph.py 存在 + ``_classify_node`` / ``render_mermaid`` /
+  ``classDef hub`` / ``classDef verify`` 等符号在
+- V1 docstring sentinel ``INFRA_048_SHA_LOCKS`` 自锁 + 本脚本 v4_behavior func sha
+- V2 dump_v4_sha_graph.py file sha + ``render_mermaid`` func sha
+- V3 in-memory mutant: 替换 render_mermaid body 为 ``return 'graph LR'``, sha 必漂移
+- V4 行为验证: subprocess 调用 ``python scripts/dump_v4_sha_graph.py --mermaid``,
+  stdout 必含 6 行 classDef + 关键节点 ``class`` 关联 (hub/verify/lib/dump)
 - V5 Reviewer LGTM gate (print-only)
 
-INFRA_044_SHA_LOCKS
+INFRA_048_SHA_LOCKS
 -------------------
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
-- ``_infer_target`` func sha: EXPECTED_INFER_TARGET_FUNC_SHA
+- ``render_mermaid`` func sha: EXPECTED_RENDER_MERMAID_FUNC_SHA
 - 本脚本 v4_behavior 自 checker func sha: EXPECTED_V4_CHECKER_FUNC_SHA
 
 退出码 0=ALL PASS / 1=任一 FAIL.
@@ -28,7 +37,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 from typing import List, Tuple
@@ -37,21 +46,21 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
-# infra-044 sha lock 常量 (V2)
+# infra-048 sha lock 常量 (V2)
 EXPECTED_DUMP_FILE_SHA = "8a896a8e5cfdeecd0a7b25a07de37e147efeca0775e87f76e766c54b89541981"
-EXPECTED_INFER_TARGET_FUNC_SHA = "8fa29b811670d4f7642e2ca84d571bcf2bf77dbabf5b2a60efa17f4df08eb446"
+EXPECTED_RENDER_MERMAID_FUNC_SHA = "ac5c49107be339e17c8ddd96ea9f872f178c6191a68a01de5503344224c72260"
 
-# 本脚本 v4_behavior 自锁 (V1)
-EXPECTED_V4_CHECKER_FUNC_SHA = "b9ae27aaddeb2a1d89171b4dfd1c66be7e0559be16555617b91879a5857bf41a"
+# 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
+EXPECTED_V4_CHECKER_FUNC_SHA = "9c47345119ce380e4dd1edd1322a4167f40ef1288e31f972d2fab451a0a8fc35"
 
-DOCSTRING_SENTINEL = "INFRA_044_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_048_SHA_LOCKS"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_044][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_048][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, ok, detail))
 
 
@@ -68,26 +77,27 @@ def _func_sha(path: Path, func_name: str) -> str:
     raise RuntimeError(f"func {func_name!r} not found in {path}")
 
 
-def _load_dump_module():
-    spec = importlib.util.spec_from_file_location("_dump_v4_sha_graph_under_test", DUMP_PY)
-    mod = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(mod)
-    return mod
-
-
 # ---------------------------------------------------------------------------
 # V0: scaffolding
 # ---------------------------------------------------------------------------
 def v0_scaffolding() -> None:
     _emit("V0_dump_exists", DUMP_PY.is_file(), f"path={DUMP_PY}")
     src = DUMP_PY.read_text(encoding="utf-8")
-    needed = ["def _infer_target", "_KNOWN_NON_NUMERIC_TARGETS", "EXPECTED_DUMP_FILE_SHA"]
+    needed = [
+        "def _classify_node",
+        "def render_mermaid",
+        "classDef hub",
+        "classDef verify",
+        "classDef lib",
+        "classDef dump",
+        "classDef module",
+        "classDef unknown",
+    ]
     found = [n for n in needed if n in src]
     _emit(
-        "V0_infer_target_symbols",
+        "V0_classdef_symbols",
         len(found) == len(needed),
-        f"found {len(found)}/{len(needed)}: {found}",
+        f"found {len(found)}/{len(needed)}",
     )
 
 
@@ -122,7 +132,7 @@ def v1_self_lock() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V2: dump file sha + _infer_target func sha
+# V2: dump file sha + render_mermaid func sha
 # ---------------------------------------------------------------------------
 def v2_dump_locks() -> None:
     got_file = _file_sha(DUMP_PY)
@@ -135,43 +145,43 @@ def v2_dump_locks() -> None:
             f"got={got_file[:16]} expect={EXPECTED_DUMP_FILE_SHA[:16]}",
         )
     try:
-        got_func = _func_sha(DUMP_PY, "_infer_target")
+        got_func = _func_sha(DUMP_PY, "render_mermaid")
     except Exception as e:
-        _emit("V2_infer_target_func_sha", False, f"compute err: {e!r}")
+        _emit("V2_render_mermaid_func_sha", False, f"compute err: {e!r}")
         return
-    if EXPECTED_INFER_TARGET_FUNC_SHA == "__BUMP_ME__":
+    if EXPECTED_RENDER_MERMAID_FUNC_SHA == "__BUMP_ME__":
         _emit(
-            "V2_infer_target_func_sha",
+            "V2_render_mermaid_func_sha",
             False,
-            f"placeholder; bump EXPECTED_INFER_TARGET_FUNC_SHA={got_func}",
+            f"placeholder; bump EXPECTED_RENDER_MERMAID_FUNC_SHA={got_func}",
         )
         return
     _emit(
-        "V2_infer_target_func_sha",
-        got_func == EXPECTED_INFER_TARGET_FUNC_SHA,
-        f"got={got_func[:16]} expect={EXPECTED_INFER_TARGET_FUNC_SHA[:16]}",
+        "V2_render_mermaid_func_sha",
+        got_func == EXPECTED_RENDER_MERMAID_FUNC_SHA,
+        f"got={got_func[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
     )
 
 
 # ---------------------------------------------------------------------------
-# V3: in-memory mutant — 替换 _infer_target body, sha 必漂移
+# V3: in-memory mutant — 替换 render_mermaid body, sha 必漂移
 # ---------------------------------------------------------------------------
 def v3_mutant() -> None:
     src = DUMP_PY.read_text(encoding="utf-8")
     tree = ast.parse(src)
     target = None
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name == "_infer_target":
+        if isinstance(node, ast.FunctionDef) and node.name == "render_mermaid":
             target = node
             break
     if target is None:
-        _emit("V3_mutant_apply", False, "_infer_target not found")
+        _emit("V3_mutant_apply", False, "render_mermaid not found")
         return
     baseline_sha = hashlib.sha256(ast.unparse(target).encode("utf-8")).hexdigest()
     mutant = ast.FunctionDef(
         name=target.name,
         args=target.args,
-        body=[ast.Return(value=ast.Constant(value="<unknown>"))],
+        body=[ast.Return(value=ast.Constant(value="graph LR"))],
         decorator_list=[],
         returns=target.returns,
     )
@@ -182,71 +192,65 @@ def v3_mutant() -> None:
         baseline_sha != mutant_sha,
         f"baseline={baseline_sha[:16]} mutant={mutant_sha[:16]}",
     )
-    if EXPECTED_INFER_TARGET_FUNC_SHA != "__BUMP_ME__":
+    if EXPECTED_RENDER_MERMAID_FUNC_SHA != "__BUMP_ME__":
         _emit(
             "V3_baseline_matches_expected",
-            baseline_sha == EXPECTED_INFER_TARGET_FUNC_SHA,
-            f"baseline={baseline_sha[:16]} expect={EXPECTED_INFER_TARGET_FUNC_SHA[:16]}",
+            baseline_sha == EXPECTED_RENDER_MERMAID_FUNC_SHA,
+            f"baseline={baseline_sha[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
         )
 
 
 # ---------------------------------------------------------------------------
-# V4: 行为验证 — import + 直接调用 _infer_target
+# V4: 行为验证 — subprocess 调用 dump --mermaid, 检查 classDef + class 关联
 # ---------------------------------------------------------------------------
 def v4_behavior() -> None:
     try:
-        mod = _load_dump_module()
+        res = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--mermaid"],
+            cwd=str(REPO),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
     except Exception as e:
-        _emit("V4_import_dump", False, f"err: {e!r}")
+        _emit("V4_subprocess", False, f"err: {e!r}")
         return
-    _emit("V4_import_dump", True, "module loaded")
-    # 查表条目: 非数字常量名
-    cases_table = [
-        ("EXPECTED_LIB_FILE_SHA", "_verify_lib.py"),
-        ("EXPECTED_VERIFY_LIB_FILE_SHA", "_verify_lib.py"),
-        ("EXPECTED_DUMP_FILE_SHA", "dump_v4_sha_graph.py"),
-        ("EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_V6_SCAN_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_READ_CONSTANT_FUNC_SHA", "_verify_lib.py"),
-        ("EXPECTED_RENDER_MERMAID_FUNC_SHA", "dump_v4_sha_graph.py"),
+    _emit("V4_subprocess", res.returncode == 0, f"rc={res.returncode}")
+    out = res.stdout
+
+    classdef_needles = [
+        "classDef hub",
+        "classDef verify",
+        "classDef lib",
+        "classDef dump",
+        "classDef module",
+        "classDef unknown",
     ]
-    miss = []
-    for const, needle in cases_table:
-        got = mod._infer_target(const, "scripts/verify_infra_044.py")
-        if needle not in got:
-            miss.append((const, got))
+    miss_cd = [n for n in classdef_needles if n not in out]
     _emit(
-        "V4_known_table_resolves",
-        not miss,
-        f"miss={miss}" if miss else f"all {len(cases_table)} table-targets resolved",
+        "V4_classdef_lines",
+        not miss_cd,
+        f"miss={miss_cd}" if miss_cd else f"all {len(classdef_needles)} classDef present",
     )
-    # numeric 路径: VERIFY_<NNN>_ 仍走原流程
-    got_numeric = mod._infer_target("VERIFY_025_EXPECTED_SHA", "scripts/verify_robot_027.py")
+
+    class_assoc_needles = [
+        "class v4_sha_json hub",
+        "class verify_robot_025 verify",
+        "class _verify_lib lib",
+        "class dump_v4_sha_graph dump",
+    ]
+    miss_cls = [n for n in class_assoc_needles if n not in out]
     _emit(
-        "V4_numeric_verify_hint",
-        "025" in got_numeric and "verify" in got_numeric.lower(),
-        f"got={got_numeric!r}",
+        "V4_class_associations",
+        not miss_cls,
+        f"miss={miss_cls}" if miss_cls else f"all {len(class_assoc_needles)} class assocs present",
     )
-    # V<NNN>_ 路径 (infra-039-backlog 扩展)
-    got_v = mod._infer_target("V018_EXPECTED_SHA", "scripts/verify_interact_033.py")
+
+    # head 必须仍是 graph LR (mermaid syntax)
     _emit(
-        "V4_v_num_hint",
-        "018" in got_v,
-        f"got={got_v!r}",
-    )
-    # BUMP_<NNN>_ 路径
-    got_bump = mod._infer_target("BUMP_028_EXPECTED_SHA", "scripts/verify_robot_031.py")
-    _emit(
-        "V4_bump_num_hint",
-        "028" in got_bump,
-        f"got={got_bump!r}",
-    )
-    # unknown 回退仍然是 <unknown target>
-    got_unknown = mod._infer_target("TOTALLY_RANDOM_NAME", "scripts/anywhere.py")
-    _emit(
-        "V4_unknown_fallback",
-        "<unknown" in got_unknown,
-        f"got={got_unknown!r}",
+        "V4_graph_lr_header",
+        out.lstrip().startswith("graph LR"),
+        f"first_line={out.splitlines()[0] if out else '<empty>'!r}",
     )
 
 
@@ -271,9 +275,9 @@ def main() -> int:
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_044][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(f"[verify_infra_048][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
         return 1
-    print(f"[verify_infra_044][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(f"[verify_infra_048][SUMMARY] ALL PASS ({total} checks)", flush=True)
     return 0
 
 

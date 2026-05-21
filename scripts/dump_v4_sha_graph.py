@@ -277,8 +277,30 @@ def render_text(graph: Dict) -> str:
     return "\n".join(out)
 
 
+def _classify_node(node_id: str) -> str:
+    """根据 node_id 判定 classDef 类别 (infra-039-backlog-mermaid-classDef-styling).
+
+    返回 className: hub / verify / lib / dump / module / unknown
+    """
+    if node_id == "v4_sha_json":
+        return "hub"
+    if node_id.startswith("unknown_"):
+        return "unknown"
+    if node_id == "_verify_lib":
+        return "lib"
+    if node_id == "dump_v4_sha_graph":
+        return "dump"
+    if node_id.startswith("verify_"):
+        return "verify"
+    return "module"
+
+
 def render_mermaid(graph: Dict) -> str:
-    """渲染 mermaid graph LR 语法, 可直接 paste 到 mermaid.live."""
+    """渲染 mermaid graph LR 语法, 可直接 paste 到 mermaid.live.
+
+    infra-039-backlog-mermaid-classDef-styling: 在末尾 emit 6 类 classDef 与
+    每个节点的 class 关联, 视觉上分层 hub / verify / lib / dump / module / unknown。
+    """
     out: List[str] = []
     out.append("graph LR")
     nodes: set = set()
@@ -330,6 +352,16 @@ def render_mermaid(graph: Dict) -> str:
                 out.append(f'    {tgt_id}["?{lock["const"]}"]')
                 nodes.add(tgt_id)
             out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
+
+    # infra-039-backlog-mermaid-classDef-styling: classDef 声明 + 每节点 class 关联
+    out.append("    classDef hub fill:#f9f,stroke:#909,color:#000;")
+    out.append("    classDef verify fill:#9cf,stroke:#069,color:#000;")
+    out.append("    classDef lib fill:#9f9,stroke:#090,color:#000;")
+    out.append("    classDef dump fill:#ff9,stroke:#990,color:#000;")
+    out.append("    classDef module fill:#c9f,stroke:#609,color:#000;")
+    out.append("    classDef unknown fill:#f99,stroke:#900,color:#000;")
+    for nid in sorted(nodes):
+        out.append(f"    class {nid} {_classify_node(nid)};")
     return "\n".join(out)
 
 
