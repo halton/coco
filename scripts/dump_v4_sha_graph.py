@@ -191,6 +191,11 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_066.py", "EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA"):
         "scripts/_verify_lib.py:verify_closeout_evidence_trustworthy (func-sha)",
+    # verify_infra_067 (P294-Rx) — 锁 verify_summary_exit helper
+    ("verify_infra_067.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_067.py", "EXPECTED_VERIFY_SUMMARY_EXIT_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_summary_exit (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

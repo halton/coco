@@ -7857,7 +7857,7 @@
     {
       "id": "infra-P294-Rx-verify-summary-exit-propagation",
       "priority": 3.38,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 38,
       "area": "infra",
       "title": "verify 脚本 [SUMMARY] FAIL 与 process exit code 解耦兜底",
