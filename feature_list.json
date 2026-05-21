@@ -6499,14 +6499,19 @@
       "area": "infra",
       "phase": 34,
       "title": "scripts/scan_verify_sha_locks.py 输出反向引用 sha-lock 索引",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-038 closeout Reviewer 建议",
       "scope": "扩展 scan_verify_sha_locks.py：除正向 target→sha 外，额外输出 sha-lock 反向引用索引（target → 谁锁我），便于扩集前快速判断 cascade bump 影响范围。",
       "dependencies": [
         "infra-038"
       ],
-      "verification": []
+      "verification": [
+        "scripts/dump_reverse_sha_lock_index.py: 新建反向 sha lock 索引工具, 复用 _verify_lib.scan_reverse_sha_locks/live_verify_sha_set + dump_v4_sha_graph._infer_target; 三档互斥 CLI: --text (默认分组表格) / --json (schema 'reverse_sha_lock_index/v1') / --check (consistency rc 0/1)",
+        "scripts/verify_infra_049.py: V0-V5 meta-lock (17 checks ALL PASS), V2 锁 dump_index file_sha + render_text/render_json func_sha, V3 in-memory mutant 反证 render_text sha 漂移, V4 subprocess 实测 --json / --text / --json --text 互斥",
+        "verify_infra_034 V6 consistency: scanned=7, live=183 (含新 verify_infra_049), all_match=True",
+        "./init.sh smoke: 11/11 PASS"
+      ]
     },
     {
       "id": "infra-038-backlog-V6-pre-flight-grep-check",
