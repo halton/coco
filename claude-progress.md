@@ -5430,3 +5430,23 @@ Process 改善:
 - 选择理由：P273 流程项两项 ROI 最高（防同类失误，影响所有未来 feature 的 evidence 可信度），所以排 #1.36 / #2.36；后三项为 phase-35 / phase-34 close-out caveat 的具体技术债，范围小、单 Engineer round 可完成
 - 排除：infra-V6-backlog-strengthen-mutant-targeting（cascade 风险偏高，留 phase-37）、SDK 升级类、改 _verify_lib 公共签名的项
 - 立即开始 **#1.36 infra-P273-evidence-report-accuracy**
+
+## Session P274 — #1.36 infra-P273-evidence-report-accuracy closeout passing (closeout sub-agent)
+
+- 起点 main HEAD=92e3790，feat 分支 `feat/infra-P273-evidence-report-accuracy`
+- **Engineer round-1** (commit 9cb51ea)：
+  - 新增 `scripts/_verify_lib.py::assert_verify_passed(name, stdout)` helper：subprocess 跑 verify + 双格式 regex 扫描（`summary total=N failed=M` 与 `[SUMMARY] ALL PASS (N checks)`）
+  - AGENTS.md / CLAUDE.md 加入硬规则段：sub-agent 上报 verify 前必须 paste stdout 末尾 5 行，禁止仅凭子任务返回值断言
+- **Engineer round-1.5 fix** (commit 2996a8a)：
+  - Reviewer round-1 指出 regex 只覆盖 `summary total=N failed=M` 老格式，新 verify_infra_055 等用 `[SUMMARY] ALL PASS (N checks)` 直接漏掉 → 修复为双格式兼容 regex
+- **Reviewer round-2 sub-agent fresh-context: LGTM 9/10**
+  - helper API 清晰、双格式 regex 覆盖完整、CLAUDE.md / AGENTS.md 硬规则段落地
+  - 1 个 P2 caveat：`assert_verify_passed` 对 `total=0 failed=0` 仍判 passed=True，verify 脚本 bug 跳过所有 check 会误导 → 入账 `infra-P275-assert-verify-passed-min-checks`
+- **Closeout sub-agent (P274)**：
+  - merge --no-ff feat 分支到 main，merge commit **0df12b3**
+  - `./init.sh` smoke 11/11 PASS
+  - 9 个 verify 脚本实测全 PASS（verify_infra_055 26 checks / verify_infra_034 53/0 / verify_robot_035 8/0 / verify_infra_037 13 / 042 13 / 045 18 / 052 23 / 054 20 / robot_037 18）
+  - feature_list.json：`infra-P273-evidence-report-accuracy` status `in_progress` → `passing`，evidence 写入实测 stdout 尾行 + Reviewer 摘要 + merge sha
+  - 入账 1 项 backlog：`infra-P275-assert-verify-passed-min-checks` (P2 caveat)
+  - push main 与 feat 分支各一次（结果见 commit 报告）
+- 持续开发模式继续：下一 candidate 应为 **#2.36 infra-P273-new-verify-self-checker-fixup-protocol**

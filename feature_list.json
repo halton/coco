@@ -7262,12 +7262,29 @@
       "area": "infra",
       "phase": "phase-36",
       "title": "Sub-agent 上报 verify 结果前必须 grep FAIL 实际输出",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "P273 infra-048-backlog-mermaid-palette-extract closeout 流程偏差 (Engineer 首轮报 PASS 但 V1 自锁实际 FAIL)",
       "scope": "Engineer / Reviewer / verify-runner sub-agent 在向主会话回报 'verify_infra_NNN.py 全 PASS' 之前，必须执行 `python scripts/verify_infra_NNN.py 2>&1 | grep -E 'FAIL|Error'` 并将原始 stdout 末尾 5 行同步 paste 到 brief；禁止仅凭子任务返回值或目测断言通过。落地形式：在 AGENTS.md / CLAUDE.md 加入硬规则段；可选 _verify_lib helper 提供 `assert_verify_clean(name)` 工具函数走 subprocess.run + 关键字扫描。",
       "dependencies": [],
-      "verification": []
+      "verification": [],
+      "evidence": [
+        "merge commit: 0df12b3 (main HEAD) — merge --no-ff feat/infra-P273-evidence-report-accuracy (P274)",
+        "Engineer round-1: feat 2996a8a + 9cb51ea (assert_verify_passed helper + AGENTS.md 硬规则段 + 双格式 regex 兼容)",
+        "Reviewer round-2 sub-agent fresh-context: LGTM 9/10 — helper API 清晰、regex 兼容老/新 summary 两种格式、CLAUDE.md/AGENTS.md 硬规则落地；1 个 P2 caveat (min_checks 防 total=0 失真) 已入账 P275",
+        "Smoke 复跑 11/11 PASS (main HEAD 0df12b3)",
+        "verify stdout 尾行实测：",
+        "  verify_infra_055: [SUMMARY] ALL PASS (26 checks)",
+        "  verify_infra_034: summary total=53 failed=0",
+        "  verify_robot_035: summary total=8 failed=0",
+        "  verify_infra_037: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_042: [SUMMARY] ALL PASS (13 checks)",
+        "  verify_infra_045: [SUMMARY] ALL PASS (18 checks)",
+        "  verify_infra_052: [SUMMARY] ALL PASS (23 checks)",
+        "  verify_infra_054: [SUMMARY] ALL PASS (20 checks)",
+        "  verify_robot_037: [SUMMARY] ALL PASS (18 checks)",
+        "dogfood: assert_verify_passed 在 3 套样本 stdout 上全 passed=True (覆盖 'summary total=N failed=0' 与 '[SUMMARY] ALL PASS (N checks)' 两种格式)"
+      ]
     },
     {
       "id": "infra-P273-new-verify-self-checker-fixup-protocol",
@@ -7281,9 +7298,18 @@
       "scope": "新建 verify_infra_NNN.py (含 V1 self-lock) 时，作者必须在最后一步运行 `python scripts/dump_v4_sha_graph.py --target verify_infra_NNN.py.<checker_func>` 取真实 func sha，回填 `EXPECTED_V*_CHECKER_FUNC_SHA = '...'`，并重跑该 verify 二次确认。落地：写入 CLAUDE.md / AGENTS.md verify 章节为 mandatory step；可选 `_verify_lib` 加 `bootstrap_self_lock()` helper 输出 'paste this constant' 提示；模板里 placeholder 改为 `'__FILL_ME_AFTER_FIRST_RUN__'` 避免 silent 0000...。",
       "dependencies": [],
       "verification": []
+    },
+    {
+      "id": "infra-P275-assert-verify-passed-min-checks",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "area": "infra",
+      "title": "assert_verify_passed 加 min_checks 防 total=0 失真",
+      "rationale": "P274 dogfood 发现 `[verify_x] summary total=0 failed=0` 会判 passed=True；若 verify 脚本因 bug 一个 check 都没跑就直接 print summary，sub-agent 仍会被误导。建议 helper 增加 `min_checks: int = 1` 参数，或在 caller 侧锁最小 check 数。"
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-20 P259 infra-V6 closeout passing + 5 backlog 入账"
+    "last_updated": "2026-05-22 P274 infra-P273-evidence-report-accuracy closeout passing + 1 backlog 入账 (P275)"
   }
 }
