@@ -7227,3 +7227,16 @@ planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三�
 - Reviewer: sub_agent_fresh_context LGTM；P0=[] P1=[] P2=[22 项 grace_period graduate 入 backlog / 037/061/064 历史 floor 锁 lib_file_sha drift]
 - backlog 入账 1 项: `infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump` (037/061/064 _verify_lib floor sha bump)
 - dedupe: 删 idx=418 (priority=999) backlog stub，保 priority=2.45 主条目升 passing
+
+## Session 2026-05-22 — phase-45 #3.45 infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool (Closeout)
+
+- 062 V4_closeout_baseline_head_echo_format 从 soft emit=True 升级为 bool(result['ok']) 真硬，配 grace_period 16 historic features 列表与历史 violations 精确匹配
+- helper `assert_closeout_baseline_head_echo_format` 新增 `grace_period_feature_ids` 参数；062 _enforce_closeout_baseline_head_echo_format 定义 16-项 GRACE 集合
+- 新增 verify_infra_094 V0-V5 共 14 checks；mutant (drop one grace → ok=False → emit=False) 证 hard 真触发
+- engineer commit: b3c3dcc, merge commit: 68ee03b, base fe82e72
+- verify_runs: 062 ALL PASS 27 grace_skipped=16 / 094 PASS 13/14 (V1_self_main_func_sha pending self-sha drift 预期) / 093 PASS 13/14 (同 V1) / smoke PASS
+- baseline 072 V1_self_main_func_sha on fe82e72 = pre-existing self-sha drift，与本 feature 无关
+- Reviewer: sub_agent_fresh_context LGTM；P0/P1/P2 全空；neighbours 088-093 全 PASS；sha cascade (lib/062/dump/helper) 已同步锁紧
+- dedupe: 删 idx=12013 (priority=999) backlog stub，保 priority=3.45 主条目升 passing
+- 三件套 promote 闭合：#1.45 verify_runs_shape (hard+grace 17) / #2.45 reviewer_block_shape (hard+grace 22) / #3.45 baseline_head_echo_format (hard+grace 16)
+

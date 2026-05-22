@@ -12011,17 +12011,6 @@
       }
     },
     {
-      "id": "infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
-      "area": "infra",
-      "title": "promote V4_closeout_baseline_head_echo_format emit→bool(result['ok']) 真硬",
-      "rationale": "phase-44 #5.44 引入 V4_closeout_baseline_head_echo_format soft emit=True，16 historic violations 阻碍 promote 真硬。",
-      "description": "phase-44 #5.44 引入 V4_closeout_baseline_head_echo_format soft emit=True，16 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策",
-      "acceptance": "决定 backfill 16 violations 或加 grace_period 后 promote 062 emit→bool"
-    },
-    {
       "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate",
       "priority": 999,
       "phase": null,
@@ -12226,7 +12215,7 @@
       "id": "infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool",
       "priority": 3.45,
       "phase": 45,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "V4_closeout_baseline_head_echo_format soft emit → bool 真硬 promote",
       "rationale": "phase-44 #5.44 已落 helper + 062 soft emit (violations=16)；violations 最少，promote 成本最低，应作为本组三 promote 中最先做的候选 (但 priority 排第三只为按规则一致性)。",
@@ -12235,16 +12224,49 @@
       "expected_files": [
         "scripts/_verify_lib.py",
         "scripts/verify_infra_062.py",
-        "scripts/verify_infra_NNN.py",
+        "scripts/verify_infra_094.py",
         "scripts/dump_v4_sha_graph.py",
-        "feature_list.json (backfill 16)"
+        "feature_list.json (16 项 grace_period)"
       ],
       "verify_targets": [
         "verify_infra_062 V4_closeout_baseline_head_echo_format (hard bool)",
-        "新 verify_infra_NNN V0-V5"
+        "verify_infra_094 V0-V5"
       ],
-      "notes_for_engineer": ".venv 必须激活；16 violations 全量 backfill 最干净；cascade 全量",
-      "acceptance": "verify_infra_NNN ALL PASS；062 V4 改 bool 后 smoke PASS；reviewer LGTM"
+      "notes_for_engineer": ".venv 必须激活；16 violations 走 grace_period 列表；cascade 全量",
+      "acceptance": "verify_infra_094 ALL PASS；062 V4 改 bool 后 smoke PASS；reviewer LGTM",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER",
+          "merge_commit_sha": "68ee03b",
+          "baseline_head_echo": "fe82e72",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=32 enforced=30 soft_skipped=2 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None"
+            },
+            {
+              "name": "verify_infra_094",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_094][PASS] V4_5_mutant_grace_const_rename orig_occurrences=4 mutant_subs=4 — 14/14 PASS post-evidence-fill"
+            },
+            {
+              "name": "verify_infra_093",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_093][PASS] V5_reviewer_lgtm_gate target=infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool helper_ok=True reason=reviewer_kind=sub_agent_fresh_context verdict=LGTM OK"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过",
+          "pre_existing_baseline_sha": "fe82e72",
+          "baseline_tail_stdout": "[verify_infra_072][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha'] — pre-existing self-sha drift on base fe82e72, not introduced by this feature",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-45 #3.45 V4_closeout_baseline_head_echo_format promote 到真硬 emit=bool(ok)，配套 16 项 grace_period 列表与历史 violations 精确匹配，无 leak 无 over-grace；helper 新签名 grace_period_feature_ids 行为正反例齐全；094 14 检中 13 PASS（V5 为预期 reviewer 未录），mutant 试验 (drop one grace → ok=False → emit=False) 证明 hard 行为生效；neighbours 088-093 全 PASS；smoke PASS；sha cascade (lib/062/dump/helper) 已同步锁紧。",
+            "findings": {"P0": [], "P1": [], "P2": []}
+          }
+        }
+      }
     },
     {
       "id": "infra-P278-followup-closeout-merge-commit-sha-format-hard-check",
