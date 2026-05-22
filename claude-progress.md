@@ -6937,3 +6937,30 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 - smoke: PASS
 - backlog 入账：infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump (12 files V2 FILE_SHA cascade rebump, priority=999)
 - status #1.43: in_progress → passing
+
+
+## Session 2026-05-22 phase-43 #2.43 Engineer
+
+**feature**: infra-V6-backlog-062-v3-helper-func-sha-rebump-followup
+**branch**: feat/infra-V6-backlog-062-v3-helper-func-sha-rebump-followup
+**baseline main HEAD**: 8c599451
+
+**目的**: 清理 verify_infra_062.py 中 V3 helper func sha 历史漂移（若存在），并 cascade 检查 075-085。
+
+**扫描结果**:
+- 062 内 EXPECTED_*_FUNC_SHA 常量共 2 个：
+  - EXPECTED_CLOSEOUT_FUNC_SHA (locks verify_closeout_evidence_trustworthy)
+  - EXPECTED_V4_CHECKER_FUNC_SHA (locks v4_behavior self checker)
+- 实算后均与现常量一致，**0 bump 需要**。
+- 062 verify: ALL PASS (21 checks), 包含 V3_helper_func_sha (d190174c24b26494) 与 V1_self_checker_func_sha (66a2cdb26e7ef571)。
+- 075/076/077/078/080/081/082/083/084/085 V3 helper func sha 全部 PASS（无漂）。
+
+**Pre-existing FAIL (不在本 feature scope)**:
+- 079 V4_4_real_run_074_rc0_and_pass: pre-existing baseline（074 实跑 rc=2，记录在前期 closeout evidence）
+- 085 V5_reviewer_lgtm_gate: pre-existing baseline（reviewer.verdict='LGTM-conditional' vs expected 'LGTM'）
+
+**结论**: 上一轮 #1.43 cascade 已彻底覆盖 V3 helper func sha 漂移。本 feature no-op confirmation，将切 passing 由 Reviewer 确认。
+
+**verify tails**:
+- verify_infra_062: ALL PASS (21 checks)
+- ./init.sh: 全 smoke 通过
