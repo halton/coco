@@ -12357,7 +12357,7 @@
       "acceptance": "verify_infra_096 ALL PASS；062 V4 soft emit 通过；smoke PASS；reviewer LGTM",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "4772d09",
+          "main_head_sha": "1a6e74d",
           "merge_commit_sha": "4772d09421347514cb06c9de9614b55a6e45448a",
           "baseline_head_echo": "e84d8cd",
           "pre_existing_baseline_sha": "e84d8cd",
