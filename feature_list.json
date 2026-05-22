@@ -11047,7 +11047,7 @@
           ]
         },
         "closeout_verify": {
-          "main_head_sha": "PENDING_A_COMMIT",
+          "main_head_sha": "9554835",
           "baseline_head_echo": "f19a51e",
           "verify_runs": [
             {
