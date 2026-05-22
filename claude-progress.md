@@ -7029,3 +7029,16 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 **backlog 入账 2 项 (priority=999 phase=null)**:
 - infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline
 - infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion
+
+## Session Closeout (phase-43 #3.43 infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk)
+
+- merge commit: b45d35c (--no-ff feat/infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk → main, base=cedf2b7)
+- Engineer commit: 17c225f
+- 改动 narrow scope：`_verify_lib.py` default `allowed_prefixes` 扩到 7 (含 docstring 同步), `_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST` 减 6 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_reverse_sha_locks / scan_reviewer_text / live_verify_sha_set), 20+ verify_infra_06x/07x/08x.py cascade bump LIB_FILE_SHA + 081/082/083 062_FILE_SHA + 085 NAMING_HELPER_FUNC_SHA
+- verify 结果：062 ALL PASS 21 (V4_verify_lib_helper_naming_convention scanned=23 enforced=14 legacy_allowlisted=9 violations=0)；082/083/084 ALL PASS 14；085/079 各 1 FAIL = pre-existing cedf2b7 baseline (V5_reviewer_lgtm_gate 085=LGTM-conditional / 074 V2 sha cascade) 非本次引入
+- Reviewer: sub_agent_fresh_context LGTM (mutation A/B/C 反向证伪验证 backlog rename-to-enforce scope 正确)
+- smoke PASS（所有 11 项）
+- 新 backlog: infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce (priority=999 status=backlog) 已登记
+- A commit 即将创建：chore(infra-V6-backlog): closeout passing + #3.43 入账
+- B commit 即将创建：chore(infra-V6-backlog): bump closeout_verify.main_head_sha for #3.43
+
