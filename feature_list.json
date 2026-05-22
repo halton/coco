@@ -10906,7 +10906,7 @@
       "acceptance": "verify_infra_NNN.py 全 PASS; verify_infra_062 V4_reviewer_summary_nonempty PASS; AGENTS.md 更新; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_A_COMMIT",
+          "main_head_sha": "5b1769e",
           "baseline_head_echo": "3a452b5",
           "pre_existing_baseline_sha": "3a452b5",
           "baseline_tail_stdout": "[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper call_count=1\n[verify_infra_082][PASS] V4_2_call_in_main_chain main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero\n[verify_infra_082][FAIL] V4_5_verify_062_file_sha got=014d9880994b040d expect=51fb9bdf49233ccb (baseline pre-merge)\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate\n[verify_infra_082][SUMMARY] FAIL 2/14: V1_self_main_func_sha got=8f7253cb (baseline 3a452b5 同 FAIL 同 got, pre-existing 确认)",
