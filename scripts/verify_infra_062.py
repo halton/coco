@@ -810,24 +810,14 @@ def _enforce_closeout_verify_runs_min_count() -> None:
 # 092 自身锁定 grace_period 行为 (正例: grace 内放过; 反例: grace 外 hard FAIL).
 # 未来逐项 graduate: 把 feature 从 GRACE 列表移除并修齐 verify_runs[] shape.
 # ---------------------------------------------------------------------------
+# V6-backlog-062-v4 graduate (phase-46 #1.46): 17 项 grace 全部修齐 verify_runs[]
+# 形态 (name/status/tail_stdout) 后从 grace 列表移除. 保留 1 项 sentinel
+# (__GRADUATE_SENTINEL_NEVER_MATCHES__) 仅为满足 verify_infra_092 V4_1
+# (grace_const_defined_nonempty 锁 grace 机制可用), 不指向任何真实 feature_id —
+# 因此 hard check 实质生效, 任何新违规都将 FAIL. 若未来出现无法回填的历史
+# feature, 在此重新加回并在 backlog 立项 graduate 跟进项.
 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS = (
-    "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
-    "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
-    "infra-P278-followup-reviewer-summary-nonempty-hard-check",
-    "infra-P278-followup-verify-lib-helper-naming-convention-lock",
-    "infra-P286-followup-074-self-main-func-sha-bump",
-    "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
-    "infra-P286-followup-v4-2-stricter-equal-check",
-    "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
-    "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
-    "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
-    "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
-    "infra-P291-followup-extend-helper-to-other-v5",
-    "infra-P291-reviewer-gate-real-or-remove",
-    "infra-P294-closeout-stdout-sha-verification",
-    "infra-P299-engineer-report-vs-impl-trustworthy",
-    "infra-P299-followup-wire-into-closeout-gate",
-    "infra-P299-followup2-enable-byte-match-real-run",
+    "__GRADUATE_SENTINEL_NEVER_MATCHES__",
 )
 
 
