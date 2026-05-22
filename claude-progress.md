@@ -7042,3 +7042,23 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 - A commit 即将创建：chore(infra-V6-backlog): closeout passing + #3.43 入账
 - B commit 即将创建：chore(infra-V6-backlog): bump closeout_verify.main_head_sha for #3.43
 
+
+## Session N+1: phase-43 #4.43 infra-P278-followup-closeout-verify-runs-min-count-hard-check (in_progress, Engineer 阶段)
+- branch: feat/infra-P278-followup-closeout-verify-runs-min-count-hard-check (base=e0e8393)
+- 新 helper: `_verify_lib.assert_closeout_verify_runs_min_count(feature_list_path, min_count=3) -> dict`
+  - Default-OFF: 缺 verify_runs 字段 → soft_skip; 含字段且 len<min_count → hard FAIL
+  - 当前 feature_list.json: scanned=23 enforced=23 soft_skipped=0 violations=0 (所有 passing feature 都已 >=3 runs)
+- 062 加 `_enforce_closeout_verify_runs_min_count()` + V4_closeout_verify_runs_min_count, 挂在 main 链上 (line 783)
+- 新 verify_infra_086.py V0-V5 14 checks (V0×5 / V1 self main sha / V2 lib file sha / V3 helper func sha / V4_1..V4_5 / V5)
+  - V4_4 真做 mutation: 临时 NamedTemporaryFile mini feature_list 含 1 run → violation=1; 还原后 ok=True; 原文件不动
+- cascade bump:
+  - _verify_lib file sha 7265a08b→57385b07 (19 verify_infra_*.py: 063,065-068,070-073,075-082,084,085)
+  - verify_infra_062 file sha 5f8af764→d844c0ea (3 files: 081,082,083)
+  - dump_v4_sha_graph.py 新增 086 三条 entry (LIB FILE / HELPER FUNC / SELF MAIN)
+- verify 结果:
+  - 062 ALL PASS 22 (V4_closeout_verify_runs_min_count scanned=23 enforced=23 soft_skipped=0 violations=0 min_count=3)
+  - 086 13/14 PASS (V5 reviewer FAIL = 预期, reviewer 未填)
+  - 075-084 ALL PASS; 085 V5 reviewer pre-existing FAIL (LGTM-conditional, backlog); 079 V4_4 pre-existing FAIL (backlog)
+  - smoke ALL PASS
+- Engineer commit 即将创建：feat(infra-P278-followup): add V4_closeout_verify_runs_min_count hard check (Default-OFF)
+- 等待 Reviewer sub-agent fresh-context 评审

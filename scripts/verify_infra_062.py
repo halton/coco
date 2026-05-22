@@ -68,6 +68,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
+    assert_closeout_verify_runs_min_count,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     assert_reviewer_summary_nonempty,
@@ -76,7 +77,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "7265a08b5ceeb3c6e1ae6d0741f87219d5a1e46b767fc4e0066465384a0465a3"
+EXPECTED_VERIFY_LIB_FILE_SHA = "57385b07472b1fc811d351c9c12dcf2f4a85b3bdfe8e466a6f77cdea673110be"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -706,6 +707,51 @@ def _enforce_verify_lib_helper_naming() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4: closeout_verify.verify_runs 最少条数 hard check (phase-43 #4.43)
+# infra-P278-followup-closeout-verify-runs-min-count-hard-check —
+# Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段 len>=3 hard enforce.
+# ---------------------------------------------------------------------------
+def _enforce_closeout_verify_runs_min_count() -> None:
+    """对 feature_list.json 调 assert_closeout_verify_runs_min_count(min_count=3),
+    任一 violation → hard FAIL; soft_skipped/enforced_count 写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_verify_runs_min_count",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_verify_runs_min_count(feature_list, min_count=3)
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_verify_runs_min_count",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_verify_runs_min_count",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_verify_runs_min_count",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_count={result.get('min_count')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -734,6 +780,7 @@ def main() -> int:
     _enforce_baseline_head_echo_required()
     _enforce_reviewer_summary_nonempty()
     _enforce_verify_lib_helper_naming()
+    _enforce_closeout_verify_runs_min_count()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]

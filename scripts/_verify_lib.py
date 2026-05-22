@@ -53,6 +53,7 @@ __all__ = [
     "assert_verify_passed",
     "verify_summary_exit",
     "assert_verify_lib_public_helper_naming",
+    "assert_closeout_verify_runs_min_count",
 ]
 
 
@@ -2492,5 +2493,109 @@ def assert_verify_lib_public_helper_naming(
         out["error"] = f"{type(e).__name__}: {e}"
         out["ok"] = False
         return out
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-closeout-verify-runs-min-count-hard-check (phase-43 #4.43)
+# Closeout-verify-trustworthy 已要求 verify_runs 每项含 tail_stdout+status,
+# 但未约束最少条数. 加 Default-OFF hard check: 缺字段 soft_skip;
+# 含字段且 len(verify_runs) < min_count → hard FAIL.
+# ---------------------------------------------------------------------------
+def assert_closeout_verify_runs_min_count(
+    feature_list_path,
+    min_count: int = 3,
+) -> dict:
+    """扫 feature_list.json 所有 status=='passing' 且 evidence.closeout_verify
+    存在的 feature, 对其 closeout_verify.verify_runs (若存在) 要求
+    len(verify_runs) >= min_count.
+
+    参数:
+        feature_list_path: feature_list.json 的路径 (str | Path).
+        min_count: 最少 verify_runs 条数门槛, 默认 3.
+
+    返回 dict::
+
+        {
+          "ok": bool,                  # True 当无 violation
+          "violations": [              # 每条违规一项
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "runs_count": int,
+                  "min_count": int,
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],  # 缺 verify_runs 字段的 feature_id
+          "enforced_count": int,       # 真正参与 enforce 的 feature 数 (含字段)
+          "scanned_count": int,        # 扫到的 status=passing 含 closeout_verify
+          "min_count": int,
+          "error": str | None,
+        }
+
+    Default-OFF 行为:
+      - 老 feature (缺 verify_runs 字段 / 非 list) → soft_skipped 列表, 不算 violation
+      - 含 verify_runs 字段且为 list → hard enforce: len >= min_count
+
+    错误:
+      - feature_list 不存在 / parse 失败 → ok=False, error 字段载明
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_count": int(min_count),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        vr = cv.get("verify_runs")
+        if not isinstance(vr, list):
+            # 老 feature 缺字段 (或非 list) → soft_skipped
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+        if len(vr) < int(min_count):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"closeout_verify.verify_runs len={len(vr)} "
+                    f"< min_count={min_count}"
+                ),
+                "runs_count": len(vr),
+                "min_count": int(min_count),
+            })
     out["ok"] = len(out["violations"]) == 0
     return out

@@ -11243,7 +11243,7 @@
       "id": "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
       "priority": 4.43,
       "phase": 43,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "closeout_verify.verify_runs 最少条数 hard check (Default-OFF)",
       "rationale": "Closeout-verify-trustworthy 硬规则已要求 verify_runs 含 tail_stdout+status，但未约束最少条数。实际 closeout 中常仅 1-2 条 verify 跑导致信号薄弱；加最少 N 条 (N=2 起步) Default-OFF→hard 检，提高 closeout 证据丰度。",
