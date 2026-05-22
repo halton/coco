@@ -6498,3 +6498,20 @@ Engineer sub-agent (phase-40 #4.40):
   - `infra-P286-followup4-add-noqa-placeholder-self-exempt-comment` (Reviewer 非阻塞 hardening 建议)
   - `infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok` (075 V5 字段 ok= 与 076/077/078 helper_ok= 不一致小清理)
 - **feature_list.json**: status `not_started` → `passing`，evidence 完整含 closeout_verify.reviewer.baseline_head_echo=58ab509
+
+## Session: phase-40 #5.40 infra-P286-followup-v4-2-stricter-equal-check 收口
+
+- **feature**: `infra-P286-followup-v4-2-stricter-equal-check` (phase-40 #5.40)
+- **baseline main HEAD**: `addbec0` (chore(infra-P286-followup-074-self-main-func-sha-bump): closeout passing + 2 backlog 入账)
+- **feat branch**: `feat/infra-P286-followup-v4-2-stricter-equal-check`
+- **feat HEAD (round-2)**: `a4f3e00` (fix: round-2 — 079 V5 真门 + V4_5 真跑 mutant 074 subprocess)
+- **Reviewer (sub-agent fresh-context, round-2)**: LGTM
+  - round-1 REJECT 2 个 P0: 079 V5 硬绿 placeholder=True + V4_5 重言式 mutant 074
+  - round-2 修复: V5 改 `ok is True` 真门 + V4_5 真跑 mutant 074 subprocess (rc=2, stdout 含 `[verify_infra_074][FAIL] V4_2_const_value_eq_truth value=81 truth=9999`)
+  - feat_head_echo=`a4f3e00`, baseline_head_echo=`addbec0`
+- **verify_runs (all PASS on feat HEAD a4f3e00)**: smoke + verify_infra_{079, 078, 077, 076, 075, 074, 073, 072, 071, 070, 068, 067, 066, 065, 063, 062, 060, 059, 034}
+- **EXPECTED_TOTAL_NODES_TRUTH=81**, **EXPECTED_VERIFY_074_FILE_SHA**=`eef1c642...420af392`, **EXPECTED_SELF_MAIN_FUNC_SHA(079)**=`18760bb2...b9799526`
+- **backlog 入账 1**:
+  - `infra-P286-followup-tolerance-headroom-bump` (round-2 实测 total=86 / expect=81 / tol=±5 贴上限, 需 bump expect 给 headroom)
+- **feature_list.json**: status `not_started` → `passing`, evidence 完整 含 closeout_verify.reviewer.{reviewer_kind=sub_agent_fresh_context, verdict=LGTM, round=2, feat_head_echo=a4f3e00, baseline_head_echo=addbec0}
+- **baseline_head_echo dogfood**: 第 3 次落地 (infra-P286-followup3-promote 触发条件 N>=5 进度: 3/5)

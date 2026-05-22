@@ -14,22 +14,35 @@ ratio 检查无法报警。本 feature 给 059 引入:
 
 verify_infra_074 锁定 verify_infra_059 上述行为存在 (ast 扫描常量 + 真跑 059)。
 
+infra-P286-followup-v4-2-stricter-equal-check (phase-40 #5.40):
+原 V4_2 仅断言常量值 ``> 0`` (弱断言: 任何非零正整数都过). 收紧为:
+
+- V4_2: 059 中 EXPECTED_CURRENT_TOTAL_NODES 值精确等于 074 自持的真值常量
+  ``EXPECTED_TOTAL_NODES_TRUTH`` (P286 实测 81).
+- V4_2b: subprocess 真跑 059, 解析其 stdout 中
+  ``V4_real_total_nodes_within_tolerance total_nodes=<N> expect=<E>`` 行,
+  断言 ``expect == EXPECTED_TOTAL_NODES_TRUTH`` (与 dump 实跑 cross-check).
+
+任意一处 mutate (改 059 常量, 或改 074 真值) 都被精确等比立即抓住。
+
 INFRA_074_SHA_LOCKS
 -------------------
 - ``scripts/verify_infra_059.py`` file sha: EXPECTED_VERIFY_059_FILE_SHA
 - ``scripts/verify_infra_059.py:main`` func sha: EXPECTED_059_MAIN_FUNC_SHA
 - 常量名锁: EXPECTED_TOTAL_NODES_CONST_NAME / EXPECTED_TOLERANCE_CONST_NAME
-- 本脚本 main() 自锁 func sha: EXPECTED_SELF_MAIN_FUNC_SHA (placeholder __BUMP_ME__)
+- 真值锁: EXPECTED_TOTAL_NODES_TRUTH (int 真值)
+- 本脚本 main() 自锁 func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 
-校验层级 (V0-V5, 共 15 checks):
+校验层级 (V0-V5, 共 16 checks):
 
 - V0 scaffolding: 路径存在 + 常量 hex64 + docstring sentinel (7 checks)
-- V1 self main() func sha 自锁 (placeholder OK) (1 check)
+- V1 self main() func sha 自锁 (1 check)
 - V2 verify_infra_059.py file sha (1 check)
 - V3 verify_infra_059.py:main func sha (1 check)
-- V4 业务实测 (4 checks):
+- V4 业务实测 (5 checks):
   - V4_1 ast 扫: verify_infra_059.py 顶层含 EXPECTED_CURRENT_TOTAL_NODES 常量
-  - V4_2 该常量值为 int 且 > 0
+  - V4_2 该常量值精确 == EXPECTED_TOTAL_NODES_TRUTH (本 feature 收紧)
+  - V4_2b subprocess 真跑 059 + parse stdout → expect == EXPECTED_TOTAL_NODES_TRUTH
   - V4_3 含 TOTAL_NODES_TOLERANCE 常量 (int, ≥ 0)
   - V4_4 subprocess 真跑 059 → rc=0 (ALL PASS, 含 V4_real_total_nodes_within_tolerance)
 - V5 reviewer_lgtm_gate: 用 ``assert_reviewer_lgtm`` 真校 P291 (已 passing) (1 check)
@@ -71,6 +84,8 @@ EXPECTED_SELF_MAIN_FUNC_SHA = "80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c
 
 EXPECTED_TOTAL_NODES_CONST_NAME = "EXPECTED_CURRENT_TOTAL_NODES"
 EXPECTED_TOLERANCE_CONST_NAME = "TOTAL_NODES_TOLERANCE"
+# P286 实测真值, 任一侧 mutate 即 FAIL (V4_2 / V4_2b 双链).
+EXPECTED_TOTAL_NODES_TRUTH: int = 81
 
 DOCSTRING_SENTINEL = "INFRA_074_SHA_LOCKS"
 
@@ -206,11 +221,11 @@ def v4_behavior() -> None:
         val_total is not None,
         f"value={val_total}",
     )
-    # V4_2 值为 int 且 > 0
+    # V4_2 (P286-followup): 值精确 == EXPECTED_TOTAL_NODES_TRUTH
     _emit(
-        "V4_2_const_value_positive_int",
-        isinstance(val_total, int) and val_total > 0,
-        f"value={val_total}",
+        "V4_2_const_value_eq_truth",
+        isinstance(val_total, int) and val_total == EXPECTED_TOTAL_NODES_TRUTH,
+        f"value={val_total} truth={EXPECTED_TOTAL_NODES_TRUTH}",
     )
     # V4_3 含 TOTAL_NODES_TOLERANCE 常量 (int ≥ 0)
     val_tol = _get_int_const(src, EXPECTED_TOLERANCE_CONST_NAME)
@@ -220,7 +235,7 @@ def v4_behavior() -> None:
         f"value={val_tol}",
     )
 
-    # V4_4 subprocess 真跑 059 → rc=0
+    # V4_4 subprocess 真跑 059 → rc=0 + V4_2b 解析 stdout cross-check
     try:
         proc = subprocess.run(
             [sys.executable, str(VERIFY_059)],
@@ -229,14 +244,29 @@ def v4_behavior() -> None:
             timeout=120,
         )
         rc = proc.returncode
-        tail = "\n".join(proc.stdout.strip().splitlines()[-3:])
+        stdout = proc.stdout
+        tail = "\n".join(stdout.strip().splitlines()[-3:])
     except Exception as e:  # noqa: BLE001
         rc = -1
+        stdout = ""
         tail = f"exception: {e!r}"
     _emit(
         "V4_4_real_run_059_rc0",
         rc == 0,
         f"rc={rc} tail={tail!r}",
+    )
+    # V4_2b: parse "V4_real_total_nodes_within_tolerance ... expect=<N>" 行,
+    # 断言 N == EXPECTED_TOTAL_NODES_TRUTH (与 dump 实跑 cross-check)
+    expect_match = re.search(
+        r"V4_real_total_nodes_within_tolerance.*?expect=(?P<n>\d+)",
+        stdout,
+    )
+    parsed_expect = int(expect_match.group("n")) if expect_match else None
+    _emit(
+        "V4_2b_real_dump_expect_eq_truth",
+        parsed_expect == EXPECTED_TOTAL_NODES_TRUTH,
+        f"parsed_expect={parsed_expect} truth={EXPECTED_TOTAL_NODES_TRUTH} "
+        f"matched={bool(expect_match)}",
     )
 
 
