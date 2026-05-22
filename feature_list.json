@@ -11325,7 +11325,7 @@
       "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "d57bf68",
+          "main_head_sha": "5b7bd44",
           "baseline_head_echo": "b5f2aa8",
           "merge_commit_sha": "d57bf68948d1e3d0a4ba7a7e709faf35f040716a",
           "smoke_tail_stdout": "==> Smoke: face-tracker (primary stability 5 frames) ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav) ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture) ok: wake hits=['可可']\n==> Smoke: power-state (companion-003) ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging) ok: summary keys 完整, jsonl line keys⊇['component','event','level','ts']\n==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
