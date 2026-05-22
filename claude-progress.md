@@ -6441,3 +6441,18 @@ infra-P299-engineer-report-vs-impl-trustworthy 入 passing。
 - push: `git push origin feat/infra-P286-followup-round1-reviewer-baseline-head-mismatch` 403
   (permission denied, halton/coco), 按规则忽略继续.
 
+
+## Session 2026-05-22 (infra-P286-followup-round1-reviewer-baseline-head-mismatch closeout)
+
+Closeout sub-agent (phase-40 #3.40):
+
+- pre-merge feat HEAD: `bcf7034`; baseline: `9ced8e5`
+- 三遍独立 feat-branch 实跑 (17 verify: 077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034) + smoke → 全 rc=0
+- merge --no-ff feat/infra-P286-followup-round1-reviewer-baseline-head-mismatch → main → post-merge HEAD `dd01688`
+- post-merge 再跑同一套 17 verify + smoke → 全 rc=0
+- baseline 9ced8e5 上 060/075/076 ALL PASS, **无 pre-existing 污染**
+- helper assert_reviewer_baseline_head_echo 八路 mutant 全行为正确; verify_077 V4_3 mutant 真触发 FAIL rc=2 恢复 PASS
+- Reviewer sub-agent fresh-context **LGTM** (baseline_head_echo=9ced8e5)
+- **首次 dogfood**: 本 feature 的 closeout evidence 写入 `closeout_verify.reviewer.baseline_head_echo = "9ced8e5"`, 是 P286 修复字段在真实 closeout 中的第一次落地; helper 在 V5 reviewer_lgtm_gate 跑时 helper_ok=True
+- feature_list.json: `infra-P286-followup-round1-reviewer-baseline-head-mismatch` `not_started` → `passing` + 完整 closeout_verify evidence
+- backlog 入账 1 条 (priority=999): `infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required` — 等 5+ feature dogfood 后 promote baseline_head_echo 为 P278 hard required
