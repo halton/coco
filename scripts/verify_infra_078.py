@@ -55,9 +55,17 @@ LIB = SCRIPTS / "_verify_lib.py"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 V5_GATE_FEATURE_ID = "infra-P286-followup-074-self-main-func-sha-bump"
 
-# 占位 sentinel —— 本仓库历史 placeholder 字符串。注意：这里**故意**用 split
-# 拼接, 让 V4_1 扫描自身常量声明时 value 不是字面占位 (避免本文件被误判).
-PLACEHOLDER_SENTINEL = "__BUMP" + "_ME__"
+# 占位 sentinel —— 本仓库历史 placeholder 字符串。
+#
+# # noqa: PLACEHOLDER_SELF_EXEMPT
+# ----------------------------------
+# 这里**故意**用 `"__BUMP" + "_ME__"` split 拼接, 让 V4_1 扫描自身常量声明时
+# value 是 BinOp (不是 ast.Constant(str)), 从而 V4_1 不会把本文件自身误判为
+# placeholder 回归; 同时 V4_4 git grep 占位字面 `__BUMP_ME__` 也不会在本源码
+# 行命中. 后续维护者: **严禁**把这一行改写成字面 `"__BUMP_ME__"`, 否则
+# verify_infra_078 自身会立刻把自己扫成 placeholder 命中 (V4_1 FAIL) 并/或
+# V4_4 git grep 命中赋值. 这是 sentinel self-exempt 的硬约束。
+PLACEHOLDER_SENTINEL = "__BUMP" + "_ME__"  # noqa: PLACEHOLDER_SELF_EXEMPT — 严禁字面化为 "__BUMP_ME__"
 EXPECTED_CONST_RE = re.compile(r"^EXPECTED_.*_SHA$")
 
 sys.path.insert(0, str(SCRIPTS))
@@ -98,6 +106,19 @@ def scan_file_for_placeholder_assignments(path: Path) -> List[Tuple[str, int]]:
 
     仅看顶层 Assign / AnnAssign 节点 (排除函数 / 类内部), 仅看 value 是
     ``ast.Constant(str)`` 的情况; if/比较 / docstring 中出现的字符串不计入。
+
+    **Sentinel self-exempt 硬规则 (P286 followup4)**:
+    本仓库内任何使用 PLACEHOLDER_SENTINEL 的源文件 (尤其是本 verify 自身),
+    **必须**保持 sentinel 在源码中以拼接形式存在 (例如 ``"__BUMP" + "_ME__"``),
+    **严禁**字面化为单个字符串常量 ``"__BUMP_ME__"``. 字面化将导致:
+
+    1. 本扫描函数把该文件自身的 sentinel 常量识别为 placeholder 命中
+       (V4_1 FAIL, offending 包含本文件);
+    2. V4_4 git grep 占位字面 `__BUMP_ME__` 会在源码里命中赋值正则,
+       立刻 FAIL.
+
+    含 sentinel 拼接的位置请加 ``# noqa: PLACEHOLDER_SELF_EXEMPT`` 行内注释
+    显式声明 self-exempt 意图, 防止后续维护误改。
     """
     out: List[Tuple[str, int]] = []
     try:
@@ -285,6 +306,10 @@ def v4_behavior() -> None:
         fake_repo_scripts = tmpdir / "scripts"
         fake_repo_scripts.mkdir(parents=True)
         fake = fake_repo_scripts / "verify_infra_999.py"
+        # noqa: PLACEHOLDER_SELF_EXEMPT — fake 文件内容**故意**用运行时拼接构造
+        # placeholder 赋值字面, 源码不出现 __BUMP_ME__ 字面 (避开 V4_4 git grep
+        # 与本扫描函数的 self 命中); fake 文件本身写到 tmpdir 且不在 scripts/,
+        # 不会被 V4_1 真正扫描序列纳入, 安全。
         fake.write_text(
             "EXPECTED_FOO_SHA = \"" + PLACEHOLDER_SENTINEL + "\"\n"
             "EXPECTED_BAR_SHA: str = \"" + PLACEHOLDER_SENTINEL + "\"\n",

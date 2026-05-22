@@ -10195,7 +10195,7 @@
       "id": "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
       "priority": 4.41,
       "phase": 41,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "078 加 # noqa: PLACEHOLDER_SELF_EXEMPT 注释 + V4_1 docstring 显式声明 sentinel 不能被字面化",
       "rationale": "Reviewer 建议非阻塞 hardening：当前 078 用 PLACEHOLDER_SENTINEL 拼接绕过 self-hit，可读性弱；加 noqa 注释 + V4_1 docstring 显式说明 sentinel 不能被字面拼回，降低后续维护误改风险。",
