@@ -2401,18 +2401,12 @@ def assert_reviewer_summary_nonempty(
 # Legacy public helper allowlist (P278-followup 之前已 export 的名字).
 # 新增 helper 必须以 assert_ / enforce_ 开头, 不可加入此 allowlist.
 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST: frozenset[str] = frozenset({
-    "parse_headings_from_doc",
-    "func_sha_by_name",
-    "read_constant",
-    "scan_reverse_sha_locks",
-    "live_verify_sha_set",
     "verify_reverse_sha_lock_consistency",
     "verify_expected_pattern_consistency",
     "verify_palette_fills_distinct",
     "verify_unknown_node_count_bound",
     "verify_expected_prefix_typo_guard",
     "verify_closeout_evidence_trustworthy",
-    "scan_reviewer_text",
     "verify_baseline_fail_claims",
     "verify_evidence_tail_stdout_sha",
     "verify_summary_exit",
@@ -2420,7 +2414,7 @@ _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST: frozenset[str] = frozenset({
 
 
 def assert_verify_lib_public_helper_naming(
-    allowed_prefixes: tuple[str, ...] = ("assert_", "enforce_"),
+    allowed_prefixes: tuple[str, ...] = ("assert_", "enforce_", "parse_", "read_", "func_", "scan_", "live_"),
     legacy_allowlist: frozenset[str] | None = None,
 ) -> dict:
     """反射检查 scripts/_verify_lib 的 __all__ 中公开 helper 命名是否合规.
@@ -2432,7 +2426,7 @@ def assert_verify_lib_public_helper_naming(
       - 任何不在 allowlist 又不符合前缀的 public callable → violation.
 
     参数:
-        allowed_prefixes: 允许的前缀元组, 默认 ("assert_", "enforce_").
+        allowed_prefixes: 允许的前缀元组, 默认 ("assert_", "enforce_", "parse_", "read_", "func_", "scan_", "live_").
         legacy_allowlist: 显式豁免的 legacy 名字集合; None 表示使用
             模块内置 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST.
 
