@@ -9932,25 +9932,101 @@
           "baseline_head_sha": "addbec0",
           "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n",
           "verify_runs": [
-            {"script": "scripts/verify_infra_079.py", "status": "PASS", "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_078.py", "status": "PASS", "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"},
-            {"script": "scripts/verify_infra_077.py", "status": "PASS", "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_076.py", "status": "PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_075.py", "status": "PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
-            {"script": "scripts/verify_infra_074.py", "status": "PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"},
-            {"script": "scripts/verify_infra_073.py", "status": "PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_072.py", "status": "PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_071.py", "status": "PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_070.py", "status": "PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
-            {"script": "scripts/verify_infra_068.py", "status": "PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
-            {"script": "scripts/verify_infra_067.py", "status": "PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
-            {"script": "scripts/verify_infra_066.py", "status": "PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_065.py", "status": "PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
-            {"script": "scripts/verify_infra_063.py", "status": "PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
-            {"script": "scripts/verify_infra_062.py", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
-            {"script": "scripts/verify_infra_060.py", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
-            {"script": "scripts/verify_infra_059.py", "status": "PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
-            {"script": "scripts/verify_infra_034.py", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            {
+              "script": "scripts/verify_infra_079.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_078.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_077.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_076.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_075.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_074.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_073.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_072.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_071.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_070.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_068.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_067.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_066.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_065.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_063.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_060.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_059.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_034.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+            }
           ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
@@ -10003,13 +10079,143 @@
       "id": "infra-P286-followup-tolerance-headroom-bump",
       "priority": 1.41,
       "phase": 41,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_059 EXPECTED_CURRENT_TOTAL_NODES / TOLERANCE headroom 不足，下一新 verify 立爆",
       "rationale": "P286-followup-v4-2-stricter-equal-check round-2 实测 total_nodes=86 / expect=81 / tolerance=±5 (差距=5, 贴上限)。再加一个新 verify_infra_*.py 引入新常量节点即超 tolerance，V4_real_total_nodes_within_tolerance 立爆。需重算 expect (bump 到当前真值) 或上调 tolerance 给 headroom (建议 expect=86, tolerance=±5, 留 ±5 buffer)。074 EXPECTED_TOTAL_NODES_TRUTH 与 079 EXPECTED_TOTAL_NODES_TRUTH_VALUE 须同步 cascade。",
       "description": "bump scripts/verify_infra_059.py:EXPECTED_CURRENT_TOTAL_NODES 81→新真值 (或调 tolerance); cascade scripts/verify_infra_074.py:EXPECTED_TOTAL_NODES_TRUTH 与 scripts/verify_infra_079.py:EXPECTED_TOTAL_NODES_TRUTH_VALUE; 跑 059/074/079 + smoke 全 PASS.",
       "verification_plan": "运行 verify_infra_059 / 074 / 079 + smoke + dump_v4_sha_graph; 确认 V4_real_total_nodes_within_tolerance 仍 PASS 且新 truth 与 dump 实跑数一致.",
-      "notes_for_engineer": "来源 P286-followup-v4-2-stricter-equal-check round-2 Reviewer P2-1; cascade 三处 (059 / 074 / 079) 真值必须同步，否则 074 V4_2 (== TRUTH) / V4_2b (== TRUTH) 任一爆即 FAIL。"
+      "notes_for_engineer": "来源 P286-followup-v4-2-stricter-equal-check round-2 Reviewer P2-1; cascade 三处 (059 / 074 / 079) 真值必须同步，否则 074 V4_2 (== TRUTH) / V4_2b (== TRUTH) 任一爆即 FAIL。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "feat_head_sha": "a1f3507",
+          "baseline_head_sha": "83d36a7",
+          "merge_commit_sha": "e4cc65e",
+          "verify_runs": [
+            {
+              "name": "verify_infra_079",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_078",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "name": "verify_infra_077",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_076",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_075",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "name": "verify_infra_074",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+            },
+            {
+              "name": "verify_infra_073",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_072",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_071",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_070",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "name": "verify_infra_068",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "name": "verify_infra_067",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "name": "verify_infra_066",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_065",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "name": "verify_infra_063",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "name": "verify_infra_060",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_059",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "name": "verify_infra_034",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "round": 1,
+            "feat_head_echo": "a1f3507",
+            "baseline_head_echo": "83d36a7",
+            "summary": "phase-41 #1.41 双 lever (truth 81->86 + tolerance +-5->+-10) + V4_5 mutant regex 通用 \\d+ 不硬编码 + 142 reverse locks 无 orphan + 5 关键 verify + smoke 全 PASS"
+          }
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "round": 1,
+          "feat_head_echo": "a1f3507",
+          "baseline_head_echo": "83d36a7",
+          "summary": "phase-41 #1.41 双 lever (truth 81->86 + tolerance +-5->+-10) + V4_5 mutant regex 通用 \\d+ 不硬编码 + 142 reverse locks 无 orphan + 5 关键 verify + smoke 全 PASS"
+        },
+        "EXPECTED_TOTAL_NODES": 86,
+        "TOTAL_NODES_TOLERANCE": 10,
+        "EXPECTED_VERIFY_059_FILE_SHA": "276badba1a1dceb45ce3bc8ffce7809f5f77fb37eae3140a904e329fbcc95025",
+        "EXPECTED_VERIFY_074_FILE_SHA": "3cbc76e322152143aa3653ecaa055e5c89ddb95eb04d3a544d1ead8504270b1a"
+      }
     }
   ],
   "_meta": {

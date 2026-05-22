@@ -6529,3 +6529,20 @@ Engineer sub-agent (phase-40 #4.40):
 - feature_list.json 改动: 5 条 backlog → not_started, phase null → 41, priority 999 → 1.41..5.41
 - baseline_head_echo dogfood 进度: 3/5 (P286-followup3 promote 触发条件), phase-41 5 个走完后预计 → 8/5, 达成 promote 条件。
 - 下一步: 派 phase-41 #1.41 Engineer sub-agent (infra-P286-followup-tolerance-headroom-bump)
+
+## Session 2026-05-22: phase-41 #1.41 closeout (infra-P286-followup-tolerance-headroom-bump)
+
+- baseline main HEAD: `83d36a7`
+- feat HEAD: `a1f3507`
+- merge commit: `e4cc65e`
+- 双 lever 收口: EXPECTED_TOTAL_NODES 81→86 + TOLERANCE ±5→±10 (留 headroom 防下一新 verify 立爆)
+- cascade: scripts/verify_infra_{059, 074, 079}.py 同步真值; V4_5 mutant regex 通用 \d+ 不硬编码
+- 142 reverse locks 无 orphan; verify_runs (all PASS): smoke + verify_infra_{079, 078, 077, 076, 075, 074, 073, 072, 071, 070, 068, 067, 066, 065, 063, 062, 060, 059, 034}
+- new file shas:
+  - EXPECTED_VERIFY_059_FILE_SHA=`276badba1a1dceb45ce3bc8ffce7809f5f77fb37eae3140a904e329fbcc95025`
+  - EXPECTED_VERIFY_074_FILE_SHA=`3cbc76e322152143aa3653ecaa055e5c89ddb95eb04d3a544d1ead8504270b1a`
+- Reviewer: sub_agent_fresh_context LGTM round-1 (无 round-2), feat_head_echo=a1f3507, baseline_head_echo=83d36a7
+- feature_list.json: status `not_started` → `passing`, evidence 完整 (closeout_verify.{main_head_sha, feat_head_sha, baseline_head_sha, verify_runs, reviewer})
+- baseline_head_echo dogfood: 第 4 次落地 (P286-followup3 promote 触发进度 4/5)
+- 无 backlog 入账 (Reviewer 仅 P2 docstring 建议, 不强制本轮)
+- 下一步: phase-41 #2.41 `infra-P291-followup2-helper-return-value-must-participate-in-emit`
