@@ -8382,12 +8382,44 @@
     {
       "id": "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
       "priority": 3.39,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 39,
       "area": "infra",
       "title": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证",
       "rationale": "P294-R5 Reviewer round-1 #3 minor: helper 已派生 total_checks (P294-R5), 但 dict 返回仅含 total_checks + failed_reasons; 下游验证若想严格 assert 守恒律 (passed + failed == total), 需自行算 passed=total-len(failed_reasons). 建议 helper 同步暴露 passed_checks 字段, 让 verify_infra_062/066 V4 可直接 assert passed+failed==total 三量一致, 把守恒律从'推导'升级到'锁'. 纯增强, 不动现有 caller.",
-      "description": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证. closeout-verify-trustworthy helper dict 增 passed_checks 字段, 让下游 V4 可直接 assert passed_checks + len(failed_reasons) == total_checks 三量一致. Verify 范围: 改 helper (在 scripts/_verify_lib.py 或 closeout helper 模块); cascade 更新 verify_infra_062/066 V4 守恒律 assert; 新增 canary 用 passed+failed!=total 触发 rc!=0. Reviewer acceptance: 守恒律从'推导' (total - failed) 升级到独立字段交叉锁, 任一字段错位都被 V4 detect."
+      "description": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证. closeout-verify-trustworthy helper dict 增 passed_checks 字段, 让下游 V4 可直接 assert passed_checks + len(failed_reasons) == total_checks 三量一致. Verify 范围: 改 helper (在 scripts/_verify_lib.py 或 closeout helper 模块); cascade 更新 verify_infra_062/066 V4 守恒律 assert; 新增 canary 用 passed+failed!=total 触发 rc!=0. Reviewer acceptance: 守恒律从'推导' (total - failed) 升级到独立字段交叉锁, 任一字段错位都被 V4 detect.",
+      "evidence": {
+        "merged_commit": "55f4866",
+        "merge_commit": "2693df5",
+        "main_head_sha": "2693df50f217b443c247ffa00fee5aa26c97b897",
+        "main_head_sha_short": "2693df5",
+        "pre_merge_baseline_sha": "126457e",
+        "closeout_verify": {
+          "main_head_sha": "2693df5",
+          "verify_runs": [
+            {"name": "verify_infra_034", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=118; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0", "tail_stdout_sha256": "3900c9d90ed93035"},
+            {"name": "verify_infra_060", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_060][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "88e8587616be30a7"},
+            {"name": "verify_infra_062", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_062][SUMMARY] ALL PASS (17 checks)", "tail_stdout_sha256": "7ff30066304d2fd0"},
+            {"name": "verify_infra_063", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_063][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_063][SUMMARY] ALL PASS (20 checks)", "tail_stdout_sha256": "53fe7013b16e449f"},
+            {"name": "verify_infra_065", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_065][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_065][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "de9b90644073b29f"},
+            {"name": "verify_infra_066", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_066][PASS] V5_reviewer_lgtm_gate P294-R5 closeout 须 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_066][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "8457cda4278715b7"},
+            {"name": "verify_infra_067", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_067][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_067][SUMMARY] ALL PASS (18 checks)", "tail_stdout_sha256": "dfe99891cf121071"},
+            {"name": "verify_infra_068", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_068][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_068][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "0819c484987fc2e2"},
+            {"name": "verify_infra_069", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_069][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_069][SUMMARY] ALL PASS (10 checks)", "tail_stdout_sha256": "947afcd8eb559ab7"},
+            {"name": "verify_infra_070", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_070][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_070][SUMMARY] ALL PASS (15 checks)", "tail_stdout_sha256": "1584cd98a9fb6ced"},
+            {"name": "verify_infra_071", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_071][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_071][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "706f0e259ea77726"},
+            {"name": "verify_infra_072", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_072][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_072][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "1988fc9e30a192f8"}
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "smoke_tail_stdout_sha256": "1e0aa7b1c3d11b16",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context: passed_checks 字段 helper 增强 + V4_5 守恒律 mutant 真+反两面 PASS (passed+failed==total 锁), V5 真 assert_reviewer_lgtm P291, cascade 060/062/063/065/066/067/068/070/071 + EXPECTED_CLOSEOUT_*_FUNC_SHA 全部 PASS; feat 12 + merged main 11 verify ALL PASS; smoke PASS. LGTM."
+          },
+          "mutant_test_passed": true
+        }
+      }
     },
     {
       "id": "infra-P299-baseline-runs-use-head-env",
@@ -8397,6 +8429,15 @@
       "area": "infra",
       "title": "closeout baseline 用 head env 实跑 baseline scripts",
       "rationale": "P297 Reviewer info finding: closeout baseline clone 缺 .venv 应固化用 head env 实跑 baseline scripts (避免 /tmp clone 缺 .venv 误判 FAIL)."
+    },
+    {
+      "id": "infra-P299-followup-brief-baseline-sha-accuracy",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "closeout brief baseline sha 与 git log 真实对齐",
+      "rationale": "P299 Reviewer P2 finding: closeout brief 中 'Main baseline pre-merge' 字段曾误写 8965db6 (实际 git log main -1 是 126457e). 建议主会话生成 brief 时机械化用 `git log main -1 --format=%h` 取真实当前 HEAD, 避免人工抄写不一致 (虽不影响 sub-agent 实跑 verify, 但留 audit trail 噪音)."
     },
     {
       "id": "infra-P294-followup-070-self-func-sha-bump",

@@ -6235,3 +6235,18 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
   - infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup (P2) — V0/V1/V3 self/helper sha pre-existing baseline 统一收口
   - infra-P299-engineer-report-vs-impl-trustworthy (P0-P1) — Engineer/Reviewer 实跑报告 vs closeout 实测交叉锁, 防 P291 类型造假
 - 持续开发模式: 继续 phase-39 #3.39 (按 priority 最低数字 not_started 选)
+
+## Session 2026-05-22 — phase-39 #3.39 infra-P299-closeout-verify-trustworthy-helper-passed-checks-field closeout
+
+- Engineer commit: 55f4866 — helper dict 加 `passed_checks` 字段 (passed + failed == total 守恒律独立锁); verify_infra_072 14 checks (V4_5 mutant 真+反两面, V5 真 assert_reviewer_lgtm P291); cascade bump dump + 060/062/063/065/066/067/068/070/071 EXPECTED_CLOSEOUT_*_FUNC_SHA
+- Reviewer (sub-agent fresh-context) LGTM — mutant 真+反两面 PASS; feat 12 + main 11 verify ALL PASS + smoke PASS; 0 V4_5 结构性问题
+- Merge commit: 2693df5 (main_head_sha=2693df50f217b443c247ffa00fee5aa26c97b897); pre-merge baseline=126457e (注: brief 中误写 8965db6, 已入 backlog)
+- closeout_verify on merged main 2693df5 (P278 5 信号完整):
+  - 12/12 verify ALL PASS rc=0 (034/060/062/063/065/066/067/068/069/070/071/072), 每条带 tail_stdout + tail_stdout_sha256
+  - `./init.sh` smoke PASS, smoke_tail_stdout_sha256=1e0aa7b1c3d11b16
+  - reviewer_kind=sub_agent_fresh_context, verdict=LGTM
+  - mutant_test_passed=true (Reviewer 跑过 V4_5 真+反两面)
+- feature_list.json: infra-P299-closeout-verify-trustworthy-helper-passed-checks-field in_progress → passing (含 closeout_verify 完整 evidence block)
+- backlog 入账 (1 项):
+  - infra-P299-followup-brief-baseline-sha-accuracy (P2) — closeout brief baseline sha 应机械化用 `git log main -1 --format=%h` 取真实 HEAD, 避免人工抄写 (本次 8965db6 vs 实际 126457e)
+- 持续开发模式: 继续 phase-39 下一 not_started (按 priority 最低数字选)
