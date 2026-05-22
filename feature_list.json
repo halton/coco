@@ -11617,7 +11617,7 @@
           "lgtm": true
         },
         "closeout_verify": {
-          "main_head_sha": "188c517",
+          "main_head_sha": "27a14f5",
           "baseline_head_echo": "dc3ec06",
           "merge_commit_sha": "188c517",
           "verify_runs": [
