@@ -11934,7 +11934,7 @@
           "new_self_main_func_sha": "72d4e15f0582a8e21d80463ee5ec8c0d1e64b10135567b015fba55ddb5c58882"
         },
         "closeout_verify": {
-          "main_head_sha": "e3e64b0",
+          "main_head_sha": "d3fa3f7",
           "baseline_head_echo": "a4177b2",
           "merge_commit_sha": "e3e64b03de3b8f9743c23a9bc55bad6db23b217d",
           "pre_existing_baseline_sha": null,
