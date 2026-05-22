@@ -7754,7 +7754,7 @@
     {
       "id": "infra-P294-closeout-stdout-sha-verification",
       "priority": 1.39,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 39,
       "area": "infra",
       "title": "closeout evidence 的 tail_stdout 加 sha256 防伪机制",

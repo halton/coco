@@ -44,6 +44,7 @@ __all__ = [
     "verify_closeout_evidence_trustworthy",
     "scan_reviewer_text",
     "verify_baseline_fail_claims",
+    "verify_evidence_tail_stdout_sha",
     "assert_verify_passed",
     "verify_summary_exit",
 ]
@@ -1299,4 +1300,238 @@ def scan_reviewer_text(reviewer_text: str) -> dict:
         "signal_count": signal_count,
         "min_signals_met": min_signals_met,
         "flags": flags,
+    }
+
+
+# ---------------------------------------------------------------------------
+# infra-P294-closeout-stdout-sha-verification (phase-39 #1.39): closeout
+# evidence 的 tail_stdout 加 sha256 防伪机制。
+#
+# 背景: P278 round-1 dogfood 设计踩坑 — 把 tail_stdout 文本字段塞回 evidence 仅
+# 验非空即判 trustworthy, 等于让 Engineer 写任意 "ALL PASS" 文本就能蒙混 closeout
+# trust gate (单点谎言换地方放)。Round-2 设计修: helper 改回只验 schema。本 helper
+# 是真正的解药: evidence 加 ``tail_stdout_sha256`` 字段, 由本 helper 在 main HEAD
+# (用 git worktree 隔离) 现场 re-run 对应 verify 脚本, 取 stdout 同字符长度的 tail,
+# 计算 sha256 比对 evidence 中记录值, 不一致即返回 ok=False + offending list。
+#
+# Default-OFF: 本 helper 不在任何已有 verify 流程自动调用; 由 closeout sub-agent
+# 或专用 verify (verify_infra_070) 显式触发。
+# ---------------------------------------------------------------------------
+def verify_evidence_tail_stdout_sha(
+    evidence: dict,
+    repo_root: "Path | str",
+    main_head_sha: str,
+    scripts_dir_name: str = "scripts",
+    timeout_per_script: int = 60,
+) -> dict:
+    """对 evidence.verify_runs 在 main HEAD 实跑并 sha256 比对 tail_stdout.
+
+    算法 (sha256 anti-forgery):
+
+    1. 校验 ``main_head_sha`` 可被 ``git rev-parse`` 解析为有效 commit。
+    2. 用 ``git worktree add --detach`` 把 main_head_sha 检出到临时目录, 隔离运行。
+    3. 对 ``evidence['verify_runs']`` 每一项 (含 ``script``, ``tail_stdout``,
+       ``tail_stdout_sha256``):
+         - 在 worktree 内 ``python <script>`` 运行 (cwd = worktree root);
+         - 取 captured stdout 的 tail (与 ``len(evidence_tail_stdout)`` 同长字符数,
+           从末尾起取);
+         - 计算 sha256(tail_bytes) (utf-8 编码), 与 ``tail_stdout_sha256`` 比对;
+         - 不一致 → offending list 加一条 (含 script / expected / actual);
+         - 缺失字段 (tail_stdout / tail_stdout_sha256) → reasons 加一条, ok=False。
+    4. worktree 在 finally 中 ``git worktree remove --force`` 清理。
+
+    输入:
+      evidence: dict, 至少含 ``verify_runs: list[dict]`` 子结构, 每项需:
+        {
+          "script": "scripts/verify_infra_NNN.py",  (相对 repo_root)
+          "tail_stdout": "<非空 str>",
+          "tail_stdout_sha256": "<64-hex sha256 of utf-8 tail bytes>",
+        }
+      repo_root: 仓库根目录 (含 .git)
+      main_head_sha: 期望 re-run 的 commit ref (sha / branch / tag)
+      scripts_dir_name: scripts 目录名 (默认 "scripts")
+      timeout_per_script: 单脚本运行超时秒数 (默认 60s)
+
+    返回 dict::
+
+        {
+          "ok": bool,                          # 全部 sha 匹配 + 无字段缺失
+          "checked": int,                      # 实跑脚本数
+          "matched": int,                      # sha 匹配数
+          "offending": list[dict],             # 不匹配项 [{script, expected_sha, actual_sha, note}]
+          "missing_fields": list[dict],        # 缺字段项 [{index, script, missing}]
+          "main_head_sha_resolved": str,       # rev-parse 解析后 sha (空字符串若无效)
+          "error": str | None,                 # 顶层错误 (ref 无效 / worktree 失败等)
+        }
+
+    Default-OFF 约定: 本 helper 不在已有 verify 自动运行流程出现; 仅由 closeout
+    sub-agent 或 verify_infra_070 显式触发。
+    """
+    import subprocess  # noqa: WPS433
+    import tempfile
+
+    repo_root = Path(repo_root).resolve()
+
+    # 1) main_head_sha 校验
+    proc_rp = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{main_head_sha}^{{commit}}"],
+        cwd=str(repo_root), capture_output=True, text=True, check=False,
+    )
+    if proc_rp.returncode != 0:
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "missing_fields": [],
+            "main_head_sha_resolved": "",
+            "error": (
+                f"main_head_sha invalid: {main_head_sha!r} "
+                f"(git rev-parse stderr={proc_rp.stderr.strip()!r})"
+            ),
+        }
+    resolved_sha = proc_rp.stdout.strip()
+
+    # 2) evidence schema 基本检查
+    if not isinstance(evidence, dict):
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "missing_fields": [],
+            "main_head_sha_resolved": resolved_sha,
+            "error": "evidence is not a dict",
+        }
+    # 支持 evidence 顶层 verify_runs 或嵌套在 closeout_verify.verify_runs
+    runs = evidence.get("verify_runs")
+    if runs is None:
+        cv = evidence.get("closeout_verify")
+        if isinstance(cv, dict):
+            runs = cv.get("verify_runs")
+    if not isinstance(runs, list) or not runs:
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "missing_fields": [],
+            "main_head_sha_resolved": resolved_sha,
+            "error": "evidence.verify_runs missing or empty",
+        }
+
+    offending: list[dict] = []
+    missing_fields: list[dict] = []
+    matched = 0
+    checked = 0
+
+    # 3) git worktree add 隔离实跑
+    with tempfile.TemporaryDirectory(prefix="coco_p294_sha_wt_") as tmpd:
+        wt_path = Path(tmpd) / "wt"
+        proc_add = subprocess.run(
+            ["git", "worktree", "add", "--detach", str(wt_path), resolved_sha],
+            cwd=str(repo_root), capture_output=True, text=True, check=False,
+        )
+        if proc_add.returncode != 0:
+            return {
+                "ok": False,
+                "checked": 0,
+                "matched": 0,
+                "offending": [],
+                "missing_fields": [],
+                "main_head_sha_resolved": resolved_sha,
+                "error": (
+                    f"git worktree add failed: "
+                    f"stderr={proc_add.stderr.strip()!r}"
+                ),
+            }
+        try:
+            for i, r in enumerate(runs):
+                if not isinstance(r, dict):
+                    missing_fields.append({
+                        "index": i,
+                        "script": None,
+                        "missing": "<not a dict>",
+                    })
+                    continue
+                script_rel = r.get("script")
+                ev_tail = r.get("tail_stdout")
+                ev_sha = r.get("tail_stdout_sha256")
+                missing_keys: list[str] = []
+                if not isinstance(script_rel, str) or not script_rel.strip():
+                    missing_keys.append("script")
+                if not isinstance(ev_tail, str) or not ev_tail:
+                    missing_keys.append("tail_stdout")
+                if (not isinstance(ev_sha, str)
+                        or not re.fullmatch(r"[0-9a-f]{64}", ev_sha or "")):
+                    missing_keys.append("tail_stdout_sha256")
+                if missing_keys:
+                    missing_fields.append({
+                        "index": i,
+                        "script": script_rel,
+                        "missing": ",".join(missing_keys),
+                    })
+                    continue
+
+                script_abs = wt_path / script_rel
+                if not script_abs.is_file():
+                    offending.append({
+                        "script": script_rel,
+                        "expected_sha": ev_sha,
+                        "actual_sha": None,
+                        "note": "script missing on main HEAD worktree",
+                    })
+                    checked += 1
+                    continue
+                try:
+                    proc_run = subprocess.run(
+                        [sys.executable, script_rel],
+                        cwd=str(wt_path),
+                        capture_output=True, text=True, check=False,
+                        timeout=timeout_per_script,
+                    )
+                except Exception as e:  # noqa: BLE001
+                    offending.append({
+                        "script": script_rel,
+                        "expected_sha": ev_sha,
+                        "actual_sha": None,
+                        "note": f"run error: {e!r}",
+                    })
+                    checked += 1
+                    continue
+                actual_stdout = proc_run.stdout or ""
+                # 取与 evidence tail_stdout 同字符长度的末尾子串
+                n_chars = len(ev_tail)
+                actual_tail = actual_stdout[-n_chars:] if n_chars > 0 else ""
+                actual_sha = hashlib.sha256(
+                    actual_tail.encode("utf-8")
+                ).hexdigest()
+                checked += 1
+                if actual_sha == ev_sha:
+                    matched += 1
+                else:
+                    offending.append({
+                        "script": script_rel,
+                        "expected_sha": ev_sha,
+                        "actual_sha": actual_sha,
+                        "note": (
+                            f"sha256 mismatch (rerun rc={proc_run.returncode}, "
+                            f"tail_len={n_chars})"
+                        ),
+                    })
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(wt_path)],
+                cwd=str(repo_root), capture_output=True, text=True, check=False,
+            )
+
+    ok = (not offending) and (not missing_fields) and (checked > 0)
+    return {
+        "ok": ok,
+        "checked": checked,
+        "matched": matched,
+        "offending": offending,
+        "missing_fields": missing_fields,
+        "main_head_sha_resolved": resolved_sha,
+        "error": None,
     }
