@@ -9229,7 +9229,7 @@
       "description": "强化 verify_infra_076 V4_1 AST: 不仅扫 assert_reviewer_lgtm 调用存在, 还要追踪返回值 ok 是否被 emit() 第二参数引用 (变量传递链).",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "f6ad7e4",
           "feat_head_sha": "2a278fa",
           "baseline_head_sha": "6a5fa3e",
           "merge_commit_sha": "d4f2edb",
