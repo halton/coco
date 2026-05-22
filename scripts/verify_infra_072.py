@@ -271,7 +271,7 @@ def v5_reviewer_gate() -> None:
     _emit(
         "V5_reviewer_lgtm_gate",
         ok is True,
-        f"target={V5_GATE_FEATURE_ID} ok={ok} reason={reason!r}",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
     )
 
 

@@ -71,7 +71,7 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-EXPECTED_VERIFY_074_FILE_SHA = "c51cdae72e84df8e6f2a8b8f7958fe6a6bb703af6285e11b10cfd59be0e54878"
+EXPECTED_VERIFY_074_FILE_SHA = "d843e85b0b0a19acb598701bb9b1c60ea440beac62458bff5001f7aa88af709e"
 EXPECTED_VERIFY_LIB_FILE_SHA = "ebcec7ec936822801c7d656f9b6de429d2145f74133676ead1dfd860c5addd0d"
 EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA = "c668f3d46c0b188adee8c087650f854e570a51f0ff1202cd5f1fe09c9e5a78db"
 EXPECTED_SELF_MAIN_FUNC_SHA = "18760bb2e4c06f9a0f64a09b1bdb6e58eafacefd730b5f2b85b9c693b9799526"
@@ -356,7 +356,7 @@ def v5_reviewer_gate() -> None:
     _emit(
         "V5_reviewer_lgtm_gate",
         ok is True,
-        f"target={V5_GATE_FEATURE_ID} ok={ok} reason={reason!r}",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
     )
 
 
