@@ -6190,3 +6190,20 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - 选取理由: 集中在 verify 机制完备性 / closeout trustworthy 防伪 / cascade 防漏三类 P0-P1; 来源 Reviewer info + Engineer 实跑反思; 5 项独立可串行执行, sim-only 闭环
 - backlog 剩余 105 项 (含 P289/P290/P298 等次要项, 留作 phase-40+)
 - 持续开发模式: 准备开工 #1.39 infra-P294-closeout-stdout-sha-verification
+
+## Session 2026-05-22 — phase-39 #1.39 infra-P294-closeout-stdout-sha-verification 收官
+
+- feat/infra-P294-closeout-stdout-sha-verification → main, merge_commit=b0c55e8 (no-ff), engineer_commit=d24ee33, baseline=a6f6d5f
+- 交付物:
+  - 新 helper `_verify_lib.verify_evidence_tail_stdout_sha`: 真起 git worktree (`_make_mini_repo`) + subprocess re-run + sha256 比对 (杜绝 evidence tail_stdout 文本伪造)
+  - 新 scripts/verify_infra_070.py 15 checks (V0-V5, V4_2 mutant sha 反证 / V4_3 missing 字段 / V4_4 empty runs / V4_5 invalid main_head_sha)
+  - cascade bump: dump_v4_sha_graph + verify_infra_060/062/063/065/066/067/068 _verify_lib sha 锁全部对齐
+- closeout_verify (P278 5 信号): main_head_sha=b0c55e8 (短 7) / b0c55e8b16f9b36c0b585a4c725c4423f73c3be0 (全 40); verify_infra_034/060/062/063/065/066/067/068/069/070 全 ALL PASS rc=0 (每条带 tail_stdout_sha256); ./init.sh smoke PASS; reviewer_kind=sub_agent_fresh_context (LGTM); mutant_test_passed=true
+- feature_list.json: infra-P294-closeout-stdout-sha-verification in_progress → passing (含 closeout_verify 完整 evidence block)
+- Reviewer (sub-agent fresh-context) LGTM 摘要: helper 真起 worktree + subprocess re-run + sha256 比对; V0-V5 15 checks 全 PASS; mutant 反证 (改 sha → V4_2 FAIL → restore → ALL PASS) 通过; 2 P1 findings + 2 P2 info 入 backlog 不阻 merge
+- backlog 入账 (4 项):
+  - infra-P294-followup-070-self-func-sha-bump (P1) — V1 self func sha 占位 `__BUMP_ME__` 下次 070 改动锁实算值
+  - infra-P294-followup-v5-reviewer-gate-evidence-bind (P1) — V5 reviewer_lgtm_gate 跨 verify 全局改造实读 evidence.reviewer (与 phase-39 #2.39 重叠, 主线收口)
+  - infra-P294-followup-070-mini-repo-env-isolation (P2) — `_make_mini_repo` 加 GIT_DIR/GIT_WORK_TREE 显式清空, env 透传隔离
+  - infra-P294-followup-helper-tail-chars-vs-bytes-doc (P2) — helper docstring 明确 "chars not bytes"
+- 持续开发模式: 继续 phase-39 #2.39 infra-P291-reviewer-gate-real-or-remove

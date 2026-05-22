@@ -7754,12 +7754,40 @@
     {
       "id": "infra-P294-closeout-stdout-sha-verification",
       "priority": 1.39,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 39,
       "area": "infra",
       "title": "closeout evidence 的 tail_stdout 加 sha256 防伪机制",
       "rationale": "P278 round-1 dogfood 设计踩坑: 回填 P281/P285 evidence 的 tail_stdout 字符串后, helper 只验字段非空就判 trustworthy, 等于把单点谎言换地方放 (Engineer 可写任意 'ALL PASS' 文本绕过). Round-2 设计修: 移除真实 evidence dogfood, helper 只验 schema. 真正解药: evidence 加 tail_stdout_sha 字段 (sha256 of canonical stdout), 由 helper 在 main HEAD 现场 re-run verify 并比对 sha256, 不一致即 untrustworthy. 涉及: (a) closeout sub-agent 模板自动 emit tail_stdout_sha, (b) helper 接口扩展为 verify_closeout_evidence_trustworthy(evidence, scripts_dir=None, rerun=True), (c) re-run 时机/并发/缓存策略.",
-      "description": "closeout evidence 的 tail_stdout 加 sha256 防伪机制. 封堵 evidence tail_stdout 文本伪造攻击面: closeout 模板 emit tail_stdout_sha256 字段; verify helper (verify_infra_062/068) 在 main HEAD 现场 re-run 对应 verify 脚本, 比对 canonical stdout 的 sha256, 不一致即 untrustworthy. Verify 范围: 新增 verify_infra_069 (或扩 062) 锁 helper 含 sha256 比对路径 + V4 canary 用 tampered tail_stdout 触发 rc!=0. Reviewer acceptance: helper 真在 main HEAD 跑 verify (非读 evidence 字段) + canary 验证 tamper detect 路径不可绕过."
+      "description": "closeout evidence 的 tail_stdout 加 sha256 防伪机制. 封堵 evidence tail_stdout 文本伪造攻击面: closeout 模板 emit tail_stdout_sha256 字段; verify helper (verify_infra_062/068) 在 main HEAD 现场 re-run 对应 verify 脚本, 比对 canonical stdout 的 sha256, 不一致即 untrustworthy. Verify 范围: 新增 verify_infra_069 (或扩 062) 锁 helper 含 sha256 比对路径 + V4 canary 用 tampered tail_stdout 触发 rc!=0. Reviewer acceptance: helper 真在 main HEAD 跑 verify (非读 evidence 字段) + canary 验证 tamper detect 路径不可绕过.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "b0c55e8",
+          "main_head_sha_full": "b0c55e8b16f9b36c0b585a4c725c4423f73c3be0",
+          "merged_commit": "d24ee33",
+          "merge_sha": "b0c55e8",
+          "verify_runs": [
+            {"script": "scripts/verify_infra_034.py", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0", "tail_stdout_sha256": "39805d865c5a8b3d35dc3ebed947d08b1b9365637df713d0c1d8aee71274c3e4"},
+            {"script": "scripts/verify_infra_060.py", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "0bd26b593e6aec9beed320a5a520915398f6296faf83cedb5221c5ea2553145e"},
+            {"script": "scripts/verify_infra_062.py", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)", "tail_stdout_sha256": "6e9111ce0392fb1e69d40ed49037eb20d1f5cc8168e615ce66fadf384233f9aa"},
+            {"script": "scripts/verify_infra_063.py", "status": "PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)", "tail_stdout_sha256": "998ff9c31bd4fc3188389d51c77670dc196994b5a761e6ea45f241c44cd6ba23"},
+            {"script": "scripts/verify_infra_065.py", "status": "PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "ba2882f387939a7e647c070c883daca525a7f2e8220249cffe9d2f5013657dcc"},
+            {"script": "scripts/verify_infra_066.py", "status": "PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "3143caba8259603fa6aa5c17d0abad874339f615ef5dff769464545563661f38"},
+            {"script": "scripts/verify_infra_067.py", "status": "PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)", "tail_stdout_sha256": "5d730a3a4b2dc2423e2568e0d525272944eed2ff04daffb1c26518da645449a2"},
+            {"script": "scripts/verify_infra_068.py", "status": "PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "1265305545a98eca6198c9eae7fa22a726f41c1a5f8695c9705d8ad40d26377a"},
+            {"script": "scripts/verify_infra_069.py", "status": "PASS", "tail_stdout": "[verify_infra_069][SUMMARY] ALL PASS (10 checks)", "tail_stdout_sha256": "71b9d29aa3f3747f00b2cd366e6aac3acccb168bc52bcdef0633228196b7fe51"},
+            {"script": "scripts/verify_infra_070.py", "status": "PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)", "tail_stdout_sha256": "25c65299c09a50a0f70f94490fd99dc4d5bb62a57bc3e165ffd2c54bc6adcaec"},
+            {"script": "./init.sh (smoke)", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json", "tail_stdout_sha256": "84a62223bdde440158fcf5d7d67d28764d45d94b0aa222a46c0fd1c66d4387b6"}
+          ],
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer (sub-agent fresh-context): LGTM. helper verify_evidence_tail_stdout_sha 真起 git worktree + subprocess re-run + sha256 比对. verify_infra_070 V0-V5 共 15 checks 全 PASS, V4 mutant 反证 (改 sha 后 V4_2 FAIL → restore 后 ALL PASS). cascade bump dump_v4_sha_graph + 060/062/063/065/066/067/068 V2 _verify_lib sha 锁全部对齐. 2 P1 findings 入 backlog 不阻 merge: (a) V1 self func sha 占位 __BUMP_ME__ 待下次 070 改动锁; (b) V5 reviewer_lgtm_gate 跨 verify 全局改造实读 evidence.reviewer (与 phase-39 #2.39 重叠). 2 P2 info 入 backlog: (c) _make_mini_repo 加 GIT_DIR/GIT_WORK_TREE 显式清空; (d) helper docstring 明确 chars not bytes.",
+            "mutant_test_passed": true
+          }
+        }
+      }
     },
     {
       "id": "infra-P294-R4-fail-baseline-cross-check",
@@ -8222,9 +8250,45 @@
       "area": "infra",
       "title": "closeout baseline 用 head env 实跑 baseline scripts",
       "rationale": "P297 Reviewer info finding: closeout baseline clone 缺 .venv 应固化用 head env 实跑 baseline scripts (避免 /tmp clone 缺 .venv 误判 FAIL)."
+    },
+    {
+      "id": "infra-P294-followup-070-self-func-sha-bump",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_070 V1 self func sha 占位 __BUMP_ME__ 锁定为实算值",
+      "rationale": "P294 Reviewer P1 finding: verify_infra_070.py V1 self-func sha 占位 '__BUMP_ME__' 待下次 070 改动时锁定为实算 sha256 (与其他 verify 自检模式对齐, 防止后续 070 改动无人察觉)."
+    },
+    {
+      "id": "infra-P294-followup-v5-reviewer-gate-evidence-bind",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "V5 reviewer_lgtm_gate 跨 verify 全局改造为实读 evidence.reviewer",
+      "rationale": "P294 Reviewer P1 finding: 当前各 verify 脚本 V5_reviewer_lgtm_gate 仅打印固定文案不实读 feature_list.json evidence.reviewer 字段. 建议全局改造为真读 evidence.reviewer.reviewer_kind == sub_agent_fresh_context + verdict 含 LGTM 字样. 与 phase-39 #2.39 infra-P291-reviewer-gate-real-or-remove 重叠 (后者可作主线收口)."
+    },
+    {
+      "id": "infra-P294-followup-070-mini-repo-env-isolation",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_070 _make_mini_repo 加 GIT_DIR/GIT_WORK_TREE 显式清空",
+      "rationale": "P294 Reviewer P2 info finding: verify_infra_070.py _make_mini_repo 起 git worktree 时未显式清空父进程的 GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE 等 env var, 极端 CI 嵌套场景可能串台. 建议 subprocess.run env={**os.environ, 'GIT_DIR': '', 'GIT_WORK_TREE': ''} 显式隔离."
+    },
+    {
+      "id": "infra-P294-followup-helper-tail-chars-vs-bytes-doc",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_evidence_tail_stdout_sha helper docstring 明确 chars not bytes",
+      "rationale": "P294 Reviewer P2 info finding: helper verify_evidence_tail_stdout_sha 当前 docstring 未明确 tail_stdout 长度限制是 'chars' 还是 'bytes'. 实测取 last line decode 后的 string, 应在 docstring 写明 'chars (Unicode codepoints, not raw bytes)' 防误用."
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P294-R5 phase-38 #2.38 infra-P294-R5-total-checks-derived 入 passing (merge 5e4ffe6, Reviewer round-1 REJECT (2 SHA 不同步 blocker) → 第三方仲裁 Reviewer 正确 → round-2 fix LGTM, verify_infra_066 ALL PASS 14 + 062 ALL PASS 17 + 060 ALL PASS 14 + 034 53/0 + smoke PASS) + 入账 1 个 backlog (P299 helper passed_checks field)"
+    "last_updated": "2026-05-22 P294 phase-39 #1.39 infra-P294-closeout-stdout-sha-verification 入 passing (merge b0c55e8, Reviewer sub-agent fresh-context LGTM, verify_infra_034/060/062/063/065/066/067/068/069/070 全 ALL PASS + smoke PASS, mutant test 反证通过) + 入账 4 个 backlog (P294 followup: 070 self func sha bump / V5 gate evidence bind / 070 mini-repo env isolation / helper chars vs bytes doc)"
   }
 }
