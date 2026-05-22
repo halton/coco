@@ -1,5 +1,50 @@
 # 进度日志
 
+## Session 2026-05-22 — phase-43 #3.43 infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk (Engineer narrow round)
+
+**branch**: feat/infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk
+**baseline main HEAD**: cedf2b7
+**scope**: narrow (上一次 abort 因 scope 过大: 31 callsite + 10 rename + alias + cascade)
+
+### 改动
+1. `scripts/_verify_lib.py`:
+   - `assert_verify_lib_public_helper_naming` 的 default `allowed_prefixes` 从 `("assert_", "enforce_")` 扩展为 `("assert_", "enforce_", "parse_", "read_", "func_", "scan_", "live_")` (加 5 个前缀)
+   - 同步更新 docstring default 描述
+   - `_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST` 移除 6 个 query/getter 名:
+     - parse_headings_from_doc (parse_)
+     - func_sha_by_name (func_)
+     - read_constant (read_)
+     - scan_reverse_sha_locks (scan_)
+     - scan_reviewer_text (scan_)
+     - live_verify_sha_set (live_)
+   - allowlist 从 15 减到 9 (剩 9 个 verify_* 前缀 helper 推后 bulk rename)
+   - LIB_FILE_SHA: `b7f1c5f1b9b8938b6ba7881bdb92a88838a38527bc5b4914c51267961353e088` → `7265a08b5ceeb3c6e1ae6d0741f87219d5a1e46b767fc4e0066465384a0465a3`
+
+2. cascade bump (20 个 verify file, sed 批量替换 b7f1c5f1 → 7265a08b):
+   - verify_infra_062/063/065-068/070-073/075-082/084/085
+
+3. cascade bump 062 file sha (62 文件本身被改动): `84f8f947847d1d319bf61ed21b0f3143866398b498117bebec6a2214f79f741f` → `5f8af764ce9e21316f17f099e5c2acb52d9d19cf617bbc874fc5d15cad5e3be0` 同步 081/082/083 中的 EXPECTED_VERIFY_062_FILE_SHA。
+
+4. cascade bump 085 helper func sha (helper body 改了): `EXPECTED_NAMING_HELPER_FUNC_SHA` `f63396fd7625117c815c90a12875bad353c7a2c034bf45d7af0e3704475ffc88` → `2ab8a07e421920e25f22dff751adb514c4b0fddec05ec2d645fe8d839d45f876`
+
+### 验证
+- `verify_infra_062`: ALL PASS (21 checks). 关键: `V4_verify_lib_helper_naming_convention scanned=23 enforced=14 legacy_allowlisted=9 violations=0` (enforced 8 → 14, allowlisted 15 → 9)
+- 075/076/077/078/080/081/082/083/084: ALL PASS
+- 079: FAIL `V4_4_real_run_074_rc0_and_pass` — pre-existing baseline FAIL (cedf2b7 同 FAIL, 不在本 scope, 已在 backlog)
+- 085: FAIL `V5_reviewer_lgtm_gate` LGTM-conditional — pre-existing baseline FAIL (cedf2b7 同 FAIL, 已在 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion)
+- `./init.sh` smoke: PASS (全 12 个 smoke 项)
+
+### 新入 backlog
+- `infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce` (priority=999, status=backlog, phase=null) — 剩余 9 个 verify_* helper bulk rename → enforce_* + alias + ~31 callsite 替换 + cascade
+
+### feature_list.json
+- #3.43 status: not_started → in_progress
+- #3.43 title/description/verification_plan/expected_files/verify_targets/notes/acceptance 全部改为 narrow 版
+
+待 Reviewer fresh-context 评审。
+
+---
+
 ## Session 2026-05-22 — phase-43 #1.43 infra-P286-followup6-historical-cascade-self-main-sha-rebump (Engineer round)
 
 **branch**: feat/infra-P286-followup6-historical-cascade-self-main-sha-rebump

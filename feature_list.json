@@ -11152,26 +11152,26 @@
       "id": "infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk",
       "priority": 3.43,
       "phase": 43,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
-      "title": "_verify_lib 15 个 legacy public helper 改 assert_/enforce_ 前缀 (bulk)",
-      "description": "infra-P278-followup-verify-lib-helper-naming-convention-lock (#5.42) 用 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 临时豁免 15 个 legacy 名 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_* / live_verify_sha_set / verify_* / scan_reviewer_text)。本 backlog 项为后续统一改名 assert_/enforce_ 前缀, 同时 cascade 所有调用点 + dump + cross-file func sha, 清空 allowlist。",
-      "rationale": "命名一致性 lock 已上线但 legacy 群仍以 allowlist 形式存在；统一收割避免 allowlist 永久化、为后续 helper 引入提供干净基准。",
-      "verification_plan": "把 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 中 15 个名字逐一改 assert_/enforce_ 前缀 (或归类为 read_/scan_ 私有); 全仓库调用点 grep 同步; cascade 所有 verify file _verify_lib file sha; 跑 062 V4_verify_lib_helper_naming_convention enforce=23 legacy_allowlisted=0 violations=0",
+      "title": "_verify_lib naming allowed_prefixes 扩展 + allowlist 减 6 query helper (narrow scope)",
+      "description": "narrow 版：仅扩展 assert_verify_lib_public_helper_naming 的 default allowed_prefixes 为 ('assert_', 'enforce_', 'parse_', 'read_', 'func_', 'scan_', 'live_'), 同时从 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 移除 6 个 query/getter 名 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_reverse_sha_locks / scan_reviewer_text / live_verify_sha_set), 使其改由前缀枚举命中而非 allowlist 豁免。剩余 9 个 verify_* 前缀 helper 仍 allowlist 豁免, 推后 bulk rename verify_* → enforce_* (含 alias + 31 callsite 替换 + cascade) 见 backlog infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce。",
+      "rationale": "上一次 Engineer abort, scope 过大 (31 callsite + 10 rename + alias)。本轮收窄到只动 prefix 扩展 + allowlist 减项, 不引 callsite 改名风险, 立刻在 062 V4_verify_lib_helper_naming_convention 体现 enforced 从 8 升到 14。",
+      "verification_plan": "1) _verify_lib.py 修改 default allowed_prefixes + allowlist 移除 6 名; 2) cascade bump _verify_lib file sha 到所有引 EXPECTED_VERIFY_LIB_FILE_SHA / EXPECTED_LIB_FILE_SHA 且持 main HEAD sha 的 verify 文件 (20 处); 3) 跑 062 ALL PASS 21, V4_verify_lib_helper_naming_convention scanned=23 enforced=14 legacy_allowlisted=9 violations=0; 4) 075-085 跑通 (pre-existing baseline FAIL 不阻); 5) smoke PASS",
       "expected_files": [
         "scripts/_verify_lib.py",
         "scripts/verify_infra_062.py",
-        "scripts/verify_infra_085.py",
-        "scripts/verify_infra_06{3,5..8}.py",
-        "scripts/verify_infra_07{0..3,5..7,9}.py",
-        "scripts/verify_infra_08{0..2,4}.py"
+        "scripts/verify_infra_063.py",
+        "scripts/verify_infra_06{5..8}.py",
+        "scripts/verify_infra_07{0..3,5..9}.py",
+        "scripts/verify_infra_08{0..5}.py"
       ],
       "verify_targets": [
-        "verify_infra_062 V4_verify_lib_helper_naming_convention scanned=23 enforced=23 legacy_allowlisted=0",
-        "verify_infra_085 V0-V5"
+        "verify_infra_062 V4_verify_lib_helper_naming_convention scanned=23 enforced=14 legacy_allowlisted=9 violations=0",
+        "verify_infra_075..085 (pre-existing baseline 079/085 FAIL 不阻 merge)"
       ],
-      "notes_for_engineer": ".venv 必须激活；分两个 commit：先 rename + grep 替换调用点，再 cascade file sha；过程中 allowlist 一次清空，验证 enforce=23 真上",
-      "acceptance": "_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 清空；verify_infra_062 V4_verify_lib_helper_naming_convention enforced=23 violations=0 legacy_allowlisted=0；085 全 PASS；smoke PASS；reviewer LGTM"
+      "notes_for_engineer": ".venv 必须激活; default_allowed_prefixes 同步更新 docstring; cascade bump 由 grep+sed 批量替换 b7f1c5f1 → 新 LIB_FILE_SHA; 085 V3_helper_func_sha 因 helper body 改了需 bump EXPECTED_NAMING_HELPER_FUNC_SHA; verify_* → enforce_* bulk rename 入新 backlog 推后",
+      "acceptance": "_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 从 15 减到 9; 062 V4_verify_lib_helper_naming_convention enforced=14 legacy_allowlisted=9 violations=0; smoke PASS; reviewer LGTM"
     },
     {
       "id": "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
@@ -11277,6 +11277,31 @@
       ],
       "notes_for_engineer": ".venv 必须激活；优先纯 evidence 字段修复，避免改 V5 helper 语义弱化",
       "acceptance": "verify_infra_085 ALL PASS；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "_verify_lib 剩余 9 个 verify_* 前缀 helper bulk rename → enforce_* (含 alias + 31 callsite + cascade)",
+      "description": "phase-43 #3.43 (narrow) 已扩展 allowed_prefixes 收编 6 个 query/getter 名 (parse_/read_/func_/scan_/live_)，剩 9 个 verify_* 前缀 helper 仍在 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 中：verify_reverse_sha_lock_consistency / verify_expected_pattern_consistency / verify_palette_fills_distinct / verify_unknown_node_count_bound / verify_expected_prefix_typo_guard / verify_closeout_evidence_trustworthy / verify_baseline_fail_claims / verify_evidence_tail_stdout_sha / verify_summary_exit。本 backlog 项为 bulk rename verify_* → enforce_*, 加 deprecation alias (verify_* 转发 enforce_*), grep 全仓 callsite (~31 处) 替换, cascade _verify_lib file sha 与所有依赖文件，最终清空 allowlist。",
+      "rationale": "naming convention lock 最终目标是清空 allowlist。9 个 verify_* helper 改为 enforce_* 后，allowlist=0, 062 V4_verify_lib_helper_naming_convention enforced=23 legacy_allowlisted=0 violations=0。上一轮 abort 显示一次性做 scope 过大（callsite ~31 + alias + cascade），拆为独立 backlog item 后续单独执行。",
+      "verification_plan": "1) _verify_lib.py 中 9 个 verify_* helper 改 enforce_* + 加 alias (verify_X = enforce_X) 维持向后兼容; 2) grep -rn 'verify_X' scripts/ tests/ 批量替换 callsite (~31 处); 3) cascade bump _verify_lib file sha; 4) bump 所有锁 enforce_* helper func sha 的 verify file; 5) 移除 allowlist 9 项; 6) 跑 062 V4_verify_lib_helper_naming_convention scanned=23 enforced=23 legacy_allowlisted=0 violations=0; 7) 075-085 全 PASS; 8) smoke PASS",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_06{3,5..8}.py",
+        "scripts/verify_infra_07{0..3,5..9}.py",
+        "scripts/verify_infra_08{0..5}.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_verify_lib_helper_naming_convention scanned=23 enforced=23 legacy_allowlisted=0 violations=0",
+        "verify_infra_075..085 ALL PASS"
+      ],
+      "notes_for_engineer": ".venv 必须激活；分多 commit (rename + alias / callsite 替换 / cascade) 避免单次 diff 过大; deprecation alias 必须保留至少一个 phase 后才能删；callsite 替换前先 dry-run grep 出全部出现, 排除字符串字面量、docstring 等假阳; 062/085 helper func sha 锁需同步 bump",
+      "acceptance": "_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 清空；062 V4_verify_lib_helper_naming_convention enforced=23 violations=0；075-085 全 PASS；smoke PASS；reviewer LGTM"
     }
   ],
   "_meta": {
