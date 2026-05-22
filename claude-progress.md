@@ -6964,3 +6964,23 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 **verify tails**:
 - verify_infra_062: ALL PASS (21 checks)
 - ./init.sh: 全 smoke 通过
+
+## Session 2026-05-22 — phase-43 #2.43 Closeout (infra-V6-backlog-062-v3-helper-func-sha-rebump-followup)
+
+**Closeout sub-agent**: merge feat/infra-V6-backlog-062-v3-helper-func-sha-rebump-followup → main
+
+- base main HEAD = 8c59945
+- engineer commit = c520066
+- merge commit = c17a854 (--no-ff)
+- reviewer (sub-agent fresh ctx) LGTM
+- status: in_progress → passing
+
+**verify 三遍取最后 tail**:
+- verify_infra_062: ALL PASS (21 checks)，V4_byte_match_enforce scanned=215 enforced=124 fired_features=10；V4_baseline_head_echo_required enforced=8；V4_reviewer_summary_nonempty enforced=16（dogfood P278 三套计数 +1）
+- verify_infra_079: FAIL 1/14 V4_4_real_run_074_rc0_and_pass（baseline 8c59945 同 FAIL，pre-existing）
+- verify_infra_085: FAIL 1/14 V5_reviewer_lgtm_gate（baseline 8c59945 同 FAIL，pre-existing）
+- ./init.sh smoke: 全 PASS
+
+**backlog 入账 2 项 (priority=999 phase=null)**:
+- infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline
+- infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion
