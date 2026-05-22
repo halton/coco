@@ -56,6 +56,7 @@ __all__ = [
     "assert_closeout_verify_runs_min_count",
     "assert_closeout_smoke_tail_nonempty",
     "assert_verify_lib_helpers_in_v3_sha_table",
+    "assert_closeout_verify_runs_shape",
 ]
 
 
@@ -2728,6 +2729,191 @@ def assert_closeout_smoke_tail_nonempty(
                     "min_chars": int(min_chars),
                     "must_contain": list(mc),
                 })
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-closeout-verify-runs-status-shape-hard-check
+# (phase-44 #3.44): closeout_verify.verify_runs[] element shape hard check.
+# 已有 V4_closeout_verify_runs_min_count 仅约束条数 >=3; 但对 element 字段
+# (name/status/tail_stdout) 内容未约束, 仍允许 status='' 或 tail_stdout='ok' 之类
+# 不可 audit 的占位. 加 Default-OFF + soft-PASS for legacy hard check:
+#   - enforce-set: feature 含 closeout_verify.reviewer.reviewer_kind ==
+#     'sub_agent_fresh_context' (即 P278 之后真正受 reviewer-trustworthy 约束的);
+#   - 每个 verify_runs[i] 必须含 name(非空 str)/status(非空 str 且 ∈ allowed_statuses)/
+#     tail_stdout(strip()后 >= min_tail_chars);
+#   - legacy (reviewer_kind 缺失 / 非 sub_agent_fresh_context) → soft_skipped.
+# ---------------------------------------------------------------------------
+def assert_closeout_verify_runs_shape(
+    feature_list_path,
+    min_tail_chars: int = 20,
+    allowed_statuses: tuple = ("PASS", "FAIL", "SKIP"),
+) -> dict:
+    """扫 feature_list.json, 对 enforce-set 内 feature 的
+    evidence.closeout_verify.verify_runs[] 每个 element 做 shape hard check.
+
+    enforce-set 判定:
+      - feature.status == 'passing'
+      - evidence.closeout_verify 为 dict
+      - closeout_verify.reviewer.reviewer_kind == 'sub_agent_fresh_context'
+
+    Element shape 要求:
+      - 'name': 非空 str
+      - 'status': 非空 str 且 (若 allowed_statuses 非空) 必须 ∈ allowed_statuses
+      - 'tail_stdout': str, strip() 后长度 >= min_tail_chars
+
+    参数:
+        feature_list_path: feature_list.json 路径 (str | Path).
+        min_tail_chars: tail_stdout strip 后最少字符数 (默认 20).
+        allowed_statuses: status 字段允许的取值; 传 () 则只校验非空, 不校验取值.
+
+    返回 dict::
+
+        {
+          "ok": bool,
+          "violations": [
+              {
+                  "feature_id": str,
+                  "run_index": int,
+                  "reason": str,
+                  "field": str,            # 'name' | 'status' | 'tail_stdout'
+                  "value_repr": str,       # repr(...) 截断到 80 字符
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],
+          "enforced_count": int,
+          "scanned_count": int,
+          "min_tail_chars": int,
+          "allowed_statuses": list,
+          "error": str | None,
+        }
+
+    Default-OFF + soft-PASS for legacy:
+      - 老 feature (无 reviewer_kind 或非 sub_agent_fresh_context / 缺 verify_runs
+        list) → soft_skipped, 不算 violation
+      - 在 enforce-set 内但缺 verify_runs / 非 list → soft_skipped (与 min_count
+        helper 一致 — 那个 check 已负责 list 形态)
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    allowed_list = list(allowed_statuses) if allowed_statuses else []
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_tail_chars": int(min_tail_chars),
+        "allowed_statuses": list(allowed_list),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    def _repr80(v) -> str:
+        s = repr(v)
+        return s if len(s) <= 80 else s[:77] + "..."
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        reviewer = cv.get("reviewer") if isinstance(cv.get("reviewer"), dict) else {}
+        if reviewer.get("reviewer_kind") != "sub_agent_fresh_context":
+            out["soft_skipped"].append(fid)
+            continue
+        vr = cv.get("verify_runs")
+        if not isinstance(vr, list):
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+        for idx, run in enumerate(vr):
+            if not isinstance(run, dict):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "run_index": idx,
+                    "reason": f"verify_runs[{idx}] not a dict (type={type(run).__name__})",
+                    "field": "<element>",
+                    "value_repr": _repr80(run),
+                })
+                continue
+            # name
+            name = run.get("name")
+            if not (isinstance(name, str) and name.strip()):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "run_index": idx,
+                    "reason": f"verify_runs[{idx}].name empty or not str",
+                    "field": "name",
+                    "value_repr": _repr80(name),
+                })
+            # status
+            status = run.get("status")
+            if not (isinstance(status, str) and status.strip()):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "run_index": idx,
+                    "reason": f"verify_runs[{idx}].status empty or not str",
+                    "field": "status",
+                    "value_repr": _repr80(status),
+                })
+            elif allowed_list and status not in allowed_list:
+                out["violations"].append({
+                    "feature_id": fid,
+                    "run_index": idx,
+                    "reason": (
+                        f"verify_runs[{idx}].status={status!r} not in "
+                        f"allowed_statuses={allowed_list}"
+                    ),
+                    "field": "status",
+                    "value_repr": _repr80(status),
+                })
+            # tail_stdout
+            tail = run.get("tail_stdout")
+            if not isinstance(tail, str):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "run_index": idx,
+                    "reason": f"verify_runs[{idx}].tail_stdout missing or not str",
+                    "field": "tail_stdout",
+                    "value_repr": _repr80(tail),
+                })
+            else:
+                stripped_len = len(tail.strip())
+                if stripped_len < int(min_tail_chars):
+                    out["violations"].append({
+                        "feature_id": fid,
+                        "run_index": idx,
+                        "reason": (
+                            f"verify_runs[{idx}].tail_stdout stripped_len="
+                            f"{stripped_len} < min_tail_chars={min_tail_chars}"
+                        ),
+                        "field": "tail_stdout",
+                        "value_repr": _repr80(tail),
+                    })
     out["ok"] = len(out["violations"]) == 0
     return out
 

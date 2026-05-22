@@ -11663,7 +11663,7 @@
       "id": "infra-P278-followup-closeout-verify-runs-status-shape-hard-check",
       "priority": 3.44,
       "phase": 44,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "closeout_verify.verify_runs 元素 shape hard check (name/status/tail_stdout 非空)",
       "rationale": "phase-43 #4.43 已加 min_count，本轮约束每条 verify_runs 元素必须含 name + status + tail_stdout 三字段且非空 (tail_stdout min 20 char)，杜绝 stub/空 status 占位。",
@@ -11680,7 +11680,18 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；legacy 缺字段 soft_skip 走 verify_runs 整字段缺 (与 min_count 同口径)；min_chars=20 与 reviewer.summary 一致；cascade _verify_lib + 062 file sha 全量",
-      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "engineer_summary": "新 helper assert_closeout_verify_runs_shape 加入 _verify_lib (func sha 05b8474f8788a25c); 新 verify_infra_089 V0-V5 14 checks (V5 pending FAIL 预期 13/14 PASS); 062 加 _enforce_closeout_verify_runs_shape wire 入 main, V4_closeout_verify_runs_shape Default-OFF soft-PASS emit=True (scanned=27 enforced=25 soft_skipped=2 violations=167 写入 detail, 留待后续 promote 至 hard fail); 062 V3_HELPER_FUNC_NAMES 加 assert_closeout_verify_runs_shape (28 名); 22 个 verify_infra_*.py EXPECTED_VERIFY_LIB_FILE_SHA 全量 bump a22c6d81→dee2c3c7; 081/082/083 EXPECTED_VERIFY_062_FILE_SHA bump 2854c3b0→90f35f3b; dump_v4_sha_graph.py 加 089 三条 entry; 062 ALL PASS 25; 089 13/14; 081-088 ALL PASS 14 each; smoke PASS",
+        "lib_file_sha_old": "a22c6d81200cf6b35df7ed6a3df3e726068848df4401a8a7c7078a1d90ac64c0",
+        "lib_file_sha_new": "dee2c3c706439e90398771d6cc510355a2a366afd93a8f2ddfa5b59ee5112246",
+        "verify_062_file_sha_old": "2854c3b03f4347d0770e8403732cbcecf7215c7fe8183cfc4338c01a40b600fa",
+        "verify_062_file_sha_new": "90f35f3b59d0b8b24c91424c4cda12eea20b4ceabf0a98dddb9799d1360b25d7",
+        "shape_helper_func_sha": "05b8474f8788a25ca2a944f9c34cabd677be494dd63c5d9076438b116753dcb4",
+        "verify_089_self_main_func_sha": "13733da371b264573a548d02f3e2f87179a2c609433d92b3b80867deb502a2f8",
+        "engineer_complete": true,
+        "reviewer_pending": true
+      }
     },
     {
       "id": "infra-P278-followup-closeout-reviewer-block-shape-hard-check",

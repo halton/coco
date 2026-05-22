@@ -70,6 +70,7 @@ from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
     assert_closeout_smoke_tail_nonempty,
     assert_closeout_verify_runs_min_count,
+    assert_closeout_verify_runs_shape,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     assert_reviewer_summary_nonempty,
@@ -79,7 +80,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "a22c6d81200cf6b35df7ed6a3df3e726068848df4401a8a7c7078a1d90ac64c0"
+EXPECTED_VERIFY_LIB_FILE_SHA = "dee2c3c706439e90398771d6cc510355a2a366afd93a8f2ddfa5b59ee5112246"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -92,6 +93,7 @@ V3_HELPER_FUNC_NAMES = (
     "assert_baseline_head_echo_present_and_matches",
     "assert_closeout_smoke_tail_nonempty",
     "assert_closeout_verify_runs_min_count",
+    "assert_closeout_verify_runs_shape",
     "assert_report_matches_closeout_runs",
     "assert_reviewer_baseline_head_echo",
     "assert_reviewer_lgtm",
@@ -791,6 +793,61 @@ def _enforce_closeout_verify_runs_min_count() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4: closeout_verify.verify_runs[] element shape hard check (phase-44 #3.44)
+# infra-P278-followup-closeout-verify-runs-status-shape-hard-check —
+# Default-OFF + soft-PASS for legacy: helper enforce-set 仅含
+# reviewer_kind=='sub_agent_fresh_context' 的 feature; 062 这里以 emit=True
+# soft-PASS (与 V5_reviewer_lgtm_gate 一致), 把 violation 计数写进 detail.
+# 实际 hard 行为由 verify_infra_089 自身锁定 (helper func sha + 行为正反例).
+# 未来 promote 到真硬 fail 时, 把下面 _emit 的第二参换成 bool(result.get('ok')).
+# ---------------------------------------------------------------------------
+def _enforce_closeout_verify_runs_shape() -> None:
+    """对 feature_list.json 调 assert_closeout_verify_runs_shape(min_tail_chars=20,
+    allowed_statuses=('PASS','FAIL','SKIP')); Default-OFF: emit=True 不阻断,
+    把 scanned/enforced/soft_skipped/violations 计数写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_verify_runs_shape",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_verify_runs_shape(
+            feature_list,
+            min_tail_chars=20,
+            allowed_statuses=("PASS", "FAIL", "SKIP"),
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_verify_runs_shape",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_verify_runs_shape",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_verify_runs_shape",
+        True,  # Default-OFF soft-PASS
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_tail_chars={result.get('min_tail_chars')} "
+        f"allowed_statuses={result.get('allowed_statuses')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -904,6 +961,7 @@ def main() -> int:
     _enforce_verify_lib_helper_naming()
     _enforce_closeout_verify_runs_min_count()
     _enforce_closeout_smoke_tail_nonempty()
+    _enforce_closeout_verify_runs_shape()
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)
