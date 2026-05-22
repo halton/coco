@@ -378,6 +378,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_baseline_head_echo_format (func-sha)",
     ("verify_infra_094.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_094.py:main (func-sha)",
+    # verify_infra_095 (infra-P278-followup-closeout-merge-commit-sha-format-hard-check) —
+    # phase-45 #4.45: 新增 V4_closeout_merge_commit_sha_format hard check +
+    # 配套 V4_MERGE_COMMIT_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS 14 historic grace_set 行为
+    ("verify_infra_095.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_095.py", "EXPECTED_MERGE_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_closeout_merge_commit_sha_format (func-sha)",
+    ("verify_infra_095.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_095.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
