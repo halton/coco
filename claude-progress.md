@@ -7109,3 +7109,26 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 - evidence.closeout_verify 6 信号齐：main_head_sha=d57bf68 / baseline_head_echo=b5f2aa8 / merge_commit_sha=d57bf68… / smoke_tail_stdout(>=20 含 'Smoke') / verify_runs[4] / reviewer (sub_agent_fresh_context LGTM)
 - status: in_progress → passing
 - A 段 commit 待写；B 段将 bump main_head_sha 让 087 V5 PASS
+
+
+## Session N+4: phase-43 closeout (5/5 passing) + phase-44 planning (5 candidates)
+
+### phase-43 收官
+phase-43 5 个 feature 全部 passing,main HEAD=36945ba (chore bump for #5.43 closeout)。本 phase 围绕 closeout-verify-trustworthy P278 硬规则继续机械化深化 + 历史 cascade rebump 收尾:
+- #1.43 infra-P286-followup6-historical-cascade-self-main-sha-rebump (passing)
+- #2.43 infra-V6-backlog-062-v3-helper-func-sha-rebump-followup (passing)
+- #3.43 infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk (passing)
+- #4.43 infra-P278-followup-closeout-verify-runs-min-count-hard-check (passing; V4_closeout_verify_runs_min_count Default-OFF→hard)
+- #5.43 infra-P278-followup-closeout-smoke-tail-nonempty-hard-check (passing; V4_closeout_smoke_tail_nonempty Default-OFF→hard)
+
+phase-43 收官 main HEAD=36945ba。无遗留 in_progress。085 V5 reviewer.verdict='LGTM-conditional' 仍为 pre-existing FAIL,已抬入 phase-44 #1.44。
+
+### phase-44 planning (5 candidates, all status=not_started)
+继续围绕 P278 closeout-verify-trustworthy 硬规则机械化收紧 + 清掉 backlog 长尾 062 round2 / 085 LGTM-conditional:
+- #1.44 infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion — promote backlog: 085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM (rationale: 长期 pre-existing FAIL 噪声)
+- #2.44 infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 — promote backlog: 062 helper func sha 第二轮 rebump (rationale: 历史 cascade 长尾收尾)
+- #3.44 infra-P278-followup-closeout-verify-runs-status-shape-hard-check — verify_runs 元素 shape (name/status/tail_stdout 非空, tail_stdout>=20)
+- #4.44 infra-P278-followup-closeout-reviewer-block-shape-hard-check — reviewer block shape (verdict ∈ {LGTM,LGTM-conditional,REJECT} + checks_run 非空 list)
+- #5.44 infra-P278-followup-closeout-baseline-head-echo-format-hard-check — baseline_head_echo 7+ hex 且 != main_head_sha
+
+planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进一步收紧 closeout block 三件套形状 (verify_runs 元素形状 / reviewer block 形状 / baseline_head_echo 格式),并把两个长尾 backlog (085 / 062-round2) 拉进 active 清理。下一轮起做 #1.44。

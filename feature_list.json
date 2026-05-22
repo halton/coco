@@ -11421,9 +11421,9 @@
     },
     {
       "id": "infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 1.44,
+      "phase": 44,
+      "status": "not_started",
       "area": "infra",
       "title": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM 提升",
       "description": "verify_infra_085.py V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock 在 baseline 8c59945 与当前 main 同 FAIL（reviewer.verdict='LGTM-conditional' expected 'LGTM'）。属 evidence 字段语义偏移的 pre-existing 噪声，需在确认 conditional 条件已满足后改 verdict 为 LGTM 或调整 V5 helper 允许 LGTM-conditional。",
@@ -11436,7 +11436,8 @@
         "verify_infra_085 V5_reviewer_lgtm_gate PASS"
       ],
       "notes_for_engineer": ".venv 必须激活；优先纯 evidence 字段修复，避免改 V5 helper 语义弱化",
-      "acceptance": "verify_infra_085 ALL PASS；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_085 ALL PASS；smoke PASS；reviewer LGTM",
+      "rationale_phase44": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM promotion (phase-44 #1)"
     },
     {
       "id": "infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce",
@@ -11465,9 +11466,9 @@
     },
     {
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-round2",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 2.44,
+      "phase": 44,
+      "status": "not_started",
       "area": "infra",
       "title": "verify_infra_062 V3_helper_func_sha + 082-085 V1_self_main_func_sha pre-existing FAIL cascade rebump (round2)",
       "description": "phase-43 #4.43 (infra-P278-followup-closeout-verify-runs-min-count-hard-check) closeout 期间 Reviewer fresh-context 确认 062 V3_helper_func_sha 与 082/083/084/085 V1_self_main_func_sha 在 baseline e0e8393 与 PR HEAD 同 FAIL，均为 pre-existing cascade drift。",
@@ -11485,7 +11486,77 @@
         "verify_infra_082..085 V1_self_main_func_sha PASS"
       ],
       "notes_for_engineer": ".venv 必须激活；dump_v4_sha_graph 看 drift 集合后统一 commit",
-      "acceptance": "062 V3 + 082-085 V1 全 PASS；smoke PASS；reviewer LGTM"
+      "acceptance": "062 V3 + 082-085 V1 全 PASS；smoke PASS；reviewer LGTM",
+      "rationale_phase44": "verify_infra_062 helper func sha rebump 第二轮 (phase-44 #2)"
+    },
+    {
+      "id": "infra-P278-followup-closeout-verify-runs-status-shape-hard-check",
+      "priority": 3.44,
+      "phase": 44,
+      "status": "not_started",
+      "area": "infra",
+      "title": "closeout_verify.verify_runs 元素 shape hard check (name/status/tail_stdout 非空)",
+      "rationale": "phase-43 #4.43 已加 min_count，本轮约束每条 verify_runs 元素必须含 name + status + tail_stdout 三字段且非空 (tail_stdout min 20 char)，杜绝 stub/空 status 占位。",
+      "description": "新 helper assert_closeout_verify_runs_element_shape() 加 _verify_lib：scan feature_list.json status=passing 项 closeout_verify.verify_runs 列表；每元素缺 name|status|tail_stdout 或 tail_stdout<20 char → hard FAIL（带 violation feature id + 元素 index）。062 加 V4_closeout_verify_runs_element_shape wire。",
+      "verification_plan": "新 verify_infra_NNN V0-V5：V0 self-pass / V1 helper exists / V2 import / V3 mutant 临时把元素 status 置空 → FAIL / V4 正例反例 mutant strip / V5 reviewer LGTM。062 V4 emit scanned/enforced/soft_skipped/violations。",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_NNN.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_closeout_verify_runs_element_shape",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；legacy 缺字段 soft_skip 走 verify_runs 整字段缺 (与 min_count 同口径)；min_chars=20 与 reviewer.summary 一致；cascade _verify_lib + 062 file sha 全量",
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-P278-followup-closeout-reviewer-block-shape-hard-check",
+      "priority": 4.44,
+      "phase": 44,
+      "status": "not_started",
+      "area": "infra",
+      "title": "closeout reviewer block shape hard check (verdict + checks_run)",
+      "rationale": "reviewer.summary 非空已 hard，本轮补 verdict ∈ {LGTM, LGTM-conditional, REJECT} 与 checks_run 非空 list，统一 reviewer block 形状，避免 stub reviewer 蒙混 closeout。",
+      "description": "新 helper assert_closeout_reviewer_block_shape() 加 _verify_lib：scan feature_list.json status=passing 项 closeout_verify.reviewer；缺 verdict/checks_run 或 verdict 不在白名单 / checks_run 非 list 或空 → hard FAIL。062 加 V4_closeout_reviewer_block_shape wire。",
+      "verification_plan": "新 verify_infra_NNN V0-V5：V0 self-pass / V1 helper exists / V2 import / V3 mutant 临时把 verdict 改为 'OK' → FAIL；checks_run=[] → FAIL / V4 正例反例 mutant strip / V5 reviewer LGTM。062 V4 emit scanned/enforced/soft_skipped/violations。",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_NNN.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_closeout_reviewer_block_shape",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；verdict 白名单显式三值；legacy 整 reviewer 字段缺 soft_skip；cascade _verify_lib + 062 file sha 全量",
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
+      "priority": 5.44,
+      "phase": 44,
+      "status": "not_started",
+      "area": "infra",
+      "title": "closeout baseline_head_echo 7+ hex 且 != main_head_sha hard check",
+      "rationale": "FAIL 分支已要求 baseline_head_echo 字段存在，但未校验格式与去重；本轮硬要 7+ hex 且不得与 main_head_sha 相同 (否则 baseline 等于 self 失去意义)。",
+      "description": "新 helper assert_closeout_baseline_head_echo_format() 加 _verify_lib：scan feature_list.json status=passing 含 verify_runs 任一 FAIL 的项；要求 closeout_verify.baseline_head_echo 匹配 ^[0-9a-f]{7,}$ 且 != closeout_verify.main_head_sha；违反 hard FAIL。062 加 V4_closeout_baseline_head_echo_format wire。",
+      "verification_plan": "新 verify_infra_NNN V0-V5：V0 self-pass / V1 helper exists / V2 import / V3 mutant baseline_head_echo='XYZ' → FAIL；mutant baseline_head_echo == main_head_sha → FAIL / V4 正例反例 mutant strip / V5 reviewer LGTM。062 V4 emit scanned/enforced/soft_skipped/violations。",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_NNN.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_closeout_baseline_head_echo_format",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；只 enforce 有 FAIL verify_run 的 passing 项；legacy 整 baseline_head_echo 缺 soft_skip (已有别的 helper enforce 存在性)；cascade _verify_lib + 062 file sha 全量",
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
     }
   ],
   "_meta": {
