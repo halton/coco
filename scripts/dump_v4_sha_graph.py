@@ -333,6 +333,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_verify_runs_shape (func-sha)",
     ("verify_infra_089.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_089.py:main (func-sha)",
+    # verify_infra_090 (P278-followup-closeout-reviewer-block-shape-hard-check) —
+    # phase-44 #4.44: 锁 assert_closeout_reviewer_block_shape helper +
+    # lib file + 自 main; 不锁 self file sha (同 074/079-089 形)
+    ("verify_infra_090.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_090.py", "EXPECTED_REVIEWER_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_closeout_reviewer_block_shape (func-sha)",
+    ("verify_infra_090.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_090.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

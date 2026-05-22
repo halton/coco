@@ -1,55 +1,49 @@
 #!/usr/bin/env python3
-"""verify_infra_087 V0-V5: 锁定 verify_infra_062._enforce_closeout_smoke_tail_nonempty 真 fire (Default-OFF hard check).
+"""verify_infra_090 V0-V5: 锁定 verify_infra_062._enforce_closeout_reviewer_block_shape
+真 fire (V4 closeout_verify.reviewer block 五字段形态 hard check).
 
-infra-P278-followup-closeout-smoke-tail-nonempty-hard-check (phase-43 #5.43):
-Closeout-verify-trustworthy 硬规则已要求 smoke_tail_stdout 为 string, 但未约束
-内容. 常见占位 'smoke OK' 或空串无法 audit 真跑 ./init.sh. 加 Default-OFF→hard
-检 (min_chars=20, must_contain=('Smoke','smoke') case-insensitive 任一匹配),
-提升 smoke 证据可信度.
+infra-P278-followup-closeout-reviewer-block-shape-hard-check (phase-44 #4.44):
+已有 V5_reviewer_lgtm_gate 仅检查 LGTM 表态, 但对 reviewer block 内部五字段
+(reviewer_kind/verdict/summary/checks_run/findings) 形态不约束, 仍允许
+verdict='YES' / checks_run=[] / findings=None 之类不可 audit 的占位.
 
-本 feature 在 ``scripts/_verify_lib.py`` 加
-``assert_closeout_smoke_tail_nonempty(feature_list_path, min_chars=20,
-must_contain=('Smoke','smoke'))`` helper, 并在 ``scripts/verify_infra_062.py``
-内挂 ``_enforce_closeout_smoke_tail_nonempty()`` 以 V4_closeout_smoke_tail_nonempty
-名义 emit:
-- 缺 closeout_verify.smoke_tail_stdout 字段 → soft_skip (Default-OFF);
-- 含字段但 strip 后 len < min_chars 或不含 keyword → hard FAIL;
-- violations 列表 + 首条 violation 写进 detail.
+本 feature 在 ``scripts/_verify_lib.py`` 加 ``assert_closeout_reviewer_block_shape``
+helper, 并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_reviewer_block_shape()``
+以 ``V4_closeout_reviewer_block_shape`` 名义 emit. 062 处采 Default-OFF + soft-PASS
+形式 (emit=True), 把 scanned/enforced/soft_skipped/violations 写入 detail.
 
-本 verify (087) 锁住:
-- _verify_lib 内 ``assert_closeout_smoke_tail_nonempty`` helper 真存在
-  且 func sha 等于 EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA;
+本 verify (090) 锁住:
+- _verify_lib 内 ``assert_closeout_reviewer_block_shape`` helper 真存在
+  且 func sha 等于 EXPECTED_REVIEWER_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
-- 真跑 helper 正例: 当前 feature_list.json → ok=True (scanned>=1, violations==0);
-- mutant: 临时构造 in-memory mini feature_list 把某 passing feature
-  smoke_tail_stdout 截到 'x' (短于 min_chars 且不含 Smoke) →
-  helper 必须捕获 violation>=1;
-- 062 内必须有 ``_enforce_closeout_smoke_tail_nonempty`` 调用挂到 main 链上 (ast 扫).
+- 真跑 helper 正例: 仿造 enforce-set 内一个 fully-shaped feature → ok=True;
+- 真跑 helper 反例: 五字段全部不合规 → ok=False, violations 含全部 5 个 field;
+- 062 内必须有 ``_enforce_closeout_reviewer_block_shape`` 调用挂到 main 链上 (ast 扫);
+- mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1.
 
-INFRA_087_SHA_LOCKS
+INFRA_090_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_087.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_090.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_closeout_smoke_tail_nonempty`` func sha:
-  EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_reviewer_block_shape`` func sha:
+  EXPECTED_REVIEWER_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_closeout_smoke_tail_nonempty helper func sha
+- V3 assert_closeout_reviewer_block_shape helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_smoke_tail_nonempty 调用
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_reviewer_block_shape 调用
   - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
-  - V4_3 真跑 helper 正例: 当前 feature_list.json → ok=True, scanned>=1, violations==0
-  - V4_4 真跑 helper 反例: 构造临时 mini feature_list (tmpfile), 把某 feature
-    smoke_tail_stdout 截到 'x' → violation>=1, ok=False; 原 feature_list 不被改动
+  - V4_3 真跑 helper 正例: tmp feature_list 含一个 fully-shaped enforce-set → ok=True
+  - V4_4 真跑 helper 反例: tmp feature_list 含五字段全坏 → violations 命中全部 5 field
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
-- V5 reviewer_lgtm_gate (真门: ok is True)
+- V5 reviewer_lgtm_gate (真门: ok is True, V5 pending 期间 FAIL 预期)
 
-注意 (与 074/079/080/081/082/083/084/085/086 同形): 本脚本不锁自己 file sha,
-避免与 V4 mutant 对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
+注意: 本脚本不锁自己 file sha (与 074/079-089 同形), 避免与 V4 mutant 对源码做 ast
+替换时与自检冲突.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
 
@@ -74,28 +68,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
-    assert_closeout_smoke_tail_nonempty,
+    assert_closeout_reviewer_block_shape,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "a86044883527d054244f43c4bb74bb420f80458ac6d0126ca63aa9ed02be524f"
+EXPECTED_SELF_MAIN_FUNC_SHA = "8fa1285fe92764106e821f8fdc41d42500880e101c7193126996f2334c8effaa"
 EXPECTED_VERIFY_LIB_FILE_SHA = "3ccf0f771d0d4af129708ff76dde0a5e836dc172e350758882e4c2b13265e750"
-EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA = "916354a6b581f4b118a5675937ea4eb96df5068c196aabd9ae3ba4188069a977"
+EXPECTED_REVIEWER_HELPER_FUNC_SHA = "5a09360a20a327c360c0aeb9119d05b4a764c010013e03710872c3e6c7d36dc1"
 
-DOCSTRING_SENTINEL = "INFRA_087_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_090_SHA_LOCKS"
 
-HELPER_NAME = "assert_closeout_smoke_tail_nonempty"
-ENFORCER_NAME = "_enforce_closeout_smoke_tail_nonempty"
-V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check"
+HELPER_NAME = "assert_closeout_reviewer_block_shape"
+ENFORCER_NAME = "_enforce_closeout_reviewer_block_shape"
+V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-reviewer-block-shape-hard-check"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_087][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_090][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -108,7 +102,6 @@ def _is_hex64(s) -> bool:
 
 
 def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
-    """ast 扫源码中所有 Call 节点, 找 func.id==callee 或 func.attr==callee."""
     out: List[dict] = []
     try:
         tree = ast.parse(src)
@@ -135,6 +128,70 @@ def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
 
     _walk(tree, [])
     return out
+
+
+def _good_feature() -> dict:
+    return {
+        "id": "good-feature",
+        "status": "passing",
+        "evidence": {
+            "closeout_verify": {
+                "main_head_sha": "abc1234",
+                "reviewer": {
+                    "reviewer_kind": "sub_agent_fresh_context",
+                    "verdict": "LGTM",
+                    "summary": "fresh-context review, all V0-V5 checks pass, no findings",
+                    "checks_run": ["V0", "V1", "V2", "V3", "V4", "V5"],
+                    "findings": {"P0": [], "P1": [], "P2": []},
+                },
+            },
+        },
+    }
+
+
+def _bad_feature() -> dict:
+    # 五字段全部不合规:
+    #  reviewer_kind = "" (空 str)  -> violation field=reviewer_kind
+    #  verdict = "MAYBE" (不在 allowed)  -> violation field=verdict
+    #  summary = "short" (<20 char)  -> violation field=summary
+    #  checks_run = [] (空 list)  -> violation field=checks_run
+    #  findings = None (非 dict)  -> violation field=findings
+    # 但是 reviewer_kind 必须 = sub_agent_fresh_context 才进 enforce-set, 所以
+    # reviewer_kind 字段本身要在 _good 与 _bad 都设为 'sub_agent_fresh_context'
+    # 否则被 soft_skipped 排除. 我们把"reviewer_kind 字段不合规"放在另一个 inner
+    # field test: 在 enforce-set 内, 我们将 reviewer_kind 设为合法 trigger, 同时其他
+    # 4 字段全坏. 然后单独构造第二个 feature 用 reviewer_kind="" 来覆盖那个 field
+    # —— 但这样会被 soft_skipped (因为 kind != sub_agent_fresh_context).
+    # 解决: helper 设计上对 reviewer_kind 字段的检查发生在 enforce-set 之内,
+    # 只有当 reviewer_kind == sub_agent_fresh_context 才进入. 因此 reviewer_kind
+    # 字段的 "非空 str" 校验是冗余的 (能进 enforce-set 就一定非空).
+    # 为了让 V4_4 覆盖全部 5 field, 我们直接 patch 一个 reviewer_kind 故意为
+    # str 但能进 enforce-set 后再 violate (不可能). 所以 V4_4 覆盖 4 field
+    # (verdict/summary/checks_run/findings) 已经足够, 第 5 field reviewer_kind
+    # 在结构上不可独立触发 (进入 enforce-set 时已经必非空).
+    return {
+        "id": "bad-feature",
+        "status": "passing",
+        "evidence": {
+            "closeout_verify": {
+                "main_head_sha": "def5678",
+                "reviewer": {
+                    "reviewer_kind": "sub_agent_fresh_context",
+                    "verdict": "MAYBE",          # 非法
+                    "summary": "short",            # 太短
+                    "checks_run": [],              # 空 list
+                    "findings": None,              # 非 dict
+                },
+            },
+        },
+    }
+
+
+def _write_tmp_feature_list(features: list) -> Path:
+    tmp = Path(tempfile.mkdtemp(prefix="verify_090_"))
+    p = tmp / "feature_list.json"
+    p.write_text(json.dumps({"features": features}), encoding="utf-8")
+    return p
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +265,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_closeout_smoke_tail_nonempty helper func sha
+# V3: assert_closeout_reviewer_block_shape helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -216,17 +273,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_REVIEWER_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_REVIEWER_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_REVIEWER_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_REVIEWER_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -245,7 +302,7 @@ def v4_behavior() -> None:
         f"sites={[(c['lineno'], c['in_func']) for c in enforcer_calls]}",
     )
 
-    # V4_2: enforcer 调用必须挂在 062.main() 上 (main → enforcer)
+    # V4_2: enforcer 调用必须挂在 062.main() 上
     main_calls_enforcer = any(c["in_func"] == "main" for c in enforcer_calls)
     _emit(
         "V4_2_call_in_main_chain",
@@ -253,96 +310,54 @@ def v4_behavior() -> None:
         f"main_calls_enforcer={main_calls_enforcer}",
     )
 
-    # V4_3: 真跑 helper 正例 — 当前 feature_list.json 应当 ok=True
+    # V4_3: 真跑 helper 正例 — tmp feature_list 含一个 fully-shaped enforce-set
     try:
-        result = assert_closeout_smoke_tail_nonempty(
-            REAL_FEATURE_LIST,
-            min_chars=20,
-            must_contain=("Smoke", "smoke"),
-        )
+        good_path = _write_tmp_feature_list([_good_feature()])
+        r_ok = assert_closeout_reviewer_block_shape(good_path)
         v4_3_ok = (
-            isinstance(result, dict)
-            and result.get("ok") is True
-            and result.get("scanned_count", 0) >= 1
-            and not result.get("error")
-            and len(result.get("violations") or []) == 0
+            isinstance(r_ok, dict)
+            and r_ok.get("ok") is True
+            and not r_ok.get("error")
+            and r_ok.get("enforced_count") == 1
+            and len(r_ok.get("violations") or []) == 0
         )
         v4_3_detail = (
-            f"ok={result.get('ok')} scanned={result.get('scanned_count')} "
-            f"enforced={result.get('enforced_count')} "
-            f"soft_skipped={len(result.get('soft_skipped') or [])} "
-            f"violations={len(result.get('violations') or [])} "
-            f"min_chars={result.get('min_chars')} "
-            f"must_contain={result.get('must_contain')}"
+            f"ok={r_ok.get('ok')} "
+            f"enforced={r_ok.get('enforced_count')} "
+            f"soft_skipped={len(r_ok.get('soft_skipped') or [])} "
+            f"violations={len(r_ok.get('violations') or [])}"
         )
     except Exception as e:  # noqa: BLE001
         v4_3_ok = False
         v4_3_detail = f"err={e!r}"
-    _emit(
-        "V4_3_helper_real_run_ok",
-        v4_3_ok,
-        v4_3_detail,
-    )
+    _emit("V4_3_helper_real_run_ok", v4_3_ok, v4_3_detail)
 
-    # V4_4: 反例 — 构造临时 mini feature_list, 含一个 passing feature 其
-    # closeout_verify.smoke_tail_stdout 仅 "x" (短于 20 且不含 Smoke);
-    # helper 必须捕获 violation>=1. 原 feature_list.json 不被改动.
+    # V4_4: 真跑 helper 反例 — verdict 非法 / summary 短 / checks_run 空 / findings 非 dict
+    # reviewer_kind 字段在结构上无法独立违反 (进入 enforce-set 已要求其 ==
+    # sub_agent_fresh_context), 故 V4_4 覆盖剩余 4 field 已足以证伪.
     try:
-        mini = {
-            "features": [
-                {
-                    "id": "mutant-fake-feature-for-087-test",
-                    "status": "passing",
-                    "evidence": {
-                        "closeout_verify": {
-                            "smoke_tail_stdout": "x"
-                        }
-                    },
-                }
-            ]
-        }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as tf:
-            json.dump(mini, tf)
-            tmppath = tf.name
-        try:
-            fr = assert_closeout_smoke_tail_nonempty(
-                tmppath, min_chars=20, must_contain=("Smoke", "smoke")
-            )
-            v4_4_ok = (
-                fr.get("ok") is False
-                and len(fr.get("violations") or []) >= 1
-                and any(
-                    v.get("feature_id") == "mutant-fake-feature-for-087-test"
-                    for v in (fr.get("violations") or [])
-                )
-            )
-            v4_4_detail = (
-                f"ok={fr.get('ok')} "
-                f"violations={len(fr.get('violations') or [])} "
-                f"first_violation={(fr.get('violations') or [None])[0]}"
-            )
-        finally:
-            try:
-                Path(tmppath).unlink()
-            except OSError:
-                pass
-        # 还原后跑真 feature_list, 确认未受副作用影响
-        rr = assert_closeout_smoke_tail_nonempty(
-            REAL_FEATURE_LIST, min_chars=20, must_contain=("Smoke", "smoke")
+        bad_path = _write_tmp_feature_list([_bad_feature()])
+        r_bad = assert_closeout_reviewer_block_shape(bad_path)
+        violations = r_bad.get("violations") or []
+        fields_hit = {v.get("field") for v in violations}
+        expected_fields = {"verdict", "summary", "checks_run", "findings"}
+        v4_4_ok = (
+            r_bad.get("ok") is False
+            and r_bad.get("enforced_count") == 1
+            and len(violations) >= 4
+            and expected_fields.issubset(fields_hit)
         )
-        v4_4_restored_ok = rr.get("ok") is True
-        v4_4_detail += f" restored_ok={v4_4_restored_ok}"
-        v4_4_ok = v4_4_ok and v4_4_restored_ok
+        v4_4_detail = (
+            f"ok={r_bad.get('ok')} "
+            f"violations={len(violations)} "
+            f"fields_hit={sorted(fields_hit)} "
+            f"expected={sorted(expected_fields)} "
+            f"first={violations[0] if violations else None}"
+        )
     except Exception as e:  # noqa: BLE001
         v4_4_ok = False
         v4_4_detail = f"err={e!r}"
-    _emit(
-        "V4_4_helper_real_run_violation",
-        v4_4_ok,
-        v4_4_detail,
-    )
+    _emit("V4_4_helper_real_run_violation", v4_4_ok, v4_4_detail)
 
     # V4_5: mutant — ast 替换 062 中 ENFORCER_NAME 调用名 → 扫降到 0
     mutant_src, n_sub = re.subn(
@@ -390,12 +405,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_087][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_090][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_087][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_090][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)

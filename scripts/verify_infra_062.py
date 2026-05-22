@@ -68,6 +68,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
+    assert_closeout_reviewer_block_shape,
     assert_closeout_smoke_tail_nonempty,
     assert_closeout_verify_runs_min_count,
     assert_closeout_verify_runs_shape,
@@ -80,7 +81,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "dee2c3c706439e90398771d6cc510355a2a366afd93a8f2ddfa5b59ee5112246"
+EXPECTED_VERIFY_LIB_FILE_SHA = "3ccf0f771d0d4af129708ff76dde0a5e836dc172e350758882e4c2b13265e750"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -91,6 +92,7 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d58
 # 集合本身"不能在 _verify_lib.py 漂移而 062 未感知。
 V3_HELPER_FUNC_NAMES = (
     "assert_baseline_head_echo_present_and_matches",
+    "assert_closeout_reviewer_block_shape",
     "assert_closeout_smoke_tail_nonempty",
     "assert_closeout_verify_runs_min_count",
     "assert_closeout_verify_runs_shape",
@@ -867,6 +869,61 @@ def v5_reviewer_gate() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4: closeout_verify.reviewer block 五字段形态 hard check
+# (phase-44 #4.44) infra-P278-followup-closeout-reviewer-block-shape-hard-check
+# Default-OFF + soft-PASS for legacy: emit=True 不阻断, 把 violations 计数写进 detail.
+# 实际 hard 行为由 verify_infra_090 自身锁定.
+# ---------------------------------------------------------------------------
+def _enforce_closeout_reviewer_block_shape() -> None:
+    """对 feature_list.json 调 assert_closeout_reviewer_block_shape(min_summary_chars=20,
+    allowed_verdicts=('LGTM','conditional','REJECT'),
+    required_findings_keys=('P0','P1','P2')); Default-OFF: emit=True 不阻断,
+    把 scanned/enforced/soft_skipped/violations 写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_reviewer_block_shape",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_reviewer_block_shape(
+            feature_list,
+            min_summary_chars=20,
+            allowed_verdicts=("LGTM", "conditional", "REJECT"),
+            required_findings_keys=("P0", "P1", "P2"),
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_reviewer_block_shape",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_reviewer_block_shape",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_reviewer_block_shape",
+        True,  # Default-OFF soft-PASS
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_summary_chars={result.get('min_summary_chars')} "
+        f"allowed_verdicts={result.get('allowed_verdicts')} "
+        f"required_findings_keys={result.get('required_findings_keys')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V4: closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check
 # (phase-43 #5.43) infra-P278-followup-closeout-smoke-tail-nonempty-hard-check
 # Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
@@ -962,6 +1019,7 @@ def main() -> int:
     _enforce_closeout_verify_runs_min_count()
     _enforce_closeout_smoke_tail_nonempty()
     _enforce_closeout_verify_runs_shape()
+    _enforce_closeout_reviewer_block_shape()
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)

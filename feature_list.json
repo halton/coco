@@ -11729,7 +11729,7 @@
       "id": "infra-P278-followup-closeout-reviewer-block-shape-hard-check",
       "priority": 4.44,
       "phase": 44,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "closeout reviewer block shape hard check (verdict + checks_run)",
       "rationale": "reviewer.summary 非空已 hard，本轮补 verdict ∈ {LGTM, LGTM-conditional, REJECT} 与 checks_run 非空 list，统一 reviewer block 形状，避免 stub reviewer 蒙混 closeout。",
@@ -11746,7 +11746,24 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；verdict 白名单显式三值；legacy 整 reviewer 字段缺 soft_skip；cascade _verify_lib + 062 file sha 全量",
-      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "engineer_notes": "Engineer #4.44: 新增 assert_closeout_reviewer_block_shape helper (五字段 reviewer_kind/verdict/summary/checks_run/findings, Default-OFF + soft-PASS for legacy, 仅 reviewer_kind=='sub_agent_fresh_context' enforce); 062 加 _enforce_closeout_reviewer_block_shape + V4_closeout_reviewer_block_shape wire (soft-PASS emit); 新 verify_infra_090 V0-V5 14 checks (V5 pending FAIL 预期); dump_v4_sha_graph.py 加 090 3 entries; cascade bump LIB sha 24 files + 062 sha in 081/082/083.",
+        "verify_runs": [
+          {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"},
+          {"name": "verify_infra_090", "status": "FAIL", "tail_stdout": "[verify_infra_090][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate'] (V5 pending placeholder)"},
+          {"name": "verify_infra_081", "status": "PASS", "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_082", "status": "PASS", "tail_stdout": "[verify_infra_082][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_083", "status": "PASS", "tail_stdout": "[verify_infra_083][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_084", "status": "PASS", "tail_stdout": "[verify_infra_084][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_085", "status": "PASS", "tail_stdout": "[verify_infra_085][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_086", "status": "PASS", "tail_stdout": "[verify_infra_086][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_087", "status": "PASS", "tail_stdout": "[verify_infra_087][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_088", "status": "PASS", "tail_stdout": "[verify_infra_088][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "verify_infra_089", "status": "PASS", "tail_stdout": "[verify_infra_089][SUMMARY] ALL PASS (14 checks)"},
+          {"name": "init_smoke", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
+        ]
+      }
     },
     {
       "id": "infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
