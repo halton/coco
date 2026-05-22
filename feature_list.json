@@ -10998,10 +10998,11 @@
           "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
-            "verdict": "LGTM-conditional",
+            "verdict": "LGTM",
             "lgtm": true,
             "p1_resolution": "Reviewer 报告的 P1 (bump 085 EXPECTED_SELF_MAIN_FUNC_SHA) 经 P1-fix sub-agent 复核为 no-op: 085 V1_self_main_func_sha 实跑 PASS (got=87e910ff05a21013 expect=87e910ff05a21013); Reviewer 看的是 cascade bump 中间态。无需 bump。",
-            "summary": "phase-42 #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock 实施正确: _verify_lib.assert_verify_lib_public_helper_naming 新 helper Default-OFF soft_skip 设计完备 (23 __all__ / 8 enforced / 15 legacy_allowlisted / 0 violations), 062 V4_verify_lib_helper_naming_convention 真触发 emit detail 字段齐, allowlist 15 名 100% 在 __all__ 且 100% 不带前缀 (无误纳入), 085 mutation test 真做 (V4_4 插入非法 helper 触发 violation 再还原 PASS), smoke ALL PASS. Reviewer P1 (085 self main sha bump) 复核为 no-op (常量已正确, V1 已 PASS)."
+            "summary": "phase-42 #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock 实施正确: _verify_lib.assert_verify_lib_public_helper_naming 新 helper Default-OFF soft_skip 设计完备 (23 __all__ / 8 enforced / 15 legacy_allowlisted / 0 violations), 062 V4_verify_lib_helper_naming_convention 真触发 emit detail 字段齐, allowlist 15 名 100% 在 __all__ 且 100% 不带前缀 (无误纳入), 085 mutation test 真做 (V4_4 插入非法 helper 触发 violation 再还原 PASS), smoke ALL PASS. Reviewer P1 (085 self main sha bump) 复核为 no-op (常量已正确, V1 已 PASS). [promoted via phase-44 #1.44 infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion: conditional P1 已经 P1-fix 复核为 no-op (085 V1_self_main_func_sha 实跑 PASS), 条件已满足, 升格 LGTM]",
+            "original_verdict": "LGTM-conditional"
           }
         }
       }
@@ -11423,7 +11424,7 @@
       "id": "infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion",
       "priority": 1.44,
       "phase": 44,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM 提升",
       "description": "verify_infra_085.py V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock 在 baseline 8c59945 与当前 main 同 FAIL（reviewer.verdict='LGTM-conditional' expected 'LGTM'）。属 evidence 字段语义偏移的 pre-existing 噪声，需在确认 conditional 条件已满足后改 verdict 为 LGTM 或调整 V5 helper 允许 LGTM-conditional。",
@@ -11437,7 +11438,60 @@
       ],
       "notes_for_engineer": ".venv 必须激活；优先纯 evidence 字段修复，避免改 V5 helper 语义弱化",
       "acceptance": "verify_infra_085 ALL PASS；smoke PASS；reviewer LGTM",
-      "rationale_phase44": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM promotion (phase-44 #1)"
+      "rationale_phase44": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM promotion (phase-44 #1)",
+      "evidence": {
+        "engineer_change": {
+          "target_feature": "infra-P278-followup-verify-lib-helper-naming-convention-lock",
+          "field_path": "evidence.closeout_verify.reviewer.verdict",
+          "before": "LGTM-conditional",
+          "after": "LGTM",
+          "summary_appended": "[promoted via phase-44 #1.44 ...条件已满足, 升格 LGTM]",
+          "rationale": "P1 (085 bump) 已被 P1-fix sub-agent 复核为 no-op (V1_self_main_func_sha 实跑 PASS), 条件已满足"
+        },
+        "verify_runs_engineer": [
+          {
+            "script": "scripts/verify_infra_085.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail": "ALL PASS (23 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_082.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_083.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_084.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_086.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_087.py",
+            "status": "PASS",
+            "tail": "ALL PASS (14 checks)"
+          },
+          {
+            "script": "./init.sh",
+            "status": "PASS",
+            "tail": "Smoke 通过"
+          }
+        ],
+        "closeout_verify": {}
+      }
     },
     {
       "id": "infra-V6-backlog-verify-lib-legacy-9-verify-prefix-rename-to-enforce",
