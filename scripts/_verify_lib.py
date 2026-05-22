@@ -57,6 +57,7 @@ __all__ = [
     "assert_closeout_smoke_tail_nonempty",
     "assert_verify_lib_helpers_in_v3_sha_table",
     "assert_closeout_verify_runs_shape",
+    "assert_closeout_reviewer_block_shape",
 ]
 
 
@@ -2971,4 +2972,220 @@ def assert_verify_lib_helpers_in_v3_sha_table(
         len(out["missing_in_v3_table"]) == 0
         and len(out["extra_in_v3_table"]) == 0
     )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-closeout-reviewer-block-shape-hard-check (phase-44 #4.44):
+# 扫所有 feature 的 evidence.closeout_verify.reviewer 五字段 + 形态合规.
+# Default-OFF + soft-PASS for legacy: 仅对 reviewer_kind == 'sub_agent_fresh_context'
+# enforce; 其他软放过 (soft_skipped).
+# ---------------------------------------------------------------------------
+def assert_closeout_reviewer_block_shape(
+    feature_list_path,
+    min_summary_chars: int = 20,
+    allowed_verdicts: tuple = ("LGTM", "conditional", "REJECT"),
+    required_findings_keys: tuple = ("P0", "P1", "P2"),
+) -> dict:
+    """每个 closeout_verify.reviewer block 必须含五字段且形态合规.
+
+    enforce-set 判定:
+      - feature.status == 'passing'
+      - evidence.closeout_verify 为 dict
+      - closeout_verify.reviewer 为 dict
+      - reviewer.reviewer_kind == 'sub_agent_fresh_context'
+
+    五字段:
+      - reviewer_kind: 非空 str
+      - verdict: 非空 str 且 (若 allowed_verdicts 非空) 必须 ∈ allowed_verdicts
+      - summary: str, strip 后长度 >= min_summary_chars
+      - checks_run: 非空 list
+      - findings: dict, 且含 required_findings_keys 中每个 key, 对应值为 list
+
+    参数:
+        feature_list_path: feature_list.json 路径 (str | Path).
+        min_summary_chars: summary strip 后最少字符数 (默认 20).
+        allowed_verdicts: verdict 字段允许的取值; 传 () 则只校验非空.
+        required_findings_keys: findings dict 必须包含的 key (默认 P0/P1/P2).
+
+    返回 dict::
+
+        {
+          "ok": bool,
+          "violations": [
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "field": str,        # reviewer_kind|verdict|summary|checks_run|findings
+                  "value_repr": str,   # repr(...) 截断到 80 字符
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],
+          "enforced_count": int,
+          "scanned_count": int,
+          "min_summary_chars": int,
+          "allowed_verdicts": list,
+          "required_findings_keys": list,
+          "error": str | None,
+        }
+
+    Default-OFF + soft-PASS for legacy:
+      - 老 feature (无 reviewer / reviewer 非 dict / reviewer_kind !=
+        'sub_agent_fresh_context') → soft_skipped, 不算 violation.
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    allowed_list = list(allowed_verdicts) if allowed_verdicts else []
+    findings_keys = list(required_findings_keys) if required_findings_keys else []
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_summary_chars": int(min_summary_chars),
+        "allowed_verdicts": list(allowed_list),
+        "required_findings_keys": list(findings_keys),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    def _repr80(v) -> str:
+        s = repr(v)
+        return s if len(s) <= 80 else s[:77] + "..."
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        reviewer = cv.get("reviewer")
+        if not isinstance(reviewer, dict):
+            out["soft_skipped"].append(fid)
+            continue
+        if reviewer.get("reviewer_kind") != "sub_agent_fresh_context":
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+
+        # reviewer_kind
+        rk = reviewer.get("reviewer_kind")
+        if not (isinstance(rk, str) and rk.strip()):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "reviewer.reviewer_kind empty or not str",
+                "field": "reviewer_kind",
+                "value_repr": _repr80(rk),
+            })
+
+        # verdict
+        vd = reviewer.get("verdict")
+        if not (isinstance(vd, str) and vd.strip()):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "reviewer.verdict empty or not str",
+                "field": "verdict",
+                "value_repr": _repr80(vd),
+            })
+        elif allowed_list and vd not in allowed_list:
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"reviewer.verdict={vd!r} not in "
+                    f"allowed_verdicts={allowed_list}"
+                ),
+                "field": "verdict",
+                "value_repr": _repr80(vd),
+            })
+
+        # summary
+        summ = reviewer.get("summary")
+        if not isinstance(summ, str):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "reviewer.summary missing or not str",
+                "field": "summary",
+                "value_repr": _repr80(summ),
+            })
+        else:
+            stripped_len = len(summ.strip())
+            if stripped_len < int(min_summary_chars):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"reviewer.summary stripped_len={stripped_len} "
+                        f"< min_summary_chars={min_summary_chars}"
+                    ),
+                    "field": "summary",
+                    "value_repr": _repr80(summ),
+                })
+
+        # checks_run
+        cr = reviewer.get("checks_run")
+        if not (isinstance(cr, list) and len(cr) > 0):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "reviewer.checks_run missing/empty or not list",
+                "field": "checks_run",
+                "value_repr": _repr80(cr),
+            })
+
+        # findings
+        fd = reviewer.get("findings")
+        if not isinstance(fd, dict):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "reviewer.findings missing or not dict",
+                "field": "findings",
+                "value_repr": _repr80(fd),
+            })
+        else:
+            missing_keys = [k for k in findings_keys if k not in fd]
+            non_list_keys = [
+                k for k in findings_keys
+                if k in fd and not isinstance(fd[k], list)
+            ]
+            if missing_keys:
+                out["violations"].append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"reviewer.findings missing required keys="
+                        f"{missing_keys} (required={findings_keys})"
+                    ),
+                    "field": "findings",
+                    "value_repr": _repr80(fd),
+                })
+            if non_list_keys:
+                out["violations"].append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"reviewer.findings keys not list: "
+                        f"{non_list_keys}"
+                    ),
+                    "field": "findings",
+                    "value_repr": _repr80(fd),
+                })
+    out["ok"] = len(out["violations"]) == 0
     return out
