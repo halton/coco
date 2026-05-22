@@ -8782,13 +8782,18 @@
     },
     {
       "id": "infra-P291-followup-extend-helper-to-other-v5",
-      "priority": 999,
+      "priority": 2.4,
       "status": "not_started",
-      "phase": 0,
+      "phase": 40,
       "area": "infra",
-      "title": "把 assert_reviewer_lgtm helper 接入其它 V5_reviewer_lgtm_gate 调用点",
+      "title": "assert_reviewer_lgtm 推广到所有 V5_reviewer_lgtm_gate 调用点",
       "rationale": "P291 在 _verify_lib 中加了 assert_reviewer_lgtm helper + verify_infra_071, 但当前只在新 verify_infra_071 中实质 enforce. 其它 V5_reviewer_lgtm_gate (060/062/063/065/066/067/068/070 等) 仍是文案占位. Reviewer P2 backlog: 把 helper 接入其它 V5 调用点, 让全部 V5 gate 都成为实检.",
-      "description": "把 _verify_lib.assert_reviewer_lgtm 接入其它 V5_reviewer_lgtm_gate 调用点, 改文案占位为实检. Verify 范围: 修改 060/062/063/065/066/067/068/070 等脚本中 V5_reviewer_lgtm_gate 段为实读 feature_list.json. Reviewer acceptance: 所有 V5_reviewer_lgtm_gate 名实一致, mutant test 让 verdict-FOO/wrong-id 触发 rc!=0."
+      "description": "P291 引入的 _verify_lib.assert_reviewer_lgtm 当前只在 verify_infra_071 实读 feature_list.json，其余 060/062/063/065/066/067/068/070/072/073 等 10+ 个 verify_*.py 的 V5_reviewer_lgtm_gate 段仍是占位文案/恒真 assert，名实不一致。本 feature 改造所有现存 V5 调用点接入 helper 真读对应 feature evidence.reviewer (或 closeout_verify.reviewer)，并在 mutant 实验 (临时修改 feature_list.json 中 reviewer.verdict='FOO' 或 reviewer_kind=other) 时让对应 verify rc!=0。",
+      "verification_plan": "新 verify_infra_076.py: V0 静态; V1/V2/V3 标准 sha 锁链; V4_1 扫描全 scripts/verify_infra_*.py 找出所有 V5_reviewer_lgtm_gate 调用点 (regex 或 ast), 断言每个调用点都 import 并调 assert_reviewer_lgtm (不能再有 'placeholder' / 'TODO' 文案); V4_2 mutant: 临时把某 verify 的 V5 段还原为恒真 'pass' → V4_1 FAIL; V4_3 跑一遍每个被改造 verify 的 V5 段确认 PASS (评估时 self-skip 075 / 071 已就绪的); V5 真打 (改 feature_list.json reviewer.verdict='FOO' 临时) 让所有改造点 FAIL 后 restore; total checks 估 ~15",
+      "notes_for_engineer": ".venv 必须激活;Engineer 任务尺寸大 (改 10+ 文件 + cascade bump 全部 _verify_lib sha 锁), 必须拆 A (helper 接入 + 单文件 PoC) + B (其余 9 文件 cascade + dump bump + commit + push) 两步, 避免 socket 断 (infra-P299-engineer-task-size-guideline 教训);V4_5 mutant 不要把整脚本复制到 tmp (P286 round-1 教训), 在内存中 mutate；改造后 071 已有的 assert_reviewer_lgtm 调用不要重复",
+      "depends_on": [
+        "infra-P299-engineer-report-vs-impl-trustworthy"
+      ]
     },
     {
       "id": "infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup",
@@ -8802,43 +8807,54 @@
     },
     {
       "id": "infra-P299-engineer-report-vs-impl-trustworthy",
-      "priority": 999,
+      "priority": 1.4,
       "status": "not_started",
-      "phase": 0,
+      "phase": 40,
       "area": "infra",
-      "title": "Engineer 报告文字 vs 实际 commit 内容交叉锁",
+      "title": "Engineer/Reviewer 实跑报告 vs closeout 实测交叉锁",
       "rationale": "P291 Engineer + Reviewer 在 feat 上的实跑报告与 closeout sub-agent 实测严重矛盾 (前者报 6 项 FAIL 谎称 baseline, closeout 实测 ALL PASS 三遍). 说明 Engineer/Reviewer 提交的实跑报告未被任何 verify 交叉验证, 可能造假或环境失配. 需要机械化 gate: closeout 必须重跑并对比前序报告的 verify_runs 数据, 不一致时阻 merge.",
-      "description": "Engineer/Reviewer 报告 vs closeout 实测交叉锁. Verify: closeout sub-agent 实跑 vs Engineer/Reviewer 报告的 verify_runs[].tail_stdout_sha256 必须 byte-match; 不一致 → rc!=0, 报告差异. Reviewer acceptance: P291 类型造假事件被自动捕获."
+      "description": "P291 事件揭示 Engineer/Reviewer 报告的 verify_runs[].tail_stdout 可与 closeout 实跑不一致（疑似造假或 venv/cwd 失配）。新 helper assert_report_matches_closeout_runs(feature_id) 真读 feature_list.json，强制 evidence 中 engineer_runs / reviewer_runs (若存在) 的 tail_stdout_sha256 与 closeout_verify.verify_runs[same script].tail_stdout_sha256 byte-match；不一致返回 ok=False+reason。验收：mutant 改 Engineer 报告中某 sha256 一位 → V4 FAIL。",
+      "verification_plan": "新 verify_infra_075.py: V0 静态自检; V1 self func sha 锁 helper; V2 _verify_lib file sha 锁; V3 helper func sha 锁; V4_1 正常 feature evidence 全 byte-match → PASS; V4_2 mutant: 改 engineer_runs sha256 一位 → ok=False; V4_3 mutant: closeout_verify.verify_runs 缺脚本 → ok=False (script not covered); V4_4 mutant: tail_stdout 字面改一字符 而 sha256 不同步 → 触发 V4_2 检测; V4_5 兼容 evidence 暂无 engineer_runs 字段时 graceful skip (record 'no engineer runs to cross-check'); V5 真打 P291 evidence 验证当前 mismatch 情况 (P291 evidence 不含 engineer_runs 字段 → V4_5 skip 路径)",
+      "notes_for_engineer": ".venv 必须激活;helper 写入 _verify_lib.py 后必须 cascade bump 所有锁 _verify_lib file sha 的 verify_*.py (060/062/063/065/066/067/068/070/071/072/073) EXPECTED_VERIFY_LIB_FILE_SHA + dump_v4_sha_graph + 071 EXPECTED_ASSERT_REVIEWER_LGTM_FUNC_SHA 等;然后 dump_v4_sha_graph 也要 cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA;V4_2 mutant 不要再用 V4_5 那种把整脚本复制走的 harness (P286 round-1 教训), 用最小 evidence dict in-memory mutate;V1 self func sha 用真算值, 禁止 __BUMP_ME__ placeholder"
     },
     {
       "id": "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 3.4,
+      "phase": 40,
+      "status": "not_started",
       "area": "infra",
-      "title": "Reviewer brief checkpoint: baseline 实跑前必须 git checkout 到真 baseline sha",
+      "title": "Reviewer baseline_head_echo 强制校验防 baseline-HEAD 错配",
       "rationale": "P286 round-1 Reviewer 报告 verify_infra_060 在 baseline (c88a248) FAIL 1/14; round-2 Closeout 实测 baseline c88a248 上 060 ALL PASS (14 checks). 强烈怀疑 round-1 Reviewer 在 round-1 HEAD (b69310d 或其它) 而非真 baseline c88a248 上跑 060, 把当时 in-progress 中间态当成了 baseline. 应在 Reviewer brief 模板里加 checkpoint: 报 baseline 数据前必须 git checkout 到 main baseline sha 并 echo HEAD 确认, 报告里强制带 baseline_head_echo 字段.",
-      "description": "Reviewer fresh-context 评审 baseline 段最常见误差: 没 checkout 就在 in-progress HEAD 上跑, 报告错把 in-progress 行为当 baseline 行为. Verify 范围: 改 Reviewer brief 模板 + 加 verify_infra_*** 校验 evidence.reviewer.baseline_head_echo 字段含 baseline sha 前 7 hex."
+      "description": "P286 round-1 Reviewer 在 feat HEAD 直接跑被当成 baseline 结果, 报告 V4_5 假阳性；同类 P291 Engineer 也在 feat HEAD 错把 baseline 结果当主验证。本 feature 在 Reviewer brief 模板中固化要求 evidence.reviewer.baseline_head_echo 字段写真实 `git rev-parse --short HEAD` 输出 (在 checkout baseline 后), 并新增 verify 锁 closeout_verify.reviewer.baseline_head_echo == closeout_verify.pre_existing_baseline_sha[:7] (容差短 sha 长度)；不匹配 → V4 FAIL。",
+      "verification_plan": "新 verify_infra_077.py: V0/V1/V2/V3 标准 sha 锁; V4_1 真读 feature_list.json 中 5+ 个最近 closeout feature, 断言 reviewer.baseline_head_echo 存在且匹配 pre_existing_baseline_sha[:7]; V4_2 mutant: 临时改 echo 一位 → FAIL; V4_3 mutant: 删字段 → FAIL ('missing baseline_head_echo'); V4_4 容差: echo 全 40-hex 也接受; V4_5 backward-compat: pre P286 老 feature evidence 无该字段时 graceful skip + 计入 legacy 列表 (不阻 PASS, 仅 stdout warn); V5 reviewer lgtm gate (用 assert_reviewer_lgtm 自己锁自己); total ~14 checks; 同时改 .claude/agents/ 下 reviewer 模板 (如有) 加 baseline_head_echo 段",
+      "notes_for_engineer": ".venv 必须激活;cascade: 加 helper 后 bump _verify_lib sha + dump + 060 EXPECTED_DUMP_FILE_SHA;legacy 容差非常关键 (不要让本 feature merge 后所有老 evidence 全 FAIL);改 Reviewer brief 模板的位置: 查 .claude/ 或 docs/ 下相关模板, 找不到就在 AGENTS.md 加段"
     },
     {
       "id": "infra-P286-followup-074-self-main-func-sha-bump",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 4.4,
+      "phase": 40,
+      "status": "not_started",
       "area": "infra",
-      "title": "verify_infra_074 EXPECTED_SELF_MAIN_FUNC_SHA 从 __BUMP_ME__ 升到真值",
+      "title": "verify_infra_074 V1 self func sha + 同模式 070 placeholder 收口",
       "rationale": "P286 final HEAD 07ad894 上 verify_infra_074 自锁 EXPECTED_SELF_MAIN_FUNC_SHA 仍为 __BUMP_ME__ placeholder; V1 输出 hint 建议 80c710de... 真实 sha. 应在下一轮 hardening feature 中把 placeholder 替成真值并启用 V1 strict check, 关闭自锁旁路.",
-      "description": "074 V1 self-sha lock 当前为 placeholder, 不阻 PASS. Verify 范围: 改 verify_infra_074.py 把 EXPECTED_SELF_MAIN_FUNC_SHA 改成实测值 + 触发 V1 active."
+      "description": "verify_infra_074 V1 EXPECTED_SELF_MAIN_FUNC_SHA 当前为 __BUMP_ME__ 占位, V1 effectively 关闭。同模式 verify_infra_070 也有 self func sha 占位 (P294-followup-070-self-func-sha-bump)。本 feature 一次性收口两个 placeholder, 改用 scripts/_verify_lib.func_sha_by_name(__file__, 'main') 实算值锁定, V1 启用; 同时机制化检查所有 verify_infra_*.py 中是否还存在 __BUMP_ME__ 字面量 (新 lint 防回归)。",
+      "verification_plan": "改 verify_infra_074.py + verify_infra_070.py: EXPECTED_SELF_MAIN_FUNC_SHA = '<真算 sha>' (不能再 __BUMP_ME__);新 verify_infra_078.py: V0/V1/V2/V3 自锁; V4_1 grep 全 scripts/verify_infra_*.py 不允许出现 '__BUMP_ME__' 字面 → 任何匹配 FAIL; V4_2 mutant: 临时改某 verify 加 __BUMP_ME__ → FAIL; V4_3 跑 verify_infra_074 + 070 自身确保新 sha 生效 rc=0; V4_4 mutant: 改 074 main 函数体 → V1 应 FAIL (sha mismatch);V5 reviewer gate; total ~12 checks",
+      "notes_for_engineer": ".venv 必须激活;先在 074/070 中实算 main 函数 sha 写入 EXPECTED_SELF_MAIN_FUNC_SHA, 然后 cascade bump _verify_lib sha 锁 (因为新增了 078) + dump 锁 + 060 锁;V4_2 mutant 用 in-memory 字符串扫描而非真改文件;notes: 077 / 075 / 076 (本 phase 前序 feature) 不在此 feature 范围 (它们走自己的 V1 真值)"
     },
     {
       "id": "infra-P286-followup-v4-2-stricter-equal-check",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 5.4,
+      "phase": 40,
+      "status": "not_started",
       "area": "infra",
-      "title": "verify_infra_074 V4_2 增 V4_2b: EXPECTED_CURRENT_TOTAL_NODES == 实测值精确 check",
+      "title": "verify_infra_074 V4_2 stricter ==/±tolerance 精确锁",
       "rationale": "P286 V4_2 当前只锁 EXPECTED_CURRENT_TOTAL_NODES > 0 (正整数). 在 ±5 tolerance 内的静默改动 (例 76→78) 只能靠 V2 file sha 报警; 若改动也包含 expected 值同步调整, 则完全不触发. 考虑加 V4_2b 锁 == 当前实测值 (与 ±5 tolerance 设计权衡: tolerance 留给真实漂移, V4_2b 锁定义本身).",
-      "description": "权衡: tolerance ±5 vs 精确锁. 现状只 >0 太宽. Verify 范围: 改 verify_infra_074.py 加 V4_2b 锁与 dump 实测值 cross-check."
+      "description": "verify_infra_074 V4_2 当前只断言 total_nodes > 0, 过宽。P286 round-2 移除 V4_5 mutant 后, V4_2 是唯一锁 total_nodes 值的检查, 需收紧为精确等于 EXPECTED_CURRENT_TOTAL_NODES (=81 或最新值) 或 ±5 tolerance, 并加 V4_2b 与 dump_v4_sha_graph 实跑值做 cross-check。",
+      "verification_plan": "改 verify_infra_074.py: V4_2 = total_nodes == EXPECTED_CURRENT_TOTAL_NODES (精确锁); V4_2b 新增 = abs(total_nodes - dump_real_total) <= 5 容差锁; 同步更新 EXPECTED_CURRENT_TOTAL_NODES 为当前实测;新 verify_infra_079.py: V0-V3 sha 链; V4_1 mutant 074 中改 EXPECTED 值 ±10 → 074 V4_2 FAIL; V4_2 跑 074 自己确认 rc=0; V4_3 跑 dump_v4_sha_graph 解析 SUMMARY 行的 total_nodes 实测值与 074 EXPECTED 容差吻合; V5 reviewer gate; total ~10 checks",
+      "notes_for_engineer": ".venv 必须激活;先 cd repo 跑 python scripts/dump_v4_sha_graph.py 取真 total_nodes 值更新 074 EXPECTED;cascade bump _verify_lib + dump + 060 EXPECTED_DUMP_FILE_SHA (079 新增);V4 mutant 实验注意一旦改 EXPECTED 074 必须先 verify 再 restore",
+      "depends_on": [
+        "infra-P286-followup-074-self-main-func-sha-bump"
+      ]
     }
   ],
   "_meta": {
