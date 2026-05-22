@@ -10288,13 +10288,46 @@
       "id": "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
       "priority": 5.41,
       "phase": 41,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "075 V5 字段 ok= 与 076/077/078 其它 verify 字段 helper_ok= 不一致，统一命名",
       "rationale": "075 V5_reviewer_lgtm_gate 输出用 `ok=`，而 076/077/078 等同类 V5 都用 `helper_ok=`，小风格不一致；统一为 helper_ok= 方便机械化解析与文本扫描。",
       "description": "把 scripts/verify_infra_075.py 中 V5 PASS line 的 ok= 改为 helper_ok=，与 076/077/078 对齐。",
       "verification_plan": "运行 075 + grep helper_ok=",
-      "notes_for_engineer": "与本 feature 无关的小清理；来源 P286 followup Reviewer 旁注"
+      "notes_for_engineer": "与本 feature 无关的小清理；来源 P286 followup Reviewer 旁注",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "feat_head_sha": "356b100",
+          "baseline_head_sha": "fdf754d",
+          "merge_commit_sha": "e3abb19",
+          "verify_runs": [
+            {"verify": "verify_infra_075", "status": "PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+            {"verify": "verify_infra_076", "status": "PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_077", "status": "PASS", "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_078", "status": "PASS", "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"},
+            {"verify": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (18 checks)"},
+            {"verify": "verify_infra_081", "status": "PASS", "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_080", "status": "PASS", "tail_stdout": "[verify_infra_080][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_079", "status": "PASS", "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_074", "status": "PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"},
+            {"verify": "verify_infra_060", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+            {"verify": "verify_infra_034", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"},
+            {"verify": "verify_infra_037", "status": "FAIL", "tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']", "pre_existing_baseline_sha": "fdf754d", "baseline_tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"},
+            {"verify": "verify_infra_041", "status": "FAIL", "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'", "pre_existing_baseline_sha": "fdf754d", "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"},
+            {"verify": "verify_infra_057", "status": "FAIL", "tail_stdout": "[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']", "pre_existing_baseline_sha": "fdf754d", "baseline_tail_stdout": "[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"}
+          ],
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "round": 1,
+            "feat_head_echo": "356b100",
+            "baseline_head_echo": "fdf754d",
+            "summary": "改动小、精准、对齐 spec、无副作用，四文件命名完全一致；P291 实质性合规（动态变量替换硬编码 True）；smoke 通过；FAIL 全部为 pre-existing baseline 同 FAIL"
+          }
+        }
+      }
     },
     {
       "id": "infra-P286-followup-tolerance-headroom-bump",
@@ -10437,6 +10470,18 @@
         "EXPECTED_VERIFY_059_FILE_SHA": "276badba1a1dceb45ce3bc8ffce7809f5f77fb37eae3140a904e329fbcc95025",
         "EXPECTED_VERIFY_074_FILE_SHA": "3cbc76e322152143aa3653ecaa055e5c89ddb95eb04d3a544d1ead8504270b1a"
       }
+    },
+    {
+      "id": "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "把 079/080/081/074 等 V5 PASS line 的 ok=True 同样替换为动态 helper_ok={ok} 与 075-078 对齐",
+      "rationale": "P286-followup4 round-1 Reviewer P2 旁注：spec 明确只覆盖 075-078 四个 verify 的 V5 PASS line 字段统一，但 079/080/081/074 等其它 verify 的 V5 PASS line 仍是 `ok=True` 旧格式，超出本次 spec 范围未处理。需后续单独 followup 把这批也对齐为动态 `helper_ok={ok}`，全仓库 V5 命名一致。",
+      "description": "扫描 scripts/verify_infra_*.py 的 V5 PASS line，把所有 `ok=True` 等硬编码 / 旧字段名统一为动态 `helper_ok={ok}` 并保证 P291 substring 仍合规。",
+      "verification_plan": "全 verify_infra_*.py grep 确认 V5 PASS line 只剩 helper_ok= 形式；跑相关 verify + smoke 全 PASS。",
+      "notes_for_engineer": "来源 phase-41 #5.41 P286-followup4 Reviewer P2 旁注；范围超出 #5.41 spec 故另立 followup。"
     }
   ],
   "_meta": {

@@ -6616,3 +6616,12 @@ Engineer sub-agent (phase-40 #4.40):
 - V4 sha cascade: 未触发 (改动只动了 v5_reviewer_gate 的 detail 字符串，未改 main()/helper/lib，所有 EXPECTED_*_SHA 常量保持不变)
 - pre-existing baseline FAIL (与本 feature 无关): 037/041/057
 - 下一步: 等 Reviewer fresh-context 评审
+
+## Session 2026-05-22 phase-41 #5.41 Closeout
+- Feature: infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok → passing
+- baseline main HEAD=fdf754d; feat HEAD=356b100; merge_commit=e3abb19 (A 段 commit 之后 main HEAD 在 B 段 bump)
+- Reviewer (sub_agent_fresh_context) round-1 LGTM: 改动小、精准、对齐 spec、无副作用，四文件命名完全一致；P291 实质性合规
+- Verify (post-merge main): 075/076/077/078/062/081/080/079/074/060/034 全 ALL PASS；037/041/057 pre-existing baseline 同 FAIL (与本 feature 无关)
+- smoke: 通过
+- P2 入账: +backlog `infra-P286-followup5-v5-ok-naming-extend-to-079-081-074` priority=999 phase=null (扩展到 079/080/081/074 等 V5 PASS line 的 `ok=True` 旧格式)
+- 下一步: phase-41 收官 (5/5 passing)，phase-42 planning
