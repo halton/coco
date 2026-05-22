@@ -8382,7 +8382,7 @@
     {
       "id": "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
       "priority": 3.39,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 39,
       "area": "infra",
       "title": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证",

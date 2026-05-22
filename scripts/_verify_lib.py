@@ -894,6 +894,7 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
 
         {
           "total_checks": int,
+          "passed_checks": int,
           "failed_checks": int,
           "failed_reasons": list[str],
           "all_trustworthy": bool,
@@ -901,6 +902,9 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
           "verify_runs_have_tail": bool,
           "reviewer_fresh_context": bool,
         }
+
+    守恒律 (invariant): ``passed_checks + failed_checks == total_checks`` 恒成立,
+    用于下游 V4 把"推导关系"升级为"独立字段交叉锁" (P299).
     """
     reasons: list[str] = []
 
@@ -991,6 +995,7 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
     failed = len(reasons)
     return {
         "total_checks": total_checks,
+        "passed_checks": total_checks - failed,
         "failed_checks": failed,
         "failed_reasons": reasons,
         "all_trustworthy": failed == 0,
