@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
-"""verify_infra_092 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_shape
-emit 已 promote 至真硬 (bool(result['ok'])), 配套 grace_period 17 historic features.
+"""verify_infra_093 V0-V5: 锁定 verify_infra_062._enforce_closeout_reviewer_block_shape
+emit 已 promote 至真硬 (bool(result['ok'])), 配套 grace_period 22 historic features.
 
-infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool (phase-45 #1.45):
-phase-44 #3.44 引入 V4_closeout_verify_runs_shape, 当时 emit=True soft 模式以避免
-阻断 167 historic violations. 本 feature 把 emit 从 True soft promote 到
-bool(result['ok']) 真硬, 但用 grace_period_feature_ids 一次性 grandfather 17 个
-历史 violation feature, 新 feature 必须 hard PASS.
+infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool (phase-45 #2.45):
+phase-44 #4.44 引入 V4_closeout_reviewer_block_shape, 当时 emit=True soft 模式以避免
+阻断 45 historic violations (22 unique features). 本 feature 把 emit 从 True soft
+promote 到 bool(result['ok']) 真硬, 但用 grace_period_feature_ids 一次性 grandfather
+22 个历史 violation feature, 新 feature 必须 hard PASS reviewer block 五字段形态.
 
-本 verify (092) 锁住:
-- _verify_lib.py 的 assert_closeout_verify_runs_shape helper 接受
+本 verify (093) 锁住:
+- _verify_lib.py 的 assert_closeout_reviewer_block_shape helper 接受
   ``grace_period_feature_ids`` 参数 (signature 检查);
 - _verify_lib file sha 与 helper func sha;
-- 062 内必须定义 ``V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS`` 常量 (非空 tuple);
-- 062 _enforce_closeout_verify_runs_shape 调用 helper 时传入 grace_period_feature_ids;
-- 062 _enforce_closeout_verify_runs_shape 内的 _emit 第二参不是裸 True (真硬 promote);
+- 062 内必须定义 ``V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS`` 常量 (非空 tuple);
+- 062 _enforce_closeout_reviewer_block_shape 调用 helper 时传入 grace_period_feature_ids;
+- 062 _enforce_closeout_reviewer_block_shape 内的 _emit 第二参不是裸 True (真硬 promote);
 - 真跑 helper 正例: feature 在 grace_set 内 + 含 violation → ok=True + grace_skipped 含该 fid;
 - 真跑 helper 反例: feature 不在 grace_set 内 + 含 violation → ok=False + violations 非空;
 - mutant: 062 中 grace 常量名替换 → 062 仍执行但 grace_period_count==0.
 
-INFRA_092_SHA_LOCKS
+INFRA_093_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_092.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_093.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_closeout_verify_runs_shape`` func sha:
+- ``scripts/_verify_lib.py:assert_closeout_reviewer_block_shape`` func sha:
   EXPECTED_SHAPE_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
@@ -31,17 +31,17 @@ INFRA_092_SHA_LOCKS
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_closeout_verify_runs_shape helper func sha
+- V3 assert_closeout_reviewer_block_shape helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 中 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS 常量定义 + 非空 tuple
-  - V4_2 062 _enforce_closeout_verify_runs_shape 调 helper 时传 grace_period_feature_ids 参数
+  - V4_1 062 中 V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS 常量定义 + 非空 tuple
+  - V4_2 062 _enforce_closeout_reviewer_block_shape 调 helper 时传 grace_period_feature_ids 参数
         且 _emit 第二参不是裸 True (真硬 promote 检查)
   - V4_3 真跑 helper 正例: bad feature ∈ grace_set → ok=True, grace_skipped 含 fid
   - V4_4 真跑 helper 反例: bad feature ∉ grace_set → ok=False, violations 非空
-  - V4_5 mutant: 062 中 GRACE 常量赋值改名 → 仍可 import 但 grace_period_count 应能 ≥ 17 仅在原版
+  - V4_5 mutant: 062 中 GRACE 常量赋值改名 → 仍可 import 但 grace_period_count 应能 ≥ 22 仅在原版
 - V5 reviewer_lgtm_gate (真门: V5 pending 期间预期 FAIL)
 
-注意: 本脚本不锁自己 file sha, 与 074/079-091 同形.
+注意: 本脚本不锁自己 file sha, 与 074/079-092 同形.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (verify_summary_exit).
 
@@ -66,23 +66,24 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
-    assert_closeout_verify_runs_shape,
+    assert_closeout_reviewer_block_shape,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "0a37a89e07a976570c6e2d0b4ee60221ca1c8396e6e046054c1d2e7f1f59d1a7"
+EXPECTED_SELF_MAIN_FUNC_SHA = "305fc7cfc339e76ddfa774c276d4c1e81170884791b76259121a5eb1a3d4d8ab"
 EXPECTED_VERIFY_LIB_FILE_SHA = "44aa048a18610396022213c0e5f57c938775a84e831305de50048f114ef81e78"
-EXPECTED_SHAPE_HELPER_FUNC_SHA = "2bba74d292e70d71b87c45a283e0cdc23fad046eb72ee5f55f001083c46d868f"
+EXPECTED_SHAPE_HELPER_FUNC_SHA = "0aab4012cb7fd3540935b859936667bd76f70d04f4e3504139c161502b562bf2"
 
-DOCSTRING_SENTINEL = "INFRA_092_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_093_SHA_LOCKS"
 
-HELPER_NAME = "assert_closeout_verify_runs_shape"
-ENFORCER_NAME = "_enforce_closeout_verify_runs_shape"
-GRACE_CONST_NAME = "V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS"
+HELPER_NAME = "assert_closeout_reviewer_block_shape"
+ENFORCER_NAME = "_enforce_closeout_reviewer_block_shape"
+GRACE_CONST_NAME = "V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS"
+EMIT_TAG = "V4_closeout_reviewer_block_shape"
 V5_GATE_FEATURE_ID = (
-    "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool"
+    "infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool"
 )
 
 _results: List[Tuple[str, bool, str]] = []
@@ -90,7 +91,7 @@ _results: List[Tuple[str, bool, str]] = []
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_092][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_093][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -102,7 +103,9 @@ def _is_hex64(s) -> bool:
     return isinstance(s, str) and bool(re.fullmatch(r"[0-9a-f]{64}", s))
 
 
-def _bad_run_block() -> dict:
+def _bad_reviewer_block() -> dict:
+    """构造一个 enforce-set 命中 (status=passing, reviewer_kind=sub_agent_fresh_context)
+    但 reviewer.summary 短于 20 char 的 violation feature."""
     return {
         "id": "tmp-fid",
         "status": "passing",
@@ -112,31 +115,17 @@ def _bad_run_block() -> dict:
                 "reviewer": {
                     "reviewer_kind": "sub_agent_fresh_context",
                     "verdict": "LGTM",
+                    "summary": "short",  # < 20 chars → violation
+                    "checks_run": ["a", "b"],
+                    "findings": {"P0": [], "P1": [], "P2": []},
                 },
-                "verify_runs": [
-                    {
-                        "name": "verify_infra_062",
-                        "status": "PASS",
-                        "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (27 checks)",
-                    },
-                    {
-                        "name": "init_smoke",
-                        "status": "PASS",
-                        "tail_stdout": "==> Smoke: ok; entry-point + Coco class loaded",
-                    },
-                    {
-                        "name": "verify_infra_092",
-                        "status": "PASS",
-                        "tail_stdout": "ok",  # 短 tail → violation
-                    },
-                ],
             },
         },
     }
 
 
 def _write_tmp_feature_list(features: list) -> Path:
-    tmp = Path(tempfile.mkdtemp(prefix="verify_092_"))
+    tmp = Path(tempfile.mkdtemp(prefix="verify_093_"))
     p = tmp / "feature_list.json"
     p.write_text(json.dumps({"features": features}), encoding="utf-8")
     return p
@@ -171,7 +160,6 @@ def _enforcer_passes_grace_kwarg() -> tuple:
             break
     if target_fn is None:
         return False, f"enforcer fn {ENFORCER_NAME} not found"
-    # 扫调用
     for sub in ast.walk(target_fn):
         if isinstance(sub, ast.Call):
             fname = None
@@ -188,9 +176,8 @@ def _enforcer_passes_grace_kwarg() -> tuple:
 
 
 def _enforcer_emit_not_naked_true() -> tuple:
-    """ast 扫 062 中 ENFORCER_NAME 函数体, 找最后一个 _emit('V4_closeout_verify_runs_shape', X, ...)
-    调用; 若 X 是常量 True, 则视为未 promote (FAIL); 若是表达式 (Call/Attribute/Name/BoolOp 等)
-    则视为 promote 到真硬 (PASS)."""
+    """ast 扫 062 中 ENFORCER_NAME 函数体, 找最后一个 _emit(EMIT_TAG, X, ...) 调用;
+    若 X 是常量 True, 则视为未 promote (FAIL); 若是表达式则视为 promote 到真硬 (PASS)."""
     src = VERIFY_062.read_text(encoding="utf-8")
     tree = ast.parse(src)
     target_fn = None
@@ -211,14 +198,13 @@ def _enforcer_emit_not_naked_true() -> tuple:
                 fname = sub.func.attr
             if fname == "_emit" and sub.args:
                 first = sub.args[0]
-                if isinstance(first, ast.Constant) and first.value == "V4_closeout_verify_runs_shape":
+                if isinstance(first, ast.Constant) and first.value == EMIT_TAG:
                     if len(sub.args) >= 2:
                         second = sub.args[1]
                         if isinstance(second, ast.Constant) and second.value is True:
                             last_naked_true = (getattr(sub, "lineno", -1))
                         else:
                             last_promoted = (getattr(sub, "lineno", -1), type(second).__name__)
-    # 允许 soft-skip 路径还有 True (err / placeholder), 但必须存在至少一个 promoted 真硬 _emit
     if last_promoted is not None:
         return True, f"promoted _emit at line {last_promoted}; (naked_true_lines may still exist for soft-skip err path)"
     return False, f"no promoted _emit found; last_naked_true={last_naked_true}"
@@ -295,7 +281,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_closeout_verify_runs_shape helper func sha
+# V3: assert_closeout_reviewer_block_shape helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -321,7 +307,6 @@ def v3_helper_func_sha() -> None:
 # V4: 行为校验
 # ---------------------------------------------------------------------------
 def v4_behavior() -> None:
-    # V4_1: 062 中 GRACE 常量定义且非空 tuple
     grace = _read_grace_tuple_from_062()
     _emit(
         "V4_1_grace_const_defined_nonempty",
@@ -329,7 +314,6 @@ def v4_behavior() -> None:
         f"grace_const={GRACE_CONST_NAME} len={len(grace)} sample={grace[:2] if grace else None}",
     )
 
-    # V4_2: enforcer 传 grace_period_feature_ids 参数 + emit 非裸 True (promote)
     ok_kwarg, detail_kwarg = _enforcer_passes_grace_kwarg()
     ok_promote, detail_promote = _enforcer_emit_not_naked_true()
     _emit(
@@ -338,12 +322,11 @@ def v4_behavior() -> None:
         f"kwarg_ok={ok_kwarg} ({detail_kwarg}); promote_ok={ok_promote} ({detail_promote})",
     )
 
-    # V4_3: 真跑 helper 正例 — bad feature 但 fid 在 grace_set 内 → ok=True + grace_skipped 含 fid
     try:
-        bad = _bad_run_block()
+        bad = _bad_reviewer_block()
         fid = bad["id"]
         path = _write_tmp_feature_list([bad])
-        r_in_grace = assert_closeout_verify_runs_shape(
+        r_in_grace = assert_closeout_reviewer_block_shape(
             path, grace_period_feature_ids=(fid,)
         )
         gs = r_in_grace.get("grace_skipped") or []
@@ -365,11 +348,10 @@ def v4_behavior() -> None:
         v4_3_detail = f"err={e!r}"
     _emit("V4_3_grace_in_set_softpasses", v4_3_ok, v4_3_detail)
 
-    # V4_4: 真跑 helper 反例 — bad feature 不在 grace_set 内 → ok=False + violations 非空
     try:
-        bad = _bad_run_block()
+        bad = _bad_reviewer_block()
         path = _write_tmp_feature_list([bad])
-        r_out_grace = assert_closeout_verify_runs_shape(
+        r_out_grace = assert_closeout_reviewer_block_shape(
             path, grace_period_feature_ids=()
         )
         violations = r_out_grace.get("violations") or []
@@ -391,9 +373,6 @@ def v4_behavior() -> None:
         v4_4_detail = f"err={e!r}"
     _emit("V4_4_grace_out_of_set_hardfails", v4_4_ok, v4_4_detail)
 
-    # V4_5: mutant — 把 062 中 GRACE 常量名替换 → 062 module 仍执行 enforcer
-    # 但 enforcer 内对 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS 引用失效.
-    # 这里用 ast text scan: GRACE_CONST_NAME 在 062 内应至少出现 2 次 (定义 + 引用).
     src062 = VERIFY_062.read_text(encoding="utf-8")
     occurrences = len(re.findall(re.escape(GRACE_CONST_NAME), src062))
     mutant_src, n_sub = re.subn(
@@ -437,12 +416,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_092][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_093][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_092][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_093][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
