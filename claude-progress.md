@@ -7157,3 +7157,13 @@ planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进
 - feature_list.json: status in_progress → passing, evidence.closeout_verify 6 信号完整 (main_head_sha=188c517, reviewer sub_agent_fresh_context LGTM, pre_existing_baseline_sha=null)
 - Reviewer (sub-agent fresh-context): LGTM, P0/P1 空, P2 仅文档建议
 - 等待 B 段 bump main_head_sha 至 closeout commit
+
+## Session 2026-05-22 phase-44 #4.44 Closeout A
+
+- feature: infra-P278-followup-closeout-reviewer-block-shape-hard-check
+- merge: feat/infra-P278-followup-closeout-reviewer-block-shape-hard-check → main (--no-ff), merge HEAD=e45bfbc, baseline_head_echo=0ad989f
+- verify_runs: 062 ALL PASS 26 (含新增 V4_closeout_reviewer_block_shape soft emit, scanned=28 enforced=26 soft_skipped=2 violations=45), 090 13/14 (V5 pending placeholder gate FAIL 符预期), 081-089 ALL PASS 14 each, smoke PASS
+- feature_list.json: status in_progress → passing, evidence.closeout_verify 6 信号完整 (main_head_sha=e45bfbc, reviewer sub_agent_fresh_context LGTM, pre_existing_baseline_sha=null)
+- 新 backlog 入账: infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool (45 historic violations)
+- Reviewer (sub-agent fresh-context): LGTM, P0/P1 空, P2 仅 reviewer_kind 准入设计说明
+- 等待 B 段 bump main_head_sha 至 closeout commit
