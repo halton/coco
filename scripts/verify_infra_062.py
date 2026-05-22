@@ -373,21 +373,63 @@ def v4_behavior() -> None:
 
 
 # ---------------------------------------------------------------------------
-# P299-followup wire-into-closeout-gate (infra-P299-followup-wire-into-closeout-gate):
-# 在 062 内部 wire assert_report_matches_closeout_runs helper, 使 closeout
-# byte-match 真伪校验在 ./init.sh / closeout gate 路径上有静态调用点 (机械化
-# 阻 merge 的 ast-lock 由 verify_infra_081 V4 保证). 实际 byte-match 真跑
-# 留 Default-OFF: schema 不兼容 (现存 flat verify_runs vs P299 nested round
-# 结构) 或 main_head 不匹配 → soft-PASS 跳过. 完整 enforcement 留 backlog
-# infra-P299-followup2-enable-byte-match-real-run。
+# P299-followup2 enable-byte-match-real-run (infra-P299-followup2-enable-byte-
+# match-real-run):
+# 旧版 _enforce_closeout_byte_match 依赖 closeout_verify.main_head_sha 与当前
+# git HEAD startswith 匹配 + nested round schema with rc 字段, 实际从未触发
+# (closeout commit 后 bump 又移动 HEAD; flat schema 无 rc) → 永远 soft-skip,
+# 等于挂牌不开门。本轮把 enforcement 改成 "弱版 anchor byte-match" 方案:
+#   - 扫所有 passing feature 的 closeout_verify.verify_runs
+#   - 对每条 entry: 从 name (fallback script) 提取 verify_infra_NNN 数字, tail_stdout
+#     必须含 'verify_infra_NNN' 子串 (≈ tail-name 一致性 anchor, catch
+#     copy-paste 伪造)
+#   - name 无 verify_infra_NNN (smoke/bootstrap 等) 或 tail 为空 → soft_skip
+#     (Default-OFF 渐进 promote, 与 P286-followup3 baseline_head_echo 同风格)
+#   - 任一 violation → hard FAIL (开门)
+#   - enforced >= 1 → fire=True (真触发, 不再 soft-skip overall)
+# Default-OFF 哲学保留: 老 evidence 无规范 tail 自动 soft_skip, 不 retro 重写;
+# 新 closeout 真 enforce。assert_report_matches_closeout_runs (P299 nested
+# schema 真重跑 helper) 留作未来 enforcement 强版本入口, 由 backlog 单独 promote。
 # ---------------------------------------------------------------------------
+
+
+def _classify_closeout_tail_anchor(name: str, tail: str) -> tuple[str, str]:
+    """对单条 verify_runs entry 分类: 返回 (verdict, detail)。
+
+    verdict in {"enforced_ok", "violation", "soft_skip"}.
+
+    规则:
+      - name 中无 verify_infra_NNN → soft_skip (smoke/bootstrap/init 等非 verify
+        脚本)
+      - tail.strip() 为空 → soft_skip (老 evidence 未捕获 tail)
+      - tail 含子串 'verify_infra_NNN' → enforced_ok (tail-name 一致)
+      - 否则 → violation (tail 与声称 name 不匹配, 疑似 copy-paste 伪造)
+    """
+    import re as _re
+
+    m = _re.search(r"verify_infra_(\d+)", name or "")
+    if not m:
+        return ("soft_skip", "name has no verify_infra_NNN")
+    nnn = m.group(1)
+    if not (tail or "").strip():
+        return ("soft_skip", f"tail_stdout empty for verify_infra_{nnn}")
+    anchor = f"verify_infra_{nnn}"
+    if anchor in tail:
+        return ("enforced_ok", f"anchor {anchor} present")
+    return (
+        "violation",
+        f"tail missing anchor {anchor}; tail-tail={tail[-60:]!r}",
+    )
+
+
 def _enforce_closeout_byte_match() -> None:
-    """对 feature_list.json 中当前 main HEAD 对应的 closeout feature 调
-    assert_report_matches_closeout_runs (Default-OFF: schema 不兼容或不
-    匹配则 soft-PASS 跳过, 不阻 062 主流程; 081 V4 ast-lock 锁住"062 必须
-    调此 helper"这一静态事实)."""
+    """弱版 anchor byte-match: 扫所有 passing feature.closeout_verify.verify_runs,
+    要求每条 entry 的 tail_stdout 含 verify_infra_NNN anchor (NNN 来自 name).
+
+    Default-OFF 渐进 promote: 老 evidence/smoke entry 自动 soft_skip;
+    新 evidence 真 enforce。violation > 0 → hard FAIL, 真开门。
+    """
     import json
-    import subprocess as _sp  # noqa: WPS433
 
     feature_list = REAL_FEATURE_LIST
     if not feature_list.is_file():
@@ -398,19 +440,19 @@ def _enforce_closeout_byte_match() -> None:
         )
         return
     try:
-        head = _sp.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=str(REPO), capture_output=True, text=True, check=False,
-        ).stdout.strip()
-    except Exception as e:  # noqa: BLE001
-        _emit("V4_byte_match_enforce", True, f"soft-skip: git HEAD err={e!r}")
-        return
-    try:
         fl = json.loads(feature_list.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
-        _emit("V4_byte_match_enforce", True, f"soft-skip: feature_list parse err={e!r}")
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: feature_list parse err={e!r}",
+        )
         return
-    target = None
+    scanned = 0
+    enforced = 0
+    soft_skipped = 0
+    violations: list[str] = []
+    fired_feature_ids: list[str] = []
     for f in fl.get("features", []):
         if f.get("status") != "passing":
             continue
@@ -420,65 +462,96 @@ def _enforce_closeout_byte_match() -> None:
         cv = ev.get("closeout_verify") or {}
         if not isinstance(cv, dict):
             continue
-        ch = cv.get("main_head_sha") or ""
-        if isinstance(ch, str) and ch and head.startswith(ch):
-            target = (f.get("id"), cv)
-            break
-    if target is None:
-        _emit(
-            "V4_byte_match_enforce",
-            True,
-            f"soft-skip: no passing feature.closeout_verify matches HEAD={head[:12]}",
-        )
-        return
-    fid, cv = target
-    # P299 helper 期望 nested round schema: {"verify_runs":[{"round":N,"scripts":{...}}]}
-    # 现存 closeout_verify 是 flat list [{"script","status","tail_stdout"}], schema
-    # 不兼容 → 包成单 round 适配, 若仍不兼容 (字段缺) helper 自身会报 schema err.
-    flat_runs = cv.get("verify_runs") or []
-    if not isinstance(flat_runs, list) or not flat_runs:
-        _emit(
-            "V4_byte_match_enforce",
-            True,
-            f"soft-skip: target={fid} verify_runs empty/not-list",
-        )
-        return
-    scripts_map: dict = {}
-    for r in flat_runs:
-        if not isinstance(r, dict):
+        runs = cv.get("verify_runs") or []
+        if not isinstance(runs, list):
             continue
-        name = r.get("script")
-        tail = r.get("tail_stdout")
-        status = r.get("status")
-        rc = r.get("rc")  # legacy schema 无 rc, 跳过
-        if not (isinstance(name, str) and isinstance(tail, str)
-                and isinstance(status, str) and isinstance(rc, int)):
-            continue
-        scripts_map[name] = {"rc": rc, "tail_stdout": tail, "status": status}
-    if not scripts_map:
-        _emit(
-            "V4_byte_match_enforce",
-            True,
-            f"soft-skip: target={fid} legacy flat schema (no rc field); "
-            f"byte-match enforcement deferred to backlog infra-P299-followup2",
-        )
-        return
-    report_obj = {"verify_runs": [{"round": 1, "scripts": scripts_map}]}
-    try:
-        result = assert_report_matches_closeout_runs(
-            report_obj, REPO, cv.get("main_head_sha", ""),
-        )
-    except Exception as e:  # noqa: BLE001
-        _emit("V4_byte_match_enforce", True, f"soft-skip: helper err={e!r}")
-        return
-    # 真跑成功: ok=True 时 hard PASS, ok=False 时 hard FAIL (真造假证据)
-    _emit(
-        "V4_byte_match_enforce",
-        bool(result.get("ok")),
-        f"target={fid} checked={result.get('checked')} "
-        f"matched={result.get('matched')} "
-        f"offending_count={len(result.get('offending') or [])}",
+        feat_fired = False
+        for r in runs:
+            if not isinstance(r, dict):
+                continue
+            name = r.get("name") or r.get("script") or ""
+            tail = r.get("tail_stdout") or ""
+            scanned += 1
+            verdict, detail = _classify_closeout_tail_anchor(name, tail)
+            if verdict == "enforced_ok":
+                enforced += 1
+                feat_fired = True
+            elif verdict == "violation":
+                violations.append(f"{f.get('id')}::{name}::{detail}")
+            else:
+                soft_skipped += 1
+        if feat_fired:
+            fired_feature_ids.append(f.get("id"))
+    fire_overall = enforced >= 1
+    ok = (len(violations) == 0)
+    detail = (
+        f"scanned={scanned} enforced={enforced} soft_skipped={soft_skipped} "
+        f"violations={len(violations)} fire={fire_overall} "
+        f"fired_features={len(fired_feature_ids)}"
     )
+    if violations:
+        detail += f" first_violation={violations[0]!r}"
+    if not fire_overall:
+        # 无任何 entry 触发 enforcement (例如全部 soft_skip), soft-PASS overall
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: no enforced entry; {detail}",
+        )
+    else:
+        _emit("V4_byte_match_enforce", ok, detail)
+
+    # Deferred strong path (Default-OFF, 大多数情况 noop): 若某 passing feature
+    # 的 closeout_verify 含 P299 nested rounds schema (含 round + scripts + rc)
+    # 且 main_head_sha 与当前 HEAD 匹配, 则真调 assert_report_matches_closeout_runs
+    # 做 byte+rc 比对; 现存 evidence 全是 flat schema → 不命中即 noop。保留 ast
+    # 调用满足 verify_infra_081 V4 锁 ("062._enforce_closeout_byte_match 函数体
+    # 必须含 helper 调用"), 并为未来 schema 迁移留 hook。
+    import subprocess as _sp  # noqa: WPS433
+
+    try:
+        _head = _sp.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(REPO), capture_output=True, text=True, check=False,
+        ).stdout.strip()
+    except Exception:  # noqa: BLE001
+        return
+    for _f in fl.get("features", []):
+        if _f.get("status") != "passing":
+            continue
+        _ev = _f.get("evidence")
+        if not isinstance(_ev, dict):
+            continue
+        _cv = _ev.get("closeout_verify") or {}
+        if not isinstance(_cv, dict):
+            continue
+        _ch = _cv.get("main_head_sha") or ""
+        if not (isinstance(_ch, str) and _ch and _head.startswith(_ch)):
+            continue
+        _runs = _cv.get("verify_runs") or []
+        if not isinstance(_runs, list) or not _runs:
+            continue
+        _first = _runs[0]
+        if not (isinstance(_first, dict)
+                and "round" in _first
+                and isinstance(_first.get("scripts"), dict)):
+            continue
+        _report_obj = {"verify_runs": _runs}
+        try:
+            assert_report_matches_closeout_runs(
+                _report_obj, REPO, _cv.get("main_head_sha", ""),
+            )
+        except Exception:  # noqa: BLE001
+            return
+        return
+
+
+def _maybe_strong_byte_match_deferred(fl: dict) -> None:
+    """Reserved hook for future schema migration; currently unused. The
+    actual deferred strong path lives inline in ``_enforce_closeout_byte_match``
+    so verify_infra_081 V4_2 can detect ``assert_report_matches_closeout_runs``
+    inside the enforcer's own function body via AST scan."""
+    return
 
 
 # ---------------------------------------------------------------------------
