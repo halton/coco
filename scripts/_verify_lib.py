@@ -45,6 +45,7 @@ __all__ = [
     "scan_reviewer_text",
     "verify_baseline_fail_claims",
     "verify_evidence_tail_stdout_sha",
+    "assert_report_matches_closeout_runs",
     "assert_reviewer_lgtm",
     "assert_verify_passed",
     "verify_summary_exit",
@@ -1629,3 +1630,256 @@ def assert_reviewer_lgtm(
     return True, (
         f"feature {feature_id!r}: reviewer_kind={kind!r} verdict={verdict!r} OK"
     )
+
+
+# ---------------------------------------------------------------------------
+# infra-P299-engineer-report-vs-impl-trustworthy: Engineer/Reviewer report
+# vs closeout 实跑 byte-match helper
+# ---------------------------------------------------------------------------
+# P291 真实造假事件: Engineer report 谎称 6 项 verify FAIL 是 baseline pre-existing,
+# 第三方实跑全 PASS. 本 helper 在指定 main_head_sha 检出隔离 worktree, 真
+# subprocess.run report 中每条 verify, 比对 actual_tail 与 claimed tail 的
+# sha256 (与 P294 同口径: utf-8 编码 last 500 chars), 同时校 rc.
+#
+# 与 P294 verify_evidence_tail_stdout_sha 的区别:
+#   - P294 输入 evidence (顶层 verify_runs 或 closeout_verify.verify_runs), 单 round
+#   - P299 输入 report_obj (verify_runs: [{round, scripts: {<name>: {rc,
+#     tail_stdout, status}}}, ...]), 多 round, 也校 rc
+#
+# Default-OFF: 本 helper 不在已有 verify 自动调用; 仅由 verify_infra_075 / 未来
+# closeout enforcement 显式触发。
+# ---------------------------------------------------------------------------
+def assert_report_matches_closeout_runs(
+    report_obj: dict,
+    repo_root: "Path | str",
+    main_head_sha: str,
+    tail_chars: int = 500,
+    timeout_per_script: int = 60,
+) -> dict:
+    """对 report_obj.verify_runs 在 main_head_sha 实跑并 byte-match 比对 tail+rc.
+
+    算法:
+      1. git rev-parse 校 main_head_sha 有效, 拿 resolved sha.
+      2. git worktree add --detach 检出 resolved sha 到 tmpdir.
+      3. 遍历 report_obj['verify_runs'] (list[dict]), 每项含
+         {"round": int, "scripts": {<verify_name>: {"rc": int, "tail_stdout":
+         str, "status": str}, ...}}.
+         对每个 scripts 条目 subprocess.run(python <name>) (cwd=worktree),
+         取 actual_stdout 的 last `tail_chars` 字符, sha256(utf-8) 比对
+         sha256(claimed_tail.encode("utf-8")), 并比对 rc.
+      4. 不一致 → offending 加一条 {script, round, claimed_sha, actual_sha,
+         claimed_rc, actual_rc}.
+      5. finally 清 worktree.
+
+    输入:
+      report_obj: dict, 至少含
+        {
+          "verify_runs": [
+            {
+              "round": int,
+              "scripts": {
+                "verify_infra_NNN.py": {
+                  "rc": int,
+                  "tail_stdout": str,        # 最近 tail_chars 字符 (utf-8)
+                  "status": "PASS" | "FAIL",
+                },
+                ...
+              },
+            },
+            ...
+          ],
+        }
+      repo_root: 含 .git 的仓库根
+      main_head_sha: 期望 re-run 的 commit ref
+      tail_chars: 取 stdout 末尾字符数 (默认 500, 与 P294 一致)
+      timeout_per_script: 单脚本超时秒数 (默认 60s)
+
+    返回:
+      {
+        "ok": bool,                          # 全部 byte+rc 匹配
+        "checked": int,                      # 实跑脚本-round pair 数
+        "matched": int,                      # 全部匹配数
+        "offending": list[dict],             # [{script, round, claimed_sha,
+                                             #   actual_sha, claimed_rc, actual_rc}]
+        "main_head_sha_resolved": str,
+        "error": str | None,
+      }
+
+    Default-OFF: 本 helper 不在已有 verify 自动运行; 仅 verify_infra_075 / 未来
+    closeout enforcement 显式触发。
+    """
+    import subprocess  # noqa: WPS433
+    import tempfile
+
+    repo_root = Path(repo_root).resolve()
+
+    # 1) main_head_sha rev-parse
+    proc_rp = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{main_head_sha}^{{commit}}"],
+        cwd=str(repo_root), capture_output=True, text=True, check=False,
+    )
+    if proc_rp.returncode != 0:
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "main_head_sha_resolved": "",
+            "error": (
+                f"main_head_sha invalid: {main_head_sha!r} "
+                f"(git rev-parse stderr={proc_rp.stderr.strip()!r})"
+            ),
+        }
+    resolved_sha = proc_rp.stdout.strip()
+
+    # 2) report schema 基本检查
+    if not isinstance(report_obj, dict):
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "main_head_sha_resolved": resolved_sha,
+            "error": "report_obj is not a dict",
+        }
+    runs = report_obj.get("verify_runs")
+    if not isinstance(runs, list) or not runs:
+        return {
+            "ok": False,
+            "checked": 0,
+            "matched": 0,
+            "offending": [],
+            "main_head_sha_resolved": resolved_sha,
+            "error": "report_obj.verify_runs missing or empty",
+        }
+
+    offending: list[dict] = []
+    matched = 0
+    checked = 0
+
+    # 3) git worktree add 隔离实跑
+    with tempfile.TemporaryDirectory(prefix="coco_p299_match_wt_") as tmpd:
+        wt_path = Path(tmpd) / "wt"
+        proc_add = subprocess.run(
+            ["git", "worktree", "add", "--detach", str(wt_path), resolved_sha],
+            cwd=str(repo_root), capture_output=True, text=True, check=False,
+        )
+        if proc_add.returncode != 0:
+            return {
+                "ok": False,
+                "checked": 0,
+                "matched": 0,
+                "offending": [],
+                "main_head_sha_resolved": resolved_sha,
+                "error": (
+                    f"git worktree add failed: "
+                    f"stderr={proc_add.stderr.strip()!r}"
+                ),
+            }
+        try:
+            for round_entry in runs:
+                if not isinstance(round_entry, dict):
+                    continue
+                round_id = round_entry.get("round")
+                scripts_map = round_entry.get("scripts")
+                if not isinstance(scripts_map, dict):
+                    continue
+                for script_name, script_info in scripts_map.items():
+                    if not isinstance(script_info, dict):
+                        continue
+                    claimed_rc = script_info.get("rc")
+                    claimed_tail = script_info.get("tail_stdout")
+                    if (not isinstance(script_name, str)
+                            or not isinstance(claimed_rc, int)
+                            or not isinstance(claimed_tail, str)):
+                        offending.append({
+                            "script": script_name,
+                            "round": round_id,
+                            "claimed_sha": None,
+                            "actual_sha": None,
+                            "claimed_rc": claimed_rc,
+                            "actual_rc": None,
+                            "note": "missing/invalid fields",
+                        })
+                        checked += 1
+                        continue
+                    # 支持完整路径 (scripts/verify_infra_NNN.py) 或纯文件名
+                    script_rel = script_name
+                    if "/" not in script_rel:
+                        script_rel = f"scripts/{script_rel}"
+                    script_abs = wt_path / script_rel
+                    if not script_abs.is_file():
+                        offending.append({
+                            "script": script_name,
+                            "round": round_id,
+                            "claimed_sha": hashlib.sha256(
+                                claimed_tail.encode("utf-8")
+                            ).hexdigest(),
+                            "actual_sha": None,
+                            "claimed_rc": claimed_rc,
+                            "actual_rc": None,
+                            "note": "script missing on resolved sha worktree",
+                        })
+                        checked += 1
+                        continue
+                    try:
+                        proc_run = subprocess.run(
+                            [sys.executable, script_rel],
+                            cwd=str(wt_path),
+                            capture_output=True, text=True, check=False,
+                            timeout=timeout_per_script,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        offending.append({
+                            "script": script_name,
+                            "round": round_id,
+                            "claimed_sha": hashlib.sha256(
+                                claimed_tail.encode("utf-8")
+                            ).hexdigest(),
+                            "actual_sha": None,
+                            "claimed_rc": claimed_rc,
+                            "actual_rc": None,
+                            "note": f"run error: {e!r}",
+                        })
+                        checked += 1
+                        continue
+                    actual_stdout = proc_run.stdout or ""
+                    actual_tail = actual_stdout[-tail_chars:] if tail_chars > 0 else ""
+                    actual_sha = hashlib.sha256(
+                        actual_tail.encode("utf-8")
+                    ).hexdigest()
+                    claimed_sha = hashlib.sha256(
+                        claimed_tail[-tail_chars:].encode("utf-8")
+                    ).hexdigest()
+                    actual_rc = proc_run.returncode
+                    checked += 1
+                    if actual_sha == claimed_sha and actual_rc == claimed_rc:
+                        matched += 1
+                    else:
+                        offending.append({
+                            "script": script_name,
+                            "round": round_id,
+                            "claimed_sha": claimed_sha,
+                            "actual_sha": actual_sha,
+                            "claimed_rc": claimed_rc,
+                            "actual_rc": actual_rc,
+                            "note": (
+                                f"mismatch sha={actual_sha != claimed_sha} "
+                                f"rc={actual_rc != claimed_rc}"
+                            ),
+                        })
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(wt_path)],
+                cwd=str(repo_root), capture_output=True, text=True, check=False,
+            )
+
+    ok = (not offending) and (checked > 0)
+    return {
+        "ok": ok,
+        "checked": checked,
+        "matched": matched,
+        "offending": offending,
+        "main_head_sha_resolved": resolved_sha,
+        "error": None,
+    }
