@@ -10278,14 +10278,69 @@
       "id": "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
       "priority": 1.42,
       "phase": 42,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "在 N (>=5) 个 feature dogfood baseline_head_echo 后 promote 为 P278 hard required",
       "rationale": "infra-P286-followup-round1-reviewer-baseline-head-mismatch 已在 helper 与 verify_infra_077 落地 assert_reviewer_baseline_head_echo + legacy 容差, 并完成首次 dogfood. Reviewer 建议: 当 closeout_verify.reviewer.baseline_head_echo 在 5+ 个真实 closeout feature 自然落地后, 把它从 'optional + legacy graceful skip' 升级为 P278 closeout-verify-trustworthy 的 hard required 字段, 并扩 verify_infra_062 V4 检查.",
       "description": "等到 5+ 新 closeout feature evidence 内自然带上 closeout_verify.reviewer.baseline_head_echo 字段后, 在 verify_infra_062 V4 系列增加 hard 检查: 任一 in window (例如近 N closeout) 的 feature 缺 baseline_head_echo → V4 FAIL. 同步在 P278 sec 文档/AGENTS.md Closeout 硬规则段增列 baseline_head_echo 为必填. 触发条件: 自 P286 merge 后至少 5 个不同 closeout 都写有真 sha (非 N/A).",
       "verification_plan": "新 verify_infra_NNN.py (V0-V5 模板): V0 verify-file-itself-passing, V1 helper exists, V2 import & invoke baseline_head_echo extractor, V3 mutant: 临时移除某 passing feature 的 evidence.closeout_verify.reviewer.baseline_head_echo → FAIL; 恢复 → PASS, V4 在 verify_infra_062 cascade 追加 V4_baseline_head_echo_required: 扫描近 N (>=5) 个 status=passing feature, 任一缺 baseline_head_echo 或不等于 closeout_verify.baseline_head_sha → FAIL, V5 reviewer fresh-context LGTM. 同步在 AGENTS.md Closeout-verify-trustworthy 硬规则段增列 baseline_head_echo 为必填字段.",
       "notes_for_engineer": ".venv 必须激活; 触发条件未到不要急着实施, 先观察 5+ feature dogfood 是否稳定; 实施时记得 cascade _verify_lib sha + dump + 062 EXPECTED_DUMP_FILE_SHA",
-      "acceptance": "verify_infra_NNN.py 全 PASS; mutant FAIL 恢复 PASS; verify_infra_062 V4_baseline_head_echo_required PASS (近 8 个 closeout feature 全带); AGENTS.md / CLAUDE.md P278 段更新; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS."
+      "acceptance": "verify_infra_NNN.py 全 PASS; mutant FAIL 恢复 PASS; verify_infra_062 V4_baseline_head_echo_required PASS (近 8 个 closeout feature 全带); AGENTS.md / CLAUDE.md P278 段更新; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "feat_head_sha": "f83bb40c2a48f88c0c8a44d6d0e1f4f73d3e6a8c",
+          "baseline_head_sha": "e2f2075e3b75",
+          "merge_commit_sha": "439064c4be07",
+          "verify_runs": [
+            {
+              "verify": "verify_infra_082",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_082][PASS] V4_5_verify_062_file_sha got=99852c4f46b84be4 expect=99852c4f46b84be4\n[verify_infra_082][SUMMARY] PASS 14/14 (post bump+evidence-fill on main)"
+            },
+            {
+              "verify": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=439064c4be07\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=15 enforced=5 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)"
+            },
+            {
+              "verify": "verify_infra_060",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"...\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "verify": "verify_infra_037",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "pre_existing_baseline_sha": "e2f2075",
+              "baseline_tail_stdout": "[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+            },
+            {
+              "verify": "verify_infra_041",
+              "status": "FAIL",
+              "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "pre_existing_baseline_sha": "e2f2075",
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+            },
+            {
+              "verify": "verify_infra_057",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "pre_existing_baseline_sha": "e2f2075",
+              "baseline_tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state ok ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config ok summary keys complete\n==> Smoke: publish ok entry-point 正确 + Coco 可加载\n==> Smoke 通过",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "round": 1,
+            "feat_head_echo": "f83bb40",
+            "baseline_head_echo": "e2f2075",
+            "summary": "082 V0-V4 全 PASS V5 pre-closeout FAIL 符合预期；062 19 checks ALL PASS V4_baseline_head_echo_required scanned=15 enforced=5 soft_skipped=10 violations=0；smoke 通过；零回归（所有 pre-existing FAIL 在 baseline 上逐项独立复现，072 V3 净改进）；helper Default-OFF 渐进 promote 策略合理；V4_4 ast mutant 真触发非重言；AGENTS.md 6 信号文字与实施段对应一致"
+          }
+        }
+      }
     },
     {
       "id": "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
@@ -10661,6 +10716,16 @@
       "description": "scripts/_verify_lib.py 中 helper 数量已超 12, 命名风格逐步分化 (assert_* / check_* / enforce_* / _validate_*). 本 feature 锁定命名规约: 所有对外暴露的 helper 必须以 assert_ 或 enforce_ 开头, 内部 helper 以 _ 开头. 通过 verify file 加 grep / 反射锁.",
       "verification_plan": "新 verify_infra_NNN.py: V3 import _verify_lib, 反射列出所有 module-level callable, 断言公开 helper (不以 _ 开头) 必须以 assert_ / enforce_ 开头, 否则 FAIL; mutant: 临时在 _verify_lib.py 加 def foo(): pass → FAIL; 恢复 → PASS. AGENTS.md _verify_lib 段补命名规约硬规则.",
       "acceptance": "verify_infra_NNN.py 全 PASS; 现有 _verify_lib helper 命名 100% 合规 (如不合规需先 rename); mutant FAIL 恢复 PASS; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS."
+    },
+    {
+      "id": "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "historical cascade self_main_func_sha rebump (067-081 群)",
+      "description": "067/068/070-077/080 等多个 verify file 的 EXPECTED_SELF_MAIN_FUNC_SHA 在历史 cascade 中漏 bump 导致 V1_self_main_func_sha 在当前 main 上 FAIL；非 trustworthy 故障，集中重 bump",
+      "rationale": "Reviewer 在 infra-P286-followup3 closeout 暴露：phase-39/40/41 cascade 多个 verify 漏 bump V1_self_main_func_sha lock。不阻 merge（pre-existing baseline FAIL），但累积；集中一次 bump 清。"
     }
   ],
   "_meta": {

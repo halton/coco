@@ -6668,3 +6668,18 @@ Engineer sub-agent (phase-40 #4.40):
   - 067/068/070/071/072/073/075/076/077/080/081: 多个 pre-existing FAIL (V1_self_main_func_sha / V3_helper_func_sha / V0_self_main_func_sha; main 基线已 FAIL, feat 状态等价或差 <=1 因 sed cascade lib file sha; 不引入 regression)
 - smoke: 通过 (face-tracker/VAD/wake-word/power-state/config/publish 全 ok)
 - 下一步: phase-42 #1.42 Reviewer fresh-context 评审
+
+## Session 2026-05-22 phase-42 #1.42 closeout
+
+- Feature: infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required → **passing**
+- Merge commit: 439064c4be07 (no-ff)
+- Reviewer: sub_agent_fresh_context LGTM round-1 (feat_head_echo=f83bb40, baseline_head_echo=e2f2075)
+- 关键 verify:
+  - verify_infra_082 PASS 14/14 (V5_reviewer_lgtm_gate post-evidence-fill PASS)
+  - verify_infra_062 ALL PASS 19 checks; V4_baseline_head_echo_required scanned=15 enforced=5 soft_skipped=10 violations=0 (本 feature 进入 enforce 列, P278 第 6 hard-required 信号 promote 落地)
+  - verify_infra_060 ALL PASS 14 checks
+- 修复 inline: feat 漏 bump verify_infra_062 EXPECTED_CLOSEOUT_FUNC_SHA (99bd1012→d190174c, helper 实际 sha 未变, 是 feat 错误改 lock); closeout 阶段恢复正确 lock 值
+- pre-existing baseline FAIL (在 e2f2075 同等复现, 不阻 merge): 037 V2_lib_file_sha, 041 AttributeError _v6_target_id, 057 V2+V4_real_all_match; 067-081 群另入 backlog infra-P286-followup6-historical-cascade-self-main-sha-rebump
+- baseline_head_echo dogfood 第 9 次落地, promote-to-P278-hard-required 后第 1 次 hard enforce
+- smoke ./init.sh 通过
+- 持续开发模式: 继续 phase-42 #2.42
