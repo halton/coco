@@ -7179,3 +7179,29 @@ planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进
 - status: in_progress → passing
 - 1 新 backlog 入账: infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool (priority 999, 16 historic violations 跟踪 emit→bool promote)
 - A 段完成；B 段待启
+
+## Session 2026-05-22 — phase-44 closeout (5/5 passing) + phase-45 planning
+
+### phase-44 收官
+phase-44 5 个 feature 全部 passing，main HEAD=46e9736 (chore bump for #5.44 closeout B 段)。本 phase 聚焦 closeout-verify-trustworthy P278 硬规则三件套 (verify_runs 元素形状 / reviewer block 形状 / baseline_head_echo 格式) soft emit 落地 + 两个长尾 backlog (085 V5 conditional promotion + 062 V3 helper sha rebump round2) 清理：
+
+1. #1.44 infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion — passing
+2. #2.44 infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 — passing
+3. #3.44 infra-P278-followup-closeout-verify-runs-status-shape-hard-check — passing (062 V4 soft emit violations=167)
+4. #4.44 infra-P278-followup-closeout-reviewer-block-shape-hard-check — passing (violations=45)
+5. #5.44 infra-P278-followup-closeout-baseline-head-echo-format-hard-check — passing (violations=16)
+
+phase-44 收官 main HEAD=46e9736。无遗留 in_progress。三个 soft emit V4 helper 全 dogfood 通过但 062 未升 hard bool（167/45/16 violations 需 backfill 或 grace_period 决策），已抬入 phase-45 作 promote-bool 候选。
+
+### phase-45 planning (5 candidates, all status=not_started)
+
+承接 phase-44 三件套 soft emit，phase-45 推进 promote-bool + 新增两件套 soft emit：
+
+- #1.45 infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool — V4_closeout_verify_runs_shape soft → hard bool (167 violations，倾向 grace_period)
+- #2.45 infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool — V4_closeout_reviewer_block_shape soft → hard bool (45 violations，可 backfill)
+- #3.45 infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool — V4_closeout_baseline_head_echo_format soft → hard bool (16 violations，全量 backfill 最干净)
+- #4.45 infra-P278-followup-closeout-merge-commit-sha-format-hard-check — 新 helper merge_commit_sha 7+ hex (062 V4 soft emit)
+- #5.45 infra-P278-followup-closeout-main-head-sha-format-hard-check — 新 helper main_head_sha 7+ hex (062 V4 soft emit)
+
+planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三条由 soft 升为 bool 真硬以闭合 trustworthy 三件套；同时把 closeout_verify 另两个核心字段 (merge_commit_sha / main_head_sha) 按相同 helper + soft emit 节奏补齐。下一轮起做 #1.45（最大 violations 但模式最复杂，先攻克）或按 violations 升序从 #3.45 起做（决策待 engineer 阶段）。
+
