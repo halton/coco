@@ -3233,6 +3233,7 @@ def assert_closeout_reviewer_block_shape(
 def assert_closeout_baseline_head_echo_format(
     feature_list_path,
     min_hex_chars: int = 7,
+    grace_period_feature_ids: tuple = (),
 ) -> dict:
     """每个 closeout_verify.baseline_head_echo 必须形态合规.
 
@@ -3252,6 +3253,11 @@ def assert_closeout_baseline_head_echo_format(
     参数:
         feature_list_path: feature_list.json 路径 (str | Path).
         min_hex_chars: baseline_head_echo 最少 hex 字符数 (默认 7).
+        grace_period_feature_ids: 软放过列表 — 这些历史 feature 的 violations
+            不计入 violations, 而计入 grace_skipped. 新 feature 不在此列表中
+            即按 hard 强制. (V6-062-baseline-head-echo-format-promote-bool:
+            emit 已 promote 至 bool, 用此列表把 16 个历史 violation feature
+            一次性 grandfather 进来)
 
     返回 dict::
 
@@ -3267,8 +3273,10 @@ def assert_closeout_baseline_head_echo_format(
               ...
           ],
           "soft_skipped": [str, ...],
+          "grace_skipped": [str, ...],
           "enforced_count": int,
           "scanned_count": int,
+          "grace_period_count": int,
           "min_hex_chars": int,
           "error": str | None,
         }
@@ -3281,12 +3289,15 @@ def assert_closeout_baseline_head_echo_format(
     import json as _json
     import re as _re
 
+    grace_set = set(grace_period_feature_ids or ())
     out: dict = {
         "ok": False,
         "violations": [],
         "soft_skipped": [],
+        "grace_skipped": [],
         "enforced_count": 0,
         "scanned_count": 0,
+        "grace_period_count": len(grace_set),
         "min_hex_chars": int(min_hex_chars),
         "error": None,
     }
@@ -3330,62 +3341,65 @@ def assert_closeout_baseline_head_echo_format(
             out["soft_skipped"].append(fid)
             continue
         out["enforced_count"] += 1
+        feature_violations: list = []
 
         bhe = cv.get("baseline_head_echo")
         if not isinstance(bhe, str):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "baseline_head_echo missing or not str",
                 "field": "baseline_head_echo",
                 "value_repr": _repr80(bhe),
             })
-            continue
-        bhe_s = bhe.strip()
-        if not bhe_s:
-            out["violations"].append({
-                "feature_id": fid,
-                "reason": "baseline_head_echo empty after strip",
-                "field": "baseline_head_echo",
-                "value_repr": _repr80(bhe),
-            })
-            continue
-        if len(bhe_s) < int(min_hex_chars):
-            out["violations"].append({
-                "feature_id": fid,
-                "reason": (
-                    f"baseline_head_echo len={len(bhe_s)} < "
-                    f"min_hex_chars={min_hex_chars}"
-                ),
-                "field": "baseline_head_echo",
-                "value_repr": _repr80(bhe),
-            })
-            continue
-        if not hex_re.match(bhe_s):
-            out["violations"].append({
-                "feature_id": fid,
-                "reason": (
-                    "baseline_head_echo contains non-hex chars "
-                    "(must be 0-9a-f lowercase)"
-                ),
-                "field": "baseline_head_echo",
-                "value_repr": _repr80(bhe),
-            })
-            continue
-        mhs = cv.get("main_head_sha")
-        if isinstance(mhs, str):
-            mhs_s = mhs.strip()
-            n = len(bhe_s)
-            if mhs_s and mhs_s[:n] == bhe_s:
-                out["violations"].append({
+        else:
+            bhe_s = bhe.strip()
+            if not bhe_s:
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": "baseline_head_echo empty after strip",
+                    "field": "baseline_head_echo",
+                    "value_repr": _repr80(bhe),
+                })
+            elif len(bhe_s) < int(min_hex_chars):
+                feature_violations.append({
                     "feature_id": fid,
                     "reason": (
-                        f"baseline_head_echo={bhe_s!r} equals "
-                        f"main_head_sha[:{n}]={mhs_s[:n]!r}; "
-                        "baseline must differ from closeout-after main"
+                        f"baseline_head_echo len={len(bhe_s)} < "
+                        f"min_hex_chars={min_hex_chars}"
                     ),
                     "field": "baseline_head_echo",
                     "value_repr": _repr80(bhe),
                 })
-                continue
+            elif not hex_re.match(bhe_s):
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": (
+                        "baseline_head_echo contains non-hex chars "
+                        "(must be 0-9a-f lowercase)"
+                    ),
+                    "field": "baseline_head_echo",
+                    "value_repr": _repr80(bhe),
+                })
+            else:
+                mhs = cv.get("main_head_sha")
+                if isinstance(mhs, str):
+                    mhs_s = mhs.strip()
+                    n = len(bhe_s)
+                    if mhs_s and mhs_s[:n] == bhe_s:
+                        feature_violations.append({
+                            "feature_id": fid,
+                            "reason": (
+                                f"baseline_head_echo={bhe_s!r} equals "
+                                f"main_head_sha[:{n}]={mhs_s[:n]!r}; "
+                                "baseline must differ from closeout-after main"
+                            ),
+                            "field": "baseline_head_echo",
+                            "value_repr": _repr80(bhe),
+                        })
+        # grace_period: 若 feature 在 grace_set 且有 violation, 不计入 violations
+        if feature_violations and fid in grace_set:
+            out["grace_skipped"].append(fid)
+        else:
+            out["violations"].extend(feature_violations)
     out["ok"] = len(out["violations"]) == 0
     return out
