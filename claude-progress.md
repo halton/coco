@@ -6625,3 +6625,24 @@ Engineer sub-agent (phase-40 #4.40):
 - smoke: 通过
 - P2 入账: +backlog `infra-P286-followup5-v5-ok-naming-extend-to-079-081-074` priority=999 phase=null (扩展到 079/080/081/074 等 V5 PASS line 的 `ok=True` 旧格式)
 - 下一步: phase-41 收官 (5/5 passing)，phase-42 planning
+
+## Session 2026-05-22 phase-41 收官 + phase-42 planning
+- phase-41 5/5 passing 总览 (main HEAD=0d1d695):
+  - #1.41 infra-P286-followup-tolerance-headroom-bump → passing
+  - #2.41 infra-P291-followup2-helper-return-value-must-participate-in-emit → passing
+  - #3.41 infra-P299-followup-wire-into-closeout-gate → passing
+  - #4.41 infra-P286-followup4-add-noqa-placeholder-self-exempt-comment → passing
+  - #5.41 infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok → passing
+- baseline_head_echo dogfood: 第 8 次自然落地 (远超 P286-followup3 promote 阈值 N>=5)，phase-42 #1.42 即可正式 promote 为 P278 hard-required
+- 累积 backlog 摘要 (本 phase 选入 phase-42 的 3 项):
+  - infra-P286-followup3 (baseline_head_echo P278 hard) → promote 为 #1.42
+  - infra-P299-followup2 (byte-match real-run, soft-skip 问题) → promote 为 #2.42
+  - infra-P286-followup5 (V5 ok naming extend 074/079/080/081) → promote 为 #3.42
+- phase-42 planning 5 候选入账 (feature_list.json):
+  - #1.42 infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required (verify_infra_062 cascade 增 V4_baseline_head_echo_required + AGENTS.md P278 段更新)
+  - #2.42 infra-P299-followup2-enable-byte-match-real-run (改 nested rounds schema 记 closeout_commit_sha, 让 byte-match 真 fire 而非 soft-skip)
+  - #3.42 infra-P286-followup5-v5-ok-naming-extend-to-079-081-074 (统一 V5 PASS line helper_ok={ok} 命名)
+  - #4.42 infra-P278-followup-reviewer-summary-nonempty-hard-check (verify_infra_062 增 V4_reviewer_summary_nonempty: summary strip 后 >=20 字符)
+  - #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock (_verify_lib 公开 helper 必须 assert_/enforce_ 前缀, 内部 _ 前缀, 通过反射锁)
+- phase-42 启动声明: 持续开发模式默认启用, 起步从 #1.42 开始 (dogfood 已达 promote 时机, 最高 ROI)
+- 下一步: phase-42 #1.42 Engineer round-1
