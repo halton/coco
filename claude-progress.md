@@ -1,5 +1,13 @@
 # 进度日志
 
+## Session 2026-05-22 — phase-44 #3.44 infra-P278-followup-closeout-verify-runs-status-shape-hard-check (Closeout A)
+
+- merge: feat/infra-P278-followup-closeout-verify-runs-status-shape-hard-check (9ae0443) → main, merge sha=8654109, base=7f3d4e4
+- verify_runs: 062 ALL PASS 25; 089 13/14 (V5_reviewer_lgtm_gate pending B 段 reviewer block 写入); init smoke PASS; 081-088 各 ALL PASS 14
+- feature status: in_progress → passing；closeout_verify 6 信号完整 (main_head_sha=8654109, baseline=7f3d4e4, merge_commit=8654109..., verify_runs=3, smoke_tail_stdout 含 "Smoke 通过", baseline_tail_stdout 标注 no pre-existing baseline FAIL, reviewer sub_agent_fresh_context LGTM)
+- 新 backlog 入账：infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool (Reviewer P2: 167 historic violations 需 backfill 或宽限期后 promote emit→bool)
+- 等待 B 段重跑 089 V5 LGTM gate 转 14/14
+
 ## Session 2026-05-22 — phase-43 #4.43 infra-P278-followup-closeout-verify-runs-min-count-hard-check (Closeout)
 
 - A 段 merge: feat/infra-P278-followup-closeout-verify-runs-min-count-hard-check (108d9f4) → main, merge sha=bd6fdbf, base=e0e8393

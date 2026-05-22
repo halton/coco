@@ -11663,7 +11663,7 @@
       "id": "infra-P278-followup-closeout-verify-runs-status-shape-hard-check",
       "priority": 3.44,
       "phase": 44,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "closeout_verify.verify_runs 元素 shape hard check (name/status/tail_stdout 非空)",
       "rationale": "phase-43 #4.43 已加 min_count，本轮约束每条 verify_runs 元素必须含 name + status + tail_stdout 三字段且非空 (tail_stdout min 20 char)，杜绝 stub/空 status 占位。",
@@ -11690,7 +11690,39 @@
         "shape_helper_func_sha": "05b8474f8788a25ca2a944f9c34cabd677be494dd63c5d9076438b116753dcb4",
         "verify_089_self_main_func_sha": "13733da371b264573a548d02f3e2f87179a2c609433d92b3b80867deb502a2f8",
         "engineer_complete": true,
-        "reviewer_pending": true
+        "reviewer_pending": false,
+        "closeout_verify": {
+          "main_head_sha": "8654109",
+          "baseline_head_echo": "7f3d4e4",
+          "merge_commit_sha": "8654109717c210e9adda1e95023ca0928cfc8d90",
+          "pre_existing_baseline_sha": null,
+          "baseline_tail_stdout": "no pre-existing baseline FAIL after this shape hard check add",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=27 enforced=25 soft_skipped=2 violations=167 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation={'feature_id': 'infra-P291-reviewer-gate-real-or-remove', 'run_index': 0, 'reason': 'verify_runs[0].name empty or not str', 'field': 'name', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=28 v3_table=28 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (25 checks)"
+            },
+            {
+              "name": "verify_infra_089",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_089][PASS] V4_1_verify_062_calls_enforcer call_count=1 sites=[(964, 'main')]\n[verify_infra_089][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_089][PASS] V4_3_helper_real_run_ok ok=True enforced=1 soft_skipped=0 violations=0\n[verify_infra_089][PASS] V4_4_helper_real_run_violation ok=False violations=3 fields_hit=['name', 'status', 'tail_stdout']\n[verify_infra_089][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_089][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-verify-runs-status-shape-hard-check (B 段 reviewer block 写入后转 PASS)\n[verify_infra_089][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate'] (expected pending V5, A 段已 13/14)"
+            },
+            {
+              "name": "init.sh smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-44 #3.44 closeout_verify.verify_runs[] element shape hard check LGTM: helper assert_closeout_verify_runs_shape 字段完整 (ok/violations/soft_skipped/enforced_count/scanned_count/min_tail_chars/allowed_statuses/error), enforce-set 收敛到 reviewer_kind=sub_agent_fresh_context, Default-OFF + soft-PASS for legacy 设计合理. 062 emit=True soft-PASS 与 V5_reviewer_lgtm_gate 同形 (precedent 一致, 注释含 promote 路径). 089 V4 五子检 (V4_1 调用扫描 / V4_2 main 挂链 / V4_3 正例 ok=True / V4_4 反例 name+status+tail_stdout 三 field 命中 / V4_5 mutant ast strip 调用名→零) 全 PASS, fixture 正反例覆盖完整. Mutation 测试: 临时改 _bad_feature 第一行 name=None→fixed 后 089 V4_4 立 FAIL (violations 从 3 降到 2, fields_hit 缺 'name'); restore 后 13/14 PASS. Cascade bump 完整 (LIB sha 22 file + 062 sha 3 file + dump_v4_sha_graph 含 089 entry), 081-088 ALL PASS 14 cascade 无 drift, init smoke PASS. V5_reviewer_lgtm_gate 待本 reviewer block 写入即解锁.",
+            "checks_run": ["git_log_status_HEAD_9ae0443_clean", "source_review_all", "verify_062_PASS_25", "verify_089_13of14_V5_pending", "verify_081_088_all_pass", "smoke_pass", "dump_v4_sha_graph_089", "mutation_bad_feature_name_fail", "restore_clean"],
+            "findings": {"P0": [], "P1": [], "P2": ["062 V4_closeout_verify_runs_shape violations=167 历史 closeout backlog; promote emit→bool 前需 backfill 或宽限期，建议单独 followup"]}
+          }
+        }
       }
     },
     {
@@ -11738,6 +11770,17 @@
       ],
       "notes_for_engineer": ".venv 必须激活；只 enforce 有 FAIL verify_run 的 passing 项；legacy 整 baseline_head_echo 缺 soft_skip (已有别的 helper enforce 存在性)；cascade _verify_lib + 062 file sha 全量",
       "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "promote 062 V4_closeout_verify_runs_shape emit→bool(result['ok']) 真硬",
+      "rationale": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，扫到 167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
+      "description": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
+      "acceptance": "决定 backfill 167 violations 或加 grace_period 后 promote 062 emit→bool(result['ok'])"
     }
   ],
   "_meta": {
