@@ -11692,7 +11692,7 @@
         "engineer_complete": true,
         "reviewer_pending": false,
         "closeout_verify": {
-          "main_head_sha": "8654109",
+          "main_head_sha": "9d8fc86",
           "baseline_head_echo": "7f3d4e4",
           "merge_commit_sha": "8654109717c210e9adda1e95023ca0928cfc8d90",
           "pre_existing_baseline_sha": null,
