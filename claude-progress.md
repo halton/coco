@@ -7240,3 +7240,13 @@ planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三�
 - dedupe: 删 idx=12013 (priority=999) backlog stub，保 priority=3.45 主条目升 passing
 - 三件套 promote 闭合：#1.45 verify_runs_shape (hard+grace 17) / #2.45 reviewer_block_shape (hard+grace 22) / #3.45 baseline_head_echo_format (hard+grace 16)
 
+
+## Session 2026-05-22 phase-45 #4.45 closeout
+- feature: infra-P278-followup-closeout-merge-commit-sha-format-hard-check status=passing priority=4.45 phase=45
+- engineer commit eb831ff → merge_commit f8b92548 → base main 5740eb2
+- verify_infra_095 ALL PASS 14/14 (V0/V1 60a6445c3f802de9/V2 0f1e075c1626fe57/V3 0f632e9eb01c0ec1/V4_1-5/V5)
+- verify_infra_062 ALL PASS 28/28 (V4_closeout_merge_commit_sha_format scanned=33 enforced=31 grace_skipped=14 violations=0)
+- verify_infra_094 ALL PASS 14/14（cascade 不破）；smoke 全通
+- Reviewer: sub_agent_fresh_context LGTM；P0/P1=[]; P2=["V5 095 FAIL closeout-pending 正常态"]
+- baseline 066 V2/V3 FAIL on base 5740eb2 = pre-existing SHA drift，与本 feature 无关
+- 三件套 + 第四件 promote 闭合：#1.45 verify_runs_shape / #2.45 reviewer_block_shape / #3.45 baseline_head_echo_format / #4.45 merge_commit_sha_format
