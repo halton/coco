@@ -10204,7 +10204,7 @@
       "notes_for_engineer": "纯文档/注释 hardening，无功能改动；来源 P286 followup Reviewer 非阻塞建议",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "f5dee32",
           "feat_head_sha": "2c9e5d2",
           "baseline_head_sha": "394e78f",
           "merge_commit_sha": "c0f7f1e",
