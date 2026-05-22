@@ -8336,7 +8336,7 @@
     {
       "id": "infra-P299-baseline-fail-claim-regex-multiline",
       "priority": 4.39,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 39,
       "area": "infra",
       "title": "verify_baseline_fail_claims regex 支持跨行 claim",

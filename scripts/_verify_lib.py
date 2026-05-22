@@ -1016,7 +1016,7 @@ def verify_closeout_evidence_trustworthy(evidence: dict) -> dict:
 # Default-OFF: 不在任何已有流程自动运行; 由调用方显式触发。
 # ---------------------------------------------------------------------------
 _RE_BASELINE_FAIL_CLAIM = re.compile(
-    r"verify_infra_(\d{3})\b[^\n]{0,80}?\b(FAIL|fail|失败)\b"
+    r"verify_infra_(\d{3})\b[\s\S]{0,200}?\b(FAIL|fail|失败)\b"
 )
 
 
