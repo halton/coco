@@ -10088,7 +10088,7 @@
       "notes_for_engineer": "来源 P286-followup-v4-2-stricter-equal-check round-2 Reviewer P2-1; cascade 三处 (059 / 074 / 079) 真值必须同步，否则 074 V4_2 (== TRUTH) / V4_2b (== TRUTH) 任一爆即 FAIL。",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "88cae39",
           "feat_head_sha": "a1f3507",
           "baseline_head_sha": "83d36a7",
           "merge_commit_sha": "e4cc65e",
