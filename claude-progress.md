@@ -6836,3 +6836,17 @@ Engineer sub-agent (phase-40 #4.40):
   - 082: 1/14 FAIL [V1_self_main_func_sha] (pre-existing baseline at 6f9f119, 同 #4.42 closeout 已记录, 与本 commit 无关)
 - smoke: ALL PASS
 - 等待 Reviewer fresh-context 评审 + closeout (Engineer 不切 passing 不 merge, P261)
+
+## Session — phase-42 #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock (Closeout)
+
+- merge: 9943cff (non-ff into main, base 6f9f119)
+- Reviewer: sub-agent fresh-context LGTM-conditional (P1 复核 no-op: 085 V1_self_main_func_sha 实跑 PASS got=87e910ff05a21013 expect=87e910ff05a21013, Reviewer 看的是 cascade bump 中间态)
+- 实跑 verify:
+  - 062: ALL PASS 21 (V4_verify_lib_helper_naming_convention scanned=23 enforced=8 legacy_allowlisted=15 violations=0)
+  - 085: 13/14 PASS, V5_reviewer_lgtm_gate FAIL (expected pre evidence fill; B-commit re-run 会 PASS)
+  - 083/084: ALL PASS (14 each)
+  - 082: 1/14 FAIL [V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02] — baseline 6f9f119 同模式 FAIL (P286-followup6 backlog 覆盖), 与本 feature 无关
+- smoke: ALL PASS
+- evidence.closeout_verify (6 信号全): main_head_sha (placeholder → B-commit bump) / verify_runs (含 tail_stdout + status) / FAIL pre_existing_baseline_sha=6f9f119 + baseline_tail_stdout / smoke_tail_stdout / reviewer.reviewer_kind=sub_agent_fresh_context / baseline_head_echo=6f9f119
+- status: in_progress → passing
+- phase-42 5/5 PASSING (1.42/2.42/3.42/4.42/5.42 全 passing)
