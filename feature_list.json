@@ -10776,7 +10776,7 @@
       "id": "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
       "priority": 3.42,
       "phase": 42,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "把 079/080/081/074 等 V5 PASS line 的 ok=True 同样替换为动态 helper_ok={ok} 与 075-078 对齐",
       "rationale": "P286-followup4 round-1 Reviewer P2 旁注：spec 明确只覆盖 075-078 四个 verify 的 V5 PASS line 字段统一，但 079/080/081/074 等其它 verify 的 V5 PASS line 仍是 `ok=True` 旧格式，超出本次 spec 范围未处理。需后续单独 followup 把这批也对齐为动态 `helper_ok={ok}`，全仓库 V5 命名一致。",

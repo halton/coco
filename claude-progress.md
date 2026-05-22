@@ -6751,3 +6751,22 @@ Engineer sub-agent (phase-40 #4.40):
 - pre-existing baseline FAIL (与 5e512aa 一致): 034 (V5/V6), 037 (V2_lib_file_sha), 041 (AttributeError _v6_target_id), 057 (V2/V4), 074 (V2_verify_059_file_sha), 082 (V1_self_main_func_sha)
 - smoke 通过
 - baseline_head_echo dogfood 第 10 次落地（promote-to-P278-hard-required 后第 2 次 hard 落地）
+
+## Session 2026-05-22 (phase-42 #3.42 infra-P286-followup5-v5-ok-naming-extend-to-079-081-074 round-1 Engineer)
+
+- feature: `infra-P286-followup5-v5-ok-naming-extend-to-079-081-074`
+- branch: `feat/infra-P286-followup5-v5-ok-naming-extend-to-079-081-074`
+- 基准 main HEAD: 8a2edbb
+- 改动: 把 9 个 verify file (071/072/073/074/079/080/081/082/083) 的 v5_reviewer_gate _emit detail 由 `target={V5_GATE_FEATURE_ID} ok={ok} reason={reason!r}` 替换为 `target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}`，与 060/062/063/065/066/067/068/070/075-078 对齐
+- 副带: 079 内 EXPECTED_VERIFY_074_FILE_SHA 因 074 字符串改动需 bump c51cdae7→d843e85b
+- verify 结果 (本 feat 引入 0 新 FAIL, 余 pre-existing baseline):
+  - 074: FAIL 1/16 [V2_verify_059_file_sha] (pre-existing baseline)
+  - 079: FAIL 1/14 [V4_4_real_run_074_rc0_and_pass] (pre-existing baseline，074 传染)
+  - 072: FAIL 1/14 [V3_helper_func_sha] (pre-existing baseline)
+  - 082: FAIL 1/14 [V1_self_main_func_sha] (pre-existing baseline)
+  - 071/073/080/081/083: ALL PASS, V5 line 全显示动态 helper_ok={ok}
+  - 062: ALL PASS (19), V5 line 已显示 helper_ok=False 真值路径
+- smoke: ALL PASS
+- V4 sha cascade: 未触发（仅字符串字面量改动，未触及 v5_reviewer_gate 函数 sha 锁——全仓库无此锁）
+- 待 Reviewer fresh-context 评审
+
