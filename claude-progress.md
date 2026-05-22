@@ -1,5 +1,41 @@
 # 进度日志
 
+## Session 2026-05-22 — phase-43 #1.43 infra-P286-followup6-historical-cascade-self-main-sha-rebump (Engineer round)
+
+**branch**: feat/infra-P286-followup6-historical-cascade-self-main-sha-rebump
+**baseline main HEAD**: f19a51e65c9bf3ce474b684d5493caf1ae22be4b
+
+### Round 1: 扫描 EXPECTED_SELF_MAIN_FUNC_SHA 全量
+脚本扫所有 scripts/verify_infra_*.py，提取 EXPECTED_SELF_MAIN_FUNC_SHA 常量与 main() 实算 func_sha_by_name 比对。
+- **mismatch 1 项**:
+  - `scripts/verify_infra_082.py` `EXPECTED_SELF_MAIN_FUNC_SHA`:
+    `c45cf4954d41da02...` → `8f7253cb11547181d2daa51043d16651bc1f4270d971e56af40f182ad3e0485e`
+- 其余 067/068/070-077/080/081/083/084/085 等历史漂移项均已在 phase-42 cascade 清完，本轮 no-op。
+
+### Round 2: cascade 收敛
+- 本轮 082 file sha 改变后无下游 verify 引用 (grep 确认 dump_v4_sha_graph.py 之外无 verify_* 文件引 082 file sha)
+- self main sha 全扫第二轮 mismatch=0，收敛。
+
+### 附带发现 (不在本 feature 范围，入 backlog)
+扫描中发现 12 个 pre-existing FILE_SHA cascade 漂移 (V2 槽位，与 V1 self_main 不同性质的锁)，留作独立 backlog 不在本 feature 处理：
+- verify_infra_037/061/064 `EXPECTED_VERIFY_LIB_FILE_SHA` a80af00 → b7f1c5f1
+- verify_infra_042/045/052/055/056/057/058 `EXPECTED_LIB_FILE_SHA` a80af00 → b7f1c5f1
+- verify_infra_059 `EXPECTED_LIB_FILE_SHA` ebcec7ec → b7f1c5f1
+- verify_infra_074 `EXPECTED_VERIFY_059_FILE_SHA` 6297a65a → 607a0369
+说明：这些是 V2_lib_file_sha / V2_verify_059_file_sha 槽位的 file sha 漂移，与本 feature 主轴 (V1_self_main_func_sha) 是不同锁系；混在本 feature commit 会扩大 review 面、易引入 cascade 噪声。按"不衍生 fu chain；新 caveat 只入 backlog"原则单独立项更安全。
+
+### 关键 verify tail
+- verify_infra_062: ALL PASS (21 checks)
+- verify_infra_082: ALL PASS (14 checks) ← V1 修复后
+- verify_infra_083: ALL PASS (14 checks)
+- verify_infra_084: ALL PASS (14 checks)
+- verify_infra_085: FAIL 1/14 ['V5_reviewer_lgtm_gate'] — evidence-pending (LGTM-conditional)，非本 feature 范围
+- ./init.sh smoke: 全 PASS
+
+### 边界声明
+- Engineer 不 merge feat→main / 不切 passing (P261 硬规则)；等 Reviewer sub-agent fresh-context LGTM
+- 不新建 verify 文件 (清理任务，按 prompt 指令覆盖 spec 字段)；本 feature 不增加新锁，只修历史 V1 漂移
+
 ## 关键决策导航
 
 按时间顺序，遇到分歧时回到这里看过去做过什么决定与为什么：
