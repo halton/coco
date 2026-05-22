@@ -6603,3 +6603,16 @@ Engineer sub-agent (phase-40 #4.40):
 - feature_list.json: status in_progress → passing, evidence 完整 nested round schema (verify/status/tail_stdout + 三 FAIL 配 pre_existing_baseline_sha + baseline_tail_stdout + reviewer.reviewer_kind=sub_agent_fresh_context + lgtm=true + feat_head_echo + baseline_head_echo)
 - baseline_head_echo dogfood: 第 7 次落地
 - 下一步: phase-41 #5.41 候选 (按 priority 最低 not_started)
+
+## Session 2026-05-22 phase-41 #5.41 Engineer round-1
+- Feature: infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok (priority 5.41, phase 41)
+- Branch: feat/infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok (基于 main fdf754d)
+- 改动: scripts/verify_infra_075.py V5_reviewer_lgtm_gate 的 PASS line 由 `ok=True` 改为 `helper_ok={ok}`，与 076/077/078 对齐；feature_list.json status not_started→in_progress
+- Verify:
+  - 075 ALL PASS (15 checks)：V5 detail line 现为 `target=... helper_ok=True reason=...`
+  - 076 ALL PASS (14 checks)：076 对 075 的 AST scan (检查 body 含 'assert_reviewer_lgtm') 仍通过
+  - cross-grep: 075/076/077/078 V5 PASS line 全部统一为 `helper_ok={ok}`
+- smoke: 通过 (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish)
+- V4 sha cascade: 未触发 (改动只动了 v5_reviewer_gate 的 detail 字符串，未改 main()/helper/lib，所有 EXPECTED_*_SHA 常量保持不变)
+- pre-existing baseline FAIL (与本 feature 无关): 037/041/057
+- 下一步: 等 Reviewer fresh-context 评审
