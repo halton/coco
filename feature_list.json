@@ -11424,7 +11424,7 @@
       "id": "infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion",
       "priority": 1.44,
       "phase": 44,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_085 V5_reviewer_lgtm_gate LGTM-conditional → LGTM 提升",
       "description": "verify_infra_085.py V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock 在 baseline 8c59945 与当前 main 同 FAIL（reviewer.verdict='LGTM-conditional' expected 'LGTM'）。属 evidence 字段语义偏移的 pre-existing 噪声，需在确认 conditional 条件已满足后改 verdict 为 LGTM 或调整 V5 helper 允许 LGTM-conditional。",
@@ -11490,7 +11490,38 @@
             "tail": "Smoke 通过"
           }
         ],
-        "closeout_verify": {}
+        "closeout_verify": {
+          "main_head_sha": "f8e208a",
+          "baseline_head_echo": "dd8d9c1",
+          "merge_commit_sha": "f8e208a",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=25 enforced=23 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (23 checks)"
+            },
+            {
+              "name": "verify_infra_085",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock helper_ok=True reason=\"feature 'infra-P278-followup-verify-lib-helper-naming-convention-lock': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_085][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "./init.sh smoke",
+              "status": "PASS",
+              "tail_stdout": "  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "pre_existing_baseline_sha": null,
+          "baseline_tail_stdout": "no pre-existing baseline FAIL after this promotion",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-44 #1.44 infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion 实施正确: Engineer 仅修改 infra-P278-followup-verify-lib-helper-naming-convention-lock 的 evidence.closeout_verify.reviewer.verdict (LGTM-conditional → LGTM) 并追加 promotion 说明 + 保留 original_verdict 审计字段, 未越界改 helper/_verify_lib/062/085 脚本; conditional 条件 (P1 085 self main sha bump no-op) 经实跑 V1 PASS got=expect=87e910ff05a21013 客观满足非伪 promote; 085 ALL PASS 14/14 含 V5_reviewer_lgtm_gate, 062 ALL PASS 23/23, 082-087 各 ALL PASS 14/14, smoke PASS; mutation test 将 verdict 改回 LGTM-conditional → 085 V5 FAIL 1/14, restore → ALL PASS, hard_fail 验证通过.",
+            "checks_run": ["verify_infra_085_PASS_14", "verify_infra_062_PASS_23", "verify_infra_082_PASS_14", "verify_infra_083_PASS_14", "verify_infra_084_PASS_14", "verify_infra_086_PASS_14", "verify_infra_087_PASS_14", "smoke_PASS", "git_diff_minimal_one_field", "mutation_test_hard_fail_and_restore"],
+            "findings": {"P0": [], "P1": [], "P2": []}
+          }
+        }
       }
     },
     {

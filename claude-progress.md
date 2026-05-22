@@ -7132,3 +7132,13 @@ phase-43 收官 main HEAD=36945ba。无遗留 in_progress。085 V5 reviewer.verd
 - #5.44 infra-P278-followup-closeout-baseline-head-echo-format-hard-check — baseline_head_echo 7+ hex 且 != main_head_sha
 
 planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进一步收紧 closeout block 三件套形状 (verify_runs 元素形状 / reviewer block 形状 / baseline_head_echo 格式),并把两个长尾 backlog (085 / 062-round2) 拉进 active 清理。下一轮起做 #1.44。
+
+## Session 2026-05-22 — phase-44 #1.44 closeout A 段
+
+- merged feat/infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion → main (merge commit f8e208a, base dd8d9c1)
+- verify_infra_062 ALL PASS 23, verify_infra_085 ALL PASS 14 (含 V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock helper_ok=True)
+- baseline parity: 082/083/084/086/087 各 ALL PASS 14, no pre-existing baseline FAIL
+- smoke PASS
+- feature_list.json: infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion status in_progress → passing, evidence.closeout_verify 完整填充 (main_head_sha=f8e208a, baseline_head_echo=dd8d9c1, 3 verify_runs, reviewer sub_agent_fresh_context LGTM)
+- 062 V4_closeout_smoke_tail_nonempty enforced 23 → 24 (本 feature evidence 入账)
+- 等待 B 段 bump main_head_sha 至 closeout commit
