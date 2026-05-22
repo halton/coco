@@ -73,14 +73,52 @@ from _verify_lib import (  # noqa: E402
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     assert_reviewer_summary_nonempty,
+    assert_verify_lib_helpers_in_v3_sha_table,
     assert_verify_lib_public_helper_naming,
     func_sha_by_name,
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "91ee88fb787e87673032ffa3d48c647f56877f70a5d6bf9deb338d670a651606"
+EXPECTED_VERIFY_LIB_FILE_SHA = "a22c6d81200cf6b35df7ed6a3df3e726068848df4401a8a7c7078a1d90ac64c0"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
+
+# infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (phase-44 #2.44):
+# V3 helper drift detector — 显式列出 _verify_lib.py 全部公共 helper 名 (round2 入账).
+# 新增 helper 时必须同步加入此列表 (或 V3_HELPER_DRIFT_ALLOWLIST), 否则 drift detector
+# hard FAIL. 这强制 round2-style 防漂移: V3 锁不再只锁单个 helper 的 sha, 也锁"helper
+# 集合本身"不能在 _verify_lib.py 漂移而 062 未感知。
+V3_HELPER_FUNC_NAMES = (
+    "assert_baseline_head_echo_present_and_matches",
+    "assert_closeout_smoke_tail_nonempty",
+    "assert_closeout_verify_runs_min_count",
+    "assert_report_matches_closeout_runs",
+    "assert_reviewer_baseline_head_echo",
+    "assert_reviewer_lgtm",
+    "assert_reviewer_summary_nonempty",
+    "assert_unique_needle",
+    "assert_v5_gate_emit_uses_helper_return",
+    "assert_verify_lib_helpers_in_v3_sha_table",
+    "assert_verify_lib_public_helper_naming",
+    "assert_verify_passed",
+    "func_sha_by_name",
+    "live_verify_sha_set",
+    "parse_headings_from_doc",
+    "read_constant",
+    "scan_reverse_sha_locks",
+    "scan_reviewer_text",
+    "verify_baseline_fail_claims",
+    "verify_closeout_evidence_trustworthy",
+    "verify_evidence_tail_stdout_sha",
+    "verify_expected_pattern_consistency",
+    "verify_expected_prefix_typo_guard",
+    "verify_palette_fills_distinct",
+    "verify_reverse_sha_lock_consistency",
+    "verify_summary_exit",
+    "verify_unknown_node_count_bound",
+)
+# 允许豁免的 helper 名 (默认空; 若未来确有不进 V3 表的 public helper, 显式加入此处).
+V3_HELPER_DRIFT_ALLOWLIST: tuple = ()
 
 DOCSTRING_SENTINEL = "INFRA_062_SHA_LOCKS"
 
@@ -777,6 +815,39 @@ def v5_reviewer_gate() -> None:
 # Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
 # Smoke/smoke → hard enforce FAIL.
 # ---------------------------------------------------------------------------
+def _enforce_v3_helper_drift_detector() -> None:
+    """infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (phase-44 #2.44):
+    扫 _verify_lib.py 全部公共 helper, 与 V3_HELPER_FUNC_NAMES 比对.
+    任一 missing/extra → hard FAIL. 强制 round2-style 防漂移."""
+    try:
+        result = assert_verify_lib_helpers_in_v3_sha_table(
+            LIB,
+            V3_HELPER_FUNC_NAMES,
+            allowlist=V3_HELPER_DRIFT_ALLOWLIST,
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit("V3_helper_func_sha_drift_detector", False, f"helper err: {e!r}")
+        return
+    if result.get("error"):
+        _emit(
+            "V3_helper_func_sha_drift_detector",
+            False,
+            f"error={result.get('error')!r}",
+        )
+        return
+    missing = result.get("missing_in_v3_table") or []
+    extra = result.get("extra_in_v3_table") or []
+    _emit(
+        "V3_helper_func_sha_drift_detector",
+        bool(result.get("ok")),
+        f"scanned={len(result.get('scanned_helpers') or [])} "
+        f"v3_table={len(result.get('v3_table_keys') or [])} "
+        f"allowlist={len(result.get('allowlist') or [])} "
+        f"missing_in_v3_table={missing} "
+        f"extra_in_v3_table={extra}",
+    )
+
+
 def _enforce_closeout_smoke_tail_nonempty() -> None:
     """对 feature_list.json 调 assert_closeout_smoke_tail_nonempty(min_chars=20,
     must_contain=('Smoke','smoke')), 任一 violation → hard FAIL;
@@ -833,6 +904,7 @@ def main() -> int:
     _enforce_verify_lib_helper_naming()
     _enforce_closeout_verify_runs_min_count()
     _enforce_closeout_smoke_tail_nonempty()
+    _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]

@@ -55,6 +55,7 @@ __all__ = [
     "assert_verify_lib_public_helper_naming",
     "assert_closeout_verify_runs_min_count",
     "assert_closeout_smoke_tail_nonempty",
+    "assert_verify_lib_helpers_in_v3_sha_table",
 ]
 
 
@@ -2728,4 +2729,60 @@ def assert_closeout_smoke_tail_nonempty(
                     "must_contain": list(mc),
                 })
     out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (phase-44 #2.44):
+# V3 helper drift detector — 扫描 _verify_lib.py 公共 helper (def 开头非下划线),
+# 与传入的 v3_table_keys 比对, 任何 missing/extra 即漂移 (强制 round2-style 防漂)
+# ---------------------------------------------------------------------------
+def assert_verify_lib_helpers_in_v3_sha_table(
+    verify_lib_path,
+    v3_table_keys,
+    allowlist=None,
+) -> dict:
+    """扫描 _verify_lib.py 公共 helper, 比对 v3_table_keys.
+
+    设计意图:
+      未来新增 helper 必须同步更新 062 的 V3 helper sha 表 (或 allowlist),
+      否则 hard FAIL — 强制 round2-style 防漂移。
+
+    Args:
+        verify_lib_path: _verify_lib.py 路径 (str/Path).
+        v3_table_keys: 062 V3 helper sha 表的 key 列表 (helper 函数名).
+        allowlist: 显式豁免的 helper 名集合 (允许不进 V3 表).
+
+    Returns:
+        dict: ok, missing_in_v3_table, extra_in_v3_table, scanned_helpers,
+              v3_table_keys, allowlist, error.
+    """
+    import re as _re
+    from pathlib import Path as _Path
+    out = {
+        "ok": False,
+        "missing_in_v3_table": [],
+        "extra_in_v3_table": [],
+        "scanned_helpers": [],
+        "v3_table_keys": sorted(list(v3_table_keys or [])),
+        "allowlist": sorted(list(allowlist or [])),
+        "error": None,
+    }
+    try:
+        p = _Path(verify_lib_path)
+        src = p.read_text(encoding="utf-8")
+    except Exception as e:
+        out["error"] = f"read err: {e!r}"
+        return out
+    helpers = _re.findall(r"^def ([a-z][a-z0-9_]*)\(", src, _re.MULTILINE)
+    out["scanned_helpers"] = sorted(set(helpers))
+    al = set(allowlist or [])
+    table_set = set(v3_table_keys or [])
+    helper_set = set(out["scanned_helpers"])
+    out["missing_in_v3_table"] = sorted(helper_set - table_set - al)
+    out["extra_in_v3_table"] = sorted(table_set - helper_set)
+    out["ok"] = (
+        len(out["missing_in_v3_table"]) == 0
+        and len(out["extra_in_v3_table"]) == 0
+    )
     return out

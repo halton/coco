@@ -315,6 +315,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_smoke_tail_nonempty (func-sha)",
     ("verify_infra_087.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_087.py:main (func-sha)",
+    # verify_infra_088 (V6-backlog-062-v3-helper-func-sha-rebump-round2) —
+    # phase-44 #2.44: 锁 assert_verify_lib_helpers_in_v3_sha_table helper +
+    # lib file + 自 main; 不锁 self file sha (同 074/079-087 形)
+    ("verify_infra_088.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_088.py", "EXPECTED_DRIFT_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_verify_lib_helpers_in_v3_sha_table (func-sha)",
+    ("verify_infra_088.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_088.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
