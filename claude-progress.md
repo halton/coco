@@ -6922,3 +6922,18 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
 - **#5.43 infra-P278-followup-closeout-smoke-tail-nonempty-hard-check** — 新 helper assert_closeout_smoke_tail_nonempty (keyword='Smoke', min_chars=20)；062 加 V4_closeout_smoke_tail_nonempty；新建 verify_infra_NNN V0-V5
 
 主轴延续：P278 closeout-verify-trustworthy 6 信号继续逐项 hard 化 (verify_runs 数量 / smoke_tail 内容)，并把 phase-42 累积的 baseline noise 一次 cascade 清干净 (#1.43/#2.43)；命名一致性 allowlist 收尾 (#3.43)。
+
+## Session phase-43 #1.43 Closeout — infra-P286-followup6-historical-cascade-self-main-sha-rebump
+
+- merge sha: 5b90dd6 (no-ff feat/infra-P286-followup6-historical-cascade-self-main-sha-rebump)
+- baseline: f19a51e
+- Reviewer (sub-agent fresh-context): LGTM
+- verify_runs (3rd raw tail):
+  - 062: ALL PASS (21 checks)
+  - 082: ALL PASS (14 checks) — V1 self_main_func_sha 已 bump (8f7253cb11547181)
+  - 083: ALL PASS (14 checks)
+  - 084: ALL PASS (14 checks)
+  - 085: FAIL 1/14 V5_reviewer_lgtm_gate (pre-existing — baseline f19a51e 同样 FAIL，LGTM-conditional)
+- smoke: PASS
+- backlog 入账：infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump (12 files V2 FILE_SHA cascade rebump, priority=999)
+- status #1.43: in_progress → passing

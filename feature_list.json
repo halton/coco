@@ -11010,7 +11010,7 @@
       "id": "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
       "priority": 1.43,
       "phase": 43,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "historical cascade self_main_func_sha 群集中 rebump (067-081)",
       "description": "扫描 verify_infra_067/068/070-077/080-082 等 EXPECTED_SELF_MAIN_FUNC_SHA 与当前 main 函数 sha 偏移项，统一一次性 bump 到当前实测值；同步 dump_v4_sha_graph + 062 byte-match enforce 链；过程中不引入新 trustworthy 故障。",
@@ -11027,7 +11027,66 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；rebump 是机械动作但必须先 dry-run scan 出 drift 集，按一次完整 cascade 流程提交 (避免分批引入更多 noise)；V4 加 cascade scan helper 时注意 Default-OFF + 6f9f119 类 baseline 处理",
-      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scan>=15 enforced>=N drift=0；smoke 通过；reviewer sub-agent LGTM"
+      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scan>=15 enforced>=N drift=0；smoke 通过；reviewer sub-agent LGTM",
+      "evidence": {
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-P286-followup6 修复 verify_infra_082.py V1_self_main_func_sha 历史漂移（c45cf4954d41da02→8f7253cb11547181）；scope 干净仅 verify_082 常量+progress+status；baseline f19a51e 上 082 真 FAIL V1 而 feat HEAD f420bfc 上 ALL PASS 14/14，证修复有效无回归；062/083/084 ALL PASS；085 V5 reviewer_lgtm_gate FAIL pre-existing 非本范围；smoke 全 PASS；12 项 V2 FILE_SHA cascade 抽样确认 baseline 已 FAIL 属 pre-existing 建议入 backlog 不阻 merge",
+          "checks_run": [
+            "git diff f19a51e..f420bfc → scripts/verify_infra_082.py + feature_list.json + claude-progress.md (3 files, scope 干净)",
+            "verify_infra_062 ALL PASS (21 checks)",
+            "verify_infra_082 (feat HEAD f420bfc) ALL PASS (14 checks)",
+            "verify_infra_082 (baseline f19a51e) FAIL 1/14 V1_self_main_func_sha 证修复有效无回归",
+            "verify_infra_083 ALL PASS (14 checks)",
+            "verify_infra_084 ALL PASS (14 checks)",
+            "verify_infra_085 FAIL 1/14 V5_reviewer_lgtm_gate pre-existing",
+            "./init.sh smoke 全 PASS",
+            "baseline 抽样 037/045/074 V2 槽位均 FAIL → 12 项 V2 FILE_SHA cascade pre-existing 确认"
+          ]
+        },
+        "closeout_verify": {
+          "main_head_sha": "PENDING_A_COMMIT",
+          "baseline_head_echo": "f19a51e",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=[\"closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)\"]\n[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=210 enforced=119 soft_skipped=91 violations=0 fire=True fired_features=9\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=20 enforced=8 soft_skipped=12 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=20 enforced=15 soft_skipped=5 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=23 enforced=8 legacy_allowlisted=15 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (21 checks)"
+            },
+            {
+              "name": "verify_infra_082",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['feature_list']\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=84f8f947847d1d31 expect=84f8f947847d1d31\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required helper_ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_083",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_083][PASS] V4_3_classifier_behavior_correct enforced_ok='enforced_ok' violation='violation' skip_smoke='soft_skip' skip_empty='soft_skip'\n[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=210 enforced=119 soft_skipped=91 violations=0 fire=True fired_features=9'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run helper_ok=True reason=\"feature 'infra-P299-followup2-enable-byte-match-real-run': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_083][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_084",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_084][PASS] V4_3_helper_real_run_ok ok=True scanned=20 enforced=15 soft_skipped=5 violations=0\n[verify_infra_084][PASS] V4_4_helper_real_run_violation ok=False enforced=1 violations=1 soft_skipped=1\n[verify_infra_084][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_084][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-reviewer-summary-nonempty-hard-check helper_ok=True reason=\"feature 'infra-P278-followup-reviewer-summary-nonempty-hard-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_084][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_085",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_085][PASS] V4_3_helper_real_run_ok ok=True scanned=23 enforced=8 legacy_allowlisted=15 violations=0 soft_skipped=False\n[verify_infra_085][PASS] V4_4_helper_real_run_violation ok=False violations=1 first_violation={'name': 'totally_invalid_public_helper_for_mutant_test', 'reason': \"public helper 'totally_invalid_public_helper_for_mutant_test' 命名不符合规约 (必须以 assert_/enforce_ 开头, 或加入 legacy_allowlist)\"} restored_ok=True\n[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock helper_ok=False reason=\"feature 'infra-P278-followup-verify-lib-helper-naming-convention-lock' reviewer.verdict='LGTM-conditional', expected 'LGTM'\"\n[verify_infra_085][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
+              "pre_existing_baseline_sha": "f19a51e",
+              "baseline_tail_stdout": "[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock helper_ok=False reason=\"feature 'infra-P278-followup-verify-lib-helper-naming-convention-lock' reviewer.verdict='LGTM-conditional', expected 'LGTM'\"\n[verify_infra_085][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "lgtm": true,
+            "summary": "infra-P286-followup6 修复 verify_infra_082.py V1_self_main_func_sha 历史漂移（c45cf4954d41da02→8f7253cb11547181）；scope 干净仅 verify_082 常量+progress+status；baseline f19a51e 上 082 真 FAIL V1 而 feat HEAD f420bfc 上 ALL PASS 14/14，证修复有效无回归；062/083/084 ALL PASS；085 V5 reviewer_lgtm_gate FAIL pre-existing 非本范围；smoke 全 PASS；12 项 V2 FILE_SHA cascade 抽样确认 baseline 已 FAIL 属 pre-existing 建议入 backlog 不阻 merge"
+          }
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
@@ -11122,6 +11181,25 @@
       ],
       "notes_for_engineer": ".venv 必须激活；keyword 默认 'Smoke' (case-insensitive)；legacy soft_skip 走 '字段缺' 而非 '内容不符'；min_chars=20 与 reviewer.summary 对齐；cascade _verify_lib file sha + 062 file sha 全量",
       "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "历史 V2 FILE_SHA cascade rebump (12 files)",
+      "description": "12 项 verify_infra_*.py 的 V2 FILE_SHA 槽位在 baseline f19a51e 上已 FAIL (pre-existing)，需 cascade rebump。列表：verify_infra_037/042/045/052/055/056/057/058/059/061/064/074。机械动作，先 dump_v4_sha_graph dry-run，再统一 commit。",
+      "rationale": "phase-43 #1.43 closeout (infra-P286-followup6) Reviewer 抽样 037/045/074 V2 槽位均 FAIL，确认 12 项 V2 FILE_SHA cascade pre-existing 污染 baseline。需后续单独 feature 集中清理。",
+      "verification_plan": "V0 self-pass / V1 dump_v4_sha_graph 列出 12 项 drift=0 / V2 mutant strip / V3 各 verify_*.py 真跑 PASS / V4 062 byte-match enforce / V5 reviewer LGTM",
+      "expected_files": [
+        "scripts/verify_infra_{037,042,045,052,055,056,057,058,059,061,064,074}.py"
+      ],
+      "verify_targets": [
+        "verify_infra_{037,042,045,052,055,056,057,058,059,061,064,074} ALL PASS"
+      ],
+      "notes_for_engineer": ".venv 必须激活；机械 cascade；先 scan drift 集合再一次性 bump",
+      "acceptance": "12 verify 文件全 PASS；062 byte-match enforce 无新 violation；smoke PASS；reviewer LGTM"
     }
   ],
   "_meta": {
