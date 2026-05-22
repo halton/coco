@@ -10288,7 +10288,7 @@
       "id": "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
       "priority": 5.41,
       "phase": 41,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "075 V5 字段 ok= 与 076/077/078 其它 verify 字段 helper_ok= 不一致，统一命名",
       "rationale": "075 V5_reviewer_lgtm_gate 输出用 `ok=`，而 076/077/078 等同类 V5 都用 `helper_ok=`，小风格不一致；统一为 helper_ok= 方便机械化解析与文本扫描。",
