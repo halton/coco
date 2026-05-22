@@ -2031,11 +2031,13 @@ def assert_v5_gate_emit_uses_helper_return(verify_script_path) -> dict:
           "error": str | None,
         }
 
-    判定:
+    判定 (round-2 P1 修: 与实现对齐):
       - 若文件无 v5_reviewer_gate 函数: ok=True, checked=False (skip).
-      - 若 v5_reviewer_gate 不调用 assert_reviewer_lgtm: 仍按"字面 True/False/None
+      - 若 v5_reviewer_gate 不调用 assert_reviewer_lgtm: 仍按"字面 True
         即违规"判 (即便没调 helper, 也不允许硬绿写法).
-      - 任一 _emit 第二位置参数是 Constant(True|False|None): violation.
+      - 任一 _emit 第二位置参数是 Constant(value=True): violation (硬绿反模式).
+      - 字面 False / None: 视为 guard 早返回 (典型: feature_list 缺失时
+        ``_emit("V5_...", False, ...)`` 后 return), **合法, 不视为 violation**.
       - 其他表达式 (Name/Compare/BoolOp/Attribute/Call/...) 视为合规.
     """
     import ast as _ast

@@ -16,11 +16,11 @@ phase-40 #5.40 P0-1 root cause = verify_infra_079 V5 写 ``_emit("V5...", True, 
 
 INFRA_080_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_080.py:main`` func sha: EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_080.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
   (自锁 main 函数体, 防止 v5_reviewer_gate 调用顺序被悄悄改掉)
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
 - ``scripts/_verify_lib.py:assert_v5_gate_emit_uses_helper_return`` func sha:
-  EXPECTED_VERIFY_080_HELPER_FUNC_SHA
+  EXPECTED_HELPER_FUNC_SHA
 
 注意 (与 074/079 同形): 本脚本不锁自己 file sha — file sha 自锁会跟
 "v4_5 mutant 必须能跑过 V2 自检" 冲突 (见 079 docstring), 且 078 反
@@ -72,9 +72,9 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA = "9e4f8ac57fd44c204f1f72a6074f5e527a20d7cdd09591b68191d0adaf69935c"
-EXPECTED_VERIFY_LIB_FILE_SHA = "2d6d4118c664412efe2d2c2e5c988adba47fe682e1ae939f13c2a5fdd4ca09c3"
-EXPECTED_VERIFY_080_HELPER_FUNC_SHA = "b39bbed0145cfbe4152b966dd666ec688f84f1a6789426ef32324abd4cb0d56b"
+EXPECTED_SELF_MAIN_FUNC_SHA = "9e4f8ac57fd44c204f1f72a6074f5e527a20d7cdd09591b68191d0adaf69935c"
+EXPECTED_VERIFY_LIB_FILE_SHA = "524e3edd3e3ef957ccce47f3eae5a8ff908358de16ef88ea080f2e36cd22e4d9"
+EXPECTED_HELPER_FUNC_SHA = "eb093670ad42fa6b6f6a9a118951ea5bc2942715c907a08542bacf1586dbce48"
 
 DOCSTRING_SENTINEL = "INFRA_080_SHA_LOCKS"
 
@@ -149,24 +149,24 @@ def v1_self_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V1_self_main_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_SELF_MAIN_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V1_self_main_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_SELF_MAIN_FUNC_SHA={got}",
         )
         return
-    if not _is_hex64(EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA):
+    if not _is_hex64(EXPECTED_SELF_MAIN_FUNC_SHA):
         _emit(
             "V1_self_main_func_sha",
             False,
-            f"EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA not 64-hex; actual={got}",
+            f"EXPECTED_SELF_MAIN_FUNC_SHA not 64-hex; actual={got}",
         )
         return
     _emit(
         "V1_self_main_func_sha",
-        got == EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA[:16]}",
+        got == EXPECTED_SELF_MAIN_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_SELF_MAIN_FUNC_SHA[:16]}",
     )
 
 
@@ -198,17 +198,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_VERIFY_080_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_VERIFY_080_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_VERIFY_080_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_VERIFY_080_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_HELPER_FUNC_SHA[:16]}",
     )
 
 
