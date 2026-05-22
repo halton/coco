@@ -60,6 +60,7 @@ __all__ = [
     "assert_closeout_reviewer_block_shape",
     "assert_closeout_baseline_head_echo_format",
     "assert_closeout_merge_commit_sha_format",
+    "assert_closeout_main_head_sha_format",
 ]
 
 
@@ -3550,6 +3551,135 @@ def assert_closeout_merge_commit_sha_format(
                     ),
                     "field": "merge_commit_sha",
                     "value_repr": _repr80(mcs),
+                })
+        if feature_violations and fid in grace_set:
+            out["grace_skipped"].append(fid)
+        else:
+            out["violations"].extend(feature_violations)
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+def assert_closeout_main_head_sha_format(
+    feature_list_path,
+    min_hex_chars: int = 7,
+    grace_period_feature_ids: tuple = (),
+) -> dict:
+    """每个 closeout_verify.main_head_sha 必须形态合规.
+
+    enforce-set 判定 (同 assert_closeout_merge_commit_sha_format):
+      - feature.status == 'passing'
+      - evidence.closeout_verify 为 dict
+      - closeout_verify.reviewer 为 dict
+      - reviewer.reviewer_kind == 'sub_agent_fresh_context'
+
+    形态规则:
+      - main_head_sha 必须为非空 str
+      - strip 后长度 >= min_hex_chars (默认 7, git short hash 最小)
+      - 字符全为小写 hex (0-9a-f); 大写 / 非 hex 字符均算违反
+
+    参数:
+        feature_list_path: feature_list.json 路径 (str | Path).
+        min_hex_chars: main_head_sha 最少 hex 字符数 (默认 7).
+        grace_period_feature_ids: 软放过列表 — 这些历史 feature 的 violations
+            不计入 violations, 而计入 grace_skipped.
+
+    返回 dict (形态同 assert_closeout_merge_commit_sha_format, 字段名替换).
+    """
+    from pathlib import Path as _P
+    import json as _json
+    import re as _re
+
+    grace_set = set(grace_period_feature_ids or ())
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "grace_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "grace_period_count": len(grace_set),
+        "min_hex_chars": int(min_hex_chars),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    def _repr80(v) -> str:
+        s = repr(v)
+        return s if len(s) <= 80 else s[:77] + "..."
+
+    hex_re = _re.compile(r"^[0-9a-f]+$")
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        reviewer = cv.get("reviewer")
+        if not isinstance(reviewer, dict):
+            out["soft_skipped"].append(fid)
+            continue
+        if reviewer.get("reviewer_kind") != "sub_agent_fresh_context":
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+        feature_violations: list = []
+
+        mhs = cv.get("main_head_sha")
+        if not isinstance(mhs, str):
+            feature_violations.append({
+                "feature_id": fid,
+                "reason": "main_head_sha missing or not str",
+                "field": "main_head_sha",
+                "value_repr": _repr80(mhs),
+            })
+        else:
+            mhs_s = mhs.strip()
+            if not mhs_s:
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": "main_head_sha empty after strip",
+                    "field": "main_head_sha",
+                    "value_repr": _repr80(mhs),
+                })
+            elif len(mhs_s) < int(min_hex_chars):
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"main_head_sha len={len(mhs_s)} < "
+                        f"min_hex_chars={min_hex_chars}"
+                    ),
+                    "field": "main_head_sha",
+                    "value_repr": _repr80(mhs),
+                })
+            elif not hex_re.match(mhs_s):
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": (
+                        "main_head_sha contains non-hex chars "
+                        "(must be 0-9a-f lowercase)"
+                    ),
+                    "field": "main_head_sha",
+                    "value_repr": _repr80(mhs),
                 })
         if feature_violations and fid in grace_set:
             out["grace_skipped"].append(fid)

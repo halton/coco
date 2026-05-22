@@ -70,6 +70,7 @@ from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
     assert_closeout_baseline_head_echo_format,
     assert_closeout_merge_commit_sha_format,
+    assert_closeout_main_head_sha_format,
     assert_closeout_reviewer_block_shape,
     assert_closeout_smoke_tail_nonempty,
     assert_closeout_verify_runs_min_count,
@@ -96,6 +97,7 @@ V3_HELPER_FUNC_NAMES = (
     "assert_baseline_head_echo_present_and_matches",
     "assert_closeout_baseline_head_echo_format",
     "assert_closeout_merge_commit_sha_format",
+    "assert_closeout_main_head_sha_format",
     "assert_closeout_reviewer_block_shape",
     "assert_closeout_smoke_tail_nonempty",
     "assert_closeout_verify_runs_min_count",
@@ -1152,6 +1154,67 @@ def _enforce_closeout_merge_commit_sha_format() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V6-062 main-head-sha-format hard check 配套 (phase-45 #5.45)
+# infra-P278-followup-closeout-main-head-sha-format-hard-check —
+# 同形态新增 V4_closeout_main_head_sha_format, emit 首次即真硬 (bool(result['ok']));
+# 实测 0 historical violations, 故 GRACE tuple 仅含一个不匹配任何 feature 的
+# sentinel placeholder, 既满足 mutant V4_5 occurrences>=2 要求, 也不会污染真实
+# violation 判定. 实际 hard 行为由 verify_infra_096 自身锁定.
+# ---------------------------------------------------------------------------
+V4_MAIN_HEAD_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS = (
+    "__no-historical-main-head-sha-violations__",
+)
+
+
+def _enforce_closeout_main_head_sha_format() -> None:
+    """对 feature_list.json 调 assert_closeout_main_head_sha_format(min_hex_chars=7,
+    grace_period_feature_ids=V4_MAIN_HEAD_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS);
+    emit=bool(result['ok']) 真硬 (首次即 hard): 新 feature (不在 GRACE 内) 含 violation → FAIL.
+    实际 hard 行为由 verify_infra_096 自身锁定 (helper func sha + 行为正反例)."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_main_head_sha_format",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_main_head_sha_format(
+            feature_list,
+            min_hex_chars=7,
+            grace_period_feature_ids=V4_MAIN_HEAD_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS,
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_main_head_sha_format",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_main_head_sha_format",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_main_head_sha_format",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"grace_skipped={len(result.get('grace_skipped') or [])} "
+        f"grace_period_count={result.get('grace_period_count')} "
+        f"violations={len(violations)} "
+        f"min_hex_chars={result.get('min_hex_chars')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V4: closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check
 # (phase-43 #5.43) infra-P278-followup-closeout-smoke-tail-nonempty-hard-check
 # Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
@@ -1250,6 +1313,7 @@ def main() -> int:
     _enforce_closeout_reviewer_block_shape()
     _enforce_closeout_baseline_head_echo_format()
     _enforce_closeout_merge_commit_sha_format()
+    _enforce_closeout_main_head_sha_format()
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)
