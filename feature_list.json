@@ -8783,7 +8783,7 @@
     {
       "id": "infra-P291-followup-extend-helper-to-other-v5",
       "priority": 2.4,
-      "status": "not_started",
+      "status": "passing",
       "phase": 40,
       "area": "infra",
       "title": "assert_reviewer_lgtm 推广到所有 V5_reviewer_lgtm_gate 调用点",
@@ -8793,7 +8793,118 @@
       "notes_for_engineer": ".venv 必须激活;Engineer 任务尺寸大 (改 10+ 文件 + cascade bump 全部 _verify_lib sha 锁), 必须拆 A (helper 接入 + 单文件 PoC) + B (其余 9 文件 cascade + dump bump + commit + push) 两步, 避免 socket 断 (infra-P299-engineer-task-size-guideline 教训);V4_5 mutant 不要把整脚本复制到 tmp (P286 round-1 教训), 在内存中 mutate；改造后 071 已有的 assert_reviewer_lgtm 调用不要重复",
       "depends_on": [
         "infra-P299-engineer-report-vs-impl-trustworthy"
-      ]
+      ],
+      "evidence": {
+        "branch": "feat/infra-P291-followup-extend-helper-to-other-v5",
+        "pre_merge_head": "752a8c7d",
+        "code_head": "105e7ea",
+        "merge_commit": "446031e1",
+        "closeout_verify": {
+          "main_head_sha": "446031e1b04a1fb2546426934b0d74d93d1f976b",
+          "pre_existing_baseline_sha": "25bb3fec",
+          "baseline_tail_stdout": "main baseline 25bb3fec: 060/062/063 历史 ALL PASS, 076 在 baseline 不存在(本 feature 新引入)",
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {"round": 1, "results": [
+              {"script": "verify_infra_076.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": 2, "results": [
+              {"script": "verify_infra_076.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": 3, "results": [
+              {"script": "verify_infra_076.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": "post_merge", "results": [
+              {"script": "verify_infra_076.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]}
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM"
+          },
+          "mutation_checks": "V4_1 mutant: 删除 verify_infra_068.py 中 assert_reviewer_lgtm 调用 → verify_infra_076 FAIL rc=2; 恢复后 PASS rc=0. helper 三路实测: P299 LGTM ok=True / nonexistent feature ok=False / mutant verdict ok=False."
+        }
+      }
+    },
+    {
+      "id": "infra-P291-followup2-helper-return-value-must-participate-in-emit",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "assert_reviewer_lgtm 返回值必须参与 V5 gate emit 第二参数 (行为锁强化)",
+      "rationale": "P291-extend Reviewer info-level finding: 当前 8 个迁移文件中 helper 返回值 helper_ok/reason 只写入 detail 字段, gate 自身仍 emit=True (soft-PASS 模式). V4_1 ast 静态扫描只检查 assert_reviewer_lgtm 调用存在, 未锁定调用结果是否真正参与判定. 行为锁不够强: 理论上 helper_ok=False 仍 emit PASS. 需要补 V4 ast 分析锁定 helper 返回值进入 emit 第二参数 (或显式 hard gate 模式).",
+      "description": "强化 verify_infra_076 V4_1 AST: 不仅扫 assert_reviewer_lgtm 调用存在, 还要追踪返回值 ok 是否被 emit() 第二参数引用 (变量传递链)."
+    },
+    {
+      "id": "infra-P291-extend2-migrate-remaining-26-legacy-V5",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "迁移剩余 26 个 legacy V5_reviewer_lgtm_gate 接入 assert_reviewer_lgtm",
+      "rationale": "P291-extend 完成了 060/062/063/065/066/067/068/070 共 8 路迁移 (加上原 P291 071 共 9 路). 仓库内仍有约 26 个 verify_infra_*.py 含 legacy V5_reviewer_lgtm_gate 占位文案. 需统一接入 helper, 让全部 V5 gate 都成为实检 (与 P291-extend 相同 soft-PASS 模式).",
+      "description": "扫描 scripts/verify_infra_*.py 中所有 legacy V5_reviewer_lgtm_gate 占位调用点, 改为 assert_reviewer_lgtm helper 实读; cascade bump _verify_lib sha 锁; 验收同 P291-extend (V4_1 ast 静态覆盖率 100%)."
     },
     {
       "id": "infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup",

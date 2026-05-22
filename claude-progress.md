@@ -6407,3 +6407,16 @@ infra-P299-engineer-report-vs-impl-trustworthy 入 passing。
 - cascade: dump_v4_sha_graph.py 加 076 2 条 _PER_FILE_LOCKS; verify_infra_060.py EXPECTED_DUMP_FILE_SHA bump 010387f4 -> 179b50d2
 - final HEAD 全 verify (034/059/060/062/063/065/066/067/068/070/071/072/073/074/075/076 + smoke) ALL PASS rc=0
 - push origin feat/...: 403 (haltonhuo_microsoft 无 halton/coco 写权限) - 按规则忽略继续
+
+### Session: 2026-05-22 phase-40 #2.40 infra-P291-followup-extend-helper-to-other-v5 (Closeout)
+
+- branch: feat/infra-P291-followup-extend-helper-to-other-v5
+- pre-merge HEAD: 105e7ea (Engineer 752a8c7d + Closeout 补 commit progress 105e7ea)
+- post-merge main HEAD: 446031e1
+- baseline: 25bb3fec (060/062/063 ALL PASS, 076 新引入)
+- Closeout 三遍独立实跑 + post-merge 第四遍 (076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 共 16 verify) ALL PASS rc=0 三+一轮
+- smoke (init.sh) ALL PASS
+- Reviewer fresh-context LGTM (sub_agent_fresh_context); mutation V4_1 删 068 helper → 076 FAIL rc=2 / 恢复 PASS rc=0; helper 三路 (LGTM=True / nonexistent=False / mutant=False)
+- feature_list.json: infra-P291-followup-extend-helper-to-other-v5 status not_started→passing + 完整 evidence (closeout_verify 四轮 verify_runs + smoke + baseline + reviewer + mutation_checks)
+- 加 2 条 backlog: infra-P291-followup2-helper-return-value-must-participate-in-emit (V4_1 ast 锁 emit 第二参数), infra-P291-extend2-migrate-remaining-26-legacy-V5 (剩余 26 路迁移)
+- push 策略: commit 后 push origin main + push origin feat/... 各一次, 失败忽略
