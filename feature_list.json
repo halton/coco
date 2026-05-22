@@ -11010,7 +11010,7 @@
       "id": "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
       "priority": 1.43,
       "phase": 43,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "historical cascade self_main_func_sha 群集中 rebump (067-081)",
       "description": "扫描 verify_infra_067/068/070-077/080-082 等 EXPECTED_SELF_MAIN_FUNC_SHA 与当前 main 函数 sha 偏移项，统一一次性 bump 到当前实测值；同步 dump_v4_sha_graph + 062 byte-match enforce 链；过程中不引入新 trustworthy 故障。",
