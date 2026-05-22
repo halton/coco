@@ -6286,3 +6286,35 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
   - infra-P286-followup-round1-reviewer-baseline-head-mismatch (Reviewer brief 加 baseline_head_echo checkpoint)
   - infra-P286-followup-074-self-main-func-sha-bump (074 EXPECTED_SELF_MAIN_FUNC_SHA 升真值)
   - infra-P286-followup-v4-2-stricter-equal-check (V4_2b 锁 == 精确值)
+
+## Session 2026-05-22 — phase-40 planning
+
+phase-39 5/5 已收官 (main HEAD=d8ca3f1), 5/5 全 passing:
+- 1.39 infra-P294-closeout-stdout-sha-verification (merge b0c55e8)
+- 2.39 infra-P291-reviewer-gate-real-or-remove (merge 89bb267)
+- 3.39 infra-P299-closeout-verify-trustworthy-helper-passed-checks-field (merge 2693df5)
+- 4.39 infra-P299-baseline-fail-claim-regex-multiline (merge 7593ff5)
+- 5.39 infra-P286-total-nodes-lock (merge 616bed0)
+
+phase-40 候选 (按 priority 1.4 → 5.4, 提级自 backlog/phase=0 残留项):
+
+1. **1.4 infra-P299-engineer-report-vs-impl-trustworthy** — P291 真实造假事件驱动 (Engineer + Reviewer 报 6 项 FAIL 谎称 baseline, closeout 实测 ALL PASS), 机械化交叉锁 Engineer/Reviewer 报告的 verify_runs[].tail_stdout_sha256 与 closeout 实测 byte-match (新 helper assert_report_matches_closeout_runs + verify_infra_075)
+2. **2.4 infra-P291-followup-extend-helper-to-other-v5** — 把 P291 引入的 _verify_lib.assert_reviewer_lgtm 推广到 10+ 现存 V5_reviewer_lgtm_gate 调用点 (060/062/063/065/066/067/068/070/072/073), 让所有 V5 gate 名实统一 (新 verify_infra_076 + V4_1 静态扫描 + 改造点 mutant 反证); 依赖 1.4
+3. **3.4 infra-P286-followup-round1-reviewer-baseline-head-mismatch** — P286 round-1 Reviewer baseline_head 错配致 V4_5 假阳性; 固化 Reviewer brief 模板要求 reviewer.baseline_head_echo 字段, 加 verify_infra_077 锁 baseline_head_echo == pre_existing_baseline_sha[:7] (legacy 容差)
+4. **4.4 infra-P286-followup-074-self-main-func-sha-bump** — 074 + 070 V1 EXPECTED_SELF_MAIN_FUNC_SHA __BUMP_ME__ placeholder 收口为真算值, 新 verify_infra_078 + V4_1 grep __BUMP_ME__ 字面 lint 防回归
+5. **5.4 infra-P286-followup-v4-2-stricter-equal-check** — verify_infra_074 V4_2 total_nodes >0 太宽收紧为精确等于 EXPECTED + V4_2b dump 实跑 cross-check, 新 verify_infra_079; 依赖 4.4
+
+排除候选 (不入 phase-40 理由):
+- infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup: 与 4.4 部分重叠, 4.4 已包 070; 剩余 5+ 文件 placeholder 留 phase-41 一次性清扫
+- infra-P294-followup-070-* (mini-repo-env-isolation / chars-vs-bytes-doc): 文档/微调, 收益密度低
+- infra-P299-shell-verify-rc-usage-doc: 纯文档化, 收益已通过 P294-Rx merge 体现
+- infra-P299-old-verify-summary-helper-migration: 30 个旧 verify 渐进迁移, 一次太大, 拆 phase-41/42 分批
+- infra-P298-verify-infra-064-helper-sha-full-coverage: 单点扩 sha 覆盖, 收益不如 V5 推广
+- infra-P299-engineer-task-size-guideline: 已在 P291/P294-Ry brief 中口头落实
+- robot-* / interact-* / vision-* backlog: 与本 phase 聚焦 (closeout-trustworthy V4/V5 机制完备) 不直接重叠
+- uat-*: 真机异步, 不阻 sim phase 推进
+
+Commit: 1b8285e (chore(phase-40): planning — 5 candidates)
+Push: 403 personal fork 权限失败, 按规则忽略继续, main HEAD post-commit local=1b8285e
+
+下一步: 立即派 priority 1.4 infra-P299-engineer-report-vs-impl-trustworthy Engineer sub-agent。
