@@ -9958,6 +9958,18 @@
       "description": "把 scripts/verify_infra_075.py 中 V5 PASS line 的 ok= 改为 helper_ok=，与 076/077/078 对齐。",
       "verification_plan": "运行 075 + grep helper_ok=",
       "notes_for_engineer": "与本 feature 无关的小清理；来源 P286 followup Reviewer 旁注"
+    },
+    {
+      "id": "infra-P286-followup-tolerance-headroom-bump",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "verify_infra_059 EXPECTED_CURRENT_TOTAL_NODES / TOLERANCE headroom 不足，下一新 verify 立爆",
+      "rationale": "P286-followup-v4-2-stricter-equal-check round-2 实测 total_nodes=86 / expect=81 / tolerance=±5 (差距=5, 贴上限)。再加一个新 verify_infra_*.py 引入新常量节点即超 tolerance，V4_real_total_nodes_within_tolerance 立爆。需重算 expect (bump 到当前真值) 或上调 tolerance 给 headroom (建议 expect=86, tolerance=±5, 留 ±5 buffer)。074 EXPECTED_TOTAL_NODES_TRUTH 与 079 EXPECTED_TOTAL_NODES_TRUTH_VALUE 须同步 cascade。",
+      "description": "bump scripts/verify_infra_059.py:EXPECTED_CURRENT_TOTAL_NODES 81→新真值 (或调 tolerance); cascade scripts/verify_infra_074.py:EXPECTED_TOTAL_NODES_TRUTH 与 scripts/verify_infra_079.py:EXPECTED_TOTAL_NODES_TRUTH_VALUE; 跑 059/074/079 + smoke 全 PASS.",
+      "verification_plan": "运行 verify_infra_059 / 074 / 079 + smoke + dump_v4_sha_graph; 确认 V4_real_total_nodes_within_tolerance 仍 PASS 且新 truth 与 dump 实跑数一致.",
+      "notes_for_engineer": "来源 P286-followup-v4-2-stricter-equal-check round-2 Reviewer P2-1; cascade 三处 (059 / 074 / 079) 真值必须同步，否则 074 V4_2 (== TRUTH) / V4_2b (== TRUTH) 任一爆即 FAIL。"
     }
   ],
   "_meta": {

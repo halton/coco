@@ -36,10 +36,13 @@ INFRA_079_SHA_LOCKS
     ``V4_2_const_value_eq_truth`` 与 ``V4_2b_real_dump_expect_eq_truth``
     两个 emit tag 字面 (回归保护, 防止有人改回旧 tag 名)
   - V4_4 subprocess 真跑 074 → rc=0 且 stdout 含两个 tag 的 PASS 行
-  - V4_5 mutant: 取 074 源码字符串, regex sub
-    ``EXPECTED_TOTAL_NODES_TRUTH: int = 81`` → ``= 9999``, ast-extract
-    后值应为 9999 ≠ 81. 证明 ast helper 能区分真值变化.
-- V5 reviewer_lgtm_gate
+  - V4_5 mutant (round-2 整改, 真触发 FAIL): 把 074 源码写到 tmp 路径,
+    regex 替换 ``EXPECTED_TOTAL_NODES_TRUTH: int = 81`` → ``= 9999``,
+    subprocess 跑 tmp 074 (env PYTHONPATH=SCRIPTS, cwd=REPO), 断言
+    rc≠0 且 stdout 含 ``[verify_infra_074][FAIL] V4_2_const_value_eq_truth``.
+    074 不锁自己 file_sha, 所以 mutant 074 不会被 V2 自检拦下, 会真走到 V4_2
+    然后断 81 != 9999 → FAIL. 这才是 074 V4_2 那条 check **自己**会变红的真证.
+- V5 reviewer_lgtm_gate (真门: ok is True)
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit)。
 
@@ -273,34 +276,67 @@ def v4_behavior() -> None:
         f"rc={rc} pass_V4_2_eq_truth={pass_eq} pass_V4_2b={pass_2b}",
     )
 
-    # V4_5 mutant: 重放 074 V4_2 等价 logic 于 (a) 原 074 src (应 True)
-    # 与 (b) src 中 EXPECTED_TOTAL_NODES_TRUTH 替换为 9999 (应 False).
-    # 直接证明: 074 V4_2 那条精确等比 check 在真值漂移时会 FAIL,
-    # 不只是"helper 能区分"——而是这条 check 自己会变红.
-    def _simulate_v4_2(src_text: str, truth_value: int) -> bool:
-        val = _get_int_const(src_text, "EXPECTED_CURRENT_TOTAL_NODES")
-        # 但 EXPECTED_CURRENT_TOTAL_NODES 来自 059, 不在 074. 改为同
-        # 074 V4_2 的形式: 取 074 自持 EXPECTED_TOTAL_NODES_TRUTH 与
-        # 059 EXPECTED_CURRENT_TOTAL_NODES (由 truth_value 模拟) 比对.
-        own_truth = _get_int_const(
-            src_text, EXPECTED_TOTAL_NODES_TRUTH_CONST_NAME
-        )
-        return isinstance(own_truth, int) and own_truth == truth_value
-
-    # (a) 原 src + 真值 81 → True
-    orig_ok = _simulate_v4_2(src, EXPECTED_TOTAL_NODES_TRUTH_VALUE)
-    # (b) mutate 074 真值常量为 9999, 用同一真值 81 比对 → False
+    # V4_5 mutant (P0 round-2 整改): 真跑 mutant 074 subprocess, 断言 rc≠0 且
+    # stdout 含 [FAIL] V4_2_const_value_eq_truth. 这才能证明 074 V4_2 那条精确
+    # 等比 check 在真值漂移时**自己会变红** — 而不是在 079 内部重写一遍 logic
+    # 自测 ast helper (round-1 假阳性 root cause).
+    #
+    # 关键事实: 074 不锁自己 file_sha (只锁 059 file_sha), 所以 mutant 074 跑
+    # 起来不会被 V2 自检拦下, 会真的走到 V4_2 然后断 81 != 9999 → FAIL.
+    #
+    # 074 内部用 ``Path(__file__).resolve().parents[1] / "scripts" /
+    # "verify_infra_059.py"`` 找 059, 所以 mutant 074 必须落在真 SCRIPTS/ 下
+    # (而不是 tmp dir, 否则 parents[1]/scripts 不存在 → FileNotFoundError).
+    # 文件名故意不以 `verify_` 起首, 避免被任何 verify_infra_*.py glob 扫到.
+    # try/finally 保证跑完立删, 不污染 repo.
     mutant_src = re.sub(
         r"(EXPECTED_TOTAL_NODES_TRUTH\s*:\s*int\s*=\s*)\d+",
         r"\g<1>9999",
         src,
         count=1,
     )
-    mutant_ok = _simulate_v4_2(mutant_src, EXPECTED_TOTAL_NODES_TRUTH_VALUE)
+    substituted = "= 9999" in mutant_src and mutant_src != src
+    mutant_path = SCRIPTS / "_for_079_v4_5_mutant_074.py"
+    try:
+        mutant_path.write_text(mutant_src, encoding="utf-8")
+        try:
+            mproc = subprocess.run(
+                [sys.executable, str(mutant_path)],
+                capture_output=True,
+                text=True,
+                timeout=180,
+                cwd=str(REPO),
+            )
+            mrc = mproc.returncode
+            mstdout = mproc.stdout
+            mstderr = mproc.stderr
+        except Exception as e:  # noqa: BLE001
+            _emit(
+                "V4_5_mutant_real_subprocess_fail",
+                False,
+                f"exception: {e!r}",
+            )
+            return
+    finally:
+        try:
+            mutant_path.unlink()
+        except FileNotFoundError:
+            pass
+    # 断言: mutant 074 跑出非 0 rc + stdout 含 V4_2 那条 tag 的 FAIL 行
+    v4_2_fail_re = re.compile(
+        r"\[verify_infra_074\]\[FAIL\]\s+V4_2_const_value_eq_truth"
+    )
+    has_v4_2_fail = bool(v4_2_fail_re.search(mstdout))
+    ok_all = substituted and mrc != 0 and has_v4_2_fail
+    fail_lines = [
+        ln for ln in mstdout.splitlines() if "[FAIL]" in ln
+    ]
     _emit(
-        "V4_5_mutant_helper_distinguishes",
-        orig_ok is True and mutant_ok is False,
-        f"orig_ok={orig_ok} mutant_ok={mutant_ok} (mutant 真触发 FAIL)",
+        "V4_5_mutant_real_subprocess_fail",
+        ok_all,
+        f"substituted={substituted} rc={mrc} has_V4_2_FAIL={has_v4_2_fail} "
+        f"fail_lines_count={len(fail_lines)} first_fail_line={fail_lines[0] if fail_lines else ''!r} "
+        f"stderr_tail={mstderr.strip().splitlines()[-1] if mstderr.strip() else ''!r}",
     )
 
 
@@ -308,11 +344,18 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    if not REAL_FEATURE_LIST.is_file():
+        _emit(
+            "V5_reviewer_lgtm_gate",
+            False,
+            f"feature_list.json not found at {REAL_FEATURE_LIST}",
+        )
+        return
     ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        ok is True,
+        f"target={V5_GATE_FEATURE_ID} ok={ok} reason={reason!r}",
     )
 
 
