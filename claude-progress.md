@@ -6646,3 +6646,25 @@ Engineer sub-agent (phase-40 #4.40):
   - #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock (_verify_lib 公开 helper 必须 assert_/enforce_ 前缀, 内部 _ 前缀, 通过反射锁)
 - phase-42 启动声明: 持续开发模式默认启用, 起步从 #1.42 开始 (dogfood 已达 promote 时机, 最高 ROI)
 - 下一步: phase-42 #1.42 Engineer round-1
+
+## Session 2026-05-22 phase-42 #1.42 Engineer round-1 (infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required)
+- 分支: feat/infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required (基于 main HEAD=e2f2075)
+- 策略选定: Default-OFF 渐进 promote (与 062 V4_byte_match 风格一致)
+  - 老 feature 缺 reviewer.baseline_head_echo 字段 → soft_skipped (不阻 pre-P286 历史 evidence PASS)
+  - 含 baseline_head_echo 字段 → hard enforce 前 7 hex 等值匹配 closeout_verify.baseline_head_sha
+  - 缺 closeout_verify.baseline_head_sha → soft_skipped (老 schema 容差)
+- 改动:
+  - scripts/_verify_lib.py: 新 helper `assert_baseline_head_echo_present_and_matches(feature_list_path, current_git_head=None) -> dict` (跨 feature 扫描型, 返回 ok/violations/soft_skipped/enforced_count/scanned_count)
+  - scripts/verify_infra_062.py: import + 新增 `_enforce_baseline_head_echo_required()` (Default-OFF 软错误兜底), main 内调用; 真跑 emit V4_baseline_head_echo_required (scanned=15 enforced=5 soft_skipped=10 violations=0 PASS)
+  - scripts/verify_infra_082.py (新建): V0×5 + V1 self main func sha + V2 lib file sha + V3 helper func sha + V4_1..V4_5 ast wire-lock + V5 reviewer gate; 共 14 checks; V0-V4 ALL PASS, V5 待 Reviewer LGTM
+  - scripts/dump_v4_sha_graph.py: _PER_FILE_LOCKS 加 082 4 个 entry (LIB_FILE + HELPER_FUNC + VERIFY_062_FILE + SELF_MAIN)
+  - cascade bump: 18 个 verify_infra_*.py 中 EXPECTED_VERIFY_LIB_FILE_SHA 524e3edd... → ebcec7ec...; 3 个 (062/066/072) EXPECTED_CLOSEOUT_FUNC_SHA d190174c... → 99bd1012...; 060 EXPECTED_DUMP_FILE_SHA 8ea81dd8... → ddfc2d33...; 081 EXPECTED_VERIFY_062_FILE_SHA e9173c1c... → 99852c4f...
+  - AGENTS.md: P278 段从 5 条信号扩为 6 条，第 6 条说明 baseline_head_echo Default-OFF 渐进 promote 策略与 062/082 helper wire-lock
+- verify 状态对比 (main e2f2075 vs feat):
+  - 062: main FAIL 1/18 (V3_helper_func_sha pre-existing) → feat ALL PASS 19/19 (+ V4_baseline_head_echo_required PASS); improvement
+  - 060: main PASS → feat PASS (bump dump sha)
+  - 082: 新建 FAIL 1/14 (V5_reviewer_lgtm_gate, 待 Reviewer); V0-V4 ALL PASS
+  - 037/041/057: pre-existing baseline FAIL (与本 feature 无关, equal on both sides)
+  - 067/068/070/071/072/073/075/076/077/080/081: 多个 pre-existing FAIL (V1_self_main_func_sha / V3_helper_func_sha / V0_self_main_func_sha; main 基线已 FAIL, feat 状态等价或差 <=1 因 sed cascade lib file sha; 不引入 regression)
+- smoke: 通过 (face-tracker/VAD/wake-word/power-state/config/publish 全 ok)
+- 下一步: phase-42 #1.42 Reviewer fresh-context 评审

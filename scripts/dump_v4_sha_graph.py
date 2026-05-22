@@ -268,6 +268,17 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/verify_infra_062.py (file-sha)",
     ("verify_infra_081.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_081.py:main (func-sha)",
+    # verify_infra_082 (P286-followup3-promote-baseline-head-echo-to-P278-hard-required) —
+    # phase-42 #1.42: 锁 assert_baseline_head_echo_present_and_matches helper + lib
+    # file + 062 file (wire target) + 自 main; 不锁 self file sha (同 074/079/080/081 形)
+    ("verify_infra_082.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_082.py", "EXPECTED_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_baseline_head_echo_present_and_matches (func-sha)",
+    ("verify_infra_082.py", "EXPECTED_VERIFY_062_FILE_SHA"):
+        "scripts/verify_infra_062.py (file-sha)",
+    ("verify_infra_082.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_082.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

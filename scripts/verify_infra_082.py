@@ -1,55 +1,54 @@
 #!/usr/bin/env python3
-"""verify_infra_081 V0-V5: 锁定 verify_infra_062 必须 wire assert_report_matches_closeout_runs 进 closeout gate.
+"""verify_infra_082 V0-V5: 锁定 verify_infra_062 必须 wire assert_baseline_head_echo_present_and_matches 进 closeout gate.
 
-infra-P299-followup-wire-into-closeout-gate (phase-41 #3.41):
-phase-40 #1.41 (P299-engineer-report-vs-impl-trustworthy) 建好 helper
-``assert_report_matches_closeout_runs`` (detached worktree + subprocess
-实跑 + sha256(actual_tail) vs sha256(claimed_tail) + rc 比对), 但 helper
-仅作"工具"暴露, 没有 verify_infra_*.py 业务真的调用它. closeout
-sub-agent 即使 report 假数据, V0-V6 链也 catch 不到这条违规.
+infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required (phase-42 #1.42):
+P286 round-1 dogfood (verify_infra_077) 把 reviewer.baseline_head_echo 字段在
+单个 evidence 内做了 legacy 容差校验; 但这只是 "可选信号", 任一新 closeout 漏
+带 echo 都不会阻 062 (P278 主入口). 本 feature 把 baseline_head_echo 从
+optional + legacy-skip 升级为 P278 第 6 hard-required 信号:
 
-本 feature 把 helper wire 进 062 (closeout-verify-trustworthy 总入口):
+- _verify_lib.py 引入跨 feature_list 扫描型 helper
+  ``assert_baseline_head_echo_present_and_matches`` (Default-OFF / 渐进 promote:
+  缺字段 → soft_skipped, 含字段 → 严格 enforce 前 7+ hex 等值匹配
+  closeout_verify.baseline_head_sha);
+- verify_infra_062.main() 内新增 ``_enforce_baseline_head_echo_required`` 函数
+  ast 静态调用 helper, 写出 V4_baseline_head_echo_required emit;
+- 082 V4 ast-lock 锁住 "062 函数体必须出现 helper 调用" 这一静态事实, 删调用
+  即 082 FAIL (机械化阻 merge), 并通过 mutant 替换验证 detection 真实有效.
 
-- 062 内新增 ``_enforce_closeout_byte_match`` 函数体, ast 静态调用
-  ``assert_report_matches_closeout_runs``;
-- 062.main() 真调 ``_enforce_closeout_byte_match()``;
-- 081 V4 ast-lock 锁住 "062 函数体必须出现 ``assert_report_matches_closeout_runs``
-  调用" 这一静态事实, 删调用即 081 FAIL (机械化阻 merge).
+策略 (Default-OFF 渐进 promote, 与 062 V4_byte_match 风格一致):
+  - 老 feature (缺 reviewer.baseline_head_echo 字段) → soft_skipped
+    (不阻 pre-P286 历史 evidence PASS, 不强 retro fix)
+  - 含 baseline_head_echo 字段 → hard enforce 前 7+ hex 等值匹配
+    closeout_verify.baseline_head_sha (大小写不敏感); 不匹配 → violation
+  - closeout_verify.baseline_head_sha 缺失 → soft_skipped (老 schema)
 
-实际 byte-match 真跑保持 Default-OFF (schema 不兼容或 main_head 不匹配
-→ soft-PASS 跳过): 现存 closeout_verify.verify_runs 是 flat list
-[{script,status,tail_stdout}], P299 helper 期望 nested round
-{"verify_runs":[{round,scripts:{name:{rc,tail_stdout,status}}}]}, 且
-legacy schema 缺 rc 字段, 适配后跳过. 完整真跑 enforcement 留 backlog
-``infra-P299-followup2-enable-byte-match-real-run``.
-
-INFRA_081_SHA_LOCKS
+INFRA_082_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_081.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_082.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_report_matches_closeout_runs`` func sha:
-  EXPECTED_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_baseline_head_echo_present_and_matches``
+  canonical func sha: EXPECTED_HELPER_FUNC_SHA
 - ``scripts/verify_infra_062.py`` file sha: EXPECTED_VERIFY_062_FILE_SHA
-
-注意 (与 074/079/080 同形): 本脚本不锁自己 file sha, 避免与 V4_4 mutant
-跑过 V2 自检冲突, 且与 078 placeholder 禁字面约束兼容.
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib.py file sha
-- V3 helper assert_report_matches_closeout_runs func sha
+- V3 helper canonical func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 ``assert_report_matches_closeout_runs`` 调用
-  - V4_2 调用位于真 def 函数体 (非 if False / 注释 / docstring), 且至少一个
-    在 062.main() 可达调用链 (main → _enforce_closeout_byte_match)
-  - V4_3 调用入参第一个位置参数语义合理 (Name='report_obj' 或 dict literal,
-    防止有人调成空 dict 应付检查)
-  - V4_4 mutant: 拷贝 062 到 tmp 并删 helper 调用, 再 ast 扫 → 检测必须 0 调用
-  - V4_5 062 file sha 锁 (EXPECTED_VERIFY_062_FILE_SHA), 防止 062 被悄悄改
-    回不调 helper 的版本但还能过 V4_1
+  - V4_1 062 函数体 ast 扫到至少一处 helper 调用
+  - V4_2 调用位于真 def 函数体且 main() 可达 (main → _enforce_baseline_head_echo_required
+    → helper)
+  - V4_3 调用入参第一个位置参数非平凡 (非空 dict/None/<unparse-err>; 防应付调用)
+  - V4_4 mutant: 替换 062 中 helper callee 名 → ast 扫 helper 调用必须降到 0
+  - V4_5 062 file sha 锁 (EXPECTED_VERIFY_062_FILE_SHA), 防止 062 被悄悄改回
+    不调 helper 的版本但还能过 V4_1
 - V5 reviewer_lgtm_gate (真门: ok is True)
+
+注意 (与 074/079/080/081 同形): 本脚本不锁自己 file sha, 避免与 V4_4 mutant
+对源码做 ast 替换时与 V2 自检冲突, 且与 078 placeholder 禁字面约束兼容.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
 
@@ -77,22 +76,23 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "110572e4de22344c1bd70be5006b106c8a1eb93794b7d10d786599928c7a3245"
+EXPECTED_SELF_MAIN_FUNC_SHA = "c45cf4954d41da02d2c90c419de7913db5915bdb51146441bfd0c626813b7378"
 EXPECTED_VERIFY_LIB_FILE_SHA = "ebcec7ec936822801c7d656f9b6de429d2145f74133676ead1dfd860c5addd0d"
-EXPECTED_HELPER_FUNC_SHA = "6578542d1b17fe12f2d2e98a598701192c1f9b2cc9fa3be185d4d4f00fad2894"
+EXPECTED_HELPER_FUNC_SHA = "c6dc6341726578428019a97be704d6a4432f9b0d3fbb17b384f19ab18dc1d873"
 EXPECTED_VERIFY_062_FILE_SHA = "99852c4f46b84be4332b8a65c03bdce2e79f252e71533f83aea1ba6674ad8a4c"
 
-DOCSTRING_SENTINEL = "INFRA_081_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_082_SHA_LOCKS"
 
-HELPER_NAME = "assert_report_matches_closeout_runs"
-V5_GATE_FEATURE_ID = "infra-P299-followup-wire-into-closeout-gate"
+HELPER_NAME = "assert_baseline_head_echo_present_and_matches"
+ENFORCER_NAME = "_enforce_baseline_head_echo_required"
+V5_GATE_FEATURE_ID = "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_081][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_082][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -252,15 +252,13 @@ def v4_behavior() -> None:
         f"call_count={len(calls)} sites={[(c['lineno'], c['in_func']) for c in calls]}",
     )
 
-    # V4_2: 至少一个调用位于真函数体 (in_func != '<module>')
+    # V4_2: 调用位于真 def 函数体且 main 可达
+    # main → _enforce_baseline_head_echo_required → helper
     in_func_calls = [c for c in calls if c["in_func"] != "<module>"]
-    # 进一步要求 main() 调用链可达: 062 main 直接调用 _enforce_closeout_byte_match,
-    # 后者内调 helper. 静态校验: main() 函数体 ast 含 Name=_enforce_closeout_byte_match
-    # 调用, 且 _enforce_closeout_byte_match 函数体含 HELPER_NAME 调用.
-    enforce_calls = _scan_calls_in_source(src062, "_enforce_closeout_byte_match")
-    main_calls_enforcer = any(c["in_func"] == "main" for c in enforce_calls)
+    enforcer_calls = _scan_calls_in_source(src062, ENFORCER_NAME)
+    main_calls_enforcer = any(c["in_func"] == "main" for c in enforcer_calls)
     enforcer_calls_helper = any(
-        c["in_func"] == "_enforce_closeout_byte_match" for c in calls
+        c["in_func"] == ENFORCER_NAME for c in calls
     )
     _emit(
         "V4_2_call_in_main_chain",
@@ -270,11 +268,12 @@ def v4_behavior() -> None:
         f"enforcer_calls_helper={enforcer_calls_helper}",
     )
 
-    # V4_3: 第一个 helper 调用的 arg1 不能是空 dict / None 字面 (防应付调用)
+    # V4_3: helper 调用 arg1 非平凡 (典型为 feature_list 路径 Name/Attribute,
+    # 防止有人调成空 dict / None / 字面应付检查)
     bad_arg1 = []
     for c in calls:
         a = (c.get("arg1_source") or "").strip()
-        if a in ("{}", "None", "", "<unparse-err>"):
+        if a in ("{}", "None", "", "<unparse-err>", "[]"):
             bad_arg1.append((c["lineno"], a))
     _emit(
         "V4_3_helper_arg1_nontrivial",
@@ -282,16 +281,14 @@ def v4_behavior() -> None:
         f"bad_arg1={bad_arg1} sample_arg1={[c.get('arg1_source') for c in calls][:3]}",
     )
 
-    # V4_4: mutant — 拷贝 062 到 tmp 并删除所有 helper 调用 (regex 替换),
-    # 再扫 → 必须 0 调用. 用 ast 检测不依赖文件磁盘, 直接传源码字符串.
-    # 故意把 callee 名替换成 _DELETED_callee_, 确保 ast 不再匹配 HELPER_NAME.
+    # V4_4: mutant — 把 062 中 HELPER_NAME 替换成 _DELETED_<HELPER>_,
+    # 再 ast 扫 → 必须 0 调用 (detection 真有效)
     mutant_src, n_sub = re.subn(
         re.escape(HELPER_NAME) + r"\b",
         f"_DELETED_{HELPER_NAME}_",
         src062,
     )
     mutant_calls = _scan_calls_in_source(mutant_src, HELPER_NAME)
-    # n_sub 应当 >= 调用次数 + import 行数; 实际只要 mutant_calls 为 0 且 n_sub>=1
     _emit(
         "V4_4_mutant_strip_call_detected_zero",
         n_sub >= 1 and len(mutant_calls) == 0,
@@ -345,12 +342,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_081][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_082][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_081][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_082][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
