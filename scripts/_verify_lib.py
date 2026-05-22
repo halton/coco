@@ -52,6 +52,7 @@ __all__ = [
     "assert_reviewer_summary_nonempty",
     "assert_verify_passed",
     "verify_summary_exit",
+    "assert_verify_lib_public_helper_naming",
 ]
 
 
@@ -2385,5 +2386,117 @@ def assert_reviewer_summary_nonempty(
                 "summary_len": len(stripped),
                 "min_chars": int(min_chars),
             })
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-verify-lib-helper-naming-convention-lock (phase-42 #5.42)
+# 锁定 _verify_lib 公开 helper 命名规约: 新增公开 helper 必须以 assert_ 或
+# enforce_ 开头. legacy 已存在 helper 通过 legacy_allowlist 显式豁免;
+# rename legacy 入 backlog (infra-P278-followup-verify-lib-legacy-rename).
+# Default-OFF 硬规则: 若 _verify_lib 没有 __all__ → soft_skip; 含 __all__ → hard enforce.
+# ---------------------------------------------------------------------------
+
+# Legacy public helper allowlist (P278-followup 之前已 export 的名字).
+# 新增 helper 必须以 assert_ / enforce_ 开头, 不可加入此 allowlist.
+_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST: frozenset[str] = frozenset({
+    "parse_headings_from_doc",
+    "func_sha_by_name",
+    "read_constant",
+    "scan_reverse_sha_locks",
+    "live_verify_sha_set",
+    "verify_reverse_sha_lock_consistency",
+    "verify_expected_pattern_consistency",
+    "verify_palette_fills_distinct",
+    "verify_unknown_node_count_bound",
+    "verify_expected_prefix_typo_guard",
+    "verify_closeout_evidence_trustworthy",
+    "scan_reviewer_text",
+    "verify_baseline_fail_claims",
+    "verify_evidence_tail_stdout_sha",
+    "verify_summary_exit",
+})
+
+
+def assert_verify_lib_public_helper_naming(
+    allowed_prefixes: tuple[str, ...] = ("assert_", "enforce_"),
+    legacy_allowlist: frozenset[str] | None = None,
+) -> dict:
+    """反射检查 scripts/_verify_lib 的 __all__ 中公开 helper 命名是否合规.
+
+    规则:
+      - 若模块没有 __all__ → soft_skip (Default-OFF: legacy 缺字段豁免)
+      - 含 __all__ → 遍历每一项, 取 module-level callable, 名字必须以
+        allowed_prefixes 任一开头, 或在 legacy_allowlist 中显式豁免.
+      - 任何不在 allowlist 又不符合前缀的 public callable → violation.
+
+    参数:
+        allowed_prefixes: 允许的前缀元组, 默认 ("assert_", "enforce_").
+        legacy_allowlist: 显式豁免的 legacy 名字集合; None 表示使用
+            模块内置 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST.
+
+    返回 dict::
+
+        {
+          "ok": bool,                  # True 当无 violation
+          "violations": [              # 每条违规一项
+              {"name": str, "reason": str},
+              ...
+          ],
+          "soft_skipped": bool,        # __all__ 缺失时 True
+          "enforced_count": int,       # 命中前缀的 helper 数
+          "scanned_count": int,        # __all__ 总条目数
+          "legacy_allowlisted_count": int,  # 命中 legacy_allowlist 的 helper 数
+          "error": str | None,
+        }
+    """
+    out: dict = {
+        "ok": True,
+        "violations": [],
+        "soft_skipped": False,
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "legacy_allowlisted_count": 0,
+        "error": None,
+    }
+    if legacy_allowlist is None:
+        legacy_allowlist = _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST
+    try:
+        import importlib
+        import sys as _sys
+        # 确保 import 到本仓库的 _verify_lib (避免外部同名 shadow)
+        scripts_dir = str(Path(__file__).resolve().parent)
+        if scripts_dir not in _sys.path:
+            _sys.path.insert(0, scripts_dir)
+        mod = importlib.import_module("_verify_lib")
+        all_names = getattr(mod, "__all__", None)
+        if all_names is None:
+            out["soft_skipped"] = True
+            return out
+        out["scanned_count"] = len(all_names)
+        for name in all_names:
+            obj = getattr(mod, name, None)
+            if obj is None or not callable(obj):
+                # 非 callable (如常量) — 跳过, 不算 violation
+                continue
+            if name in legacy_allowlist:
+                out["legacy_allowlisted_count"] += 1
+                continue
+            if any(name.startswith(p) for p in allowed_prefixes):
+                out["enforced_count"] += 1
+                continue
+            out["violations"].append({
+                "name": name,
+                "reason": (
+                    f"public helper {name!r} 命名不符合规约 "
+                    f"(必须以 {'/'.join(allowed_prefixes)} 开头, "
+                    f"或加入 legacy_allowlist)"
+                ),
+            })
+    except Exception as e:
+        out["error"] = f"{type(e).__name__}: {e}"
+        out["ok"] = False
+        return out
     out["ok"] = len(out["violations"]) == 0
     return out

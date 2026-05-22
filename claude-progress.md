@@ -6816,3 +6816,23 @@ Engineer sub-agent (phase-40 #4.40):
 - reviewer.reviewer_kind = sub_agent_fresh_context (LGTM; 含 mutation test: 把 infra-P294 reviewer.summary 改成 'x' → 062 立即 hard FAIL，还原后 ALL PASS)
 - 持续开发：phase-42 #5.42 候选继续
 
+
+## Session — phase-42 #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock (Engineer round)
+
+- branch: feat/infra-P278-followup-verify-lib-helper-naming-convention-lock (从 main 6f9f119 拉)
+- 实施:
+  - `scripts/_verify_lib.py`: 新增 `assert_verify_lib_public_helper_naming(allowed_prefixes=("assert_","enforce_"), legacy_allowlist=None) -> dict` helper, Default-OFF (缺 __all__ → soft_skip; 含 __all__ → hard enforce 新增 public callable 必须 assert_/enforce_ 开头); 加入 __all__; 内置 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 显式豁免 15 个 legacy 名字 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_* / live_verify_sha_set / verify_* / scan_reviewer_text); legacy rename 计入 backlog (此 commit 不做 rename, 避免阻塞 cascade 调用点)
+  - `scripts/verify_infra_062.py`: import helper; 新增 `_enforce_verify_lib_helper_naming()` emit `V4_verify_lib_helper_naming_convention`; 挂到 main() 调用链
+  - `scripts/verify_infra_085.py`: 新建 V0-V5 共 14 checks 锁住 helper + 062 wire 真有效 (V4_3 真跑 helper 正例 / V4_4 临时注入 fake public callable 反例 + 还原后再 ok=True / V4_5 mutant strip)
+  - Cascade bump _verify_lib file sha: dc4c091c → b7f1c5f1 (19 个 verify 脚本同步, 含 062/063/065-068/070-073/075-082/084)
+  - Cascade bump 062 file sha: 014d9880 → 84f8f947 (081/082/083 同步)
+  - `scripts/dump_v4_sha_graph.py`: 加 085 三项 entry
+- 当前 verify (Engineer 阶段, V5 还未填 reviewer evidence 所以预期 FAIL 一条):
+  - 062: ALL PASS (21 checks, 新增 V4_verify_lib_helper_naming_convention scanned=23 enforced=8 legacy_allowlisted=15 violations=0)
+  - 085: 13/14 PASS, V5_reviewer_lgtm_gate FAIL (reviewer evidence 未填, 预期, 等 Reviewer)
+  - 084: ALL PASS (14)
+  - 083: ALL PASS (14)
+  - 081: ALL PASS (14)
+  - 082: 1/14 FAIL [V1_self_main_func_sha] (pre-existing baseline at 6f9f119, 同 #4.42 closeout 已记录, 与本 commit 无关)
+- smoke: ALL PASS
+- 等待 Reviewer fresh-context 评审 + closeout (Engineer 不切 passing 不 merge, P261)

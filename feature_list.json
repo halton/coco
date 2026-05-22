@@ -10954,7 +10954,7 @@
       "id": "infra-P278-followup-verify-lib-helper-naming-convention-lock",
       "phase": 42,
       "priority": 5.42,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "description": "scripts/_verify_lib.py 中 helper 数量已超 12, 命名风格逐步分化 (assert_* / check_* / enforce_* / _validate_*). 本 feature 锁定命名规约: 所有对外暴露的 helper 必须以 assert_ 或 enforce_ 开头, 内部 helper 以 _ 开头. 通过 verify file 加 grep / 反射锁.",
       "verification_plan": "新 verify_infra_NNN.py: V3 import _verify_lib, 反射列出所有 module-level callable, 断言公开 helper (不以 _ 开头) 必须以 assert_ / enforce_ 开头, 否则 FAIL; mutant: 临时在 _verify_lib.py 加 def foo(): pass → FAIL; 恢复 → PASS. AGENTS.md _verify_lib 段补命名规约硬规则.",

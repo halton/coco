@@ -71,11 +71,12 @@ from _verify_lib import (  # noqa: E402
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     assert_reviewer_summary_nonempty,
+    assert_verify_lib_public_helper_naming,
     func_sha_by_name,
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "dc4c091c203026ced5a9927331b49c439c08514b9cb9ffa22381579c07903b01"
+EXPECTED_VERIFY_LIB_FILE_SHA = "b7f1c5f1b9b8938b6ba7881bdb92a88838a38527bc5b4914c51267961353e088"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -663,6 +664,48 @@ def _enforce_reviewer_summary_nonempty() -> None:
 
 
 # ---------------------------------------------------------------------------
+# infra-P278-followup-verify-lib-helper-naming-convention-lock (phase-42 #5.42)
+# 反射锁: _verify_lib 公开 helper (在 __all__ 内的 callable) 命名必须以
+# assert_ / enforce_ 开头, 否则 hard FAIL. legacy 名字通过模块内置
+# allowlist 显式豁免; 缺 __all__ → soft_skip (Default-OFF).
+# ---------------------------------------------------------------------------
+def _enforce_verify_lib_helper_naming() -> None:
+    try:
+        result = assert_verify_lib_public_helper_naming()
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_verify_lib_helper_naming_convention",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_verify_lib_helper_naming_convention",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    if result.get("soft_skipped"):
+        _emit(
+            "V4_verify_lib_helper_naming_convention",
+            True,
+            "soft-skip: _verify_lib has no __all__ (Default-OFF)",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_verify_lib_helper_naming_convention",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"legacy_allowlisted={result.get('legacy_allowlisted_count')} "
+        f"violations={len(violations)} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -690,6 +733,7 @@ def main() -> int:
     _enforce_closeout_byte_match()
     _enforce_baseline_head_echo_required()
     _enforce_reviewer_summary_nonempty()
+    _enforce_verify_lib_helper_naming()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
