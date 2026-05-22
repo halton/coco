@@ -58,6 +58,7 @@ __all__ = [
     "assert_verify_lib_helpers_in_v3_sha_table",
     "assert_closeout_verify_runs_shape",
     "assert_closeout_reviewer_block_shape",
+    "assert_closeout_baseline_head_echo_format",
 ]
 
 
@@ -3187,5 +3188,171 @@ def assert_closeout_reviewer_block_shape(
                     "field": "findings",
                     "value_repr": _repr80(fd),
                 })
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-closeout-baseline-head-echo-format-hard-check
+# (phase-44 #5.44)
+# 每个 closeout_verify.baseline_head_echo 形态合规 hard check
+# ---------------------------------------------------------------------------
+def assert_closeout_baseline_head_echo_format(
+    feature_list_path,
+    min_hex_chars: int = 7,
+) -> dict:
+    """每个 closeout_verify.baseline_head_echo 必须形态合规.
+
+    enforce-set 判定:
+      - feature.status == 'passing'
+      - evidence.closeout_verify 为 dict
+      - closeout_verify.reviewer 为 dict
+      - reviewer.reviewer_kind == 'sub_agent_fresh_context'
+
+    形态规则:
+      - baseline_head_echo 必须为非空 str
+      - strip 后长度 >= min_hex_chars (默认 7, git short hash 最小)
+      - 字符全为小写 hex (0-9a-f); 大写 / 非 hex 字符均算违反
+      - 且必须 != closeout_verify.main_head_sha 的前 N 字符 (N=baseline 长度);
+        baseline 是 closeout 前的 main, 不应与 closeout 后 main 相同
+
+    参数:
+        feature_list_path: feature_list.json 路径 (str | Path).
+        min_hex_chars: baseline_head_echo 最少 hex 字符数 (默认 7).
+
+    返回 dict::
+
+        {
+          "ok": bool,
+          "violations": [
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "field": str,        # always "baseline_head_echo"
+                  "value_repr": str,   # repr(...) 截断到 80 字符
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],
+          "enforced_count": int,
+          "scanned_count": int,
+          "min_hex_chars": int,
+          "error": str | None,
+        }
+
+    Default-OFF + soft-PASS for legacy:
+      - 老 feature (无 reviewer / reviewer 非 dict / reviewer_kind !=
+        'sub_agent_fresh_context') → soft_skipped, 不算 violation.
+    """
+    from pathlib import Path as _P
+    import json as _json
+    import re as _re
+
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_hex_chars": int(min_hex_chars),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    def _repr80(v) -> str:
+        s = repr(v)
+        return s if len(s) <= 80 else s[:77] + "..."
+
+    hex_re = _re.compile(r"^[0-9a-f]+$")
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        reviewer = cv.get("reviewer")
+        if not isinstance(reviewer, dict):
+            out["soft_skipped"].append(fid)
+            continue
+        if reviewer.get("reviewer_kind") != "sub_agent_fresh_context":
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+
+        bhe = cv.get("baseline_head_echo")
+        if not isinstance(bhe, str):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "baseline_head_echo missing or not str",
+                "field": "baseline_head_echo",
+                "value_repr": _repr80(bhe),
+            })
+            continue
+        bhe_s = bhe.strip()
+        if not bhe_s:
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": "baseline_head_echo empty after strip",
+                "field": "baseline_head_echo",
+                "value_repr": _repr80(bhe),
+            })
+            continue
+        if len(bhe_s) < int(min_hex_chars):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"baseline_head_echo len={len(bhe_s)} < "
+                    f"min_hex_chars={min_hex_chars}"
+                ),
+                "field": "baseline_head_echo",
+                "value_repr": _repr80(bhe),
+            })
+            continue
+        if not hex_re.match(bhe_s):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    "baseline_head_echo contains non-hex chars "
+                    "(must be 0-9a-f lowercase)"
+                ),
+                "field": "baseline_head_echo",
+                "value_repr": _repr80(bhe),
+            })
+            continue
+        mhs = cv.get("main_head_sha")
+        if isinstance(mhs, str):
+            mhs_s = mhs.strip()
+            n = len(bhe_s)
+            if mhs_s and mhs_s[:n] == bhe_s:
+                out["violations"].append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"baseline_head_echo={bhe_s!r} equals "
+                        f"main_head_sha[:{n}]={mhs_s[:n]!r}; "
+                        "baseline must differ from closeout-after main"
+                    ),
+                    "field": "baseline_head_echo",
+                    "value_repr": _repr80(bhe),
+                })
+                continue
     out["ok"] = len(out["violations"]) == 0
     return out

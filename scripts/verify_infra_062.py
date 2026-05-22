@@ -68,6 +68,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
+    assert_closeout_baseline_head_echo_format,
     assert_closeout_reviewer_block_shape,
     assert_closeout_smoke_tail_nonempty,
     assert_closeout_verify_runs_min_count,
@@ -81,7 +82,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "3ccf0f771d0d4af129708ff76dde0a5e836dc172e350758882e4c2b13265e750"
+EXPECTED_VERIFY_LIB_FILE_SHA = "99933db26a1bda209f928f24961c4f1e39105ce32f9046b841fcc9782eb919b0"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -92,6 +93,7 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d58
 # 集合本身"不能在 _verify_lib.py 漂移而 062 未感知。
 V3_HELPER_FUNC_NAMES = (
     "assert_baseline_head_echo_present_and_matches",
+    "assert_closeout_baseline_head_echo_format",
     "assert_closeout_reviewer_block_shape",
     "assert_closeout_smoke_tail_nonempty",
     "assert_closeout_verify_runs_min_count",
@@ -924,6 +926,55 @@ def _enforce_closeout_reviewer_block_shape() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4: closeout_verify.baseline_head_echo 形态合规 hard check
+# (phase-44 #5.44) infra-P278-followup-closeout-baseline-head-echo-format-hard-check
+# Default-OFF + soft-PASS for legacy: emit=True 不阻断, 把 violations 计数写进 detail.
+# 实际 hard 行为由 verify_infra_091 自身锁定.
+# ---------------------------------------------------------------------------
+def _enforce_closeout_baseline_head_echo_format() -> None:
+    """对 feature_list.json 调 assert_closeout_baseline_head_echo_format(min_hex_chars=7);
+    Default-OFF: emit=True 不阻断, 把 scanned/enforced/soft_skipped/violations 写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_baseline_head_echo_format",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_baseline_head_echo_format(
+            feature_list,
+            min_hex_chars=7,
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_baseline_head_echo_format",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_baseline_head_echo_format",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_baseline_head_echo_format",
+        True,  # Default-OFF soft-PASS
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_hex_chars={result.get('min_hex_chars')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V4: closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check
 # (phase-43 #5.43) infra-P278-followup-closeout-smoke-tail-nonempty-hard-check
 # Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
@@ -1020,6 +1071,7 @@ def main() -> int:
     _enforce_closeout_smoke_tail_nonempty()
     _enforce_closeout_verify_runs_shape()
     _enforce_closeout_reviewer_block_shape()
+    _enforce_closeout_baseline_head_echo_format()
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)

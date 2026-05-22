@@ -11789,7 +11789,7 @@
       "id": "infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
       "priority": 5.44,
       "phase": 44,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "closeout baseline_head_echo 7+ hex 且 != main_head_sha hard check",
       "rationale": "FAIL 分支已要求 baseline_head_echo 字段存在，但未校验格式与去重；本轮硬要 7+ hex 且不得与 main_head_sha 相同 (否则 baseline 等于 self 失去意义)。",
@@ -11806,7 +11806,22 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；只 enforce 有 FAIL verify_run 的 passing 项；legacy 整 baseline_head_echo 缺 soft_skip (已有别的 helper enforce 存在性)；cascade _verify_lib + 062 file sha 全量",
-      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_NNN ALL PASS；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "engineer_run": {
+          "verify_infra_062": "ALL PASS (27 checks; +V4_closeout_baseline_head_echo_format soft emit scanned=29 enforced=27 soft_skipped=2 violations=16 min_hex_chars=7)",
+          "verify_infra_091": "13/14 PASS, V5_reviewer_lgtm_gate FAIL pending (期望)",
+          "verify_infra_081_to_090": "ALL PASS (cascade 062 file sha bump + lib file sha bump)",
+          "smoke": "./init.sh Smoke 通过",
+          "branch": "feat/infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
+          "lib_file_sha_old": "3ccf0f771d0d4af129708ff76dde0a5e836dc172e350758882e4c2b13265e750",
+          "lib_file_sha_new": "99933db26a1bda209f928f24961c4f1e39105ce32f9046b841fcc9782eb919b0",
+          "verify_062_file_sha_old": "403aa7779033fa3981ba549edbcbeb744b5b4b35cbd78f1d93a579a37226b5aa",
+          "verify_062_file_sha_new": "63e984c16d0864a1fc4bd21f18fc11286c97881bd69893d97c2629ccaf5ce4bc",
+          "new_helper_func_sha": "fd166d27c14e81bf0ccc99990b98d2349e44c744baea9f6c470a27ec8d3b22f9",
+          "new_self_main_func_sha": "72d4e15f0582a8e21d80463ee5ec8c0d1e64b10135567b015fba55ddb5c58882"
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool",
