@@ -6782,3 +6782,23 @@ Engineer sub-agent (phase-40 #4.40):
 - smoke 通过
 - baseline_head_echo dogfood 第 11 次落地（promote-to-P278-hard-required 后第 3 次 hard 落地，evidence.closeout_verify.reviewer.baseline_head_echo="8a2edbb..."）
 
+
+## Session: 2026-05-22 infra-P278-followup-reviewer-summary-nonempty-hard-check (phase-42 #4.42) Engineer
+
+- feature: `infra-P278-followup-reviewer-summary-nonempty-hard-check` → in_progress (Engineer commit)
+- branch: feat/infra-P278-followup-reviewer-summary-nonempty-hard-check (从 main 3a452b5 拉)
+- 实施:
+  - `scripts/_verify_lib.py`: 新增 `assert_reviewer_summary_nonempty(feature_list_path, min_chars=20) -> dict` helper, Default-OFF (缺 reviewer.summary 字段 soft_skip; 含字段 strip 后 >=20 char hard enforce); 加入 __all__
+  - `scripts/verify_infra_062.py`: import helper; 新增 `_enforce_reviewer_summary_nonempty()` emit `V4_reviewer_summary_nonempty`; 挂到 main() 调用链
+  - `scripts/verify_infra_084.py`: 新建 V0-V5 共 14 checks 锁住 helper + 062 wire 真有效 (V4_3 真跑 helper 正例 / V4_4 反例 / V4_5 mutant strip)
+  - Cascade bump _verify_lib file sha: ebcec7e → dc4c091c (18 个 verify 脚本同步, 含 062/063/065-068/070-073/075-082)
+  - Cascade bump 062 file sha: 51fb9bdf → 014d9880 (081/082/083 同步)
+  - `scripts/dump_v4_sha_graph.py`: 加 084 三项 entry
+- 当前 verify (Engineer 阶段, V5 还未填 reviewer evidence 所以预期 FAIL 一条):
+  - 062: ALL PASS (20 checks, 新增 V4_reviewer_summary_nonempty scanned=18 enforced=13 soft_skipped=5 violations=0)
+  - 084: 13/14 PASS, V5_reviewer_lgtm_gate FAIL (reviewer evidence 未填, 预期, 等 Reviewer)
+  - 082: 1/14 FAIL [V1_self_main_func_sha] (pre-existing baseline at 3a452b5)
+  - 083: ALL PASS (14)
+  - 081: ALL PASS (14)
+- smoke: ALL PASS
+- 等待 Reviewer fresh-context 评审 + closeout (Engineer 不切 passing, P261)
