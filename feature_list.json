@@ -11092,7 +11092,7 @@
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
       "priority": 2.43,
       "phase": 43,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "verify_infra_062 V3_helper_func_sha 重 bump + cascade",
       "description": "在 phase-42 cascade 期间多次出现 verify_infra_062.py V3_helper_func_sha pre-existing baseline FAIL (got 与 EXPECTED 偏移)；非 trustworthy 故障，需在统一时间窗一次性 cascade rebump，并同步 dump 与下游 081/082/083 EXPECTED_VERIFY_062_FILE_SHA 链。",
