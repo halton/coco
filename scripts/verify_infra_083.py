@@ -29,7 +29,7 @@ INFRA_083_SHA_LOCKS
 - ``scripts/verify_infra_083.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/verify_infra_062.py`` file sha: EXPECTED_VERIFY_062_FILE_SHA
 - ``scripts/verify_infra_062.py:_classify_closeout_tail_anchor`` func sha:
-  EXPECTED_CLASSIFIER_FUNC_SHA
+  EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
@@ -81,7 +81,7 @@ from _verify_lib import (  # noqa: E402
 
 EXPECTED_SELF_MAIN_FUNC_SHA = "83fba4707db4341679ab889dd4c16bcaef4a35e5762040e3988a4d12e0f9db53"
 EXPECTED_VERIFY_062_FILE_SHA = "51fb9bdf49233ccbcf8eb9c1c47b492d18a1a152f5b7cd060cfca04b19ea878f"
-EXPECTED_CLASSIFIER_FUNC_SHA = "1055318f4513bbb64d31aed79a37a0d90e60107e7be519245f33b43f7ce13351"
+EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA = "1055318f4513bbb64d31aed79a37a0d90e60107e7be519245f33b43f7ce13351"
 
 DOCSTRING_SENTINEL = "INFRA_083_SHA_LOCKS"
 
@@ -226,17 +226,17 @@ def v3_classifier_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_classifier_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_CLASSIFIER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_classifier_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_CLASSIFIER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_classifier_func_sha",
-        got == EXPECTED_CLASSIFIER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_CLASSIFIER_FUNC_SHA[:16]}",
+        got == EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA[:16]}",
     )
 
 

@@ -6716,3 +6716,23 @@ Engineer sub-agent (phase-40 #4.40):
   - verify_infra_082: V1_self_main_func_sha
 - smoke ./init.sh 通过
 - 下一步: phase-42 #2.42 Reviewer fresh-context 评审
+
+## Session 2026-05-22 phase-42 #2.42 Engineer round-2 (infra-P299-followup2-enable-byte-match-real-run)
+
+- Reviewer round-1 REJECT P0: scripts/verify_infra_083.py 内常量 EXPECTED_CLASSIFIER_FUNC_SHA 在 dump_v4_sha_graph _infer_target 内不匹配任何 hint regex (无 VERIFY_<num>_/LIB/CHECKER/SELF), 落入 <unknown target> → render_mermaid 产 unknown_EXPECTED_CLASSIFIER_FUNC_SHA → unknown_count 1→2 → 触发 060/074 V4 链式 FAIL
+- 修法: 方案 (c) 最小侵入改名 — `EXPECTED_CLASSIFIER_FUNC_SHA` → `EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA` (含 VERIFY_062_ → 命中 _RE_VERIFY_HINT → 自动归 verify_infra_062.py 节点, classifier 正确识别)
+- 改动: scripts/verify_infra_083.py 6 处替换 (docstring 1 + 模块常量定义 1 + v3 helper 内 4 处)
+- 无 dump 改动 → 无 039/044/047/048/053/054 cascade
+- v1/v3 的 func sha 未变 (main() 与 verify_infra_062._classify_closeout_tail_anchor 函数体不含改名常量, ast hash 不变)
+- verify 状态:
+  - 060 ALL PASS 14/14 (V4_real_unknown_count_eq_one unknown_count=1 ✓ 回归修复)
+  - 074 PASS 15/16, 仅余 V2_verify_059_file_sha pre-existing baseline FAIL (V4_4_real_run_059_rc0 已 PASS ✓)
+  - 083 PASS 13/14 (V0-V4 全 PASS, V5_reviewer_lgtm_gate closeout 前预期 FAIL)
+  - 062 ALL PASS 19/19 (V4_byte_match_enforce scanned=175 enforced=114 fire=True fired_features=8)
+- pre-existing baseline FAIL (与本 feature 无关):
+  - verify_infra_034: V5_self_subprocess + V6_orphan_reverse_locks
+  - verify_infra_060: 不再; round-2 已修复
+  - verify_infra_074: V2_verify_059_file_sha (059 file sha 漂移)
+  - verify_infra_082: V1_self_main_func_sha
+- smoke ./init.sh 通过
+- 下一步: phase-42 #2.42 Reviewer fresh-context 评审 round-2
