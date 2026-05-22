@@ -6515,3 +6515,17 @@ Engineer sub-agent (phase-40 #4.40):
   - `infra-P286-followup-tolerance-headroom-bump` (round-2 实测 total=86 / expect=81 / tol=±5 贴上限, 需 bump expect 给 headroom)
 - **feature_list.json**: status `not_started` → `passing`, evidence 完整 含 closeout_verify.reviewer.{reviewer_kind=sub_agent_fresh_context, verdict=LGTM, round=2, feat_head_echo=a4f3e00, baseline_head_echo=addbec0}
 - **baseline_head_echo dogfood**: 第 3 次落地 (infra-P286-followup3-promote 触发条件 N>=5 进度: 3/5)
+
+## Session 2026-05-22: phase-41 planning
+
+- pre-planning main HEAD: `78c25a3` (phase-40 #5.40 closeout, 5/5 全 passing)
+- backlog 总量: 120 条 (priority=999, status=backlog, phase=null)
+- phase-41 5 个候选 (排序 + rationale, 全 sim-only / infra, 无真机依赖):
+  - **1.41 `infra-P286-followup-tolerance-headroom-bump`** — **最紧迫**. round-2 实测 verify_infra_059 total_nodes=86 / EXPECTED=81 / tolerance=±5 已贴上限, 下一新 verify 立爆。优先修。
+  - **2.41 `infra-P291-followup2-helper-return-value-must-participate-in-emit`** — 紧跟 phase-40 #2.40 V5 helper migration. V4_1 ast 锁 assert_reviewer_lgtm 返回值必须参与 V5 gate emit 第二参数, 防 helper 被绕过的行为锁强化。
+  - **3.41 `infra-P299-followup-wire-into-closeout-gate`** — P299 helper assert_report_matches_closeout_runs wire 进 closeout enforcement, 机械化阻 merge, 收口 P299 信任链。
+  - **4.41 `infra-P286-followup4-add-noqa-placeholder-self-exempt-comment`** — 078 加 `# noqa: PLACEHOLDER_SELF_EXEMPT` 注释 + V4_1 docstring 显式声明 sentinel 不能被字面化, Reviewer 非阻塞 hardening 建议落地。
+  - **5.41 `infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok`** — 075 V5 字段 `ok=` 与 076/077/078 其它 verify `helper_ok=` 不一致, 统一命名小清理 (覆盖 075-079)。
+- feature_list.json 改动: 5 条 backlog → not_started, phase null → 41, priority 999 → 1.41..5.41
+- baseline_head_echo dogfood 进度: 3/5 (P286-followup3 promote 触发条件), phase-41 5 个走完后预计 → 8/5, 达成 promote 条件。
+- 下一步: 派 phase-41 #1.41 Engineer sub-agent (infra-P286-followup-tolerance-headroom-bump)
