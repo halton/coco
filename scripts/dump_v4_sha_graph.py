@@ -257,6 +257,17 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_v5_gate_emit_uses_helper_return (func-sha)",
     ("verify_infra_080.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_080.py:main (func-sha)",
+    # verify_infra_081 (P299-followup-wire-into-closeout-gate) — 锁
+    # assert_report_matches_closeout_runs helper + lib file + 062 file (wire
+    # target) + 自 main; 不锁 self file sha (与 074/079/080 同形)
+    ("verify_infra_081.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_081.py", "EXPECTED_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_report_matches_closeout_runs (func-sha)",
+    ("verify_infra_081.py", "EXPECTED_VERIFY_062_FILE_SHA"):
+        "scripts/verify_infra_062.py (file-sha)",
+    ("verify_infra_081.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_081.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
