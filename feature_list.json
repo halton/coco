@@ -10786,7 +10786,7 @@
       "acceptance": "全 scripts/verify_infra_*.py V5 PASS line 命名统一; verify_infra_NNN.py 全 PASS; mutant FAIL 恢复 PASS; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "d886c78",
           "feat_head_sha": "92574e5f0a8e0869f15015026e6f331efa2eb88f",
           "baseline_head_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
           "merge_commit_sha": "241ce4e704b21156f236d845acb443ac59cb4f4e",
