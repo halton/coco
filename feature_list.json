@@ -12296,7 +12296,7 @@
         "merge_commit": "f8b92548",
         "base_main": "5740eb2",
         "closeout_verify": {
-          "main_head_sha": "f8b92548",
+          "main_head_sha": "3dc6bae",
           "merge_commit_sha": "f8b92548",
           "baseline_head_echo": "5740eb2",
           "verify_runs": [
