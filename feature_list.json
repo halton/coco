@@ -12047,7 +12047,7 @@
       "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
       "priority": 1.45,
       "phase": 45,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "V4_closeout_verify_runs_shape soft emit → bool 真硬 promote",
       "rationale": "phase-44 #3.44 已落 helper + 062 soft emit (scanned/enforced/soft_skipped/violations=167)；本轮在 062 把该规则升为 bool 真硬 (与 V3_helper_func_sha_drift_detector 同级)，含 backfill 167 violations 或加 grace_period 决策（参考 V5_reviewer_lgtm_conditional_promotion 节奏）。",
@@ -12065,7 +12065,28 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；167 violations 偏多，倾向 grace_period (老 feature soft_skip + 新 feature 硬) 而非全量 backfill；cascade _verify_lib + 062 file sha 全量；参考 #1.44 V5 conditional promotion 节奏",
-      "acceptance": "verify_infra_NNN ALL PASS；062 V4 改 bool 后 smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_NNN ALL PASS；062 V4 改 bool 后 smoke PASS；reviewer LGTM",
+      "evidence": {
+        "engineer_run": {
+          "branch": "feat/infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
+          "approach": "Option C grace_period: helper assert_closeout_verify_runs_shape 加 grace_period_feature_ids 参数；062 _enforce_closeout_verify_runs_shape 定义 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS (17 historic features) 并 promote emit=True → bool(result['ok']) 真硬",
+          "grace_period_feature_count": 17,
+          "lib_sha_old": "99933db26a1bda209f928f24961c4f1e39105ce32f9046b841fcc9782eb919b0",
+          "lib_sha_new": "87db6ab1d43be8c94eeefb2b6e93752ebf9428b99cb387b0123ecc06ba73277e",
+          "verify_062_sha_old": "63e984c16d0864a1fc4bd21f18fc11286c97881bd69893d97c2629ccaf5ce4bc",
+          "verify_062_sha_new": "c2e7e637c8d892380608bab662a982782b60dff45d64b962764736449b377b4e",
+          "shape_helper_func_sha_old": "05b8474f8788a25ca2a944f9c34cabd677be494dd63c5d9076438b116753dcb4",
+          "shape_helper_func_sha_new": "2bba74d292e70d71b87c45a283e0cdc23fad046eb72ee5f55f001083c46d868f",
+          "verify_runs_summary": [
+            "verify_infra_062 ALL PASS (27 checks) — V4_closeout_verify_runs_shape now emit bool real-hard with grace_skipped=17",
+            "verify_infra_092 PASS 13/14 (V5 reviewer LGTM pending) — locks grace_period behavior",
+            "verify_infra_089 ALL PASS (14) — shape helper sha bumped",
+            "verify_infra_063/065/067/068/070/071/073/075/076/077/078/080/081/082/083/084/085/086/087/088/090/091 ALL PASS",
+            "smoke ALL PASS (./init.sh)",
+            "pre-existing baseline FAIL (与本 feature 无关): 066/072 V3_helper_func_sha vs 99bd10127cd14263; 074/079 V2_verify_059_file_sha / V4_4 real_run baseline mismatch"
+          ]
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool",

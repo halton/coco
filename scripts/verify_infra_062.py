@@ -82,7 +82,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "99933db26a1bda209f928f24961c4f1e39105ce32f9046b841fcc9782eb919b0"
+EXPECTED_VERIFY_LIB_FILE_SHA = "87db6ab1d43be8c94eeefb2b6e93752ebf9428b99cb387b0123ecc06ba73277e"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -799,16 +799,38 @@ def _enforce_closeout_verify_runs_min_count() -> None:
 # ---------------------------------------------------------------------------
 # V4: closeout_verify.verify_runs[] element shape hard check (phase-44 #3.44)
 # infra-P278-followup-closeout-verify-runs-status-shape-hard-check —
-# Default-OFF + soft-PASS for legacy: helper enforce-set 仅含
-# reviewer_kind=='sub_agent_fresh_context' 的 feature; 062 这里以 emit=True
-# soft-PASS (与 V5_reviewer_lgtm_gate 一致), 把 violation 计数写进 detail.
-# 实际 hard 行为由 verify_infra_089 自身锁定 (helper func sha + 行为正反例).
-# 未来 promote 到真硬 fail 时, 把下面 _emit 的第二参换成 bool(result.get('ok')).
+# phase-45 #1.45 promote: emit 从 True soft → bool(result['ok']) 真硬;
+# 配套引入 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS (17 historic features)
+# 用 grace_period 一次性 grandfather, 新 feature 必须 hard PASS.
+# 实际 hard 行为由 verify_infra_089 自身锁定 (helper func sha + 行为正反例),
+# 092 自身锁定 grace_period 行为 (正例: grace 内放过; 反例: grace 外 hard FAIL).
+# 未来逐项 graduate: 把 feature 从 GRACE 列表移除并修齐 verify_runs[] shape.
 # ---------------------------------------------------------------------------
+V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS = (
+    "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
+    "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
+    "infra-P278-followup-reviewer-summary-nonempty-hard-check",
+    "infra-P278-followup-verify-lib-helper-naming-convention-lock",
+    "infra-P286-followup-074-self-main-func-sha-bump",
+    "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
+    "infra-P286-followup-v4-2-stricter-equal-check",
+    "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
+    "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
+    "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
+    "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
+    "infra-P291-followup-extend-helper-to-other-v5",
+    "infra-P291-reviewer-gate-real-or-remove",
+    "infra-P294-closeout-stdout-sha-verification",
+    "infra-P299-engineer-report-vs-impl-trustworthy",
+    "infra-P299-followup-wire-into-closeout-gate",
+    "infra-P299-followup2-enable-byte-match-real-run",
+)
+
+
 def _enforce_closeout_verify_runs_shape() -> None:
     """对 feature_list.json 调 assert_closeout_verify_runs_shape(min_tail_chars=20,
-    allowed_statuses=('PASS','FAIL','SKIP')); Default-OFF: emit=True 不阻断,
-    把 scanned/enforced/soft_skipped/violations 计数写进 detail."""
+    allowed_statuses=('PASS','FAIL','SKIP'), grace_period_feature_ids=GRACE);
+    emit=bool(result['ok']) 真硬: 新 feature (不在 GRACE 内) 含 violation → FAIL."""
     feature_list = REAL_FEATURE_LIST
     if not feature_list.is_file():
         _emit(
@@ -822,6 +844,7 @@ def _enforce_closeout_verify_runs_shape() -> None:
             feature_list,
             min_tail_chars=20,
             allowed_statuses=("PASS", "FAIL", "SKIP"),
+            grace_period_feature_ids=V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS,
         )
     except Exception as e:  # noqa: BLE001
         _emit(
@@ -840,10 +863,12 @@ def _enforce_closeout_verify_runs_shape() -> None:
     violations = result.get("violations") or []
     _emit(
         "V4_closeout_verify_runs_shape",
-        True,  # Default-OFF soft-PASS
+        bool(result.get("ok")),  # phase-45 #1.45: promote 至真硬
         f"scanned={result.get('scanned_count')} "
         f"enforced={result.get('enforced_count')} "
         f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"grace_skipped={len(result.get('grace_skipped') or [])} "
+        f"grace_period_count={result.get('grace_period_count')} "
         f"violations={len(violations)} "
         f"min_tail_chars={result.get('min_tail_chars')} "
         f"allowed_statuses={result.get('allowed_statuses')} "

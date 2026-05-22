@@ -2751,6 +2751,7 @@ def assert_closeout_verify_runs_shape(
     feature_list_path,
     min_tail_chars: int = 20,
     allowed_statuses: tuple = ("PASS", "FAIL", "SKIP"),
+    grace_period_feature_ids: tuple = (),
 ) -> dict:
     """扫 feature_list.json, 对 enforce-set 内 feature 的
     evidence.closeout_verify.verify_runs[] 每个 element 做 shape hard check.
@@ -2769,6 +2770,10 @@ def assert_closeout_verify_runs_shape(
         feature_list_path: feature_list.json 路径 (str | Path).
         min_tail_chars: tail_stdout strip 后最少字符数 (默认 20).
         allowed_statuses: status 字段允许的取值; 传 () 则只校验非空, 不校验取值.
+        grace_period_feature_ids: 软放过列表 — 这些历史 feature 的 violations
+            不计入 violations, 而计入 grace_skipped. 新 feature 不在此列表中
+            即按 hard 强制. (P294/V6-062: emit 已 promote 至 bool, 用此列表
+            把 17 个历史 violation feature 一次性 grandfather 进来)
 
     返回 dict::
 
@@ -2785,8 +2790,10 @@ def assert_closeout_verify_runs_shape(
               ...
           ],
           "soft_skipped": [str, ...],
+          "grace_skipped": [str, ...],
           "enforced_count": int,
           "scanned_count": int,
+          "grace_period_count": int,
           "min_tail_chars": int,
           "allowed_statuses": list,
           "error": str | None,
@@ -2802,12 +2809,15 @@ def assert_closeout_verify_runs_shape(
     import json as _json
 
     allowed_list = list(allowed_statuses) if allowed_statuses else []
+    grace_set = set(grace_period_feature_ids or ())
     out: dict = {
         "ok": False,
         "violations": [],
         "soft_skipped": [],
+        "grace_skipped": [],
         "enforced_count": 0,
         "scanned_count": 0,
+        "grace_period_count": len(grace_set),
         "min_tail_chars": int(min_tail_chars),
         "allowed_statuses": list(allowed_list),
         "error": None,
@@ -2852,9 +2862,10 @@ def assert_closeout_verify_runs_shape(
             out["soft_skipped"].append(fid)
             continue
         out["enforced_count"] += 1
+        feature_violations: list = []
         for idx, run in enumerate(vr):
             if not isinstance(run, dict):
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "run_index": idx,
                     "reason": f"verify_runs[{idx}] not a dict (type={type(run).__name__})",
@@ -2865,7 +2876,7 @@ def assert_closeout_verify_runs_shape(
             # name
             name = run.get("name")
             if not (isinstance(name, str) and name.strip()):
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "run_index": idx,
                     "reason": f"verify_runs[{idx}].name empty or not str",
@@ -2875,7 +2886,7 @@ def assert_closeout_verify_runs_shape(
             # status
             status = run.get("status")
             if not (isinstance(status, str) and status.strip()):
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "run_index": idx,
                     "reason": f"verify_runs[{idx}].status empty or not str",
@@ -2883,7 +2894,7 @@ def assert_closeout_verify_runs_shape(
                     "value_repr": _repr80(status),
                 })
             elif allowed_list and status not in allowed_list:
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "run_index": idx,
                     "reason": (
@@ -2896,7 +2907,7 @@ def assert_closeout_verify_runs_shape(
             # tail_stdout
             tail = run.get("tail_stdout")
             if not isinstance(tail, str):
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "run_index": idx,
                     "reason": f"verify_runs[{idx}].tail_stdout missing or not str",
@@ -2906,7 +2917,7 @@ def assert_closeout_verify_runs_shape(
             else:
                 stripped_len = len(tail.strip())
                 if stripped_len < int(min_tail_chars):
-                    out["violations"].append({
+                    feature_violations.append({
                         "feature_id": fid,
                         "run_index": idx,
                         "reason": (
@@ -2916,6 +2927,11 @@ def assert_closeout_verify_runs_shape(
                         "field": "tail_stdout",
                         "value_repr": _repr80(tail),
                     })
+        # grace_period: 若 feature 在 grace_set 且 有 violation, 不计入 violations
+        if feature_violations and fid in grace_set:
+            out["grace_skipped"].append(fid)
+        else:
+            out["violations"].extend(feature_violations)
     out["ok"] = len(out["violations"]) == 0
     return out
 

@@ -351,6 +351,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_baseline_head_echo_format (func-sha)",
     ("verify_infra_091.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_091.py:main (func-sha)",
+    # verify_infra_092 (infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool) —
+    # phase-45 #1.45: 锁 062 _enforce_closeout_verify_runs_shape 已 promote 真硬 +
+    # 配套 V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS 17 historic grace_set 行为
+    ("verify_infra_092.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_092.py", "EXPECTED_SHAPE_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_closeout_verify_runs_shape (func-sha)",
+    ("verify_infra_092.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_092.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
