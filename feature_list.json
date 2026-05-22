@@ -10297,7 +10297,7 @@
       "notes_for_engineer": "与本 feature 无关的小清理；来源 P286 followup Reviewer 旁注",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "bf11602",
           "feat_head_sha": "356b100",
           "baseline_head_sha": "fdf754d",
           "merge_commit_sha": "e3abb19",
