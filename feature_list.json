@@ -11263,7 +11263,7 @@
       "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "bd6fdbf",
+          "main_head_sha": "eeeee8f",
           "baseline_head_echo": "e0e8393",
           "smoke_tail_stdout": "==> Smoke: TTS (kokoro-zh) ok samples=21839 sr=24000; vision face detect ok 1 face; companion-vision detect=10 hit=10; face-tracker tracks=1; VAD trigger fired 1; wake-word hits=['可可']; power-state ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE sleep_cb=1 wake_cb=1; config jsonl OK; publish entry-point + Coco class OK. ==> Smoke 通过。",
           "verify_runs": [
