@@ -12236,7 +12236,7 @@
       "acceptance": "verify_infra_094 ALL PASS；062 V4 改 bool 后 smoke PASS；reviewer LGTM",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER",
+          "main_head_sha": "951fafc",
           "merge_commit_sha": "68ee03b",
           "baseline_head_echo": "fe82e72",
           "verify_runs": [
@@ -12263,7 +12263,8 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-45 #3.45 V4_closeout_baseline_head_echo_format promote 到真硬 emit=bool(ok)，配套 16 项 grace_period 列表与历史 violations 精确匹配，无 leak 无 over-grace；helper 新签名 grace_period_feature_ids 行为正反例齐全；094 14 检中 13 PASS（V5 为预期 reviewer 未录），mutant 试验 (drop one grace → ok=False → emit=False) 证明 hard 行为生效；neighbours 088-093 全 PASS；smoke PASS；sha cascade (lib/062/dump/helper) 已同步锁紧。",
-            "findings": {"P0": [], "P1": [], "P2": []}
+            "findings": {"P0": [], "P1": [], "P2": []},
+            "checks_run": ["verify_infra_062", "verify_infra_094", "verify_infra_088", "verify_infra_089", "verify_infra_090", "verify_infra_091", "verify_infra_092", "verify_infra_093", "smoke"]
           }
         }
       }
