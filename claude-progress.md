@@ -6420,3 +6420,24 @@ infra-P299-engineer-report-vs-impl-trustworthy 入 passing。
 - feature_list.json: infra-P291-followup-extend-helper-to-other-v5 status not_started→passing + 完整 evidence (closeout_verify 四轮 verify_runs + smoke + baseline + reviewer + mutation_checks)
 - 加 2 条 backlog: infra-P291-followup2-helper-return-value-must-participate-in-emit (V4_1 ast 锁 emit 第二参数), infra-P291-extend2-migrate-remaining-26-legacy-V5 (剩余 26 路迁移)
 - push 策略: commit 后 push origin main + push origin feat/... 各一次, 失败忽略
+
+## Session 2026-05-22: infra-P286-followup-round1-reviewer-baseline-head-mismatch (phase-40 #3.40) Engineer
+
+- pre HEAD: 9ced8e5 (main)
+- final HEAD: d433149 (feat/infra-P286-followup-round1-reviewer-baseline-head-mismatch)
+- 改动:
+  - `scripts/_verify_lib.py`: 新增 `assert_reviewer_baseline_head_echo(evidence_dict)` helper, 校验
+    `evidence.closeout_verify.reviewer.baseline_head_echo == pre_existing_baseline_sha[:7]` (大小写不敏感,
+    legacy 缺字段时 ok=True legacy=True). file sha `5647e74→2da97a0`. helper func sha `a53ebe39...`.
+  - `scripts/verify_infra_077.py`: 14 checks V0×5/V1/V2/V3/V4_1..V4_5/V5. V4_3 mismatch mutant
+    (echo='b69310d' vs baseline='c88a248') 真触发 helper FAIL. V4_5 真读 P299 evidence 注入 'deadbee' →
+    helper FAIL `12079bf!=deadbee`.
+  - dump_v4_sha_graph.py `_PER_FILE_LOCKS` 加 077 2 条; file sha `179b50d→8d774a2`.
+  - cascade bump EXPECTED_(VERIFY_)LIB_FILE_SHA: 13 verify (059/062/063/065/066/067/068/070/071/072/073/075/076).
+  - verify_infra_060 EXPECTED_DUMP_FILE_SHA `179b50d→8d774a2`.
+  - verify_infra_074 EXPECTED_VERIFY_059_FILE_SHA `1c1cd4f→44da67d` (059 file sha 因 lib bump 而变).
+- final HEAD 全 verify 实跑: 077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 + smoke
+  全 rc=0.
+- push: `git push origin feat/infra-P286-followup-round1-reviewer-baseline-head-mismatch` 403
+  (permission denied, halton/coco), 按规则忽略继续.
+
