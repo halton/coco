@@ -1,52 +1,55 @@
 #!/usr/bin/env python3
-"""verify_infra_084 V0-V5: 锁定 verify_infra_062._enforce_reviewer_summary_nonempty 真 fire (Default-OFF hard check).
+"""verify_infra_087 V0-V5: 锁定 verify_infra_062._enforce_closeout_smoke_tail_nonempty 真 fire (Default-OFF hard check).
 
-infra-P278-followup-reviewer-summary-nonempty-hard-check (phase-42 #4.42):
-P278 closeout-verify-trustworthy 系列已经在 062 内挂了 `_enforce_baseline_head_echo_required`
-(verify_infra_082 锁), 但 `reviewer.summary` 字段虽长期约定要有可读的总结句, 实际
-schema 上并未校验:
-- 老 feature reviewer 既可能是 dict 也可能是 list, 缺 summary 字段直接被 062 跳过;
-- 含 summary 但是空串 / 仅空白 / 单字符占位 (`"ok"` 等) 也算过, 等于挂牌不开门。
+infra-P278-followup-closeout-smoke-tail-nonempty-hard-check (phase-43 #5.43):
+Closeout-verify-trustworthy 硬规则已要求 smoke_tail_stdout 为 string, 但未约束
+内容. 常见占位 'smoke OK' 或空串无法 audit 真跑 ./init.sh. 加 Default-OFF→hard
+检 (min_chars=20, must_contain=('Smoke','smoke') case-insensitive 任一匹配),
+提升 smoke 证据可信度.
 
-本 feature 在 `scripts/_verify_lib.py` 加 `assert_reviewer_summary_nonempty(min_chars=20)`
-helper, 并在 `scripts/verify_infra_062.py` 内挂 `_enforce_reviewer_summary_nonempty()`,
-以 V4_reviewer_summary_nonempty 名义 emit:
-- 老 feature 缺 reviewer.summary → soft_skipped (Default-OFF 渐进 promote);
-- 含 reviewer.summary → hard enforce: `.strip()` 后长度必须 >= 20 字符;
-- violation > 0 → V4 FAIL.
+本 feature 在 ``scripts/_verify_lib.py`` 加
+``assert_closeout_smoke_tail_nonempty(feature_list_path, min_chars=20,
+must_contain=('Smoke','smoke'))`` helper, 并在 ``scripts/verify_infra_062.py``
+内挂 ``_enforce_closeout_smoke_tail_nonempty()`` 以 V4_closeout_smoke_tail_nonempty
+名义 emit:
+- 缺 closeout_verify.smoke_tail_stdout 字段 → soft_skip (Default-OFF);
+- 含字段但 strip 后 len < min_chars 或不含 keyword → hard FAIL;
+- violations 列表 + 首条 violation 写进 detail.
 
-本 verify (084) 锁住:
-- _verify_lib 内 `assert_reviewer_summary_nonempty` helper 真存在且 func sha 等于
-  EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA;
+本 verify (087) 锁住:
+- _verify_lib 内 ``assert_closeout_smoke_tail_nonempty`` helper 真存在
+  且 func sha 等于 EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
-- 真跑 helper: 当前 feature_list 应当 ok=True (scan>=1 且 enforced/soft_skip 之和
-  等于 scan; violations==0);
-- mutant: 删 _verify_lib 中 helper def → import 失败 / func 缺 → 行为不再可用;
-- 062 内必须有 `_enforce_reviewer_summary_nonempty` 调用挂到 main 链上 (ast 扫).
+- 真跑 helper 正例: 当前 feature_list.json → ok=True (scanned>=1, violations==0);
+- mutant: 临时构造 in-memory mini feature_list 把某 passing feature
+  smoke_tail_stdout 截到 'x' (短于 min_chars 且不含 Smoke) →
+  helper 必须捕获 violation>=1;
+- 062 内必须有 ``_enforce_closeout_smoke_tail_nonempty`` 调用挂到 main 链上 (ast 扫).
 
-INFRA_084_SHA_LOCKS
+INFRA_087_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_084.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_087.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_reviewer_summary_nonempty`` func sha:
-  EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_smoke_tail_nonempty`` func sha:
+  EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_reviewer_summary_nonempty helper func sha
+- V3 assert_closeout_smoke_tail_nonempty helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_reviewer_summary_nonempty 调用
-  - V4_2 调用挂到 062.main() 函数体上 (main → _enforce_reviewer_summary_nonempty)
-  - V4_3 真跑 helper 正例: 当前 REAL_FEATURE_LIST → ok=True, scanned >=1
-  - V4_4 真跑 helper 反例: 注入虚拟 feature_list, 含 reviewer.summary="x" → violation>=1
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_smoke_tail_nonempty 调用
+  - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
+  - V4_3 真跑 helper 正例: 当前 feature_list.json → ok=True, scanned>=1, violations==0
+  - V4_4 真跑 helper 反例: 构造临时 mini feature_list (tmpfile), 把某 feature
+    smoke_tail_stdout 截到 'x' → violation>=1, ok=False; 原 feature_list 不被改动
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
 - V5 reviewer_lgtm_gate (真门: ok is True)
 
-注意 (与 074/079/080/081/082/083 同形): 本脚本不锁自己 file sha, 避免与 V4 mutant
-对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
+注意 (与 074/079/080/081/082/083/084/085/086 同形): 本脚本不锁自己 file sha,
+避免与 V4 mutant 对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
 
@@ -71,28 +74,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_closeout_smoke_tail_nonempty,
     assert_reviewer_lgtm,
-    assert_reviewer_summary_nonempty,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "9e8c5b34d9b4cacac6301ced964831d52247d82bd2ae6a28908b4a469e558b71"
+EXPECTED_SELF_MAIN_FUNC_SHA = "a86044883527d054244f43c4bb74bb420f80458ac6d0126ca63aa9ed02be524f"
 EXPECTED_VERIFY_LIB_FILE_SHA = "91ee88fb787e87673032ffa3d48c647f56877f70a5d6bf9deb338d670a651606"
-EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA = "4877aa66f51e5528ac0b266824205fe6c9380bfae076884061739ef59f45bdcb"
+EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA = "916354a6b581f4b118a5675937ea4eb96df5068c196aabd9ae3ba4188069a977"
 
-DOCSTRING_SENTINEL = "INFRA_084_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_087_SHA_LOCKS"
 
-HELPER_NAME = "assert_reviewer_summary_nonempty"
-ENFORCER_NAME = "_enforce_reviewer_summary_nonempty"
-V5_GATE_FEATURE_ID = "infra-P278-followup-reviewer-summary-nonempty-hard-check"
+HELPER_NAME = "assert_closeout_smoke_tail_nonempty"
+ENFORCER_NAME = "_enforce_closeout_smoke_tail_nonempty"
+V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_084][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_087][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -205,7 +208,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_reviewer_summary_nonempty helper func sha
+# V3: assert_closeout_smoke_tail_nonempty helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -213,17 +216,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_REVIEWER_SUMMARY_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -250,20 +253,27 @@ def v4_behavior() -> None:
         f"main_calls_enforcer={main_calls_enforcer}",
     )
 
-    # V4_3: 真跑 helper 正例 — 当前 REAL_FEATURE_LIST 应当 ok=True
+    # V4_3: 真跑 helper 正例 — 当前 feature_list.json 应当 ok=True
     try:
-        result = assert_reviewer_summary_nonempty(REAL_FEATURE_LIST, min_chars=20)
+        result = assert_closeout_smoke_tail_nonempty(
+            REAL_FEATURE_LIST,
+            min_chars=20,
+            must_contain=("Smoke", "smoke"),
+        )
         v4_3_ok = (
             isinstance(result, dict)
             and result.get("ok") is True
             and result.get("scanned_count", 0) >= 1
             and not result.get("error")
+            and len(result.get("violations") or []) == 0
         )
         v4_3_detail = (
             f"ok={result.get('ok')} scanned={result.get('scanned_count')} "
             f"enforced={result.get('enforced_count')} "
             f"soft_skipped={len(result.get('soft_skipped') or [])} "
-            f"violations={len(result.get('violations') or [])}"
+            f"violations={len(result.get('violations') or [])} "
+            f"min_chars={result.get('min_chars')} "
+            f"must_contain={result.get('must_contain')}"
         )
     except Exception as e:  # noqa: BLE001
         v4_3_ok = False
@@ -274,54 +284,57 @@ def v4_behavior() -> None:
         v4_3_detail,
     )
 
-    # V4_4: 反例 — 注入临时 feature_list, 含 reviewer.summary="x" (长度 1 < 20)
-    # → enforced>=1, violations>=1, ok=False
+    # V4_4: 反例 — 构造临时 mini feature_list, 含一个 passing feature 其
+    # closeout_verify.smoke_tail_stdout 仅 "x" (短于 20 且不含 Smoke);
+    # helper 必须捕获 violation>=1. 原 feature_list.json 不被改动.
     try:
-        fake = {
+        mini = {
             "features": [
                 {
-                    "id": "fake-too-short",
+                    "id": "mutant-fake-feature-for-087-test",
                     "status": "passing",
                     "evidence": {
                         "closeout_verify": {
-                            "reviewer": {"summary": "x"},
-                        },
+                            "smoke_tail_stdout": "x"
+                        }
                     },
-                },
-                {
-                    "id": "fake-missing-soft-skip",
-                    "status": "passing",
-                    "evidence": {
-                        "closeout_verify": {
-                            "reviewer": {},
-                        },
-                    },
-                },
+                }
             ]
         }
         with tempfile.NamedTemporaryFile(
-            "w", suffix=".json", delete=False, encoding="utf-8"
+            mode="w", suffix=".json", delete=False, encoding="utf-8"
         ) as tf:
-            json.dump(fake, tf)
-            fake_path = Path(tf.name)
+            json.dump(mini, tf)
+            tmppath = tf.name
         try:
-            fr = assert_reviewer_summary_nonempty(fake_path, min_chars=20)
+            fr = assert_closeout_smoke_tail_nonempty(
+                tmppath, min_chars=20, must_contain=("Smoke", "smoke")
+            )
             v4_4_ok = (
                 fr.get("ok") is False
-                and (fr.get("enforced_count") or 0) >= 1
                 and len(fr.get("violations") or []) >= 1
-                and len(fr.get("soft_skipped") or []) >= 1
+                and any(
+                    v.get("feature_id") == "mutant-fake-feature-for-087-test"
+                    for v in (fr.get("violations") or [])
+                )
             )
             v4_4_detail = (
-                f"ok={fr.get('ok')} enforced={fr.get('enforced_count')} "
+                f"ok={fr.get('ok')} "
                 f"violations={len(fr.get('violations') or [])} "
-                f"soft_skipped={len(fr.get('soft_skipped') or [])}"
+                f"first_violation={(fr.get('violations') or [None])[0]}"
             )
         finally:
             try:
-                fake_path.unlink()
+                Path(tmppath).unlink()
             except OSError:
                 pass
+        # 还原后跑真 feature_list, 确认未受副作用影响
+        rr = assert_closeout_smoke_tail_nonempty(
+            REAL_FEATURE_LIST, min_chars=20, must_contain=("Smoke", "smoke")
+        )
+        v4_4_restored_ok = rr.get("ok") is True
+        v4_4_detail += f" restored_ok={v4_4_restored_ok}"
+        v4_4_ok = v4_4_ok and v4_4_restored_ok
     except Exception as e:  # noqa: BLE001
         v4_4_ok = False
         v4_4_detail = f"err={e!r}"
@@ -377,12 +390,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_084][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_087][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_084][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_087][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
