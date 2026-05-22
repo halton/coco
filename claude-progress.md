@@ -7167,3 +7167,15 @@ planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进
 - 新 backlog 入账: infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool (45 historic violations)
 - Reviewer (sub-agent fresh-context): LGTM, P0/P1 空, P2 仅 reviewer_kind 准入设计说明
 - 等待 B 段 bump main_head_sha 至 closeout commit
+
+## Session 2026-05-22 phase-44 #5.44 closeout A
+- feature: infra-P278-followup-closeout-baseline-head-echo-format-hard-check
+- engineer commit: be9fdf2
+- baseline (pre-merge) main HEAD: a4177b2
+- merge commit: e3e64b0 (full: e3e64b03de3b8f9743c23a9bc55bad6db23b217d)
+- verify_runs: verify_infra_062 ALL PASS (27), verify_infra_091 13/14 PASS (V5 in-flight 预期 FAIL), ./init.sh smoke PASS
+- 081-090 全 ALL PASS 14 each (cascade verified)
+- Reviewer: sub_agent_fresh_context LGTM (10 checks 含 git_state_clean + 2 mutation a/b)
+- status: in_progress → passing
+- 1 新 backlog 入账: infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool (priority 999, 16 historic violations 跟踪 emit→bool promote)
+- A 段完成；B 段待启

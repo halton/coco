@@ -11649,11 +11649,25 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-44 #2.44 fresh-context review: V3 helper drift detector helper 设计合理（missing 受 allowlist 豁免, extra 永不豁免），V3_HELPER_FUNC_NAMES 27 entries 与 _verify_lib.py 公共 helper 集合精确匹配，allowlist=() 空。062 ALL PASS 24, 088 13/14 (V5 pending 预期), 081-087 全 PASS, smoke 通过。mutation (a) 加 fake helper → V3_helper_func_sha_drift_detector hard FAIL missing_in_v3_table=['assert_drift_test_mutant']; (b) 删 V3 表 entry → hard FAIL missing_in_v3_table=['verify_unknown_node_count_bound']; 还原后均 ALL PASS。cascade bump (LIB sha a22c6d81, 062 sha 2854c3b0, dump_v4_sha_graph 含 088) 完整。无 P0/P1, 仅 P2 文档建议。",
-            "checks_run": ["git_status_clean", "verify_062_ALL_PASS_24", "verify_088_13of14", "verify_081_087_all_pass", "smoke_pass", "mutation_add_helper_fail", "mutation_delete_v3_entry_fail", "restore_clean", "helper_source_review", "allowlist_empty_verified"],
+            "checks_run": [
+              "git_status_clean",
+              "verify_062_ALL_PASS_24",
+              "verify_088_13of14",
+              "verify_081_087_all_pass",
+              "smoke_pass",
+              "mutation_add_helper_fail",
+              "mutation_delete_v3_entry_fail",
+              "restore_clean",
+              "helper_source_review",
+              "allowlist_empty_verified"
+            ],
             "findings": {
               "P0": [],
               "P1": [],
-              "P2": ["drift_detector_asymmetry_doc_note", "allowlist_empty_good"]
+              "P2": [
+                "drift_detector_asymmetry_doc_note",
+                "allowlist_empty_good"
+              ]
             }
           }
         }
@@ -11719,8 +11733,24 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-44 #3.44 closeout_verify.verify_runs[] element shape hard check LGTM: helper assert_closeout_verify_runs_shape 字段完整 (ok/violations/soft_skipped/enforced_count/scanned_count/min_tail_chars/allowed_statuses/error), enforce-set 收敛到 reviewer_kind=sub_agent_fresh_context, Default-OFF + soft-PASS for legacy 设计合理. 062 emit=True soft-PASS 与 V5_reviewer_lgtm_gate 同形 (precedent 一致, 注释含 promote 路径). 089 V4 五子检 (V4_1 调用扫描 / V4_2 main 挂链 / V4_3 正例 ok=True / V4_4 反例 name+status+tail_stdout 三 field 命中 / V4_5 mutant ast strip 调用名→零) 全 PASS, fixture 正反例覆盖完整. Mutation 测试: 临时改 _bad_feature 第一行 name=None→fixed 后 089 V4_4 立 FAIL (violations 从 3 降到 2, fields_hit 缺 'name'); restore 后 13/14 PASS. Cascade bump 完整 (LIB sha 22 file + 062 sha 3 file + dump_v4_sha_graph 含 089 entry), 081-088 ALL PASS 14 cascade 无 drift, init smoke PASS. V5_reviewer_lgtm_gate 待本 reviewer block 写入即解锁.",
-            "checks_run": ["git_log_status_HEAD_9ae0443_clean", "source_review_all", "verify_062_PASS_25", "verify_089_13of14_V5_pending", "verify_081_088_all_pass", "smoke_pass", "dump_v4_sha_graph_089", "mutation_bad_feature_name_fail", "restore_clean"],
-            "findings": {"P0": [], "P1": [], "P2": ["062 V4_closeout_verify_runs_shape violations=167 历史 closeout backlog; promote emit→bool 前需 backfill 或宽限期，建议单独 followup"]}
+            "checks_run": [
+              "git_log_status_HEAD_9ae0443_clean",
+              "source_review_all",
+              "verify_062_PASS_25",
+              "verify_089_13of14_V5_pending",
+              "verify_081_088_all_pass",
+              "smoke_pass",
+              "dump_v4_sha_graph_089",
+              "mutation_bad_feature_name_fail",
+              "restore_clean"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "062 V4_closeout_verify_runs_shape violations=167 历史 closeout backlog; promote emit→bool 前需 backfill 或宽限期，建议单独 followup"
+              ]
+            }
           }
         }
       }
@@ -11750,18 +11780,66 @@
       "evidence": {
         "engineer_notes": "Engineer #4.44: 新增 assert_closeout_reviewer_block_shape helper (五字段 reviewer_kind/verdict/summary/checks_run/findings, Default-OFF + soft-PASS for legacy, 仅 reviewer_kind=='sub_agent_fresh_context' enforce); 062 加 _enforce_closeout_reviewer_block_shape + V4_closeout_reviewer_block_shape wire (soft-PASS emit); 新 verify_infra_090 V0-V5 14 checks (V5 pending FAIL 预期); dump_v4_sha_graph.py 加 090 3 entries; cascade bump LIB sha 24 files + 062 sha in 081/082/083.",
         "verify_runs": [
-          {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"},
-          {"name": "verify_infra_090", "status": "FAIL", "tail_stdout": "[verify_infra_090][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate'] (V5 pending placeholder gate; 入账后 closeout_verify.reviewer 入位)"},
-          {"name": "verify_infra_081", "status": "PASS", "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_082", "status": "PASS", "tail_stdout": "[verify_infra_082][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_083", "status": "PASS", "tail_stdout": "[verify_infra_083][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_084", "status": "PASS", "tail_stdout": "[verify_infra_084][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_085", "status": "PASS", "tail_stdout": "[verify_infra_085][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_086", "status": "PASS", "tail_stdout": "[verify_infra_086][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_087", "status": "PASS", "tail_stdout": "[verify_infra_087][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_088", "status": "PASS", "tail_stdout": "[verify_infra_088][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "verify_infra_089", "status": "PASS", "tail_stdout": "[verify_infra_089][SUMMARY] ALL PASS (14 checks)"},
-          {"name": "init_smoke", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"
+          },
+          {
+            "name": "verify_infra_090",
+            "status": "FAIL",
+            "tail_stdout": "[verify_infra_090][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate'] (V5 pending placeholder gate; 入账后 closeout_verify.reviewer 入位)"
+          },
+          {
+            "name": "verify_infra_081",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_082",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_082][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_083",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_083][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_084",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_084][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_085",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_085][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_086",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_086][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_087",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_087][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_088",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_088][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_089",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_089][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "init_smoke",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
         ],
         "closeout_verify": {
           "main_head_sha": "99b4833",
@@ -11771,16 +11849,50 @@
           "baseline_tail_stdout": "no pre-existing baseline FAIL after this reviewer-block shape add",
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
           "verify_runs": [
-            {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"},
-            {"name": "verify_infra_090", "status": "PASS", "tail_stdout": "[verify_infra_090][SUMMARY] ALL PASS (14 checks)"},
-            {"name": "init_smoke", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"
+            },
+            {
+              "name": "verify_infra_090",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_090][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "init_smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
           ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-44 #4.44 closeout reviewer block shape hard check fresh-context review: 090 V0-V5 13/14 PASS (V5 LGTM 入账 gate pending FAIL 符合预期), 062 ALL PASS 26 含新增 V4_closeout_reviewer_block_shape (soft emit, scanned=28 enforced=26 soft_skipped=2 violations=45), cascade 081-089 ALL PASS, smoke PASS, mutation (a) verdict=LGTM → V4_4 hard FAIL, mutation (b) drop helper from V3 names → V3_drift_detector hard FAIL, 双 mutation 还原 PASS, helper enforce-set 设计 (reviewer_kind == sub_agent_fresh_context) 合理且 default-OFF legacy soft-skip 形态与前序 follow-up 一致.",
-            "checks_run": ["V0_scaffolding", "V1_self_main_func_sha", "V2_verify_lib_file_sha", "V3_helper_func_sha", "V4_1_calls_enforcer", "V4_2_call_in_main", "V4_3_helper_positive", "V4_4_helper_negative", "V4_5_mutant_strip", "V5_reviewer_gate", "cascade_081_089", "smoke", "mutation_a_verdict_legal", "mutation_b_drift_drop", "restore_clean"],
-            "findings": {"P0": [], "P1": [], "P2": ["090 V4_4 结构上覆盖 4/5 field (reviewer_kind 因 enforce 准入即必非空, 不可独立触发); 设计合理且已在反例 fixture 长注释中标注"]}
+            "checks_run": [
+              "V0_scaffolding",
+              "V1_self_main_func_sha",
+              "V2_verify_lib_file_sha",
+              "V3_helper_func_sha",
+              "V4_1_calls_enforcer",
+              "V4_2_call_in_main",
+              "V4_3_helper_positive",
+              "V4_4_helper_negative",
+              "V4_5_mutant_strip",
+              "V5_reviewer_gate",
+              "cascade_081_089",
+              "smoke",
+              "mutation_a_verdict_legal",
+              "mutation_b_drift_drop",
+              "restore_clean"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "090 V4_4 结构上覆盖 4/5 field (reviewer_kind 因 enforce 准入即必非空, 不可独立触发); 设计合理且已在反例 fixture 长注释中标注"
+              ]
+            }
           }
         }
       }
@@ -11789,7 +11901,7 @@
       "id": "infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
       "priority": 5.44,
       "phase": 44,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "closeout baseline_head_echo 7+ hex 且 != main_head_sha hard check",
       "rationale": "FAIL 分支已要求 baseline_head_echo 字段存在，但未校验格式与去重；本轮硬要 7+ hex 且不得与 main_head_sha 相同 (否则 baseline 等于 self 失去意义)。",
@@ -11820,6 +11932,81 @@
           "verify_062_file_sha_new": "63e984c16d0864a1fc4bd21f18fc11286c97881bd69893d97c2629ccaf5ce4bc",
           "new_helper_func_sha": "fd166d27c14e81bf0ccc99990b98d2349e44c744baea9f6c470a27ec8d3b22f9",
           "new_self_main_func_sha": "72d4e15f0582a8e21d80463ee5ec8c0d1e64b10135567b015fba55ddb5c58882"
+        },
+        "closeout_verify": {
+          "main_head_sha": "e3e64b0",
+          "baseline_head_echo": "a4177b2",
+          "merge_commit_sha": "e3e64b03de3b8f9743c23a9bc55bad6db23b217d",
+          "pre_existing_baseline_sha": null,
+          "baseline_tail_stdout": "no pre-existing baseline FAIL after this baseline-head-echo format add",
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=29 enforced=27 soft_skipped=2 violations=45 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation={'feature_id': 'infra-P291-reviewer-gate-real-or-remove', 'reason': 'reviewer.summary missing or not str', 'field': 'summary', 'value_repr': 'None'}\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=29 enforced=27 soft_skipped=2 violations=16 min_hex_chars=7 first_violation={'feature_id': 'infra-P291-reviewer-gate-real-or-remove', 'reason': 'baseline_head_echo missing or not str', 'field': 'baseline_head_echo', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=30 v3_table=30 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "name": "verify_infra_091",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_091][PASS] V4_3_helper_real_run_ok ok=True enforced=1 soft_skipped=0 violations=0\n[verify_infra_091][PASS] V4_4_helper_real_run_violation ok=False enforced=4 violations=4 feat_ids_hit=['bad-empty', 'bad-nonhex', 'bad-same', 'bad-short'] expected=['bad-empty', 'bad-nonhex', 'bad-same', 'bad-short'] first={'feature_id': 'bad-empty', 'reason': 'baseline_head_echo empty after strip', 'field': 'baseline_head_echo', 'value_repr': \"''\"}\n[verify_infra_091][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_091][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-baseline-head-echo-format-hard-check helper_ok=False reason=\"feature 'infra-P278-followup-closeout-baseline-head-echo-format-hard-check' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_091][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']"
+            },
+            {
+              "name": "init.sh smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-44 #5.44 infra-P278-followup-closeout-baseline-head-echo-format-hard-check fresh-context review 全 dogfood 通过：helper 7 字段完备、4 条规则分支全实现、enforce-set=sub_agent_fresh_context、062 emit=True soft 与 smoke_tail/runs_shape/reviewer_block 形态一致、091 V0-V5 14 checks 设计完备且实跑 13/14 PASS（V5 in-flight 预期 FAIL）、cascade（LIB 99933db2 / 062 63e984c1 / dump_v4_sha_graph +3 entry）齐全、邻近 081-090 全 PASS、smoke PASS；mutation (a) 改 091 V4_4 反例 bad-empty fixture 为合规 hex 致 V4_4 hard FAIL，mutation (b) 删 062 V3_HELPER_FUNC_NAMES 中 helper 名致 V3_drift hard FAIL，restore 后均 PASS，git tree clean",
+            "checks_run": [
+              "git_state_clean",
+              "helper_field_completeness",
+              "rule_four_branches",
+              "enforce_set",
+              "062_emit_True_soft_precedent_consistent",
+              "091_V0_V5_14_checks_full",
+              "cascade_complete",
+              "real_runs",
+              "mutation_a_fixture_legal",
+              "mutation_b_v3_drift_strip"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "V5 reviewer gate in-flight 预期 FAIL",
+                "091 V4_3 正例 fixture baseline 与 main 前 N hex 不冲突"
+              ]
+            }
+          }
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "phase-44 #5.44 infra-P278-followup-closeout-baseline-head-echo-format-hard-check fresh-context review 全 dogfood 通过：helper 7 字段完备、4 条规则分支全实现、enforce-set=sub_agent_fresh_context、062 emit=True soft 与 smoke_tail/runs_shape/reviewer_block 形态一致、091 V0-V5 14 checks 设计完备且实跑 13/14 PASS（V5 in-flight 预期 FAIL）、cascade（LIB 99933db2 / 062 63e984c1 / dump_v4_sha_graph +3 entry）齐全、邻近 081-090 全 PASS、smoke PASS；mutation (a) 改 091 V4_4 反例 bad-empty fixture 为合规 hex 致 V4_4 hard FAIL，mutation (b) 删 062 V3_HELPER_FUNC_NAMES 中 helper 名致 V3_drift hard FAIL，restore 后均 PASS，git tree clean",
+          "checks_run": [
+            "git_state_clean",
+            "helper_field_completeness",
+            "rule_four_branches",
+            "enforce_set",
+            "062_emit_True_soft_precedent_consistent",
+            "091_V0_V5_14_checks_full",
+            "cascade_complete",
+            "real_runs",
+            "mutation_a_fixture_legal",
+            "mutation_b_v3_drift_strip"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "V5 reviewer gate in-flight 预期 FAIL",
+              "091 V4_3 正例 fixture baseline 与 main 前 N hex 不冲突"
+            ]
+          }
         }
       }
     },
@@ -11844,6 +12031,17 @@
       "rationale": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，扫到 167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
       "description": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
       "acceptance": "决定 backfill 167 violations 或加 grace_period 后 promote 062 emit→bool(result['ok'])"
+    },
+    {
+      "id": "infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "promote V4_closeout_baseline_head_echo_format emit→bool(result['ok']) 真硬",
+      "rationale": "phase-44 #5.44 引入 V4_closeout_baseline_head_echo_format soft emit=True，16 historic violations 阻碍 promote 真硬。",
+      "description": "phase-44 #5.44 引入 V4_closeout_baseline_head_echo_format soft emit=True，16 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策",
+      "acceptance": "决定 backfill 16 violations 或加 grace_period 后 promote 062 emit→bool"
     }
   ],
   "_meta": {
