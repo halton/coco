@@ -11518,8 +11518,23 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-44 #1.44 infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion 实施正确: Engineer 仅修改 infra-P278-followup-verify-lib-helper-naming-convention-lock 的 evidence.closeout_verify.reviewer.verdict (LGTM-conditional → LGTM) 并追加 promotion 说明 + 保留 original_verdict 审计字段, 未越界改 helper/_verify_lib/062/085 脚本; conditional 条件 (P1 085 self main sha bump no-op) 经实跑 V1 PASS got=expect=87e910ff05a21013 客观满足非伪 promote; 085 ALL PASS 14/14 含 V5_reviewer_lgtm_gate, 062 ALL PASS 23/23, 082-087 各 ALL PASS 14/14, smoke PASS; mutation test 将 verdict 改回 LGTM-conditional → 085 V5 FAIL 1/14, restore → ALL PASS, hard_fail 验证通过.",
-            "checks_run": ["verify_infra_085_PASS_14", "verify_infra_062_PASS_23", "verify_infra_082_PASS_14", "verify_infra_083_PASS_14", "verify_infra_084_PASS_14", "verify_infra_086_PASS_14", "verify_infra_087_PASS_14", "smoke_PASS", "git_diff_minimal_one_field", "mutation_test_hard_fail_and_restore"],
-            "findings": {"P0": [], "P1": [], "P2": []}
+            "checks_run": [
+              "verify_infra_085_PASS_14",
+              "verify_infra_062_PASS_23",
+              "verify_infra_082_PASS_14",
+              "verify_infra_083_PASS_14",
+              "verify_infra_084_PASS_14",
+              "verify_infra_086_PASS_14",
+              "verify_infra_087_PASS_14",
+              "smoke_PASS",
+              "git_diff_minimal_one_field",
+              "mutation_test_hard_fail_and_restore"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
           }
         }
       }
@@ -11553,7 +11568,7 @@
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-round2",
       "priority": 2.44,
       "phase": 44,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "verify_infra_062 V3_helper_func_sha + 082-085 V1_self_main_func_sha pre-existing FAIL cascade rebump (round2)",
       "description": "phase-43 #4.43 (infra-P278-followup-closeout-verify-runs-min-count-hard-check) closeout 期间 Reviewer fresh-context 确认 062 V3_helper_func_sha 与 082/083/084/085 V1_self_main_func_sha 在 baseline e0e8393 与 PR HEAD 同 FAIL，均为 pre-existing cascade drift。",
@@ -11572,7 +11587,36 @@
       ],
       "notes_for_engineer": ".venv 必须激活；dump_v4_sha_graph 看 drift 集合后统一 commit",
       "acceptance": "062 V3 + 082-085 V1 全 PASS；smoke PASS；reviewer LGTM",
-      "rationale_phase44": "verify_infra_062 helper func sha rebump 第二轮 (phase-44 #2)"
+      "rationale_phase44": "verify_infra_062 helper func sha rebump 第二轮 (phase-44 #2)",
+      "evidence": {
+        "engineer_note": "phase-44 #2.44 Engineer 实施完成. Round2 形式: 新增 V3 helper drift detector 而非简单 sha rebump. 在 scripts/_verify_lib.py 加 assert_verify_lib_helpers_in_v3_sha_table helper (扫 _verify_lib 公共 helper 与 062.V3_HELPER_FUNC_NAMES 比对, missing/extra 即漂移); 在 scripts/verify_infra_062.py 加 V3_HELPER_FUNC_NAMES tuple (27 helper names 含新加) + V3_HELPER_DRIFT_ALLOWLIST + _enforce_v3_helper_drift_detector() 挂到 main, emit V3_helper_func_sha_drift_detector. 062 共 24 PASS (新增 1 个 check). 新建 scripts/verify_infra_088.py V0-V5 14 checks (V5 reviewer pending FAIL 预期, 待 Reviewer sub-agent LGTM 后入账). cascade bump: _verify_lib file sha 91ee88fb→a22c6d81 (22 verify_infra 文件) + 062 file sha 3618d364→2854c3b0 (081/082/083). dump_v4_sha_graph.py 加 3 entries.",
+        "verify_runs_at_implementation": [
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (24 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_088.py",
+            "status": "PARTIAL",
+            "tail_stdout": "[verify_infra_088][SUMMARY] FAIL 1/14: [V5_reviewer_lgtm_gate] (V5 pending Reviewer LGTM, 13/14 PASS 预期)"
+          },
+          {
+            "script": "scripts/verify_infra_081-087.py",
+            "status": "PASS",
+            "tail_stdout": "081-087 全部 ALL PASS (14 checks each)"
+          },
+          {
+            "script": "./init.sh",
+            "status": "PASS",
+            "tail_stdout": "Smoke 通过"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "pending_sub_agent_fresh_context",
+          "lgtm": null
+        }
+      }
     },
     {
       "id": "infra-P278-followup-closeout-verify-runs-status-shape-hard-check",

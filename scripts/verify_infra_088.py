@@ -1,52 +1,49 @@
 #!/usr/bin/env python3
-"""verify_infra_086 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_min_count 真 fire (Default-OFF hard check).
+"""verify_infra_088 V0-V5: 锁定 verify_infra_062._enforce_v3_helper_drift_detector 真 fire (V3 helper drift detector).
 
-infra-P278-followup-closeout-verify-runs-min-count-hard-check (phase-43 #4.43):
-Closeout-verify-trustworthy 硬规则已要求 verify_runs 含 tail_stdout+status,
-但未约束最少条数. 实际 closeout 中常仅 1-2 条 verify 跑导致信号薄弱;
-加最少 N 条 (N=3) Default-OFF→hard 检, 提高 closeout 证据丰度.
+infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (phase-44 #2.44):
+062 V3 锁此前仅锁单个 helper (verify_closeout_evidence_trustworthy) 的 func sha.
+round2 任务: 把"helper 集合本身"也纳入漂移检测 — 任何新加 helper 必须同步加入
+062.V3_HELPER_FUNC_NAMES 列表 (或 V3_HELPER_DRIFT_ALLOWLIST), 否则 hard FAIL.
 
-本 feature 在 ``scripts/_verify_lib.py`` 加
-``assert_closeout_verify_runs_min_count(feature_list_path, min_count=3)`` helper,
-并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_verify_runs_min_count()``,
-以 V4_closeout_verify_runs_min_count 名义 emit:
-- 缺 closeout_verify.verify_runs 字段 → soft_skip (Default-OFF);
-- 含字段且 len(verify_runs) < min_count → hard FAIL;
-- violations 列表 + 首条 violation 写进 detail.
+本 feature 在 ``scripts/_verify_lib.py`` 加 ``assert_verify_lib_helpers_in_v3_sha_table``
+helper, 并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_v3_helper_drift_detector()``
+以 V3_helper_func_sha_drift_detector 名义 emit:
+- 扫 _verify_lib.py 所有公共 helper (def + 非下划线开头);
+- 与 062.V3_HELPER_FUNC_NAMES 比对; 任何 missing/extra → hard FAIL;
+- 含 scanned_helpers/v3_table_keys/allowlist/missing/extra 写入 detail.
 
-本 verify (086) 锁住:
-- _verify_lib 内 ``assert_closeout_verify_runs_min_count`` helper 真存在
-  且 func sha 等于 EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA;
+本 verify (088) 锁住:
+- _verify_lib 内 ``assert_verify_lib_helpers_in_v3_sha_table`` helper 真存在
+  且 func sha 等于 EXPECTED_DRIFT_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
-- 真跑 helper 正例: 当前 feature_list.json → ok=True (scanned>=1, violations==0);
-- mutant: 临时构造 in-memory mini feature_list 把某 passing feature verify_runs 截到 1 条 →
-  helper 必须捕获 violation>=1;
-- 062 内必须有 ``_enforce_closeout_verify_runs_min_count`` 调用挂到 main 链上 (ast 扫).
+- 真跑 helper 正例: 当前 062.V3_HELPER_FUNC_NAMES → ok=True;
+- mutant: 删一个 helper 名 → ok=False, missing_in_v3_table 非空;
+- 062 内必须有 ``_enforce_v3_helper_drift_detector`` 调用挂到 main 链上 (ast 扫).
 
-INFRA_086_SHA_LOCKS
+INFRA_088_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_086.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_088.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_closeout_verify_runs_min_count`` func sha:
-  EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_verify_lib_helpers_in_v3_sha_table`` func sha:
+  EXPECTED_DRIFT_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_closeout_verify_runs_min_count helper func sha
+- V3 assert_verify_lib_helpers_in_v3_sha_table helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_verify_runs_min_count 调用
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_v3_helper_drift_detector 调用
   - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
-  - V4_3 真跑 helper 正例: 当前 feature_list.json → ok=True, scanned>=1, violations==0
-  - V4_4 真跑 helper 反例: 构造临时 mini feature_list (tmpfile), 把某 feature verify_runs 截到 1 条 →
-    violation>=1, ok=False; 原 feature_list 不被改动
+  - V4_3 真跑 helper 正例: 062.V3_HELPER_FUNC_NAMES → ok=True
+  - V4_4 真跑 helper 反例: 删一个 name → ok=False, missing 非空
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
-- V5 reviewer_lgtm_gate (真门: ok is True)
+- V5 reviewer_lgtm_gate (真门: ok is True, V5 pending 期间 FAIL 预期)
 
-注意 (与 074/079/080/081/082/083/084/085 同形): 本脚本不锁自己 file sha,
-避免与 V4 mutant 对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
+注意 (与 074/079/080/081/082/083/084/085/086/087 同形): 本脚本不锁自己 file sha,
+避免与 V4 mutant 对源码做 ast 替换时与自检冲突.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
 
@@ -56,10 +53,8 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import json
 import re
 import sys
-import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -71,28 +66,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
-    assert_closeout_verify_runs_min_count,
     assert_reviewer_lgtm,
+    assert_verify_lib_helpers_in_v3_sha_table,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "ba96559384ef8ec55ff28bf69872104d836540f64cb65f32572a233a6dc6a9d8"
+EXPECTED_SELF_MAIN_FUNC_SHA = "985b9e4552bcdc2ba0594669ac6d9caf8a8bd34535568bd567a0cea6adac8e87"
 EXPECTED_VERIFY_LIB_FILE_SHA = "a22c6d81200cf6b35df7ed6a3df3e726068848df4401a8a7c7078a1d90ac64c0"
-EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA = "4e964b8969935a464159ac7e117dd248da12f98851a3b71bda8be30a8e4e99ec"
+EXPECTED_DRIFT_HELPER_FUNC_SHA = "5b68351e4bc7916fc9b817ca3d2b2bbed8733227252a3bb13008950256e4d8ff"
 
-DOCSTRING_SENTINEL = "INFRA_086_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_088_SHA_LOCKS"
 
-HELPER_NAME = "assert_closeout_verify_runs_min_count"
-ENFORCER_NAME = "_enforce_closeout_verify_runs_min_count"
-V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-verify-runs-min-count-hard-check"
+HELPER_NAME = "assert_verify_lib_helpers_in_v3_sha_table"
+ENFORCER_NAME = "_enforce_v3_helper_drift_detector"
+V5_GATE_FEATURE_ID = "infra-V6-backlog-062-v3-helper-func-sha-rebump-round2"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_086][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_088][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -105,7 +100,6 @@ def _is_hex64(s) -> bool:
 
 
 def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
-    """ast 扫源码中所有 Call 节点, 找 func.id==callee 或 func.attr==callee."""
     out: List[dict] = []
     try:
         tree = ast.parse(src)
@@ -132,6 +126,24 @@ def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
 
     _walk(tree, [])
     return out
+
+
+def _read_062_v3_names() -> tuple:
+    """从 062 源码读出 V3_HELPER_FUNC_NAMES 元组 (ast 不 import 062, 防循环)."""
+    src = VERIFY_062.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == "V3_HELPER_FUNC_NAMES":
+                    val = node.value
+                    if isinstance(val, (ast.Tuple, ast.List)):
+                        names = []
+                        for el in val.elts:
+                            if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                                names.append(el.value)
+                        return tuple(names)
+    return ()
 
 
 # ---------------------------------------------------------------------------
@@ -205,7 +217,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_closeout_verify_runs_min_count helper func sha
+# V3: assert_verify_lib_helpers_in_v3_sha_table helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -213,17 +225,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_DRIFT_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_DRIFT_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_DRIFT_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_DRIFT_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -242,7 +254,7 @@ def v4_behavior() -> None:
         f"sites={[(c['lineno'], c['in_func']) for c in enforcer_calls]}",
     )
 
-    # V4_2: enforcer 调用必须挂在 062.main() 上 (main → enforcer)
+    # V4_2: enforcer 调用必须挂在 062.main() 上
     main_calls_enforcer = any(c["in_func"] == "main" for c in enforcer_calls)
     _emit(
         "V4_2_call_in_main_chain",
@@ -250,91 +262,57 @@ def v4_behavior() -> None:
         f"main_calls_enforcer={main_calls_enforcer}",
     )
 
-    # V4_3: 真跑 helper 正例 — 当前 feature_list.json 应当 ok=True
+    # V4_3: 真跑 helper 正例 — 当前 062.V3_HELPER_FUNC_NAMES → ok=True
     try:
-        result = assert_closeout_verify_runs_min_count(
-            REAL_FEATURE_LIST, min_count=3
-        )
+        names = _read_062_v3_names()
+        result = assert_verify_lib_helpers_in_v3_sha_table(LIB, names)
         v4_3_ok = (
             isinstance(result, dict)
             and result.get("ok") is True
-            and result.get("scanned_count", 0) >= 1
             and not result.get("error")
-            and len(result.get("violations") or []) == 0
+            and len(result.get("missing_in_v3_table") or []) == 0
+            and len(result.get("extra_in_v3_table") or []) == 0
+            and len(result.get("scanned_helpers") or []) >= 10
         )
         v4_3_detail = (
-            f"ok={result.get('ok')} scanned={result.get('scanned_count')} "
-            f"enforced={result.get('enforced_count')} "
-            f"soft_skipped={len(result.get('soft_skipped') or [])} "
-            f"violations={len(result.get('violations') or [])} "
-            f"min_count={result.get('min_count')}"
+            f"ok={result.get('ok')} "
+            f"scanned={len(result.get('scanned_helpers') or [])} "
+            f"v3_table={len(result.get('v3_table_keys') or [])} "
+            f"missing={len(result.get('missing_in_v3_table') or [])} "
+            f"extra={len(result.get('extra_in_v3_table') or [])}"
         )
     except Exception as e:  # noqa: BLE001
         v4_3_ok = False
         v4_3_detail = f"err={e!r}"
-    _emit(
-        "V4_3_helper_real_run_ok",
-        v4_3_ok,
-        v4_3_detail,
-    )
+    _emit("V4_3_helper_real_run_ok", v4_3_ok, v4_3_detail)
 
-    # V4_4: 反例 — 构造临时 mini feature_list, 含一个 passing feature 其
-    # closeout_verify.verify_runs 只 1 条; helper 必须捕获 violation>=1.
-    # 原 feature_list.json 不被改动.
+    # V4_4: 反例 — 删一个 name → missing 非空, ok=False
     try:
-        mini = {
-            "features": [
-                {
-                    "id": "mutant-fake-feature-for-086-test",
-                    "status": "passing",
-                    "evidence": {
-                        "closeout_verify": {
-                            "verify_runs": [
-                                {"status": "PASS", "tail_stdout": "only-one-run"}
-                            ]
-                        }
-                    },
-                }
-            ]
-        }
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as tf:
-            json.dump(mini, tf)
-            tmppath = tf.name
-        try:
-            fr = assert_closeout_verify_runs_min_count(tmppath, min_count=3)
-            v4_4_ok = (
-                fr.get("ok") is False
-                and len(fr.get("violations") or []) >= 1
-                and any(
-                    v.get("feature_id") == "mutant-fake-feature-for-086-test"
-                    for v in (fr.get("violations") or [])
-                )
-            )
-            v4_4_detail = (
-                f"ok={fr.get('ok')} "
-                f"violations={len(fr.get('violations') or [])} "
-                f"first_violation={(fr.get('violations') or [None])[0]}"
-            )
-        finally:
-            try:
-                Path(tmppath).unlink()
-            except OSError:
-                pass
-        # 还原后跑真 feature_list, 确认未受副作用影响
-        rr = assert_closeout_verify_runs_min_count(REAL_FEATURE_LIST, min_count=3)
+        names = _read_062_v3_names()
+        # 删一个 (取第一个)
+        truncated = tuple(names[1:]) if len(names) >= 2 else ()
+        fr = assert_verify_lib_helpers_in_v3_sha_table(LIB, truncated)
+        missing = fr.get("missing_in_v3_table") or []
+        v4_4_ok = (
+            fr.get("ok") is False
+            and len(missing) >= 1
+            and (names[0] in missing if names else False)
+        )
+        v4_4_detail = (
+            f"ok={fr.get('ok')} "
+            f"removed_name={names[0] if names else None} "
+            f"missing_count={len(missing)} "
+            f"first_missing={missing[0] if missing else None}"
+        )
+        # 还原跑一次确认无副作用
+        rr = assert_verify_lib_helpers_in_v3_sha_table(LIB, names)
         v4_4_restored_ok = rr.get("ok") is True
         v4_4_detail += f" restored_ok={v4_4_restored_ok}"
         v4_4_ok = v4_4_ok and v4_4_restored_ok
     except Exception as e:  # noqa: BLE001
         v4_4_ok = False
         v4_4_detail = f"err={e!r}"
-    _emit(
-        "V4_4_helper_real_run_violation",
-        v4_4_ok,
-        v4_4_detail,
-    )
+    _emit("V4_4_helper_real_run_violation", v4_4_ok, v4_4_detail)
 
     # V4_5: mutant — ast 替换 062 中 ENFORCER_NAME 调用名 → 扫降到 0
     mutant_src, n_sub = re.subn(
@@ -382,12 +360,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_086][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_088][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_086][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_088][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
