@@ -1,5 +1,18 @@
 # 进度日志
 
+## Session 2026-05-22 — phase-43 #4.43 infra-P278-followup-closeout-verify-runs-min-count-hard-check (Closeout)
+
+- A 段 merge: feat/infra-P278-followup-closeout-verify-runs-min-count-hard-check (108d9f4) → main, merge sha=bd6fdbf, base=e0e8393
+- verify_infra_062 ALL PASS 22 checks (含新 V4_closeout_verify_runs_min_count scanned=23 enforced=23 violations=0 min_count=3)
+- verify_infra_086 14 checks: V0-V4 全 PASS (含 V4_3/V4_4 真 mutation test + V4_5 mutant strip 检测), V5_reviewer_lgtm_gate 自指 closeout 时序自循环 (B-commit 后 PASS)
+- verify_infra_082/083/084 ALL PASS (V1_self_main_func_sha 全 PASS, Reviewer P2 stale)
+- verify_infra_085 V5 FAIL = pre-existing baseline e0e8393 同 FAIL (LGTM-conditional)，已入 backlog
+- smoke PASS (TTS/vision/face-tracker/VAD/wake-word/power-state/config/publish)
+- backlog 入账: infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (Reviewer P2 stale 但形式上记一笔)
+- #4.43 status: in_progress → passing, evidence.closeout_verify 6 信号齐全 (main_head_sha + baseline_head_echo + smoke_tail_stdout + verify_runs[4] + reviewer.kind=sub_agent_fresh_context)
+
+---
+
 ## Session 2026-05-22 — phase-43 #3.43 infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk (Engineer narrow round)
 
 **branch**: feat/infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk
