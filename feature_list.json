@@ -11764,7 +11764,7 @@
           {"name": "init_smoke", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
         ],
         "closeout_verify": {
-          "main_head_sha": "e45bfbc",
+          "main_head_sha": "99b4833",
           "baseline_head_echo": "0ad989f",
           "merge_commit_sha": "e45bfbc7bc507803d642c7716891150f77d08374",
           "pre_existing_baseline_sha": null,
@@ -11772,7 +11772,7 @@
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
           "verify_runs": [
             {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (26 checks)"},
-            {"name": "verify_infra_090", "status": "FAIL", "tail_stdout": "[verify_infra_090][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']"},
+            {"name": "verify_infra_090", "status": "PASS", "tail_stdout": "[verify_infra_090][SUMMARY] ALL PASS (14 checks)"},
             {"name": "init_smoke", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
           ],
           "reviewer": {
