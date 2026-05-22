@@ -7142,3 +7142,10 @@ planning rationale: phase-43 已加 min_count + smoke_tail_nonempty,phase-44 进
 - feature_list.json: infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion status in_progress → passing, evidence.closeout_verify 完整填充 (main_head_sha=f8e208a, baseline_head_echo=dd8d9c1, 3 verify_runs, reviewer sub_agent_fresh_context LGTM)
 - 062 V4_closeout_smoke_tail_nonempty enforced 23 → 24 (本 feature evidence 入账)
 - 等待 B 段 bump main_head_sha 至 closeout commit
+
+## Session phase-44 #2.44 Closeout A 段 (infra-V6-backlog-062-v3-helper-func-sha-rebump-round2)
+- merge: feat/infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 → main (--no-ff), merge HEAD=188c517, baseline_head_echo=dc3ec06
+- verify_runs: 062 ALL PASS 24, 088 13/14 (V5 self-gate pending, B 段重跑应 14/14), 081-087 全 PASS, smoke PASS
+- feature_list.json: status in_progress → passing, evidence.closeout_verify 6 信号完整 (main_head_sha=188c517, reviewer sub_agent_fresh_context LGTM, pre_existing_baseline_sha=null)
+- Reviewer (sub-agent fresh-context): LGTM, P0/P1 空, P2 仅文档建议
+- 等待 B 段 bump main_head_sha 至 closeout commit

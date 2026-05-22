@@ -11568,7 +11568,7 @@
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-round2",
       "priority": 2.44,
       "phase": 44,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_062 V3_helper_func_sha + 082-085 V1_self_main_func_sha pre-existing FAIL cascade rebump (round2)",
       "description": "phase-43 #4.43 (infra-P278-followup-closeout-verify-runs-min-count-hard-check) closeout 期间 Reviewer fresh-context 确认 062 V3_helper_func_sha 与 082/083/084/085 V1_self_main_func_sha 在 baseline e0e8393 与 PR HEAD 同 FAIL，均为 pre-existing cascade drift。",
@@ -11613,8 +11613,49 @@
           }
         ],
         "reviewer": {
-          "reviewer_kind": "pending_sub_agent_fresh_context",
-          "lgtm": null
+          "reviewer_kind": "sub_agent_fresh_context",
+          "lgtm": true
+        },
+        "closeout_verify": {
+          "main_head_sha": "188c517",
+          "baseline_head_echo": "dc3ec06",
+          "merge_commit_sha": "188c517",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=27 v3_table=27 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature missing\"\n[verify_infra_062][SUMMARY] ALL PASS (24 checks)"
+            },
+            {
+              "name": "verify_infra_088",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_088][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_088][FAIL] V5_reviewer_lgtm_gate target=infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 helper_ok=False reason=\"reviewer_kind='pending_sub_agent_fresh_context'\"\n[verify_infra_088][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate'] (V5 自闭环 pending, A 段写入 reviewer 后 B 段重跑应 14/14)"
+            },
+            {
+              "name": "init_smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "verify_infra_081-087",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_081..087][SUMMARY] ALL PASS (14 checks each) - 7 scripts all green"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。",
+          "pre_existing_baseline_sha": null,
+          "baseline_tail_stdout": "no pre-existing baseline FAIL after this drift detector add; 088 V5 self-gate pending is expected during A-stage closeout (will turn 14/14 in B-stage after reviewer block written), not a baseline drift",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-44 #2.44 fresh-context review: V3 helper drift detector helper 设计合理（missing 受 allowlist 豁免, extra 永不豁免），V3_HELPER_FUNC_NAMES 27 entries 与 _verify_lib.py 公共 helper 集合精确匹配，allowlist=() 空。062 ALL PASS 24, 088 13/14 (V5 pending 预期), 081-087 全 PASS, smoke 通过。mutation (a) 加 fake helper → V3_helper_func_sha_drift_detector hard FAIL missing_in_v3_table=['assert_drift_test_mutant']; (b) 删 V3 表 entry → hard FAIL missing_in_v3_table=['verify_unknown_node_count_bound']; 还原后均 ALL PASS。cascade bump (LIB sha a22c6d81, 062 sha 2854c3b0, dump_v4_sha_graph 含 088) 完整。无 P0/P1, 仅 P2 文档建议。",
+            "checks_run": ["git_status_clean", "verify_062_ALL_PASS_24", "verify_088_13of14", "verify_081_087_all_pass", "smoke_pass", "mutation_add_helper_fail", "mutation_delete_v3_entry_fail", "restore_clean", "helper_source_review", "allowlist_empty_verified"],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": ["drift_detector_asymmetry_doc_note", "allowlist_empty_good"]
+            }
+          }
         }
       }
     },
