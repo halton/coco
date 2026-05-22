@@ -48,6 +48,7 @@ __all__ = [
     "assert_report_matches_closeout_runs",
     "assert_reviewer_lgtm",
     "assert_reviewer_baseline_head_echo",
+    "assert_baseline_head_echo_present_and_matches",
     "assert_verify_passed",
     "verify_summary_exit",
 ]
@@ -1994,6 +1995,143 @@ def assert_reviewer_baseline_head_echo(evidence_dict: dict) -> dict:
             f"baseline_head_echo[:7]={echo_prefix!r} != "
             f"pre_existing_baseline_sha[:7]={expected_prefix!r}"
         )
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required
+# (phase-42 #1.42): 跨 feature_list 扫描型 helper, 把 baseline_head_echo 从
+# "dogfood + 单 evidence legacy 容差" promote 为 P278 hard-required 信号。
+#
+# 策略 (Default-OFF 渐进 promote, 与 062 V4_byte_match 风格一致):
+#   - 老 feature (缺 reviewer.baseline_head_echo 字段) → soft_skipped
+#     (不阻 pre-P286 历史 evidence PASS, 不强 retro fix)
+#   - 含 baseline_head_echo 字段的 feature → hard enforce 前 7+ hex 等值匹配
+#     closeout_verify.baseline_head_sha (大小写不敏感); 不匹配 → violation
+#   - closeout_verify.baseline_head_sha 缺失 → soft_skipped (老 schema)
+#   - 任一 violation → ok=False, V4_baseline_head_echo_required FAIL
+#
+# 此 helper 由 verify_infra_062 v4_behavior 段末尾真调, 把跨 feature 一致性
+# 校验纳入 P278 closeout-verify-trustworthy 主入口; 同时被 verify_infra_082
+# (新增) 锁住行为 + ast 静态调用链。
+# ---------------------------------------------------------------------------
+def assert_baseline_head_echo_present_and_matches(
+    feature_list_path,
+    current_git_head: str | None = None,
+) -> dict:
+    """跨 feature_list 扫描型 P278 hard-required check: baseline_head_echo
+    字段一致性 (新 feature hard enforce, 老 feature soft skip).
+
+    扫描 feature_list.json 所有 status=='passing' 且 evidence.closeout_verify
+    存在的 feature, 对其 reviewer.baseline_head_echo (若存在) 与
+    closeout_verify.baseline_head_sha 做前 7+ hex 等值匹配 (大小写不敏感)。
+
+    参数:
+        feature_list_path: feature_list.json 的路径 (str | Path).
+        current_git_head: 当前 git HEAD sha (str | None); 仅记录到返回
+            字典, 不参与 enforce 判定 (留作未来 cutoff 扩展点).
+
+    返回 dict::
+
+        {
+          "ok": bool,                  # True 当无 violation
+          "violations": [              # 每条违规一项
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "echo_prefix": str,
+                  "expected_prefix": str,
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],  # 缺 echo 字段或缺 baseline_sha 的 feature_id
+          "enforced_count": int,       # 真正参与 enforce 的 feature 数 (含字段)
+          "scanned_count": int,        # 扫到的 status=passing 含 closeout_verify
+          "current_git_head": str | None,
+          "error": str | None,
+        }
+
+    Default-OFF 行为:
+      - 老 feature (缺 baseline_head_echo 字段) → soft_skipped 列表, 不算 violation
+      - 缺 baseline_head_sha 但有 echo → soft_skipped (老 schema 容差)
+      - 含 baseline_head_echo 且 baseline_head_sha 都有 → hard enforce 等值
+
+    错误:
+      - feature_list 不存在 / parse 失败 → ok=False, error 字段载明
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "current_git_head": current_git_head,
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        # 取 reviewer.baseline_head_echo (兼容 reviewer 为 dict 或 list 形态)
+        rv = cv.get("reviewer")
+        echo = None
+        if isinstance(rv, dict):
+            echo = rv.get("baseline_head_echo")
+        elif isinstance(rv, list):
+            for it in rv:
+                if isinstance(it, dict) and it.get("baseline_head_echo"):
+                    echo = it.get("baseline_head_echo")
+                    break
+        if not isinstance(echo, str) or not echo.strip():
+            # 老 feature 缺字段 → soft_skipped
+            out["soft_skipped"].append(fid)
+            continue
+        baseline_sha = cv.get("baseline_head_sha")
+        if not isinstance(baseline_sha, str) or not baseline_sha.strip():
+            # 含 echo 但缺 baseline_head_sha → soft_skipped (老 schema)
+            out["soft_skipped"].append(fid)
+            continue
+        # 二者都有 → hard enforce 前 7 hex 等值
+        out["enforced_count"] += 1
+        echo_prefix = echo.strip().lower()[:7]
+        expected_prefix = baseline_sha.strip().lower()[:7]
+        if echo_prefix != expected_prefix:
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"reviewer.baseline_head_echo[:7]={echo_prefix!r} != "
+                    f"closeout_verify.baseline_head_sha[:7]={expected_prefix!r}"
+                ),
+                "echo_prefix": echo_prefix,
+                "expected_prefix": expected_prefix,
+            })
+    out["ok"] = len(out["violations"]) == 0
     return out
 
 

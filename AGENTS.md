@@ -207,15 +207,16 @@ P273 / P275 还暴露过另一类失真：**新建 `scripts/verify_infra_NNN.py`
 
 ## Closeout-verify-trustworthy 硬规则 (P278)
 
-Closeout sub-agent 提交的 verify 报告必须满足以下 5 条机械化校验，否则视为不可信：
+Closeout sub-agent 提交的 verify 报告必须满足以下 6 条机械化校验，否则视为不可信：
 
 1. **main HEAD 显式锁**: evidence.closeout_verify.main_head_sha 存在且 >=7 hex (merge 后必须在 main HEAD 上跑，不能在 working tree)
 2. **verify_runs 完整尾行**: evidence.closeout_verify.verify_runs 非空，每项含 script + 非空 tail_stdout + status ∈ {PASS, FAIL}
 3. **pre-existing FAIL 需独立复现**: 任一 FAIL 必须配套 pre_existing_baseline_sha + baseline_tail_stdout 字段（在 pre-merge main baseline 上 stash 后独立复现）
 4. **smoke 尾行**: evidence.closeout_verify.smoke_tail_stdout 非空
 5. **Reviewer fresh-context**: evidence.reviewer.reviewer_kind == "sub_agent_fresh_context" 且 lgtm == True（主 context 自审不算）
+6. **baseline_head_echo 一致性 (P286-followup3, phase-42 #1.42)**: 若 evidence.closeout_verify.reviewer.baseline_head_echo 字段存在，必须与 closeout_verify.baseline_head_sha 前 7 hex 等值匹配 (大小写不敏感)。Default-OFF 渐进 promote：老 feature 缺字段 → soft_skipped (不 retro fix)；缺 baseline_head_sha → soft_skipped (老 schema)。该信号防御 P286 round-1 baseline-HEAD mismatch (Reviewer 在 feat HEAD 上跑 baseline verify 却 echo 成 baseline sha 的伪证)。
 
-机械化校验由 `scripts/verify_infra_062.py` 调用 `_verify_lib.verify_closeout_evidence_trustworthy(evidence)` 实施。Closeout sub-agent 提交前应自检 dogfood。
+机械化校验由 `scripts/verify_infra_062.py` 调用 `_verify_lib.verify_closeout_evidence_trustworthy(evidence)` (信号 1-5) + `_verify_lib.assert_baseline_head_echo_present_and_matches(feature_list)` (信号 6) 实施。Closeout sub-agent 提交前应自检 dogfood。`scripts/verify_infra_082.py` 静态 ast-lock 锁 062 必须 wire 信号 6 helper, 删调用即 FAIL。
 
 **已知边界 (P278 round-2 显式承认)**: 当前 helper **只验 schema 不验 stdout 字符串真伪** —— 即 Engineer 可在 evidence 里写任意 `tail_stdout = "ALL PASS"` 字符串而 helper 不会反查 main HEAD 实测。tail_stdout 真伪验证留待 backlog `infra-P294-closeout-stdout-sha-verification` (sha256-of-stdout + main HEAD re-run 比对) 与 `infra-P294-R4-fail-baseline-cross-check` (FAIL run 的 baseline_tail_stdout 交叉校验)。当前阶段 trust gate 仍由 Reviewer fresh-context 人工对照实测 stdout 把关。
 

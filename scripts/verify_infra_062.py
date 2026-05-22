@@ -67,14 +67,15 @@ LIB = SCRIPTS / "_verify_lib.py"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_baseline_head_echo_present_and_matches,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "524e3edd3e3ef957ccce47f3eae5a8ff908358de16ef88ea080f2e36cd22e4d9"
-EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
+EXPECTED_VERIFY_LIB_FILE_SHA = "ebcec7ec936822801c7d656f9b6de429d2145f74133676ead1dfd860c5addd0d"
+EXPECTED_CLOSEOUT_FUNC_SHA = "99bd10127cd14263d633d3d66bf9a50ea153130d2f2e909781ad5452c909b39d"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
 DOCSTRING_SENTINEL = "INFRA_062_SHA_LOCKS"
@@ -481,6 +482,68 @@ def _enforce_closeout_byte_match() -> None:
 
 
 # ---------------------------------------------------------------------------
+# infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required
+# (phase-42 #1.42): 把 baseline_head_echo 从 dogfood/单 evidence legacy 容差
+# promote 为 P278 hard-required 第 6 信号。真调跨 feature_list 扫描型 helper
+# assert_baseline_head_echo_present_and_matches: 任一 feature 含 echo 字段但
+# 与 closeout_verify.baseline_head_sha 前 7 hex 不一致 → V4_baseline_head_echo_required
+# FAIL (Default-OFF: 缺字段或缺 baseline_sha 走 soft_skipped, 不阻 pre-P286 老 evidence).
+# ---------------------------------------------------------------------------
+def _enforce_baseline_head_echo_required() -> None:
+    """对 feature_list.json 调 assert_baseline_head_echo_present_and_matches,
+    任一 violation → hard FAIL; soft_skipped/enforced_count 写进 detail."""
+    import subprocess as _sp  # noqa: WPS433
+
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_baseline_head_echo_required",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        head = _sp.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(REPO), capture_output=True, text=True, check=False,
+        ).stdout.strip() or None
+    except Exception as e:  # noqa: BLE001
+        head = None
+        _emit(
+            "V4_baseline_head_echo_required",
+            True,
+            f"soft-skip: git HEAD err={e!r}",
+        )
+        return
+    try:
+        result = assert_baseline_head_echo_present_and_matches(feature_list, head)
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_baseline_head_echo_required",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_baseline_head_echo_required",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_baseline_head_echo_required",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -506,6 +569,7 @@ def main() -> int:
     v3_helper_func_sha()
     v4_behavior()
     _enforce_closeout_byte_match()
+    _enforce_baseline_head_echo_required()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]

@@ -10278,7 +10278,7 @@
       "id": "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
       "priority": 1.42,
       "phase": 42,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "在 N (>=5) 个 feature dogfood baseline_head_echo 后 promote 为 P278 hard required",
       "rationale": "infra-P286-followup-round1-reviewer-baseline-head-mismatch 已在 helper 与 verify_infra_077 落地 assert_reviewer_baseline_head_echo + legacy 容差, 并完成首次 dogfood. Reviewer 建议: 当 closeout_verify.reviewer.baseline_head_echo 在 5+ 个真实 closeout feature 自然落地后, 把它从 'optional + legacy graceful skip' 升级为 P278 closeout-verify-trustworthy 的 hard required 字段, 并扩 verify_infra_062 V4 检查.",
