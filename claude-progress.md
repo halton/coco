@@ -6176,3 +6176,17 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - 庆贺: **phase-38 5/5 全部 passing 收官** (1.38 P294-R4 / 2.38 P294-R5 / 3.38 P294-Rx / 4.38 P294-Ry / 5.38 P297)
 - backlog 入账 (1 项): infra-P299-baseline-runs-use-head-env — closeout baseline clone 缺 .venv 应固化"head env 实跑 baseline scripts"写法
 - 持续开发模式: 继续 phase-39 planning
+
+## Session 2026-05-22 — phase-39 planning
+
+- phase-38 5/5 已收官 (main HEAD=b7bf24c), 进入 phase-39 规划
+- 从 backlog (含 P294/P291/P299/P286 等共 110 项) 提升 5 个最有价值 sim-only candidate
+- phase-39 候选 (按 priority 1.39 → 5.39):
+  1. **1.39 infra-P294-closeout-stdout-sha-verification** — closeout evidence tail_stdout 加 sha256 防伪 (helper 在 main HEAD re-run verify 比对 sha256, 杜绝文本伪造)
+  2. **2.39 infra-P291-reviewer-gate-real-or-remove** — V5_reviewer_lgtm_gate 升级为实读 evidence.reviewer_lgtm 或显式标占位 (名实相符)
+  3. **3.39 infra-P299-closeout-verify-trustworthy-helper-passed-checks-field** — helper dict 增 passed_checks 字段, V4 守恒律 passed+failed==total 三量交叉锁
+  4. **4.39 infra-P299-baseline-fail-claim-regex-multiline** — verify_baseline_fail_claims regex 支持跨行 claim, 避免 markdown 折行漏检 (P294-R4 Reviewer finding)
+  5. **5.39 infra-P286-total-nodes-lock** — verify_infra_059 加 EXPECTED_CURRENT_TOTAL_NODES=76 + ratio bound, total/unknown/ratio 三重锁
+- 选取理由: 集中在 verify 机制完备性 / closeout trustworthy 防伪 / cascade 防漏三类 P0-P1; 来源 Reviewer info + Engineer 实跑反思; 5 项独立可串行执行, sim-only 闭环
+- backlog 剩余 105 项 (含 P289/P290/P298 等次要项, 留作 phase-40+)
+- 持续开发模式: 准备开工 #1.39 infra-P294-closeout-stdout-sha-verification
