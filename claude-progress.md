@@ -6456,3 +6456,29 @@ Closeout sub-agent (phase-40 #3.40):
 - **首次 dogfood**: 本 feature 的 closeout evidence 写入 `closeout_verify.reviewer.baseline_head_echo = "9ced8e5"`, 是 P286 修复字段在真实 closeout 中的第一次落地; helper 在 V5 reviewer_lgtm_gate 跑时 helper_ok=True
 - feature_list.json: `infra-P286-followup-round1-reviewer-baseline-head-mismatch` `not_started` → `passing` + 完整 closeout_verify evidence
 - backlog 入账 1 条 (priority=999): `infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required` — 等 5+ feature dogfood 后 promote baseline_head_echo 为 P278 hard required
+
+## Session 2026-05-22 (infra-P286-followup-074-self-main-func-sha-bump Engineer)
+
+Engineer sub-agent (phase-40 #4.40):
+
+- 分支 `feat/infra-P286-followup-074-self-main-func-sha-bump`, base main HEAD `58ab509`
+- 收口 `EXPECTED_SELF_MAIN_FUNC_SHA` 占位字符串 (`__BUMP_ME__`) → 真算 sha256(ast.unparse(main))：
+  - verify_infra_070.py → `a1f4e1b5b5df77600d5cbd4a7eea150ba66e62980d949b6bcce1a1339dd0c6f1`
+  - verify_infra_071.py → `4e7a5205b4c611d28f8c0788ff8d9b74725bb2481b893ec53b0882fb4e7c69ba`
+  - verify_infra_072.py → `c2c699e0762289b286cf6fc44bf3f7e82491fcba04d6f1d5786ae082741f61a7`
+  - verify_infra_073.py → `8b0ac9b322ffaee7b9d1331edeadfef044353d46ae58b3935d95618d99e474e5`
+  - verify_infra_074.py → `80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c6d5563b4e12f2e7`
+  - (扩到 5 个 verify, V4_1 静态扫描发现 071/072/073 也有同样占位 — 一并收口)
+- 新建 `scripts/verify_infra_078.py` (V0×5 / V1 / V2 / V4_1..V4_5 / V5 共 13 checks): 长期防止 `EXPECTED_*_SHA = "<placeholder>"` 形式占位回归
+  - V4_1 ast scan 所有 `scripts/verify_infra_*.py` 顶层 Assign/AnnAssign, name 匹配 `EXPECTED_.*_SHA` value 为 sentinel 视作违规
+  - V4_2/V4_3 真读 070/074 EXPECTED_SELF_MAIN_FUNC_SHA == ast.unparse(main).sha256
+  - V4_4 git grep + 行内 regex 直接 ban 占位赋值
+  - V4_5 合成 fake verify_infra_999.py 含占位赋值 → 扫描应命中 (反模式正向验证)
+  - 注: PLACEHOLDER_SENTINEL 用 split 拼接, 避免本文件 V4_1/V4_4 自我误报
+- 反模式 mutant 实验 (本地临时改动, 立即 restore):
+  - 070 EXPECTED_SELF_MAIN_FUNC_SHA → placeholder: V4_1/V4_2/V4_4 三连 FAIL ✓
+  - 074 EXPECTED_SELF_MAIN_FUNC_SHA → placeholder: V4_1/V4_3/V4_4 三连 FAIL ✓
+  - V4_5 synthetic placeholder hit: yes ✓
+- cascade 评估: 070/071/072/073/074 的 main_func sha 未变 (main 函数体不引用顶层常量值, 只引用名字); 其他文件无人引用 070-074 的 file sha 作为常量; `dump_v4_sha_graph.py` 未改, 060 EXPECTED_DUMP_FILE_SHA 无需 bump; 059 total_nodes 容差 81±5, 新增 078 的 EXPECTED 常量未触发越界
+- final HEAD 18 verify (078/077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034) + `./init.sh` smoke 全 rc=0
+- 占位收口前后对比: V4_1 first run offending=[071,072,073,078] → after bump offending=[] (078 自身在最后一刻填入真值)
