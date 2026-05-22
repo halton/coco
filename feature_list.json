@@ -12022,17 +12022,6 @@
       "acceptance": "决定 backfill 45 violations 或加 grace_period 后 promote 062 emit→bool(result['ok'])"
     },
     {
-      "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
-      "area": "infra",
-      "title": "promote 062 V4_closeout_verify_runs_shape emit→bool(result['ok']) 真硬",
-      "rationale": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，扫到 167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
-      "description": "phase-44 #3.44 引入 V4_closeout_verify_runs_shape soft emit=True，167 historic violations。本 backlog 跟踪 emit→bool(result['ok']) 真硬 promote 前的 backfill / 宽限期决策。",
-      "acceptance": "决定 backfill 167 violations 或加 grace_period 后 promote 062 emit→bool(result['ok'])"
-    },
-    {
       "id": "infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool",
       "priority": 999,
       "phase": null,
@@ -12120,7 +12109,7 @@
             {
               "name": "verify_infra_081-091 (11 verifies)",
               "status": "PASS",
-              "tail_stdout": "081/082/083/084/085/086/087/088/089/090/091 each [SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "verify_infra_081/082/083/084/085/086/087/088/089/090/091 each [SUMMARY] ALL PASS (14 checks)"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: publish ok entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -12130,11 +12119,24 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-45 #1.45 062 V4_closeout_verify_runs_shape emit True→bool(result['ok']) 真硬 promote + grace_period 17 historic features 设计干净；helper 用 per-feature violation 暂存+grace_set 覆盖判定吞掉违规、ok 由最终 violations 决定；062/092/081-091/smoke 全 PASS；066/072/074/079 pre-existing baseline 已确认与本 feature 无关；mutation (a) strip 1 grace 项触发 V4 hard FAIL violations=11；mutation (b) 注入 enforce-set 内 fake 违规触发 V4 hard FAIL violations=1，两轮还原后 ALL PASS。",
-            "checks_run": ["diff afaf47b..0e612b7", "062 ALL PASS 27 grace_skipped=17", "092 13/14 V5 pending", "081-091 ALL PASS", "smoke PASS", "baseline 066/072/074/079 at afaf47b FAIL 复现", "mutation (a) grace-strip V4 hard FAIL violations=11 restore PASS", "mutation (b) inject violator V4 hard FAIL violations=1 restore PASS"],
+            "checks_run": [
+              "diff afaf47b..0e612b7",
+              "062 ALL PASS 27 grace_skipped=17",
+              "092 13/14 V5 pending",
+              "081-091 ALL PASS",
+              "smoke PASS",
+              "baseline 066/072/074/079 at afaf47b FAIL 复现",
+              "mutation (a) grace-strip V4 hard FAIL violations=11 restore PASS",
+              "mutation (b) inject violator V4 hard FAIL violations=1 restore PASS"
+            ],
             "findings": {
               "P0": [],
               "P1": [],
-              "P2": ["092 V4_5 mutant 仅文本计数；非阻断", "V4_2 promote 检查依赖存在任一 promoted _emit；V4_3/V4_4 + V1 self sha 兜底风险低", "17 项 grace_period graduate 建议入 backlog"]
+              "P2": [
+                "092 V4_5 mutant 仅文本计数；非阻断",
+                "V4_2 promote 检查依赖存在任一 promoted _emit；V4_3/V4_4 + V1 self sha 兜底风险低",
+                "17 项 grace_period graduate 建议入 backlog"
+              ]
             }
           }
         }
