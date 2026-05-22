@@ -6318,3 +6318,62 @@ Commit: 1b8285e (chore(phase-40): planning — 5 candidates)
 Push: 403 personal fork 权限失败, 按规则忽略继续, main HEAD post-commit local=1b8285e
 
 下一步: 立即派 priority 1.4 infra-P299-engineer-report-vs-impl-trustworthy Engineer sub-agent。
+
+---
+
+## Session 2026/05/22 (P299 Engineer 实施)
+
+**phase-40 #1.40 infra-P299-engineer-report-vs-impl-trustworthy Engineer 子任务完成 (待 Reviewer + Closeout)**
+
+- Branch: `feat/infra-P299-engineer-report-vs-impl-trustworthy`
+- pre HEAD: `12079bf` (main, phase-40 planning)
+- final HEAD (feat): `65b34de`
+- 改动汇总: 16 files (+701 / -13)
+
+**核心改动**:
+- `scripts/_verify_lib.py`: 加 `assert_report_matches_closeout_runs(report_obj, repo_root, main_head_sha, tail_chars=500, timeout_per_script=60)` (export 到 __all__)。算法与 P294 `verify_evidence_tail_stdout_sha` 同口径 (utf-8 last N chars + sha256 + detached worktree finally cleanup), 但 input schema 是 `verify_runs: [{round, scripts: {<name>: {rc, tail_stdout, status}}}, ...]`, 多 round, 额外 byte-cmp rc.
+- `scripts/verify_infra_075.py` 新建 15 checks (V0×5 / V1 / V2 / V3 / V4×6 / V5)。V4 用真造 mini git repo + 真 subprocess.run helper 跑出 byte-match (ok=True), byte-mismatch (sha 不等), rc-mismatch (rc=1 实跑 vs rc=0 claim), invalid sha 四组反证。**V1 EXPECTED_SELF_MAIN_FUNC_SHA = `0fca2e2a...` 真算值, 禁 __BUMP_ME__** (P299 硬要求, 075 V1 实现里也加了 placeholder 即 FAIL 的强约束代码路径).
+- `scripts/dump_v4_sha_graph.py`: `_PER_FILE_LOCKS` 加 075 两条 entry.
+
+**SHA 演进**:
+- `_verify_lib.py`: `79bdbb3a...` → `5647e741...`
+- `dump_v4_sha_graph.py`: `a952874d...` → `010387f4...`
+- `verify_infra_059.py`: `8997cff7...` → `1c1cd4fa...` (因 lib sha bump)
+- 075 self main func sha: `0fca2e2aed12e99e1e4768048bf6edded4967ad2eb79f6223c0c4978cc307e69`
+- 075 EXPECTED_HELPER_FUNC_SHA: `6578542d1b17fe12f2d2e98a598701192c1f9b2cc9fa3be185d4d4f00fad2894`
+
+**Cascade bumps** (共 13 个 verify 文件):
+- lib sha bump (79bdbb3a → 5647e741): 059/062/063/065/066/067/068/070/071/072/073 (11 files)
+- 060 EXPECTED_DUMP_FILE_SHA bump
+- 074 EXPECTED_VERIFY_059_FILE_SHA bump
+
+**Final HEAD `65b34de` 实跑结果** (raw tail SUMMARY 行):
+- verify_infra_059: ALL PASS (18 checks)
+- verify_infra_060: ALL PASS (14 checks)
+- verify_infra_062: ALL PASS (17 checks)
+- verify_infra_063: ALL PASS (20 checks)
+- verify_infra_065: ALL PASS (13 checks)
+- verify_infra_066: ALL PASS (14 checks)
+- verify_infra_067: ALL PASS (18 checks)
+- verify_infra_068: ALL PASS (13 checks)
+- verify_infra_070: ALL PASS (15 checks)
+- verify_infra_071: ALL PASS (14 checks)
+- verify_infra_072: ALL PASS (14 checks)
+- verify_infra_073: ALL PASS (14 checks)
+- verify_infra_074: ALL PASS (15 checks)
+- verify_infra_075: ALL PASS (15 checks)
+- ./init.sh smoke: PASS (wake-word / power-state / config / publish 四个 stage 全 ok)
+
+**反模式实验 (V4 mutant 反证, 真跑 in-process 真 helper, 不靠 tmp-dir 缺失伪造)**:
+- V4_3 byte-match: ok=True, matched=1, checked=1, offending=[]
+- V4_4 byte-mismatch: ok=False, offending=[{claimed_sha=cd61cf8c, actual_sha=d6c60561, rc 相同}]
+- V4_5 rc-mismatch (mini repo `sys.exit(1)`, report claim rc=0): ok=False, offending=[{sha 相同, claimed_rc=0, actual_rc=1}]
+- V4_6 invalid sha (deadbeef...): ok=False, error="main_head_sha invalid: ... fatal: Needed a single revision"
+
+**Push**:
+- `git push origin feat/infra-P299-engineer-report-vs-impl-trustworthy`: rc=128, "Permission to halton/coco.git denied to haltonhuo_microsoft. fatal: ... 403". 按 CLAUDE.md 规则忽略, 不重试。
+
+**Spec 决策记录**:
+phase-40 planning 文档的 P299 description 提到的方案是"cross-check evidence 内 engineer_runs[].tail_stdout_sha256 vs closeout_verify.verify_runs[same script].tail_stdout_sha256", 但本 Engineer 任务 prompt (最新 spec) 改为"真重跑 + byte-match actual_tail sha"路径 (防伪力度更强, evidence 不依赖 engineer 自报 sha 字段)。Engineer 按 prompt 实施。两套方案不互斥, planning 中 cross-check 路径可作 V4 future expansion (本次 V4_3/4/5 已覆盖 byte+rc 主路径)。
+
+下一步: 派 Reviewer sub-agent fresh-context 评审 -> Closeout sub-agent (含 verify_infra_062 closeout_verify trustworthy 校验)。
