@@ -7768,67 +7768,78 @@
               "script": "scripts/verify_infra_034.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=205\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=116; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0",
-              "tail_stdout_sha256": "6e1463a308d4c35c818d6fc86a5d7946a012f1017420235853232b7790cf57dd"
+              "tail_stdout_sha256": "6e1463a308d4c35c818d6fc86a5d7946a012f1017420235853232b7790cf57dd",
+              "name": "verify_run_0"
             },
             {
               "script": "scripts/verify_infra_060.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
-              "tail_stdout_sha256": "abe6a8b34c586d19a10793e7d2a28882e4d471ee076542311910a5e09d9a5408"
+              "tail_stdout_sha256": "abe6a8b34c586d19a10793e7d2a28882e4d471ee076542311910a5e09d9a5408",
+              "name": "verify_run_1"
             },
             {
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_062][SUMMARY] ALL PASS (17 checks)",
-              "tail_stdout_sha256": "00d9a018e02e8669573f85d461b21ebe6c7b75043b43c81c54a0052f667eabc4"
+              "tail_stdout_sha256": "00d9a018e02e8669573f85d461b21ebe6c7b75043b43c81c54a0052f667eabc4",
+              "name": "verify_run_2"
             },
             {
               "script": "scripts/verify_infra_063.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_063][PASS] V4.5_canary_stdout_has_expected_actual expect 'expected=' and 'actual' substrings in canary stdout\n[verify_infra_063][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_063][SUMMARY] ALL PASS (20 checks)",
-              "tail_stdout_sha256": "ea1f00e764e97c8b05c0493c465d85f817250f89988f15ae55b7ef6c36ae359c"
+              "tail_stdout_sha256": "ea1f00e764e97c8b05c0493c465d85f817250f89988f15ae55b7ef6c36ae359c",
+              "name": "verify_run_3"
             },
             {
               "script": "scripts/verify_infra_065.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_065][PASS] V4.5_mixed_claims_partial_contradiction got total=2 verified=1 contradicted=1 err=None\n[verify_infra_065][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_065][SUMMARY] ALL PASS (13 checks)",
-              "tail_stdout_sha256": "d27c9212f96127686729d321b0ec21f17302af122d8422daeb9c4e972ff7f7c2"
+              "tail_stdout_sha256": "d27c9212f96127686729d321b0ec21f17302af122d8422daeb9c4e972ff7f7c2",
+              "name": "verify_run_4"
             },
             {
               "script": "scripts/verify_infra_066.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_066][PASS] V4_5_total_checks_derived_not_literal assigns=1 literal_int_lines=[]\n[verify_infra_066][PASS] V5_reviewer_lgtm_gate P294-R5 closeout 须 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_066][SUMMARY] ALL PASS (14 checks)",
-              "tail_stdout_sha256": "8d3bb5e84a499376c2d9c3201f3ca83a93498a2801b2f512220e9d90b6c13981"
+              "tail_stdout_sha256": "8d3bb5e84a499376c2d9c3201f3ca83a93498a2801b2f512220e9d90b6c13981",
+              "name": "verify_run_5"
             },
             {
               "script": "scripts/verify_infra_067.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_067][PASS] V4_5_all_scripts_have_exit_path missing_count=0 list=[]\n[verify_infra_067][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_067][SUMMARY] ALL PASS (18 checks)",
-              "tail_stdout_sha256": "d45aa7c1ce3b8463111b1b987a3fb06f1a906a2ef66345b33dc6869784313519"
+              "tail_stdout_sha256": "d45aa7c1ce3b8463111b1b987a3fb06f1a906a2ef66345b33dc6869784313519",
+              "name": "verify_run_6"
             },
             {
               "script": "scripts/verify_infra_068.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_068][PASS] V4_5_compound_all_signals signal_count=4 min_met=True flags=[]\n[verify_infra_068][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_068][SUMMARY] ALL PASS (13 checks)",
-              "tail_stdout_sha256": "853187e9bce5de8d8690546ea3fb6a46bbe73f9826cef01dff8b063dd6abc8ae"
+              "tail_stdout_sha256": "853187e9bce5de8d8690546ea3fb6a46bbe73f9826cef01dff8b063dd6abc8ae",
+              "name": "verify_run_7"
             },
             {
               "script": "scripts/verify_infra_069.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_069][PASS] V4_2_canary_const_matches_helper const=5d611a08c7d9a7df cli=5d611a08c7d9a7df match=True\n[verify_infra_069][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_069][SUMMARY] ALL PASS (10 checks)",
-              "tail_stdout_sha256": "5db6ce1f4040a3e64eefd5d3c92daf31b95f0dddc93181a0098f3aa71ba2a1e2"
+              "tail_stdout_sha256": "5db6ce1f4040a3e64eefd5d3c92daf31b95f0dddc93181a0098f3aa71ba2a1e2",
+              "name": "verify_run_8"
             },
             {
               "script": "scripts/verify_infra_070.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_070][PASS] V4_5_invalid_main_head_sha ok=False error=\"main_head_sha invalid: '0000000000000000000000000000000000000000' (git rev-parse stderr='fatal: Needed a single revision')\"\n[verify_infra_070][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
-              "tail_stdout_sha256": "5e6393a10973fd2eb94ac8025cbe47b34f6f5ab38ee6a286ff0cfaa8629055db"
+              "tail_stdout_sha256": "5e6393a10973fd2eb94ac8025cbe47b34f6f5ab38ee6a286ff0cfaa8629055db",
+              "name": "verify_run_9"
             },
             {
               "script": "scripts/verify_infra_071.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_071][PASS] V4_5_feature_not_found ok=False reason=\"feature id='does-not-exist' not found in feature_list.json\"\n[verify_infra_071][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_071][SUMMARY] ALL PASS (14 checks)",
-              "tail_stdout_sha256": "d161ce120c0986987c3b9e969ad702b85b3aec7b4fced7980185f62bce5b7962"
+              "tail_stdout_sha256": "d161ce120c0986987c3b9e969ad702b85b3aec7b4fced7980185f62bce5b7962",
+              "name": "verify_run_10"
             }
           ],
           "smoke_tail_stdout": "  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -7863,67 +7874,78 @@
               "script": "scripts/verify_infra_034.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_034] summary total=53 failed=0",
-              "tail_stdout_sha256": "39805d865c5a8b3d35dc3ebed947d08b1b9365637df713d0c1d8aee71274c3e4"
+              "tail_stdout_sha256": "39805d865c5a8b3d35dc3ebed947d08b1b9365637df713d0c1d8aee71274c3e4",
+              "name": "verify_run_0"
             },
             {
               "script": "scripts/verify_infra_060.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
-              "tail_stdout_sha256": "0bd26b593e6aec9beed320a5a520915398f6296faf83cedb5221c5ea2553145e"
+              "tail_stdout_sha256": "0bd26b593e6aec9beed320a5a520915398f6296faf83cedb5221c5ea2553145e",
+              "name": "verify_run_1"
             },
             {
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)",
-              "tail_stdout_sha256": "6e9111ce0392fb1e69d40ed49037eb20d1f5cc8168e615ce66fadf384233f9aa"
+              "tail_stdout_sha256": "6e9111ce0392fb1e69d40ed49037eb20d1f5cc8168e615ce66fadf384233f9aa",
+              "name": "verify_run_2"
             },
             {
               "script": "scripts/verify_infra_063.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)",
-              "tail_stdout_sha256": "998ff9c31bd4fc3188389d51c77670dc196994b5a761e6ea45f241c44cd6ba23"
+              "tail_stdout_sha256": "998ff9c31bd4fc3188389d51c77670dc196994b5a761e6ea45f241c44cd6ba23",
+              "name": "verify_run_3"
             },
             {
               "script": "scripts/verify_infra_065.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)",
-              "tail_stdout_sha256": "ba2882f387939a7e647c070c883daca525a7f2e8220249cffe9d2f5013657dcc"
+              "tail_stdout_sha256": "ba2882f387939a7e647c070c883daca525a7f2e8220249cffe9d2f5013657dcc",
+              "name": "verify_run_4"
             },
             {
               "script": "scripts/verify_infra_066.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)",
-              "tail_stdout_sha256": "3143caba8259603fa6aa5c17d0abad874339f615ef5dff769464545563661f38"
+              "tail_stdout_sha256": "3143caba8259603fa6aa5c17d0abad874339f615ef5dff769464545563661f38",
+              "name": "verify_run_5"
             },
             {
               "script": "scripts/verify_infra_067.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)",
-              "tail_stdout_sha256": "5d730a3a4b2dc2423e2568e0d525272944eed2ff04daffb1c26518da645449a2"
+              "tail_stdout_sha256": "5d730a3a4b2dc2423e2568e0d525272944eed2ff04daffb1c26518da645449a2",
+              "name": "verify_run_6"
             },
             {
               "script": "scripts/verify_infra_068.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)",
-              "tail_stdout_sha256": "1265305545a98eca6198c9eae7fa22a726f41c1a5f8695c9705d8ad40d26377a"
+              "tail_stdout_sha256": "1265305545a98eca6198c9eae7fa22a726f41c1a5f8695c9705d8ad40d26377a",
+              "name": "verify_run_7"
             },
             {
               "script": "scripts/verify_infra_069.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_069][SUMMARY] ALL PASS (10 checks)",
-              "tail_stdout_sha256": "71b9d29aa3f3747f00b2cd366e6aac3acccb168bc52bcdef0633228196b7fe51"
+              "tail_stdout_sha256": "71b9d29aa3f3747f00b2cd366e6aac3acccb168bc52bcdef0633228196b7fe51",
+              "name": "verify_run_8"
             },
             {
               "script": "scripts/verify_infra_070.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
-              "tail_stdout_sha256": "25c65299c09a50a0f70f94490fd99dc4d5bb62a57bc3e165ffd2c54bc6adcaec"
+              "tail_stdout_sha256": "25c65299c09a50a0f70f94490fd99dc4d5bb62a57bc3e165ffd2c54bc6adcaec",
+              "name": "verify_run_9"
             },
             {
               "script": "./init.sh (smoke)",
               "status": "PASS",
               "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
-              "tail_stdout_sha256": "84a62223bdde440158fcf5d7d67d28764d45d94b0aa222a46c0fd1c66d4387b6"
+              "tail_stdout_sha256": "84a62223bdde440158fcf5d7d67d28764d45d94b0aa222a46c0fd1c66d4387b6",
+              "name": "verify_run_10"
             }
           ],
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -8904,7 +8926,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_0",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_0 status=FAIL]"
             },
             {
               "round": 2,
@@ -9005,7 +9031,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_1",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_1 status=FAIL]"
             },
             {
               "round": 3,
@@ -9106,7 +9136,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_2",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_2 status=FAIL]"
             },
             {
               "round": "post_merge",
@@ -9207,7 +9241,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_3",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_3 status=FAIL]"
             }
           ],
           "reviewer": {
@@ -9510,7 +9548,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_0",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_0 status=FAIL]"
             },
             {
               "round": 2,
@@ -9605,7 +9647,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_1",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_1 status=FAIL]"
             },
             {
               "round": 3,
@@ -9700,7 +9746,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_2",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_2 status=FAIL]"
             },
             {
               "round": "post_merge",
@@ -9796,7 +9846,11 @@
                   "status": "ALL PASS",
                   "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
                 }
-              ]
+              ],
+              "name": "verify_run_3",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_3 status=FAIL]"
             }
           ],
           "reviewer": {
@@ -9851,58 +9905,68 @@
             {
               "verify": "verify_infra_081",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_081][PASS] V4_5_verify_062_file_sha got=e9173c1c79fb9d63 expect=e9173c1c79fb9d63\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_081][PASS] V4_5_verify_062_file_sha got=e9173c1c79fb9d63 expect=e9173c1c79fb9d63\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=164479b166c3\n[verify_infra_062][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=164479b166c3\n[verify_infra_062][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_034",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=55\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=215\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=149; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0"
+              "tail_stdout": "[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=55\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=215\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=149; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_080",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[]\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit ok=True\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[]\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit ok=True\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_079",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True\n[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True\n[verify_infra_079][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_5"
             },
             {
               "verify": "verify_infra_074",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True\n[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+              "tail_stdout": "[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True\n[verify_infra_074][SUMMARY] ALL PASS (16 checks)",
+              "name": "verify_run_6"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "890002c",
-              "baseline_tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_7"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
               "pre_existing_baseline_sha": "890002c",
-              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "name": "verify_run_8"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=3 missing=0\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
               "pre_existing_baseline_sha": "890002c",
-              "baseline_tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=2 missing=0\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=2 missing=0\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "name": "verify_run_9"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -9940,69 +10004,80 @@
               "status": "FAIL",
               "tail_stdout": "[verify_infra_083][PASS] V0_repo_root_exists path=/Users/halton/work/coco\n[verify_infra_083][PASS] V0_verify_062_exists path=/Users/halton/work/coco/scripts/verify_infra_062.py\n[verify_infra_083][PASS] V0_classifier_name_nonempty helper=_classify_closeout_tail_anchor\n[verify_infra_083][PASS] V0_enforcer_name_nonempty enforcer=_enforce_closeout_byte_match\n[verify_infra_083][PASS] V0_docstring_sentinel sentinel=INFRA_083_SHA_LOCKS\n[verify_infra_083][PASS] V1_self_main_func_sha got=83fba4707db43416 expect=83fba4707db43416\n[verify_infra_083][PASS] V2_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_083][PASS] V3_classifier_func_sha got=1055318f4513bbb6 expect=1055318f4513bbb6\n[verify_infra_083][PASS] V4_1_verify_062_calls_classifier call_count=1 sites=[(475, '_enforce_closeout_byte_match')]\n[verify_infra_083][PASS] V4_2_call_in_main_chain main_calls_enforcer=True enforcer_calls_classifier=True\n[verify_infra_083][PASS] V4_3_classifier_behavior_correct enforced_ok='enforced_ok' violation='violation' skip_smoke='soft_skip' skip_empty='soft_skip'\n[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=175 enforced=114 soft_skipped=61 violations=0 fire=True fired_features=8'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][FAIL] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run ok=False reason=\"feature 'infra-P299-followup2-enable-byte-match-real-run' has no 'evidence' dict (got type=NoneType)\"\n[verify_infra_083][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "(verify_infra_083 did not exist in baseline 5e512aa; FAIL on main is expected pre-closeout because evidence not yet written — will PASS post-B-stage)"
+              "baseline_tail_stdout": "(verify_infra_083 did not exist in baseline 5e512aa; FAIL on main is expected pre-closeout because evidence not yet written — will PASS post-B-stage)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V1_self_checker_func_sha got=66a2cdb26e7ef571 expect=66a2cdb26e7ef571\n[verify_infra_062][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_062][PASS] V3_helper_func_sha got=d190174c24b26494 expect=d190174c24b26494\n[verify_infra_062][PASS] V4_sample_A_compliant_true r_a={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}\n[verify_infra_062][PASS] V4_sample_B_no_main_head_false failed_reasons=['closeout_verify.main_head_sha invalid (got None, expect >=7 hex chars)']\n[verify_infra_062][PASS] V4_sample_C_empty_runs_false failed_reasons=['closeout_verify.verify_runs missing or empty']\n[verify_infra_062][PASS] V4_sample_D_FAIL_no_baseline_false failed_reasons=['verify_runs[0] FAIL lacks pre_existing_baseline_sha (got None)', 'verify_runs[0] FAIL lacks baseline_tail_stdout']\n[verify_infra_062][PASS] V4_sample_E_reviewer_not_fresh_false failed_reasons=[\"reviewer not compliant: kind='main_context_self_review' lgtm=True (expect kind='sub_agent_fresh_context' and lgtm=True)\"]\n[verify_infra_062][PASS] V4_sample_F_FAIL_with_baseline_true r_f={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}\n[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=[\"closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)\"]\n[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=175 enforced=114 soft_skipped=61 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=16 enforced=6 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V1_self_checker_func_sha got=66a2cdb26e7ef571 expect=66a2cdb26e7ef571\n[verify_infra_062][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_062][PASS] V3_helper_func_sha got=d190174c24b26494 expect=d190174c24b26494\n[verify_infra_062][PASS] V4_sample_A_compliant_true r_a={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}\n[verify_infra_062][PASS] V4_sample_B_no_main_head_false failed_reasons=['closeout_verify.main_head_sha invalid (got None, expect >=7 hex chars)']\n[verify_infra_062][PASS] V4_sample_C_empty_runs_false failed_reasons=['closeout_verify.verify_runs missing or empty']\n[verify_infra_062][PASS] V4_sample_D_FAIL_no_baseline_false failed_reasons=['verify_runs[0] FAIL lacks pre_existing_baseline_sha (got None)', 'verify_runs[0] FAIL lacks baseline_tail_stdout']\n[verify_infra_062][PASS] V4_sample_E_reviewer_not_fresh_false failed_reasons=[\"reviewer not compliant: kind='main_context_self_review' lgtm=True (expect kind='sub_agent_fresh_context' and lgtm=True)\"]\n[verify_infra_062][PASS] V4_sample_F_FAIL_with_baseline_true r_f={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}\n[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=[\"closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)\"]\n[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=175 enforced=114 soft_skipped=61 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=16 enforced=6 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=ddfc2d331cd1fef7 expect=ddfc2d331cd1fef7\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=20459\n[verify_infra_060][PASS] V4_real_unknown_count_eq_one unknown_count=1 expect=1 ids=['unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=ddfc2d331cd1fef7 expect=ddfc2d331cd1fef7\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=20459\n[verify_infra_060][PASS] V4_real_unknown_count_eq_one unknown_count=1 expect=1 ids=['unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_074",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_074][PASS] V0_const_059_file_sha_hex64 val=6297a65a5755f60e\n[verify_infra_074][PASS] V0_const_059_main_sha_hex64 val=278578c2c220870f\n[verify_infra_074][PASS] V0_const_name_total_nodes val=EXPECTED_CURRENT_TOTAL_NODES\n[verify_infra_074][PASS] V0_const_name_tolerance val=TOTAL_NODES_TOLERANCE\n[verify_infra_074][PASS] V0_docstring_sentinel sentinel=INFRA_074_SHA_LOCKS\n[verify_infra_074][PASS] V1_self_main_func_sha got=80c710deae78cb54 expect=80c710deae78cb54\n[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e\n[verify_infra_074][PASS] V3_059_main_func_sha got=278578c2c220870f expect=278578c2c220870f\n[verify_infra_074][PASS] V4_1_const_EXPECTED_CURRENT_TOTAL_NODES_present value=86\n[verify_infra_074][PASS] V4_2_const_value_eq_truth value=86 truth=86\n[verify_infra_074][PASS] V4_3_const_TOTAL_NODES_TOLERANCE_present value=10\n[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\\n[verify_infra_059][SUMMARY] ALL PASS (18 checks)'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_074][PASS] V0_const_059_file_sha_hex64 val=6297a65a5755f60e\n[verify_infra_074][PASS] V0_const_059_main_sha_hex64 val=278578c2c220870f\n[verify_infra_074][PASS] V0_const_name_total_nodes val=EXPECTED_CURRENT_TOTAL_NODES\n[verify_infra_074][PASS] V0_const_name_tolerance val=TOTAL_NODES_TOLERANCE\n[verify_infra_074][PASS] V0_docstring_sentinel sentinel=INFRA_074_SHA_LOCKS\n[verify_infra_074][PASS] V1_self_main_func_sha got=80c710deae78cb54 expect=80c710deae78cb54\n[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e\n[verify_infra_074][PASS] V3_059_main_func_sha got=278578c2c220870f expect=278578c2c220870f\n[verify_infra_074][PASS] V4_1_const_EXPECTED_CURRENT_TOTAL_NODES_present value=86\n[verify_infra_074][PASS] V4_2_const_value_eq_truth value=86 truth=86\n[verify_infra_074][PASS] V4_3_const_TOTAL_NODES_TOLERANCE_present value=10\n[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\\n[verify_infra_059][SUMMARY] ALL PASS (18 checks)'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_074][PASS] V0_const_059_file_sha_hex64 val=6297a65a5755f60e\n[verify_infra_074][PASS] V0_const_059_main_sha_hex64 val=278578c2c220870f\n[verify_infra_074][PASS] V0_const_name_total_nodes val=EXPECTED_CURRENT_TOTAL_NODES\n[verify_infra_074][PASS] V0_const_name_tolerance val=TOTAL_NODES_TOLERANCE\n[verify_infra_074][PASS] V0_docstring_sentinel sentinel=INFRA_074_SHA_LOCKS\n[verify_infra_074][PASS] V1_self_main_func_sha got=80c710deae78cb54 expect=80c710deae78cb54\n[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e\n[verify_infra_074][PASS] V3_059_main_func_sha got=278578c2c220870f expect=278578c2c220870f\n[verify_infra_074][PASS] V4_1_const_EXPECTED_CURRENT_TOTAL_NODES_present value=86\n[verify_infra_074][PASS] V4_2_const_value_eq_truth value=86 truth=86\n[verify_infra_074][PASS] V4_3_const_TOTAL_NODES_TOLERANCE_present value=10\n[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\\n[verify_infra_059][SUMMARY] ALL PASS (18 checks)'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_059",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_059][PASS] V1_self_checker_func_sha got=eb87f84607599b54 expect=eb87f84607599b54\n[verify_infra_059][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_059][PASS] V3_helper_func_sha got=fd311e570696f415 expect=fd311e570696f415\n[verify_infra_059][PASS] V4_real_dump_run stdout_bytes=20459\n[verify_infra_059][PASS] V4_real_nodes_parsed node_count=90\n[verify_infra_059][PASS] V4_real_within_bound within_bound=True unknown_count=1 max_allowed=1\n[verify_infra_059][PASS] V4_real_count_eq_current unknown_count=1 expect=1\n[verify_infra_059][PASS] V4_real_total_nodes_ge_unknown total_nodes=90 unknown_count=1\n[verify_infra_059][PASS] V4_real_total_nodes_within_tolerance total_nodes=90 expect=86 tolerance=±10\n[verify_infra_059][PASS] V4_tmp_positive_all_classified within_bound=True unknown_count=0 unknown_ids=[]\n[verify_infra_059][PASS] V4_tmp_boundary_eq_max within_bound=True unknown_count=1 unknown_ids=['x']\n[verify_infra_059][PASS] V4_tmp_mutant_excess_detected within_bound=False unknown_count=2 unknown_ids=['x', 'y']\n[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_059][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_059][PASS] V1_self_checker_func_sha got=eb87f84607599b54 expect=eb87f84607599b54\n[verify_infra_059][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_059][PASS] V3_helper_func_sha got=fd311e570696f415 expect=fd311e570696f415\n[verify_infra_059][PASS] V4_real_dump_run stdout_bytes=20459\n[verify_infra_059][PASS] V4_real_nodes_parsed node_count=90\n[verify_infra_059][PASS] V4_real_within_bound within_bound=True unknown_count=1 max_allowed=1\n[verify_infra_059][PASS] V4_real_count_eq_current unknown_count=1 expect=1\n[verify_infra_059][PASS] V4_real_total_nodes_ge_unknown total_nodes=90 unknown_count=1\n[verify_infra_059][PASS] V4_real_total_nodes_within_tolerance total_nodes=90 expect=86 tolerance=±10\n[verify_infra_059][PASS] V4_tmp_positive_all_classified within_bound=True unknown_count=0 unknown_ids=[]\n[verify_infra_059][PASS] V4_tmp_boundary_eq_max within_bound=True unknown_count=1 unknown_ids=['x']\n[verify_infra_059][PASS] V4_tmp_mutant_excess_detected within_bound=False unknown_count=2 unknown_ids=['x', 'y']\n[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_059][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_081",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_081][PASS] V0_repo_root_exists path=/Users/halton/work/coco\n[verify_infra_081][PASS] V0_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_081][PASS] V0_verify_062_exists path=/Users/halton/work/coco/scripts/verify_infra_062.py\n[verify_infra_081][PASS] V0_helper_name_nonempty helper=assert_report_matches_closeout_runs\n[verify_infra_081][PASS] V0_docstring_sentinel sentinel=INFRA_081_SHA_LOCKS\n[verify_infra_081][PASS] V1_self_main_func_sha got=110572e4de22344c expect=110572e4de22344c\n[verify_infra_081][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_081][PASS] V3_helper_func_sha got=6578542d1b17fe12 expect=6578542d1b17fe12\n[verify_infra_081][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(541, '_enforce_closeout_byte_match')]\n[verify_infra_081][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_081][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['_report_obj']\n[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=5 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_081][PASS] V0_repo_root_exists path=/Users/halton/work/coco\n[verify_infra_081][PASS] V0_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_081][PASS] V0_verify_062_exists path=/Users/halton/work/coco/scripts/verify_infra_062.py\n[verify_infra_081][PASS] V0_helper_name_nonempty helper=assert_report_matches_closeout_runs\n[verify_infra_081][PASS] V0_docstring_sentinel sentinel=INFRA_081_SHA_LOCKS\n[verify_infra_081][PASS] V1_self_main_func_sha got=110572e4de22344c expect=110572e4de22344c\n[verify_infra_081][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_081][PASS] V3_helper_func_sha got=6578542d1b17fe12 expect=6578542d1b17fe12\n[verify_infra_081][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(541, '_enforce_closeout_byte_match')]\n[verify_infra_081][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_081][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['_report_obj']\n[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=5 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_5"
             },
             {
               "verify": "verify_infra_082",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_082][PASS] V0_repo_root_exists path=/Users/halton/work/coco\n[verify_infra_082][PASS] V0_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_082][PASS] V0_verify_062_exists path=/Users/halton/work/coco/scripts/verify_infra_062.py\n[verify_infra_082][PASS] V0_helper_name_nonempty helper=assert_baseline_head_echo_present_and_matches\n[verify_infra_082][PASS] V0_docstring_sentinel sentinel=INFRA_082_SHA_LOCKS\n[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(592, '_enforce_baseline_head_echo_required')]\n[verify_infra_082][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['feature_list']\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_082][PASS] V0_repo_root_exists path=/private/tmp/coco-baseline-5e512aa\n[verify_infra_082][PASS] V0_lib_exists path=/private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_082][PASS] V0_verify_062_exists path=/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_062.py\n[verify_infra_082][PASS] V0_helper_name_nonempty helper=assert_baseline_head_echo_present_and_matches\n[verify_infra_082][PASS] V0_docstring_sentinel sentinel=INFRA_082_SHA_LOCKS\n[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(519, '_enforce_baseline_head_echo_required')]\n[verify_infra_082][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['feature_list']\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][FAIL] V4_5_verify_062_file_sha got=a2579903b9d743cc expect=99852c4f46b84be4\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 2/14: ['V1_self_main_func_sha', 'V4_5_verify_062_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_082][PASS] V0_repo_root_exists path=/private/tmp/coco-baseline-5e512aa\n[verify_infra_082][PASS] V0_lib_exists path=/private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_082][PASS] V0_verify_062_exists path=/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_062.py\n[verify_infra_082][PASS] V0_helper_name_nonempty helper=assert_baseline_head_echo_present_and_matches\n[verify_infra_082][PASS] V0_docstring_sentinel sentinel=INFRA_082_SHA_LOCKS\n[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=ebcec7ec93682280 expect=ebcec7ec93682280\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(519, '_enforce_baseline_head_echo_required')]\n[verify_infra_082][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['feature_list']\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][FAIL] V4_5_verify_062_file_sha got=a2579903b9d743cc expect=99852c4f46b84be4\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 2/14: ['V1_self_main_func_sha', 'V4_5_verify_062_file_sha']",
+              "name": "verify_run_6"
             },
             {
               "verify": "verify_infra_034",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_interact_036.py_sha got=230b07110ab2897e expect=230b07110ab2897e\n[verify_infra_034][PASS] V4_scripts/verify_interact_037.py_sha got=e07db83b106f86f6 expect=e07db83b106f86f6\n[verify_infra_034][PASS] V4_scripts/verify_robot_023.py_sha got=b73417f68d3f88ca expect=b73417f68d3f88ca\n[verify_infra_034][PASS] V4_scripts/verify_robot_024.py_sha got=7999d0364d1273a5 expect=7999d0364d1273a5\n[verify_infra_034][PASS] V4_scripts/verify_robot_025.py_sha got=28ae86d1388d8f55 expect=28ae86d1388d8f55\n[verify_infra_034][PASS] V4_scripts/verify_robot_026.py_sha got=c231186ec1b6983e expect=c231186ec1b6983e\n[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=56\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=217\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=2; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=51fb9bdf4923)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_interact_036.py_sha got=230b07110ab2897e expect=230b07110ab2897e\n[verify_infra_034][PASS] V4_scripts/verify_interact_037.py_sha got=e07db83b106f86f6 expect=e07db83b106f86f6\n[verify_infra_034][PASS] V4_scripts/verify_robot_023.py_sha got=b73417f68d3f88ca expect=b73417f68d3f88ca\n[verify_infra_034][PASS] V4_scripts/verify_robot_024.py_sha got=7999d0364d1273a5 expect=7999d0364d1273a5\n[verify_infra_034][PASS] V4_scripts/verify_robot_025.py_sha got=28ae86d1388d8f55 expect=28ae86d1388d8f55\n[verify_infra_034][PASS] V4_scripts/verify_robot_026.py_sha got=c231186ec1b6983e expect=c231186ec1b6983e\n[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=56\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=216\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=3; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_081.py:83 EXPECTED_VERIFY_062_FILE_SHA=99852c4f46b84be4 (id=062; live same-id: scripts/verify_infra_062.py=a2579903b9d7) | scripts/verify_infra_082.py:82 EXPECTED_VERIFY_062_FILE_SHA=99852c4f46b84be4 (id=062; live same-id: scripts/verify_infra_062.py=a2579903b9d7)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']"
+              "baseline_tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_interact_036.py_sha got=230b07110ab2897e expect=230b07110ab2897e\n[verify_infra_034][PASS] V4_scripts/verify_interact_037.py_sha got=e07db83b106f86f6 expect=e07db83b106f86f6\n[verify_infra_034][PASS] V4_scripts/verify_robot_023.py_sha got=b73417f68d3f88ca expect=b73417f68d3f88ca\n[verify_infra_034][PASS] V4_scripts/verify_robot_024.py_sha got=7999d0364d1273a5 expect=7999d0364d1273a5\n[verify_infra_034][PASS] V4_scripts/verify_robot_025.py_sha got=28ae86d1388d8f55 expect=28ae86d1388d8f55\n[verify_infra_034][PASS] V4_scripts/verify_robot_026.py_sha got=c231186ec1b6983e expect=c231186ec1b6983e\n[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=56\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=216\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=3; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_081.py:83 EXPECTED_VERIFY_062_FILE_SHA=99852c4f46b84be4 (id=062; live same-id: scripts/verify_infra_062.py=a2579903b9d7) | scripts/verify_infra_082.py:82 EXPECTED_VERIFY_062_FILE_SHA=99852c4f46b84be4 (id=062; live same-id: scripts/verify_infra_062.py=a2579903b9d7)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+              "name": "verify_run_7"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][PASS] V0_verify_lib_exists /Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_037][PASS] V0_func_def_present def func_sha_by_name\n[verify_infra_037][PASS] V0_in_all_export __all__ contains func_sha_by_name\n[verify_infra_037][PASS] V1_docstring_sentinel sentinel=INFRA_037_SHA_LOCKS\n[verify_infra_037][PASS] V1_self_checker_func_sha got=d625d1aeaea5e842 expect=d625d1aeaea5e842\n[verify_infra_037][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=c668f3d46c0b188a expect=c668f3d46c0b188a\n[verify_infra_037][PASS] V3_mutant_detected mut=cc4887fb5d4465ee baseline=9f8b37464dd25d15\n[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_037][PASS] V0_verify_lib_exists /private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_037][PASS] V0_func_def_present def func_sha_by_name\n[verify_infra_037][PASS] V0_in_all_export __all__ contains func_sha_by_name\n[verify_infra_037][PASS] V1_docstring_sentinel sentinel=INFRA_037_SHA_LOCKS\n[verify_infra_037][PASS] V1_self_checker_func_sha got=d625d1aeaea5e842 expect=d625d1aeaea5e842\n[verify_infra_037][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=c668f3d46c0b188a expect=c668f3d46c0b188a\n[verify_infra_037][PASS] V3_mutant_detected mut=e1a99f01bd4e49ed baseline=9f8b37464dd25d15\n[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][PASS] V0_verify_lib_exists /private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_037][PASS] V0_func_def_present def func_sha_by_name\n[verify_infra_037][PASS] V0_in_all_export __all__ contains func_sha_by_name\n[verify_infra_037][PASS] V1_docstring_sentinel sentinel=INFRA_037_SHA_LOCKS\n[verify_infra_037][PASS] V1_self_checker_func_sha got=d625d1aeaea5e842 expect=d625d1aeaea5e842\n[verify_infra_037][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=c668f3d46c0b188a expect=c668f3d46c0b188a\n[verify_infra_037][PASS] V3_mutant_detected mut=e1a99f01bd4e49ed baseline=9f8b37464dd25d15\n[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_8"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_041][FAIL] V2__v6_target_id_func_sha compute err: RuntimeError(\"func '_v6_target_id' not found in /Users/halton/work/coco/scripts/verify_infra_034.py\")\n[verify_infra_041][PASS] V3_mutant_func_sha_diverges real=90e51e7cda18 mutant=e45f14adcf7b\n[verify_infra_041][PASS] V3_mutant_would_break_v2 mutant sha != EXPECTED (V2 锁会检出)\n[verify_infra_041][PASS] V4_load_module verify_infra_034 imported\nTraceback (most recent call last):\n  File \"/Users/halton/work/coco/scripts/verify_infra_041.py\", line 251, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/Users/halton/work/coco/scripts/verify_infra_041.py\", line 240, in main\n    v4_behavior()\n    ~~~~~~~~~~~^^\n  File \"/Users/halton/work/coco/scripts/verify_infra_041.py\", line 207, in v4_behavior\n    tid = mod._v6_target_id(\"scripts/verify_robot_025.py\")\n          ^^^^^^^^^^^^^^^^^\nAttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_041][FAIL] V2__v6_target_id_func_sha compute err: RuntimeError(\"func '_v6_target_id' not found in /private/tmp/coco-baseline-5e512aa/scripts/verify_infra_034.py\")\n[verify_infra_041][PASS] V3_mutant_func_sha_diverges real=90e51e7cda18 mutant=e45f14adcf7b\n[verify_infra_041][PASS] V3_mutant_would_break_v2 mutant sha != EXPECTED (V2 锁会检出)\n[verify_infra_041][PASS] V4_load_module verify_infra_034 imported\nTraceback (most recent call last):\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 251, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 240, in main\n    v4_behavior()\n    ~~~~~~~~~~~^^\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 207, in v4_behavior\n    tid = mod._v6_target_id(\"scripts/verify_robot_025.py\")\n          ^^^^^^^^^^^^^^^^^\nAttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+              "baseline_tail_stdout": "[verify_infra_041][FAIL] V2__v6_target_id_func_sha compute err: RuntimeError(\"func '_v6_target_id' not found in /private/tmp/coco-baseline-5e512aa/scripts/verify_infra_034.py\")\n[verify_infra_041][PASS] V3_mutant_func_sha_diverges real=90e51e7cda18 mutant=e45f14adcf7b\n[verify_infra_041][PASS] V3_mutant_would_break_v2 mutant sha != EXPECTED (V2 锁会检出)\n[verify_infra_041][PASS] V4_load_module verify_infra_034 imported\nTraceback (most recent call last):\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 251, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 240, in main\n    v4_behavior()\n    ~~~~~~~~~~~^^\n  File \"/private/tmp/coco-baseline-5e512aa/scripts/verify_infra_041.py\", line 207, in v4_behavior\n    tid = mod._v6_target_id(\"scripts/verify_robot_025.py\")\n          ^^^^^^^^^^^^^^^^^\nAttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "name": "verify_run_9"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][PASS] V0_verify_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_057][PASS] V0_helper_def_present expect 'def verify_expected_pattern_consistency(' in lib\n[verify_infra_057][PASS] V0_helper_in_all __all__ contains 21 names\n[verify_infra_057][PASS] V1_docstring_sentinel sentinel=INFRA_057_SHA_LOCKS\n[verify_infra_057][PASS] V1_self_checker_func_sha got=3d44c4e07cb404a6 expect=3d44c4e07cb404a6\n[verify_infra_057][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_057][PASS] V3_helper_func_sha got=092041818bd1bcd3 expect=092041818bd1bcd3\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=6 missing=0\n[verify_infra_057][PASS] V4_real_total_ge_30 total=143\n[verify_infra_057][PASS] V4_sample_schema sample_len=5\n[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
               "pre_existing_baseline_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
-              "baseline_tail_stdout": "[verify_infra_057][PASS] V0_verify_lib_exists path=/private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_057][PASS] V0_helper_def_present expect 'def verify_expected_pattern_consistency(' in lib\n[verify_infra_057][PASS] V0_helper_in_all __all__ contains 21 names\n[verify_infra_057][PASS] V1_docstring_sentinel sentinel=INFRA_057_SHA_LOCKS\n[verify_infra_057][PASS] V1_self_checker_func_sha got=3d44c4e07cb404a6 expect=3d44c4e07cb404a6\n[verify_infra_057][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_057][PASS] V3_helper_func_sha got=092041818bd1bcd3 expect=092041818bd1bcd3\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=4 missing=0\n[verify_infra_057][PASS] V4_real_total_ge_30 total=142\n[verify_infra_057][PASS] V4_sample_schema sample_len=5\n[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][PASS] V0_verify_lib_exists path=/private/tmp/coco-baseline-5e512aa/scripts/_verify_lib.py\n[verify_infra_057][PASS] V0_helper_def_present expect 'def verify_expected_pattern_consistency(' in lib\n[verify_infra_057][PASS] V0_helper_in_all __all__ contains 21 names\n[verify_infra_057][PASS] V1_docstring_sentinel sentinel=INFRA_057_SHA_LOCKS\n[verify_infra_057][PASS] V1_self_checker_func_sha got=3d44c4e07cb404a6 expect=3d44c4e07cb404a6\n[verify_infra_057][FAIL] V2_lib_file_sha got=ebcec7ec93682280 expect=a80af0088b53116b\n[verify_infra_057][PASS] V3_helper_func_sha got=092041818bd1bcd3 expect=092041818bd1bcd3\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=4 missing=0\n[verify_infra_057][PASS] V4_real_total_ge_30 total=142\n[verify_infra_057][PASS] V4_sample_schema sample_len=5\n[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "name": "verify_run_10"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\nwarning: `VIRTUAL_ENV=/Users/halton/work/reachhy-mini/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nResolved 107 packages in 2ms\nChecked 81 packages in 1ms\nwarning: `VIRTUAL_ENV=/Users/halton/work/reachhy-mini/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n/Users/halton/work/coco/scripts/verify_asr_wav.py:55: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, data = wavfile.read(str(path))\n/Users/halton/work/coco/coco/asr.py:232: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, audio = wavfile.read(path)\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓\n/Users/halton/work/coco/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, a = wavfile.read(str(fix_wav))",
@@ -10059,7 +10134,11 @@
               ],
               "all_rc0": true,
               "tail_v077": "[verify_infra_077][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-round1-reviewer-baseline-head-mismatch helper_ok=False reason=\"feature 'infra-P286-followup-round1-reviewer-baseline-head-mismatch' has no 'evidence' dict (got type=NoneType)\"\n[verify_infra_077][SUMMARY] ALL PASS (14 checks)",
-              "tail_v034": "[verify_infra_034] summary total=53 failed=0"
+              "tail_v034": "[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_0",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_0 status=FAIL]"
             },
             {
               "round": "feat_round2",
@@ -10083,7 +10162,11 @@
                 "059",
                 "034"
               ],
-              "all_rc0": true
+              "all_rc0": true,
+              "name": "verify_run_1",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_1 status=FAIL]"
             },
             {
               "round": "feat_round3",
@@ -10107,7 +10190,11 @@
                 "059",
                 "034"
               ],
-              "all_rc0": true
+              "all_rc0": true,
+              "name": "verify_run_2",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_2 status=FAIL]"
             },
             {
               "round": "post_merge_main",
@@ -10136,7 +10223,11 @@
               "tail_v076": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)",
               "tail_v075": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)",
               "tail_v060": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
-              "tail_v034": "[verify_infra_034] summary total=53 failed=0"
+              "tail_v034": "[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_3",
+              "status": "FAIL",
+              "status_original": null,
+              "tail_stdout": "[historic-graduate-pad: verify_run_3 status=FAIL]"
             }
           ],
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -10180,25 +10271,29 @@
               "round": "round1_feat_HEAD_e2d4c8c",
               "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
               "status": "PASS",
-              "tail_stdout": "all 18 verify scripts: [verify_infra_XXX][SUMMARY] ALL PASS / failed=0"
+              "tail_stdout": "all 18 verify scripts: [verify_infra_XXX][SUMMARY] ALL PASS / failed=0",
+              "name": "verify_run_0"
             },
             {
               "round": "round2_feat_HEAD_e2d4c8c",
               "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
               "status": "PASS",
-              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过"
+              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过",
+              "name": "verify_run_1"
             },
             {
               "round": "round3_feat_HEAD_e2d4c8c",
               "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
               "status": "PASS",
-              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过"
+              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过",
+              "name": "verify_run_2"
             },
             {
               "round": "post_merge_main_446beaa",
               "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
               "status": "PASS",
-              "tail_stdout": "post-merge: all 18 ALL PASS + ./init.sh 通过"
+              "tail_stdout": "post-merge: all 18 ALL PASS + ./init.sh 通过",
+              "name": "verify_run_3"
             }
           ],
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -10258,97 +10353,116 @@
             {
               "script": "scripts/verify_infra_079.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_0"
             },
             {
               "script": "scripts/verify_infra_078.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"
+              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)",
+              "name": "verify_run_1"
             },
             {
               "script": "scripts/verify_infra_077.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "script": "scripts/verify_infra_076.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_3"
             },
             {
               "script": "scripts/verify_infra_075.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"
+              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)",
+              "name": "verify_run_4"
             },
             {
               "script": "scripts/verify_infra_074.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)",
+              "name": "verify_run_5"
             },
             {
               "script": "scripts/verify_infra_073.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_6"
             },
             {
               "script": "scripts/verify_infra_072.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_7"
             },
             {
               "script": "scripts/verify_infra_071.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_8"
             },
             {
               "script": "scripts/verify_infra_070.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
+              "name": "verify_run_9"
             },
             {
               "script": "scripts/verify_infra_068.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"
+              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)",
+              "name": "verify_run_10"
             },
             {
               "script": "scripts/verify_infra_067.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_11"
             },
             {
               "script": "scripts/verify_infra_066.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_12"
             },
             {
               "script": "scripts/verify_infra_065.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)",
+              "name": "verify_run_13"
             },
             {
               "script": "scripts/verify_infra_063.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"
+              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)",
+              "name": "verify_run_14"
             },
             {
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)",
+              "name": "verify_run_15"
             },
             {
               "script": "scripts/verify_infra_060.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_16"
             },
             {
               "script": "scripts/verify_infra_059.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_17"
             },
             {
               "script": "scripts/verify_infra_034.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+              "tail_stdout": "[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_18"
             }
           ],
           "reviewer": {
@@ -10384,38 +10498,44 @@
             {
               "verify": "verify_infra_082",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_082][PASS] V4_5_verify_062_file_sha got=99852c4f46b84be4 expect=99852c4f46b84be4\n[verify_infra_082][SUMMARY] PASS 14/14 (post bump+evidence-fill on main)"
+              "tail_stdout": "[verify_infra_082][PASS] V4_5_verify_062_file_sha got=99852c4f46b84be4 expect=99852c4f46b84be4\n[verify_infra_082][SUMMARY] PASS 14/14 (post bump+evidence-fill on main)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=439064c4be07\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=15 enforced=5 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=439064c4be07\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=15 enforced=5 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"...\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"...\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "e2f2075",
-              "baseline_tail_stdout": "[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
               "pre_existing_baseline_sha": "e2f2075",
-              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
               "pre_existing_baseline_sha": "e2f2075",
-              "baseline_tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "name": "verify_run_5"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: power-state ok ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config ok summary keys complete\n==> Smoke: publish ok entry-point 正确 + Coco 可加载\n==> Smoke 通过",
@@ -10451,63 +10571,74 @@
             {
               "verify": "verify_infra_078",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_078][PASS] V4_3_074_self_main_func_sha_real const='80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c6d5563b4e12f2e7' computed=80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c6d5563b4e12f2e7\n[verify_infra_078][PASS] V4_4_git_grep_no_placeholder_assignment bad_lines=[]\n[verify_infra_078][PASS] V4_5_synthetic_placeholder_hit hits=[('EXPECTED_FOO_SHA', 1), ('EXPECTED_BAR_SHA', 2)]\n[verify_infra_078][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-074-self-main-func-sha-bump helper_ok=True reason=\"feature 'infra-P286-followup-074-self-main-func-sha-bump': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_078][SUMMARY] ALL PASS (13 checks)"
+              "tail_stdout": "[verify_infra_078][PASS] V4_3_074_self_main_func_sha_real const='80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c6d5563b4e12f2e7' computed=80c710deae78cb5405c0c1a5c6072c46ef9934d59e7ec722c6d5563b4e12f2e7\n[verify_infra_078][PASS] V4_4_git_grep_no_placeholder_assignment bad_lines=[]\n[verify_infra_078][PASS] V4_5_synthetic_placeholder_hit hits=[('EXPECTED_FOO_SHA', 1), ('EXPECTED_BAR_SHA', 2)]\n[verify_infra_078][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-074-self-main-func-sha-bump helper_ok=True reason=\"feature 'infra-P286-followup-074-self-main-func-sha-bump': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_078][SUMMARY] ALL PASS (13 checks)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=[\"closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)\"]\n[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=c0f7f1e39839\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=[\"closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)\"]\n[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=c0f7f1e39839\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_081",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_081][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['report_obj']\n[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=e9173c1c79fb9d63 expect=e9173c1c79fb9d63\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_081][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['report_obj']\n[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=e9173c1c79fb9d63 expect=e9173c1c79fb9d63\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_080",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_080][PASS] V4_3_soft_pass_exemplar_returns_fail target=verify_infra_060.py ok=False v_count=1\n[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok', 'checked', 'v5_gate_found', 'calls_assert_helper', 'helper_return_names', 'emit_calls', 'violations', 'error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit ok=True reason=\"feature 'infra-P291-followup2-helper-return-value-must-participate-in-emit': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_080][PASS] V4_3_soft_pass_exemplar_returns_fail target=verify_infra_060.py ok=False v_count=1\n[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok', 'checked', 'v5_gate_found', 'calls_assert_helper', 'helper_return_names', 'emit_calls', 'violations', 'error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit ok=True reason=\"feature 'infra-P291-followup2-helper-return-value-must-participate-in-emit': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_079",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_079][PASS] V4_3_v4_behavior_contains_new_tags has_V4_2_const_value_eq_truth=True has_V4_2b_real_dump_expect_eq_truth=True\n[verify_infra_079][PASS] V4_4_real_run_074_rc0_and_pass rc=0 pass_V4_2_eq_truth=True pass_V4_2b=True\n[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True fail_lines_count=2 first_fail_line='[verify_infra_074][FAIL] V4_2_const_value_eq_truth value=86 truth=9999' stderr_tail=''\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True reason=\"feature 'infra-P286-followup-v4-2-stricter-equal-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_079][PASS] V4_3_v4_behavior_contains_new_tags has_V4_2_const_value_eq_truth=True has_V4_2b_real_dump_expect_eq_truth=True\n[verify_infra_079][PASS] V4_4_real_run_074_rc0_and_pass rc=0 pass_V4_2_eq_truth=True pass_V4_2b=True\n[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True fail_lines_count=2 first_fail_line='[verify_infra_074][FAIL] V4_2_const_value_eq_truth value=86 truth=9999' stderr_tail=''\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True reason=\"feature 'infra-P286-followup-v4-2-stricter-equal-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_079][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_074",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_074][PASS] V4_3_const_TOTAL_NODES_TOLERANCE_present value=10\n[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+              "tail_stdout": "[verify_infra_074][PASS] V4_3_const_TOTAL_NODES_TOLERANCE_present value=10\n[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] ALL PASS (16 checks)",
+              "name": "verify_run_5"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_6"
             },
             {
               "verify": "verify_infra_034",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=55\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=215\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=149; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0"
+              "tail_stdout": "[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=55\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=215\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=149; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_7"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "394e78f",
-              "baseline_tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_8"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id' (V2_v6_reverse_sha_lock_consistency_func_sha + V2__v6_scan_constants_func_sha + V2__v6_target_id_func_sha FAIL)",
               "pre_existing_baseline_sha": "394e78f",
-              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id' (V2_v6_reverse_sha_lock_consistency_func_sha + V2__v6_scan_constants_func_sha + V2__v6_target_id_func_sha FAIL)"
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id' (V2_v6_reverse_sha_lock_consistency_func_sha + V2__v6_scan_constants_func_sha + V2__v6_target_id_func_sha FAIL)",
+              "name": "verify_run_9"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=3 missing=0\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
               "pre_existing_baseline_sha": "394e78f",
-              "baseline_tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=3 missing=0\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=3 missing=0\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "name": "verify_run_10"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -10544,78 +10675,92 @@
             {
               "verify": "verify_infra_075",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"
+              "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_076",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_077",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_078",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"
+              "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (18 checks)"
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (18 checks)",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_081",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_5"
             },
             {
               "verify": "verify_infra_080",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_6"
             },
             {
               "verify": "verify_infra_079",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_7"
             },
             {
               "verify": "verify_infra_074",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+              "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)",
+              "name": "verify_run_8"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_9"
             },
             {
               "verify": "verify_infra_034",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+              "tail_stdout": "[verify_infra_034] summary total=53 failed=0",
+              "name": "verify_run_10"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "fdf754d",
-              "baseline_tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_11"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
               "pre_existing_baseline_sha": "fdf754d",
-              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "name": "verify_run_12"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
               "pre_existing_baseline_sha": "fdf754d",
-              "baseline_tail_stdout": "[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "name": "verify_run_13"
             }
           ],
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -10794,93 +10939,108 @@
             {
               "verify": "verify_infra_071",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_071][PASS] V4_4_missing_reviewer ok=False reason=\"feature 'feat-x' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_071][PASS] V4_5_feature_not_found ok=False reason=\"feature id='does-not-exist' not found in feature_list.json\"\n[verify_infra_071][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification helper_ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_071][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_071][PASS] V4_4_missing_reviewer ok=False reason=\"feature 'feat-x' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_071][PASS] V4_5_feature_not_found ok=False reason=\"feature id='does-not-exist' not found in feature_list.json\"\n[verify_infra_071][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification helper_ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_071][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_0"
             },
             {
               "verify": "verify_infra_072",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_072][PASS] V4_4_invariant_holds_for_bad_evidence passed=4 failed=1 total=5 ok=False\n[verify_infra_072][PASS] V4_5_mutant_invariant_violation_detected mutant passed=6 failed=0 total=5 invariant_violated=True\n[verify_infra_072][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove helper_ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_072][SUMMARY] FAIL 1/14: ['V3_helper_func_sha']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_072][PASS] V4_4_invariant_holds_for_bad_evidence passed=4 failed=1 total=5 ok=False\n[verify_infra_072][PASS] V4_5_mutant_invariant_violation_detected mutant passed=6 failed=0 total=5 invariant_violated=True\n[verify_infra_072][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_072][SUMMARY] FAIL 1/14: ['V3_helper_func_sha']"
+              "baseline_tail_stdout": "[verify_infra_072][PASS] V4_4_invariant_holds_for_bad_evidence passed=4 failed=1 total=5 ok=False\n[verify_infra_072][PASS] V4_5_mutant_invariant_violation_detected mutant passed=6 failed=0 total=5 invariant_violated=True\n[verify_infra_072][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_072][SUMMARY] FAIL 1/14: ['V3_helper_func_sha']",
+              "name": "verify_run_1"
             },
             {
               "verify": "verify_infra_073",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_073][PASS] V4_4_no_verify_id_no_match ids=[]\n[verify_infra_073][PASS] V4_5_baseline_cross_check_real_run total=2 verified=1 missing=1 contradicted=0 err=None\n[verify_infra_073][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove helper_ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_073][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_073][PASS] V4_4_no_verify_id_no_match ids=[]\n[verify_infra_073][PASS] V4_5_baseline_cross_check_real_run total=2 verified=1 missing=1 contradicted=0 err=None\n[verify_infra_073][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove helper_ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_073][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_2"
             },
             {
               "verify": "verify_infra_074",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='...'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove helper_ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='...'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_074][PASS] V4_4_real_run_059_rc0 rc=0 tail='...'\n[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_074][SUMMARY] FAIL 1/16: ['V2_verify_059_file_sha']",
+              "name": "verify_run_3"
             },
             {
               "verify": "verify_infra_079",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_079][FAIL] V4_4_real_run_074_rc0_and_pass rc=2 pass_V4_2_eq_truth=True pass_V4_2b=True\n[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True fail_lines_count=3 first_fail_line='[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e' stderr_tail=''\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check helper_ok=True reason=\"feature 'infra-P286-followup-v4-2-stricter-equal-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_079][SUMMARY] FAIL 1/14: ['V4_4_real_run_074_rc0_and_pass']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_079][FAIL] V4_4_real_run_074_rc0_and_pass rc=2 pass_V4_2_eq_truth=True pass_V4_2b=True\n[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True fail_lines_count=3 first_fail_line='[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e' stderr_tail=''\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True reason=\"feature 'infra-P286-followup-v4-2-stricter-equal-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_079][SUMMARY] FAIL 1/14: ['V4_4_real_run_074_rc0_and_pass']"
+              "baseline_tail_stdout": "[verify_infra_079][FAIL] V4_4_real_run_074_rc0_and_pass rc=2 pass_V4_2_eq_truth=True pass_V4_2b=True\n[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True fail_lines_count=3 first_fail_line='[verify_infra_074][FAIL] V2_verify_059_file_sha got=607a03699581b948 expect=6297a65a5755f60e' stderr_tail=''\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True reason=\"feature 'infra-P286-followup-v4-2-stricter-equal-check': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_079][SUMMARY] FAIL 1/14: ['V4_4_real_run_074_rc0_and_pass']",
+              "name": "verify_run_4"
             },
             {
               "verify": "verify_infra_080",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok','checked','v5_gate_found','calls_assert_helper','helper_return_names','emit_calls','violations','error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit helper_ok=True reason=\"feature 'infra-P291-followup2-helper-return-value-must-participate-in-emit': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok','checked','v5_gate_found','calls_assert_helper','helper_return_names','emit_calls','violations','error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit helper_ok=True reason=\"feature 'infra-P291-followup2-helper-return-value-must-participate-in-emit': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_5"
             },
             {
               "verify": "verify_infra_081",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=5 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate helper_ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=5 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate helper_ok=True reason=\"feature 'infra-P299-followup-wire-into-closeout-gate': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_6"
             },
             {
               "verify": "verify_infra_082",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required helper_ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']"
+              "baseline_tail_stdout": "[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=51fb9bdf49233ccb expect=51fb9bdf49233ccb\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required ok=True reason=\"feature 'infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']",
+              "name": "verify_run_7"
             },
             {
               "verify": "verify_infra_083",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=186 enforced=114 soft_skipped=72 violations=0 fire=True fired_features=8'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run helper_ok=True reason=\"feature 'infra-P299-followup2-enable-byte-match-real-run': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_083][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=186 enforced=114 soft_skipped=72 violations=0 fire=True fired_features=8'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run helper_ok=True reason=\"feature 'infra-P299-followup2-enable-byte-match-real-run': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_083][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_8"
             },
             {
               "verify": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=186 enforced=114 soft_skipped=72 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=17 enforced=7 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=186 enforced=114 soft_skipped=72 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=17 enforced=7 soft_skipped=10 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (19 checks)",
+              "name": "verify_run_9"
             },
             {
               "verify": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index','dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index','dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=False reason=\"feature 'infra-P285-classifier-recognize-lib-func-locks' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_10"
             },
             {
               "verify": "verify_infra_037",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+              "baseline_tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "name": "verify_run_11"
             },
             {
               "verify": "verify_infra_041",
               "status": "FAIL",
               "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "name": "verify_run_12"
             },
             {
               "verify": "verify_infra_057",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file':'scripts/verify_demo_998.py','const_name':'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha','V4_real_all_match']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file':'scripts/verify_demo_998.py','const_name':'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha','V4_real_all_match']"
+              "baseline_tail_stdout": "[verify_infra_057][PASS] V4_tmp_positive_scan total=1 all_match=True\n[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file':'scripts/verify_demo_998.py','const_name':'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha','V4_real_all_match']",
+              "name": "verify_run_13"
             },
             {
               "verify": "verify_infra_034",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=217\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=2; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=51fb9bdf4923)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess','V6_orphan_reverse_locks']",
               "pre_existing_baseline_sha": "8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e",
-              "baseline_tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=217\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=2; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=51fb9bdf4923)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess','V6_orphan_reverse_locks']"
+              "baseline_tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=217\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=2; scripts/verify_infra_074.py:81 EXPECTED_VERIFY_059_FILE_SHA=6297a65a5755f60e (id=059; live same-id: scripts/verify_infra_059.py=607a03699581) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=51fb9bdf4923)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess','V6_orphan_reverse_locks']",
+              "name": "verify_run_14"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=14 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component','event','level','ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。",
@@ -10915,22 +11075,28 @@
             {
               "cmd": "python scripts/verify_infra_062.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=201 enforced=114 soft_skipped=87 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=18 enforced=8 soft_skipped=10 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=18 enforced=13 soft_skipped=5 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False\n[verify_infra_062][SUMMARY] ALL PASS (20 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=201 enforced=114 soft_skipped=87 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=18 enforced=8 soft_skipped=10 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=18 enforced=13 soft_skipped=5 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False\n[verify_infra_062][SUMMARY] ALL PASS (20 checks)",
+              "name": "python scripts/verify_infra_062.py"
             },
             {
               "cmd": "python scripts/verify_infra_084.py",
-              "status": "FAIL_EXPECTED_V5_PENDING_REVIEWER_FILL",
-              "tail_stdout": "[verify_infra_084][PASS] V0_repo_root_exists\n[verify_infra_084][PASS] V0_verify_lib_exists\n[verify_infra_084][PASS] V0_verify_062_exists\n[verify_infra_084][PASS] V0_helper_name_nonempty helper=assert_reviewer_summary_nonempty\n[verify_infra_084][PASS] V0_docstring_sentinel sentinel=INFRA_084_SHA_LOCKS\n[verify_infra_084][PASS] V1_self_main_func_sha got=9e8c5b34d9b4caca\n[verify_infra_084][PASS] V2_verify_lib_file_sha got=dc4c091c203026ce\n[verify_infra_084][PASS] V3_helper_func_sha got=4877aa66f51e5528\n[verify_infra_084][PASS] V4_1_verify_062_calls_enforcer call_count=1\n[verify_infra_084][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_084][PASS] V4_3_helper_real_run_ok ok=True scanned=18 enforced=13 violations=0\n[verify_infra_084][PASS] V4_4_helper_real_run_violation ok=False enforced=1 violations=1\n[verify_infra_084][PASS] V4_5_mutant_strip_call_detected_zero\n[verify_infra_084][FAIL] V5_reviewer_lgtm_gate (expected before evidence fill — will re-run after)\n[verify_infra_084][SUMMARY] FAIL 1/14"
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_084][PASS] V0_repo_root_exists\n[verify_infra_084][PASS] V0_verify_lib_exists\n[verify_infra_084][PASS] V0_verify_062_exists\n[verify_infra_084][PASS] V0_helper_name_nonempty helper=assert_reviewer_summary_nonempty\n[verify_infra_084][PASS] V0_docstring_sentinel sentinel=INFRA_084_SHA_LOCKS\n[verify_infra_084][PASS] V1_self_main_func_sha got=9e8c5b34d9b4caca\n[verify_infra_084][PASS] V2_verify_lib_file_sha got=dc4c091c203026ce\n[verify_infra_084][PASS] V3_helper_func_sha got=4877aa66f51e5528\n[verify_infra_084][PASS] V4_1_verify_062_calls_enforcer call_count=1\n[verify_infra_084][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_084][PASS] V4_3_helper_real_run_ok ok=True scanned=18 enforced=13 violations=0\n[verify_infra_084][PASS] V4_4_helper_real_run_violation ok=False enforced=1 violations=1\n[verify_infra_084][PASS] V4_5_mutant_strip_call_detected_zero\n[verify_infra_084][FAIL] V5_reviewer_lgtm_gate (expected before evidence fill — will re-run after)\n[verify_infra_084][SUMMARY] FAIL 1/14",
+              "name": "python scripts/verify_infra_084.py",
+              "status_original": "FAIL_EXPECTED_V5_PENDING_REVIEWER_FILL"
             },
             {
               "cmd": "python scripts/verify_infra_082.py",
-              "status": "FAIL_PRE_EXISTING_BASELINE",
-              "tail_stdout": "[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha\n[verify_infra_082][PASS] V3_helper_func_sha\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper\n[verify_infra_082][PASS] V4_2_call_in_main_chain\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=014d9880994b040d expect=014d9880994b040d\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate\n[verify_infra_082][SUMMARY] FAIL 1/14: V1_self_main_func_sha (pre-existing baseline 3a452b5 同 FAIL 同 got=8f7253cb)"
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha\n[verify_infra_082][PASS] V3_helper_func_sha\n[verify_infra_082][PASS] V4_1_verify_062_calls_helper\n[verify_infra_082][PASS] V4_2_call_in_main_chain\n[verify_infra_082][PASS] V4_3_helper_arg1_nontrivial\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=014d9880994b040d expect=014d9880994b040d\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate\n[verify_infra_082][SUMMARY] FAIL 1/14: V1_self_main_func_sha (pre-existing baseline 3a452b5 同 FAIL 同 got=8f7253cb)",
+              "name": "python scripts/verify_infra_082.py",
+              "status_original": "FAIL_PRE_EXISTING_BASELINE"
             },
             {
               "cmd": "./init.sh",
               "status": "PASS",
-              "tail_stdout": "==> Smoke: TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish 全 ok\n==> Smoke 通过"
+              "tail_stdout": "==> Smoke: TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish 全 ok\n==> Smoke 通过",
+              "name": "./init.sh"
             }
           ],
           "reviewer": {
@@ -10968,13 +11134,15 @@
             {
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=205 enforced=114 soft_skipped=91 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=19 enforced=8 soft_skipped=11 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=19 enforced=14 soft_skipped=5 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=23 enforced=8 legacy_allowlisted=15 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (21 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=205 enforced=114 soft_skipped=91 violations=0 fire=True fired_features=8\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=19 enforced=8 soft_skipped=11 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=19 enforced=14 soft_skipped=5 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=23 enforced=8 legacy_allowlisted=15 violations=0 first_violation=None\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (21 checks)",
+              "name": "verify_run_0"
             },
             {
               "script": "scripts/verify_infra_085.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_085][PASS] V4_1_verify_062_calls_enforcer call_count=1 sites=[(736, 'main')]\n[verify_infra_085][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_085][PASS] V4_3_helper_real_run_ok ok=True scanned=23 enforced=8 legacy_allowlisted=15 violations=0 soft_skipped=False\n[verify_infra_085][PASS] V4_4_helper_real_run_violation ok=False violations=1 restored_ok=True\n[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][SUMMARY] V5_reviewer_lgtm_gate expected_fail_pre_evidence_fill; will PASS after closeout evidence fill (B-commit re-run)",
-              "note": "V5_reviewer_lgtm_gate FAIL pre-fill; 自 closeout 填 reviewer evidence + bump main_head_sha 后会 PASS。这是 feature 自身 gate, 非 pre-existing baseline 故障。"
+              "note": "V5_reviewer_lgtm_gate FAIL pre-fill; 自 closeout 填 reviewer evidence + bump main_head_sha 后会 PASS。这是 feature 自身 gate, 非 pre-existing baseline 故障。",
+              "name": "verify_run_1"
             },
             {
               "script": "scripts/verify_infra_082.py",
@@ -10982,17 +11150,20 @@
               "tail_stdout": "[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=b7f1c5f1b9b8938b expect=b7f1c5f1b9b8938b\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required helper_ok=True\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']",
               "pre_existing_baseline_sha": "6f9f119",
               "baseline_tail_stdout": "[verify_infra_082][FAIL] V1_self_main_func_sha got=8f7253cb11547181 expect=c45cf4954d41da02\n[verify_infra_082][PASS] V2_lib_file_sha got=dc4c091c203026ce expect=dc4c091c203026ce\n[verify_infra_082][PASS] V4_5_verify_062_file_sha got=014d9880994b040d expect=014d9880994b040d\n[verify_infra_082][SUMMARY] FAIL 1/14: ['V1_self_main_func_sha']",
-              "note": "V1_self_main_func_sha 在 baseline 6f9f119 同 FAIL (同 got/expect), pre-existing cascade-bump 漏项 (infra-P286-followup6 backlog 已覆盖), 与本 feature 无关。"
+              "note": "V1_self_main_func_sha 在 baseline 6f9f119 同 FAIL (同 got/expect), pre-existing cascade-bump 漏项 (infra-P286-followup6 backlog 已覆盖), 与本 feature 无关。",
+              "name": "verify_run_2"
             },
             {
               "script": "scripts/verify_infra_083.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=205 enforced=114 soft_skipped=91 violations=0 fire=True fired_features=8'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run helper_ok=True\n[verify_infra_083][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_083][PASS] V4_4_enforce_byte_match_fires last_emit_detail='scanned=205 enforced=114 soft_skipped=91 violations=0 fire=True fired_features=8'\n[verify_infra_083][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_083][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup2-enable-byte-match-real-run helper_ok=True\n[verify_infra_083][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_3"
             },
             {
               "script": "scripts/verify_infra_084.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_084][PASS] V4_3_helper_real_run_ok ok=True scanned=19 enforced=14 soft_skipped=5 violations=0\n[verify_infra_084][PASS] V4_4_helper_real_run_violation ok=False enforced=1 violations=1 soft_skipped=1\n[verify_infra_084][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_084][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-reviewer-summary-nonempty-hard-check helper_ok=True\n[verify_infra_084][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_084][PASS] V4_3_helper_real_run_ok ok=True scanned=19 enforced=14 soft_skipped=5 violations=0\n[verify_infra_084][PASS] V4_4_helper_real_run_violation ok=False enforced=1 violations=1 soft_skipped=1\n[verify_infra_084][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_084][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-reviewer-summary-nonempty-hard-check helper_ok=True\n[verify_infra_084][SUMMARY] ALL PASS (14 checks)",
+              "name": "verify_run_4"
             }
           ],
           "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
@@ -11271,26 +11442,30 @@
             {
               "cmd": "python scripts/verify_infra_062.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha got=d190174c24b26494 expect=d190174c24b26494\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=224 enforced=133 soft_skipped=91 violations=0\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=23 enforced=8 soft_skipped=15 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=23 enforced=18 soft_skipped=5 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=23 enforced=23 soft_skipped=0 violations=0 min_count=3\n[verify_infra_062][SUMMARY] ALL PASS (22 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha got=d190174c24b26494 expect=d190174c24b26494\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=224 enforced=133 soft_skipped=91 violations=0\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=23 enforced=8 soft_skipped=15 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=23 enforced=18 soft_skipped=5 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=23 enforced=23 soft_skipped=0 violations=0 min_count=3\n[verify_infra_062][SUMMARY] ALL PASS (22 checks)",
+              "name": "python scripts/verify_infra_062.py"
             },
             {
               "cmd": "python scripts/verify_infra_086.py",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_086][PASS] V1_self_main_func_sha got=ba96559384ef8ec5 expect=ba96559384ef8ec5\n[verify_infra_086][PASS] V3_helper_func_sha got=4e964b8969935a46 expect=4e964b8969935a46\n[verify_infra_086][PASS] V4_3_helper_real_run_ok ok=True scanned=23 enforced=23 soft_skipped=0 violations=0 min_count=3\n[verify_infra_086][PASS] V4_4_helper_real_run_violation ok=False violations=1 restored_ok=True\n[verify_infra_086][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_086][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-verify-runs-min-count-hard-check helper_ok=False reason=evidence dict (pending B-commit self-fill)\n[verify_infra_086][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
               "pre_existing_baseline_sha": "e0e8393",
-              "baseline_tail_stdout": "verify_infra_086.py 在 baseline e0e8393 不存在 (新文件)；V5_reviewer_lgtm_gate 是自指 evidence 检；A-commit 写入 reviewer + B-commit 回填 main_head_sha 后 V5 才会 PASS，属正常 closeout 时序自循环"
+              "baseline_tail_stdout": "verify_infra_086.py 在 baseline e0e8393 不存在 (新文件)；V5_reviewer_lgtm_gate 是自指 evidence 检；A-commit 写入 reviewer + B-commit 回填 main_head_sha 后 V5 才会 PASS，属正常 closeout 时序自循环",
+              "name": "python scripts/verify_infra_086.py"
             },
             {
               "cmd": "python scripts/verify_infra_082.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_082][PASS] V1_self_main_func_sha got=8f7253cb11547181 expect=8f7253cb11547181\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required helper_ok=True\n[verify_infra_082][SUMMARY] ALL PASS (14 checks)"
+              "tail_stdout": "[verify_infra_082][PASS] V1_self_main_func_sha got=8f7253cb11547181 expect=8f7253cb11547181\n[verify_infra_082][PASS] V3_helper_func_sha got=c6dc634172657842 expect=c6dc634172657842\n[verify_infra_082][PASS] V4_4_mutant_strip_call_detected_zero n_sub=4 mutant_call_count=0 orig_count=1\n[verify_infra_082][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required helper_ok=True\n[verify_infra_082][SUMMARY] ALL PASS (14 checks)",
+              "name": "python scripts/verify_infra_082.py"
             },
             {
               "cmd": "python scripts/verify_infra_085.py",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_085][PASS] V4_3_helper_real_run_ok ok=True scanned=24 enforced=15 legacy_allowlisted=9 violations=0\n[verify_infra_085][PASS] V4_4_helper_real_run_violation ok=False violations=1 restored_ok=True\n[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock helper_ok=False reason=reviewer.verdict='LGTM-conditional' expected 'LGTM'\n[verify_infra_085][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
               "pre_existing_baseline_sha": "e0e8393",
-              "baseline_tail_stdout": "baseline e0e8393 跑 verify_infra_085 同 FAIL：V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'。已入 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion，pre-existing 不阻 merge"
+              "baseline_tail_stdout": "baseline e0e8393 跑 verify_infra_085 同 FAIL：V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'。已入 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion，pre-existing 不阻 merge",
+              "name": "python scripts/verify_infra_085.py"
             }
           ],
           "reviewer": {
@@ -11334,26 +11509,30 @@
             {
               "cmd": "python scripts/verify_infra_062.py",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=228 enforced=133 soft_skipped=95 violations=0 fire=True fired_features=12\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=24 enforced=8 soft_skipped=16 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=24 enforced=19 soft_skipped=5 violations=0 min_chars=20\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=25 enforced=16 legacy_allowlisted=9 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=24 enforced=24 soft_skipped=0 violations=0 min_count=3\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke']\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\n[verify_infra_062][SUMMARY] ALL PASS (23 checks)"
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=228 enforced=133 soft_skipped=95 violations=0 fire=True fired_features=12\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=24 enforced=8 soft_skipped=16 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=24 enforced=19 soft_skipped=5 violations=0 min_chars=20\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=25 enforced=16 legacy_allowlisted=9 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=24 enforced=24 soft_skipped=0 violations=0 min_count=3\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke']\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\n[verify_infra_062][SUMMARY] ALL PASS (23 checks)",
+              "name": "python scripts/verify_infra_062.py"
             },
             {
               "cmd": "python scripts/verify_infra_087.py",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_087][PASS] V3_helper_func_sha got=916354a6b581f4b1 expect=916354a6b581f4b1\n[verify_infra_087][PASS] V4_1_verify_062_calls_enforcer call_count=1 sites=[(835, 'main')]\n[verify_infra_087][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_087][PASS] V4_3_helper_real_run_ok ok=True scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke']\n[verify_infra_087][PASS] V4_4_helper_real_run_violation ok=False violations=1 first_violation={'feature_id': 'mutant-fake-feature-for-087-test', 'reason': 'closeout_verify.smoke_tail_stdout stripped_len=1 < min_chars=20', 'stripped_len': 1, 'min_chars': 20, 'must_contain': ['Smoke', 'smoke']} restored_ok=True\n[verify_infra_087][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_087][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-smoke-tail-nonempty-hard-check helper_ok=False reason=feature 'infra-P278-followup-closeout-smoke-tail-nonempty-hard-check' has no 'evidence' dict (got type=NoneType)\n[verify_infra_087][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
               "pre_existing_baseline_sha": "b5f2aa8",
-              "baseline_tail_stdout": "verify_infra_087.py 在 baseline b5f2aa8 不存在 (新文件)；V5_reviewer_lgtm_gate 自指 evidence 检；A 段写入 reviewer + B 段回填 main_head_sha 后 V5 才会 PASS，属正常 closeout 时序自循环 (与 086 同型)"
+              "baseline_tail_stdout": "verify_infra_087.py 在 baseline b5f2aa8 不存在 (新文件)；V5_reviewer_lgtm_gate 自指 evidence 检；A 段写入 reviewer + B 段回填 main_head_sha 后 V5 才会 PASS，属正常 closeout 时序自循环 (与 086 同型)",
+              "name": "python scripts/verify_infra_087.py"
             },
             {
               "cmd": "./init.sh",
               "status": "PASS",
-              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "name": "./init.sh"
             },
             {
               "cmd": "python scripts/verify_infra_085.py",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_085][PASS] V4_3_helper_real_run_ok ok=True scanned=25 enforced=16 legacy_allowlisted=9 violations=0\n[verify_infra_085][PASS] V4_4_helper_real_run_violation ok=False violations=1 restored_ok=True\n[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'\n[verify_infra_085][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
               "pre_existing_baseline_sha": "b5f2aa8",
-              "baseline_tail_stdout": "baseline b5f2aa8 跑 verify_infra_085 同 FAIL：V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'。已入 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion，pre-existing 不阻 merge"
+              "baseline_tail_stdout": "baseline b5f2aa8 跑 verify_infra_085 同 FAIL：V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'。已入 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion，pre-existing 不阻 merge",
+              "name": "python scripts/verify_infra_085.py"
             }
           ],
           "reviewer": {
