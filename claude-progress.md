@@ -6265,3 +6265,9 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - backlog 入账 (1 项):
   - infra-P299-followup-engineer-stale-verify-evidence (P1) — Engineer 在 cascade bump EXPECTED_*_FILE_SHA 后, 必须在 final commit 后再跑一次完整 cascade-affected verify 列表, 禁止用中间 commit / pre-bump 状态的 verify 结果作 evidence (本次 Engineer 报 7 项 FAIL 但 Closeout 实测全 PASS, 方向无害但误导)
 - 持续开发模式: 继续 phase-39 下一 not_started (按 priority 最低数字选)
+
+## Session 2026-05-22 infra-P286-total-nodes-lock round-2 (Engineer)
+- round-1 Reviewer REJECT: V4_5 mutant harness 复制 059 到 tmp 但缺失 live scripts/ 其它 verify 文件依赖, 导致 dump 出来 node 数远低于 81, V4_real_total_nodes_within_tolerance 必然 FAIL — 与 mutant 是否真改 -999 无关, 反模式实验 mutant 值改 81 (=不 mutate) V4_5 仍 PASS, 证据链断裂违反 P291 real-or-remove
+- 整改方案: 方案 2 — 移除 V4_5, 保留 V4_1-V4_4 (15 checks); 同步修正 074 docstring 错误 (原 P286 实测 80 → 81)
+- cascade 分析: dump _PER_FILE_LOCKS 074 两条 value 是 target 描述字符串 (非真 sha), 074 file/func sha 也无下游锁 → 无需 bump dump / 060
+- final HEAD verify (round-2 commit 后): verify_infra_074 rc=0 (15/15 PASS), verify_infra_059 rc=0 (18 checks), verify_infra_060 rc=0 (14 checks), ./init.sh smoke rc=0

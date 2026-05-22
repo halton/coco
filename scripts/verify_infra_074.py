@@ -7,13 +7,12 @@ verify_infra_059 V4 之前只锁 unknown_count 精确值 + ratio 上界 (unknown
 不锁绝对 total_nodes。若大量 sha lock 被误删 (V4 与 total 一起缩水, ratio 不变),
 ratio 检查无法报警。本 feature 给 059 引入:
 
-- ``EXPECTED_CURRENT_TOTAL_NODES: int`` (P286 实测 = 80)
+- ``EXPECTED_CURRENT_TOTAL_NODES: int`` (P286 实测 = 81)
 - ``TOTAL_NODES_TOLERANCE: int = 5``
 - V4 行为锁: ``abs(total_nodes - EXPECTED_CURRENT_TOTAL_NODES) <=
   TOTAL_NODES_TOLERANCE``
 
-verify_infra_074 锁定 verify_infra_059 上述行为存在 (ast 扫描常量 + 真跑 059)
-并以 mutant (把 EXPECTED_CURRENT_TOTAL_NODES 改为 -999) 证明锁真生效。
+verify_infra_074 锁定 verify_infra_059 上述行为存在 (ast 扫描常量 + 真跑 059)。
 
 INFRA_074_SHA_LOCKS
 -------------------
@@ -22,20 +21,23 @@ INFRA_074_SHA_LOCKS
 - 常量名锁: EXPECTED_TOTAL_NODES_CONST_NAME / EXPECTED_TOLERANCE_CONST_NAME
 - 本脚本 main() 自锁 func sha: EXPECTED_SELF_MAIN_FUNC_SHA (placeholder __BUMP_ME__)
 
-校验层级 (V0-V5):
+校验层级 (V0-V5, 共 15 checks):
 
-- V0 scaffolding: 路径存在 + 常量 hex64 + docstring sentinel
-- V1 self main() func sha 自锁 (placeholder OK)
-- V2 verify_infra_059.py file sha
-- V3 verify_infra_059.py:main func sha
-- V4 业务实测:
+- V0 scaffolding: 路径存在 + 常量 hex64 + docstring sentinel (7 checks)
+- V1 self main() func sha 自锁 (placeholder OK) (1 check)
+- V2 verify_infra_059.py file sha (1 check)
+- V3 verify_infra_059.py:main func sha (1 check)
+- V4 业务实测 (4 checks):
   - V4_1 ast 扫: verify_infra_059.py 顶层含 EXPECTED_CURRENT_TOTAL_NODES 常量
   - V4_2 该常量值为 int 且 > 0
   - V4_3 含 TOTAL_NODES_TOLERANCE 常量 (int, ≥ 0)
   - V4_4 subprocess 真跑 059 → rc=0 (ALL PASS, 含 V4_real_total_nodes_within_tolerance)
-  - V4_5 mutant: 临时把 059 源里 EXPECTED_CURRENT_TOTAL_NODES 改为 -999
-    (复制到 tmp + 改值 + 跑 → rc != 0, 验证锁真生效); 自动 restore
-- V5 reviewer_lgtm_gate: 用 ``assert_reviewer_lgtm`` 真校 P291 (已 passing)
+- V5 reviewer_lgtm_gate: 用 ``assert_reviewer_lgtm`` 真校 P291 (已 passing) (1 check)
+
+(round-1 曾包含 V4_5 mutant check, 但 tmp dir 跑 059 缺失 live scripts/ 下其它
+verify 文件依赖, 导致 dump 出来 node 数远低于 81, V4_real_total_nodes_within_tolerance
+必然 FAIL — 与是否真 mutate 常量无关, 证据链断裂违反 P291 real-or-remove,
+round-2 整改: 移除 V4_5)
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit)。
 
@@ -48,8 +50,6 @@ import hashlib
 import re
 import subprocess
 import sys
-import tempfile
-import shutil
 from pathlib import Path
 from typing import List, Tuple
 
@@ -238,51 +238,6 @@ def v4_behavior() -> None:
         rc == 0,
         f"rc={rc} tail={tail!r}",
     )
-
-    # V4_5 mutant: 临时把 EXPECTED_CURRENT_TOTAL_NODES 改为 -999, 跑 → rc != 0
-    mutant_ok = False
-    mutant_detail = ""
-    try:
-        with tempfile.TemporaryDirectory(prefix="coco_p286_074_") as tmpd:
-            tmp_scripts = Path(tmpd) / "scripts"
-            tmp_scripts.mkdir()
-            # 复制 _verify_lib.py (059 依赖之) 与 dump_v4_sha_graph.py
-            for f in ("_verify_lib.py", "dump_v4_sha_graph.py"):
-                shutil.copy2(SCRIPTS / f, tmp_scripts / f)
-            # 把 059 源里常量替换为 -999
-            mutated = re.sub(
-                r"^EXPECTED_CURRENT_TOTAL_NODES:\s*int\s*=\s*\d+",
-                "EXPECTED_CURRENT_TOTAL_NODES: int = -999",
-                src,
-                count=1,
-                flags=re.MULTILINE,
-            )
-            if mutated == src:
-                # fall back: 不带类型注解的形式
-                mutated = re.sub(
-                    r"^EXPECTED_CURRENT_TOTAL_NODES\s*=\s*\d+",
-                    "EXPECTED_CURRENT_TOTAL_NODES = -999",
-                    src,
-                    count=1,
-                    flags=re.MULTILINE,
-                )
-            mut_path = tmp_scripts / "verify_infra_059.py"
-            mut_path.write_text(mutated, encoding="utf-8")
-            proc = subprocess.run(
-                [sys.executable, str(mut_path)],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            mutant_rc = proc.returncode
-            mutant_ok = mutant_rc != 0
-            mutant_detail = (
-                f"mutant_rc={mutant_rc} (expect != 0); "
-                f"tail={proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ''!r}"
-            )
-    except Exception as e:  # noqa: BLE001
-        mutant_detail = f"exception: {e!r}"
-    _emit("V4_5_mutant_neg999_fails", mutant_ok, mutant_detail)
 
 
 # ---------------------------------------------------------------------------
