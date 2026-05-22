@@ -11305,7 +11305,7 @@
       "id": "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
       "priority": 5.43,
       "phase": 43,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check (Default-OFF)",
       "rationale": "Closeout 6 信号之一 smoke_tail_stdout 当前仅形态校验为 string，未检内容；常见 closeout evidence 残留占位 'smoke OK' 或空字符串，无法 audit 真跑 ./init.sh。加 'len>0 + 含 Smoke 关键词' Default-OFF→hard 检，提升 smoke 证据可信度。",
@@ -11322,7 +11322,62 @@
         "新 verify_infra_NNN V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；keyword 默认 'Smoke' (case-insensitive)；legacy soft_skip 走 '字段缺' 而非 '内容不符'；min_chars=20 与 reviewer.summary 对齐；cascade _verify_lib file sha + 062 file sha 全量",
-      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "d57bf68",
+          "baseline_head_echo": "b5f2aa8",
+          "merge_commit_sha": "d57bf68948d1e3d0a4ba7a7e709faf35f040716a",
+          "smoke_tail_stdout": "==> Smoke: face-tracker (primary stability 5 frames) ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav) ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture) ok: wake hits=['可可']\n==> Smoke: power-state (companion-003) ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging) ok: summary keys 完整, jsonl line keys⊇['component','event','level','ts']\n==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "cmd": "python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=228 enforced=133 soft_skipped=95 violations=0 fire=True fired_features=12\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=24 enforced=8 soft_skipped=16 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=24 enforced=19 soft_skipped=5 violations=0 min_chars=20\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=25 enforced=16 legacy_allowlisted=9 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=24 enforced=24 soft_skipped=0 violations=0 min_count=3\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke']\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\n[verify_infra_062][SUMMARY] ALL PASS (23 checks)"
+            },
+            {
+              "cmd": "python scripts/verify_infra_087.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_087][PASS] V3_helper_func_sha got=916354a6b581f4b1 expect=916354a6b581f4b1\n[verify_infra_087][PASS] V4_1_verify_062_calls_enforcer call_count=1 sites=[(835, 'main')]\n[verify_infra_087][PASS] V4_2_call_in_main_chain main_calls_enforcer=True\n[verify_infra_087][PASS] V4_3_helper_real_run_ok ok=True scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke', 'smoke']\n[verify_infra_087][PASS] V4_4_helper_real_run_violation ok=False violations=1 first_violation={'feature_id': 'mutant-fake-feature-for-087-test', 'reason': 'closeout_verify.smoke_tail_stdout stripped_len=1 < min_chars=20', 'stripped_len': 1, 'min_chars': 20, 'must_contain': ['Smoke', 'smoke']} restored_ok=True\n[verify_infra_087][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_087][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-smoke-tail-nonempty-hard-check helper_ok=False reason=feature 'infra-P278-followup-closeout-smoke-tail-nonempty-hard-check' has no 'evidence' dict (got type=NoneType)\n[verify_infra_087][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
+              "pre_existing_baseline_sha": "b5f2aa8",
+              "baseline_tail_stdout": "verify_infra_087.py 在 baseline b5f2aa8 不存在 (新文件)；V5_reviewer_lgtm_gate 自指 evidence 检；A 段写入 reviewer + B 段回填 main_head_sha 后 V5 才会 PASS，属正常 closeout 时序自循环 (与 086 同型)"
+            },
+            {
+              "cmd": "./init.sh",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "cmd": "python scripts/verify_infra_085.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_085][PASS] V4_3_helper_real_run_ok ok=True scanned=25 enforced=16 legacy_allowlisted=9 violations=0\n[verify_infra_085][PASS] V4_4_helper_real_run_violation ok=False violations=1 restored_ok=True\n[verify_infra_085][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_085][FAIL] V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'\n[verify_infra_085][SUMMARY] FAIL 1/14: ['V5_reviewer_lgtm_gate']",
+              "pre_existing_baseline_sha": "b5f2aa8",
+              "baseline_tail_stdout": "baseline b5f2aa8 跑 verify_infra_085 同 FAIL：V5_reviewer_lgtm_gate target=infra-P278-followup-verify-lib-helper-naming-convention-lock reviewer.verdict='LGTM-conditional' expected 'LGTM'。已入 backlog infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion，pre-existing 不阻 merge"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-43 #5.43 infra-P278-followup-closeout-smoke-tail-nonempty-hard-check fresh-context dogfood：062 ALL PASS 23 checks（V4_closeout_smoke_tail_nonempty scanned=24 enforced=22 soft_skipped=2 violations=0 min_chars=20 must_contain=['Smoke','smoke']）；087 13/14 PASS（V5 reviewer pending FAIL 符合预期）；082/083/084/086 ALL PASS；smoke 全绿；mutation test 触发：smoke_tail_stdout='x' → V4_closeout_smoke_tail_nonempty hard FAIL violations=1，restore 后 ALL PASS 23 checks 还原；cascade bump LIB 91ee88fb / 062 3618d364 在 062/082/083/084/086/087 一致命中；Default-OFF + soft-PASS for legacy 设计合理。",
+            "checks_run": [
+              "verify_infra_062 ALL PASS 23",
+              "verify_infra_087 13/14 PASS (V5 pending expected)",
+              "verify_infra_082/083/084/086 ALL PASS",
+              "init.sh smoke 全绿",
+              "mutation test: smoke_tail_stdout='x' → V4 hard FAIL → restore → ALL PASS"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "085 V5 LGTM-conditional 是 pre-existing 与本 feature 无关",
+                "must_contain=['Smoke','smoke'] OR 语义，未来语言/标签调整需同步"
+              ]
+            }
+          }
+        },
+        "real_machine_uat": "n/a (infra)"
+      }
     },
     {
       "id": "infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump",

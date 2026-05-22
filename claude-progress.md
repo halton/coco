@@ -7096,3 +7096,16 @@ phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
   - smoke ALL PASS
 - Engineer commit 即将创建: feat(infra-P278-followup): add V4_closeout_smoke_tail_nonempty hard check (Default-OFF)
 - 等待 Reviewer sub-agent fresh-context 评审
+
+
+## Session N+3: phase-43 #5.43 infra-P278-followup-closeout-smoke-tail-nonempty-hard-check (passing, closeout A 段)
+- Engineer commit 168993b → Reviewer fresh-context LGTM → A 段 merge feat→main
+- merge HEAD=d57bf68 (no-ff into main, base=b5f2aa8)
+- closeout A verify:
+  - verify_infra_062 ALL PASS 23 checks (V4_closeout_smoke_tail_nonempty scanned=24 enforced=22 soft_skipped=2 violations=0)
+  - verify_infra_087 13/14 PASS (V5_reviewer_lgtm_gate FAIL pending B 段 main_head_sha bump 后再 evidence 完整)
+  - init.sh smoke ALL PASS
+  - verify_infra_085 V5 FAIL pre-existing (baseline b5f2aa8 reviewer.verdict='LGTM-conditional'，已 backlog)
+- evidence.closeout_verify 6 信号齐：main_head_sha=d57bf68 / baseline_head_echo=b5f2aa8 / merge_commit_sha=d57bf68… / smoke_tail_stdout(>=20 含 'Smoke') / verify_runs[4] / reviewer (sub_agent_fresh_context LGTM)
+- status: in_progress → passing
+- A 段 commit 待写；B 段将 bump main_head_sha 让 087 V5 PASS
