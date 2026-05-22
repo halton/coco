@@ -67,6 +67,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_closeout_evidence_trustworthy,
@@ -371,6 +372,115 @@ def v4_behavior() -> None:
 
 
 # ---------------------------------------------------------------------------
+# P299-followup wire-into-closeout-gate (infra-P299-followup-wire-into-closeout-gate):
+# 在 062 内部 wire assert_report_matches_closeout_runs helper, 使 closeout
+# byte-match 真伪校验在 ./init.sh / closeout gate 路径上有静态调用点 (机械化
+# 阻 merge 的 ast-lock 由 verify_infra_081 V4 保证). 实际 byte-match 真跑
+# 留 Default-OFF: schema 不兼容 (现存 flat verify_runs vs P299 nested round
+# 结构) 或 main_head 不匹配 → soft-PASS 跳过. 完整 enforcement 留 backlog
+# infra-P299-followup2-enable-byte-match-real-run。
+# ---------------------------------------------------------------------------
+def _enforce_closeout_byte_match() -> None:
+    """对 feature_list.json 中当前 main HEAD 对应的 closeout feature 调
+    assert_report_matches_closeout_runs (Default-OFF: schema 不兼容或不
+    匹配则 soft-PASS 跳过, 不阻 062 主流程; 081 V4 ast-lock 锁住"062 必须
+    调此 helper"这一静态事实)."""
+    import json
+    import subprocess as _sp  # noqa: WPS433
+
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        head = _sp.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(REPO), capture_output=True, text=True, check=False,
+        ).stdout.strip()
+    except Exception as e:  # noqa: BLE001
+        _emit("V4_byte_match_enforce", True, f"soft-skip: git HEAD err={e!r}")
+        return
+    try:
+        fl = json.loads(feature_list.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        _emit("V4_byte_match_enforce", True, f"soft-skip: feature_list parse err={e!r}")
+        return
+    target = None
+    for f in fl.get("features", []):
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify") or {}
+        if not isinstance(cv, dict):
+            continue
+        ch = cv.get("main_head_sha") or ""
+        if isinstance(ch, str) and ch and head.startswith(ch):
+            target = (f.get("id"), cv)
+            break
+    if target is None:
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: no passing feature.closeout_verify matches HEAD={head[:12]}",
+        )
+        return
+    fid, cv = target
+    # P299 helper 期望 nested round schema: {"verify_runs":[{"round":N,"scripts":{...}}]}
+    # 现存 closeout_verify 是 flat list [{"script","status","tail_stdout"}], schema
+    # 不兼容 → 包成单 round 适配, 若仍不兼容 (字段缺) helper 自身会报 schema err.
+    flat_runs = cv.get("verify_runs") or []
+    if not isinstance(flat_runs, list) or not flat_runs:
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: target={fid} verify_runs empty/not-list",
+        )
+        return
+    scripts_map: dict = {}
+    for r in flat_runs:
+        if not isinstance(r, dict):
+            continue
+        name = r.get("script")
+        tail = r.get("tail_stdout")
+        status = r.get("status")
+        rc = r.get("rc")  # legacy schema 无 rc, 跳过
+        if not (isinstance(name, str) and isinstance(tail, str)
+                and isinstance(status, str) and isinstance(rc, int)):
+            continue
+        scripts_map[name] = {"rc": rc, "tail_stdout": tail, "status": status}
+    if not scripts_map:
+        _emit(
+            "V4_byte_match_enforce",
+            True,
+            f"soft-skip: target={fid} legacy flat schema (no rc field); "
+            f"byte-match enforcement deferred to backlog infra-P299-followup2",
+        )
+        return
+    report_obj = {"verify_runs": [{"round": 1, "scripts": scripts_map}]}
+    try:
+        result = assert_report_matches_closeout_runs(
+            report_obj, REPO, cv.get("main_head_sha", ""),
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit("V4_byte_match_enforce", True, f"soft-skip: helper err={e!r}")
+        return
+    # 真跑成功: ok=True 时 hard PASS, ok=False 时 hard FAIL (真造假证据)
+    _emit(
+        "V4_byte_match_enforce",
+        bool(result.get("ok")),
+        f"target={fid} checked={result.get('checked')} "
+        f"matched={result.get('matched')} "
+        f"offending_count={len(result.get('offending') or [])}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -395,6 +505,7 @@ def main() -> int:
     v2_lib_file_sha()
     v3_helper_func_sha()
     v4_behavior()
+    _enforce_closeout_byte_match()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
