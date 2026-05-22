@@ -11174,7 +11174,7 @@
       "acceptance": "_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 从 15 减到 9; 062 V4_verify_lib_helper_naming_convention enforced=14 legacy_allowlisted=9 violations=0; smoke PASS; reviewer LGTM",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING",
+          "main_head_sha": "f98777f",
           "baseline_head_echo": "cedf2b7",
           "verify_runs": [
             {
