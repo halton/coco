@@ -6577,3 +6577,18 @@ Engineer sub-agent (phase-40 #4.40):
 - 新增 backlog: infra-P299-followup2-enable-byte-match-real-run (priority=999, status=backlog, phase=null) — 解决 V4_byte_match_enforce "挂牌不开门"
 - baseline_head_echo dogfood: 第 6 次落地
 - 下一步: phase-41 #4 候选 (按 priority 最低 not_started)
+
+## Session 2026-05-22 phase-41 #4.41 Engineer round-1 (infra-P286-followup4-add-noqa-placeholder-self-exempt-comment)
+- baseline main HEAD: 394e78f
+- feat branch: feat/infra-P286-followup4-add-noqa-placeholder-self-exempt-comment
+- 改动: 仅 scripts/verify_infra_078.py + feature_list.json (status not_started → in_progress)
+  - 第 60 行 PLACEHOLDER_SENTINEL 拼接处加 `# noqa: PLACEHOLDER_SELF_EXEMPT` 行内注释 + 多行块注释解释 self-exempt 硬约束 (严禁字面化为 "__BUMP_ME__"，否则 V4_1 / V4_4 立即 FAIL)
+  - scan_file_for_placeholder_assignments docstring 显式声明 "Sentinel self-exempt 硬规则 (P286 followup4)"，列出字面化后的两条 FAIL 后果
+  - V4_5 fake-file write_text 处加块注释解释为何用运行时拼接而非字面 + noqa 标记
+- V1 self main func sha 不变 (改动均在 main 函数之外: 模块顶层注释 / scan helper docstring / v4_behavior 函数内注释; ast.unparse 不保留注释)
+- V2 _verify_lib file sha 未动 _verify_lib，不变
+- verify_infra_078 实跑: ALL PASS 13 checks (V0×5 + V1 + V2 + V4_1..V4_5 + V5)
+- smoke: 全 PASS
+- pre-existing baseline FAIL (与本 feature 无关): verify_infra_037 (V2_lib_file_sha 锁旧 sha)、041 (AttributeError: verify_infra_034 has no _v6_target_id)、057 (V2_lib_file_sha + V4_real_all_match)
+- 无 V4 sha cascade 需求: dump_v4_sha_graph 仅 078 self-checker 锁自身 main，且 main 未变
+- 待 Reviewer fresh-context 评审
