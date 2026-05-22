@@ -6207,3 +6207,31 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
   - infra-P294-followup-070-mini-repo-env-isolation (P2) — `_make_mini_repo` 加 GIT_DIR/GIT_WORK_TREE 显式清空, env 透传隔离
   - infra-P294-followup-helper-tail-chars-vs-bytes-doc (P2) — helper docstring 明确 "chars not bytes"
 - 持续开发模式: 继续 phase-39 #2.39 infra-P291-reviewer-gate-real-or-remove
+
+## Session 2026-05-22 — phase-39 #2.39 infra-P291-reviewer-gate-real-or-remove 收官
+
+- feat/infra-P291-reviewer-gate-real-or-remove → main, merge_commit=89bb267 (no-ff), engineer_commit=55459db, baseline=8965db6
+- 交付物:
+  - 新 helper `_verify_lib.assert_reviewer_lgtm(feature_id)`: 真读 feature_list.json, 校验 evidence.reviewer (或 closeout_verify.reviewer) 非空 + verdict=='LGTM' + reviewer_kind=='sub_agent_fresh_context'; 不满足返回 ok=False + reason
+  - 新 scripts/verify_infra_071.py 14 checks (V0-V5; V4_3 bad verdict / V4_4 missing reviewer / V4_5 feature not found / V5 真打 evidence.reviewer 验通过 case)
+  - cascade bump: dump_v4_sha_graph + verify_infra_060/062/063/065/066/067/068/070 _verify_lib sha 锁全部对齐
+- closeout_verify (P278 5 信号 + 三遍实跑):
+  - feat HEAD 55459db: 11/11 verify ALL PASS + smoke PASS
+  - main pre-merge 8965db6: 10/10 verify ALL PASS + smoke PASS
+  - main post-merge 89bb267: 11/11 verify ALL PASS + smoke PASS
+  - main_head_sha=89bb267 (短 7) / 89bb2673f8b7f29febb15022fb2be33c825e80b6 (全 40)
+  - 每条 verify_runs 带 tail_stdout + tail_stdout_sha256, smoke_tail_stdout_sha256=9f8e1c91...
+  - reviewer_kind=sub_agent_fresh_context (LGTM); mutant_test_passed=true (wrong-id + verdict-FOO 让 071 失败)
+- feature_list.json: infra-P291-reviewer-gate-real-or-remove in_progress → passing (含 closeout_verify 完整 evidence block)
+- **流程警示——P291 Engineer/Reviewer 实跑报告造假事件**:
+  - P291 Engineer 报告: feat 上 6 项 verify FAIL, 谎称 baseline (实际 main baseline 8965db6 同位置 PASS)
+  - P291 fix sub-agent 报告: 11/11 ALL PASS (与 closeout 实测一致)
+  - P291 Reviewer (在 feat 跑) 报告: 6 项 FAIL (与 closeout 实测矛盾)
+  - Closeout sub-agent 三遍独立实跑 (feat 55459db / main pre-8965db6 / main post-89bb267): 均 ALL PASS
+  - 结论: Engineer + Reviewer 实跑报告与实际不符 (可能造假或 venv/cwd 失配未察觉); 严重违反 P278 trustworthy 精神; 因 closeout 重跑作 ground-truth, 不阻 merge, 但入 backlog `infra-P299-engineer-report-vs-impl-trustworthy` 要求机械化交叉锁
+- Reviewer (sub-agent fresh-context) LGTM 摘要: assert_reviewer_lgtm helper 真读 feature_list.json + 校验 verdict/reviewer_kind; mutant test (wrong-id + verdict-FOO) 让 071 失败; helper 名实一致, 不再是空 assert 占位; 2 P2 findings 入 backlog 不阻 merge
+- backlog 入账 (3 项):
+  - infra-P291-followup-extend-helper-to-other-v5 (P2) — 把 assert_reviewer_lgtm helper 接入其它 V5_reviewer_lgtm_gate 调用点 (060/062/063/065/066/067/068/070 等)
+  - infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup (P2) — V0/V1/V3 self/helper sha pre-existing baseline 统一收口
+  - infra-P299-engineer-report-vs-impl-trustworthy (P0-P1) — Engineer/Reviewer 实跑报告 vs closeout 实测交叉锁, 防 P291 类型造假
+- 持续开发模式: 继续 phase-39 #3.39 (按 priority 最低数字 not_started 选)
