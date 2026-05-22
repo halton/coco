@@ -47,6 +47,7 @@ __all__ = [
     "verify_evidence_tail_stdout_sha",
     "assert_report_matches_closeout_runs",
     "assert_reviewer_lgtm",
+    "assert_reviewer_baseline_head_echo",
     "assert_verify_passed",
     "verify_summary_exit",
 ]
@@ -1883,3 +1884,114 @@ def assert_report_matches_closeout_runs(
         "main_head_sha_resolved": resolved_sha,
         "error": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# infra-P286-followup-round1-reviewer-baseline-head-mismatch:
+# Reviewer baseline_head_echo 字段强制校验 helper.
+#
+# P286 round-1 Reviewer 报告中声称 baseline c88a248 上 verify_infra_060 FAIL 1/14,
+# 但 round-2 Closeout 实测 baseline 上 060 ALL PASS — round-1 Reviewer 把 baseline
+# tail 取在 round-1 feat HEAD (b69310d) 上而非真 baseline sha. 本 helper 校验
+# evidence.closeout_verify.reviewer.baseline_head_echo 与 pre_existing_baseline_sha
+# 前 7 char 匹配 (大小写不敏感), 防止 Reviewer 在错误 HEAD 上跑 baseline.
+#
+# Legacy tolerance: 缺字段时返回 ok=True legacy=True (不阻 pre-P286 老 feature
+# evidence 的 PASS), checked=False; 字段存在时严格校验前 7 char.
+# ---------------------------------------------------------------------------
+def assert_reviewer_baseline_head_echo(evidence_dict: dict) -> dict:
+    """校验 evidence.closeout_verify.reviewer.baseline_head_echo 与
+    pre_existing_baseline_sha 前 7 char 匹配 (大小写不敏感).
+
+    P286 baseline-HEAD mismatch 防御: Reviewer 在跑 baseline verify 前必须先
+    git checkout 到 pre_existing_baseline_sha 并 echo HEAD; helper 锁住
+    echo 值与 baseline sha 前 7 char 一致, 防止 Reviewer 误把 feat HEAD 上的
+    结果当 baseline 结果.
+
+    Schema:
+      {
+        "ok": bool,
+        "checked": bool,          # False 当 legacy 字段缺失
+        "legacy": bool,           # True 当字段缺失 (老 evidence 兼容)
+        "echo_value": str | None,
+        "expected_prefix": str | None,
+        "reason": str | None,
+        "error": str | None,
+      }
+
+    Legacy 行为 (字段缺失):
+      返回 ok=True, checked=False, legacy=True, reason="no baseline_head_echo
+      field (legacy)". 不阻 pre-P286 老 evidence PASS, 不强制 retro fix.
+
+    严格行为 (字段存在):
+      - 取 evidence.closeout_verify.pre_existing_baseline_sha 前 7 char
+        (大小写不敏感) 与 baseline_head_echo 比对
+      - 比对前两个值都 .lower() 处理
+      - 匹配 → ok=True checked=True legacy=False
+      - 不匹配 → ok=False checked=True legacy=False reason 指明问题
+    """
+    out: dict = {
+        "ok": False,
+        "checked": False,
+        "legacy": False,
+        "echo_value": None,
+        "expected_prefix": None,
+        "reason": None,
+        "error": None,
+    }
+    if not isinstance(evidence_dict, dict):
+        out["error"] = (
+            f"evidence_dict not a dict (got type={type(evidence_dict).__name__})"
+        )
+        return out
+    cv = evidence_dict.get("closeout_verify")
+    if not isinstance(cv, dict):
+        out["ok"] = True
+        out["legacy"] = True
+        out["reason"] = "no closeout_verify dict (legacy)"
+        return out
+    reviewer = cv.get("reviewer") if isinstance(cv.get("reviewer"), dict) else None
+    if not isinstance(reviewer, dict):
+        out["ok"] = True
+        out["legacy"] = True
+        out["reason"] = "no closeout_verify.reviewer dict (legacy)"
+        return out
+    if "baseline_head_echo" not in reviewer:
+        out["ok"] = True
+        out["legacy"] = True
+        out["reason"] = "no baseline_head_echo field (legacy)"
+        return out
+    echo = reviewer.get("baseline_head_echo")
+    if not isinstance(echo, str) or not echo.strip():
+        out["error"] = (
+            f"baseline_head_echo present but not a non-empty string "
+            f"(got type={type(echo).__name__} value={echo!r})"
+        )
+        return out
+    baseline_sha = cv.get("pre_existing_baseline_sha")
+    if not isinstance(baseline_sha, str) or not baseline_sha.strip():
+        out["error"] = (
+            f"pre_existing_baseline_sha missing or empty while "
+            f"baseline_head_echo={echo!r}"
+        )
+        out["echo_value"] = echo
+        return out
+    echo_norm = echo.strip().lower()
+    expected_prefix = baseline_sha.strip().lower()[:7]
+    out["echo_value"] = echo
+    out["expected_prefix"] = expected_prefix
+    out["checked"] = True
+    echo_prefix = echo_norm[:7]
+    if echo_prefix == expected_prefix:
+        out["ok"] = True
+        out["reason"] = (
+            f"baseline_head_echo={echo_prefix!r} matches "
+            f"pre_existing_baseline_sha[:7]={expected_prefix!r}"
+        )
+    else:
+        out["ok"] = False
+        out["reason"] = (
+            f"baseline_head_echo[:7]={echo_prefix!r} != "
+            f"pre_existing_baseline_sha[:7]={expected_prefix!r}"
+        )
+    return out
