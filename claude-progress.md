@@ -7215,3 +7215,15 @@ planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三�
 - baseline 066/072/074/079 FAIL 与 afaf47b 一致 pre-existing
 - Reviewer: sub_agent_fresh_context LGTM，含 2 轮 mutation (a strip grace / b inject violator) 验证 V4 hard FAIL 真触发并还原 ALL PASS
 - backlog 入账 1 项 P2 #3: `infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate` (17 grace_period 逐项 graduate)
+
+## Session 2026-05-22 — phase-45 #2.45 infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool (Closeout)
+
+- 062 V4_closeout_reviewer_block_shape 从 soft emit=True 升级为 bool(result['ok']) 真硬，配 grace_period 22 historic features 一次性 grandfather；GRACE 列表与实际 ungraced 扫描结果逐项匹配
+- helper `assert_closeout_reviewer_block_shape` 新增 `grace_period_feature_ids` 参数；062 _enforce_closeout_reviewer_block_shape 定义 V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS (22 historic)
+- 新增 verify_infra_093 V0-V5 共 14 checks 形态齐全；live mutant 注入确认真硬 promote
+- engineer commit: 61b489c, merge commit: b49782d, base 76468b8
+- verify_runs: 062 ALL PASS 27 grace_skipped=22 / 093 ALL PASS 14 / 092 ALL PASS 14 / smoke PASS
+- baseline 066/072 V3_helper_func_sha + 074/079 V2_verify_059_file_sha / V4_4 real_run baseline mismatch 仍 pre-existing 与本 feature 无关
+- Reviewer: sub_agent_fresh_context LGTM；P0=[] P1=[] P2=[22 项 grace_period graduate 入 backlog / 037/061/064 历史 floor 锁 lib_file_sha drift]
+- backlog 入账 1 项: `infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump` (037/061/064 _verify_lib floor sha bump)
+- dedupe: 删 idx=418 (priority=999) backlog stub，保 priority=2.45 主条目升 passing
