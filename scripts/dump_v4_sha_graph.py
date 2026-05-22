@@ -288,6 +288,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_reviewer_summary_nonempty (func-sha)",
     ("verify_infra_084.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_084.py:main (func-sha)",
+    # verify_infra_085 (P278-followup-verify-lib-helper-naming-convention-lock) —
+    # phase-42 #5.42: 锁 assert_verify_lib_public_helper_naming helper + lib file +
+    # 自 main; 不锁 self file sha (同 074/079/080/081/082/083/084 形)
+    ("verify_infra_085.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_085.py", "EXPECTED_NAMING_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_verify_lib_public_helper_naming (func-sha)",
+    ("verify_infra_085.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_085.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
