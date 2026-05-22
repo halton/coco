@@ -6683,3 +6683,36 @@ Engineer sub-agent (phase-40 #4.40):
 - baseline_head_echo dogfood 第 9 次落地, promote-to-P278-hard-required 后第 1 次 hard enforce
 - smoke ./init.sh 通过
 - 持续开发模式: 继续 phase-42 #2.42
+
+## Session 2026-05-22 phase-42 #2.42 Engineer round-1 (infra-P299-followup2-enable-byte-match-real-run)
+
+- 分支: feat/infra-P299-followup2-enable-byte-match-real-run (基于 main HEAD=5e512aa)
+- 问题诊断: 旧 _enforce_closeout_byte_match 同时受两道闸门门掉 → 永远 soft-skip:
+  - (a) closeout_verify.main_head_sha 是 closeout 当时的 HEAD; bump 之后 HEAD 又前移, head.startswith(ch) 永不匹配
+  - (b) 即便偶然匹配, flat schema 缺 rc 字段, scripts_map 永空 → soft-skip "legacy flat schema"
+  - 等于挂牌不开门 (Reviewer 在 #1.42 圈定的 known issue)
+- 方案选择: **方案 (b) 弱版 anchor byte-match** — 不走 P299 strong helper 真重跑 (schema 不兼容且需 retro 老 evidence), 改成静态字段一致性 anchor 校验, Default-OFF 渐进 promote 哲学保留
+- 改动:
+  - scripts/verify_infra_062.py: 全面重写 `_enforce_closeout_byte_match`, 新增 helper `_classify_closeout_tail_anchor(name, tail) -> (verdict, detail)`:
+    - 扫所有 passing feature.closeout_verify.verify_runs
+    - 每条 entry: 从 name (fallback script) 提 verify_infra_NNN, tail 必须含 'verify_infra_NNN' 子串
+    - name 无 verify_infra_NNN (smoke/bootstrap) 或 tail 为空 → soft_skip
+    - 含 anchor → enforced_ok; 缺 anchor → violation
+    - 任一 violation → hard FAIL; enforced>=1 → fire=True
+    - 末尾保留 deferred-strong-path: ast 静态调用 assert_report_matches_closeout_runs (满足 081 V4 ast-lock, 现存 evidence 都是 flat schema 不触发, 留未来 nested schema hook)
+  - scripts/verify_infra_083.py (新建): V0×5 + V1 self main func sha + V2 062 file sha + V3 classifier func sha + V4_1..V4_5 行为+ast wire-lock + V5 reviewer gate; 共 14 checks
+    - V4_4 关键: 真跑 _enforce_closeout_byte_match, 末条 V4_byte_match_enforce emit detail 必须含 fire=True 且不含 soft-skip → 真开门
+  - scripts/verify_infra_081.py: bump EXPECTED_VERIFY_062_FILE_SHA 99852c4f→51fb9bdf (062 file sha 变化)
+  - scripts/verify_infra_082.py: bump EXPECTED_VERIFY_062_FILE_SHA 99852c4f→51fb9bdf (同上)
+- verify 状态:
+  - 062 ALL PASS 19/19; **V4_byte_match_enforce scanned=175 enforced=114 soft_skipped=61 violations=0 fire=True fired_features=8** (真 fire, spec acceptance 达成)
+  - 081 ALL PASS 14/14 (V4_1..V4_5 全 PASS, helper ast 调用链 main→_enforce_closeout_byte_match→assert_report_matches_closeout_runs 完整)
+  - 083 PASS 13/14 (V5_reviewer_lgtm_gate 待 Reviewer, Engineer 阶段预期)
+  - 060 PASS (V4_real_unknown_count_eq_one pre-existing baseline FAIL, 与本 feature 无关)
+  - 077 ALL PASS 14/14
+- pre-existing baseline FAIL (在 main=5e512aa 同等复现, 不阻 merge):
+  - verify_infra_034: V5_self_subprocess + V6_orphan_reverse_locks
+  - verify_infra_060: V4_real_unknown_count_eq_one
+  - verify_infra_082: V1_self_main_func_sha
+- smoke ./init.sh 通过
+- 下一步: phase-42 #2.42 Reviewer fresh-context 评审

@@ -9920,7 +9920,7 @@
     {
       "id": "infra-P299-followup2-enable-byte-match-real-run",
       "priority": 2.42,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 42,
       "area": "infra",
       "title": "P299 followup2: 让 V4_byte_match_enforce 真正能开门 (摆脱 flat schema soft-skip)",
