@@ -6802,3 +6802,17 @@ Engineer sub-agent (phase-40 #4.40):
   - 081: ALL PASS (14)
 - smoke: ALL PASS
 - 等待 Reviewer fresh-context 评审 + closeout (Engineer 不切 passing, P261)
+
+## Session Closeout — phase-42 #4.42 infra-P278-followup-reviewer-summary-nonempty-hard-check (passing)
+
+- merge: 799ed83 (`merge: phase-42 #4.42 infra-P278-followup-reviewer-summary-nonempty-hard-check`)
+- engineer commit: 91a7ed7 (`feat(infra-P278-followup): add V4_reviewer_summary_nonempty hard check (Default-OFF)`)
+- baseline: main HEAD=3a452b5 (`baseline_head_echo: "3a452b5"`)
+- verify_runs:
+  - `python scripts/verify_infra_062.py` → ALL PASS 20 (V4_reviewer_summary_nonempty scanned=18 enforced=13 soft_skipped=5 violations=0 min_chars=20)
+  - `python scripts/verify_infra_084.py` → FAIL 1/14 V5_reviewer_lgtm_gate (expected: reviewer 评审 evidence A 阶段尚未填回)
+  - `python scripts/verify_infra_082.py` → FAIL 1/14 V1_self_main_func_sha (pre-existing baseline 3a452b5 同 FAIL 同 got=8f7253cb，确认与本 commit 无关)
+  - `./init.sh` → 全绿 (TTS / vision / companion-vision / face-tracker / VAD / wake-word / power-state / config / publish)
+- reviewer.reviewer_kind = sub_agent_fresh_context (LGTM; 含 mutation test: 把 infra-P294 reviewer.summary 改成 'x' → 062 立即 hard FAIL，还原后 ALL PASS)
+- 持续开发：phase-42 #5.42 候选继续
+
