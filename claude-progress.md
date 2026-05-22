@@ -7260,3 +7260,23 @@ planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三�
 - Reviewer: sub_agent_fresh_context LGTM；P0/P1=[]; P2=["sentinel placeholder dunder 风格说明"]
 - baseline 066/072/074/079 FAIL on base e84d8cd = pre-existing 与本 feature 无关
 - 五件套 promote 闭合：#1.45 verify_runs_shape / #2.45 reviewer_block_shape / #3.45 baseline_head_echo_format / #4.45 merge_commit_sha_format / #5.45 main_head_sha_format
+
+## Session 2026-05-22 phase-45 收官 + phase-46 planning
+
+phase-45 5/5 全 passing 已确认 (main HEAD=a06141c)：
+- #1.45 infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool
+- #2.45 infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool
+- #3.45 infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool
+- #4.45 infra-P278-followup-closeout-merge-commit-sha-format-hard-check
+- #5.45 infra-P278-followup-closeout-main-head-sha-format-hard-check
+
+主题闭合：062 V4 P278 6 信号 promote-bool/hard-check 链落锁；evidence 完整含 closeout_verify + reviewer sub_agent_fresh_context。
+
+phase-46 5 候选 promoted to not_started：
+- #1.46 infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate（延续 #1.45 promote-bool，将 17 historic features 逐项 graduate）
+- #2.46 infra-P299-followup-engineer-stale-verify-evidence（强制 closeout 前基于 final HEAD 重跑 cascade-affected verify）
+- #3.46 infra-P294-followup-070-self-func-sha-bump（V1 self func sha __BUMP_ME__ 占位锁定为实算值）
+- #4.46 infra-P294-followup-v5-reviewer-gate-evidence-bind（V5 reviewer_lgtm_gate 跨 verify 全局改造为实读 evidence.reviewer）
+- #5.46 infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline（修 verify_infra_079 V4.4 pre-existing FAIL）
+
+候选选择理由：均为 sim 内可验证、与 phase-45 V4/V6/P278/P294/P299 family 强延续、无真机依赖。

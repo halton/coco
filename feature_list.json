@@ -8605,9 +8605,9 @@
     },
     {
       "id": "infra-P299-followup-engineer-stale-verify-evidence",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "2.46",
+      "status": "not_started",
+      "phase": 46,
       "area": "infra",
       "title": "Engineer closeout 前必须基于 final HEAD 重跑所有 cascade-affected verify",
       "rationale": "P299 Closeout: Engineer 在 cascade bump 9 处 EXPECTED_VERIFY_LIB_FILE_SHA 后, 报告 7 项 verify FAIL (sha 不匹配), 但 Closeout 在 merged main HEAD 实跑全 13 项均 PASS rc=0. 误导方向无害 (over-report FAIL 而非 over-claim PASS), 但仍浪费 Reviewer/Closeout 排错精力. 建议在 AGENTS.md / CLAUDE.md / Engineer sub-agent brief 模板加硬规则: 涉及 cascade bump EXPECTED_*_FILE_SHA 的 feature, Engineer 必须在 final commit (含所有 bump) 后再跑一次完整 cascade-affected verify 列表, 提交 actual tail + rc, 禁止用中间 commit / pre-bump 状态的 verify 结果作 evidence."
@@ -8746,18 +8746,18 @@
     },
     {
       "id": "infra-P294-followup-070-self-func-sha-bump",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "3.46",
+      "status": "not_started",
+      "phase": 46,
       "area": "infra",
       "title": "verify_infra_070 V1 self func sha 占位 __BUMP_ME__ 锁定为实算值",
       "rationale": "P294 Reviewer P1 finding: verify_infra_070.py V1 self-func sha 占位 '__BUMP_ME__' 待下次 070 改动时锁定为实算 sha256 (与其他 verify 自检模式对齐, 防止后续 070 改动无人察觉)."
     },
     {
       "id": "infra-P294-followup-v5-reviewer-gate-evidence-bind",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "4.46",
+      "status": "not_started",
+      "phase": 46,
       "area": "infra",
       "title": "V5 reviewer_lgtm_gate 跨 verify 全局改造为实读 evidence.reviewer",
       "rationale": "P294 Reviewer P1 finding: 当前各 verify 脚本 V5_reviewer_lgtm_gate 仅打印固定文案不实读 feature_list.json evidence.reviewer 字段. 建议全局改造为真读 evidence.reviewer.reviewer_kind == sub_agent_fresh_context + verdict 含 LGTM 字样. 与 phase-39 #2.39 infra-P291-reviewer-gate-real-or-remove 重叠 (后者可作主线收口)."
@@ -11401,9 +11401,9 @@
     },
     {
       "id": "infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": "5.46",
+      "phase": 46,
+      "status": "not_started",
       "area": "infra",
       "title": "verify_infra_079 V4_4_real_run_074_rc0_and_pass pre-existing FAIL 修复",
       "description": "verify_infra_079.py V4_4_real_run_074_rc0_and_pass 在 baseline 8c59945 与当前 main 同 FAIL（rc=2，V4_2_eq_truth/V4_2b 本身 PASS）。属 074 真跑链路对 074 rc0 期望与实际 rc 不一致的 pre-existing 噪声，需单独 cascade 修复 074 内部 V2 FILE_SHA 或 EXPECTED_TOTAL_NODES_TRUTH 链路。",
@@ -12012,9 +12012,9 @@
     },
     {
       "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": "1.46",
+      "phase": 46,
+      "status": "not_started",
       "area": "infra",
       "title": "062 V4_closeout_verify_runs_shape grace_period 17 historic features 逐项 graduate",
       "rationale": "phase-45 #1.45 promote bool 真硬时为 17 个 historic features (P278/P286/P291/P294/P299 系列) 加 grace_period 暂避免硬失败；这些项的 verify_runs 字段欠规范 (tail_stdout 缺失 / status 非 PASS|FAIL|SKIP)，需要后续逐项 backfill 达标后从 grace_period 移除。",
@@ -12263,8 +12263,22 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-45 #3.45 V4_closeout_baseline_head_echo_format promote 到真硬 emit=bool(ok)，配套 16 项 grace_period 列表与历史 violations 精确匹配，无 leak 无 over-grace；helper 新签名 grace_period_feature_ids 行为正反例齐全；094 14 检中 13 PASS（V5 为预期 reviewer 未录），mutant 试验 (drop one grace → ok=False → emit=False) 证明 hard 行为生效；neighbours 088-093 全 PASS；smoke PASS；sha cascade (lib/062/dump/helper) 已同步锁紧。",
-            "findings": {"P0": [], "P1": [], "P2": []},
-            "checks_run": ["verify_infra_062", "verify_infra_094", "verify_infra_088", "verify_infra_089", "verify_infra_090", "verify_infra_091", "verify_infra_092", "verify_infra_093", "smoke"]
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "checks_run": [
+              "verify_infra_062",
+              "verify_infra_094",
+              "verify_infra_088",
+              "verify_infra_089",
+              "verify_infra_090",
+              "verify_infra_091",
+              "verify_infra_092",
+              "verify_infra_093",
+              "smoke"
+            ]
           }
         }
       }
@@ -12323,11 +12337,18 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "本轮 fresh checkout 在 HEAD=eb831ff 清洁状态下重跑 095/062/088/smoke，V1_self_main_func_sha 实测 60a6445c3f802de9 与 EXPECTED 完全一致，前轮 Reviewer P0 报告系误报；V4_closeout_merge_commit_sha_format hard check 已落地并在 062 byte-match 路径中正常执行（grace 14 项 + violations 0），phase-45 #4.45 验收通过。",
-            "checks_run": ["verify_infra_095", "verify_infra_062", "verify_infra_088", "smoke"],
+            "checks_run": [
+              "verify_infra_095",
+              "verify_infra_062",
+              "verify_infra_088",
+              "smoke"
+            ],
             "findings": {
               "P0": [],
               "P1": [],
-              "P2": ["V5_reviewer_lgtm_gate 在 095 当前 FAIL — 这是 closeout-pending 正常态"]
+              "P2": [
+                "V5_reviewer_lgtm_gate 在 095 当前 FAIL — 这是 closeout-pending 正常态"
+              ]
             }
           }
         }
@@ -12389,11 +12410,18 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "phase-45 #5.45 infra-P278-followup-closeout-main-head-sha-format-hard-check 评审通过。新增 V4_closeout_main_head_sha_format hard check 与同形态 helper assert_closeout_main_head_sha_format（min_hex_chars=7，非空字符串 + 全 0-9a-f 小写 hex），sentinel placeholder 既满足 mutant V4_5 occurrences>=2，又因 ID 不匹配任何真 feature 而不污染 violation 判定；emit 真 bool 非 naked True；cascade LIB/V3 sha 全 31 个 verify_infra_*.py 一致；live mutant 三组（empty grace、含 it、仅 sentinel）行为符合预期。",
-            "checks_run": ["verify_infra_096", "verify_infra_062", "verify_infra_095", "smoke"],
+            "checks_run": [
+              "verify_infra_096",
+              "verify_infra_062",
+              "verify_infra_095",
+              "smoke"
+            ],
             "findings": {
               "P0": [],
               "P1": [],
-              "P2": ["sentinel placeholder 字符串带 dunder 风格 '__no-historical-main-head-sha-violations__'，与同系列 merge_commit_sha grace 风格一致即可；后续若出现真历史 violation，将其加入 GRACE 同时移除 sentinel 也可（非阻塞）"]
+              "P2": [
+                "sentinel placeholder 字符串带 dunder 风格 '__no-historical-main-head-sha-violations__'，与同系列 merge_commit_sha grace 风格一致即可；后续若出现真历史 violation，将其加入 GRACE 同时移除 sentinel 也可（非阻塞）"
+              ]
             }
           }
         }
