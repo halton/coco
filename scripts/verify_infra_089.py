@@ -1,55 +1,50 @@
 #!/usr/bin/env python3
-"""verify_infra_085 V0-V5: 锁定 verify_infra_062._enforce_verify_lib_helper_naming 真 fire (Default-OFF hard check).
+"""verify_infra_089 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_shape
+真 fire (V4 closeout_verify.verify_runs[] element shape hard check).
 
-infra-P278-followup-verify-lib-helper-naming-convention-lock (phase-42 #5.42):
-``scripts/_verify_lib.py`` 内 helper 数量已超 20, 命名风格曾经分化
-(assert_* / scan_* / verify_* / func_* / read_*). 本 feature 锁定命名规约:
-新增公开 helper 必须以 ``assert_`` 或 ``enforce_`` 开头;
-legacy 已 export 的名字通过模块内置 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST
-显式豁免 (rename 入 backlog 单独 feature).
+infra-P278-followup-closeout-verify-runs-status-shape-hard-check (phase-44 #3.44):
+已有 V4_closeout_verify_runs_min_count 仅约束 verify_runs 条数 >=3, 但对每个 element
+内部字段 (name/status/tail_stdout) 形态不约束, 仍允许 status='' / tail_stdout='ok'
+之类不可 audit 的占位.
 
-本 feature 在 ``scripts/_verify_lib.py`` 加
-``assert_verify_lib_public_helper_naming(allowed_prefixes, legacy_allowlist)`` helper,
-并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_verify_lib_helper_naming()``,
-以 V4_verify_lib_helper_naming_convention 名义 emit:
-- _verify_lib 缺 __all__ → soft_skip (Default-OFF);
-- 含 __all__ → hard enforce: __all__ 中 callable 名字必须以 allowed_prefixes 任一开头,
-  或在 legacy_allowlist 中;
-- violation > 0 → V4 FAIL.
+本 feature 在 ``scripts/_verify_lib.py`` 加 ``assert_closeout_verify_runs_shape``
+helper, 并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_verify_runs_shape()``
+以 ``V4_closeout_verify_runs_shape`` 名义 emit. 062 处采 Default-OFF + soft-PASS
+形式 (emit=True), 把 scanned/enforced/soft_skipped/violations 写入 detail.
 
-本 verify (085) 锁住:
-- _verify_lib 内 ``assert_verify_lib_public_helper_naming`` helper 真存在
-  且 func sha 等于 EXPECTED_NAMING_HELPER_FUNC_SHA;
+本 verify (089) 锁住:
+- _verify_lib 内 ``assert_closeout_verify_runs_shape`` helper 真存在
+  且 func sha 等于 EXPECTED_SHAPE_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
-- 真跑 helper: 当前 _verify_lib 应当 ok=True (scanned>=1, violations==0);
-- mutant: 临时注入一个不带前缀的 fake public callable 到 __all__ →
-  helper 必须捕获 violation>=1;
-- 062 内必须有 ``_enforce_verify_lib_helper_naming`` 调用挂到 main 链上 (ast 扫).
+- 真跑 helper 正例: 仿造 enforce-set 内一个 fully-shaped feature → ok=True;
+- 真跑 helper 反例: status='' / name=None / tail_stdout='ok' → ok=False, violations
+  含对应 field;
+- 062 内必须有 ``_enforce_closeout_verify_runs_shape`` 调用挂到 main 链上 (ast 扫);
+- mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1.
 
-INFRA_085_SHA_LOCKS
+INFRA_089_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_085.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_089.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_verify_lib_public_helper_naming`` func sha:
-  EXPECTED_NAMING_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_verify_runs_shape`` func sha:
+  EXPECTED_SHAPE_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_verify_lib_public_helper_naming helper func sha
+- V3 assert_closeout_verify_runs_shape helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_verify_lib_helper_naming 调用
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_verify_runs_shape 调用
   - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
-  - V4_3 真跑 helper 正例: 当前 _verify_lib → ok=True, scanned>=1, violations==0
-  - V4_4 真跑 helper 反例: 注入临时不带前缀的 fake public callable →
-    violation>=1, ok=False; 还原后 ok=True
+  - V4_3 真跑 helper 正例: tmp feature_list 含一个 fully-shaped enforce-set → ok=True
+  - V4_4 真跑 helper 反例: tmp feature_list 含 name=None / status='' / 短 tail → violations 非空且各 field 命中
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
-- V5 reviewer_lgtm_gate (真门: ok is True)
+- V5 reviewer_lgtm_gate (真门: ok is True, V5 pending 期间 FAIL 预期)
 
-注意 (与 074/079/080/081/082/083/084 同形): 本脚本不锁自己 file sha,
-避免与 V4 mutant 对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
+注意: 本脚本不锁自己 file sha (与 074/079-088 同形), 避免与 V4 mutant 对源码做 ast
+替换时与自检冲突.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
 
@@ -59,8 +54,10 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -72,28 +69,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_closeout_verify_runs_shape,
     assert_reviewer_lgtm,
-    assert_verify_lib_public_helper_naming,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "87e910ff05a210135a341c163a0c71c1e4ac60371d55fbb983e16f0dc591aadb"
+EXPECTED_SELF_MAIN_FUNC_SHA = "13733da371b264573a548d02f3e2f87179a2c609433d92b3b80867deb502a2f8"
 EXPECTED_VERIFY_LIB_FILE_SHA = "dee2c3c706439e90398771d6cc510355a2a366afd93a8f2ddfa5b59ee5112246"
-EXPECTED_NAMING_HELPER_FUNC_SHA = "2ab8a07e421920e25f22dff751adb514c4b0fddec05ec2d645fe8d839d45f876"
+EXPECTED_SHAPE_HELPER_FUNC_SHA = "05b8474f8788a25ca2a944f9c34cabd677be494dd63c5d9076438b116753dcb4"
 
-DOCSTRING_SENTINEL = "INFRA_085_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_089_SHA_LOCKS"
 
-HELPER_NAME = "assert_verify_lib_public_helper_naming"
-ENFORCER_NAME = "_enforce_verify_lib_helper_naming"
-V5_GATE_FEATURE_ID = "infra-P278-followup-verify-lib-helper-naming-convention-lock"
+HELPER_NAME = "assert_closeout_verify_runs_shape"
+ENFORCER_NAME = "_enforce_closeout_verify_runs_shape"
+V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-verify-runs-status-shape-hard-check"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_085][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_089][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -106,7 +103,6 @@ def _is_hex64(s) -> bool:
 
 
 def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
-    """ast 扫源码中所有 Call 节点, 找 func.id==callee 或 func.attr==callee."""
     out: List[dict] = []
     try:
         tree = ast.parse(src)
@@ -133,6 +129,79 @@ def _scan_calls_in_source(src: str, callee: str) -> List[dict]:
 
     _walk(tree, [])
     return out
+
+
+def _good_feature() -> dict:
+    return {
+        "id": "good-feature",
+        "status": "passing",
+        "evidence": {
+            "closeout_verify": {
+                "main_head_sha": "abc1234",
+                "reviewer": {
+                    "reviewer_kind": "sub_agent_fresh_context",
+                    "verdict": "LGTM",
+                },
+                "verify_runs": [
+                    {
+                        "name": "verify_infra_062",
+                        "status": "PASS",
+                        "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (25 checks)",
+                    },
+                    {
+                        "name": "init_smoke",
+                        "status": "PASS",
+                        "tail_stdout": "==> Smoke: ok; entry-point + Coco class loaded",
+                    },
+                    {
+                        "name": "verify_infra_089",
+                        "status": "FAIL",
+                        "tail_stdout": "[verify_infra_089][SUMMARY] FAIL 1/14 (V5 pending placeholder)",
+                    },
+                ],
+            },
+        },
+    }
+
+
+def _bad_feature() -> dict:
+    return {
+        "id": "bad-feature",
+        "status": "passing",
+        "evidence": {
+            "closeout_verify": {
+                "main_head_sha": "def5678",
+                "reviewer": {
+                    "reviewer_kind": "sub_agent_fresh_context",
+                    "verdict": "LGTM",
+                },
+                "verify_runs": [
+                    {
+                        "name": None,
+                        "status": "PASS",
+                        "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (25 checks)",
+                    },
+                    {
+                        "name": "init_smoke",
+                        "status": "",
+                        "tail_stdout": "==> Smoke: ok; entry-point + Coco class loaded",
+                    },
+                    {
+                        "name": "verify_infra_089",
+                        "status": "PASS",
+                        "tail_stdout": "ok",
+                    },
+                ],
+            },
+        },
+    }
+
+
+def _write_tmp_feature_list(features: list) -> Path:
+    tmp = Path(tempfile.mkdtemp(prefix="verify_089_"))
+    p = tmp / "feature_list.json"
+    p.write_text(json.dumps({"features": features}), encoding="utf-8")
+    return p
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +275,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_verify_lib_public_helper_naming helper func sha
+# V3: assert_closeout_verify_runs_shape helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -214,17 +283,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_NAMING_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_SHAPE_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_NAMING_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_SHAPE_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_NAMING_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_NAMING_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_SHAPE_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_SHAPE_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -243,7 +312,7 @@ def v4_behavior() -> None:
         f"sites={[(c['lineno'], c['in_func']) for c in enforcer_calls]}",
     )
 
-    # V4_2: enforcer 调用必须挂在 062.main() 上 (main → enforcer)
+    # V4_2: enforcer 调用必须挂在 062.main() 上
     main_calls_enforcer = any(c["in_func"] == "main" for c in enforcer_calls)
     _emit(
         "V4_2_call_in_main_chain",
@@ -251,75 +320,50 @@ def v4_behavior() -> None:
         f"main_calls_enforcer={main_calls_enforcer}",
     )
 
-    # V4_3: 真跑 helper 正例 — 当前 _verify_lib 应当 ok=True
+    # V4_3: 真跑 helper 正例 — tmp feature_list 含一个 fully-shaped enforce-set
     try:
-        result = assert_verify_lib_public_helper_naming()
+        good_path = _write_tmp_feature_list([_good_feature()])
+        r_ok = assert_closeout_verify_runs_shape(good_path)
         v4_3_ok = (
-            isinstance(result, dict)
-            and result.get("ok") is True
-            and result.get("scanned_count", 0) >= 1
-            and not result.get("error")
-            and result.get("soft_skipped") is False
-            and len(result.get("violations") or []) == 0
+            isinstance(r_ok, dict)
+            and r_ok.get("ok") is True
+            and not r_ok.get("error")
+            and r_ok.get("enforced_count") == 1
+            and len(r_ok.get("violations") or []) == 0
         )
         v4_3_detail = (
-            f"ok={result.get('ok')} scanned={result.get('scanned_count')} "
-            f"enforced={result.get('enforced_count')} "
-            f"legacy_allowlisted={result.get('legacy_allowlisted_count')} "
-            f"violations={len(result.get('violations') or [])} "
-            f"soft_skipped={result.get('soft_skipped')}"
+            f"ok={r_ok.get('ok')} "
+            f"enforced={r_ok.get('enforced_count')} "
+            f"soft_skipped={len(r_ok.get('soft_skipped') or [])} "
+            f"violations={len(r_ok.get('violations') or [])}"
         )
     except Exception as e:  # noqa: BLE001
         v4_3_ok = False
         v4_3_detail = f"err={e!r}"
-    _emit(
-        "V4_3_helper_real_run_ok",
-        v4_3_ok,
-        v4_3_detail,
-    )
+    _emit("V4_3_helper_real_run_ok", v4_3_ok, v4_3_detail)
 
-    # V4_4: 反例 — 临时注入一个不带前缀的 fake public callable 到 _verify_lib
-    # __all__, helper 必须捕获 violation>=1; 还原后必须 ok=True
-    fake_name = "totally_invalid_public_helper_for_mutant_test"
+    # V4_4: 真跑 helper 反例 — name=None / status='' / tail='ok'
     try:
-        import _verify_lib as _vl
-        orig_all = list(_vl.__all__)
-        # 注入 callable + 加入 __all__
-        setattr(_vl, fake_name, lambda: None)
-        _vl.__all__ = orig_all + [fake_name]
-        try:
-            fr = assert_verify_lib_public_helper_naming()
-            v4_4_ok = (
-                fr.get("ok") is False
-                and len(fr.get("violations") or []) >= 1
-                and any(
-                    v.get("name") == fake_name for v in (fr.get("violations") or [])
-                )
-            )
-            v4_4_detail = (
-                f"ok={fr.get('ok')} violations={len(fr.get('violations') or [])} "
-                f"first_violation={(fr.get('violations') or [None])[0]}"
-            )
-        finally:
-            # 还原
-            _vl.__all__ = orig_all
-            try:
-                delattr(_vl, fake_name)
-            except AttributeError:
-                pass
-        # 还原后再跑一次, 确认恢复
-        rr = assert_verify_lib_public_helper_naming()
-        v4_4_restored_ok = rr.get("ok") is True
-        v4_4_detail += f" restored_ok={v4_4_restored_ok}"
-        v4_4_ok = v4_4_ok and v4_4_restored_ok
+        bad_path = _write_tmp_feature_list([_bad_feature()])
+        r_bad = assert_closeout_verify_runs_shape(bad_path)
+        violations = r_bad.get("violations") or []
+        fields_hit = {v.get("field") for v in violations}
+        v4_4_ok = (
+            r_bad.get("ok") is False
+            and r_bad.get("enforced_count") == 1
+            and len(violations) >= 3
+            and {"name", "status", "tail_stdout"}.issubset(fields_hit)
+        )
+        v4_4_detail = (
+            f"ok={r_bad.get('ok')} "
+            f"violations={len(violations)} "
+            f"fields_hit={sorted(fields_hit)} "
+            f"first={violations[0] if violations else None}"
+        )
     except Exception as e:  # noqa: BLE001
         v4_4_ok = False
         v4_4_detail = f"err={e!r}"
-    _emit(
-        "V4_4_helper_real_run_violation",
-        v4_4_ok,
-        v4_4_detail,
-    )
+    _emit("V4_4_helper_real_run_violation", v4_4_ok, v4_4_detail)
 
     # V4_5: mutant — ast 替换 062 中 ENFORCER_NAME 调用名 → 扫降到 0
     mutant_src, n_sub = re.subn(
@@ -367,12 +411,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_085][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_089][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_085][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_089][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
