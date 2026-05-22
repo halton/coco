@@ -12337,7 +12337,7 @@
       "id": "infra-P278-followup-closeout-main-head-sha-format-hard-check",
       "priority": 5.45,
       "phase": 45,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "closeout main_head_sha 必须非空 hex >=7 hard check",
       "rationale": "main_head_sha 是 closeout_verify 最核心字段（trustworthy 锚点），目前仅在 _verify_lib 多处隐式 assert 存在；本轮把格式 (非空 hex >=7) 落到独立 helper + 062 soft emit，与 merge_commit_sha / baseline_head_echo 三件套对齐。",
@@ -12346,15 +12346,58 @@
       "expected_files": [
         "scripts/_verify_lib.py",
         "scripts/verify_infra_062.py",
-        "scripts/verify_infra_NNN.py",
+        "scripts/verify_infra_096.py",
         "scripts/dump_v4_sha_graph.py"
       ],
       "verify_targets": [
         "verify_infra_062 V4_closeout_main_head_sha_format (soft)",
-        "新 verify_infra_NNN V0-V5"
+        "verify_infra_096 V0-V5"
       ],
       "notes_for_engineer": ".venv 必须激活；与 #4.45 同节奏；cascade 全量；注意区分 closeout_verify.main_head_sha (本规则) 与 chore bump commit B 段 (无关)",
-      "acceptance": "verify_infra_NNN ALL PASS；062 V4 soft emit 通过；smoke PASS；reviewer LGTM"
+      "acceptance": "verify_infra_096 ALL PASS；062 V4 soft emit 通过；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "4772d09",
+          "merge_commit_sha": "4772d09421347514cb06c9de9614b55a6e45448a",
+          "baseline_head_echo": "e84d8cd",
+          "pre_existing_baseline_sha": "e84d8cd",
+          "baseline_tail_stdout": "[verify_infra_066][SUMMARY] FAIL 1/14 (pre-existing); [verify_infra_072][SUMMARY] FAIL 1/14: ['V3_helper_func_sha']; [verify_infra_074][SUMMARY] FAIL 2/16: ['V2_verify_059_file_sha', 'V4_4_real_run_059_rc0']; [verify_infra_079][SUMMARY] FAIL 1/14: ['V4_4_real_run_074_rc0_and_pass'] — 4 项 pre-existing baseline FAIL 与本 feature 无关，已在 base e84d8cd 存在",
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=34 enforced=32 soft_skipped=2 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=32 v3_table=32 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False\n[verify_infra_062][SUMMARY] ALL PASS (29 checks)"
+            },
+            {
+              "name": "verify_infra_096",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_096][PASS] V4_3_grace_in_set_softpasses ok=True grace_skipped=['tmp-fid'] violations=0 grace_period_count=1\n[verify_infra_096][PASS] V4_4_grace_out_of_set_hardfails ok=False violations=1\n[verify_infra_096][PASS] V4_5_mutant_grace_const_rename orig_occurrences=3 mutant_subs=3\n[verify_infra_096][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-main-head-sha-format-hard-check helper_ok=True\n[verify_infra_096][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_095",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_095][PASS] V4_5_mutant_grace_const_rename orig_occurrences=4 mutant_subs=4\n[verify_infra_095][PASS] V5_reviewer_lgtm_gate target=infra-P278-followup-closeout-merge-commit-sha-format-hard-check helper_ok=True\n[verify_infra_095][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging) ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-45 #5.45 infra-P278-followup-closeout-main-head-sha-format-hard-check 评审通过。新增 V4_closeout_main_head_sha_format hard check 与同形态 helper assert_closeout_main_head_sha_format（min_hex_chars=7，非空字符串 + 全 0-9a-f 小写 hex），sentinel placeholder 既满足 mutant V4_5 occurrences>=2，又因 ID 不匹配任何真 feature 而不污染 violation 判定；emit 真 bool 非 naked True；cascade LIB/V3 sha 全 31 个 verify_infra_*.py 一致；live mutant 三组（empty grace、含 it、仅 sentinel）行为符合预期。",
+            "checks_run": ["verify_infra_096", "verify_infra_062", "verify_infra_095", "smoke"],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": ["sentinel placeholder 字符串带 dunder 风格 '__no-historical-main-head-sha-violations__'，与同系列 merge_commit_sha grace 风格一致即可；后续若出现真历史 violation，将其加入 GRACE 同时移除 sentinel 也可（非阻塞）"]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump",

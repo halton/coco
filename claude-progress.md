@@ -7250,3 +7250,13 @@ planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三�
 - Reviewer: sub_agent_fresh_context LGTM；P0/P1=[]; P2=["V5 095 FAIL closeout-pending 正常态"]
 - baseline 066 V2/V3 FAIL on base 5740eb2 = pre-existing SHA drift，与本 feature 无关
 - 三件套 + 第四件 promote 闭合：#1.45 verify_runs_shape / #2.45 reviewer_block_shape / #3.45 baseline_head_echo_format / #4.45 merge_commit_sha_format
+
+## Session 2026-05-22 phase-45 #5.45 closeout (A 段)
+- feature: infra-P278-followup-closeout-main-head-sha-format-hard-check status=passing priority=5.45 phase=45
+- engineer commit 90df810 → merge_commit 4772d09 → base main e84d8cd
+- verify_infra_096 ALL PASS 14/14 (helper assert_closeout_main_head_sha_format + grace const V4_MAIN_HEAD_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS + sentinel placeholder)
+- verify_infra_062 ALL PASS 29/29 (V4_closeout_main_head_sha_format scanned=34 enforced=32 grace_skipped=0 violations=0)
+- verify_infra_095 ALL PASS 14/14（cascade 不破）；smoke 全通
+- Reviewer: sub_agent_fresh_context LGTM；P0/P1=[]; P2=["sentinel placeholder dunder 风格说明"]
+- baseline 066/072/074/079 FAIL on base e84d8cd = pre-existing 与本 feature 无关
+- 五件套 promote 闭合：#1.45 verify_runs_shape / #2.45 reviewer_block_shape / #3.45 baseline_head_echo_format / #4.45 merge_commit_sha_format / #5.45 main_head_sha_format
