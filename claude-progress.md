@@ -6736,3 +6736,18 @@ Engineer sub-agent (phase-40 #4.40):
   - verify_infra_082: V1_self_main_func_sha
 - smoke ./init.sh 通过
 - 下一步: phase-42 #2.42 Reviewer fresh-context 评审 round-2
+
+
+## Session: 2026-05-22 infra-P299-followup2 closeout (phase-42 #2.42)
+
+- feature: `infra-P299-followup2-enable-byte-match-real-run`
+- feat branch: feat/infra-P299-followup2-enable-byte-match-real-run, HEAD 09b3f7c
+- baseline main: 5e512aa
+- round-1 REJECT (060/074 regression) → fix → round-2 LGTM conditional (sub_agent_fresh_context)
+- conditional bump 083 EXPECTED_SELF_MAIN_FUNC_SHA → 实测无需 bump（原值 83fba47 与 func_sha_by_name 机器实测一致），V1_self_main_func_sha 直接 PASS
+- merge commit: 303ad63 (--no-ff)
+- A-stage closeout commit: 见 git log
+- verify on main post-merge: 062 ALL PASS (V4_byte_match_enforce fire=True enforced=114 violations=0 fired_features=8), 060 PASS, 059 PASS, 081 PASS, 083 V5 等 B-stage evidence
+- pre-existing baseline FAIL (与 5e512aa 一致): 034 (V5/V6), 037 (V2_lib_file_sha), 041 (AttributeError _v6_target_id), 057 (V2/V4), 074 (V2_verify_059_file_sha), 082 (V1_self_main_func_sha)
+- smoke 通过
+- baseline_head_echo dogfood 第 10 次落地（promote-to-P278-hard-required 后第 2 次 hard 落地）
