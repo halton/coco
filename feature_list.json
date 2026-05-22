@@ -10961,7 +10961,7 @@
       "acceptance": "verify_infra_NNN.py 全 PASS; 现有 _verify_lib helper 命名 100% 合规 (如不合规需先 rename); mutant FAIL 恢复 PASS; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_A_COMMIT",
+          "main_head_sha": "ad9bbb6",
           "baseline_head_echo": "6f9f119",
           "merge_sha": "9943cff",
           "verify_runs": [
