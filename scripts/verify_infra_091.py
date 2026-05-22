@@ -1,49 +1,51 @@
 #!/usr/bin/env python3
-"""verify_infra_089 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_shape
-真 fire (V4 closeout_verify.verify_runs[] element shape hard check).
+"""verify_infra_091 V0-V5: 锁定 verify_infra_062._enforce_closeout_baseline_head_echo_format
+真 fire (V4 closeout_verify.baseline_head_echo 形态合规 hard check).
 
-infra-P278-followup-closeout-verify-runs-status-shape-hard-check (phase-44 #3.44):
-已有 V4_closeout_verify_runs_min_count 仅约束 verify_runs 条数 >=3, 但对每个 element
-内部字段 (name/status/tail_stdout) 形态不约束, 仍允许 status='' / tail_stdout='ok'
-之类不可 audit 的占位.
+infra-P278-followup-closeout-baseline-head-echo-format-hard-check (phase-44 #5.44):
+已有 V4_baseline_head_echo_required 仅检查 baseline_head_echo 字段是否存在且与
+closeout_verify.baseline_head_sha 前 7 hex 一致, 但对 baseline_head_echo 本身的
+形态 (是否为非空 str / 是否 >=7 / 是否全 hex / 是否与 main_head_sha 不同) 仍无
+机械化约束, 仍允许 baseline_head_echo='' / 'abc' / 'XYZ1234' / 与 main_head_sha
+完全相同等不可 audit 的占位.
 
-本 feature 在 ``scripts/_verify_lib.py`` 加 ``assert_closeout_verify_runs_shape``
-helper, 并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_verify_runs_shape()``
-以 ``V4_closeout_verify_runs_shape`` 名义 emit. 062 处采 Default-OFF + soft-PASS
+本 feature 在 ``scripts/_verify_lib.py`` 加 ``assert_closeout_baseline_head_echo_format``
+helper, 并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_baseline_head_echo_format()``
+以 ``V4_closeout_baseline_head_echo_format`` 名义 emit. 062 处采 Default-OFF + soft-PASS
 形式 (emit=True), 把 scanned/enforced/soft_skipped/violations 写入 detail.
 
-本 verify (089) 锁住:
-- _verify_lib 内 ``assert_closeout_verify_runs_shape`` helper 真存在
-  且 func sha 等于 EXPECTED_SHAPE_HELPER_FUNC_SHA;
+本 verify (091) 锁住:
+- _verify_lib 内 ``assert_closeout_baseline_head_echo_format`` helper 真存在
+  且 func sha 等于 EXPECTED_BASELINE_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
 - 真跑 helper 正例: 仿造 enforce-set 内一个 fully-shaped feature → ok=True;
-- 真跑 helper 反例: status='' / name=None / tail_stdout='ok' → ok=False, violations
-  含对应 field;
-- 062 内必须有 ``_enforce_closeout_verify_runs_shape`` 调用挂到 main 链上 (ast 扫);
+- 真跑 helper 反例: baseline_head_echo 四种坏形态 (空 / <7 / 含非 hex / == main 前 N hex)
+  → ok=False, violations 含全部 4 种情况;
+- 062 内必须有 ``_enforce_closeout_baseline_head_echo_format`` 调用挂到 main 链上 (ast 扫);
 - mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1.
 
-INFRA_089_SHA_LOCKS
+INFRA_091_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_089.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_091.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_closeout_verify_runs_shape`` func sha:
-  EXPECTED_SHAPE_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_baseline_head_echo_format`` func sha:
+  EXPECTED_BASELINE_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_closeout_verify_runs_shape helper func sha
+- V3 assert_closeout_baseline_head_echo_format helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_verify_runs_shape 调用
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_baseline_head_echo_format 调用
   - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
   - V4_3 真跑 helper 正例: tmp feature_list 含一个 fully-shaped enforce-set → ok=True
-  - V4_4 真跑 helper 反例: tmp feature_list 含 name=None / status='' / 短 tail → violations 非空且各 field 命中
+  - V4_4 真跑 helper 反例: tmp feature_list 含四种坏形态 → violations 覆盖全部 4 种
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
 - V5 reviewer_lgtm_gate (真门: ok is True, V5 pending 期间 FAIL 预期)
 
-注意: 本脚本不锁自己 file sha (与 074/079-088 同形), 避免与 V4 mutant 对源码做 ast
+注意: 本脚本不锁自己 file sha (与 074/079-090 同形), 避免与 V4 mutant 对源码做 ast
 替换时与自检冲突.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
@@ -69,28 +71,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
-    assert_closeout_verify_runs_shape,
+    assert_closeout_baseline_head_echo_format,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "13733da371b264573a548d02f3e2f87179a2c609433d92b3b80867deb502a2f8"
+EXPECTED_SELF_MAIN_FUNC_SHA = "72d4e15f0582a8e21d80463ee5ec8c0d1e64b10135567b015fba55ddb5c58882"
 EXPECTED_VERIFY_LIB_FILE_SHA = "99933db26a1bda209f928f24961c4f1e39105ce32f9046b841fcc9782eb919b0"
-EXPECTED_SHAPE_HELPER_FUNC_SHA = "05b8474f8788a25ca2a944f9c34cabd677be494dd63c5d9076438b116753dcb4"
+EXPECTED_BASELINE_HELPER_FUNC_SHA = "fd166d27c14e81bf0ccc99990b98d2349e44c744baea9f6c470a27ec8d3b22f9"
 
-DOCSTRING_SENTINEL = "INFRA_089_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_091_SHA_LOCKS"
 
-HELPER_NAME = "assert_closeout_verify_runs_shape"
-ENFORCER_NAME = "_enforce_closeout_verify_runs_shape"
-V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-verify-runs-status-shape-hard-check"
+HELPER_NAME = "assert_closeout_baseline_head_echo_format"
+ENFORCER_NAME = "_enforce_closeout_baseline_head_echo_format"
+V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-baseline-head-echo-format-hard-check"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_089][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_091][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -137,68 +139,83 @@ def _good_feature() -> dict:
         "status": "passing",
         "evidence": {
             "closeout_verify": {
-                "main_head_sha": "abc1234",
+                "main_head_sha": "deadbeefcafe0001",
+                "baseline_head_echo": "abc1234",
                 "reviewer": {
                     "reviewer_kind": "sub_agent_fresh_context",
                     "verdict": "LGTM",
+                    "summary": "fresh-context review",
+                    "checks_run": ["V0"],
+                    "findings": {"P0": [], "P1": [], "P2": []},
                 },
-                "verify_runs": [
-                    {
-                        "name": "verify_infra_062",
-                        "status": "PASS",
-                        "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (25 checks)",
-                    },
-                    {
-                        "name": "init_smoke",
-                        "status": "PASS",
-                        "tail_stdout": "==> Smoke: ok; entry-point + Coco class loaded",
-                    },
-                    {
-                        "name": "verify_infra_089",
-                        "status": "FAIL",
-                        "tail_stdout": "[verify_infra_089][SUMMARY] FAIL 1/14 (V5 pending placeholder)",
-                    },
-                ],
             },
         },
     }
 
 
-def _bad_feature() -> dict:
-    return {
-        "id": "bad-feature",
-        "status": "passing",
-        "evidence": {
-            "closeout_verify": {
-                "main_head_sha": "def5678",
-                "reviewer": {
-                    "reviewer_kind": "sub_agent_fresh_context",
-                    "verdict": "LGTM",
+def _bad_features() -> list:
+    # 4 个 feature, 每个触发一种坏形态, 全部在 enforce-set 内:
+    base_reviewer = {
+        "reviewer_kind": "sub_agent_fresh_context",
+        "verdict": "LGTM",
+        "summary": "fresh-context review summary text",
+        "checks_run": ["V0"],
+        "findings": {"P0": [], "P1": [], "P2": []},
+    }
+    return [
+        # 反例 1: 空 str
+        {
+            "id": "bad-empty",
+            "status": "passing",
+            "evidence": {
+                "closeout_verify": {
+                    "main_head_sha": "deadbeefcafe0001",
+                    "baseline_head_echo": "",
+                    "reviewer": base_reviewer,
                 },
-                "verify_runs": [
-                    {
-                        "name": None,
-                        "status": "PASS",
-                        "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (25 checks)",
-                    },
-                    {
-                        "name": "init_smoke",
-                        "status": "",
-                        "tail_stdout": "==> Smoke: ok; entry-point + Coco class loaded",
-                    },
-                    {
-                        "name": "verify_infra_089",
-                        "status": "PASS",
-                        "tail_stdout": "ok",
-                    },
-                ],
             },
         },
-    }
+        # 反例 2: 长度 < 7
+        {
+            "id": "bad-short",
+            "status": "passing",
+            "evidence": {
+                "closeout_verify": {
+                    "main_head_sha": "deadbeefcafe0001",
+                    "baseline_head_echo": "abc",
+                    "reviewer": base_reviewer,
+                },
+            },
+        },
+        # 反例 3: 含非 hex (大写 / X / Y / Z)
+        {
+            "id": "bad-nonhex",
+            "status": "passing",
+            "evidence": {
+                "closeout_verify": {
+                    "main_head_sha": "deadbeefcafe0001",
+                    "baseline_head_echo": "XYZ1234",
+                    "reviewer": base_reviewer,
+                },
+            },
+        },
+        # 反例 4: == main_head_sha 前 N 字符
+        {
+            "id": "bad-same",
+            "status": "passing",
+            "evidence": {
+                "closeout_verify": {
+                    "main_head_sha": "abcd1234abcd5678",
+                    "baseline_head_echo": "abcd123",
+                    "reviewer": base_reviewer,
+                },
+            },
+        },
+    ]
 
 
 def _write_tmp_feature_list(features: list) -> Path:
-    tmp = Path(tempfile.mkdtemp(prefix="verify_089_"))
+    tmp = Path(tempfile.mkdtemp(prefix="verify_091_"))
     p = tmp / "feature_list.json"
     p.write_text(json.dumps({"features": features}), encoding="utf-8")
     return p
@@ -275,7 +292,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_closeout_verify_runs_shape helper func sha
+# V3: assert_closeout_baseline_head_echo_format helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -283,17 +300,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_SHAPE_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_BASELINE_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_SHAPE_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_BASELINE_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_SHAPE_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_SHAPE_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_BASELINE_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_BASELINE_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -323,7 +340,7 @@ def v4_behavior() -> None:
     # V4_3: 真跑 helper 正例 — tmp feature_list 含一个 fully-shaped enforce-set
     try:
         good_path = _write_tmp_feature_list([_good_feature()])
-        r_ok = assert_closeout_verify_runs_shape(good_path)
+        r_ok = assert_closeout_baseline_head_echo_format(good_path)
         v4_3_ok = (
             isinstance(r_ok, dict)
             and r_ok.get("ok") is True
@@ -342,22 +359,26 @@ def v4_behavior() -> None:
         v4_3_detail = f"err={e!r}"
     _emit("V4_3_helper_real_run_ok", v4_3_ok, v4_3_detail)
 
-    # V4_4: 真跑 helper 反例 — name=None / status='' / tail='ok'
+    # V4_4: 真跑 helper 反例 — 4 种坏形态 (empty / <7 / 含非 hex / == main 前 N)
     try:
-        bad_path = _write_tmp_feature_list([_bad_feature()])
-        r_bad = assert_closeout_verify_runs_shape(bad_path)
+        bad_path = _write_tmp_feature_list(_bad_features())
+        r_bad = assert_closeout_baseline_head_echo_format(bad_path)
         violations = r_bad.get("violations") or []
-        fields_hit = {v.get("field") for v in violations}
+        # 4 个 feature 都应在 enforce-set, 各产生一条 violation
+        feat_ids_hit = {v.get("feature_id") for v in violations}
+        expected_ids = {"bad-empty", "bad-short", "bad-nonhex", "bad-same"}
         v4_4_ok = (
             r_bad.get("ok") is False
-            and r_bad.get("enforced_count") == 1
-            and len(violations) >= 3
-            and {"name", "status", "tail_stdout"}.issubset(fields_hit)
+            and r_bad.get("enforced_count") == 4
+            and len(violations) >= 4
+            and expected_ids.issubset(feat_ids_hit)
         )
         v4_4_detail = (
             f"ok={r_bad.get('ok')} "
+            f"enforced={r_bad.get('enforced_count')} "
             f"violations={len(violations)} "
-            f"fields_hit={sorted(fields_hit)} "
+            f"feat_ids_hit={sorted(feat_ids_hit)} "
+            f"expected={sorted(expected_ids)} "
             f"first={violations[0] if violations else None}"
         )
     except Exception as e:  # noqa: BLE001
@@ -411,12 +432,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_089][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_091][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_089][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_091][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
