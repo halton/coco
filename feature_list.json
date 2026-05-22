@@ -11015,9 +11015,29 @@
       "title": "historical cascade self_main_func_sha rebump (067-081 群)",
       "description": "067/068/070-077/080 等多个 verify file 的 EXPECTED_SELF_MAIN_FUNC_SHA 在历史 cascade 中漏 bump 导致 V1_self_main_func_sha 在当前 main 上 FAIL；非 trustworthy 故障，集中重 bump",
       "rationale": "Reviewer 在 infra-P286-followup3 closeout 暴露：phase-39/40/41 cascade 多个 verify 漏 bump V1_self_main_func_sha lock。不阻 merge（pre-existing baseline FAIL），但累积；集中一次 bump 清。"
+    },
+    {
+      "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "verify_infra_062 V3_helper_func_sha pre-existing baseline FAIL 集中重 bump",
+      "description": "在 phase-42 cascade 期间多次出现 verify_infra_062.py V3_helper_func_sha pre-existing baseline FAIL (got 与 EXPECTED 偏移)；非 trustworthy 故障，需在统一时间窗一次性 cascade rebump，并同步 dump 与下游 081/082/083 EXPECTED_VERIFY_062_FILE_SHA 链。",
+      "rationale": "phase-42 #3.42 Engineer round 与多次 cascade 报告中 062 V3_helper_func_sha 一直作为 baseline noise 存在；后续 V6 backlog 收割时一次性消除噪声，提升 trustworthy 信号纯度。"
+    },
+    {
+      "id": "infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "_verify_lib.py 15 个 legacy public helper 改名 assert_/enforce_ 前缀",
+      "description": "infra-P278-followup-verify-lib-helper-naming-convention-lock (#5.42) 用 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 临时豁免 15 个 legacy 名 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_* / live_verify_sha_set / verify_* / scan_reviewer_text)。本 backlog 项为后续统一改名 assert_/enforce_ 前缀, 同时 cascade 所有调用点 + dump + cross-file func sha, 清空 allowlist。",
+      "rationale": "命名一致性 lock 已上线但 legacy 群仍以 allowlist 形式存在；统一收割避免 allowlist 永久化、为后续 helper 引入提供干净基准。"
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 phase-42 #5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock → passing (merge 9943cff; baseline 6f9f119; Reviewer sub-agent fresh-context LGTM-conditional (P1 复核 no-op); _verify_lib.assert_verify_lib_public_helper_naming Default-OFF soft_skip 23 __all__/8 enforced/15 legacy_allowlisted/0 violations; 062 V4_verify_lib_helper_naming_convention 真触发; 085 mutation test 实施 (V4_4 插入非法 helper → violation → 还原 PASS); 062 ALL PASS 21; 083/084 ALL PASS; 082 V1_self_main_func_sha FAIL pre-existing baseline 6f9f119 同模式 (P286-followup6 backlog 覆盖); smoke 全通过; phase-42 5/5 PASSING)"
+    "last_updated": "2026-05-22"
   }
 }

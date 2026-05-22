@@ -6850,3 +6850,26 @@ Engineer sub-agent (phase-40 #4.40):
 - evidence.closeout_verify (6 信号全): main_head_sha (placeholder → B-commit bump) / verify_runs (含 tail_stdout + status) / FAIL pre_existing_baseline_sha=6f9f119 + baseline_tail_stdout / smoke_tail_stdout / reviewer.reviewer_kind=sub_agent_fresh_context / baseline_head_echo=6f9f119
 - status: in_progress → passing
 - phase-42 5/5 PASSING (1.42/2.42/3.42/4.42/5.42 全 passing)
+
+
+## phase-42 收官 (2026-05-22)
+
+phase-42 全 5/5 passing，统一收官：
+
+- **#1.42 infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required** (passing) — V4_baseline_head_echo_required promote 为 P278 closeout-verify-trustworthy hard required；062 V4 cascade scan 近 15 个 closeout 全带 baseline_head_echo
+- **#2.42 infra-P299-followup2-enable-byte-match-real-run** (passing, merge 303ad63) — V4_byte_match_enforce 由 Default-OFF 翻为真 fire；062 ALL PASS 19/19, fire=True enforced=114 violations=0 fired_features=8；EXPECTED_CLASSIFIER_FUNC_SHA → EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA 命中 _RE_VERIFY_HINT 解 unknown_count regression
+- **#3.42 infra-P286-followup5-v5-ok-naming-extend-to-079-081-074** (passing, merge 241ce4e) — 9 个 verify file V5 line `ok=` 改 `helper_ok=` 全仓库统一；零硬编码 ok 残留；baseline_head_echo dogfood 第 11 次落地
+- **#4.42 infra-P278-followup-reviewer-summary-nonempty-hard-check** (passing, merge 799ed83) — 新 helper assert_reviewer_summary_nonempty (min_chars=20, Default-OFF) + 062 V4_reviewer_summary_nonempty wire；scanned=18 enforced=13 soft_skipped=5 violations=0；新建 verify_infra_084 V0-V5 14 checks
+- **#5.42 infra-P278-followup-verify-lib-helper-naming-convention-lock** (passing, merge 9943cff) — 新 helper assert_verify_lib_public_helper_naming + 062 V4_verify_lib_helper_naming_convention wire；scanned=23 enforced=8 legacy_allowlisted=15 violations=0；15 legacy public helper 显式 allowlist (rename 入 backlog)；新建 verify_infra_085 V0-V5 14 checks
+
+关键能力上线：
+1. **baseline_head_echo promote 为 P278 hard-required** (062 V4 cascade, 17+ closeout dogfood)
+2. **closeout byte-match enforce real fire** (V4_byte_match_enforce 不再 Default-OFF, fire=True 8 features)
+3. **V5 ok-naming 全仓库统一** (`helper_ok=` 命名规约锁全覆盖 062/063/065-068/070-083)
+4. **reviewer.summary 非空 hard 检** (min_chars=20, soft_skip 兼容 legacy)
+5. **_verify_lib public helper naming convention lock** (assert_/enforce_ 强制前缀；legacy 15 名 allowlist 锁定)
+
+backlog 补登 (priority=999 status=backlog phase=null)：
+- `infra-V6-backlog-062-v3-helper-func-sha-rebump-followup` — 062 V3_helper_func_sha pre-existing 集中重 bump
+- `infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk` — _verify_lib 15 legacy public helper 改 assert_/enforce_ 前缀
+- (既有) `infra-P286-followup6-historical-cascade-self-main-sha-rebump` — 067-081 self_main_func_sha 群集中 rebump
