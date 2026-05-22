@@ -6271,3 +6271,18 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - 整改方案: 方案 2 — 移除 V4_5, 保留 V4_1-V4_4 (15 checks); 同步修正 074 docstring 错误 (原 P286 实测 80 → 81)
 - cascade 分析: dump _PER_FILE_LOCKS 074 两条 value 是 target 描述字符串 (非真 sha), 074 file/func sha 也无下游锁 → 无需 bump dump / 060
 - final HEAD verify (round-2 commit 后): verify_infra_074 rc=0 (15/15 PASS), verify_infra_059 rc=0 (18 checks), verify_infra_060 rc=0 (14 checks), ./init.sh smoke rc=0
+
+## Session Closeout: infra-P286-total-nodes-lock (phase-39 #5.39) — passing
+
+- pre-merge HEAD: 07ad894 (feat/infra-P286-total-nodes-lock)
+- main baseline pre-merge: c88a248
+- post-merge main HEAD: 616bed0
+- Reviewer fresh-context: sub_agent_fresh_context / LGTM (round-2)
+- Closeout 三遍实跑 (07ad894 上): verify_074 / verify_059 / verify_060 / verify_034 / smoke 全 PASS (3/3 rounds)
+- Post-merge on main 616bed0: 074(15) / 059(18) / 060(14) / 034(53) / smoke 全 PASS
+- baseline c88a248 verify_059 FAIL 1/17=[V2_lib_file_sha] 为 pre-existing
+- Mutation guard: 074 检测 mutant a (81→81000) 与 mutant c (整行删) 均 FAIL (V2 sha + V4_4 real-run)
+- 3 backlog 入账:
+  - infra-P286-followup-round1-reviewer-baseline-head-mismatch (Reviewer brief 加 baseline_head_echo checkpoint)
+  - infra-P286-followup-074-self-main-func-sha-bump (074 EXPECTED_SELF_MAIN_FUNC_SHA 升真值)
+  - infra-P286-followup-v4-2-stricter-equal-check (V4_2b 锁 == 精确值)
