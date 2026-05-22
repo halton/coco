@@ -9930,7 +9930,7 @@
       "acceptance": "verify_infra_062 V4_byte_match_enforce 至少在 1 个 passing feature 上真实 fire (非 soft-skip); mutant FAIL/恢复 PASS; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "a87f098",
           "feat_head_sha": "09b3f7c",
           "baseline_head_sha": "5e512aa722f2fef9b85281cb0dca17154abfa2d7",
           "merge_commit_sha": "303ad63c1ddc15942556266540cf9334ee095362",
