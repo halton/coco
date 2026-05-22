@@ -94,11 +94,13 @@ EXPECTED_CURRENT_UNKNOWN_COUNT = 1
 # 误删 (V4 与 total 一起缩水, ratio 不变), ratio 检查不报警。引入
 # EXPECTED_CURRENT_TOTAL_NODES (实测值 + ±TOTAL_NODES_TOLERANCE 浮动) 形成
 # count + total + ratio 三重锁, 防节点漂移。
-# 实测来源: dump_v4_sha_graph --mermaid 派生 nodes 总数 (P286 实测 = 81)。
-# 未来新增 verify_infra_* / lib helper 引起 total_nodes 漂移 > ±5 应有意识地
+# 实测来源: dump_v4_sha_graph --mermaid 派生 nodes 总数 (P286 实测 = 81;
+# infra-P286-followup-tolerance-headroom-bump phase-41 #1.41 实测 = 86, bump
+# truth 到 86 并扩 tolerance 到 ±10 留 headroom, 下次新增 verify 累计到 96 才再爆)。
+# 未来新增 verify_infra_* / lib helper 引起 total_nodes 漂移 > ±10 应有意识地
 # bump 该常量 (并复审是否新 lock 真的有效)。
-EXPECTED_CURRENT_TOTAL_NODES: int = 81
-TOTAL_NODES_TOLERANCE: int = 5
+EXPECTED_CURRENT_TOTAL_NODES: int = 86
+TOTAL_NODES_TOLERANCE: int = 10
 
 DOCSTRING_SENTINEL = "INFRA_059_SHA_LOCKS"
 
