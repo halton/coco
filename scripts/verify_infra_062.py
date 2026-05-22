@@ -73,6 +73,7 @@ from _verify_lib import (  # noqa: E402
     assert_closeout_main_head_sha_format,
     assert_closeout_reviewer_block_shape,
     assert_closeout_smoke_tail_nonempty,
+    assert_closeout_verify_runs_freshness,
     assert_closeout_verify_runs_min_count,
     assert_closeout_verify_runs_shape,
     assert_report_matches_closeout_runs,
@@ -84,7 +85,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "2c412eec9b65a38df3e3923dbf14e2e0178410e1a2305e37a87c4e97eae225d3"
+EXPECTED_VERIFY_LIB_FILE_SHA = "4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -100,6 +101,7 @@ V3_HELPER_FUNC_NAMES = (
     "assert_closeout_main_head_sha_format",
     "assert_closeout_reviewer_block_shape",
     "assert_closeout_smoke_tail_nonempty",
+    "assert_closeout_verify_runs_freshness",
     "assert_closeout_verify_runs_min_count",
     "assert_closeout_verify_runs_shape",
     "assert_report_matches_closeout_runs",
@@ -1210,6 +1212,104 @@ def _enforce_closeout_main_head_sha_format() -> None:
 # Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
 # Smoke/smoke → hard enforce FAIL.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# V4: closeout_verify.verify_runs[] freshness anchor hard check (phase-46 #2.46)
+# infra-P299-followup-engineer-stale-verify-evidence —
+# 新增 V4_closeout_verify_runs_freshness, emit 首次即真硬 (bool(result['ok']));
+# 配套引入 V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS (含所有现有
+# passing+sub_agent_fresh_context features, 一次性 grandfather 缺 freshness_anchor
+# 的历史 evidence). 新 feature 必须在每条 verify_runs entry 含 freshness_anchor
+# 字段 (前 7+ hex of main_head_sha 或 "post-merge-rerun" 字面量), 锁 closeout
+# 重跑发生在最终 post-cascade HEAD, 不是 stale 中间 sha.
+# 实际 hard 行为由 verify_infra_097 自身锁定 (helper func sha + 行为正反例).
+# 未来逐项 graduate: 把 feature 从 GRACE 列表移除并补齐 freshness_anchor 字段.
+# ---------------------------------------------------------------------------
+V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS = (
+    "infra-P291-reviewer-gate-real-or-remove",
+    "infra-P294-closeout-stdout-sha-verification",
+    "infra-P297-bootstrap-canary-edit-flow-docs",
+    "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
+    "infra-P291-followup-extend-helper-to-other-v5",
+    "infra-P299-engineer-report-vs-impl-trustworthy",
+    "infra-P299-followup-wire-into-closeout-gate",
+    "infra-P299-followup2-enable-byte-match-real-run",
+    "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
+    "infra-P286-followup-074-self-main-func-sha-bump",
+    "infra-P286-followup-v4-2-stricter-equal-check",
+    "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
+    "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
+    "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
+    "infra-P286-followup-tolerance-headroom-bump",
+    "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
+    "infra-P278-followup-reviewer-summary-nonempty-hard-check",
+    "infra-P278-followup-verify-lib-helper-naming-convention-lock",
+    "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
+    "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
+    "infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk",
+    "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
+    "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
+    "infra-V6-backlog-085-v5-reviewer-lgtm-conditional-promotion",
+    "infra-V6-backlog-062-v3-helper-func-sha-rebump-round2",
+    "infra-P278-followup-closeout-verify-runs-status-shape-hard-check",
+    "infra-P278-followup-closeout-reviewer-block-shape-hard-check",
+    "infra-P278-followup-closeout-baseline-head-echo-format-hard-check",
+    "infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate",
+    "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
+    "infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool",
+    "infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool",
+    "infra-P278-followup-closeout-merge-commit-sha-format-hard-check",
+    "infra-P278-followup-closeout-main-head-sha-format-hard-check",
+)
+
+
+def _enforce_closeout_verify_runs_freshness() -> None:
+    """对 feature_list.json 调 assert_closeout_verify_runs_freshness(min_run_count=1,
+    grace_period_feature_ids=V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS);
+    emit=bool(result['ok']) 真硬: 新 feature (不在 GRACE 内) 缺 freshness_anchor 或
+    形态不符 → FAIL. 实际 hard 行为由 verify_infra_097 自身锁定."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_verify_runs_freshness",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_verify_runs_freshness(
+            feature_list,
+            min_run_count=1,
+            grace_period_feature_ids=V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS,
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_verify_runs_freshness",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_verify_runs_freshness",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_verify_runs_freshness",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned')} "
+        f"enforced={result.get('enforced')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"grace_skipped={len(result.get('grace_skipped') or [])} "
+        f"grace_period_count={result.get('grace_period_count')} "
+        f"violations={len(violations)} "
+        f"min_run_count={result.get('min_run_count')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
 def _enforce_v3_helper_drift_detector() -> None:
     """infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 (phase-44 #2.44):
     扫 _verify_lib.py 全部公共 helper, 与 V3_HELPER_FUNC_NAMES 比对.
@@ -1304,6 +1404,7 @@ def main() -> int:
     _enforce_closeout_baseline_head_echo_format()
     _enforce_closeout_merge_commit_sha_format()
     _enforce_closeout_main_head_sha_format()
+    _enforce_closeout_verify_runs_freshness()
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)

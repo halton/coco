@@ -1,39 +1,39 @@
 #!/usr/bin/env python3
-"""verify_infra_095 V0-V5: 锁定 verify_infra_062._enforce_closeout_merge_commit_sha_format
-emit 已是真硬 (bool(result['ok'])), 配套 grace_period 14 historic features.
+"""verify_infra_097 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_freshness
+emit 已是真硬 (bool(result['ok'])), 配套 grace_period 34 historic features.
 
-infra-P278-followup-closeout-merge-commit-sha-format-hard-check (phase-45 #4.45):
-新增 V4_closeout_merge_commit_sha_format check, 首次即 hard PASS — emit=bool(result['ok']),
-但用 grace_period_feature_ids 一次性 grandfather 14 个已存在但缺 merge_commit_sha 字段的
-历史 passing+sub_agent_fresh_context feature; 新 feature 必须 hard PASS merge_commit_sha 形态.
+infra-P299-followup-engineer-stale-verify-evidence (phase-46 #2.46):
+新增 V4_closeout_verify_runs_freshness check, 首次即 hard PASS — emit=bool(result['ok']),
+但用 grace_period_feature_ids 一次性 grandfather 34 个已存在 (passing+sub_agent_fresh_context)
+但缺 freshness_anchor 字段的历史 feature; 新 feature 必须 hard PASS freshness_anchor 形态.
 
-本 verify (095) 锁住:
-- _verify_lib.py 的 assert_closeout_merge_commit_sha_format helper 接受
+本 verify (097) 锁住:
+- _verify_lib.py 的 assert_closeout_verify_runs_freshness helper 接受
   ``grace_period_feature_ids`` 参数 (signature 检查);
 - _verify_lib file sha 与 helper func sha;
-- 062 内必须定义 ``V4_MERGE_COMMIT_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS`` 常量 (非空 tuple);
-- 062 _enforce_closeout_merge_commit_sha_format 调用 helper 时传入 grace_period_feature_ids;
-- 062 _enforce_closeout_merge_commit_sha_format 内的 _emit 第二参不是裸 True (首次即真硬);
+- 062 内必须定义 ``V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS`` 常量 (非空 tuple);
+- 062 _enforce_closeout_verify_runs_freshness 调用 helper 时传入 grace_period_feature_ids;
+- 062 _enforce_closeout_verify_runs_freshness 内的 _emit 第二参不是裸 True (首次即真硬);
 - 真跑 helper 正例: feature 在 grace_set 内 + 含 violation → ok=True + grace_skipped 含该 fid;
 - 真跑 helper 反例: feature 不在 grace_set 内 + 含 violation → ok=False + violations 非空;
 - mutant: 062 中 grace 常量名替换 → 062 仍可解析但 grace_period_count==0.
 
-INFRA_095_SHA_LOCKS
+INFRA_097_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_095.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_097.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_closeout_merge_commit_sha_format`` func sha:
-  EXPECTED_MERGE_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_verify_runs_freshness`` func sha:
+  EXPECTED_FRESHNESS_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_closeout_merge_commit_sha_format helper func sha
+- V3 assert_closeout_verify_runs_freshness helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 中 V4_MERGE_COMMIT_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS 常量定义 + 非空 tuple
-  - V4_2 062 _enforce_closeout_merge_commit_sha_format 调 helper 时传 grace_period_feature_ids
+  - V4_1 062 中 V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS 常量定义 + 非空 tuple
+  - V4_2 062 _enforce_closeout_verify_runs_freshness 调 helper 时传 grace_period_feature_ids
         参数 且 _emit 第二参不是裸 True (真硬 promote 检查)
   - V4_3 真跑 helper 正例: bad feature ∈ grace_set → ok=True, grace_skipped 含 fid
   - V4_4 真跑 helper 反例: bad feature ∉ grace_set → ok=False, violations 非空
@@ -63,24 +63,24 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
-    assert_closeout_merge_commit_sha_format,
+    assert_closeout_verify_runs_freshness,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "60a6445c3f802de994c2910cb35454f4398d32344ca2da7e8c54963355caa4d0"
+EXPECTED_SELF_MAIN_FUNC_SHA = "22907b65d6189e710ad51bf2ca1befe2a2870fdb0d65716f22f6767e1b12f441"
 EXPECTED_VERIFY_LIB_FILE_SHA = "4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd"
-EXPECTED_MERGE_HELPER_FUNC_SHA = "0f632e9eb01c0ec1e0d5ad3467c137d7ceb4c0e5add47a31a41cd3c495aff34a"
+EXPECTED_FRESHNESS_HELPER_FUNC_SHA = "624db90dcd2e321a1231ed65ac821941193ca6ab30ed547e5682b362aadc4fdd"
 
-DOCSTRING_SENTINEL = "INFRA_095_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_097_SHA_LOCKS"
 
-HELPER_NAME = "assert_closeout_merge_commit_sha_format"
-ENFORCER_NAME = "_enforce_closeout_merge_commit_sha_format"
-GRACE_CONST_NAME = "V4_MERGE_COMMIT_SHA_FORMAT_GRACE_PERIOD_FEATURE_IDS"
-EMIT_TAG = "V4_closeout_merge_commit_sha_format"
+HELPER_NAME = "assert_closeout_verify_runs_freshness"
+ENFORCER_NAME = "_enforce_closeout_verify_runs_freshness"
+GRACE_CONST_NAME = "V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS"
+EMIT_TAG = "V4_closeout_verify_runs_freshness"
 V5_GATE_FEATURE_ID = (
-    "infra-P278-followup-closeout-merge-commit-sha-format-hard-check"
+    "infra-P299-followup-engineer-stale-verify-evidence"
 )
 
 _results: List[Tuple[str, bool, str]] = []
@@ -88,7 +88,7 @@ _results: List[Tuple[str, bool, str]] = []
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_095][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_097][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -100,16 +100,23 @@ def _is_hex64(s) -> bool:
     return isinstance(s, str) and bool(re.fullmatch(r"[0-9a-f]{64}", s))
 
 
-def _bad_merge_commit_feature() -> dict:
+def _bad_freshness_feature() -> dict:
     """构造一个 enforce-set 命中 (status=passing, reviewer_kind=sub_agent_fresh_context)
-    但 merge_commit_sha 缺失的 violation feature."""
+    但 verify_runs entry 缺 freshness_anchor 字段的 violation feature."""
     return {
-        "id": "tmp-fid",
+        "id": "tmp-fid-freshness",
         "status": "passing",
         "evidence": {
             "closeout_verify": {
-                "main_head_sha": "abc1234",
-                # merge_commit_sha 故意缺失 → violation
+                "main_head_sha": "abc1234def5678",
+                "verify_runs": [
+                    {
+                        "script": "scripts/verify_infra_001.py",
+                        "tail_stdout": "[verify_infra_001][SUMMARY] ALL PASS\n",
+                        "status": "PASS",
+                        # freshness_anchor 故意缺失 → violation
+                    },
+                ],
                 "reviewer": {
                     "reviewer_kind": "sub_agent_fresh_context",
                     "verdict": "LGTM",
@@ -123,7 +130,7 @@ def _bad_merge_commit_feature() -> dict:
 
 
 def _write_tmp_feature_list(features: list) -> Path:
-    tmp = Path(tempfile.mkdtemp(prefix="verify_095_"))
+    tmp = Path(tempfile.mkdtemp(prefix="verify_097_"))
     p = tmp / "feature_list.json"
     p.write_text(json.dumps({"features": features}), encoding="utf-8")
     return p
@@ -279,7 +286,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_closeout_merge_commit_sha_format helper func sha
+# V3: assert_closeout_verify_runs_freshness helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -287,17 +294,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_MERGE_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_FRESHNESS_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_MERGE_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_FRESHNESS_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_MERGE_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_MERGE_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_FRESHNESS_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_FRESHNESS_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -321,10 +328,10 @@ def v4_behavior() -> None:
     )
 
     try:
-        bad = _bad_merge_commit_feature()
+        bad = _bad_freshness_feature()
         fid = bad["id"]
         path = _write_tmp_feature_list([bad])
-        r_in_grace = assert_closeout_merge_commit_sha_format(
+        r_in_grace = assert_closeout_verify_runs_freshness(
             path, grace_period_feature_ids=(fid,)
         )
         gs = r_in_grace.get("grace_skipped") or []
@@ -347,9 +354,9 @@ def v4_behavior() -> None:
     _emit("V4_3_grace_in_set_softpasses", v4_3_ok, v4_3_detail)
 
     try:
-        bad = _bad_merge_commit_feature()
+        bad = _bad_freshness_feature()
         path = _write_tmp_feature_list([bad])
-        r_out_grace = assert_closeout_merge_commit_sha_format(
+        r_out_grace = assert_closeout_verify_runs_freshness(
             path, grace_period_feature_ids=()
         )
         violations = r_out_grace.get("violations") or []
@@ -414,12 +421,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_095][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_097][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_095][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_097][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
