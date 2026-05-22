@@ -12044,10 +12044,21 @@
       "acceptance": "决定 backfill 16 violations 或加 grace_period 后 promote 062 emit→bool"
     },
     {
+      "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "062 V4_closeout_verify_runs_shape grace_period 17 historic features 逐项 graduate",
+      "rationale": "phase-45 #1.45 promote bool 真硬时为 17 个 historic features (P278/P286/P291/P294/P299 系列) 加 grace_period 暂避免硬失败；这些项的 verify_runs 字段欠规范 (tail_stdout 缺失 / status 非 PASS|FAIL|SKIP)，需要后续逐项 backfill 达标后从 grace_period 移除。",
+      "description": "phase-45 #1.45 grace_period 17 historic feature_ids (P278/P286/P291/P294/P299 系列)，后续逐项 backfill verify_runs 字段达标后从 grace_period 移除，最终 grace_period=()",
+      "acceptance": "17 项 grace_period 全 graduate 后 grace_period_count==0 且 062 V4 PASS"
+    },
+    {
       "id": "infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool",
       "priority": 1.45,
       "phase": 45,
-      "status": "in_progress",
+      "status": "passing",
       "area": "infra",
       "title": "V4_closeout_verify_runs_shape soft emit → bool 真硬 promote",
       "rationale": "phase-44 #3.44 已落 helper + 062 soft emit (scanned/enforced/soft_skipped/violations=167)；本轮在 062 把该规则升为 bool 真硬 (与 V3_helper_func_sha_drift_detector 同级)，含 backfill 167 violations 或加 grace_period 决策（参考 V5_reviewer_lgtm_conditional_promotion 节奏）。",
@@ -12085,6 +12096,47 @@
             "smoke ALL PASS (./init.sh)",
             "pre-existing baseline FAIL (与本 feature 无关): 066/072 V3_helper_func_sha vs 99bd10127cd14263; 074/079 V2_verify_059_file_sha / V4_4 real_run baseline mismatch"
           ]
+        },
+        "closeout_verify": {
+          "main_head_sha": "2e46f49",
+          "baseline_head_echo": "afaf47b",
+          "merge_commit_sha": "2e46f4907abe8e3e8beb6862963ca6aaf115234d",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=30 enforced=28 soft_skipped=2 grace_skipped=17 grace_period_count=17 violations=0; [SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "name": "verify_infra_092",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_092][PASS] V4_5_mutant_grace_const_rename orig_occurrences=3 mutant_subs=3; V5_reviewer_lgtm_gate FAIL pending (target self, expected)"
+            },
+            {
+              "name": "smoke (./init.sh)",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish ok entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "verify_infra_081-091 (11 verifies)",
+              "status": "PASS",
+              "tail_stdout": "081/082/083/084/085/086/087/088/089/090/091 each [SUMMARY] ALL PASS (14 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish ok entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "pre_existing_baseline_sha": "afaf47b",
+          "baseline_tail_stdout": "066/072 V3_helper_func_sha pre-existing; 074 V2_verify_059_file_sha + V4_4_real_run_059_rc0 pre-existing; 079 V4_4_real_run_074_rc0_and_pass pre-existing —— 均在 base afaf47b 即存在，与本 feature 无关",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-45 #1.45 062 V4_closeout_verify_runs_shape emit True→bool(result['ok']) 真硬 promote + grace_period 17 historic features 设计干净；helper 用 per-feature violation 暂存+grace_set 覆盖判定吞掉违规、ok 由最终 violations 决定；062/092/081-091/smoke 全 PASS；066/072/074/079 pre-existing baseline 已确认与本 feature 无关；mutation (a) strip 1 grace 项触发 V4 hard FAIL violations=11；mutation (b) 注入 enforce-set 内 fake 违规触发 V4 hard FAIL violations=1，两轮还原后 ALL PASS。",
+            "checks_run": ["diff afaf47b..0e612b7", "062 ALL PASS 27 grace_skipped=17", "092 13/14 V5 pending", "081-091 ALL PASS", "smoke PASS", "baseline 066/072/074/079 at afaf47b FAIL 复现", "mutation (a) grace-strip V4 hard FAIL violations=11 restore PASS", "mutation (b) inject violator V4 hard FAIL violations=1 restore PASS"],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": ["092 V4_5 mutant 仅文本计数；非阻断", "V4_2 promote 检查依赖存在任一 promoted _emit；V4_3/V4_4 + V1 self sha 兜底风险低", "17 项 grace_period graduate 建议入 backlog"]
+            }
+          }
         }
       }
     },

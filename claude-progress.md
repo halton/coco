@@ -7205,3 +7205,13 @@ phase-44 收官 main HEAD=46e9736。无遗留 in_progress。三个 soft emit V4 
 
 planning rationale: phase-44 三 soft emit 已 wire 完整，phase-45 把这三条由 soft 升为 bool 真硬以闭合 trustworthy 三件套；同时把 closeout_verify 另两个核心字段 (merge_commit_sha / main_head_sha) 按相同 helper + soft emit 节奏补齐。下一轮起做 #1.45（最大 violations 但模式最复杂，先攻克）或按 violations 升序从 #3.45 起做（决策待 engineer 阶段）。
 
+
+## Session 2026-05-22 — phase-45 #1.45 infra-V6-backlog-062-v4-closeout-verify-runs-shape-promote-bool (Closeout A)
+
+- 062 V4_closeout_verify_runs_shape 从 soft emit=True 升级为 bool(result['ok']) 真硬，配 grace_period 17 historic features (P278/P286/P291/P294/P299 系列) 暂避免硬 FAIL
+- helper `assert_closeout_verify_runs_shape` 新增 `grace_period_feature_ids` 参数，per-feature violation 暂存 + grace_set 覆盖判定吞掉违规，ok 由最终 violations 决定
+- engineer commit: 0e612b7, merge commit: 2e46f49, base afaf47b
+- verify_runs: 062 ALL PASS 27 grace_skipped=17 / 092 PASS 13/14 (V5 self pending 预期) / smoke PASS / 081-091 ALL PASS 14 each
+- baseline 066/072/074/079 FAIL 与 afaf47b 一致 pre-existing
+- Reviewer: sub_agent_fresh_context LGTM，含 2 轮 mutation (a strip grace / b inject violator) 验证 V4 hard FAIL 真触发并还原 ALL PASS
+- backlog 入账 1 项 P2 #3: `infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate` (17 grace_period 逐项 graduate)
