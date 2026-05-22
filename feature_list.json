@@ -9750,7 +9750,7 @@
       "description": "目前 P299 helper assert_report_matches_closeout_runs 是 verify_infra_075 内部使用的工具; closeout 流程并未强制调用. 需要在 closeout sub-agent 模板/AGENTS.md 中强制要求 evidence.closeout_verify.verify_runs[*].tail_stdout 必填 + 必须含 engineer_runs/reviewer_runs (若存在) sha256 字段, 主会话/新 verify 调本 helper 实跑对比, mismatch 阻 merge.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "31051b3",
           "feat_head_sha": "f7d4b7c2437566511ecb5373ec556ae5c4b9fd23",
           "baseline_head_sha": "890002c",
           "merge_commit_sha": "164479b",
