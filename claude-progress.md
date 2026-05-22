@@ -6592,3 +6592,14 @@ Engineer sub-agent (phase-40 #4.40):
 - pre-existing baseline FAIL (与本 feature 无关): verify_infra_037 (V2_lib_file_sha 锁旧 sha)、041 (AttributeError: verify_infra_034 has no _v6_target_id)、057 (V2_lib_file_sha + V4_real_all_match)
 - 无 V4 sha cascade 需求: dump_v4_sha_graph 仅 078 self-checker 锁自身 main，且 main 未变
 - 待 Reviewer fresh-context 评审
+
+## Session 2026-05-22 phase-41 #4.41 Closeout (infra-P286-followup4-add-noqa-placeholder-self-exempt-comment)
+- baseline main HEAD: 394e78f
+- feat HEAD: 2c9e5d2
+- merge commit: c0f7f1e (merge --no-ff)
+- Reviewer (sub_agent_fresh_context) round-1: LGTM "纯注释/docstring hardening，零运行时逻辑变更；V4_1 offending=[]，V4_5 mutant hits=2 真触发，V0-V5 齐全；037/041/057 baseline 同 FAIL，pre-existing"
+- main 上 verify_runs 实跑: 078/062/081/080/079/074/060/034 全 ALL PASS；037/041/057 FAIL = baseline 394e78f 同步 FAIL = pre-existing 与本 feature 无关
+- smoke: 通过
+- feature_list.json: status in_progress → passing, evidence 完整 nested round schema (verify/status/tail_stdout + 三 FAIL 配 pre_existing_baseline_sha + baseline_tail_stdout + reviewer.reviewer_kind=sub_agent_fresh_context + lgtm=true + feat_head_echo + baseline_head_echo)
+- baseline_head_echo dogfood: 第 7 次落地
+- 下一步: phase-41 #5.41 候选 (按 priority 最低 not_started)
