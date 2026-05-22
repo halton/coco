@@ -11115,7 +11115,7 @@
         "merge_commit": "c17a854",
         "note": "dump_v4_sha_graph 实算确认 062 V3_helper_func_sha (d190174c24b26494) 与 075-085 全部 V3 helper func sha 已与 EXPECTED 一致，0 bumps 即正确（no-op confirmation feature）；scope 仅 feature_list.json + claude-progress.md；dogfood P278 hard-check 三套计数 +1。",
         "closeout_verify": {
-          "main_head_sha": "c17a854",
+          "main_head_sha": "a4fdf98",
           "baseline_head_echo": "8c59945",
           "verify_runs": [
             {
