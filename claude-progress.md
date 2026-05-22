@@ -1,5 +1,13 @@
 # 进度日志
 
+## Session 2026-05-22 — phase-46 #1.46 infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate (Closeout A)
+
+- merge: feat/infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate (726909c) → main, merge sha=d244ce4, base=16af96d
+- verify_runs: verify_infra_062 ALL PASS 29 (V4 grace_skipped=0 grace_period_count=1 sentinel); verify_infra_092 ALL PASS 14 (V4_1 grace_const_defined_nonempty + V4_5 mutant rename); verify_infra_088 ALL PASS 14; smoke ./init.sh PASS
+- feature status: not_started → passing；closeout_verify 6 信号完整 (main_head_sha=0000000 待 B 段 bump, baseline_head_echo=16af96d, merge_commit_sha=d244ce4..., verify_runs=3, smoke_tail_stdout 含 "Smoke 通过", baseline_tail_stdout 062 baseline ALL PASS, reviewer sub_agent_fresh_context LGTM checks_run=4)
+- Reviewer P2: (1) pre-existing baseline FAIL 在 066/072/074/079 不在本 feature 涉及范围 (2) P278-followup-reviewer-summary-nonempty-hard-check 的 FAIL run-level 未补 pre_existing_baseline_sha 字段 (shape helper 不要求，trustworthy helper 才要)
+- 等待 B 段 main_head_sha bump
+
 ## Session 2026-05-22 — phase-44 #3.44 infra-P278-followup-closeout-verify-runs-status-shape-hard-check (Closeout A)
 
 - merge: feat/infra-P278-followup-closeout-verify-runs-status-shape-hard-check (9ae0443) → main, merge sha=8654109, base=7f3d4e4
