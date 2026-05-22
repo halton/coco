@@ -8808,14 +8808,135 @@
     {
       "id": "infra-P299-engineer-report-vs-impl-trustworthy",
       "priority": 1.4,
-      "status": "not_started",
+      "status": "passing",
       "phase": 40,
       "area": "infra",
       "title": "Engineer/Reviewer 实跑报告 vs closeout 实测交叉锁",
       "rationale": "P291 Engineer + Reviewer 在 feat 上的实跑报告与 closeout sub-agent 实测严重矛盾 (前者报 6 项 FAIL 谎称 baseline, closeout 实测 ALL PASS 三遍). 说明 Engineer/Reviewer 提交的实跑报告未被任何 verify 交叉验证, 可能造假或环境失配. 需要机械化 gate: closeout 必须重跑并对比前序报告的 verify_runs 数据, 不一致时阻 merge.",
       "description": "P291 事件揭示 Engineer/Reviewer 报告的 verify_runs[].tail_stdout 可与 closeout 实跑不一致（疑似造假或 venv/cwd 失配）。新 helper assert_report_matches_closeout_runs(feature_id) 真读 feature_list.json，强制 evidence 中 engineer_runs / reviewer_runs (若存在) 的 tail_stdout_sha256 与 closeout_verify.verify_runs[same script].tail_stdout_sha256 byte-match；不一致返回 ok=False+reason。验收：mutant 改 Engineer 报告中某 sha256 一位 → V4 FAIL。",
       "verification_plan": "新 verify_infra_075.py: V0 静态自检; V1 self func sha 锁 helper; V2 _verify_lib file sha 锁; V3 helper func sha 锁; V4_1 正常 feature evidence 全 byte-match → PASS; V4_2 mutant: 改 engineer_runs sha256 一位 → ok=False; V4_3 mutant: closeout_verify.verify_runs 缺脚本 → ok=False (script not covered); V4_4 mutant: tail_stdout 字面改一字符 而 sha256 不同步 → 触发 V4_2 检测; V4_5 兼容 evidence 暂无 engineer_runs 字段时 graceful skip (record 'no engineer runs to cross-check'); V5 真打 P291 evidence 验证当前 mismatch 情况 (P291 evidence 不含 engineer_runs 字段 → V4_5 skip 路径)",
-      "notes_for_engineer": ".venv 必须激活;helper 写入 _verify_lib.py 后必须 cascade bump 所有锁 _verify_lib file sha 的 verify_*.py (060/062/063/065/066/067/068/070/071/072/073) EXPECTED_VERIFY_LIB_FILE_SHA + dump_v4_sha_graph + 071 EXPECTED_ASSERT_REVIEWER_LGTM_FUNC_SHA 等;然后 dump_v4_sha_graph 也要 cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA;V4_2 mutant 不要再用 V4_5 那种把整脚本复制走的 harness (P286 round-1 教训), 用最小 evidence dict in-memory mutate;V1 self func sha 用真算值, 禁止 __BUMP_ME__ placeholder"
+      "notes_for_engineer": ".venv 必须激活;helper 写入 _verify_lib.py 后必须 cascade bump 所有锁 _verify_lib file sha 的 verify_*.py (060/062/063/065/066/067/068/070/071/072/073) EXPECTED_VERIFY_LIB_FILE_SHA + dump_v4_sha_graph + 071 EXPECTED_ASSERT_REVIEWER_LGTM_FUNC_SHA 等;然后 dump_v4_sha_graph 也要 cascade bump verify_infra_060 EXPECTED_DUMP_FILE_SHA;V4_2 mutant 不要再用 V4_5 那种把整脚本复制走的 harness (P286 round-1 教训), 用最小 evidence dict in-memory mutate;V1 self func sha 用真算值, 禁止 __BUMP_ME__ placeholder",
+      "evidence": {
+        "branch": "feat/infra-P299-engineer-report-vs-impl-trustworthy",
+        "pre_merge_head": "2b7dea7",
+        "code_head": "65b34de",
+        "closeout_verify": {
+          "main_head_sha": "0b01e205fb61a61cdff6d0a26872625f98a6de21",
+          "pre_existing_baseline_sha": "12079bf",
+          "baseline_tail_stdout": "main baseline 12079bf: verify_infra_059/060 历史 ALL PASS 记录; 075 在 baseline 不存在符合预期 (本 feature 新引入).",
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {"round": 1, "results": [
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": 2, "results": [
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": 3, "results": [
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]},
+            {"round": "post_merge", "main_head": "0b01e205fb61a61cdff6d0a26872625f98a6de21", "results": [
+              {"script": "verify_infra_075.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_074.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_073.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_072.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_071.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_070.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+              {"script": "verify_infra_068.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_067.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_066.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_065.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+              {"script": "verify_infra_063.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+              {"script": "verify_infra_062.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+              {"script": "verify_infra_060.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+              {"script": "verify_infra_059.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+              {"script": "verify_infra_034.py", "rc": 0, "status": "ALL PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+            ]}
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "notes": "Reviewer fresh-context 实跑 final HEAD 全 cascade + smoke 全 PASS; mutant α(谎报tail)/β(谎报rc) ok=False, mutant γ(真tail) ok=True; 075 V1 真 sha 0fca2e2a... (非 __BUMP_ME__); finally 清理健全 (detached worktree + TemporaryDirectory)."
+          },
+          "mutation_checks": {
+            "alpha_lying_tail": "ok=False (helper 检测出 tail_stdout_sha256 mismatch)",
+            "beta_lying_rc": "ok=False (helper 检测出 rc mismatch)",
+            "gamma_truthful_tail": "ok=True (helper 接受真实匹配)"
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-P299-followup-worktree-prune-on-helper-failure",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "P299 helper finally 在 worktree remove 失败时追加 prune 或 warning",
+      "rationale": "Reviewer info backlog: P299 helper finally 在 `git worktree remove --force` 失败时静默忽略, 可能留下孤立 worktree 引用. 应追加 `git worktree prune` 或在返回 dict 中记 warning, 让 closeout 看见.",
+      "description": "P299 helper assert_report_matches_closeout_runs 在 finally 块中清理 detached worktree; 若 `git worktree remove --force` 失败 (例如目录被占用) 当前静默 swallow. 改进: 失败后追加 `git worktree prune` 兜底, 或在返回 dict 中加 warnings 列表."
+    },
+    {
+      "id": "infra-P299-followup-helper-tail-chars-vs-bytes-doc-coverage",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "P299 helper 纳入 P294 chars-vs-bytes 文档覆盖",
+      "rationale": "Reviewer info backlog: P299 helper 也涉及 tail_stdout sha256 计算 (chars vs bytes 边界), 但 P294 chars-vs-bytes 文档暂未覆盖本 helper. 应一并纳入说明.",
+      "description": "P294 helper chars-vs-bytes 文档需扩展到 P299 helper assert_report_matches_closeout_runs 中的 sha256 计算路径, 明确 hashlib.sha256 输入是 bytes (encode utf-8) 而非 chars, 避免后续 mutant test 在多字节字符 tail 时出 false-positive."
+    },
+    {
+      "id": "infra-P299-followup-wire-into-closeout-gate",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "P299 helper wire 进 closeout enforcement (机械化阻 merge)",
+      "rationale": "Reviewer info backlog: 当前 P299 helper 是被动可调, 不在 closeout 必经路径上. 应让 closeout 必须返回含 verify_runs[i].tail_stdout 的结构, 主会话调本 helper 实跑比对作 closeout enforcement gate.",
+      "description": "目前 P299 helper assert_report_matches_closeout_runs 是 verify_infra_075 内部使用的工具; closeout 流程并未强制调用. 需要在 closeout sub-agent 模板/AGENTS.md 中强制要求 evidence.closeout_verify.verify_runs[*].tail_stdout 必填 + 必须含 engineer_runs/reviewer_runs (若存在) sha256 字段, 主会话/新 verify 调本 helper 实跑对比, mismatch 阻 merge."
     },
     {
       "id": "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
@@ -8858,6 +8979,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-22 P294 phase-39 #1.39 infra-P294-closeout-stdout-sha-verification 入 passing (merge b0c55e8, Reviewer sub-agent fresh-context LGTM, verify_infra_034/060/062/063/065/066/067/068/069/070 全 ALL PASS + smoke PASS, mutant test 反证通过) + 入账 4 个 backlog (P294 followup: 070 self func sha bump / V5 gate evidence bind / 070 mini-repo env isolation / helper chars vs bytes doc)"
+    "last_updated": "2026-05-22 P299 phase-40 #1.40 infra-P299-engineer-report-vs-impl-trustworthy 入 passing (merge 0b01e20, Reviewer sub-agent fresh-context LGTM, 三遍独立实跑 075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 + smoke 全 PASS + post-merge 同样全 PASS, mutant α/β ok=False γ ok=True) + 入账 3 个 backlog (P299 followup: worktree-prune-on-helper-failure / helper-tail-chars-vs-bytes-doc-coverage / wire-into-closeout-gate)"
   }
 }

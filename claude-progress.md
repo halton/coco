@@ -6377,3 +6377,21 @@ Push: 403 personal fork 权限失败, 按规则忽略继续, main HEAD post-comm
 phase-40 planning 文档的 P299 description 提到的方案是"cross-check evidence 内 engineer_runs[].tail_stdout_sha256 vs closeout_verify.verify_runs[same script].tail_stdout_sha256", 但本 Engineer 任务 prompt (最新 spec) 改为"真重跑 + byte-match actual_tail sha"路径 (防伪力度更强, evidence 不依赖 engineer 自报 sha 字段)。Engineer 按 prompt 实施。两套方案不互斥, planning 中 cross-check 路径可作 V4 future expansion (本次 V4_3/4/5 已覆盖 byte+rc 主路径)。
 
 下一步: 派 Reviewer sub-agent fresh-context 评审 -> Closeout sub-agent (含 verify_infra_062 closeout_verify trustworthy 校验)。
+
+## Session 2026-05-22 P299 #1.40 Closeout
+
+infra-P299-engineer-report-vs-impl-trustworthy 入 passing。
+
+- pre-merge HEAD: 2b7dea7 (feat/infra-P299-engineer-report-vs-impl-trustworthy)
+- main baseline pre-merge: 12079bf
+- post-merge main HEAD: 0b01e205fb61a61cdff6d0a26872625f98a6de21
+- Reviewer: sub_agent_fresh_context, LGTM
+- 三遍独立实跑 (round 1/2/3) + post-merge 第 4 遍, verify_infra_075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 + smoke 全 ALL PASS, 共 15 verify × 4 round = 60 次 + 4 次 smoke 全 rc=0。
+- 075 V1 真 sha 0fca2e2a... (非 __BUMP_ME__), helper assert_report_matches_closeout_runs 落入 scripts/_verify_lib.py。
+- mutation_checks: α(谎报 tail)→ok=False, β(谎报 rc)→ok=False, γ(真 tail)→ok=True。
+- 入账 3 backlog (priority=999, status=backlog, area=infra, phase=null):
+  - infra-P299-followup-worktree-prune-on-helper-failure
+  - infra-P299-followup-helper-tail-chars-vs-bytes-doc-coverage
+  - infra-P299-followup-wire-into-closeout-gate
+- closeout-verify-trustworthy 硬规则 (P278): evidence 含 main_head_sha (0b01e205) + verify_runs (4 round × 15 含 tail+status) + smoke_tail_stdout + pre_existing_baseline_sha (12079bf) + baseline_tail_stdout + reviewer.reviewer_kind=sub_agent_fresh_context。无 FAIL 故 baseline_tail_stdout 简短说明 (075 在 baseline 不存在符合预期)。
+- push 策略: commit 后尝试 push origin main + push origin feat/... 各一次, 失败忽略。
