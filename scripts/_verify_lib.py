@@ -49,6 +49,7 @@ __all__ = [
     "assert_reviewer_lgtm",
     "assert_reviewer_baseline_head_echo",
     "assert_baseline_head_echo_present_and_matches",
+    "assert_reviewer_summary_nonempty",
     "assert_verify_passed",
     "verify_summary_exit",
 ]
@@ -2275,4 +2276,114 @@ def assert_v5_gate_emit_uses_helper_return(verify_script_path) -> dict:
     out["emit_calls"] = emit_records
     out["violations"] = violations
     out["ok"] = len(violations) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-reviewer-summary-nonempty-hard-check (phase-42 #4.42)
+# 跨 feature_list 扫描型 P278 hard-required check: reviewer.summary
+# 字段非空 (新 feature hard enforce, 老 feature soft skip).
+# ---------------------------------------------------------------------------
+def assert_reviewer_summary_nonempty(
+    feature_list_path,
+    min_chars: int = 20,
+) -> dict:
+    """扫 feature_list.json 所有 status=='passing' 且 evidence.closeout_verify
+    存在的 feature, 对其 reviewer.summary (若存在) strip 后长度必须 >= min_chars.
+
+    参数:
+        feature_list_path: feature_list.json 的路径 (str | Path).
+        min_chars: 最小字符数门槛 (strip 之后), 默认 20.
+
+    返回 dict::
+
+        {
+          "ok": bool,                  # True 当无 violation
+          "violations": [              # 每条违规一项
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "summary_len": int,
+                  "min_chars": int,
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],  # 缺 reviewer.summary 字段的 feature_id
+          "enforced_count": int,       # 真正参与 enforce 的 feature 数 (含字段)
+          "scanned_count": int,        # 扫到的 status=passing 含 closeout_verify
+          "error": str | None,
+        }
+
+    Default-OFF 行为:
+      - 老 feature (缺 reviewer.summary 字段) → soft_skipped 列表, 不算 violation
+      - 含 reviewer.summary 字段 → hard enforce: strip 后长度 >= min_chars
+
+    错误:
+      - feature_list 不存在 / parse 失败 → ok=False, error 字段载明
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_chars": int(min_chars),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        # 取 reviewer.summary (兼容 reviewer 为 dict 或 list 形态)
+        rv = cv.get("reviewer")
+        summary = None
+        if isinstance(rv, dict):
+            summary = rv.get("summary")
+        elif isinstance(rv, list):
+            for it in rv:
+                if isinstance(it, dict) and it.get("summary"):
+                    summary = it.get("summary")
+                    break
+        if not isinstance(summary, str):
+            # 老 feature 缺字段 → soft_skipped
+            out["soft_skipped"].append(fid)
+            continue
+        stripped = summary.strip()
+        out["enforced_count"] += 1
+        if len(stripped) < int(min_chars):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"reviewer.summary strip 后长度 {len(stripped)} < {min_chars}"
+                ),
+                "summary_len": len(stripped),
+                "min_chars": int(min_chars),
+            })
+    out["ok"] = len(out["violations"]) == 0
     return out

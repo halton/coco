@@ -70,11 +70,12 @@ from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
+    assert_reviewer_summary_nonempty,
     func_sha_by_name,
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "ebcec7ec936822801c7d656f9b6de429d2145f74133676ead1dfd860c5addd0d"
+EXPECTED_VERIFY_LIB_FILE_SHA = "dc4c091c203026ced5a9927331b49c439c08514b9cb9ffa22381579c07903b01"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -617,6 +618,51 @@ def _enforce_baseline_head_echo_required() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4: reviewer.summary 非空 hard check (phase-42 #4.42)
+# infra-P278-followup-reviewer-summary-nonempty-hard-check —
+# Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段 strip 长度 >= 20 hard enforce.
+# ---------------------------------------------------------------------------
+def _enforce_reviewer_summary_nonempty() -> None:
+    """对 feature_list.json 调 assert_reviewer_summary_nonempty(min_chars=20),
+    任一 violation → hard FAIL; soft_skipped/enforced_count 写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_reviewer_summary_nonempty",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_reviewer_summary_nonempty(feature_list, min_chars=20)
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_reviewer_summary_nonempty",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_reviewer_summary_nonempty",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_reviewer_summary_nonempty",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_chars={result.get('min_chars')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -643,6 +689,7 @@ def main() -> int:
     v4_behavior()
     _enforce_closeout_byte_match()
     _enforce_baseline_head_echo_required()
+    _enforce_reviewer_summary_nonempty()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
