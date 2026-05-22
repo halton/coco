@@ -9912,7 +9912,7 @@
       "id": "infra-P286-followup-v4-2-stricter-equal-check",
       "priority": 5.4,
       "phase": 40,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_074 V4_2 stricter ==/±tolerance 精确锁",
       "rationale": "P286 V4_2 当前只锁 EXPECTED_CURRENT_TOTAL_NODES > 0 (正整数). 在 ±5 tolerance 内的静默改动 (例 76→78) 只能靠 V2 file sha 报警; 若改动也包含 expected 值同步调整, 则完全不触发. 考虑加 V4_2b 锁 == 当前实测值 (与 ±5 tolerance 设计权衡: tolerance 留给真实漂移, V4_2b 锁定义本身).",
@@ -9921,7 +9921,47 @@
       "notes_for_engineer": ".venv 必须激活;先 cd repo 跑 python scripts/dump_v4_sha_graph.py 取真 total_nodes 值更新 074 EXPECTED;cascade bump _verify_lib + dump + 060 EXPECTED_DUMP_FILE_SHA (079 新增);V4 mutant 实验注意一旦改 EXPECTED 074 必须先 verify 再 restore",
       "depends_on": [
         "infra-P286-followup-074-self-main-func-sha-bump"
-      ]
+      ],
+      "evidence": {
+        "expected_total_nodes_truth": 81,
+        "expected_verify_074_file_sha": "eef1c6421f21aa7d307702428a149c244831ef0f613346ae64ac4d09420af392",
+        "expected_self_main_func_sha_079": "18760bb2e4c06f9a0f64a09b1bdb6e58eafacefd730b5f2b85b9c693b9799526",
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_MAIN_HEAD_SHA",
+          "feat_head_sha": "a4f3e00",
+          "baseline_head_sha": "addbec0",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n",
+          "verify_runs": [
+            {"script": "scripts/verify_infra_079.py", "status": "PASS", "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_078.py", "status": "PASS", "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "scripts/verify_infra_077.py", "status": "PASS", "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_076.py", "status": "PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_075.py", "status": "PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+            {"script": "scripts/verify_infra_074.py", "status": "PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"},
+            {"script": "scripts/verify_infra_073.py", "status": "PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_072.py", "status": "PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_071.py", "status": "PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_070.py", "status": "PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+            {"script": "scripts/verify_infra_068.py", "status": "PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "scripts/verify_infra_067.py", "status": "PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+            {"script": "scripts/verify_infra_066.py", "status": "PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_065.py", "status": "PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "scripts/verify_infra_063.py", "status": "PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+            {"script": "scripts/verify_infra_062.py", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
+            {"script": "scripts/verify_infra_060.py", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "scripts/verify_infra_059.py", "status": "PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+            {"script": "scripts/verify_infra_034.py", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "round": 2,
+            "feat_head_echo": "a4f3e00",
+            "baseline_head_echo": "addbec0",
+            "summary": "round-1 REJECT 2 个 P0 (079 V5 硬绿 placeholder=True + V4_5 重言式 mutant 074); round-2 修复: V5 改 ok is True 真门 + V4_5 真跑 mutant 074 subprocess (rc=2, stdout 含 '[verify_infra_074][FAIL] V4_2_const_value_eq_truth value=81 truth=9999'); 全 verify + smoke ALL PASS"
+          }
+        }
+      }
     },
     {
       "id": "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
