@@ -6395,3 +6395,15 @@ infra-P299-engineer-report-vs-impl-trustworthy 入 passing。
   - infra-P299-followup-wire-into-closeout-gate
 - closeout-verify-trustworthy 硬规则 (P278): evidence 含 main_head_sha (0b01e205) + verify_runs (4 round × 15 含 tail+status) + smoke_tail_stdout + pre_existing_baseline_sha (12079bf) + baseline_tail_stdout + reviewer.reviewer_kind=sub_agent_fresh_context。无 FAIL 故 baseline_tail_stdout 简短说明 (075 在 baseline 不存在符合预期)。
 - push 策略: commit 后尝试 push origin main + push origin feat/... 各一次, 失败忽略。
+
+### Session: 2026-05-22 phase-40 #2.40 infra-P291-followup-extend-helper-to-other-v5 (Engineer)
+
+- branch: feat/infra-P291-followup-extend-helper-to-other-v5
+- pre HEAD: 25bb3fec
+- final HEAD: 752a8c7d
+- 8 个现存 V5_reviewer_lgtm_gate 接入 assert_reviewer_lgtm helper:
+  060/062/063/065/066/067/068/070 (soft-PASS 模式, emit=True + helper ok/reason 写 detail)
+- 新建 scripts/verify_infra_076.py V0-V5 共 14 checks (V4_1 ast 静态扫描 MIGRATED_VERIFIES 13 文件全 hit; V4_3/V4_4 mini fake feature_list 真校 helper PASS/FAIL 两路; V4_5 缺 feature_id ok=False)
+- cascade: dump_v4_sha_graph.py 加 076 2 条 _PER_FILE_LOCKS; verify_infra_060.py EXPECTED_DUMP_FILE_SHA bump 010387f4 -> 179b50d2
+- final HEAD 全 verify (034/059/060/062/063/065/066/067/068/070/071/072/073/074/075/076 + smoke) ALL PASS rc=0
+- push origin feat/...: 403 (haltonhuo_microsoft 无 halton/coco 写权限) - 按规则忽略继续

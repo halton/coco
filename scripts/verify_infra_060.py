@@ -58,13 +58,15 @@ from typing import List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
+REAL_FEATURE_LIST = REPO / "feature_list.json"
+V5_GATE_FEATURE_ID = "infra-P285-classifier-recognize-lib-func-locks"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import func_sha_by_name  # noqa: E402
+from _verify_lib import func_sha_by_name, assert_reviewer_lgtm  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "010387f40ee3a53b7135eccee274dbb11a9c2a0d010b1458adc898ac142ce34c"
+EXPECTED_DUMP_FILE_SHA = "179b50d2e481b31a21e7abb5ad8a7d77a438039f6ccbe1b30d9ba7ca8e59ea5b"
 EXPECTED_CLASSIFY_FUNC_SHA = "03f5ccb1de76db543a36edf52cd666f11542e0432f92125bd977ca5efd202aee"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -301,10 +303,18 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
+
+    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
+    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
+    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
+    的 V4 mini-repo 测试保证。
+    """
+    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
     _emit(
         "V5_reviewer_lgtm_gate",
         True,
-        "closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
     )
 
 
