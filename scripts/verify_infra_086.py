@@ -1,54 +1,51 @@
 #!/usr/bin/env python3
-"""verify_infra_085 V0-V5: 锁定 verify_infra_062._enforce_verify_lib_helper_naming 真 fire (Default-OFF hard check).
+"""verify_infra_086 V0-V5: 锁定 verify_infra_062._enforce_closeout_verify_runs_min_count 真 fire (Default-OFF hard check).
 
-infra-P278-followup-verify-lib-helper-naming-convention-lock (phase-42 #5.42):
-``scripts/_verify_lib.py`` 内 helper 数量已超 20, 命名风格曾经分化
-(assert_* / scan_* / verify_* / func_* / read_*). 本 feature 锁定命名规约:
-新增公开 helper 必须以 ``assert_`` 或 ``enforce_`` 开头;
-legacy 已 export 的名字通过模块内置 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST
-显式豁免 (rename 入 backlog 单独 feature).
+infra-P278-followup-closeout-verify-runs-min-count-hard-check (phase-43 #4.43):
+Closeout-verify-trustworthy 硬规则已要求 verify_runs 含 tail_stdout+status,
+但未约束最少条数. 实际 closeout 中常仅 1-2 条 verify 跑导致信号薄弱;
+加最少 N 条 (N=3) Default-OFF→hard 检, 提高 closeout 证据丰度.
 
 本 feature 在 ``scripts/_verify_lib.py`` 加
-``assert_verify_lib_public_helper_naming(allowed_prefixes, legacy_allowlist)`` helper,
-并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_verify_lib_helper_naming()``,
-以 V4_verify_lib_helper_naming_convention 名义 emit:
-- _verify_lib 缺 __all__ → soft_skip (Default-OFF);
-- 含 __all__ → hard enforce: __all__ 中 callable 名字必须以 allowed_prefixes 任一开头,
-  或在 legacy_allowlist 中;
-- violation > 0 → V4 FAIL.
+``assert_closeout_verify_runs_min_count(feature_list_path, min_count=3)`` helper,
+并在 ``scripts/verify_infra_062.py`` 内挂 ``_enforce_closeout_verify_runs_min_count()``,
+以 V4_closeout_verify_runs_min_count 名义 emit:
+- 缺 closeout_verify.verify_runs 字段 → soft_skip (Default-OFF);
+- 含字段且 len(verify_runs) < min_count → hard FAIL;
+- violations 列表 + 首条 violation 写进 detail.
 
-本 verify (085) 锁住:
-- _verify_lib 内 ``assert_verify_lib_public_helper_naming`` helper 真存在
-  且 func sha 等于 EXPECTED_NAMING_HELPER_FUNC_SHA;
+本 verify (086) 锁住:
+- _verify_lib 内 ``assert_closeout_verify_runs_min_count`` helper 真存在
+  且 func sha 等于 EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA;
 - _verify_lib 文件 sha 等于 EXPECTED_VERIFY_LIB_FILE_SHA;
-- 真跑 helper: 当前 _verify_lib 应当 ok=True (scanned>=1, violations==0);
-- mutant: 临时注入一个不带前缀的 fake public callable 到 __all__ →
+- 真跑 helper 正例: 当前 feature_list.json → ok=True (scanned>=1, violations==0);
+- mutant: 临时构造 in-memory mini feature_list 把某 passing feature verify_runs 截到 1 条 →
   helper 必须捕获 violation>=1;
-- 062 内必须有 ``_enforce_verify_lib_helper_naming`` 调用挂到 main 链上 (ast 扫).
+- 062 内必须有 ``_enforce_closeout_verify_runs_min_count`` 调用挂到 main 链上 (ast 扫).
 
-INFRA_085_SHA_LOCKS
+INFRA_086_SHA_LOCKS
 -------------------
-- ``scripts/verify_infra_085.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``scripts/verify_infra_086.py:main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
-- ``scripts/_verify_lib.py:assert_verify_lib_public_helper_naming`` func sha:
-  EXPECTED_NAMING_HELPER_FUNC_SHA
+- ``scripts/_verify_lib.py:assert_closeout_verify_runs_min_count`` func sha:
+  EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA
 
 校验层级 (V0-V5, 共 14 checks):
 
 - V0 scaffolding (×5)
 - V1 self main() func sha 自锁
 - V2 _verify_lib file sha
-- V3 assert_verify_lib_public_helper_naming helper func sha
+- V3 assert_closeout_verify_runs_min_count helper func sha
 - V4 行为校验 (5 checks):
-  - V4_1 062 函数体 ast 扫到至少一处 _enforce_verify_lib_helper_naming 调用
+  - V4_1 062 函数体 ast 扫到至少一处 _enforce_closeout_verify_runs_min_count 调用
   - V4_2 调用挂到 062.main() 函数体上 (main → enforcer)
-  - V4_3 真跑 helper 正例: 当前 _verify_lib → ok=True, scanned>=1, violations==0
-  - V4_4 真跑 helper 反例: 注入临时不带前缀的 fake public callable →
-    violation>=1, ok=False; 还原后 ok=True
+  - V4_3 真跑 helper 正例: 当前 feature_list.json → ok=True, scanned>=1, violations==0
+  - V4_4 真跑 helper 反例: 构造临时 mini feature_list (tmpfile), 把某 feature verify_runs 截到 1 条 →
+    violation>=1, ok=False; 原 feature_list 不被改动
   - V4_5 mutant: ast 替换 062 中 ENFORCER_NAME 调用名 → mutant_call_count==0 且 n_sub>=1
 - V5 reviewer_lgtm_gate (真门: ok is True)
 
-注意 (与 074/079/080/081/082/083/084 同形): 本脚本不锁自己 file sha,
+注意 (与 074/079/080/081/082/083/084/085 同形): 本脚本不锁自己 file sha,
 避免与 V4 mutant 对源码做 ast 替换时与自检冲突, 且与 078 placeholder 禁字面约束兼容.
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit).
@@ -59,8 +56,10 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -72,28 +71,28 @@ REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_closeout_verify_runs_min_count,
     assert_reviewer_lgtm,
-    assert_verify_lib_public_helper_naming,
     func_sha_by_name,
     verify_summary_exit,
 )
 
-EXPECTED_SELF_MAIN_FUNC_SHA = "87e910ff05a210135a341c163a0c71c1e4ac60371d55fbb983e16f0dc591aadb"
+EXPECTED_SELF_MAIN_FUNC_SHA = "ba96559384ef8ec55ff28bf69872104d836540f64cb65f32572a233a6dc6a9d8"
 EXPECTED_VERIFY_LIB_FILE_SHA = "57385b07472b1fc811d351c9c12dcf2f4a85b3bdfe8e466a6f77cdea673110be"
-EXPECTED_NAMING_HELPER_FUNC_SHA = "2ab8a07e421920e25f22dff751adb514c4b0fddec05ec2d645fe8d839d45f876"
+EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA = "4e964b8969935a464159ac7e117dd248da12f98851a3b71bda8be30a8e4e99ec"
 
-DOCSTRING_SENTINEL = "INFRA_085_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_086_SHA_LOCKS"
 
-HELPER_NAME = "assert_verify_lib_public_helper_naming"
-ENFORCER_NAME = "_enforce_verify_lib_helper_naming"
-V5_GATE_FEATURE_ID = "infra-P278-followup-verify-lib-helper-naming-convention-lock"
+HELPER_NAME = "assert_closeout_verify_runs_min_count"
+ENFORCER_NAME = "_enforce_closeout_verify_runs_min_count"
+V5_GATE_FEATURE_ID = "infra-P278-followup-closeout-verify-runs-min-count-hard-check"
 
 _results: List[Tuple[str, bool, str]] = []
 
 
 def _emit(tag: str, ok, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_085][{mark}] {tag} {detail}", flush=True)
+    print(f"[verify_infra_086][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, bool(ok), detail))
 
 
@@ -206,7 +205,7 @@ def v2_verify_lib_file_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V3: assert_verify_lib_public_helper_naming helper func sha
+# V3: assert_closeout_verify_runs_min_count helper func sha
 # ---------------------------------------------------------------------------
 def v3_helper_func_sha() -> None:
     try:
@@ -214,17 +213,17 @@ def v3_helper_func_sha() -> None:
     except Exception as e:  # noqa: BLE001
         _emit("V3_helper_func_sha", False, f"error={e!r}")
         return
-    if EXPECTED_NAMING_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
+    if EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA == ("__BUMP" + "_ME__"):
         _emit(
             "V3_helper_func_sha",
             True,
-            f"placeholder OK; bump EXPECTED_NAMING_HELPER_FUNC_SHA={got}",
+            f"placeholder OK; bump EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA={got}",
         )
         return
     _emit(
         "V3_helper_func_sha",
-        got == EXPECTED_NAMING_HELPER_FUNC_SHA,
-        f"got={got[:16]} expect={EXPECTED_NAMING_HELPER_FUNC_SHA[:16]}",
+        got == EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_RUNS_MIN_COUNT_HELPER_FUNC_SHA[:16]}",
     )
 
 
@@ -251,23 +250,24 @@ def v4_behavior() -> None:
         f"main_calls_enforcer={main_calls_enforcer}",
     )
 
-    # V4_3: 真跑 helper 正例 — 当前 _verify_lib 应当 ok=True
+    # V4_3: 真跑 helper 正例 — 当前 feature_list.json 应当 ok=True
     try:
-        result = assert_verify_lib_public_helper_naming()
+        result = assert_closeout_verify_runs_min_count(
+            REAL_FEATURE_LIST, min_count=3
+        )
         v4_3_ok = (
             isinstance(result, dict)
             and result.get("ok") is True
             and result.get("scanned_count", 0) >= 1
             and not result.get("error")
-            and result.get("soft_skipped") is False
             and len(result.get("violations") or []) == 0
         )
         v4_3_detail = (
             f"ok={result.get('ok')} scanned={result.get('scanned_count')} "
             f"enforced={result.get('enforced_count')} "
-            f"legacy_allowlisted={result.get('legacy_allowlisted_count')} "
+            f"soft_skipped={len(result.get('soft_skipped') or [])} "
             f"violations={len(result.get('violations') or [])} "
-            f"soft_skipped={result.get('soft_skipped')}"
+            f"min_count={result.get('min_count')}"
         )
     except Exception as e:  # noqa: BLE001
         v4_3_ok = False
@@ -278,37 +278,52 @@ def v4_behavior() -> None:
         v4_3_detail,
     )
 
-    # V4_4: 反例 — 临时注入一个不带前缀的 fake public callable 到 _verify_lib
-    # __all__, helper 必须捕获 violation>=1; 还原后必须 ok=True
-    fake_name = "totally_invalid_public_helper_for_mutant_test"
+    # V4_4: 反例 — 构造临时 mini feature_list, 含一个 passing feature 其
+    # closeout_verify.verify_runs 只 1 条; helper 必须捕获 violation>=1.
+    # 原 feature_list.json 不被改动.
     try:
-        import _verify_lib as _vl
-        orig_all = list(_vl.__all__)
-        # 注入 callable + 加入 __all__
-        setattr(_vl, fake_name, lambda: None)
-        _vl.__all__ = orig_all + [fake_name]
+        mini = {
+            "features": [
+                {
+                    "id": "mutant-fake-feature-for-086-test",
+                    "status": "passing",
+                    "evidence": {
+                        "closeout_verify": {
+                            "verify_runs": [
+                                {"status": "PASS", "tail_stdout": "only-one-run"}
+                            ]
+                        }
+                    },
+                }
+            ]
+        }
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False, encoding="utf-8"
+        ) as tf:
+            json.dump(mini, tf)
+            tmppath = tf.name
         try:
-            fr = assert_verify_lib_public_helper_naming()
+            fr = assert_closeout_verify_runs_min_count(tmppath, min_count=3)
             v4_4_ok = (
                 fr.get("ok") is False
                 and len(fr.get("violations") or []) >= 1
                 and any(
-                    v.get("name") == fake_name for v in (fr.get("violations") or [])
+                    v.get("feature_id") == "mutant-fake-feature-for-086-test"
+                    for v in (fr.get("violations") or [])
                 )
             )
             v4_4_detail = (
-                f"ok={fr.get('ok')} violations={len(fr.get('violations') or [])} "
+                f"ok={fr.get('ok')} "
+                f"violations={len(fr.get('violations') or [])} "
                 f"first_violation={(fr.get('violations') or [None])[0]}"
             )
         finally:
-            # 还原
-            _vl.__all__ = orig_all
             try:
-                delattr(_vl, fake_name)
-            except AttributeError:
+                Path(tmppath).unlink()
+            except OSError:
                 pass
-        # 还原后再跑一次, 确认恢复
-        rr = assert_verify_lib_public_helper_naming()
+        # 还原后跑真 feature_list, 确认未受副作用影响
+        rr = assert_closeout_verify_runs_min_count(REAL_FEATURE_LIST, min_count=3)
         v4_4_restored_ok = rr.get("ok") is True
         v4_4_detail += f" restored_ok={v4_4_restored_ok}"
         v4_4_ok = v4_4_ok and v4_4_restored_ok
@@ -367,12 +382,12 @@ def main() -> int:
     failed_tags = [t for t, ok, _ in _results if not ok]
     if failed:
         print(
-            f"[verify_infra_085][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
+            f"[verify_infra_086][SUMMARY] FAIL {failed}/{total}: {failed_tags}",
             flush=True,
         )
     else:
         print(
-            f"[verify_infra_085][SUMMARY] ALL PASS ({total} checks)",
+            f"[verify_infra_086][SUMMARY] ALL PASS ({total} checks)",
             flush=True,
         )
     verify_summary_exit(failed)
