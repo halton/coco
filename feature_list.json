@@ -11008,33 +11008,120 @@
     },
     {
       "id": "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 1.43,
+      "phase": 43,
+      "status": "not_started",
       "area": "infra",
-      "title": "historical cascade self_main_func_sha rebump (067-081 群)",
-      "description": "067/068/070-077/080 等多个 verify file 的 EXPECTED_SELF_MAIN_FUNC_SHA 在历史 cascade 中漏 bump 导致 V1_self_main_func_sha 在当前 main 上 FAIL；非 trustworthy 故障，集中重 bump",
-      "rationale": "Reviewer 在 infra-P286-followup3 closeout 暴露：phase-39/40/41 cascade 多个 verify 漏 bump V1_self_main_func_sha lock。不阻 merge（pre-existing baseline FAIL），但累积；集中一次 bump 清。"
+      "title": "historical cascade self_main_func_sha 群集中 rebump (067-081)",
+      "description": "扫描 verify_infra_067/068/070-077/080-082 等 EXPECTED_SELF_MAIN_FUNC_SHA 与当前 main 函数 sha 偏移项，统一一次性 bump 到当前实测值；同步 dump_v4_sha_graph + 062 byte-match enforce 链；过程中不引入新 trustworthy 故障。",
+      "rationale": "Reviewer 在 infra-P286-followup3 closeout 与 phase-42 多次 cascade 报告暴露：phase-39/40/41 cascade 多个 verify file 的 EXPECTED_SELF_MAIN_FUNC_SHA 漏 bump 导致 V1_self_main_func_sha 在当前 main 上 FAIL。非 trustworthy 故障 (pre-existing baseline FAIL)，但累积持续污染 baseline。集中一次性 cascade rebump，清除噪声，提高 trustworthy 信号纯度。",
+      "verification_plan": "新 verify_infra_NNN.py V0-V5：V0 self-pass / V1 helper exists (func_sha_by_name) / V2 import scan / V3 mutant 改一个被 rebump 项 sha 后预期 FAIL 还原 PASS / V4 cascade scan 在 verify_infra_062 加 V4_self_main_func_sha_no_drift 扫近 N closeout 真函数 sha vs EXPECTED, 偏移即 FAIL / V5 reviewer fresh-context LGTM",
+      "expected_files": [
+        "scripts/verify_infra_NNN.py",
+        "scripts/verify_infra_062.py",
+        "scripts/dump_v4_sha_graph.py",
+        "scripts/verify_infra_0{67,68,70..77,80..82}.py (各 bump EXPECTED_SELF_MAIN_FUNC_SHA)"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_self_main_func_sha_no_drift",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；rebump 是机械动作但必须先 dry-run scan 出 drift 集，按一次完整 cascade 流程提交 (避免分批引入更多 noise)；V4 加 cascade scan helper 时注意 Default-OFF + 6f9f119 类 baseline 处理",
+      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scan>=15 enforced>=N drift=0；smoke 通过；reviewer sub-agent LGTM"
     },
     {
       "id": "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 2.43,
+      "phase": 43,
+      "status": "not_started",
       "area": "infra",
-      "title": "verify_infra_062 V3_helper_func_sha pre-existing baseline FAIL 集中重 bump",
+      "title": "verify_infra_062 V3_helper_func_sha 重 bump + cascade",
       "description": "在 phase-42 cascade 期间多次出现 verify_infra_062.py V3_helper_func_sha pre-existing baseline FAIL (got 与 EXPECTED 偏移)；非 trustworthy 故障，需在统一时间窗一次性 cascade rebump，并同步 dump 与下游 081/082/083 EXPECTED_VERIFY_062_FILE_SHA 链。",
-      "rationale": "phase-42 #3.42 Engineer round 与多次 cascade 报告中 062 V3_helper_func_sha 一直作为 baseline noise 存在；后续 V6 backlog 收割时一次性消除噪声，提升 trustworthy 信号纯度。"
+      "rationale": "phase-42 #3.42 Engineer round 与多次 cascade 报告中 062 V3_helper_func_sha 一直作为 baseline noise 存在；后续 V6 backlog 收割时一次性消除噪声，提升 trustworthy 信号纯度。",
+      "verification_plan": "重 bump EXPECTED_HELPER_FUNC_SHA (062 内 _classify_closeout_tail_anchor 或同类 helper) 至当前 main 实测值; 同步下游 081/082/083 EXPECTED_VERIFY_062_FILE_SHA 链; 跑 062/081/082/083 + smoke 全 PASS",
+      "expected_files": [
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_081.py",
+        "scripts/verify_infra_082.py",
+        "scripts/verify_infra_083.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V3_helper_func_sha PASS"
+      ],
+      "notes_for_engineer": ".venv 必须激活；机械化 bump，做完跑全套 verify 一次确认无 cascade 噪声",
+      "acceptance": "verify_infra_062 V3_helper_func_sha PASS；smoke PASS；081/082/083 file sha cascade 同步无 FAIL；reviewer LGTM"
     },
     {
       "id": "infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk",
-      "priority": 999,
-      "phase": null,
-      "status": "backlog",
+      "priority": 3.43,
+      "phase": 43,
+      "status": "not_started",
       "area": "infra",
-      "title": "_verify_lib.py 15 个 legacy public helper 改名 assert_/enforce_ 前缀",
+      "title": "_verify_lib 15 个 legacy public helper 改 assert_/enforce_ 前缀 (bulk)",
       "description": "infra-P278-followup-verify-lib-helper-naming-convention-lock (#5.42) 用 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 临时豁免 15 个 legacy 名 (parse_headings_from_doc / func_sha_by_name / read_constant / scan_* / live_verify_sha_set / verify_* / scan_reviewer_text)。本 backlog 项为后续统一改名 assert_/enforce_ 前缀, 同时 cascade 所有调用点 + dump + cross-file func sha, 清空 allowlist。",
-      "rationale": "命名一致性 lock 已上线但 legacy 群仍以 allowlist 形式存在；统一收割避免 allowlist 永久化、为后续 helper 引入提供干净基准。"
+      "rationale": "命名一致性 lock 已上线但 legacy 群仍以 allowlist 形式存在；统一收割避免 allowlist 永久化、为后续 helper 引入提供干净基准。",
+      "verification_plan": "把 _VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 中 15 个名字逐一改 assert_/enforce_ 前缀 (或归类为 read_/scan_ 私有); 全仓库调用点 grep 同步; cascade 所有 verify file _verify_lib file sha; 跑 062 V4_verify_lib_helper_naming_convention enforce=23 legacy_allowlisted=0 violations=0",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_085.py",
+        "scripts/verify_infra_06{3,5..8}.py",
+        "scripts/verify_infra_07{0..3,5..7,9}.py",
+        "scripts/verify_infra_08{0..2,4}.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_verify_lib_helper_naming_convention scanned=23 enforced=23 legacy_allowlisted=0",
+        "verify_infra_085 V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；分两个 commit：先 rename + grep 替换调用点，再 cascade file sha；过程中 allowlist 一次清空，验证 enforce=23 真上",
+      "acceptance": "_VERIFY_LIB_LEGACY_PUBLIC_HELPER_ALLOWLIST 清空；verify_infra_062 V4_verify_lib_helper_naming_convention enforced=23 violations=0 legacy_allowlisted=0；085 全 PASS；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
+      "priority": 4.43,
+      "phase": 43,
+      "status": "not_started",
+      "area": "infra",
+      "title": "closeout_verify.verify_runs 最少条数 hard check (Default-OFF)",
+      "rationale": "Closeout-verify-trustworthy 硬规则已要求 verify_runs 含 tail_stdout+status，但未约束最少条数。实际 closeout 中常仅 1-2 条 verify 跑导致信号薄弱；加最少 N 条 (N=2 起步) Default-OFF→hard 检，提高 closeout 证据丰度。",
+      "description": "新 helper assert_closeout_verify_runs_min_count(min_count=2) 加 _verify_lib：scan feature_list.json status=passing 项；缺 closeout_verify.verify_runs 字段 soft_skip；含字段但 len<min_count → hard FAIL（带 violation feature id 列表）。062 加 V4_closeout_verify_runs_min_count wire。",
+      "verification_plan": "新 verify_infra_NNN V0-V5：V0 self-pass / V1 helper exists / V2 import / V3 mutant 临时把某 passing feature verify_runs 截到 1 条 → FAIL；还原 PASS / V4_3 正例 V4_4 反例 V4_5 mutant strip / V5 reviewer LGTM。062 V4_closeout_verify_runs_min_count emit scanned/enforced/soft_skipped/violations/min_count。",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_NNN.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_closeout_verify_runs_min_count",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；min_count 从 2 起步 (保守, 避免大量历史 closeout legacy 触发)；legacy soft_skip 走 'verify_runs 字段缺' 而非 'len<min'；cascade _verify_lib file sha + 062 file sha 全量",
+      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM"
+    },
+    {
+      "id": "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
+      "priority": 5.43,
+      "phase": 43,
+      "status": "not_started",
+      "area": "infra",
+      "title": "closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check (Default-OFF)",
+      "rationale": "Closeout 6 信号之一 smoke_tail_stdout 当前仅形态校验为 string，未检内容；常见 closeout evidence 残留占位 'smoke OK' 或空字符串，无法 audit 真跑 ./init.sh。加 'len>0 + 含 Smoke 关键词' Default-OFF→hard 检，提升 smoke 证据可信度。",
+      "description": "新 helper assert_closeout_smoke_tail_nonempty(keyword='Smoke', min_chars=20) 加 _verify_lib：scan status=passing 项；缺 closeout_verify.smoke_tail_stdout soft_skip；含字段但 strip 后 len<min_chars 或不含 keyword (case-insensitive) → hard FAIL。062 加 V4_closeout_smoke_tail_nonempty wire。",
+      "verification_plan": "新 verify_infra_NNN V0-V5：V0 self-pass / V1 helper exists / V2 import / V3 mutant strip smoke_tail_stdout → FAIL；还原 PASS / V4_3 正例 V4_4 反例 V4_5 mutant strip / V5 reviewer LGTM。062 V4_closeout_smoke_tail_nonempty emit scanned/enforced/soft_skipped/violations/keyword/min_chars。",
+      "expected_files": [
+        "scripts/_verify_lib.py",
+        "scripts/verify_infra_062.py",
+        "scripts/verify_infra_NNN.py",
+        "scripts/dump_v4_sha_graph.py"
+      ],
+      "verify_targets": [
+        "verify_infra_062 V4_closeout_smoke_tail_nonempty",
+        "新 verify_infra_NNN V0-V5"
+      ],
+      "notes_for_engineer": ".venv 必须激活；keyword 默认 'Smoke' (case-insensitive)；legacy soft_skip 走 '字段缺' 而非 '内容不符'；min_chars=20 与 reviewer.summary 对齐；cascade _verify_lib file sha + 062 file sha 全量",
+      "acceptance": "verify_infra_NNN 全 PASS；062 新 V4 PASS scanned>=15 enforced>=N violations=0；smoke PASS；reviewer LGTM"
     }
   ],
   "_meta": {

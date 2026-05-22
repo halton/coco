@@ -6873,3 +6873,16 @@ backlog 补登 (priority=999 status=backlog phase=null)：
 - `infra-V6-backlog-062-v3-helper-func-sha-rebump-followup` — 062 V3_helper_func_sha pre-existing 集中重 bump
 - `infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk` — _verify_lib 15 legacy public helper 改 assert_/enforce_ 前缀
 - (既有) `infra-P286-followup6-historical-cascade-self-main-sha-rebump` — 067-081 self_main_func_sha 群集中 rebump
+
+
+## phase-43 planning (2026-05-22)
+
+phase-42 收官后立即启动 phase-43，5 候选 (priority 1.43..5.43)：
+
+- **#1.43 infra-P286-followup6-historical-cascade-self-main-sha-rebump** — historical cascade self_main_func_sha 群集中 rebump (067-081)；机械化 cascade + 在 062 加 V4_self_main_func_sha_no_drift；从 backlog 升 phase
+- **#2.43 infra-V6-backlog-062-v3-helper-func-sha-rebump-followup** — verify_infra_062 V3_helper_func_sha 重 bump + 081/082/083 file sha cascade；清除 phase-42 baseline noise；从 backlog 升 phase
+- **#3.43 infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk** — _verify_lib 15 个 legacy public helper 改 assert_/enforce_ 前缀；allowlist 清空；062 V4_verify_lib_helper_naming_convention enforce=23；从 backlog 升 phase
+- **#4.43 infra-P278-followup-closeout-verify-runs-min-count-hard-check** — 新 helper assert_closeout_verify_runs_min_count (min_count=2, Default-OFF→hard)；062 加 V4_closeout_verify_runs_min_count；新建 verify_infra_NNN V0-V5
+- **#5.43 infra-P278-followup-closeout-smoke-tail-nonempty-hard-check** — 新 helper assert_closeout_smoke_tail_nonempty (keyword='Smoke', min_chars=20)；062 加 V4_closeout_smoke_tail_nonempty；新建 verify_infra_NNN V0-V5
+
+主轴延续：P278 closeout-verify-trustworthy 6 信号继续逐项 hard 化 (verify_runs 数量 / smoke_tail 内容)，并把 phase-42 累积的 baseline noise 一次 cascade 清干净 (#1.43/#2.43)；命名一致性 allowlist 收尾 (#3.43)。
