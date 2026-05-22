@@ -33,10 +33,50 @@ canonical sha; ``--canary`` 子模式跑 ``run_canary_self_check()``, 实测与�
     # 自检 mutant canary (无 --verify-script): ok=True/False + mutant_detected
     python scripts/bootstrap_verify_self_checker.py --canary
 
+    # 计算当前 _CANARY_VERIFY_SRC 对应的期望 sha (P297, 编辑 canary 时使用)
+    python scripts/bootstrap_verify_self_checker.py --compute-canary-sha
+
 本脚本是 *只读* 工具, **不会**修改 --verify-script 源文件; 仅打印建议的常量字面,
 作者自行 paste 回填。设计上故意保持 paste-not-write, 避免 "脚本写过头改坏作者意图".
 
 退出码 0 = OK / 2 = 用户用法错误或 canary mutant_detected / 1 = 找不到目标函数等运行期错误.
+
+## 编辑 _CANARY_VERIFY_SRC / _CANARY_EXPECTED_SHA 的流程 (P297)
+
+如需修改 canary 嵌入源 (``_CANARY_VERIFY_SRC``) 或期望 sha
+(``_CANARY_EXPECTED_SHA``), 必须按以下顺序避免 canary mutant 模式漏报/误报:
+
+1. 修改 ``_CANARY_VERIFY_SRC`` 字符串内容 (e.g. 调整 sample mutant 代码).
+2. 立即跑::
+
+       python scripts/bootstrap_verify_self_checker.py --compute-canary-sha
+
+   该子命令复用 ``run_canary_self_check`` 内部相同路径: 把 ``_CANARY_VERIFY_SRC``
+   写入临时文件, 调 ``compute_self_checker_sha(tmp, "v4_behavior")``, 把结果以
+   纯 64 hex 单行打印到 stdout. 这正是应当填入 ``_CANARY_EXPECTED_SHA`` 的值.
+3. 把第 2 步打印的 sha 填入 ``_CANARY_EXPECTED_SHA`` 常数.
+4. 跑::
+
+       python scripts/bootstrap_verify_self_checker.py --canary
+
+   期望 rc=0 (canary self check PASS, ``ok=True mutant_detected=False``).
+5. 跑::
+
+       python scripts/verify_infra_063.py
+
+   期望 ALL PASS — V4.2 用 monkeypatch 注入 mutant compute_self_checker_sha,
+   ``--canary`` 子模式应 rc=2 (mutant 实跑 case 仍然被检出).
+6. 由于本文件 file sha 改变, ``verify_infra_069`` 锁的 ``EXPECTED_BOOTSTRAP_FILE_SHA``
+   也需 bump (见 ``scripts/dump_v4_sha_graph.py`` cascade graph).
+
+**反例 (导致 canary 失效)**:
+
+- 改 ``_CANARY_VERIFY_SRC`` 后忘记同步 ``_CANARY_EXPECTED_SHA``:
+  ``--canary`` 子模式立即 rc=2 + stderr ``MUTANT DETECTED`` 的 *false positive* —
+  helper 没坏, 是 expected const 没跟上.
+- 既改 src 又同步 sha, 但 src 改成 "等价于真 compute_self_checker_sha 的逻辑"
+  (例如把 v4_behavior 改成无函数体 / 改函数名), 导致 V4.2 mutant 检测条件不再触发 —
+  ``verify_infra_063`` V4.2 实跑模式应抓到此类退化.
 """
 from __future__ import annotations
 
@@ -165,7 +205,29 @@ def main() -> int:
         action="store_true",
         help="run self-mutant canary check (no --verify-script needed); exit 2 if mutant_detected",
     )
+    ap.add_argument(
+        "--compute-canary-sha",
+        action="store_true",
+        help="print sha that _CANARY_EXPECTED_SHA should hold for current _CANARY_VERIFY_SRC (P297)",
+    )
     args = ap.parse_args()
+
+    # infra-P297: compute-canary-sha 模式 — 复用 canary 计算路径打印期望 sha
+    if args.compute_canary_sha:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False, encoding="utf-8"
+        ) as f:
+            f.write(_CANARY_VERIFY_SRC)
+            tmp_path = Path(f.name)
+        try:
+            sha_hex = compute_self_checker_sha(tmp_path, "v4_behavior")
+        finally:
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+        print(sha_hex)
+        return 0
 
     # infra-P276: canary 自检模式 (与 --verify-script 互斥)
     if args.canary:

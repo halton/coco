@@ -7925,7 +7925,7 @@
     {
       "id": "infra-P297-bootstrap-canary-edit-flow-docs",
       "priority": 5.38,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 38,
       "area": "infra",
       "title": "文档化 bootstrap canary helper 编辑流程",
