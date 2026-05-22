@@ -82,7 +82,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "44aa048a18610396022213c0e5f57c938775a84e831305de50048f114ef81e78"
+EXPECTED_VERIFY_LIB_FILE_SHA = "41caff9b158c9d829e640b845a0a27c822b547773ddb49ecb27f73f32d56d490"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -991,14 +991,45 @@ def _enforce_closeout_reviewer_block_shape() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V6-062 baseline-head-echo-format promote-bool grace_period 配套 (phase-45 #3.45)
+# infra-V6-backlog-062-v4-closeout-baseline-head-echo-format-promote-bool —
+# V4_closeout_baseline_head_echo_format emit 从 True soft → bool(result['ok']) 真硬;
+# 配套引入 V4_BASELINE_HEAD_ECHO_FORMAT_GRACE_PERIOD_FEATURE_IDS (16 historic features)
+# 用 grace_period 一次性 grandfather, 新 feature 必须 hard PASS baseline_head_echo 形态.
+# 实际 hard 行为由 verify_infra_094 自身锁定 (helper func sha + 行为正反例).
+# 未来逐项 graduate: 把 feature 从 GRACE 列表移除并补齐 baseline_head_echo 字段.
+# ---------------------------------------------------------------------------
+V4_BASELINE_HEAD_ECHO_FORMAT_GRACE_PERIOD_FEATURE_IDS = (
+    "infra-P286-followup-074-self-main-func-sha-bump",
+    "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
+    "infra-P286-followup-tolerance-headroom-bump",
+    "infra-P286-followup-v4-2-stricter-equal-check",
+    "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
+    "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
+    "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
+    "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
+    "infra-P291-followup-extend-helper-to-other-v5",
+    "infra-P291-reviewer-gate-real-or-remove",
+    "infra-P294-closeout-stdout-sha-verification",
+    "infra-P297-bootstrap-canary-edit-flow-docs",
+    "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
+    "infra-P299-engineer-report-vs-impl-trustworthy",
+    "infra-P299-followup-wire-into-closeout-gate",
+    "infra-P299-followup2-enable-byte-match-real-run",
+)
+
+
+# ---------------------------------------------------------------------------
 # V4: closeout_verify.baseline_head_echo 形态合规 hard check
 # (phase-44 #5.44) infra-P278-followup-closeout-baseline-head-echo-format-hard-check
 # Default-OFF + soft-PASS for legacy: emit=True 不阻断, 把 violations 计数写进 detail.
 # 实际 hard 行为由 verify_infra_091 自身锁定.
 # ---------------------------------------------------------------------------
 def _enforce_closeout_baseline_head_echo_format() -> None:
-    """对 feature_list.json 调 assert_closeout_baseline_head_echo_format(min_hex_chars=7);
-    Default-OFF: emit=True 不阻断, 把 scanned/enforced/soft_skipped/violations 写进 detail."""
+    """对 feature_list.json 调 assert_closeout_baseline_head_echo_format(min_hex_chars=7,
+    grace_period_feature_ids=V4_BASELINE_HEAD_ECHO_FORMAT_GRACE_PERIOD_FEATURE_IDS);
+    emit=bool(result['ok']) 真硬: 新 feature (不在 GRACE 内) 含 violation → FAIL.
+    实际 hard 行为由 verify_infra_094 自身锁定 (helper func sha + 行为正反例)."""
     feature_list = REAL_FEATURE_LIST
     if not feature_list.is_file():
         _emit(
@@ -1011,6 +1042,7 @@ def _enforce_closeout_baseline_head_echo_format() -> None:
         result = assert_closeout_baseline_head_echo_format(
             feature_list,
             min_hex_chars=7,
+            grace_period_feature_ids=V4_BASELINE_HEAD_ECHO_FORMAT_GRACE_PERIOD_FEATURE_IDS,
         )
     except Exception as e:  # noqa: BLE001
         _emit(
@@ -1029,10 +1061,12 @@ def _enforce_closeout_baseline_head_echo_format() -> None:
     violations = result.get("violations") or []
     _emit(
         "V4_closeout_baseline_head_echo_format",
-        True,  # Default-OFF soft-PASS
+        bool(result.get("ok")),  # phase-45 #3.45: promote 至真硬
         f"scanned={result.get('scanned_count')} "
         f"enforced={result.get('enforced_count')} "
         f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"grace_skipped={len(result.get('grace_skipped') or [])} "
+        f"grace_period_count={result.get('grace_period_count')} "
         f"violations={len(violations)} "
         f"min_hex_chars={result.get('min_hex_chars')} "
         f"first_violation={violations[0] if violations else None}",
