@@ -6250,3 +6250,18 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - backlog 入账 (1 项):
   - infra-P299-followup-brief-baseline-sha-accuracy (P2) — closeout brief baseline sha 应机械化用 `git log main -1 --format=%h` 取真实 HEAD, 避免人工抄写 (本次 8965db6 vs 实际 126457e)
 - 持续开发模式: 继续 phase-39 下一 not_started (按 priority 最低数字选)
+
+## Session 2026-05-22 — phase-39 #4.39 infra-P299-baseline-fail-claim-regex-multiline closeout
+
+- Engineer commit: cd7c54d — verify_baseline_fail_claims regex `[^\n]{0,80}` → `[\s\S]{0,200}` (跨行 + 跨度从 80 扩到 200); 新增 verify_infra_073 (V0-V5 14 checks) 覆盖跨行 false-fail-detect / true-fail-verified / no-claim short-circuit / invalid baseline ref / mixed claims partial contradiction; cascade bump 9 处 EXPECTED_VERIFY_LIB_FILE_SHA
+- Reviewer (sub-agent fresh-context) LGTM — feat 13/13 PASS, baseline 12/12 PASS, 0 regression; mutant 实验确认旧 regex 抓不到跨行 / 新 regex 抓到; 1 finding 入 backlog
+- Merge commit: 7593ff5 (main_head_sha=7593ff59b5883ad68f3459963cac1859b08bdd25); pre-merge baseline=c410b2d
+- closeout_verify on merged main 7593ff5 (P278 5 信号完整):
+  - 13/13 verify ALL PASS rc=0 (034/060/062/063/065/066/067/068/069/070/071/072/073), 每条带 tail_stdout + tail_stdout_sha256 (raw 实跑)
+  - `./init.sh` smoke PASS
+  - reviewer_kind=sub_agent_fresh_context, verdict=LGTM
+  - mutant_test_passed=true
+- feature_list.json: infra-P299-baseline-fail-claim-regex-multiline in_progress → passing (含 closeout_verify 完整 evidence block)
+- backlog 入账 (1 项):
+  - infra-P299-followup-engineer-stale-verify-evidence (P1) — Engineer 在 cascade bump EXPECTED_*_FILE_SHA 后, 必须在 final commit 后再跑一次完整 cascade-affected verify 列表, 禁止用中间 commit / pre-bump 状态的 verify 结果作 evidence (本次 Engineer 报 7 项 FAIL 但 Closeout 实测全 PASS, 方向无害但误导)
+- 持续开发模式: 继续 phase-39 下一 not_started (按 priority 最低数字选)

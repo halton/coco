@@ -8336,12 +8336,47 @@
     {
       "id": "infra-P299-baseline-fail-claim-regex-multiline",
       "priority": 4.39,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 39,
       "area": "infra",
       "title": "verify_baseline_fail_claims regex 支持跨行 claim",
       "rationale": "P294-R4 Reviewer finding: 当前 FAIL claim 解析 regex 用 `[^\\n]{0,80}` 同行限定 script 名与 'FAIL on baseline' 标记距离, 若 evidence reviewer 文本把 script 名与失败原因写在跨行 (例如 markdown bullet 折行) 会漏报 false-fail 主张. 建议改 `[\\s\\S]{0,80}` 或显式 docstring 写明 'claim 必须同行' 的契约。",
-      "description": "verify_baseline_fail_claims regex 支持跨行 claim. verify_baseline_fail_claims regex 从 `[^\\n]{0,80}` 改为 `[\\s\\S]{0,80}` 支持跨行 claim; 或显式 docstring + V4 assert 强制 'claim 必须同行' 契约 (二选一). Verify 范围: 改 verify_baseline_fail_claims helper; 新增 V4 case 用 markdown 折行的 FAIL claim 文本 (script 名与 'FAIL on baseline' 跨行), 验证 detect 不漏. Reviewer acceptance: false-fail claim 跨行场景被正确捕获或被契约文档显式 disallow + V4 锁定."
+      "description": "verify_baseline_fail_claims regex 支持跨行 claim. verify_baseline_fail_claims regex 从 `[^\\n]{0,80}` 改为 `[\\s\\S]{0,200}` 支持跨行 claim (跨度从 80 扩到 200); 新增 verify_infra_073 (V0-V5 14 checks) 锁定跨行 false-fail-detect / true-fail-verified / no-claim short-circuit / invalid baseline ref / mixed claims partial contradiction 场景. Reviewer acceptance: 跨行 false-fail claim 被正确捕获 + V4 锁定.",
+      "evidence": {
+        "merged_commit": "cd7c54d",
+        "merge_commit": "7593ff5",
+        "main_head_sha": "7593ff59b5883ad68f3459963cac1859b08bdd25",
+        "main_head_sha_short": "7593ff5",
+        "pre_merge_baseline_sha": "c410b2d",
+        "mutant_test_passed": true,
+        "closeout_verify": {
+          "main_head_sha": "7593ff5",
+          "verify_runs": [
+            {"name": "verify_infra_034", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=207\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=120; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0", "tail_stdout_sha256": "b451bdbbee731183857c955097908fdbbe37f835f1b791c2aae220ba9c5caf4d"},
+            {"name": "verify_infra_060", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "abe6a8b34c586d19a10793e7d2a28882e4d471ee076542311910a5e09d9a5408"},
+            {"name": "verify_infra_062", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_062][SUMMARY] ALL PASS (17 checks)", "tail_stdout_sha256": "00d9a018e02e8669573f85d461b21ebe6c7b75043b43c81c54a0052f667eabc4"},
+            {"name": "verify_infra_063", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_063][PASS] V4.5_canary_stdout_has_expected_actual expect 'expected=' and 'actual' substrings in canary stdout\n[verify_infra_063][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_063][SUMMARY] ALL PASS (20 checks)", "tail_stdout_sha256": "ea1f00e764e97c8b05c0493c465d85f817250f89988f15ae55b7ef6c36ae359c"},
+            {"name": "verify_infra_065", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_065][PASS] V4.5_mixed_claims_partial_contradiction got total=2 verified=1 contradicted=1 err=None\n[verify_infra_065][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_065][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "d27c9212f96127686729d321b0ec21f17302af122d8422daeb9c4e972ff7f7c2"},
+            {"name": "verify_infra_066", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_066][PASS] V4_5_total_checks_derived_not_literal assigns=1 literal_int_lines=[]\n[verify_infra_066][PASS] V5_reviewer_lgtm_gate P294-R5 closeout 须 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_066][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "8d3bb5e84a499376c2d9c3201f3ca83a93498a2801b2f512220e9d90b6c13981"},
+            {"name": "verify_infra_067", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_067][PASS] V4_5_all_scripts_have_exit_path missing_count=0 list=[]\n[verify_infra_067][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_067][SUMMARY] ALL PASS (18 checks)", "tail_stdout_sha256": "d45aa7c1ce3b8463111b1b987a3fb06f1a906a2ef66345b33dc6869784313519"},
+            {"name": "verify_infra_068", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_068][PASS] V4_5_compound_all_signals signal_count=4 min_met=True flags=[]\n[verify_infra_068][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_068][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "853187e9bce5de8d8690546ea3fb6a46bbe73f9826cef01dff8b063dd6abc8ae"},
+            {"name": "verify_infra_069", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_069][PASS] V4_2_canary_const_matches_helper const=5d611a08c7d9a7df cli=5d611a08c7d9a7df match=True\n[verify_infra_069][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_069][SUMMARY] ALL PASS (10 checks)", "tail_stdout_sha256": "5db6ce1f4040a3e64eefd5d3c92daf31b95f0dddc93181a0098f3aa71ba2a1e2"},
+            {"name": "verify_infra_070", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_070][PASS] V4_5_invalid_main_head_sha ok=False error=\"main_head_sha invalid: '0000000000000000000000000000000000000000' (git rev-parse stderr='fatal: Needed a single revision')\"\n[verify_infra_070][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_070][SUMMARY] ALL PASS (15 checks)", "tail_stdout_sha256": "5e6393a10973fd2eb94ac8025cbe47b34f6f5ab38ee6a286ff0cfaa8629055db"},
+            {"name": "verify_infra_071", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_071][PASS] V4_5_feature_not_found ok=False reason=\"feature id='does-not-exist' not found in feature_list.json\"\n[verify_infra_071][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_071][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "d161ce120c0986987c3b9e969ad702b85b3aec7b4fced7980185f62bce5b7962"},
+            {"name": "verify_infra_072", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_072][PASS] V4_5_mutant_invariant_violation_detected mutant passed=6 failed=0 total=5 invariant_violated=True\n[verify_infra_072][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_072][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "65c8275fc04431bac57625d60a3094ac6bc1cd55ba2b84f4245da7d8e055d4a1"},
+            {"name": "verify_infra_073", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_073][PASS] V4_5_baseline_cross_check_real_run total=2 verified=1 missing=1 contradicted=0 err=None\n[verify_infra_073][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True reason=\"feature 'infra-P291-reviewer-gate-real-or-remove': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_073][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "94b6ebf40ffeadc83e0be29cf660937635c80c144c7e431fcd3cd6fb8abc8018"}
+          ],
+          "smoke_tail_stdout": "ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke 通过。"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Reviewer (sub-agent fresh-context): LGTM. regex 从 [^\\n]{0,80} 改为 [\\s\\S]{0,200} (跨行 + 跨度大), 新增 verify_infra_073 (14 checks), cascade bump 9 处 EXPECTED_VERIFY_LIB_FILE_SHA. feat 13/13 PASS, baseline 12/12 PASS, 0 regression. Mutant 实验确认旧 regex 抓不到跨行 / 新 regex 抓到. 1 finding 入 backlog: Engineer closeout 前需基于 final HEAD 重跑所有 cascade-affected verify (本次报 7 项 FAIL 但实际全 PASS).",
+          "findings_to_backlog": [
+            "infra-P299-followup-engineer-stale-verify-evidence"
+          ]
+        }
+      }
     },
     {
       "id": "infra-P299-verify-infra-062-helper-func-sha-baseline-drift",
@@ -8378,6 +8413,15 @@
       "area": "infra",
       "title": "V4.4 invalid baseline ref 用例补纯非法字符串覆盖",
       "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。"
+    },
+    {
+      "id": "infra-P299-followup-engineer-stale-verify-evidence",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "Engineer closeout 前必须基于 final HEAD 重跑所有 cascade-affected verify",
+      "rationale": "P299 Closeout: Engineer 在 cascade bump 9 处 EXPECTED_VERIFY_LIB_FILE_SHA 后, 报告 7 项 verify FAIL (sha 不匹配), 但 Closeout 在 merged main HEAD 实跑全 13 项均 PASS rc=0. 误导方向无害 (over-report FAIL 而非 over-claim PASS), 但仍浪费 Reviewer/Closeout 排错精力. 建议在 AGENTS.md / CLAUDE.md / Engineer sub-agent brief 模板加硬规则: 涉及 cascade bump EXPECTED_*_FILE_SHA 的 feature, Engineer 必须在 final commit (含所有 bump) 后再跑一次完整 cascade-affected verify 列表, 提交 actual tail + rc, 禁止用中间 commit / pre-bump 状态的 verify 结果作 evidence."
     },
     {
       "id": "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
