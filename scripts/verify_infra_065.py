@@ -59,7 +59,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, verify_baseline_fail_claims, assert_reviewer_lgtm  # noqa: E402
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "57385b07472b1fc811d351c9c12dcf2f4a85b3bdfe8e466a6f77cdea673110be"
+EXPECTED_VERIFY_LIB_FILE_SHA = "91ee88fb787e87673032ffa3d48c647f56877f70a5d6bf9deb338d670a651606"
 EXPECTED_BASELINE_FAIL_CROSS_CHECK_FUNC_SHA = "4aa6b31c7b5e79b1ea8f17f33c323e68fa0c20932c090848d6e322db0cd552a7"
 EXPECTED_V4_CHECKER_FUNC_SHA = "51a9db2dc9d317c2e6de21fd2be1a351430cf696313be05ee3cdf00da072b289"
 

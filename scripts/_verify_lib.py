@@ -54,6 +54,7 @@ __all__ = [
     "verify_summary_exit",
     "assert_verify_lib_public_helper_naming",
     "assert_closeout_verify_runs_min_count",
+    "assert_closeout_smoke_tail_nonempty",
 ]
 
 
@@ -2597,5 +2598,134 @@ def assert_closeout_verify_runs_min_count(
                 "runs_count": len(vr),
                 "min_count": int(min_count),
             })
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P278-followup-closeout-smoke-tail-nonempty-hard-check (phase-43 #5.43)
+# Closeout-verify-trustworthy 已要求 smoke_tail_stdout 为 string, 但未约束内容.
+# 常见占位 'smoke OK' 或空串无法 audit 真跑 ./init.sh. 加 Default-OFF hard check:
+# 缺字段 soft_skip; 含字段但 strip 后 < min_chars 或不含任何 must_contain
+# 关键词 (case-insensitive) → hard FAIL.
+# ---------------------------------------------------------------------------
+def assert_closeout_smoke_tail_nonempty(
+    feature_list_path,
+    min_chars: int = 20,
+    must_contain: tuple = ("Smoke", "smoke"),
+) -> dict:
+    """扫 feature_list.json 所有 status=='passing' 且 evidence.closeout_verify
+    存在的 feature, 对其 closeout_verify.smoke_tail_stdout (若存在) 要求:
+      - strip() 后长度 >= min_chars
+      - 字段值 (case-insensitive) 至少含 must_contain 中任一关键词
+
+    参数:
+        feature_list_path: feature_list.json 的路径 (str | Path).
+        min_chars: 最少非空白字符数门槛, 默认 20.
+        must_contain: 关键词元组 (case-insensitive 任一匹配即可),
+            默认 ("Smoke", "smoke").
+
+    返回 dict::
+
+        {
+          "ok": bool,
+          "violations": [
+              {
+                  "feature_id": str,
+                  "reason": str,
+                  "stripped_len": int,
+                  "min_chars": int,
+                  "must_contain": list,
+              },
+              ...
+          ],
+          "soft_skipped": [str, ...],   # 缺 smoke_tail_stdout 字段的 feature_id
+          "enforced_count": int,        # 真正参与 enforce 的 feature 数 (含字段)
+          "scanned_count": int,         # status=passing 含 closeout_verify
+          "min_chars": int,
+          "must_contain": list,
+          "error": str | None,
+        }
+
+    Default-OFF 行为:
+      - 老 feature (缺 smoke_tail_stdout / 非 str) → soft_skipped, 不算 violation
+      - 含字段 (str) → hard enforce: 长度门槛 + 关键词门槛
+    """
+    from pathlib import Path as _P
+    import json as _json
+
+    mc = list(must_contain) if must_contain else []
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "enforced_count": 0,
+        "scanned_count": 0,
+        "min_chars": int(min_chars),
+        "must_contain": list(mc),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    lc_keywords = [k.lower() for k in mc if isinstance(k, str) and k]
+
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned_count"] += 1
+        smoke = cv.get("smoke_tail_stdout")
+        if not isinstance(smoke, str):
+            # 老 feature 缺字段 (或非 str) → soft_skipped
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced_count"] += 1
+        stripped = smoke.strip()
+        stripped_len = len(stripped)
+        if stripped_len < int(min_chars):
+            out["violations"].append({
+                "feature_id": fid,
+                "reason": (
+                    f"closeout_verify.smoke_tail_stdout stripped_len="
+                    f"{stripped_len} < min_chars={min_chars}"
+                ),
+                "stripped_len": stripped_len,
+                "min_chars": int(min_chars),
+                "must_contain": list(mc),
+            })
+            continue
+        if lc_keywords:
+            lc_smoke = smoke.lower()
+            if not any(k in lc_smoke for k in lc_keywords):
+                out["violations"].append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"closeout_verify.smoke_tail_stdout missing any of "
+                        f"must_contain={mc} (case-insensitive)"
+                    ),
+                    "stripped_len": stripped_len,
+                    "min_chars": int(min_chars),
+                    "must_contain": list(mc),
+                })
     out["ok"] = len(out["violations"]) == 0
     return out

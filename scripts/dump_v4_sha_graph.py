@@ -306,6 +306,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_verify_runs_min_count (func-sha)",
     ("verify_infra_086.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_086.py:main (func-sha)",
+    # verify_infra_087 (P278-followup-closeout-smoke-tail-nonempty-hard-check) —
+    # phase-43 #5.43: 锁 assert_closeout_smoke_tail_nonempty helper + lib file +
+    # 自 main; 不锁 self file sha (同 074/079/080/081/082/083/084/085/086 形)
+    ("verify_infra_087.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_087.py", "EXPECTED_SMOKE_TAIL_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_closeout_smoke_tail_nonempty (func-sha)",
+    ("verify_infra_087.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_087.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

@@ -11305,7 +11305,7 @@
       "id": "infra-P278-followup-closeout-smoke-tail-nonempty-hard-check",
       "priority": 5.43,
       "phase": 43,
-      "status": "not_started",
+      "status": "in_progress",
       "area": "infra",
       "title": "closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check (Default-OFF)",
       "rationale": "Closeout 6 信号之一 smoke_tail_stdout 当前仅形态校验为 string，未检内容；常见 closeout evidence 残留占位 'smoke OK' 或空字符串，无法 audit 真跑 ./init.sh。加 'len>0 + 含 Smoke 关键词' Default-OFF→hard 检，提升 smoke 证据可信度。",

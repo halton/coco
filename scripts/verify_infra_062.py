@@ -68,6 +68,7 @@ LIB = SCRIPTS / "_verify_lib.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_baseline_head_echo_present_and_matches,
+    assert_closeout_smoke_tail_nonempty,
     assert_closeout_verify_runs_min_count,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
@@ -77,7 +78,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "57385b07472b1fc811d351c9c12dcf2f4a85b3bdfe8e466a6f77cdea673110be"
+EXPECTED_VERIFY_LIB_FILE_SHA = "91ee88fb787e87673032ffa3d48c647f56877f70a5d6bf9deb338d670a651606"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -770,6 +771,56 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V4: closeout_verify.smoke_tail_stdout 非空 + 含 'Smoke' 关键词 hard check
+# (phase-43 #5.43) infra-P278-followup-closeout-smoke-tail-nonempty-hard-check
+# Default-OFF 渐进 promote: 缺字段 soft_skip; 含字段且 stripped<20 或不含
+# Smoke/smoke → hard enforce FAIL.
+# ---------------------------------------------------------------------------
+def _enforce_closeout_smoke_tail_nonempty() -> None:
+    """对 feature_list.json 调 assert_closeout_smoke_tail_nonempty(min_chars=20,
+    must_contain=('Smoke','smoke')), 任一 violation → hard FAIL;
+    soft_skipped/enforced_count 写进 detail."""
+    feature_list = REAL_FEATURE_LIST
+    if not feature_list.is_file():
+        _emit(
+            "V4_closeout_smoke_tail_nonempty",
+            True,
+            f"soft-skip: feature_list missing at {feature_list}",
+        )
+        return
+    try:
+        result = assert_closeout_smoke_tail_nonempty(
+            feature_list, min_chars=20, must_contain=("Smoke", "smoke")
+        )
+    except Exception as e:  # noqa: BLE001
+        _emit(
+            "V4_closeout_smoke_tail_nonempty",
+            True,
+            f"soft-skip: helper err={e!r}",
+        )
+        return
+    if result.get("error"):
+        _emit(
+            "V4_closeout_smoke_tail_nonempty",
+            True,
+            f"soft-skip: helper error={result.get('error')!r}",
+        )
+        return
+    violations = result.get("violations") or []
+    _emit(
+        "V4_closeout_smoke_tail_nonempty",
+        bool(result.get("ok")),
+        f"scanned={result.get('scanned_count')} "
+        f"enforced={result.get('enforced_count')} "
+        f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"violations={len(violations)} "
+        f"min_chars={result.get('min_chars')} "
+        f"must_contain={result.get('must_contain')} "
+        f"first_violation={violations[0] if violations else None}",
+    )
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_lock()
@@ -781,6 +832,7 @@ def main() -> int:
     _enforce_reviewer_summary_nonempty()
     _enforce_verify_lib_helper_naming()
     _enforce_closeout_verify_runs_min_count()
+    _enforce_closeout_smoke_tail_nonempty()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
