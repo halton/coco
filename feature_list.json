@@ -10288,7 +10288,7 @@
       "acceptance": "verify_infra_NNN.py 全 PASS; mutant FAIL 恢复 PASS; verify_infra_062 V4_baseline_head_echo_required PASS (近 8 个 closeout feature 全带); AGENTS.md / CLAUDE.md P278 段更新; reviewer sub-agent LGTM; smoke + 全量 verify 全 PASS.",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "main_head_sha": "edee903",
           "feat_head_sha": "f83bb40c2a48f88c0c8a44d6d0e1f4f73d3e6a8c",
           "baseline_head_sha": "e2f2075e3b75",
           "merge_commit_sha": "439064c4be07",
