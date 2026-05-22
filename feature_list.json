@@ -12201,7 +12201,7 @@
       "acceptance": "17 项 grace_period 全 graduate 后 grace_period_count==0 且 062 V4 PASS",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "0000000",
+          "main_head_sha": "b6793a1",
           "merge_commit_sha": "d244ce48e5bcbf160dee638c922094a66fa144a1",
           "baseline_head_echo": "16af96d",
           "pre_existing_baseline_sha": "16af96d",
