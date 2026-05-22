@@ -6770,3 +6770,15 @@ Engineer sub-agent (phase-40 #4.40):
 - V4 sha cascade: 未触发（仅字符串字面量改动，未触及 v5_reviewer_gate 函数 sha 锁——全仓库无此锁）
 - 待 Reviewer fresh-context 评审
 
+## Session: 2026-05-22 infra-P286-followup5-v5-ok-naming-extend-to-079-081-074 closeout (phase-42 #3.42)
+
+- feature: `infra-P286-followup5-v5-ok-naming-extend-to-079-081-074` → passing
+- feat branch HEAD: 92574e5f0a8e0869f15015026e6f331efa2eb88f
+- baseline main: 8a2edbb0d0feea07b3ff5bc74bb7f90bb05fbd9e
+- merge commit: 241ce4e (--no-ff)
+- Reviewer (sub_agent_fresh_context) round-1 LGTM: "零硬编码 ok 残留；命名统一与 075-078 对齐；9 个 verify V5 line 全部真变量插值；074 file sha bump 正确匹配；4 个 FAIL 全部 pre-existing 无回归；smoke 通过"
+- verify on main post-merge: 071/073/080/081/083/062/060 ALL PASS（062 V4_byte_match_enforce fire=True enforced=114 violations=0 fired_features=8；V4_baseline_head_echo_required scanned=17 enforced=7 violations=0）
+- pre-existing baseline FAIL (与 8a2edbb 一致，独立 Reviewer 已确认): 072 (V3_helper_func_sha), 074 (V2_verify_059_file_sha), 079 (V4_4_real_run_074_rc0_and_pass，074 传染), 082 (V1_self_main_func_sha), 037/041/057/034 历史群
+- smoke 通过
+- baseline_head_echo dogfood 第 11 次落地（promote-to-P278-hard-required 后第 3 次 hard 落地，evidence.closeout_verify.reviewer.baseline_head_echo="8a2edbb..."）
+
