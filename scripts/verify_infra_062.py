@@ -82,7 +82,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "87db6ab1d43be8c94eeefb2b6e93752ebf9428b99cb387b0123ecc06ba73277e"
+EXPECTED_VERIFY_LIB_FILE_SHA = "44aa048a18610396022213c0e5f57c938775a84e831305de50048f114ef81e78"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -827,6 +827,41 @@ V4_VERIFY_RUNS_SHAPE_GRACE_PERIOD_FEATURE_IDS = (
 )
 
 
+# ---------------------------------------------------------------------------
+# V6-062 reviewer-block-shape promote-bool grace_period 配套 (phase-45 #2.45)
+# infra-V6-backlog-062-v4-closeout-reviewer-block-shape-promote-bool —
+# V4_closeout_reviewer_block_shape emit 从 True soft → bool(result['ok']) 真硬;
+# 配套引入 V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS (22 historic features)
+# 用 grace_period 一次性 grandfather, 新 feature 必须 hard PASS 五字段形态.
+# 实际 hard 行为由 verify_infra_093 自身锁定 (helper func sha + 行为正反例).
+# 未来逐项 graduate: 把 feature 从 GRACE 列表移除并修齐 reviewer block 五字段.
+# ---------------------------------------------------------------------------
+V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS = (
+    "infra-P278-followup-closeout-verify-runs-min-count-hard-check",
+    "infra-P278-followup-reviewer-summary-nonempty-hard-check",
+    "infra-P278-followup-verify-lib-helper-naming-convention-lock",
+    "infra-P286-followup-074-self-main-func-sha-bump",
+    "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
+    "infra-P286-followup-tolerance-headroom-bump",
+    "infra-P286-followup-v4-2-stricter-equal-check",
+    "infra-P286-followup3-promote-baseline-head-echo-to-P278-hard-required",
+    "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
+    "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
+    "infra-P286-followup5-v5-ok-naming-extend-to-079-081-074",
+    "infra-P286-followup6-historical-cascade-self-main-sha-rebump",
+    "infra-P291-followup-extend-helper-to-other-v5",
+    "infra-P291-reviewer-gate-real-or-remove",
+    "infra-P294-closeout-stdout-sha-verification",
+    "infra-P297-bootstrap-canary-edit-flow-docs",
+    "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field",
+    "infra-P299-engineer-report-vs-impl-trustworthy",
+    "infra-P299-followup-wire-into-closeout-gate",
+    "infra-P299-followup2-enable-byte-match-real-run",
+    "infra-V6-backlog-062-v3-helper-func-sha-rebump-followup",
+    "infra-V6-backlog-verify-lib-legacy-public-helper-rename-bulk",
+)
+
+
 def _enforce_closeout_verify_runs_shape() -> None:
     """对 feature_list.json 调 assert_closeout_verify_runs_shape(min_tail_chars=20,
     allowed_statuses=('PASS','FAIL','SKIP'), grace_period_feature_ids=GRACE);
@@ -904,8 +939,10 @@ def v5_reviewer_gate() -> None:
 def _enforce_closeout_reviewer_block_shape() -> None:
     """对 feature_list.json 调 assert_closeout_reviewer_block_shape(min_summary_chars=20,
     allowed_verdicts=('LGTM','conditional','REJECT'),
-    required_findings_keys=('P0','P1','P2')); Default-OFF: emit=True 不阻断,
-    把 scanned/enforced/soft_skipped/violations 写进 detail."""
+    required_findings_keys=('P0','P1','P2'),
+    grace_period_feature_ids=V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS);
+    emit=bool(result['ok']) 真硬: 新 feature (不在 GRACE 内) 含 violation → FAIL.
+    实际 hard 行为由 verify_infra_093 自身锁定 (helper func sha + 行为正反例)."""
     feature_list = REAL_FEATURE_LIST
     if not feature_list.is_file():
         _emit(
@@ -920,6 +957,7 @@ def _enforce_closeout_reviewer_block_shape() -> None:
             min_summary_chars=20,
             allowed_verdicts=("LGTM", "conditional", "REJECT"),
             required_findings_keys=("P0", "P1", "P2"),
+            grace_period_feature_ids=V4_REVIEWER_BLOCK_SHAPE_GRACE_PERIOD_FEATURE_IDS,
         )
     except Exception as e:  # noqa: BLE001
         _emit(
@@ -938,10 +976,12 @@ def _enforce_closeout_reviewer_block_shape() -> None:
     violations = result.get("violations") or []
     _emit(
         "V4_closeout_reviewer_block_shape",
-        True,  # Default-OFF soft-PASS
+        bool(result.get("ok")),  # phase-45 #2.45: promote 至真硬
         f"scanned={result.get('scanned_count')} "
         f"enforced={result.get('enforced_count')} "
         f"soft_skipped={len(result.get('soft_skipped') or [])} "
+        f"grace_skipped={len(result.get('grace_skipped') or [])} "
+        f"grace_period_count={result.get('grace_period_count')} "
         f"violations={len(violations)} "
         f"min_summary_chars={result.get('min_summary_chars')} "
         f"allowed_verdicts={result.get('allowed_verdicts')} "

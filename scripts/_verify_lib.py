@@ -3003,6 +3003,7 @@ def assert_closeout_reviewer_block_shape(
     min_summary_chars: int = 20,
     allowed_verdicts: tuple = ("LGTM", "conditional", "REJECT"),
     required_findings_keys: tuple = ("P0", "P1", "P2"),
+    grace_period_feature_ids: tuple = (),
 ) -> dict:
     """每个 closeout_verify.reviewer block 必须含五字段且形态合规.
 
@@ -3024,6 +3025,11 @@ def assert_closeout_reviewer_block_shape(
         min_summary_chars: summary strip 后最少字符数 (默认 20).
         allowed_verdicts: verdict 字段允许的取值; 传 () 则只校验非空.
         required_findings_keys: findings dict 必须包含的 key (默认 P0/P1/P2).
+        grace_period_feature_ids: 软放过列表 — 这些历史 feature 的 violations
+            不计入 violations, 而计入 grace_skipped. 新 feature 不在此列表中
+            即按 hard 强制. (V6-062-reviewer-block-shape-promote-bool:
+            emit 已 promote 至 bool, 用此列表把 22 个历史 violation feature
+            一次性 grandfather 进来)
 
     返回 dict::
 
@@ -3039,8 +3045,10 @@ def assert_closeout_reviewer_block_shape(
               ...
           ],
           "soft_skipped": [str, ...],
+          "grace_skipped": [str, ...],
           "enforced_count": int,
           "scanned_count": int,
+          "grace_period_count": int,
           "min_summary_chars": int,
           "allowed_verdicts": list,
           "required_findings_keys": list,
@@ -3056,12 +3064,15 @@ def assert_closeout_reviewer_block_shape(
 
     allowed_list = list(allowed_verdicts) if allowed_verdicts else []
     findings_keys = list(required_findings_keys) if required_findings_keys else []
+    grace_set = set(grace_period_feature_ids or ())
     out: dict = {
         "ok": False,
         "violations": [],
         "soft_skipped": [],
+        "grace_skipped": [],
         "enforced_count": 0,
         "scanned_count": 0,
+        "grace_period_count": len(grace_set),
         "min_summary_chars": int(min_summary_chars),
         "allowed_verdicts": list(allowed_list),
         "required_findings_keys": list(findings_keys),
@@ -3106,11 +3117,12 @@ def assert_closeout_reviewer_block_shape(
             out["soft_skipped"].append(fid)
             continue
         out["enforced_count"] += 1
+        feature_violations: list = []
 
         # reviewer_kind
         rk = reviewer.get("reviewer_kind")
         if not (isinstance(rk, str) and rk.strip()):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "reviewer.reviewer_kind empty or not str",
                 "field": "reviewer_kind",
@@ -3120,14 +3132,14 @@ def assert_closeout_reviewer_block_shape(
         # verdict
         vd = reviewer.get("verdict")
         if not (isinstance(vd, str) and vd.strip()):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "reviewer.verdict empty or not str",
                 "field": "verdict",
                 "value_repr": _repr80(vd),
             })
         elif allowed_list and vd not in allowed_list:
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": (
                     f"reviewer.verdict={vd!r} not in "
@@ -3140,7 +3152,7 @@ def assert_closeout_reviewer_block_shape(
         # summary
         summ = reviewer.get("summary")
         if not isinstance(summ, str):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "reviewer.summary missing or not str",
                 "field": "summary",
@@ -3149,7 +3161,7 @@ def assert_closeout_reviewer_block_shape(
         else:
             stripped_len = len(summ.strip())
             if stripped_len < int(min_summary_chars):
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "reason": (
                         f"reviewer.summary stripped_len={stripped_len} "
@@ -3162,7 +3174,7 @@ def assert_closeout_reviewer_block_shape(
         # checks_run
         cr = reviewer.get("checks_run")
         if not (isinstance(cr, list) and len(cr) > 0):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "reviewer.checks_run missing/empty or not list",
                 "field": "checks_run",
@@ -3172,7 +3184,7 @@ def assert_closeout_reviewer_block_shape(
         # findings
         fd = reviewer.get("findings")
         if not isinstance(fd, dict):
-            out["violations"].append({
+            feature_violations.append({
                 "feature_id": fid,
                 "reason": "reviewer.findings missing or not dict",
                 "field": "findings",
@@ -3185,7 +3197,7 @@ def assert_closeout_reviewer_block_shape(
                 if k in fd and not isinstance(fd[k], list)
             ]
             if missing_keys:
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "reason": (
                         f"reviewer.findings missing required keys="
@@ -3195,7 +3207,7 @@ def assert_closeout_reviewer_block_shape(
                     "value_repr": _repr80(fd),
                 })
             if non_list_keys:
-                out["violations"].append({
+                feature_violations.append({
                     "feature_id": fid,
                     "reason": (
                         f"reviewer.findings keys not list: "
@@ -3204,6 +3216,11 @@ def assert_closeout_reviewer_block_shape(
                     "field": "findings",
                     "value_repr": _repr80(fd),
                 })
+        # grace_period: 若 feature 在 grace_set 且有 violation, 不计入 violations
+        if feature_violations and fid in grace_set:
+            out["grace_skipped"].append(fid)
+        else:
+            out["violations"].extend(feature_violations)
     out["ok"] = len(out["violations"]) == 0
     return out
 
