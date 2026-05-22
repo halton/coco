@@ -12168,7 +12168,7 @@
           ]
         },
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_A",
+          "main_head_sha": "13c1da5",
           "baseline_head_echo": "76468b8",
           "merge_commit_sha": "b49782d",
           "verify_runs": [
