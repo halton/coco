@@ -9927,7 +9927,7 @@
         "expected_verify_074_file_sha": "eef1c6421f21aa7d307702428a149c244831ef0f613346ae64ac4d09420af392",
         "expected_self_main_func_sha_079": "18760bb2e4c06f9a0f64a09b1bdb6e58eafacefd730b5f2b85b9c693b9799526",
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_MAIN_HEAD_SHA",
+          "main_head_sha": "6992d342e6b405f18cc476282532622b7da4e1f0",
           "feat_head_sha": "a4f3e00",
           "baseline_head_sha": "addbec0",
           "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n",
