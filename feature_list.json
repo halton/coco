@@ -7773,10 +7773,26 @@
         "merge_sha": "1cb97ab",
         "feat_commit_sha": "6c8b75f",
         "verify_runs": [
-          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
-          {"script": "scripts/verify_infra_065.py", "status": "ALL PASS (13 checks)", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
-          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+          {
+            "script": "./init.sh",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "script": "scripts/verify_infra_065.py",
+            "status": "ALL PASS (13 checks)",
+            "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "status": "ALL PASS (14 checks)",
+            "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_034.py",
+            "status": "total=53 failed=0",
+            "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+          }
         ],
         "reviewer": {
           "reviewer_kind": "sub_agent_fresh_context",
@@ -7788,7 +7804,10 @@
             "infra-P299-baseline-cross-check-v4-invalid-ref-coverage"
           ]
         },
-        "commits": ["6c8b75f", "1cb97ab"]
+        "commits": [
+          "6c8b75f",
+          "1cb97ab"
+        ]
       }
     },
     {
@@ -7803,13 +7822,36 @@
         "main_head_sha": "5e4ffe6",
         "main_head_before_merge": "8f05e20",
         "merge_sha": "5e4ffe6",
-        "feat_commit_sha": ["3fae1b9", "2de74bf"],
+        "feat_commit_sha": [
+          "3fae1b9",
+          "2de74bf"
+        ],
         "verify_runs": [
-          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
-          {"script": "scripts/verify_infra_066.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "scripts/verify_infra_062.py", "status": "ALL PASS (17 checks)", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
-          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+          {
+            "script": "./init.sh",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "script": "scripts/verify_infra_066.py",
+            "status": "ALL PASS (14 checks)",
+            "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "ALL PASS (17 checks)",
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "status": "ALL PASS (14 checks)",
+            "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_034.py",
+            "status": "total=53 failed=0",
+            "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+          }
         ],
         "reviewer": {
           "reviewer_kind": "sub_agent_fresh_context",
@@ -7824,7 +7866,11 @@
             "infra-P299-closeout-verify-trustworthy-helper-passed-checks-field"
           ]
         },
-        "commits": ["3fae1b9", "2de74bf", "5e4ffe6"]
+        "commits": [
+          "3fae1b9",
+          "2de74bf",
+          "5e4ffe6"
+        ]
       }
     },
     {
@@ -7866,15 +7912,46 @@
         "main_head_sha": "6ec3768",
         "main_head_before_merge": "a2fa8e6",
         "merge_sha": "6ec3768",
-        "feat_commit_sha": ["05c553a", "58c6994"],
+        "feat_commit_sha": [
+          "05c553a",
+          "58c6994"
+        ],
         "verify_runs": [
-          {"script": "./init.sh", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
-          {"script": "scripts/verify_infra_060.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "scripts/verify_infra_062.py", "status": "ALL PASS (17 checks)", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
-          {"script": "scripts/verify_infra_065.py", "status": "ALL PASS (13 checks)", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
-          {"script": "scripts/verify_infra_066.py", "status": "ALL PASS (14 checks)", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "scripts/verify_infra_067.py", "status": "ALL PASS (18 checks)", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
-          {"script": "scripts/verify_infra_034.py", "status": "total=53 failed=0", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"}
+          {
+            "script": "./init.sh",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "status": "ALL PASS (14 checks)",
+            "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "ALL PASS (17 checks)",
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_065.py",
+            "status": "ALL PASS (13 checks)",
+            "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_066.py",
+            "status": "ALL PASS (14 checks)",
+            "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_067.py",
+            "status": "ALL PASS (18 checks)",
+            "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_034.py",
+            "status": "total=53 failed=0",
+            "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+          }
         ],
         "reviewer": {
           "reviewer_kind": "sub_agent_fresh_context",
@@ -7886,7 +7963,11 @@
         },
         "semantic_reversal": "原假设 'verify_*.py rc=0 bug' (P294-R5 round-1 仲裁推断) 被本 feature Engineer 机制化扫描 67 脚本推翻 — rc 传播全部正确, 真因是 round-1 Engineer 用 shell `| tail; echo $?` 模式读 rc, 被 tail 的 rc 覆盖 (吞了上游 verify 脚本的真 rc). Deliverable 因此重定位为: (a) verify_summary_exit helper + verify_infra_067 机制化校验所有 verify 脚本 SUMMARY/exit 一致, (b) cascade SHA bump 习惯, (c) 文档化 shell 用法陷阱 (入 P299 backlog).",
         "incidental_fix": "verify_infra_061 V3_helper_func_sha baseline stale 是 pre-existing drift (与本 feature 无因果, F2 nit), 入 backlog infra-P299-old-verify-summary-helper-migration 顺手清理.",
-        "commits": ["05c553a", "58c6994", "6ec3768"]
+        "commits": [
+          "05c553a",
+          "58c6994",
+          "6ec3768"
+        ]
       }
     },
     {
@@ -7904,14 +7985,54 @@
         "engineer_socket_disconnect_count": 2,
         "engineer_socket_disconnect_note": "Engineer 任务过大 2 次 socket 断, 拆 A (建 068 跑 PASS) + B (cascade+commit+push) 后顺利",
         "verify_runs": [
-          {"script": "init.sh", "status": "PASS", "rc": 0, "tail_stdout": "Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"},
-          {"script": "verify_infra_034.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_034] summary total=53 failed=0"},
-          {"script": "verify_infra_060.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "verify_infra_062.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"},
-          {"script": "verify_infra_065.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
-          {"script": "verify_infra_066.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
-          {"script": "verify_infra_067.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
-          {"script": "verify_infra_068.py", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"}
+          {
+            "script": "init.sh",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "script": "verify_infra_034.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_034] summary total=53 failed=0"
+          },
+          {
+            "script": "verify_infra_060.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "verify_infra_062.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+          },
+          {
+            "script": "verify_infra_065.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+          },
+          {
+            "script": "verify_infra_066.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "script": "verify_infra_067.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "script": "verify_infra_068.py",
+            "status": "PASS",
+            "rc": 0,
+            "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"
+          }
         ],
         "reviewer": {
           "reviewer_kind": "sub_agent_fresh_context",
@@ -7925,11 +8046,78 @@
     {
       "id": "infra-P297-bootstrap-canary-edit-flow-docs",
       "priority": 5.38,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 38,
       "area": "infra",
       "title": "文档化 bootstrap canary helper 编辑流程",
-      "rationale": "P276 Reviewer finding: 改 scripts/bootstrap_verify_self_checker.py helper 后必须重算 _CANARY_EXPECTED_SHA 与 verify_infra_063 EXPECTED_BOOTSTRAP_FILE_SHA, 否则 canary 自检/round-trip 会 false-positive FAIL. 建议在 helper 文件顶端 docstring + CONTRIBUTING/AGENTS.md 写明 '改本文件必须 (a) 跑 --print-canary-sha 重算 const, (b) 跑 verify_infra_063 重算 EXPECTED_BOOTSTRAP_FILE_SHA' 的流程."
+      "rationale": "P276 Reviewer finding: 改 scripts/bootstrap_verify_self_checker.py helper 后必须重算 _CANARY_EXPECTED_SHA 与 verify_infra_063 EXPECTED_BOOTSTRAP_FILE_SHA, 否则 canary 自检/round-trip 会 false-positive FAIL. 建议在 helper 文件顶端 docstring + CONTRIBUTING/AGENTS.md 写明 '改本文件必须 (a) 跑 --print-canary-sha 重算 const, (b) 跑 verify_infra_063 重算 EXPECTED_BOOTSTRAP_FILE_SHA' 的流程.",
+      "evidence": {
+        "main_head_sha": "c6ec9cb",
+        "main_head_full": "c6ec9cb7402e6f75152224f29ba84a150560f8bd",
+        "merged_commit": "cf729d4",
+        "merge_strategy": "no-ff",
+        "closeout_verify": {
+          "main_head_sha": "c6ec9cb",
+          "verify_runs": [
+            {
+              "name": "verify_infra_034.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=112; [verify_infra_034] summary total=53 failed=0"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "name": "verify_infra_063.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"
+            },
+            {
+              "name": "verify_infra_065.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "name": "verify_infra_066.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_067.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "name": "verify_infra_068.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"
+            },
+            {
+              "name": "verify_infra_069.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_069][PASS] V4_2_canary_const_matches_helper const=5d611a08c7d9a7df cli=5d611a08c7d9a7df match=True; [verify_infra_069][SUMMARY] ALL PASS (10 checks)"
+            },
+            {
+              "name": "bootstrap_verify_self_checker.py --canary",
+              "status": "PASS",
+              "tail_stdout": "[canary] ok=True mutant_detected=False; expected=5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249; actual=5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp; ==> Smoke 通过.",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "docstring P297 章节真实, --compute-canary-sha 输出与 const 字面一致, verify_infra_069 V0-V5 10 checks 完整且 mutant 可抓, cascade 三脚本 bump 全 PASS, canary 模式 ok=True, Default-OFF, smoke PASS, no regression."
+          }
+        }
+      }
     },
     {
       "id": "infra-P297-canary-mutant-parametrize",
@@ -8020,6 +8208,15 @@
       "area": "infra",
       "title": "closeout-verify-trustworthy helper dict 加 passed_checks 字段方便守恒律严格验证",
       "rationale": "P294-R5 Reviewer round-1 #3 minor: helper 已派生 total_checks (P294-R5), 但 dict 返回仅含 total_checks + failed_reasons; 下游验证若想严格 assert 守恒律 (passed + failed == total), 需自行算 passed=total-len(failed_reasons). 建议 helper 同步暴露 passed_checks 字段, 让 verify_infra_062/066 V4 可直接 assert passed+failed==total 三量一致, 把守恒律从'推导'升级到'锁'. 纯增强, 不动现有 caller."
+    },
+    {
+      "id": "infra-P299-baseline-runs-use-head-env",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "closeout baseline 用 head env 实跑 baseline scripts",
+      "rationale": "P297 Reviewer info finding: closeout baseline clone 缺 .venv 应固化用 head env 实跑 baseline scripts (避免 /tmp clone 缺 .venv 误判 FAIL)."
     }
   ],
   "_meta": {

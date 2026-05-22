@@ -6162,3 +6162,17 @@ phase-38 候选入选 (cluster: verify-self-checking / closeout-trustworthy / ca
 - feature_list.json: infra-P294-Ry-closeout-reviewer-text-scan in_progress → passing (含 evidence: main_head_sha=5be61ea / engineer_commit=f0d4abb / verify_runs / reviewer_fresh_context=true / engineer_socket_disconnect_count=2)
 - backlog 入账 (1 项): infra-P299-engineer-task-size-guideline — Engineer 任务含 cascade bump 16+ 文件 + 新建 verify + commit + push 时单次易 socket 断, 写指导拆为 A+B 两步
 - 持续开发模式: 继续 phase-38 #5.38 `infra-P297-bootstrap-canary-edit-flow-docs`
+
+## Session 2026-05-22 phase-38 #5.38 infra-P297-bootstrap-canary-edit-flow-docs closeout (passing)
+
+- merge: feat/infra-P297-bootstrap-canary-edit-flow-docs → main, merge_commit=c6ec9cb (no-ff), engineer_commit=cf729d4
+- 交付物:
+  - scripts/bootstrap_verify_self_checker.py docstring 加 P297 编辑流程章节 (6 步骤 + 2 反例)
+  - 新 CLI 子命令 `--compute-canary-sha` 输出 5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249 (与 _CANARY_EXPECTED_SHA 字面一致)
+  - 新 scripts/verify_infra_069.py 10 checks (V0-V5, V4_2_canary_const_matches_helper 关键)
+  - cascade bump: verify_infra_063 + dump_v4_sha_graph (+1) + verify_infra_060
+- closeout_verify (P278 5 信号): main_head=c6ec9cb; verify_infra_034/060/062/063/065/066/067/068/069 全 PASS; canary ok=True; ./init.sh smoke PASS; reviewer_kind=sub_agent_fresh_context (LGTM)
+- feature_list.json: infra-P297-bootstrap-canary-edit-flow-docs in_progress → passing (含 evidence)
+- 庆贺: **phase-38 5/5 全部 passing 收官** (1.38 P294-R4 / 2.38 P294-R5 / 3.38 P294-Rx / 4.38 P294-Ry / 5.38 P297)
+- backlog 入账 (1 项): infra-P299-baseline-runs-use-head-env — closeout baseline clone 缺 .venv 应固化"head env 实跑 baseline scripts"写法
+- 持续开发模式: 继续 phase-39 planning
