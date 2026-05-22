@@ -396,6 +396,15 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_main_head_sha_format (func-sha)",
     ("verify_infra_096.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_096.py:main (func-sha)",
+    # verify_infra_097 (infra-P299-followup-engineer-stale-verify-evidence) —
+    # phase-46 #2.46: 新增 V4_closeout_verify_runs_freshness hard check +
+    # 配套 V4_VERIFY_RUNS_FRESHNESS_GRACE_PERIOD_FEATURE_IDS (34 historic) grace_set 行为
+    ("verify_infra_097.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_097.py", "EXPECTED_FRESHNESS_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_closeout_verify_runs_freshness (func-sha)",
+    ("verify_infra_097.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_097.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

@@ -61,6 +61,7 @@ __all__ = [
     "assert_closeout_baseline_head_echo_format",
     "assert_closeout_merge_commit_sha_format",
     "assert_closeout_main_head_sha_format",
+    "assert_closeout_verify_runs_freshness",
 ]
 
 
@@ -3680,6 +3681,186 @@ def assert_closeout_main_head_sha_format(
                     ),
                     "field": "main_head_sha",
                     "value_repr": _repr80(mhs),
+                })
+        if feature_violations and fid in grace_set:
+            out["grace_skipped"].append(fid)
+        else:
+            out["violations"].extend(feature_violations)
+    out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+def assert_closeout_verify_runs_freshness(
+    feature_list_path,
+    min_run_count: int = 1,
+    grace_period_feature_ids: tuple = (),
+) -> dict:
+    """每条 closeout_verify.verify_runs 必须带 freshness_anchor 字段, 锁
+    verify 跑的是最终 (post-cascade) HEAD 上的 sha, 不是 stale 中间 sha.
+
+    背景 (infra-P299-followup-engineer-stale-verify-evidence, phase-46 #2.46):
+    P299 Closeout 暴露 Engineer 报告含 stale verify_runs (基于 cascade bump
+    前的 HEAD 跑出的 FAIL 结果), 实际 final HEAD 上全 PASS. 本 helper 强制
+    closeout 时显式锁: 每条 verify_runs entry 必须含 ``freshness_anchor``
+    字段, 值要么是 closeout_verify.main_head_sha 的前 7+ chars (同 main HEAD
+    跑出), 要么是显式字面量 "post-merge-rerun" (明确声明 post-merge 重跑过).
+
+    enforce-set 判定 (同 assert_closeout_main_head_sha_format):
+      - feature.status == 'passing'
+      - evidence.closeout_verify 为 dict
+      - closeout_verify.reviewer 为 dict
+      - reviewer.reviewer_kind == 'sub_agent_fresh_context'
+
+    形态规则 (per feature):
+      - closeout_verify.verify_runs 必须是非空 list (len >= min_run_count)
+      - 每条 entry 必须含 ``freshness_anchor`` 字段 (str)
+      - freshness_anchor 必须满足以下任一:
+        - 等于字面量 "post-merge-rerun"
+        - 是 main_head_sha 的前缀 (>=7 chars, 小写 hex)
+      - 否则 violation
+
+    参数:
+        feature_list_path: feature_list.json 路径 (str | Path).
+        min_run_count: verify_runs 最少 entry 数 (默认 1).
+        grace_period_feature_ids: 软放过列表 — 这些历史 feature 的 violations
+            不计入 violations, 而计入 grace_skipped.
+
+    返回 dict::
+
+        {
+          "ok": bool,
+          "violations": [...],
+          "soft_skipped": [str, ...],   # 缺 reviewer / 非 sub_agent_fresh_context
+          "grace_skipped": [str, ...],
+          "enforced": int,              # 真正参与 enforce 的 feature 数
+          "scanned": int,               # status=passing 含 closeout_verify
+          "grace_period_count": int,
+          "min_run_count": int,
+          "error": str | None,
+        }
+    """
+    from pathlib import Path as _P
+    import json as _json
+    import re as _re
+
+    grace_set = set(grace_period_feature_ids or ())
+    out: dict = {
+        "ok": False,
+        "violations": [],
+        "soft_skipped": [],
+        "grace_skipped": [],
+        "enforced": 0,
+        "scanned": 0,
+        "grace_period_count": len(grace_set),
+        "min_run_count": int(min_run_count),
+        "error": None,
+    }
+    p = _P(feature_list_path)
+    if not p.is_file():
+        out["error"] = f"feature_list not found at {p}"
+        return out
+    try:
+        data = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"feature_list parse error: {e!r}"
+        return out
+    features = data.get("features")
+    if not isinstance(features, list):
+        out["error"] = "feature_list.features missing or not a list"
+        return out
+
+    def _repr80(v) -> str:
+        s = repr(v)
+        return s if len(s) <= 80 else s[:77] + "..."
+
+    hex_re = _re.compile(r"^[0-9a-f]+$")
+    POST_MERGE_LITERAL = "post-merge-rerun"
+    for f in features:
+        if not isinstance(f, dict):
+            continue
+        if f.get("status") != "passing":
+            continue
+        ev = f.get("evidence")
+        if not isinstance(ev, dict):
+            continue
+        cv = ev.get("closeout_verify")
+        if not isinstance(cv, dict):
+            continue
+        fid = f.get("id") or "<no-id>"
+        out["scanned"] += 1
+        reviewer = cv.get("reviewer")
+        if not isinstance(reviewer, dict):
+            out["soft_skipped"].append(fid)
+            continue
+        if reviewer.get("reviewer_kind") != "sub_agent_fresh_context":
+            out["soft_skipped"].append(fid)
+            continue
+        out["enforced"] += 1
+        feature_violations: list = []
+
+        main_head = cv.get("main_head_sha") or ""
+        main_head_norm = main_head.strip().lower() if isinstance(main_head, str) else ""
+
+        runs = cv.get("verify_runs")
+        if not isinstance(runs, list):
+            feature_violations.append({
+                "feature_id": fid,
+                "reason": "verify_runs missing or not a list",
+                "field": "verify_runs",
+                "value_repr": _repr80(runs),
+            })
+        elif len(runs) < int(min_run_count):
+            feature_violations.append({
+                "feature_id": fid,
+                "reason": (
+                    f"verify_runs len={len(runs)} < "
+                    f"min_run_count={min_run_count}"
+                ),
+                "field": "verify_runs",
+                "value_repr": _repr80(runs),
+            })
+        else:
+            for idx, r in enumerate(runs):
+                if not isinstance(r, dict):
+                    feature_violations.append({
+                        "feature_id": fid,
+                        "reason": f"verify_runs[{idx}] not a dict",
+                        "field": f"verify_runs[{idx}]",
+                        "value_repr": _repr80(r),
+                    })
+                    continue
+                anchor = r.get("freshness_anchor")
+                if not isinstance(anchor, str):
+                    feature_violations.append({
+                        "feature_id": fid,
+                        "reason": (
+                            f"verify_runs[{idx}].freshness_anchor missing "
+                            "or not str"
+                        ),
+                        "field": f"verify_runs[{idx}].freshness_anchor",
+                        "value_repr": _repr80(anchor),
+                    })
+                    continue
+                anchor_s = anchor.strip().lower()
+                if anchor_s == POST_MERGE_LITERAL:
+                    continue
+                if (
+                    len(anchor_s) >= 7
+                    and hex_re.match(anchor_s)
+                    and main_head_norm
+                    and main_head_norm.startswith(anchor_s)
+                ):
+                    continue
+                feature_violations.append({
+                    "feature_id": fid,
+                    "reason": (
+                        f"verify_runs[{idx}].freshness_anchor invalid: "
+                        f"must equal {POST_MERGE_LITERAL!r} or be a "
+                        f">=7 hex prefix of main_head_sha "
+                        f"({main_head_norm[:12]!r})"
+                    ),
+                    "field": f"verify_runs[{idx}].freshness_anchor",
+                    "value_repr": _repr80(anchor),
                 })
         if feature_violations and fid in grace_set:
             out["grace_skipped"].append(fid)
