@@ -201,6 +201,9 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_068.py", "EXPECTED_REVIEWER_TEXT_SCAN_FUNC_SHA"):
         "scripts/_verify_lib.py:scan_reviewer_text (func-sha)",
+    # verify_infra_069 (P297) — 锁 bootstrap canary edit-flow docs / helper
+    ("verify_infra_069.py", "EXPECTED_BOOTSTRAP_FILE_SHA"):
+        "scripts/bootstrap_verify_self_checker.py (file-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
