@@ -220,6 +220,17 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_072.py", "EXPECTED_HELPER_FUNC_SHA"):
         "scripts/_verify_lib.py:verify_closeout_evidence_trustworthy (func-sha)",
+    # verify_infra_073 (P299-baseline-fail-claim-regex-multiline) — 锁 baseline FAIL claim
+    # regex 跨行支持 + verify_baseline_fail_claims helper
+    ("verify_infra_073.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_073.py", "EXPECTED_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:verify_baseline_fail_claims (func-sha)",
+    # verify_infra_074 (P286-total-nodes-lock) — 锁 verify_infra_059 EXPECTED_CURRENT_TOTAL_NODES 检查
+    ("verify_infra_074.py", "EXPECTED_VERIFY_059_FILE_SHA"):
+        "scripts/verify_infra_059.py (file-sha)",
+    ("verify_infra_074.py", "EXPECTED_059_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_059.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

@@ -8062,7 +8062,7 @@
     {
       "id": "infra-P286-total-nodes-lock",
       "priority": 5.39,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 39,
       "area": "infra",
       "title": "verify_infra_059 加锁 dump --mermaid total_nodes 当前实测 76",

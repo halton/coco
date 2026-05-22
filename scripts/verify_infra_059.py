@@ -71,11 +71,11 @@ from _verify_lib import (  # noqa: E402
 )
 
 # infra-059 sha lock 常量 (V2 / V3)
-EXPECTED_LIB_FILE_SHA = "a80af0088b53116bb10b672540a129f26d9b9fdf4dfeab862ddffb9170578525"
+EXPECTED_LIB_FILE_SHA = "79bdbb3a750f98f4ba2994cf2cabe9206fe8e9af075cd35c738a210c846e97c7"
 EXPECTED_UNKNOWN_FUNC_SHA = "fd311e570696f415e74a06ecd7a974f3c730323d4901df616c8a09e46638e50a"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "ec6f2e8cbea19488ce4916a450c428e8efdb385edcc38715de939581d243a1e7"
+EXPECTED_V4_CHECKER_FUNC_SHA = "eb87f84607599b54b5e234b7e54f4bbb00c93e312299e0db9bbe3281530ed9cb"
 
 # 当前实测 unknown 节点数精确锁 (V4_real_count_eq_current)
 # 来源: ``.venv/bin/python scripts/dump_v4_sha_graph.py --mermaid | grep -E
@@ -88,6 +88,17 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "ec6f2e8cbea19488ce4916a450c428e8efdb385edcc38715
 # 并按 _classify_node 归 lib / dump。仅剩 EXPECTED_DOC_SHA (verify_robot_034)
 # 因 target 是 docs/ 非 .py 文件, 继续保留 unknown 占位。
 EXPECTED_CURRENT_UNKNOWN_COUNT = 1
+
+# infra-P286-total-nodes-lock (phase-39 #5.39): V4 sha graph 节点总数锁。
+# 当前 ratio 锁只锁 V4/total 比例下界, 不锁绝对节点数; 若大量 sha lock 被
+# 误删 (V4 与 total 一起缩水, ratio 不变), ratio 检查不报警。引入
+# EXPECTED_CURRENT_TOTAL_NODES (实测值 + ±TOTAL_NODES_TOLERANCE 浮动) 形成
+# count + total + ratio 三重锁, 防节点漂移。
+# 实测来源: dump_v4_sha_graph --mermaid 派生 nodes 总数 (P286 实测 = 81)。
+# 未来新增 verify_infra_* / lib helper 引起 total_nodes 漂移 > ±5 应有意识地
+# bump 该常量 (并复审是否新 lock 真的有效)。
+EXPECTED_CURRENT_TOTAL_NODES: int = 81
+TOTAL_NODES_TOLERANCE: int = 5
 
 DOCSTRING_SENTINEL = "INFRA_059_SHA_LOCKS"
 
@@ -265,6 +276,19 @@ def v4_behavior() -> None:
         and r_real.get("total_nodes", 0) >= r_real.get("unknown_count", 0),
         f"total_nodes={r_real.get('total_nodes')} "
         f"unknown_count={r_real.get('unknown_count')}",
+    )
+
+    # infra-P286-total-nodes-lock: total_nodes 绝对值上下界 (±TOLERANCE)
+    _tn = r_real.get("total_nodes")
+    _tn_ok = (
+        isinstance(_tn, int)
+        and abs(_tn - EXPECTED_CURRENT_TOTAL_NODES) <= TOTAL_NODES_TOLERANCE
+    )
+    _emit(
+        "V4_real_total_nodes_within_tolerance",
+        _tn_ok,
+        f"total_nodes={_tn} expect={EXPECTED_CURRENT_TOTAL_NODES} "
+        f"tolerance=±{TOTAL_NODES_TOLERANCE}",
     )
 
     # 2) tmp 正例: 全非 unknown
