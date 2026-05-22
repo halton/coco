@@ -45,6 +45,7 @@ __all__ = [
     "scan_reviewer_text",
     "verify_baseline_fail_claims",
     "verify_evidence_tail_stdout_sha",
+    "assert_reviewer_lgtm",
     "assert_verify_passed",
     "verify_summary_exit",
 ]
@@ -1535,3 +1536,91 @@ def verify_evidence_tail_stdout_sha(
         "main_head_sha_resolved": resolved_sha,
         "error": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# infra-P291-reviewer-gate-real-or-remove: Reviewer LGTM gate helper
+# ---------------------------------------------------------------------------
+def assert_reviewer_lgtm(
+    feature_id: str,
+    feature_list_path: "Path | str",
+) -> tuple[bool, str]:
+    """实读 feature_list.json, 校验某 feature 的 Reviewer LGTM 字段是否合规。
+
+    名实相符: 这是真 evidence-driven 的 Reviewer LGTM gate, 替代 verify_infra_*.py
+    中各处 hardcoded ``True`` 的 V5_reviewer_lgtm_gate placeholder (P291)。
+
+    校验规则 (全部满足返回 ok=True):
+      1. feature_list.json 可被读取并解析为 JSON 顶层含 ``features: list`` 。
+      2. 列表中存在 id == feature_id 的 feature 条目。
+      3. feature ``evidence`` 子结构为 dict; 其 ``reviewer`` 字段或
+         ``closeout_verify.reviewer`` 字段为 dict (优先后者, closeout 写入位置)。
+      4. ``reviewer["reviewer_kind"] == "sub_agent_fresh_context"`` 。
+      5. ``reviewer["verdict"]`` (大小写不敏感) 等于 "LGTM" 。
+
+    缺任一字段或值不匹配 → ok=False, reason 指明问题。
+
+    Default-OFF 哲学 (P291 acceptance):
+      本 helper 只是工具, **不强制 cascade** 到所有现有 verify_infra_*.py。仅由
+      ``scripts/verify_infra_071.py`` (本 feature 的 verify) V5 主动调用; 其它
+      verify 的 V5 placeholder 保留, 后续 backlog 推进。
+
+    Args:
+      feature_id: 例如 "infra-P294-closeout-stdout-sha-verification"
+      feature_list_path: 通常是 repo_root / "feature_list.json"
+
+    Returns:
+      (ok, reason) where reason is a short human-readable string.
+    """
+    import json as _json  # noqa: WPS433
+
+    path = Path(feature_list_path)
+    if not path.is_file():
+        return False, f"feature_list.json not found: {path}"
+    try:
+        data = _json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        return False, f"feature_list.json parse error: {e!r}"
+    features = data.get("features") if isinstance(data, dict) else None
+    if not isinstance(features, list):
+        return False, "feature_list.json missing top-level 'features' list"
+    target = None
+    for f in features:
+        if isinstance(f, dict) and f.get("id") == feature_id:
+            target = f
+            break
+    if target is None:
+        return False, f"feature id={feature_id!r} not found in feature_list.json"
+    evidence = target.get("evidence")
+    if not isinstance(evidence, dict):
+        return False, (
+            f"feature {feature_id!r} has no 'evidence' dict "
+            f"(got type={type(evidence).__name__})"
+        )
+    # 优先 closeout_verify.reviewer (closeout sub-agent 写入的标准位置)
+    reviewer = None
+    cv = evidence.get("closeout_verify")
+    if isinstance(cv, dict) and isinstance(cv.get("reviewer"), dict):
+        reviewer = cv["reviewer"]
+    elif isinstance(evidence.get("reviewer"), dict):
+        reviewer = evidence["reviewer"]
+    if not isinstance(reviewer, dict):
+        return False, (
+            f"feature {feature_id!r} evidence.reviewer (or "
+            f"evidence.closeout_verify.reviewer) missing or not a dict"
+        )
+    kind = reviewer.get("reviewer_kind")
+    if kind != "sub_agent_fresh_context":
+        return False, (
+            f"feature {feature_id!r} reviewer_kind={kind!r}, "
+            f"expected 'sub_agent_fresh_context'"
+        )
+    verdict = reviewer.get("verdict")
+    if not isinstance(verdict, str) or verdict.strip().upper() != "LGTM":
+        return False, (
+            f"feature {feature_id!r} reviewer.verdict={verdict!r}, "
+            f"expected 'LGTM'"
+        )
+    return True, (
+        f"feature {feature_id!r}: reviewer_kind={kind!r} verdict={verdict!r} OK"
+    )

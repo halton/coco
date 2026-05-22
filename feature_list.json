@@ -7744,7 +7744,7 @@
     {
       "id": "infra-P291-reviewer-gate-real-or-remove",
       "priority": 2.39,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 39,
       "area": "infra",
       "title": "V5_reviewer_lgtm_gate 实质检验或显式标注为占位 gate",
@@ -7767,17 +7767,72 @@
           "merged_commit": "d24ee33",
           "merge_sha": "b0c55e8",
           "verify_runs": [
-            {"script": "scripts/verify_infra_034.py", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0", "tail_stdout_sha256": "39805d865c5a8b3d35dc3ebed947d08b1b9365637df713d0c1d8aee71274c3e4"},
-            {"script": "scripts/verify_infra_060.py", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "0bd26b593e6aec9beed320a5a520915398f6296faf83cedb5221c5ea2553145e"},
-            {"script": "scripts/verify_infra_062.py", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)", "tail_stdout_sha256": "6e9111ce0392fb1e69d40ed49037eb20d1f5cc8168e615ce66fadf384233f9aa"},
-            {"script": "scripts/verify_infra_063.py", "status": "PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)", "tail_stdout_sha256": "998ff9c31bd4fc3188389d51c77670dc196994b5a761e6ea45f241c44cd6ba23"},
-            {"script": "scripts/verify_infra_065.py", "status": "PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "ba2882f387939a7e647c070c883daca525a7f2e8220249cffe9d2f5013657dcc"},
-            {"script": "scripts/verify_infra_066.py", "status": "PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)", "tail_stdout_sha256": "3143caba8259603fa6aa5c17d0abad874339f615ef5dff769464545563661f38"},
-            {"script": "scripts/verify_infra_067.py", "status": "PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)", "tail_stdout_sha256": "5d730a3a4b2dc2423e2568e0d525272944eed2ff04daffb1c26518da645449a2"},
-            {"script": "scripts/verify_infra_068.py", "status": "PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)", "tail_stdout_sha256": "1265305545a98eca6198c9eae7fa22a726f41c1a5f8695c9705d8ad40d26377a"},
-            {"script": "scripts/verify_infra_069.py", "status": "PASS", "tail_stdout": "[verify_infra_069][SUMMARY] ALL PASS (10 checks)", "tail_stdout_sha256": "71b9d29aa3f3747f00b2cd366e6aac3acccb168bc52bcdef0633228196b7fe51"},
-            {"script": "scripts/verify_infra_070.py", "status": "PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)", "tail_stdout_sha256": "25c65299c09a50a0f70f94490fd99dc4d5bb62a57bc3e165ffd2c54bc6adcaec"},
-            {"script": "./init.sh (smoke)", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json", "tail_stdout_sha256": "84a62223bdde440158fcf5d7d67d28764d45d94b0aa222a46c0fd1c66d4387b6"}
+            {
+              "script": "scripts/verify_infra_034.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034] summary total=53 failed=0",
+              "tail_stdout_sha256": "39805d865c5a8b3d35dc3ebed947d08b1b9365637df713d0c1d8aee71274c3e4"
+            },
+            {
+              "script": "scripts/verify_infra_060.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "tail_stdout_sha256": "0bd26b593e6aec9beed320a5a520915398f6296faf83cedb5221c5ea2553145e"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (17 checks)",
+              "tail_stdout_sha256": "6e9111ce0392fb1e69d40ed49037eb20d1f5cc8168e615ce66fadf384233f9aa"
+            },
+            {
+              "script": "scripts/verify_infra_063.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)",
+              "tail_stdout_sha256": "998ff9c31bd4fc3188389d51c77670dc196994b5a761e6ea45f241c44cd6ba23"
+            },
+            {
+              "script": "scripts/verify_infra_065.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)",
+              "tail_stdout_sha256": "ba2882f387939a7e647c070c883daca525a7f2e8220249cffe9d2f5013657dcc"
+            },
+            {
+              "script": "scripts/verify_infra_066.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)",
+              "tail_stdout_sha256": "3143caba8259603fa6aa5c17d0abad874339f615ef5dff769464545563661f38"
+            },
+            {
+              "script": "scripts/verify_infra_067.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)",
+              "tail_stdout_sha256": "5d730a3a4b2dc2423e2568e0d525272944eed2ff04daffb1c26518da645449a2"
+            },
+            {
+              "script": "scripts/verify_infra_068.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)",
+              "tail_stdout_sha256": "1265305545a98eca6198c9eae7fa22a726f41c1a5f8695c9705d8ad40d26377a"
+            },
+            {
+              "script": "scripts/verify_infra_069.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_069][SUMMARY] ALL PASS (10 checks)",
+              "tail_stdout_sha256": "71b9d29aa3f3747f00b2cd366e6aac3acccb168bc52bcdef0633228196b7fe51"
+            },
+            {
+              "script": "scripts/verify_infra_070.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
+              "tail_stdout_sha256": "25c65299c09a50a0f70f94490fd99dc4d5bb62a57bc3e165ffd2c54bc6adcaec"
+            },
+            {
+              "script": "./init.sh (smoke)",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "tail_stdout_sha256": "84a62223bdde440158fcf5d7d67d28764d45d94b0aa222a46c0fd1c66d4387b6"
+            }
           ],
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
           "reviewer": {
