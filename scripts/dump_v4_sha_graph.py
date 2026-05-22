@@ -247,6 +247,14 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_077.py", "EXPECTED_HELPER_FUNC_SHA"):
         "scripts/_verify_lib.py:assert_reviewer_baseline_head_echo (func-sha)",
+    # verify_infra_080 (P291-followup2-helper-return-value-must-participate-in-emit) —
+    # 锁 assert_v5_gate_emit_uses_helper_return helper + 自 main + lib file
+    ("verify_infra_080.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_080.py", "EXPECTED_VERIFY_080_HELPER_FUNC_SHA"):
+        "scripts/_verify_lib.py:assert_v5_gate_emit_uses_helper_return (func-sha)",
+    ("verify_infra_080.py", "EXPECTED_VERIFY_080_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_080.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

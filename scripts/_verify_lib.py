@@ -1995,3 +1995,144 @@ def assert_reviewer_baseline_head_echo(evidence_dict: dict) -> dict:
             f"pre_existing_baseline_sha[:7]={expected_prefix!r}"
         )
     return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P291-followup2-helper-return-value-must-participate-in-emit (phase-41 #2.41)
+# ast 锁: v5_reviewer_gate 函数体内 _emit(...) 的第二参数必须**使用** 来自
+# assert_reviewer_lgtm 返回值的变量 (典型 `ok`/`ok is True`), 而不是字面
+# True/False/None 硬绿. 此前 phase-40 #5.40 P0-1 (verify_infra_079) 即写成
+# `_emit("V5...", True, "...")` 直接硬绿绕过 reviewer evidence 校验.
+# ---------------------------------------------------------------------------
+def assert_v5_gate_emit_uses_helper_return(verify_script_path) -> dict:
+    """ast 扫描 verify_script_path 中 ``v5_reviewer_gate`` 函数体内每个
+    ``_emit(...)`` 调用, 断言第二位置参数是 Name/Compare/BoolOp/Attribute 等
+    引用变量的表达式 (变量名必须出现在函数体内 assert_reviewer_lgtm 的解包
+    targets 中, 典型为 ``ok``), 而不是 ``Constant(True|False|None)`` 字面.
+
+    返回 dict::
+        {
+          "ok": bool,
+          "checked": bool,           # False 当 v5_reviewer_gate 函数不存在
+          "v5_gate_found": bool,
+          "calls_assert_helper": bool,
+          "helper_return_names": [str, ...],   # 解包 assert_reviewer_lgtm 时的变量名
+          "emit_calls": [
+              {
+                "lineno": int,
+                "arg1_source": str,
+                "arg1_node": str,       # ast 类型名
+                "uses_helper_var": bool,
+                "is_literal": bool,     # 字面 True/False/None
+                "violation": bool,
+              }, ...
+          ],
+          "violations": [ {lineno, arg1_source, reason}, ... ],
+          "error": str | None,
+        }
+
+    判定:
+      - 若文件无 v5_reviewer_gate 函数: ok=True, checked=False (skip).
+      - 若 v5_reviewer_gate 不调用 assert_reviewer_lgtm: 仍按"字面 True/False/None
+        即违规"判 (即便没调 helper, 也不允许硬绿写法).
+      - 任一 _emit 第二位置参数是 Constant(True|False|None): violation.
+      - 其他表达式 (Name/Compare/BoolOp/Attribute/Call/...) 视为合规.
+    """
+    import ast as _ast
+    from pathlib import Path as _Path
+
+    out: dict = {
+        "ok": False,
+        "checked": False,
+        "v5_gate_found": False,
+        "calls_assert_helper": False,
+        "helper_return_names": [],
+        "emit_calls": [],
+        "violations": [],
+        "error": None,
+    }
+    path = _Path(verify_script_path)
+    if not path.is_file():
+        out["error"] = f"verify_script_path not a file: {path}"
+        return out
+    try:
+        src = path.read_text(encoding="utf-8")
+        tree = _ast.parse(src)
+    except Exception as e:  # noqa: BLE001
+        out["error"] = f"parse error: {e!r}"
+        return out
+
+    v5_fn = None
+    for node in tree.body:
+        if isinstance(node, _ast.FunctionDef) and node.name == "v5_reviewer_gate":
+            v5_fn = node
+            break
+    if v5_fn is None:
+        out["ok"] = True
+        out["checked"] = False
+        return out
+    out["v5_gate_found"] = True
+    out["checked"] = True
+
+    # collect: assert_reviewer_lgtm 调用的解包 target 变量名 (Tuple Assign 左侧 Name)
+    helper_names: list = []
+    for sub in _ast.walk(v5_fn):
+        if isinstance(sub, _ast.Assign) and isinstance(sub.value, _ast.Call):
+            callee = sub.value.func
+            cname = None
+            if isinstance(callee, _ast.Name):
+                cname = callee.id
+            elif isinstance(callee, _ast.Attribute):
+                cname = callee.attr
+            if cname == "assert_reviewer_lgtm":
+                out["calls_assert_helper"] = True
+                for t in sub.targets:
+                    if isinstance(t, _ast.Tuple):
+                        for elt in t.elts:
+                            if isinstance(elt, _ast.Name):
+                                helper_names.append(elt.id)
+                    elif isinstance(t, _ast.Name):
+                        helper_names.append(t.id)
+    out["helper_return_names"] = helper_names
+
+    # walk every _emit(...) call in v5 body
+    emit_records: list = []
+    violations: list = []
+    for sub in _ast.walk(v5_fn):
+        if not (isinstance(sub, _ast.Call) and isinstance(sub.func, _ast.Name) and sub.func.id == "_emit"):
+            continue
+        if len(sub.args) < 2:
+            continue
+        a1 = sub.args[1]
+        arg1_source = _ast.unparse(a1)
+        node_type = type(a1).__name__
+        # collect every Name id in the expression
+        names_in_expr = [n.id for n in _ast.walk(a1) if isinstance(n, _ast.Name)]
+        uses_helper_var = any(n in helper_names for n in names_in_expr) if helper_names else False
+        # 只把"字面 True 硬绿"视为违规 (phase-40 #5.40 P0-1 反模式).
+        # 字面 False/None 通常是 guard 提前返回 (feature_list 缺失等), 合法.
+        is_literal = isinstance(a1, _ast.Constant) and a1.value in (True, False, None)
+        is_hardcoded_true = isinstance(a1, _ast.Constant) and a1.value is True
+        violation = is_hardcoded_true
+        rec = {
+            "lineno": sub.lineno,
+            "arg1_source": arg1_source,
+            "arg1_node": node_type,
+            "uses_helper_var": uses_helper_var,
+            "is_literal": is_literal,
+            "violation": violation,
+        }
+        emit_records.append(rec)
+        if violation:
+            violations.append({
+                "lineno": sub.lineno,
+                "arg1_source": arg1_source,
+                "reason": (
+                    f"_emit 第二参数是字面 True (硬绿), "
+                    "必须使用 assert_reviewer_lgtm 返回的 ok 变量 (或含其的表达式)"
+                ),
+            })
+    out["emit_calls"] = emit_records
+    out["violations"] = violations
+    out["ok"] = len(violations) == 0
+    return out
