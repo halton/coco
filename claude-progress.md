@@ -6546,3 +6546,17 @@ Engineer sub-agent (phase-40 #4.40):
 - baseline_head_echo dogfood: 第 4 次落地 (P286-followup3 promote 触发进度 4/5)
 - 无 backlog 入账 (Reviewer 仅 P2 docstring 建议, 不强制本轮)
 - 下一步: phase-41 #2.41 `infra-P291-followup2-helper-return-value-must-participate-in-emit`
+
+## Session 2026-05-22 phase-41 #2.41 closeout (infra-P291-followup2-helper-return-value-must-participate-in-emit)
+- baseline main HEAD: 6a5fa3e
+- feat branch: feat/infra-P291-followup2-helper-return-value-must-participate-in-emit
+- feat HEAD: 2a278fa (round-2 LGTM); round-1 083ff34 REJECT (034 双 FAIL: 080 const 名 EXPECTED_VERIFY_080_HELPER_SHA 含 verify_080 子串被 V6 classifier 误判 orphan reverse lock)
+- round-2 FIX: 重命名 const → P291_FU2_EXPECTED_HELPER_SHA; helper docstring 与实现对齐; cascade lib sha 15+ verify_infra_*.py 全 bump; 080 V5_helper_return_in_emit AST track 锁 helper 返回值进入 emit 第二参数
+- merge --no-ff → d4f2edb
+- verify runs: 080/079/078/077/076/075/074/073/072/071/070/068/067/066/065/063/060/059/034 全 PASS; 037 V2_lib_file_sha pre-existing FAIL (baseline 6a5fa3e 同 FAIL, 锁更老 sha a80af008, 与本 feature 无关); smoke PASS
+- 037 申报字段完整: pre_existing_baseline_sha=6a5fa3e + baseline_tail_stdout + smoke_tail_stdout
+- Reviewer: sub_agent_fresh_context LGTM round-2, feat_head_echo=2a278fa, baseline_head_echo=6a5fa3e
+- feature_list.json: status `not_started` → `passing`, evidence 完整 (closeout_verify + reviewer + implementation 三段)
+- baseline_head_echo dogfood: 第 5 次落地
+- 无新增 backlog (round-1 P2 finding 已是历史 backlog)
+- 下一步: phase-41 #3 候选选择 (按 priority 最低 not_started)

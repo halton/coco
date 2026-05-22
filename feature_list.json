@@ -9221,12 +9221,67 @@
     {
       "id": "infra-P291-followup2-helper-return-value-must-participate-in-emit",
       "priority": 2.41,
-      "status": "not_started",
+      "status": "passing",
       "phase": 41,
       "area": "infra",
       "title": "assert_reviewer_lgtm 返回值必须参与 V5 gate emit 第二参数 (行为锁强化)",
       "rationale": "P291-extend Reviewer info-level finding: 当前 8 个迁移文件中 helper 返回值 helper_ok/reason 只写入 detail 字段, gate 自身仍 emit=True (soft-PASS 模式). V4_1 ast 静态扫描只检查 assert_reviewer_lgtm 调用存在, 未锁定调用结果是否真正参与判定. 行为锁不够强: 理论上 helper_ok=False 仍 emit PASS. 需要补 V4 ast 分析锁定 helper 返回值进入 emit 第二参数 (或显式 hard gate 模式).",
-      "description": "强化 verify_infra_076 V4_1 AST: 不仅扫 assert_reviewer_lgtm 调用存在, 还要追踪返回值 ok 是否被 emit() 第二参数引用 (变量传递链)."
+      "description": "强化 verify_infra_076 V4_1 AST: 不仅扫 assert_reviewer_lgtm 调用存在, 还要追踪返回值 ok 是否被 emit() 第二参数引用 (变量传递链).",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "feat_head_sha": "2a278fa",
+          "baseline_head_sha": "6a5fa3e",
+          "merge_commit_sha": "d4f2edb",
+          "verify_runs": [
+            {"script": "verify_infra_080", "status": "PASS", "tail_stdout": "[verify_infra_080][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_079", "status": "PASS", "tail_stdout": "[verify_infra_079][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_078", "status": "PASS", "tail_stdout": "[verify_infra_078][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "verify_infra_077", "status": "PASS", "tail_stdout": "[verify_infra_077][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_076", "status": "PASS", "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_075", "status": "PASS", "tail_stdout": "[verify_infra_075][SUMMARY] ALL PASS (15 checks)"},
+            {"script": "verify_infra_074", "status": "PASS", "tail_stdout": "[verify_infra_074][SUMMARY] ALL PASS (16 checks)"},
+            {"script": "verify_infra_073", "status": "PASS", "tail_stdout": "[verify_infra_073][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_072", "status": "PASS", "tail_stdout": "[verify_infra_072][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_071", "status": "PASS", "tail_stdout": "[verify_infra_071][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_070", "status": "PASS", "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"},
+            {"script": "verify_infra_068", "status": "PASS", "tail_stdout": "[verify_infra_068][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "verify_infra_067", "status": "PASS", "tail_stdout": "[verify_infra_067][SUMMARY] ALL PASS (18 checks)"},
+            {"script": "verify_infra_066", "status": "PASS", "tail_stdout": "[verify_infra_066][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_065", "status": "PASS", "tail_stdout": "[verify_infra_065][SUMMARY] ALL PASS (13 checks)"},
+            {"script": "verify_infra_063", "status": "PASS", "tail_stdout": "[verify_infra_063][SUMMARY] ALL PASS (20 checks)"},
+            {"script": "verify_infra_062", "status": "PASS", "tail_stdout": "verify_infra_062 closeout-verify-trustworthy ALL PASS"},
+            {"script": "verify_infra_060", "status": "PASS", "tail_stdout": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"},
+            {"script": "verify_infra_059", "status": "PASS", "tail_stdout": "[verify_infra_059][SUMMARY] ALL PASS (18 checks)"},
+            {"script": "verify_infra_034", "status": "PASS", "tail_stdout": "[verify_infra_034] summary total=53 failed=0"},
+            {
+              "script": "verify_infra_037",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "pre_existing_baseline_sha": "6a5fa3e",
+              "baseline_tail_stdout": "[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "note": "037 V2_lib_file_sha 在 baseline 6a5fa3e 已 FAIL (锁更老 sha a80af008), 与本 feature 无关; smoke 全 PASS"
+            },
+            {"script": "smoke (./init.sh)", "status": "PASS", "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"}
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "round": 2,
+          "feat_head_echo": "2a278fa",
+          "baseline_head_echo": "6a5fa3e",
+          "summary": "round-1 (083ff34) REJECT: 034 V6_orphan_reverse_locks + V6_live_sha_set 双 FAIL — 080 const 名 EXPECTED_VERIFY_080_HELPER_SHA 含 'verify_080' 子串被 V6 classifier 误判 orphan reverse lock. round-2 (2a278fa) FIX: 重命名为 P291_FU2_EXPECTED_HELPER_SHA 等不含 verify_NNN 模式; helper docstring 与实现对齐 (返回 ok+detail 双值); cascade lib sha 15+ verify_infra_*.py 全部 bump; 080 新 V5_helper_return_in_emit AST track 锁定 helper 返回值进入 emit 第二参数; 034 V6 145 reverse locks 0 orphan; 全套 verify (除 037 pre-existing) PASS.",
+          "findings": "round-1 P2 backlog: 已入账"
+        },
+        "implementation": {
+          "new_files": ["scripts/verify_infra_080.py (14 checks, 含 V4_5_helper_schema_complete + V5_helper_return_in_emit AST track)"],
+          "new_helper": "scripts/_verify_lib.py: assert_v5_gate_emit_uses_helper_return(...) — AST 追踪 helper 返回值变量进入 emit() 第二参数",
+          "enrolled_targets": ["verify_infra_071", "verify_infra_072", "verify_infra_073", "verify_infra_074", "verify_infra_079", "verify_infra_080"],
+          "cascade_lib_sha_bump": "15+ verify_infra_*.py self/helper sha 同步刷新"
+        }
+      }
     },
     {
       "id": "infra-P291-extend2-migrate-remaining-26-legacy-V5",
