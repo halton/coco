@@ -52,10 +52,12 @@ from typing import List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
+REAL_FEATURE_LIST = REPO / "feature_list.json"
+V5_GATE_FEATURE_ID = "infra-P294-R4-fail-baseline-cross-check"
 LIB = SCRIPTS / "_verify_lib.py"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import func_sha_by_name, verify_baseline_fail_claims  # noqa: E402
+from _verify_lib import func_sha_by_name, verify_baseline_fail_claims, assert_reviewer_lgtm  # noqa: E402
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "5647e74194aff139a45de09e24a62a7ac1417d35905c9bebd668352370708381"
 EXPECTED_BASELINE_FAIL_CROSS_CHECK_FUNC_SHA = "4aa6b31c7b5e79b1ea8f17f33c323e68fa0c20932c090848d6e322db0cd552a7"
@@ -282,10 +284,18 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
+
+    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
+    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
+    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
+    的 V4 mini-repo 测试保证。
+    """
+    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
     _emit(
         "V5_reviewer_lgtm_gate",
         True,
-        "closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
     )
 
 

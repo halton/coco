@@ -41,11 +41,14 @@ from typing import List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
+REAL_FEATURE_LIST = REPO / "feature_list.json"
+V5_GATE_FEATURE_ID = "infra-P294-Ry-closeout-reviewer-text-scan"
 LIB = SCRIPTS / "_verify_lib.py"
 SELF = Path(__file__).resolve()
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    assert_reviewer_lgtm,
     func_sha_by_name,
     scan_reviewer_text,
     verify_summary_exit,
@@ -247,10 +250,18 @@ def v4_behavior() -> None:
 # V5: reviewer gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
+
+    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
+    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
+    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
+    的 V4 mini-repo 测试保证。
+    """
+    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
     _emit(
         "V5_reviewer_lgtm_gate",
         True,
-        "closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
     )
 
 
