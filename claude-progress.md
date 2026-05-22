@@ -6482,3 +6482,19 @@ Engineer sub-agent (phase-40 #4.40):
 - cascade 评估: 070/071/072/073/074 的 main_func sha 未变 (main 函数体不引用顶层常量值, 只引用名字); 其他文件无人引用 070-074 的 file sha 作为常量; `dump_v4_sha_graph.py` 未改, 060 EXPECTED_DUMP_FILE_SHA 无需 bump; 059 total_nodes 容差 81±5, 新增 078 的 EXPECTED 常量未触发越界
 - final HEAD 18 verify (078/077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034) + `./init.sh` smoke 全 rc=0
 - 占位收口前后对比: V4_1 first run offending=[071,072,073,078] → after bump offending=[] (078 自身在最后一刻填入真值)
+
+## Session [P286 #4.40 closeout] infra-P286-followup-074-self-main-func-sha-bump
+
+- **角色**: Closeout sub-agent
+- **目标**: 收口 P286 followup #4.40 self-main-func-sha-bump（078 lint 检测 070/071/072/073/074 中 EXPECTED_SELF_MAIN_FUNC_SHA 占位）
+- **范围扩展**: 原任务 070/074, Engineer 扩到 071/072/073 同有占位，5 文件一并收口
+- **三遍独立实跑 (feat HEAD e2d4c8c)**: 078/077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 + ./init.sh smoke 三轮全 PASS
+- **Merge**: `git merge --no-ff feat/infra-P286-followup-074-self-main-func-sha-bump` → main HEAD `446beaa`
+- **post-merge**: 同 18 verify + smoke 全 PASS
+- **baseline 58ab509 上 060/070/074 ALL PASS** (070/074 V1 走软 PASS 路径，正是 P286 要堵的盲点；078 V4_1/V4_2/V4_4 在 baseline 不存在因为 078 还没引入)
+- **Reviewer fresh-context**: LGTM；reviewer_kind=sub_agent_fresh_context; baseline_head_echo=58ab509（dogfood 2nd 落地）
+- **Mutation**: α (070 → placeholder) 触发 078 V4_1/V4_2/V4_4 FAIL，恢复 PASS; γ (合成 999.py 含 placeholder) 触发 078 V4_1 FAIL，删除恢复 PASS
+- **backlog 入账 2**:
+  - `infra-P286-followup4-add-noqa-placeholder-self-exempt-comment` (Reviewer 非阻塞 hardening 建议)
+  - `infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok` (075 V5 字段 ok= 与 076/077/078 helper_ok= 不一致小清理)
+- **feature_list.json**: status `not_started` → `passing`，evidence 完整含 closeout_verify.reviewer.baseline_head_echo=58ab509

@@ -9841,13 +9841,72 @@
       "id": "infra-P286-followup-074-self-main-func-sha-bump",
       "priority": 4.4,
       "phase": 40,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_074 V1 self func sha + 同模式 070 placeholder 收口",
       "rationale": "P286 final HEAD 07ad894 上 verify_infra_074 自锁 EXPECTED_SELF_MAIN_FUNC_SHA 仍为 __BUMP_ME__ placeholder; V1 输出 hint 建议 80c710de... 真实 sha. 应在下一轮 hardening feature 中把 placeholder 替成真值并启用 V1 strict check, 关闭自锁旁路.",
       "description": "verify_infra_074 V1 EXPECTED_SELF_MAIN_FUNC_SHA 当前为 __BUMP_ME__ 占位, V1 effectively 关闭。同模式 verify_infra_070 也有 self func sha 占位 (P294-followup-070-self-func-sha-bump)。本 feature 一次性收口两个 placeholder, 改用 scripts/_verify_lib.func_sha_by_name(__file__, 'main') 实算值锁定, V1 启用; 同时机制化检查所有 verify_infra_*.py 中是否还存在 __BUMP_ME__ 字面量 (新 lint 防回归)。",
       "verification_plan": "改 verify_infra_074.py + verify_infra_070.py: EXPECTED_SELF_MAIN_FUNC_SHA = '<真算 sha>' (不能再 __BUMP_ME__);新 verify_infra_078.py: V0/V1/V2/V3 自锁; V4_1 grep 全 scripts/verify_infra_*.py 不允许出现 '__BUMP_ME__' 字面 → 任何匹配 FAIL; V4_2 mutant: 临时改某 verify 加 __BUMP_ME__ → FAIL; V4_3 跑 verify_infra_074 + 070 自身确保新 sha 生效 rc=0; V4_4 mutant: 改 074 main 函数体 → V1 应 FAIL (sha mismatch);V5 reviewer gate; total ~12 checks",
-      "notes_for_engineer": ".venv 必须激活;先在 074/070 中实算 main 函数 sha 写入 EXPECTED_SELF_MAIN_FUNC_SHA, 然后 cascade bump _verify_lib sha 锁 (因为新增了 078) + dump 锁 + 060 锁;V4_2 mutant 用 in-memory 字符串扫描而非真改文件;notes: 077 / 075 / 076 (本 phase 前序 feature) 不在此 feature 范围 (它们走自己的 V1 真值)"
+      "notes_for_engineer": ".venv 必须激活;先在 074/070 中实算 main 函数 sha 写入 EXPECTED_SELF_MAIN_FUNC_SHA, 然后 cascade bump _verify_lib sha 锁 (因为新增了 078) + dump 锁 + 060 锁;V4_2 mutant 用 in-memory 字符串扫描而非真改文件;notes: 077 / 075 / 076 (本 phase 前序 feature) 不在此 feature 范围 (它们走自己的 V1 真值)",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "446beaa0fd1bb1e8f8445e399832a9fe4f446623",
+          "pre_existing_baseline_sha": "58ab509dc88f36a4532d2f1bfc08d5121cef0085",
+          "verify_runs": [
+            {
+              "round": "round1_feat_HEAD_e2d4c8c",
+              "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
+              "status": "PASS",
+              "tail_stdout": "all 18 verify scripts: [verify_infra_XXX][SUMMARY] ALL PASS / failed=0"
+            },
+            {
+              "round": "round2_feat_HEAD_e2d4c8c",
+              "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
+              "status": "PASS",
+              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过"
+            },
+            {
+              "round": "round3_feat_HEAD_e2d4c8c",
+              "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
+              "status": "PASS",
+              "tail_stdout": "all 18 verify scripts ALL PASS; ./init.sh Smoke 通过"
+            },
+            {
+              "round": "post_merge_main_446beaa",
+              "target": "078,077,076,075,074,073,072,071,070,068,067,066,065,063,062,060,059,034",
+              "status": "PASS",
+              "tail_stdout": "post-merge: all 18 ALL PASS + ./init.sh 通过"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "baseline_tail_stdout": {
+            "verify_060": "[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+            "verify_070": "[verify_infra_070][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification helper_ok=True ... [SUMMARY] ALL PASS (15 checks)",
+            "verify_074": "[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True ... [SUMMARY] ALL PASS (15 checks)"
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "baseline_head_echo": "58ab509",
+            "summary": "Reviewer fresh-context LGTM. final HEAD e2d4c8c 上 078/077/076/075/074/073/072/071/070/068/067/066/065/063/062/060/059/034 + smoke 全 PASS。Mutant α (070 → placeholder) 触发 078 V4_1/V4_2/V4_4 FAIL，恢复后 PASS。Mutant γ (合成 scripts/999.py 含 placeholder) 触发 078 V4_1 FAIL，删除恢复 PASS。baseline 58ab509 上 060/070/074 ALL PASS (070/074 V1 走软 PASS 路径，正是 P286 要堵的盲点)。设计争议：PLACEHOLDER_SENTINEL 拼接健壮但建议加 noqa 注释（非阻塞，已入 backlog）；075 V5 字段 ok=/helper_ok= 命名不一致（与本 feature 无关，已入 backlog）。"
+          },
+          "mutation_checks": {
+            "mutant_alpha_070_to_placeholder": {
+              "description": "070 EXPECTED_SELF_MAIN_FUNC_SHA 值替换为占位 sentinel",
+              "expected": "078 V4_1/V4_2/V4_4 FAIL",
+              "observed": "FAIL as expected",
+              "recover": "复位后 PASS"
+            },
+            "mutant_gamma_synthetic_999_placeholder": {
+              "description": "合成 scripts/verify_infra_999.py 含 placeholder",
+              "expected": "078 V4_1 FAIL",
+              "observed": "FAIL as expected",
+              "recover": "删除合成文件后 PASS"
+            }
+          },
+          "scope_expansion_note": "原任务 070/074, Engineer 扩到 071/072/073 同有占位，5 文件一并收口"
+        }
+      }
     },
     {
       "id": "infra-P286-followup-v4-2-stricter-equal-check",
@@ -9875,6 +9934,30 @@
       "description": "等到 5+ 新 closeout feature evidence 内自然带上 closeout_verify.reviewer.baseline_head_echo 字段后, 在 verify_infra_062 V4 系列增加 hard 检查: 任一 in window (例如近 N closeout) 的 feature 缺 baseline_head_echo → V4 FAIL. 同步在 P278 sec 文档/AGENTS.md Closeout 硬规则段增列 baseline_head_echo 为必填. 触发条件: 自 P286 merge 后至少 5 个不同 closeout 都写有真 sha (非 N/A).",
       "verification_plan": "新 verify_infra_<NN>.py: 在 verify_infra_062 V4 后追加 V4_required: 扫描近 N 个 closeout feature, 任一缺 baseline_head_echo → FAIL; mutant: 临时删某个 feature 的 baseline_head_echo → FAIL; 恢复 → PASS",
       "notes_for_engineer": ".venv 必须激活; 触发条件未到不要急着实施, 先观察 5+ feature dogfood 是否稳定; 实施时记得 cascade _verify_lib sha + dump + 062 EXPECTED_DUMP_FILE_SHA"
+    },
+    {
+      "id": "infra-P286-followup4-add-noqa-placeholder-self-exempt-comment",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "078 加 # noqa: PLACEHOLDER_SELF_EXEMPT 注释 + V4_1 docstring 显式声明 sentinel 不能被字面化",
+      "rationale": "Reviewer 建议非阻塞 hardening：当前 078 用 PLACEHOLDER_SENTINEL 拼接绕过 self-hit，可读性弱；加 noqa 注释 + V4_1 docstring 显式说明 sentinel 不能被字面拼回，降低后续维护误改风险。",
+      "description": "在 scripts/verify_infra_078.py 中所有 PLACEHOLDER_SENTINEL 拼接处加 # noqa: PLACEHOLDER_SELF_EXEMPT 行内注释；V4_1 docstring 显式列出 sentinel 必须保持拼接、不能字面化的硬规则。",
+      "verification_plan": "运行 078 自身 + Reviewer 检查注释存在",
+      "notes_for_engineer": "纯文档/注释 hardening，无功能改动；来源 P286 followup Reviewer 非阻塞建议"
+    },
+    {
+      "id": "infra-P286-followup4-v5-field-naming-consistency-ok-vs-helper-ok",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
+      "area": "infra",
+      "title": "075 V5 字段 ok= 与 076/077/078 其它 verify 字段 helper_ok= 不一致，统一命名",
+      "rationale": "075 V5_reviewer_lgtm_gate 输出用 `ok=`，而 076/077/078 等同类 V5 都用 `helper_ok=`，小风格不一致；统一为 helper_ok= 方便机械化解析与文本扫描。",
+      "description": "把 scripts/verify_infra_075.py 中 V5 PASS line 的 ok= 改为 helper_ok=，与 076/077/078 对齐。",
+      "verification_plan": "运行 075 + grep helper_ok=",
+      "notes_for_engineer": "与本 feature 无关的小清理；来源 P286 followup Reviewer 旁注"
     }
   ],
   "_meta": {
