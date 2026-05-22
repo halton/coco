@@ -6560,3 +6560,20 @@ Engineer sub-agent (phase-40 #4.40):
 - baseline_head_echo dogfood: 第 5 次落地
 - 无新增 backlog (round-1 P2 finding 已是历史 backlog)
 - 下一步: phase-41 #3 候选选择 (按 priority 最低 not_started)
+
+## Session 2026-05-22 — phase-41 #3.41 infra-P299-followup-wire-into-closeout-gate closeout
+- branch: feat/infra-P299-followup-wire-into-closeout-gate (HEAD f7d4b7c)
+- baseline: main 890002c
+- merge commit: 164479b (--no-ff)
+- 实现: verify_infra_062 wire P299 assert_report_matches_closeout_runs helper + 新增 verify_infra_081 (ast-lock 防 081 移除 helper 调用)
+- Reviewer: sub_agent_fresh_context LGTM round-1, feat_head_echo=f7d4b7c, baseline_head_echo=890002c
+- verify_runs (实跑 main 164479b 后):
+  - 081 13/14 PASS (V5 pre-closeout 唯一 FAIL, 写完 evidence 即翻 PASS)
+  - 062 ALL PASS 18 checks (V4_byte_match_enforce soft-skip — flat schema 限制, 见新 backlog followup2)
+  - 060/034/080/079/074 ALL PASS
+  - 037/041/057 FAIL (与 baseline 890002c 一致, pre-existing, 与本 feature 无关)
+- smoke: 通过
+- feature_list.json: status `not_started` → `passing`, evidence 完整 nested round schema
+- 新增 backlog: infra-P299-followup2-enable-byte-match-real-run (priority=999, status=backlog, phase=null) — 解决 V4_byte_match_enforce "挂牌不开门"
+- baseline_head_echo dogfood: 第 6 次落地
+- 下一步: phase-41 #4 候选 (按 priority 最低 not_started)

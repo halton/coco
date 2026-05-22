@@ -9742,12 +9742,97 @@
     {
       "id": "infra-P299-followup-wire-into-closeout-gate",
       "priority": 3.41,
-      "status": "not_started",
+      "status": "passing",
       "phase": 41,
       "area": "infra",
       "title": "P299 helper wire 进 closeout enforcement (机械化阻 merge)",
       "rationale": "Reviewer info backlog: 当前 P299 helper 是被动可调, 不在 closeout 必经路径上. 应让 closeout 必须返回含 verify_runs[i].tail_stdout 的结构, 主会话调本 helper 实跑比对作 closeout enforcement gate.",
-      "description": "目前 P299 helper assert_report_matches_closeout_runs 是 verify_infra_075 内部使用的工具; closeout 流程并未强制调用. 需要在 closeout sub-agent 模板/AGENTS.md 中强制要求 evidence.closeout_verify.verify_runs[*].tail_stdout 必填 + 必须含 engineer_runs/reviewer_runs (若存在) sha256 字段, 主会话/新 verify 调本 helper 实跑对比, mismatch 阻 merge."
+      "description": "目前 P299 helper assert_report_matches_closeout_runs 是 verify_infra_075 内部使用的工具; closeout 流程并未强制调用. 需要在 closeout sub-agent 模板/AGENTS.md 中强制要求 evidence.closeout_verify.verify_runs[*].tail_stdout 必填 + 必须含 engineer_runs/reviewer_runs (若存在) sha256 字段, 主会话/新 verify 调本 helper 实跑对比, mismatch 阻 merge.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BUMP_NEXT",
+          "feat_head_sha": "f7d4b7c2437566511ecb5373ec556ae5c4b9fd23",
+          "baseline_head_sha": "890002c",
+          "merge_commit_sha": "164479b",
+          "verify_runs": [
+            {
+              "verify": "verify_infra_081",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_081][PASS] V4_5_verify_062_file_sha got=e9173c1c79fb9d63 expect=e9173c1c79fb9d63\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate ok=True\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "verify": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce soft-skip: no passing feature.closeout_verify matches HEAD=164479b166c3\n[verify_infra_062][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "verify": "verify_infra_060",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "verify": "verify_infra_034",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=55\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=215\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=149; all match a live verify file sha\n[verify_infra_034] summary total=53 failed=0"
+            },
+            {
+              "verify": "verify_infra_080",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[]\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit ok=True\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "verify": "verify_infra_079",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_079][PASS] V4_5_mutant_real_subprocess_fail substituted=True rc=2 has_V4_2_FAIL=True\n[verify_infra_079][PASS] V5_reviewer_lgtm_gate target=infra-P286-followup-v4-2-stricter-equal-check ok=True\n[verify_infra_079][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "verify": "verify_infra_074",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_074][PASS] V4_2b_real_dump_expect_eq_truth parsed_expect=86 truth=86 matched=True\n[verify_infra_074][PASS] V5_reviewer_lgtm_gate target=infra-P291-reviewer-gate-real-or-remove ok=True\n[verify_infra_074][SUMMARY] ALL PASS (16 checks)"
+            },
+            {
+              "verify": "verify_infra_037",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+              "pre_existing_baseline_sha": "890002c",
+              "baseline_tail_stdout": "[verify_infra_037][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+            },
+            {
+              "verify": "verify_infra_041",
+              "status": "FAIL",
+              "tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'",
+              "pre_existing_baseline_sha": "890002c",
+              "baseline_tail_stdout": "AttributeError: module 'verify_infra_034' has no attribute '_v6_target_id'"
+            },
+            {
+              "verify": "verify_infra_057",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=3 missing=0\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']",
+              "pre_existing_baseline_sha": "890002c",
+              "baseline_tail_stdout": "[verify_infra_057][FAIL] V2_lib_file_sha got=524e3edd3e3ef957 expect=a80af0088b53116b\n[verify_infra_057][FAIL] V4_real_all_match all_match=False unresolved=0 orphans=2 missing=0\n[verify_infra_057][SUMMARY] FAIL 2/13: ['V2_lib_file_sha', 'V4_real_all_match']"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "round": 1,
+            "feat_head_echo": "f7d4b7c2437566511ecb5373ec556ae5c4b9fd23",
+            "baseline_head_echo": "890002c",
+            "summary": "verify_infra_081 13/14 PASS (V5 唯一 pre-closeout FAIL, 预期); verify_infra_062 ALL PASS 18 checks (V4_byte_match_enforce soft-skip 因 flat schema 无 HEAD 匹配, 已登记 followup2 backlog); 060/034/080/079/074 PASS; smoke 通过; 037/041/057 三个 FAIL 与 baseline 890002c 一致, 与本 feature 无关."
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-P299-followup2-enable-byte-match-real-run",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "P299 followup2: 让 V4_byte_match_enforce 真正能开门 (摆脱 flat schema soft-skip)",
+      "rationale": "Reviewer 强调: 当前 verify_infra_062 V4_byte_match_enforce 始终 soft-skip ('no passing feature.closeout_verify matches HEAD'), 因为 flat schema 下 main_head_sha 是 closeout 时占位, bump 之后已经是新 HEAD, 永远不会与当前 HEAD 字节匹配 — 等于挂牌不开门. 需设计方案让 enforcement 真正能触发 (例如改 nested round schema, 或允许 main_head_sha 在 closeout commit 自身, 或独立维护 byte-match index).",
+      "description": "verify_infra_062 V4_byte_match_enforce 当前实现: 扫描所有 passing feature.closeout_verify.main_head_sha, 与当前 git HEAD 字节匹配则跑 helper 比对 tail; 若无匹配则 soft-skip. 因 bump 流程后 main_head_sha 总是落后于当前 HEAD (closeout commit + bump commit 后又有新 commit), 实际从未真触发. 应改方案: (a) 改用 nested round schema 记录 round-N 的 closeout commit sha (该 sha 在那一刻就是 HEAD); 或 (b) 在 closeout commit 上单独打 tag/note 标记 byte-match-anchor; 或 (c) 让 helper 接受短 sha range 而非严格字节匹配. 任选其一让 enforcement 真正有效."
     },
     {
       "id": "infra-P286-followup-round1-reviewer-baseline-head-mismatch",
