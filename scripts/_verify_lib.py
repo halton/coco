@@ -29,6 +29,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
+_MIN_PYTHON_VERSION = (3, 13)
+if sys.version_info < _MIN_PYTHON_VERSION:
+    raise RuntimeError(
+        f"_verify_lib.py requires Python >= {_MIN_PYTHON_VERSION[0]}.{_MIN_PYTHON_VERSION[1]}; "
+        f"got {sys.version_info.major}.{sys.version_info.minor}. "
+        "Reason: inspect.getsource() output differs between Python versions, "
+        "causing sha256-based V1_self_main_func_sha / V3_helper_func_sha lock drift. "
+        "Run with .venv/bin/python (Python 3.13) for repeatable verify."
+    )
+
 __all__ = [
     "parse_headings_from_doc",
     "func_sha_by_name",
