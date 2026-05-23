@@ -6608,14 +6608,64 @@
       "area": "infra",
       "phase": 52,
       "title": "default pull_request_template.md 内容反向回退保护 (V0b grep hint 或 V2b sha lock)",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-23",
       "source": "infra-040-backlog-default-tmpl-minimal-mode #4.51 closeout Reviewer P2 findings",
       "scope": "为 .github/pull_request_template.md 加内容反向回退保护: (a) V0b_default_tmpl_contains_verify_template_hint grep `?template=verify-script.md`, 或 (b) V2b_default_tmpl_file_sha 锁 default tmpl sha — 防止默认模板内容被回退覆盖,丢失 verify-script 切换引导。当前 V0 只锁 size>0 不锁内容。",
       "dependencies": [
         "infra-040-backlog-default-tmpl-minimal-mode"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_040.py 新增 V0b_default_tmpl_contains_verify_template_hint (grep `?template=verify-script.md`) 与 V2b_default_tmpl_file_sha (锁 default tmpl sha256 前 16hex = 11f006469bbf9a1e)",
+        "11/11 PASS (含 V0b + V2b)",
+        "Mutation A 删 hint: V0b+V2b 同时 FAIL",
+        "Mutation B 改标题保留 hint: V0b PASS + V2b FAIL (证不冗余)",
+        "Mutation C 改锁末位: V2b FAIL",
+        "Baseline 45ae223 老版 verifier 9/9 PASS (无 V0b/V2b)"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_040.py",
+        "scripts": [
+          "scripts/verify_infra_040.py (新增 V0b + V2b 双锁，default tmpl sha256[:16]=11f006469bbf9a1e)"
+        ],
+        "closeout_verify": {
+          "main_head_sha": "36e8689",
+          "merge_commit_sha": "36e8689",
+          "baseline_head_sha": "45ae223",
+          "pre_existing_baseline_sha": "45ae223",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_040.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=249\n[verify_infra_040][PASS] V0b_default_tmpl_contains_verify_template_hint hint='?template=verify-script.md' present=True\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V2b_default_tmpl_file_sha got=11f006469bbf9a1e expect=11f006469bbf9a1e\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (11 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=58 enforced=38 soft_skipped=20 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=58 enforced=38 soft_skipped=20 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=58 enforced=38 soft_skipped=20 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=58 enforced=38 soft_skipped=20 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=58 enforced=38 soft_skipped=20 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_040.py @ baseline 45ae223 (old verifier 9 checks)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=249\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+            }
+          ],
+          "baseline_tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=249\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks) (baseline 45ae223 老版无 V0b/V2b，与新版 11/11 差两项匹配预期)",
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-040 #2.52 V0b/V2b 双锁实现正确，反向回退保护到位且不冗余 (V0b 给语义信号，V2b 给完整内容保护)，11/11 PASS，三项 mutation + baseline 全部符合预期。独立 sha 计算 11f006469bbf9a1e 与锁值一致；Mutation A (删 hint) V0b+V2b 同时 FAIL；Mutation B (改标题保留 hint) V0b PASS + V2b FAIL 证实不冗余；Mutation C (改锁末位) V2b FAIL；Baseline 45ae223 跑 9/9 PASS, 与新版 11/11 差 V0b/V2b 两项匹配；V1 锁 v4_behavior 函数体不变, 不需 bump。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
+      }
     },
     {
       "id": "infra-040-backlog-v4-sha-graph-tmpl-edge",

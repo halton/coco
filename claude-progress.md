@@ -1,5 +1,17 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-52 #2.52 closeout (infra-040-backlog-default-tmpl-content-lock)
+
+- feature: `infra-040-backlog-default-tmpl-content-lock` (#2.52) → status `passing`
+- 改动: `scripts/verify_infra_040.py` 新增 V0b_default_tmpl_contains_verify_template_hint (grep `?template=verify-script.md`) 与 V2b_default_tmpl_file_sha (锁 default tmpl sha256 前 16hex = `11f006469bbf9a1e`)，共 11 项 (原 9 + 2)
+- 设计意图: V0b 提供语义信号 (hint 必须存在), V2b 提供完整内容保护 (整文件 sha)。Mutation B 验证两者不冗余: 改标题保留 hint → V0b PASS / V2b FAIL
+- baseline 求证: HEAD=45ae223 旧版 verifier 9/9 PASS (无 V0b/V2b)，与新版 11/11 差两项匹配
+- Reviewer (sub-agent fresh-context): **LGTM** — 11/11 PASS + 三项 mutation + baseline 全部符合预期，V1 v4_behavior 函数体不变不需 bump
+- merge: `feat/infra-040-backlog-default-tmpl-content-lock` (HEAD=be250e4) → main, merge commit=36e8689
+- verify_infra_062 P278 gate: ALL PASS (30 checks)
+- smoke `./init.sh`: 全 PASS
+- main HEAD: 45ae223 → 36e8689
+
 ## Session 2026-05-23 — phase-52 规划 (5 candidates promoted from V6/P-series backlog)
 
 - 上一 phase: phase-51 5/5 完整收官 (main HEAD=d5534b3, #1.51-#5.51 全 passing)
