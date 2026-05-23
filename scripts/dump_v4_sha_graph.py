@@ -420,6 +420,16 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py:assert_closeout_verify_runs_freshness (func-sha)",
     ("verify_infra_097.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_097.py:main (func-sha)",
+    # verify_infra_102 (infra-P290-classify-node-family-sets) —
+    # phase-53 #3.53: 锁 _classify_node family frozenset 改写 + dump file sha;
+    # _classify_node func sha 已由 verify_infra_060 (EXPECTED_CLASSIFY_FUNC_SHA) 主锁,
+    # 这里仅锁 dump_v4_sha_graph.py file sha + 自 main + lib file sha (用于 V5 helper)。
+    ("verify_infra_102.py", "EXPECTED_DUMP_FILE_SHA"):
+        "scripts/dump_v4_sha_graph.py (file-sha)",
+    ("verify_infra_102.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_102.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_102.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
@@ -618,20 +628,30 @@ def render_text(graph: Dict, show_full_sha: bool = False) -> str:
     return "\n".join(out)
 
 
+# infra-P290-classify-node-family-sets (phase-53 #3.53): family 集合显式化。
+# 用 frozenset 替代 OR 链 / 单值 ==, 让 hub / lib / dump 家族扩展边界一目了然,
+# 新增 dump 工具或 lib helper 只需向集合追加 node_id 即可, 不再改 if 分支。
+_HUB_FAMILY: frozenset = frozenset({"v4_sha_json"})
+_LIB_FAMILY: frozenset = frozenset({"_verify_lib"})
+_DUMP_FAMILY: frozenset = frozenset({"dump_v4_sha_graph", "dump_reverse_sha_lock_index"})
+
+
 def _classify_node(node_id: str) -> str:
     """根据 node_id 判定 classDef 类别 (infra-039-backlog-mermaid-classDef-styling).
 
     返回 className: hub / verify / lib / dump / module / unknown
+
+    infra-P290-classify-node-family-sets: hub / lib / dump 三类用模块级 frozenset
+    (_HUB_FAMILY / _LIB_FAMILY / _DUMP_FAMILY) 做成员判断, 替代 OR 链 / 单值 ==,
+    家族扩展边界显式可见。
     """
-    if node_id == "v4_sha_json":
+    if node_id in _HUB_FAMILY:
         return "hub"
     if node_id.startswith("unknown_"):
         return "unknown"
-    if node_id == "_verify_lib":
+    if node_id in _LIB_FAMILY:
         return "lib"
-    # infra-P285-classifier-recognize-lib-func-locks: dump_v4_sha_graph 与
-    # dump_reverse_sha_lock_index 同属 dump 工具家族, 同归 dump classDef。
-    if node_id == "dump_v4_sha_graph" or node_id == "dump_reverse_sha_lock_index":
+    if node_id in _DUMP_FAMILY:
         return "dump"
     if node_id.startswith("verify_"):
         return "verify"
