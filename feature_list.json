@@ -5471,7 +5471,7 @@
       "id": "infra-033-backlog-multi-verify-venv-docstring",
       "name": "将 verify_*.py venv 运行环境 docstring + sha256 lock 模式推广到其他 verify 入口",
       "area": "infra",
-      "status": "in_progress",
+      "status": "passing",
       "phase": 63,
       "priority": 209,
       "origin_backlog": [
@@ -5505,6 +5505,85 @@
             "verify_infra_P290.py": 0
           },
           "caveat": "verify_infra_037 V2_lib_file_sha pre-existing baseline drift; 入 backlog 单独处理, 不在本 feature 内 cascade"
+        }
+      },
+      "closeout_verify": {
+        "main_head_sha": "738bd9fb298840f54351cedd8fa3be2e4e765403",
+        "baseline_head_echo": "3e7fef5",
+        "merge_commit_sha": "738bd9fb298840f54351cedd8fa3be2e4e765403",
+        "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=306 well_formed=306 typo_count=0\n==> Smoke 通过。",
+        "verify_runs": [
+          {
+            "verify_script": "scripts/verify_infra_033_lock_doc_rollout.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_033] PASS V1_self_sha: got=76a2a0b733f6f259 expect=76a2a0b733f6f259\n[verify_infra_033] PASS V2_min_entries: entries=18 >= EXPECTED_MIN_ENTRIES=14\n[verify_infra_033] PASS V3_required_files_have_lock_block: required=6 seen_subset=6 missing=[]\n[verify_infra_033] PASS V4_field_completeness: checked=18 incomplete=0 samples=[]\n[verify_infra_033] PASS V5_target_files_resolvable: checked=18 unresolved=0 samples=[]\n[verify_infra_033] PASS V6_mutant_drop_lock_block: after mutating 039 header, scan no longer reports it (V3 would fail)"
+          },
+          {
+            "verify_script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=495 enforced=244 soft_skipped=251 violations=0 fire=True fired_features=62\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "verify_script": "scripts/verify_infra_035.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035][PASS] V8_self_file_sha_lock actual=a5901bb7a3ae9b8a expect=a5901bb7a3ae9b8a lock_schema_version=4 bumped_at=2026-05-24\n[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only matched=True\n[verify_infra_035] summary total=55 failed=0"
+          },
+          {
+            "verify_script": "scripts/verify_infra_110.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V4_composite_key_well_formed: all 22 edges have strict-ordered composite key\n[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 22 composite key src segments free of 'expected' substring (case-insensitive)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=3cdb3a8021917013 expect=3cdb3a8021917013\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "verify_script": "scripts/verify_infra_P290.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P290][PASS] V2_target_func_sha got=072652ad44846671 expect=072652ad44846671\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290] summary: total=9 failed=0"
+          },
+          {
+            "verify_script": "scripts/verify_infra_039.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=3 baseline=285\n[verify_infra_039][PASS] V8_helper_importable\n[verify_infra_039][PASS] V8_discovered_count discovered=158 matched=18 not_found=137 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][INFO] V8 not_found=137 ambiguous=3 (known backlog: P316)\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)"
+          },
+          {
+            "verify_script": "scripts/verify_infra_037.py",
+            "status": "FAIL",
+            "tail_stdout": "[verify_infra_037][PASS] V0_func_def_present def func_sha_by_name\n[verify_infra_037][PASS] V1_self_checker_func_sha got=d625d1aeaea5e842 expect=d625d1aeaea5e842\n[verify_infra_037][FAIL] V2_lib_file_sha got=f789e0d870c9e6c3 expect=c923b8de60e1930b\n[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=781650973120bca1 expect=781650973120bca1\n[verify_infra_037][PASS] V3_mutant_detected mut=5f5114fe800dfafa baseline=9f8b37464dd25d15\n[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']",
+            "pre_existing_baseline_sha": "3e7fef5a651c9138c8c2fee409099c8cb40ebb65",
+            "baseline_tail_stdout": "main@3e7fef5 verify_infra_037: V2_lib_file_sha got=f789e0d870c9e6c3 expect=c923b8de60e1930b — pre-existing baseline drift; _verify_lib.py 在本 feature 0 字节改动, FAIL 与 infra-033 docstring rollout 无任何因果关系; phase-63 #4 closeout cascade 漏 bump 037 的 EXPECTED_VERIFY_LIB_FILE_SHA, 入 backlog infra-P314."
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "phase-63 #5 把 ## Lock: <CONST> 6-field docstring 小节推广到 5 个高价值 verify (037/039/049/062/P290) + 新增 verify_infra_033_lock_doc_rollout.py (V1-V6, EXPECTED_MIN_ENTRIES=14, 实测 entries=18, V8 self-sha pragma + V6 mutant), 全部 6/6 PASS rc=0; smoke PASS; v062 30/30 PASS。037 V2_lib_file_sha FAIL 经 baseline 3e7fef5 实测复现, 确属 pre-existing baseline drift, _verify_lib.py 在本 feature 0 字节改动, 与本 feature 无因果关系, Engineer 入 backlog 的处置正确。三组 mutation A/B/C 全部按预期触发对应 checker FAIL (V3/V2+V1/V5), 自检健全, 非永真。Diff 边界干净 (5 顶部 docstring 附加 + 1 新文件 + feature_list.json, 无代码逻辑改)。",
+          "checks_run": [
+            "diff_review",
+            "V1_V6_independent",
+            "mutation_A_drop_v039_lock",
+            "mutation_B_min_entries_999",
+            "mutation_C_target_file_nonexistent",
+            "baseline_compare_3e7fef5",
+            "037_V2_preexisting_verification",
+            "smoke",
+            "v062"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {
+                "title": "037 V2 pre-existing baseline drift",
+                "backlog_id": "infra-P314-v037-lib-file-sha-cascade-fix"
+              },
+              {
+                "title": "v033 docstring V1-V5/V1-V6 mismatch",
+                "backlog_id": "infra-P315-v033-docstring-v1v6-fix"
+              },
+              {
+                "title": "v039 V8 not_found=137 ambiguous=3",
+                "backlog_id": "infra-P316-v039-V8-not-found-reduce"
+              }
+            ]
+          }
         }
       }
     },
@@ -18519,19 +18598,104 @@
       "verification": []
     },
     {
-      "id": "infra-037-backlog-verify-lib-file-sha-cascade",
+      "id": "infra-P314-v037-lib-file-sha-cascade-fix",
       "name": "verify_infra_037 V2_lib_file_sha bump (cascade pre-existing baseline drift)",
       "area": "infra",
-      "status": "not_started",
-      "phase": 63,
-      "priority": 3108,
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
       "origin_backlog": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring",
       "description": "verify_infra_037 V2_lib_file_sha expect=c923b8de60e1930b 但当前 _verify_lib.py sha=f789e0d870c9e6c3. 此 FAIL 在 main baseline 上也成立 (与 infra-033 docstring 推广无关), 是 _verify_lib.py 后续修改未 cascade bump 到 037 的遗漏. 单独立项 bump EXPECTED_VERIFY_LIB_FILE_SHA in 037, 同时审视是否还有其他持有此常量的 verify 漂移.",
       "verification": "verify_infra_037 V2_lib_file_sha PASS; smoke PASS; reviewer fresh-context LGTM",
-      "evidence": {}
+      "evidence": {},
+      "title": "verify_infra_037 V2_lib_file_sha bump (cascade pre-existing baseline drift) + 审 110/062",
+      "source": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring Reviewer P2 #1",
+      "scope": "verify_infra_037 V2_lib_file_sha expect=c923b8de60e1930b 但当前 _verify_lib.py sha=f789e0d870c9e6c3 (baseline 3e7fef5 实测复现 FAIL). bump EXPECTED_VERIFY_LIB_FILE_SHA c923b8de60e1930b -> f789e0d870c9e6c3, 同时审 verify_infra_110 / verify_infra_062 等是否也持有 _verify_lib.py 的 sha 锁且漏 bump."
+    },
+    {
+      "id": "infra-P315-v033-docstring-v1v6-fix",
+      "title": "verify_infra_033_lock_doc_rollout.py docstring V1-V5 → V1-V6 修订",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "source": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring Reviewer P2 #2",
+      "scope": "scripts/verify_infra_033_lock_doc_rollout.py 顶部 docstring 写的 'V1-V5' 与实际实现 V1-V6 mismatch (V6_mutant_drop_lock_block). 下次 docstring 修订时统一为 V1-V6.",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-P316-v039-V8-not-found-reduce",
+      "title": "verify_infra_039 V8 V8_auto_discovery not_found=137 / ambiguous=3 降低",
+      "area": "infra",
+      "status": "backlog",
+      "phase": null,
+      "priority": 999,
+      "source": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring Reviewer P2 #3",
+      "scope": "verify_infra_039 V8 INFO not_found=137 ambiguous=3 — V8 数据扫描已知 backlog 项, 不影响 SUMMARY ALL PASS. 调研 V8_auto_discovery 命名映射缺口, 降到 <50 或显式 acceptlist; ambiguous=3 (verify_infra_046/049/P275 main/render_text 重名 4-2 个 defs) 需 lineno 锚定.",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-P314-v037-lib-file-sha-cascade-fix-exec",
+      "title": "执行 P314: bump verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA + 审 110/062 同类锁",
+      "area": "infra",
+      "status": "in_progress",
+      "phase": "phase-64",
+      "priority": 1,
+      "source": "phase-64 planning (phase-63 #5 carry-over)",
+      "scope": "机械化 cascade fix: bump verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA c923b8de60e1930b -> f789e0d870c9e6c3; grep verify_*.py 找所有持有 EXPECTED_VERIFY_LIB_FILE_SHA 的脚本, 对比 baseline 找漏 bump 项, 一并 cascade. 给 _verify_lib.py 加 closeout cascade hook 或在 v062 V3 表里把 _verify_lib 文件 sha 锁登记进自动 drift 检测.",
+      "verification": "verify_infra_037 V2_lib_file_sha PASS rc=0; v062 30/30 PASS; smoke PASS; Reviewer fresh-context LGTM",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-V11-doc-value-lock-rollout",
+      "title": "V11 classify_node_lock_doc_values 模式推广: 把 6-field 锁 doc 值校验扩到其他高价值 verify",
+      "area": "infra",
+      "status": "not_started",
+      "phase": "phase-64",
+      "priority": 2,
+      "source": "phase-63 docstring + meta-lint 体系延续",
+      "scope": "verify_infra_110 V11_classify_node_lock_doc_values (6 字段值精确匹配, 3 exact + 3 prefix) 推广到 037/039/049/062/P290 — 让 ## Lock: <CONST> docstring 不仅存在 (V3/V4/V5), 其 value 字段也必须与实测一致, 防 docstring 与实际 sha 漂移. 新增 V_doc_values check 或扩 verify_infra_033_lock_doc_rollout.py.",
+      "verification": "新 V7 PASS; mutation 改任一 doc 值 → V7 FAIL; smoke PASS; v062 PASS; Reviewer LGTM",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-V4c-case-insensitive-promote",
+      "title": "V4c case-insensitive expected-substring 推广 (case 盲点消除)",
+      "area": "infra",
+      "status": "not_started",
+      "phase": "phase-64",
+      "priority": 3,
+      "source": "phase-61 #4 V4c backlog infra-110-backlog-composite-key-src-stem-case-insensitive-expected",
+      "scope": "verify_infra_110 V4c_composite_key_src_stem_no_expected_substring 当前 anchor regex 强制 const=EXPECTED_* 大写, src_seg 含 lowercase 'expected' 时 anchor 不形成 → V4c vacuously PASS. 加固: anchor regex 加 case-insensitive const 分支, 或 V4c 直接对 unknown_ 前缀 raw tgt_id substring 扫描.",
+      "verification": "V4c 对 mixed-case Expected/expecteD/EXPECted mutation 全部 FAIL; smoke PASS; Reviewer LGTM",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-P306-bump-helper-script-rollout",
+      "title": "P306 bump-helper-script 模式推广: 给所有 self-sha lock 配独立 bump 助手",
+      "area": "infra",
+      "status": "not_started",
+      "phase": "phase-64",
+      "priority": 4,
+      "source": "infra-P306-backlog-bump-infra-035-self-sha-helper-script + 风格一致",
+      "scope": "verify_infra_035 V2/V4 有独立 bump 助手, 但 V8_self_file_sha 无 → 风格不一致. 给所有持有 EXPECTED_SELF_FILE_SHA / EXPECTED_*_FUNC_SHA 的 verify_*.py 配独立 bump_*.py 助手 (或统一 scripts/bump_self_sha.py <target> CLI), 减少 closeout 漏 bump.",
+      "verification": "bump helper 跑过任意 verify 后 expect 与 actual 匹配; smoke PASS; Reviewer LGTM",
+      "created_at": "2026-05-24"
+    },
+    {
+      "id": "infra-V12-AST-based-infer-target-hardening",
+      "title": "_infer_target 真消除硬编码: 用 AST + symbol table 替代字符串模式拼接",
+      "area": "infra",
+      "status": "not_started",
+      "phase": "phase-64",
+      "priority": 5,
+      "source": "phase-63 #2 infra-039-backlog-infer-target-auto-discovery 延续",
+      "scope": "phase-63 #2 V8_auto_discovery not_found=137 暴露的根因: _infer_target 依赖 'EXPECTED_X_FUNC_SHA' → func='x' 的 prefix-strip 命名约定, 但 137 个常量名不遵循. 改用 AST + 同文件 symbol table 查 lock docstring target_path + target_func 字段反查, 把 not_found 降到 <20.",
+      "verification": "V8 not_found < 20; smoke PASS; v062 PASS; Reviewer LGTM",
+      "created_at": "2026-05-24"
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-24T00:00:00Z"
+    "last_updated": "2026-05-24T12:00:00Z"
   }
 }
