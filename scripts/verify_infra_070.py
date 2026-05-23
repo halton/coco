@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""verify_infra_070 V0-V5: closeout evidence tail_stdout sha 行为锁.
+"""verify_infra_070 V0-V6: closeout evidence tail_stdout sha 行为锁.
 
 infra-P294-closeout-stdout-sha-verification (phase-X #N):
 P278 verify_closeout_evidence_trustworthy 已要求 evidence.verify_runs[].tail_stdout
@@ -15,8 +15,10 @@ INFRA_070_SHA_LOCKS
 - ``scripts/_verify_lib.py`` 全文件 sha: EXPECTED_VERIFY_LIB_FILE_SHA
 - ``verify_evidence_tail_stdout_sha`` canonical func sha: EXPECTED_HELPER_FUNC_SHA
 - 本脚本 main() 自锁 func sha: EXPECTED_SELF_MAIN_FUNC_SHA
+- ``_make_mini_repo`` func sha + 源码 GIT_*='' 清零行 (phase-55 #5.55 P294 followup):
+  EXPECTED_MAKE_MINI_REPO_FUNC_SHA
 
-校验层级 (V0-V5):
+校验层级 (V0-V6):
 
 - V0 scaffolding: 常量存在且 hex64
 - V1 self func sha: 本脚本 main() canonical ast.unparse sha 自锁
@@ -29,6 +31,9 @@ INFRA_070_SHA_LOCKS
   - V4_4 empty_runs: verify_runs=[] → ok=False error 非空 (reason: empty)
   - V4_5 invalid_main_head_sha: 假 sha "0"*40 → ok=False error 非空
 - V5 Reviewer LGTM gate (closeout 须 fresh-context Reviewer LGTM)
+- V6 _make_mini_repo env isolation: func sha 锁 + 源码确认 GIT_DIR/GIT_WORK_TREE/
+  GIT_INDEX_FILE 三个 env var 在 helper 内被显式 pop 剥离 (非 "" 置空 — git 把
+  空串当 invalid path), 防止 CI 嵌套 git worktree 串台
 
 退出码: 0=ALL PASS, 2=任一 FAIL (走 verify_summary_exit)。
 
@@ -62,7 +67,9 @@ from _verify_lib import (
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981cc357a93b"
 EXPECTED_HELPER_FUNC_SHA = "9e69bab11675bc2c30055225614afc436362a5e6e4ea4671912ef564dfc00946"
-EXPECTED_SELF_MAIN_FUNC_SHA = "a1f4e1b5b5df77600d5cbd4a7eea150ba66e62980d949b6bcce1a1339dd0c6f1"
+EXPECTED_SELF_MAIN_FUNC_SHA = "71eaf71197a68abf51135fba30ad602a93ec8b2e4d03a87b7cfab3565ab752ba"
+# phase-55 #5.55: lock _make_mini_repo func sha so env isolation lines can't silently drift.
+EXPECTED_MAKE_MINI_REPO_FUNC_SHA = "ffa946cdcd37086be7e27905afbd56a0c6e674974be8012e1fb2ea4ebf33852b"
 
 DOCSTRING_SENTINEL = "INFRA_070_SHA_LOCKS"
 
@@ -201,8 +208,14 @@ def _make_mini_repo(tmpd: Path) -> Tuple[Path, str]:
     scripts = repo / "scripts"
     scripts.mkdir()
     (scripts / "verify_fake.py").write_text(_FAKE_VERIFY_SRC, encoding="utf-8")
+    # P294 Reviewer P2 (followup #5.55): 显式剥离父进程的 GIT_DIR/GIT_WORK_TREE/
+    # GIT_INDEX_FILE 等 env var, 避免 CI 嵌套 git worktree 场景串台污染 mini repo.
+    # 注: 必须 pop 而非置空 "" — git 会把 GIT_DIR="" 当成 invalid path 直接 fatal.
+    _parent_env = dict(__import__("os").environ)
+    for _k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
+        _parent_env.pop(_k, None)
     env = {
-        **dict(__import__("os").environ),
+        **_parent_env,
         "GIT_AUTHOR_NAME": "test",
         "GIT_AUTHOR_EMAIL": "t@t",
         "GIT_COMMITTER_NAME": "test",
@@ -340,6 +353,53 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: _make_mini_repo env isolation lock (phase-55 #5.55, P294 followup)
+# ---------------------------------------------------------------------------
+def v6_make_mini_repo_env_isolation() -> None:
+    """Lock _make_mini_repo func sha + assert source clears GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE."""
+    try:
+        got = func_sha_by_name(Path(__file__), "_make_mini_repo")
+    except Exception as e:
+        _emit("V6_make_mini_repo_func_sha", False, f"compute err: {e!r}")
+        return
+    if EXPECTED_MAKE_MINI_REPO_FUNC_SHA == "__BUMP_ME__":
+        _emit(
+            "V6_make_mini_repo_func_sha",
+            True,
+            f"placeholder OK; bump EXPECTED_MAKE_MINI_REPO_FUNC_SHA={got}",
+        )
+    else:
+        _emit(
+            "V6_make_mini_repo_func_sha",
+            got == EXPECTED_MAKE_MINI_REPO_FUNC_SHA,
+            f"got={got[:16]} expect={EXPECTED_MAKE_MINI_REPO_FUNC_SHA[:16]}",
+        )
+    # source-text assert: all three GIT_* env clears present in the helper body.
+    try:
+        src = Path(__file__).read_text(encoding="utf-8")
+        tree = ast.parse(src)
+        helper_src = ""
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == "_make_mini_repo":
+                helper_src = ast.get_source_segment(src, node) or ""
+                break
+    except Exception as e:
+        _emit("V6_env_isolation_source_keys", False, f"parse err: {e!r}")
+        return
+    missing = [
+        k for k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE")
+        if f'"{k}"' not in helper_src
+    ]
+    # 同时确认有 .pop( 调用 (而非 "" 置空 — git 把空串当 invalid path).
+    pop_present = ".pop(" in helper_src
+    _emit(
+        "V6_env_isolation_source_keys",
+        (not missing) and pop_present,
+        f"missing={missing} pop_present={pop_present}",
+    )
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_func_sha()
@@ -347,6 +407,7 @@ def main() -> int:
     v3_helper_func_sha()
     v4_behavior()
     v5_reviewer_gate()
+    v6_make_mini_repo_env_isolation()
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
     failed_tags = [t for t, ok, _ in _results if not ok]
