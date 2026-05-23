@@ -6858,15 +6858,17 @@
       "area": "infra",
       "phase": 50,
       "title": "dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-render-json-sort-stability (P269) Reviewer 建议",
       "scope": "scripts/dump_reverse_sha_lock_index.py 顶部 docstring 显式补充：sort_order=target_asc 是外部稳定排序契约标签，对应 JSON 内部 indexed_by=target_sha + 字典按 target_sha 升序遍历的实际行为；避免未来读者误以为 sort_order 是动态计算字段。",
       "dependencies": [
         "infra-049-backlog-render-json-sort-stability"
       ],
-      "verification": [],
-      "notes": "promoted to phase-50 #4.50"
+      "verification": [
+        "scripts/verify_infra_050.py ALL PASS (19 checks)"
+      ],
+      "notes": "promoted to phase-50 #4.50 | P278: dump 工具 docstring 加 INFRA_050_SORT_ORDER_CONTRACT sentinel + 4 条外部标签 ↔ JSON 内部字段映射 needle (assert_unique_needle 锁唯一性), verify_infra_050 扩 V0_dump_docstring_sentinel + V0_dump_docstring_mapping_needles, cascade bump 049/050/051 EXPECTED_DUMP_INDEX_FILE_SHA"
     },
     {
       "id": "infra-050-backlog-v3-mutant-ast-node-based",

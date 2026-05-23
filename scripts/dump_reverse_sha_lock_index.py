@@ -27,6 +27,24 @@ audit 时快速 overview——"哪个 verify 文件锁哪个 target 文件/函�
     (schema ``reverse_sha_lock_consistency/v1``), rc 语义不变
 - ``--text`` / ``--json`` 互斥 (输出格式选择, rc=2)
 
+INFRA_050_SORT_ORDER_CONTRACT
+-----------------------------
+``--json`` 输出 ``payload.stats.sort_order`` 字段是 **外部稳定排序契约
+标签** (external stability contract label), 当前值锁定为字面串
+``"verify_file,lineno,lock_name"``. 它**不是**动态计算出来的字段, 而是
+一个静态标签, 由本工具向消费者承诺: ``payload.entries`` 列表已显式
+``sorted(entries, key=lambda e: (e["file"], e["lineno"], e["const_name"]))``
+排序, 字段名映射如下:
+
+- 外部标签 ``verify_file``  ↔  JSON 内部字段 ``entry["file"]``
+- 外部标签 ``lineno``       ↔  JSON 内部字段 ``entry["lineno"]``
+- 外部标签 ``lock_name``    ↔  JSON 内部字段 ``entry["const_name"]``
+
+消费者契约: 给定同一份源码, ``--json`` stdout 必须 bytewise 稳定 (verify_infra_050
+V4_bytewise_stable 锁 3 轮跑一致); 后续若调整排序键, 必须同步改 ``sort_order``
+字符串字面量, verify_infra_050 V0_sort_order_symbols + V4_sort_order_field
+会同时漂移, 防止悄悄改契约。
+
 退出码: 0 = 正常列出 (或 --check 通过); 1 = --check 失败 / 解析错.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).

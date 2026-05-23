@@ -26,6 +26,8 @@ INFRA_050_SHA_LOCKS
 
 - V0 scaffolding: dump_reverse_sha_lock_index.py 含 ``sort_order`` 字符串
   与 ``"verify_file,lineno,lock_name"`` 常量
+  - phase-50 #4.50: dump 工具顶部 docstring 含 ``INFRA_050_SORT_ORDER_CONTRACT``
+    sentinel + 4 条外部标签 ↔ JSON 内部字段映射 needle (assert_unique_needle 锁唯一性)
 - V1 docstring sentinel ``INFRA_050_SHA_LOCKS`` + 本脚本 v4_behavior func sha 自锁
 - V2 dump_reverse_sha_lock_index.py file sha + render_json func sha
 - V3 in-memory mutant: 把 sort key tuple ``(file, lineno, const_name)`` 改成
@@ -54,8 +56,9 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
-# cascade-locked with verify_infra_049 (P268/P269; phase-49 #4.49 kind expose bump)
-EXPECTED_DUMP_INDEX_FILE_SHA = "256df4c6d17e32deb3aaf067fea638dbaa5e548a23a08f107278155568135e20"
+# cascade-locked with verify_infra_049 (P268/P269; phase-49 #4.49 kind expose bump;
+# phase-50 #4.50 sort_order docstring contract bump)
+EXPECTED_DUMP_INDEX_FILE_SHA = "30dc7633b69e3bb4653ad79a87f34eb87fba55778dbcc9901797845578b721f6"
 EXPECTED_RENDER_JSON_FUNC_SHA = "ec31d571f053a0c7830303282ef50996b4c5675c3a3c78596898072c2088ef1f"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -63,6 +66,17 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "c24db73e5b331b261c91bc378ff87c527c5165f6425c75d1
 
 DOCSTRING_SENTINEL = "INFRA_050_SHA_LOCKS"
 SORT_ORDER_VALUE = "verify_file,lineno,lock_name"
+
+# infra-050-backlog-sort-order-label-docstring (phase-50 #4.50): dump 工具顶部
+# docstring 必须含 sort_order 外部标签 vs JSON 内部字段映射说明。下列 needle 在
+# dump_reverse_sha_lock_index.py docstring 中必须各出现恰好一次 (assert_unique_needle)。
+DUMP_DOCSTRING_SENTINEL = "INFRA_050_SORT_ORDER_CONTRACT"
+DUMP_DOCSTRING_MAPPING_NEEDLES = (
+    "外部稳定排序契约",
+    '``verify_file``  ↔  JSON 内部字段 ``entry["file"]``',
+    '``lineno``       ↔  JSON 内部字段 ``entry["lineno"]``',
+    '``lock_name``    ↔  JSON 内部字段 ``entry["const_name"]``',
+)
 
 
 # phase-47 #1.47: V5_GATE evidence-bind helper (grace_period 兜底 soft graduate)
@@ -73,7 +87,7 @@ _results: List[Tuple[str, bool, str]] = []
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _verify_lib import assert_v5_reviewer_gate_evidence_bind  # noqa: E402
+from _verify_lib import assert_v5_reviewer_gate_evidence_bind, assert_unique_needle  # noqa: E402
 
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
@@ -113,6 +127,31 @@ def v0_scaffolding() -> None:
         "V0_sort_order_symbols",
         len(found) == len(needed),
         f"found {len(found)}/{len(needed)}",
+    )
+
+    # phase-50 #4.50: dump 工具 docstring 必须含 sort_order 外部标签 vs JSON 字段映射说明
+    try:
+        dump_doc = ast.get_docstring(ast.parse(src))
+    except Exception as e:
+        _emit("V0_dump_docstring_parse", False, f"err: {e!r}")
+        return
+    _emit(
+        "V0_dump_docstring_sentinel",
+        bool(dump_doc) and DUMP_DOCSTRING_SENTINEL in (dump_doc or ""),
+        f"sentinel={DUMP_DOCSTRING_SENTINEL}",
+    )
+    # 每个 mapping needle 必须在 docstring 中恰好出现一次 (assert_unique_needle, V6 discipline)
+    needle_failures: List[str] = []
+    for needle in DUMP_DOCSTRING_MAPPING_NEEDLES:
+        try:
+            assert_unique_needle(dump_doc or "", needle)
+        except ValueError as e:
+            needle_failures.append(f"{needle!r}: {e}")
+    _emit(
+        "V0_dump_docstring_mapping_needles",
+        not needle_failures,
+        f"checked={len(DUMP_DOCSTRING_MAPPING_NEEDLES)} failures={len(needle_failures)}"
+        + (f" first={needle_failures[0]}" if needle_failures else ""),
     )
 
 
