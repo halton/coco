@@ -66,7 +66,8 @@ EXPECTED_HELPER_SHA = "98890e28f76d095217aa3edf70f229ea68cf535fac284747257e62a81
 # infra-037 bump: helper 扩展 (新增 func_sha_by_name) 后文件 sha 变更
 # infra-040-backlog bump: 新增 assert_unique_needle helper 后文件 sha 再变更
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后文件 sha 再变更
-EXPECTED_LIB_FILE_SHA = "a80af0088b53116bb10b672540a129f26d9b9fdf4dfeab862ddffb9170578525"
+# infra-V6-backlog bump (#1.48): _verify_lib.py 再次扩展后 sha 再变更
+EXPECTED_LIB_FILE_SHA = "b3005a7d9272fb06c30bc254d8530848d481f2854b77580ef6bb2a7f6166bf55"
 
 
 _results: List[Tuple[str, bool, str]] = []
