@@ -24,8 +24,9 @@ V7 bump 助手原子写锁 (infra-035-backlog-bump-atomic-write #1.53): bump 助
     原子写模式 (防回退至 write_text 直写半文件).
 V8 verify_infra_035 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash
     phase-59 #2): 对本脚本自身整体 sha256 锁住, 防 docstring / 逻辑悄悄漂移
-    而无 verify 红线. 自指处理: 计算 sha 时跳过含
-    ``EXPECTED_SELF_FILE_SHA = `` 的那一行 (sentinel line), 其余字节参与 hash.
+    而无 verify 红线. 自指处理: 计算 sha 时严格剔除行尾带 pragma
+    标记 (hash)+空格+``V8-SELF-SHA-SKIP`` 的那一行 (见 infra-P305 phase-60 #5,
+    把宽松子串匹配收紧到显式 pragma 锚), 其余字节参与 hash.
     设计参考 verify_interact_036b.py V0 schema metadata 字段语义.
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码.
@@ -74,11 +75,14 @@ BUMP_034_EXPECTED_SHA = (
 )
 
 # V8 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash, phase-59 #2)
-# 计算时跳过含 `EXPECTED_SELF_FILE_SHA = ` 的那一行 (sentinel), 其余字节参与 sha256.
+# 计算时严格剔除行尾带 pragma `(hash) V8-SELF-SHA-SKIP` 标记的那一行 (见
+# infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma, phase-60 #5).
+# 仅 EXPECTED_SELF_FILE_SHA 真常量行打 pragma; 其余字节(含 docstring / 注释 /
+# 逻辑) 一律纳入 sha256 -> 任何漂移都会触发 V8 红线, 不再被宽松子串绕过.
 # 元信息字段语义参考 verify_interact_036b.py V0 schema metadata.
-V8_SELF_SHA_LOCK_VERSION = 1
-V8_SELF_SHA_LOCK_BUMPED_AT = "2026-05-23"
-EXPECTED_SELF_FILE_SHA = "04d66709c1a2206c688fe8c474a3cb61e25fa26b142732c96fae3bb00499fcc1"
+V8_SELF_SHA_LOCK_VERSION = 2
+V8_SELF_SHA_LOCK_BUMPED_AT = "2026-05-24"
+EXPECTED_SELF_FILE_SHA = "efe3a9538570c0abbaa0ee5dbdeec1f6929258e5d5c7a54ee02c6603157a6071"  # V8-SELF-SHA-SKIP
 
 SELF = Path(__file__).resolve()
 
@@ -305,15 +309,18 @@ def v7_bump_atomic_write() -> None:
 # V8: verify_infra_035 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash)
 # ---------------------------------------------------------------------------
 def _self_sha_skip_sentinel() -> str:
-    """计算本脚本自体 sha256, 跳过含 ``EXPECTED_SELF_FILE_SHA = `` 的那一行.
+    """计算本脚本自体 sha256, 严格剔除行尾带 pragma ``V8-SELF-SHA-SKIP`` 的行.
 
-    自指处理: 把 sentinel 行整行剔除后, 对剩余字节作 sha256. 这样修改
-    EXPECTED_SELF_FILE_SHA 常量值本身不会改变计算结果, 但任何其它字节
-    (含 docstring / 逻辑微调) 都会让 sha 漂移并触发 V8 红线.
+    自指处理 (infra-P305 phase-60 #5 收紧版): 旧实现用 ``"EXPECTED_SELF_FILE_SHA = "``
+    子串匹配剔除, 命中 5 行 (注释/docstring/常量/实现/函数体内同名引用), skip
+    集合过宽; 新实现要求行尾必须是 pragma 锚 ``(hash) V8-SELF-SHA-SKIP``
+    (rstrip 后 endswith), 这样 skip 集合精确到 1 行 = 真常量行. 任何
+    其它字节 (docstring / 逻辑微调 / 注释漂移) 都进入 sha256.
     """
     raw = SELF.read_text(encoding="utf-8")
     lines = raw.splitlines(keepends=True)
-    kept = [ln for ln in lines if "EXPECTED_SELF_FILE_SHA = " not in ln]
+    _PRAGMA = "# V8-SELF-SHA-SKIP"
+    kept = [ln for ln in lines if not ln.rstrip().endswith(_PRAGMA)]
     blob = "".join(kept).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()
 
@@ -324,8 +331,9 @@ def v8_self_file_sha_lock() -> None:
     与 V2/V4 对外部脚本的 sha 锁互补: 那些是被 sha 锁住的目标, 而本脚本
     (锁的发起者) 此前未被任何 sha 锁监控, docstring 微调即可悄悄改变,
     无 verify 红线. V8 补齐这一漏洞. bump 路径: 把 EXPECTED_SELF_FILE_SHA
-    设回占位 ``"__PLACEHOLDER_WILL_BE_FILLED__"`` 跑一次, 把日志里 actual
-    回填即可 (因 sentinel 行整行剔除, 占位字符串本身不影响 sha 计算).
+    设回占位 ``"__PLACEHOLDER_WILL_BE_FILLED__"`` (保留行尾 pragma 标记)
+    跑一次, 把日志里 actual 回填即可 (因 pragma 行整行剔除, 占位字符串
+    本身不影响 sha 计算).
     """
     actual = _self_sha_skip_sentinel()
     ok = actual == EXPECTED_SELF_FILE_SHA
