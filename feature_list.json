@@ -9438,7 +9438,7 @@
       "area": "infra",
       "phase": 63,
       "title": "scan_reverse_sha_locks 用 ast 替代 regex 规避字面量假阳性",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-V6 extract closeout Reviewer 建议",
       "scope": "scan_reverse_sha_locks 当前用 regex 扫描 64-hex 字面量，注释或字符串中出现的 64-hex 字面量会产生 false positive。改用 ast 解析模块顶层 Assign 节点，只取 Constant(str) RHS 且 LHS 是大写 const_name 的项，规避字符串/注释中的字面量。",
@@ -9449,30 +9449,95 @@
       "evidence": {
         "verify_script": "scripts/verify_infra_V6_scan_ast.py",
         "ast_function_name": "scripts._verify_lib.scan_reverse_sha_locks_ast",
-        "verify_runs": [
-          {
-            "cmd": "python scripts/verify_infra_V6_scan_ast.py",
-            "rc": 0,
-            "status": "ALL PASS",
-            "tail_stdout": [
-              "[verify_infra_V6_scan_ast] PASS V1_self_sha: sentinel present; EXPECTED_SELF_FILE_SHA256 is __BUMP_ME__ placeholder (first-run bootstrap)",
-              "[verify_infra_V6_scan_ast] PASS V2_ast_vs_regex_clean: ast=250 regex=250 ast-only=0 regex-only=0",
-              "[verify_infra_V6_scan_ast] PASS V3_ast_ignores_docstring_literal: ast_names=['EXPECTED_REAL_VERIFY_999_SHA256'] re_names=['EXPECTED_FAKE_VERIFY_888_SHA256', 'EXPECTED_REAL_VERIFY_999_SHA256']",
-              "[verify_infra_V6_scan_ast] PASS V4_ast_ignores_comment_literal: ast_names=['EXPECTED_REAL_VERIFY_998_SHA256'] re_names=['EXPECTED_REAL_VERIFY_998_SHA256']",
-              "[verify_infra_V6_scan_ast] PASS V5_ast_ignores_nested_tuple_literal: ast_names=['EXPECTED_REAL_VERIFY_997_SHA256'] re_names=['EXPECTED_REAL_VERIFY_997_SHA256']",
-              "[verify_infra_V6_scan_ast][SUMMARY] ALL PASS (5 checks)"
-            ]
+        "closeout_verify": {
+          "main_head_sha": "60f578cfdcdc8e35a2ec544c14a33ce5625688d6",
+          "baseline_head_echo": "414e122",
+          "merge_commit_sha": "bf8d733bf1fb88f7ade1ea8b36150e48b647cb23",
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=294 well_formed=294 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "init_sh_smoke",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=294 well_formed=294 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "verify_infra_V6_scan_ast",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_V6_scan_ast] PASS V2_ast_vs_regex_clean: ast=250 regex=250 ast-only=0 regex-only=0\n[verify_infra_V6_scan_ast] PASS V3_ast_ignores_docstring_literal: ast_names=['EXPECTED_REAL_VERIFY_999_SHA256'] re_names=['EXPECTED_FAKE_VERIFY_888_SHA256', 'EXPECTED_REAL_VERIFY_999_SHA256']\n[verify_infra_V6_scan_ast] PASS V4_ast_ignores_comment_literal: ast_names=['EXPECTED_REAL_VERIFY_998_SHA256'] re_names=['EXPECTED_REAL_VERIFY_998_SHA256']\n[verify_infra_V6_scan_ast] PASS V5_ast_ignores_nested_tuple_literal: ast_names=['EXPECTED_REAL_VERIFY_997_SHA256'] re_names=['EXPECTED_REAL_VERIFY_997_SHA256']\n[verify_infra_V6_scan_ast][SUMMARY] ALL PASS (5 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=104 enforced=69 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=35 v3_table=35 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_infra_035",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0"
+            },
+            {
+              "name": "verify_infra_110",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)",
+              "status_detail": "post-merge cascade fix: EXPECTED_VERIFY_LIB_FILE_SHA bumped c923b8de → 3e647db in commit 60f578c"
+            },
+            {
+              "name": "verify_infra_P290",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+            },
+            {
+              "name": "verify_infra_039",
+              "freshness_anchor": "60f578c",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (22 checks)"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "AST scan helper 实现正确, 严格 tree.body toplevel Assign + Name target + Constant(str) 遍历, 同时识别 Tuple value 中第一个 64-hex Constant (与 regex tuple-form 行为对齐). V1 sentinel 在位但 EXPECTED_SELF_FILE_SHA256 仍为 __BUMP_ME__ 首跑占位 (P305 预期). V2 在真实 scripts/ 上 AST=regex=250, set 完全一致. V3 docstring mutant 在 feat HEAD 上 AST 严格忽略 docstring 内 EXPECTED_FAKE_VERIFY_888_SHA256 而 regex 误报 (ast<re=True). Mutation 反证: A 把 docstring 改成 toplevel 真赋值后 V3 逻辑 evaluate=False (会 FAIL, 证明非永真); B monkeypatch scan_ast→[] 后 V2 ast=0/regex=250 regex-only=250 (FAIL, 证明 V2 真在校验); C 独立确认 docstring 内行首 EXPECTED_DOCONLY_VERIFY_555_SHA256 被 regex 捕获但 AST omits (这是该 feature 的核心动机证据). V4/V5 也以独立 mutation 收录真实 toplevel 且排除 comment/嵌套 tuple 字面. AST 路径未处理 ast.AnnAssign (X: type = '...') 但 regex 路径也未处理, 行为对齐, 非新引入回归. Smoke rc=0 无回归.",
+            "checks_run": [
+              "V1_self_sha",
+              "V2_ast_vs_regex_clean",
+              "V3_ast_ignores_docstring_literal",
+              "V4_ast_ignores_comment_literal",
+              "V5_ast_ignores_nested_tuple_literal",
+              "mutation_A_docstring_to_toplevel",
+              "mutation_B_scan_ast_empty",
+              "mutation_C_docstring_literal_capture",
+              "smoke",
+              "v062"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [
+                "closeout 必修 v062 cascade — 已修复 (EXPECTED_VERIFY_LIB_FILE_SHA bump + V3_HELPER_FUNC_NAMES 新增 scan_reverse_sha_locks_ast)"
+              ],
+              "P2": [
+                "V1 __BUMP_ME__ 占位保留 (P305 first-run bootstrap 模式, 整文件 sha 无法 fix-point 回填除非引入 V8-SELF-SHA-SKIP pragma)",
+                "AST 未处理 ast.AnnAssign (X: type = '...') 但 regex 路径也未处理, 行为对齐, 非回归"
+              ]
+            }
           }
-        ],
+        },
         "smoke": "./init.sh PASS",
         "mutant_coverage": {
           "V3_docstring_literal": "regex 误报 EXPECTED_FAKE_VERIFY_888_SHA256, AST 正确忽略 (ast ⊊ regex)",
           "V4_comment_literal": "# 起首注释, regex/AST 都忽略 (regex line-anchor 行首要字母, AST 自然忽略)",
           "V5_nested_tuple_literal": "OTHER_VAR = (\"EXPECTED_NESTED_*\", \"<hex>\") 嵌套 tuple, regex/AST 都忽略"
-        },
-        "reviewer": "pending (next step: Reviewer sub-agent fresh-context LGTM)"
+        }
       },
-      "notes": "phase-63 #1 Engineer 完成: scripts/_verify_lib.py 新增 scan_reverse_sha_locks_ast(scripts_dir), ast.parse → module body Assign + Name target + Constant(str) value, len(v)==64 + 全 [0-9a-f] 判定; tuple value 取第一个 64-hex constant. kind 判定与 regex 路径一致 (verify_id / expected_pattern). 原 regex 路径保留作对照. 250 真实条目 AST/regex 集合等同. 新 verify_infra_V6_scan_ast.py V1-V5 全 PASS, smoke PASS. 保持 in_progress (P261 Engineer 不切 passing)."
+      "notes": "phase-63 #1 closeout: Engineer 完成 scan_reverse_sha_locks_ast (ast.parse toplevel Assign), 5 V-checks PASS. Reviewer sub-agent fresh-context LGTM. Closeout cascade 修复: (a) v062 EXPECTED_VERIFY_LIB_FILE_SHA c923b8de→3e647db + V3_HELPER_FUNC_NAMES 加入 scan_reverse_sha_locks_ast, (b) v110 同 lib_sha bump (commit 60f578c). merge=bf8d733, head=60f578c.",
+      "started_at": "2026-05-20",
+      "updated_at": "2026-05-24T00:00:00",
+      "closed_at": "2026-05-24"
     },
     {
       "id": "infra-V6-backlog-helper-docstring-clarify-live-set",

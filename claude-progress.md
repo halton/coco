@@ -1,5 +1,18 @@
 # 进度日志
 
+## Session 2026-05-24 — phase-63 #1 infra-V6-backlog-scan-ast-based closeout
+
+- pre-merge main HEAD=414e122; merge commit=bf8d733; post-merge cascade fix HEAD=60f578c
+- Engineer 完成: `_verify_lib.scan_reverse_sha_locks_ast` (ast.parse toplevel Assign + Name target + Constant(str)), tuple-form 取首个 64-hex; 与 regex 路径在真实 scripts/ 上 set 完全等同 (250/250); 新 `scripts/verify_infra_V6_scan_ast.py` V1-V5 全 PASS
+- Reviewer sub-agent fresh-context LGTM (verdict=LGTM, kind=sub_agent_fresh_context); P0=[], P1=["closeout 必修 v062 cascade"], P2=["V1 __BUMP_ME__ first-run 保留", "AnnAssign 未处理但 regex 也未处理 行为对齐"]
+- Closeout cascade 修复:
+  - `verify_infra_062.py`: EXPECTED_VERIFY_LIB_FILE_SHA c923b8de60e1930b → 3e647db781ae6fa6; V3_HELPER_FUNC_NAMES 加 `scan_reverse_sha_locks_ast` (34 → 35) → v062 30/30 PASS
+  - `verify_infra_110.py`: 同 EXPECTED_VERIFY_LIB_FILE_SHA bump (commit 60f578c on main) → v110 18/18 PASS
+- P278 trustworthy verify suite 全 PASS (post-merge anchor=60f578c):
+  - init.sh smoke / verify_infra_V6_scan_ast (5) / verify_infra_062 (30) / verify_infra_035 (55) / verify_infra_110 (18) / verify_infra_P290 (9) / verify_infra_039 (22)
+- feature_list.json: `infra-V6-backlog-scan-ast-based` status=in_progress → passing; 写 nested closeout_verify (main_head_sha, baseline_head_echo, merge_commit_sha, 7 verify_runs 含 freshness_anchor + tail_stdout, reviewer block 含 verdict/summary/checks_run/findings)
+- 下一 candidate: `infra-039-backlog-infer-target-auto-discovery` (priority=2 in phase-63 unstarted)
+
 ## Session 2026-05-24 — phase-62 规划 + #1 infra-P278-backlog-meta-lint-cleanup engineer
 
 - main HEAD=10d9f9a (phase-61 #5 closeout, phase-61 5/5 完成)
