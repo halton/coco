@@ -5837,17 +5837,18 @@
     },
     {
       "id": "infra-035-backlog-v4-sha-canonical-order",
-      "priority": 999,
+      "priority": 5,
       "area": "infra",
-      "phase": null,
+      "phase": 50,
       "title": "v4_sha.json bump 输出强制 sort_keys 规范序",
-      "status": "backlog",
+      "status": "not_started",
       "source": "infra-035-reviewer",
       "scope": "scripts/bump_infra_034_v4_sha.py 当前 json.dump 未显式 sort_keys；不同 Python 版本或后续 dict 重构可能导致 v4_sha.json 键序漂移，干扰 diff 与 sha 锁。bump 输出统一 sort_keys=True + ensure_ascii=False + indent=2，保证 canonical 形式。verify-only。",
       "dependencies": [
         "infra-035"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "promoted to phase-50 #5.50"
     },
     {
       "id": "infra-035-backlog-verify-infra-035-self-hash",
@@ -6785,18 +6786,19 @@
     },
     {
       "id": "infra-049-backlog-dump-index-kind-stats",
-      "priority": 999,
+      "priority": 3,
       "area": "infra",
-      "phase": null,
+      "phase": 50,
       "title": "dump_reverse_sha_lock_index stats 加 kind 拆解",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Engineer 自报",
       "scope": "dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解，便于观测两类锁规模演化。",
       "dependencies": [
         "infra-049-backlog-reverse-lock-pattern-expand"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "promoted to phase-50 #3.50"
     },
     {
       "id": "infra-049-backlog-infer-target-to-verify-lib",
@@ -6852,18 +6854,19 @@
     },
     {
       "id": "infra-050-backlog-sort-order-label-docstring",
-      "priority": 999,
+      "priority": 4,
       "area": "infra",
-      "phase": null,
+      "phase": 50,
       "title": "dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-render-json-sort-stability (P269) Reviewer 建议",
       "scope": "scripts/dump_reverse_sha_lock_index.py 顶部 docstring 显式补充：sort_order=target_asc 是外部稳定排序契约标签，对应 JSON 内部 indexed_by=target_sha + 字典按 target_sha 升序遍历的实际行为；避免未来读者误以为 sort_order 是动态计算字段。",
       "dependencies": [
         "infra-049-backlog-render-json-sort-stability"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "promoted to phase-50 #4.50"
     },
     {
       "id": "infra-050-backlog-v3-mutant-ast-node-based",
@@ -6930,33 +6933,35 @@
     },
     {
       "id": "infra-039-backlog-dump-filter-pattern",
-      "priority": 999,
+      "priority": 2,
       "area": "infra",
-      "phase": null,
+      "phase": 50,
       "title": "dump_v4_sha_graph 加 --filter 选项",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议",
       "scope": "dump_v4_sha_graph.py 增加 --filter <pattern> 选项，按 verify-name 或 target-path 子串过滤输出，便于在大量 lock 时聚焦特定子集。",
       "dependencies": [
         "infra-039"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "promoted to phase-50 #2.50"
     },
     {
       "id": "infra-039-backlog-dump-show-full-sha",
-      "priority": 999,
+      "priority": 1,
       "area": "infra",
-      "phase": null,
+      "phase": 50,
       "title": "dump_v4_sha_graph 加 --show-full-sha 选项",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议",
       "scope": "dump_v4_sha_graph.py 当前默认截断 sha；加 --show-full-sha 选项输出完整 sha256，便于在调试/审计场景下直接比对。",
       "dependencies": [
         "infra-039"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "promoted to phase-50 #1.50"
     },
     {
       "id": "infra-039-backlog-dump-mermaid-output",

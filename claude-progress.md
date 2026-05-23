@@ -7613,3 +7613,14 @@ phase-46 5 候选 promoted to not_started：
 - #3.49 passing
 - #4.49 passing
 - #5.49 passing — 本次 closeout
+
+## Session 2026-05-23 — phase-50 plan (5 candidates from V6 backlog pool)
+
+- main HEAD before plan: d5e3dd6
+- phase-50 候选 (5)（promoted from backlog pool，按 priority 1..5）:
+  1. #1.50 infra-039-backlog-dump-show-full-sha — dump_v4_sha_graph 加 --show-full-sha 选项；纯输出层 CLI 增强，不触 _verify_lib 函数体
+  2. #2.50 infra-039-backlog-dump-filter-pattern — dump_v4_sha_graph 加 --filter 选项；与 #1.50 同类，纯 CLI 层
+  3. #3.50 infra-049-backlog-dump-index-kind-stats — dump_reverse_sha_lock_index stats 加 kind 拆解；延续 phase-49 #4.49 dump-index expose kind 主题
+  4. #4.50 infra-050-backlog-sort-order-label-docstring — dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射；纯文档，零风险
+  5. #5.50 infra-035-backlog-v4-sha-canonical-order — v4_sha.json bump 输出强制 sort_keys 规范序；与 V6 反向 sha 锁生态强相关
+- 主题延续 phase-49（V6 / 反向 sha 锁 / dump 工具 / regex unique needle 体系）；全部 sim-only，无 audio/robot/vision 真机依赖
