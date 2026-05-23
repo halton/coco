@@ -7124,7 +7124,7 @@
       "area": "infra",
       "phase": 51,
       "title": "_RE_V_NUM_HINT / _RE_BUMP_HINT 位数策略统一 + docstring 标语义",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "_RE_V_NUM_HINT 与 _RE_BUMP_HINT 当前在位数 / 大小写边界上策略不完全一致；统一两者位数与边界规则，并在 docstring 中标注捕获语义，避免 V7/V10+ bump 时漏识别。",
@@ -7185,8 +7185,30 @@
           }
         ],
         "pre_existing_baseline_sha": "151d6e172340ba1d4aef466a77962072aee0cd9b",
-        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=3 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DOC_SHA'] (main HEAD 同 FAIL, 与本 PR 无关)",
-        "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=3 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one'] (main HEAD=151d6e1 同 FAIL, 与本 PR 无关)",
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "closeout_verify": {
+          "main_head_sha": "c22049a",
+          "merge_commit_sha": "c22049a7cfcd9f9acdd9e5acf0a03bfc3802d0e0",
+          "verify_runs_sha_ok": true,
+          "verify_runs": [
+            {
+              "cmd": "python scripts/verify_infra_039.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+            },
+            {
+              "cmd": "python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "cmd": "./init.sh (smoke)",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ]
+        },
         "cascade_bumps": [
           "EXPECTED_DUMP_FILE_SHA: d38727f0 → 2b6261e1 in 8 files (039/043/044/047/048/053/054/060)"
         ],
@@ -7194,8 +7216,10 @@
         "used_assert_unique_needle": "n-a",
         "engineer_self_assessment": "regex 字面位数统一为 \\d{2,4}, 既覆盖历史 NN 也覆盖新生 NNN; docstring 标语义; 仅常量 + 注释改动, _infer_target 函数体未变 (func_sha 不动); 仅 dump file_sha 变, cascade 8 处 EXPECTED_DUMP_FILE_SHA 同步 bump; verify_infra_060 V4_real_unknown_count_eq_one 在 main baseline 同 FAIL, pre-existing 无关项。",
         "reviewer": {
-          "reviewer_kind": "pending",
-          "note": "Engineer 自评完成; Reviewer fresh-context 评审待主会话派出"
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "regex 位数策略统一 \\d{2,4} 兼容 NN/NNN/NNNN 三档, _infer_target 函数体与 _verify_lib 均未触碰; cascade 8 处 EXPECTED_DUMP_FILE_SHA bump 完整; 060 V4_real_unknown_count_eq_one FAIL 与 main HEAD=151d6e1 同 FAIL 同 ids 确认 pre-existing 无关; mutation probe 显示 V2_dump_file_sha + verify_infra_044 V4_v_num_hint 语义锁联合可抓回退; Engineer 预置 evidence 但 status 仍 in_progress + reviewer.reviewer_kind=pending, 未违反 P261; regex completeness audit 显示无遗漏统一项; 可推进 closeout merge。",
+          "findings": {"P0": [], "P1": [], "P2": []}
         }
       }
     },

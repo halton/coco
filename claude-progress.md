@@ -7699,3 +7699,17 @@ phase-46 5 候选 promoted to not_started：
 
 phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 
+
+## Session 2026-05-23 — phase-51 #1.51 closeout
+
+`infra-039-backlog-bump-regex-normalize` closeout 完成 (`feat/infra-039-backlog-bump-regex-normalize` merged into main).
+
+- main HEAD: c22049a (merge commit c22049a7cfcd9f9acdd9e5acf0a03bfc3802d0e0)
+- baseline: 151d6e1
+- verify_infra_039.py: PASS 21/21
+- verify_infra_062.py (P278 gate): PASS 30/30
+- verify_infra_060.py baseline @151d6e1: FAIL 1/14 V4_real_unknown_count_eq_one (pre-existing, ids 同本次 merge 后, 与本 PR 无关)
+- `./init.sh` smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM
+- 改动: scripts/dump_v4_sha_graph.py 加 `_RE_V_NUM_HINT` / `_RE_BUMP_HINT` / `_RE_VERIFY_HINT` 位数统一 `\d{2,4}` (兼容 NN/NNN/NNNN); cascade 8 处 EXPECTED_DUMP_FILE_SHA d38727f0 → 2b6261e1 (039/043/044/047/048/053/054/060)
+- status: in_progress → passing
