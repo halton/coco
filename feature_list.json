@@ -15842,12 +15842,13 @@
       "priority": 999,
       "area": "infra",
       "title": "V0 sha lock 加版本号字段 (批量升级 baseline 可追溯)",
-      "status": "backlog",
+      "status": "in_progress",
       "phase": 58,
       "created_at": "2026-05-23",
       "source": "interact-036b Reviewer P2-2",
       "description": "当前 V0/V1/V2 sha lock 直接 hardcode hex, 当批量升级 baseline (cascade bump) 时, 无法快速 diff 出哪个 lock 是新一轮 bump、哪个是旧轮残留. 提案: 在 V0 self_sha 段同时写入 lock_schema_version (int) + bumped_at (date) 元数据, scripts/_verify_lib 加 helper 读 / 校验. 不阻 merge, polish.",
-      "dependencies": []
+      "dependencies": [],
+      "started_at": "2026-05-23"
     },
     {
       "id": "interact-036d-backlog-v6-warn-banner-assert",
