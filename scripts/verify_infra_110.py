@@ -20,6 +20,11 @@ INFRA_110_SHA_LOCKS
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
 - ``dump_v4_sha_graph.render_mermaid`` func sha: EXPECTED_RENDER_MERMAID_FUNC_SHA
+- ``dump_v4_sha_graph._classify_node`` func sha: EXPECTED_CLASSIFY_NODE_FUNC_SHA
+  (infra-110-backlog-classify-node-unknown-lock: V4_no_unknown_id_collision 隐式
+  依赖 _classify_node 中 ``startswith("unknown_")`` 判定逻辑; 加独立 func sha
+  锁，避免未来重构改动 _classify_node 时 V4 检查被 vacuous 绕过。verify_infra_060
+  已有同名 EXPECTED_CLASSIFY_FUNC_SHA 主锁；本处独立持有第二份)
 - self ``main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 
 校验层级 (V0-V6):
@@ -28,6 +33,7 @@ INFRA_110_SHA_LOCKS
 - V1 docstring sentinel ``INFRA_110_SHA_LOCKS`` 自锁
 - V2 双 file sha 锁 (dump + lib)
 - V3 render_mermaid func sha 锁
+- V3b _classify_node func sha 锁 (infra-110-backlog: 锁 unknown 分支判定逻辑)
 - V4 behavior (live):
   - V4_unknown_edges_exist: build_graph 至少含 1 条 unknown target lock
   - V4_no_unknown_id_collision: 渲染出的 mermaid 输出中, 不存在「两条 unknown
@@ -38,6 +44,8 @@ INFRA_110_SHA_LOCKS
 - V4b self main func sha
 - V5 Reviewer LGTM gate (grace_period 兜底)
 - V6 reverse_sha meta-lock: render_mermaid func sha (同 V3, 第二份独立持有)
+- V6b reverse_sha meta-lock: _classify_node func sha (同 V3b, 第二份独立持有)
+- V6c read_constant 自校 EXPECTED_CLASSIFY_NODE_FUNC_SHA 文字常量化
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
@@ -58,6 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_v5_reviewer_gate_evidence_bind,
     func_sha_by_name,
+    read_constant,
     verify_summary_exit,
 )
 
@@ -71,8 +80,14 @@ EXPECTED_VERIFY_LIB_FILE_SHA = (
 EXPECTED_RENDER_MERMAID_FUNC_SHA = (
     "7c7a3ff794c99af00d24b42346f4e73ce879ab0a9cde462b3966d778be236685"
 )
+# infra-110-backlog-classify-node-unknown-lock: _classify_node func sha 锁
+# (verify_infra_060.EXPECTED_CLASSIFY_FUNC_SHA 是主锁; 本处独立持有第二份避免
+# 未来 _classify_node 改写 unknown 分支时 V4_no_unknown_id_collision 被 vacuous 绕过)
+EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
+    "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
+)
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "a26fcd972d4941d479e9db1a0df3c2ddfb7cf077fd7c8d4508e06ac1229beaff"
+EXPECTED_SELF_MAIN_FUNC_SHA = "ce334aeb5a73dbc0123cd9692476058645906e28cd2ff2849d9f99c3ffbd5859"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -151,6 +166,28 @@ def main() -> None:
                 "V3_render_mermaid_func_sha",
                 got_render == EXPECTED_RENDER_MERMAID_FUNC_SHA,
                 f"got={got_render[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
+            )
+
+    # V3b _classify_node func sha (infra-110-backlog-classify-node-unknown-lock)
+    # 锁住 _classify_node 整个函数体, 含 startswith("unknown_") 分支判定;
+    # V4_no_unknown_id_collision 隐式依赖此判定逻辑正确, 加锁防止重构 vacuous.
+    try:
+        got_classify = func_sha_by_name(DUMP_PY, "_classify_node")
+    except Exception as e:
+        _emit("V3b_classify_node_func_sha", False, f"compute err: {e!r}")
+        got_classify = ""
+    if got_classify:
+        if EXPECTED_CLASSIFY_NODE_FUNC_SHA == "__BUMP_ME__":
+            _emit(
+                "V3b_classify_node_func_sha",
+                False,
+                f"placeholder; bump EXPECTED_CLASSIFY_NODE_FUNC_SHA={got_classify}",
+            )
+        else:
+            _emit(
+                "V3b_classify_node_func_sha",
+                got_classify == EXPECTED_CLASSIFY_NODE_FUNC_SHA,
+                f"got={got_classify[:16]} expect={EXPECTED_CLASSIFY_NODE_FUNC_SHA[:16]}",
             )
 
     # V4 behavior — live build_graph + render_mermaid 观测 unknown 边
@@ -244,6 +281,28 @@ def main() -> None:
             got_render == EXPECTED_RENDER_MERMAID_FUNC_SHA,
             f"meta got={got_render[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
         )
+
+    # V6b reverse_sha meta-lock (与 V3b 同 _classify_node func sha, 独立持有)
+    if got_classify and EXPECTED_CLASSIFY_NODE_FUNC_SHA != "__BUMP_ME__":
+        _emit(
+            "V6b_classify_node_func_sha_meta",
+            got_classify == EXPECTED_CLASSIFY_NODE_FUNC_SHA,
+            f"meta got={got_classify[:16]} expect={EXPECTED_CLASSIFY_NODE_FUNC_SHA[:16]}",
+        )
+
+    # V6c read_constant 自校 EXPECTED_CLASSIFY_NODE_FUNC_SHA 文字常量化
+    # (确保常量是字符串字面量而非动态计算; 防止 EXPECTED_CLASSIFY_NODE_FUNC_SHA
+    # 被改写为 ``func_sha_by_name(...)`` 之类的运行时表达式而 vacuous 通过 V3b)
+    try:
+        const_via_read = read_constant(Path(__file__), "EXPECTED_CLASSIFY_NODE_FUNC_SHA")
+        _emit(
+            "V6c_classify_node_func_sha_constant_literal",
+            isinstance(const_via_read, str) and const_via_read == EXPECTED_CLASSIFY_NODE_FUNC_SHA,
+            f"read_constant={(const_via_read[:16] if isinstance(const_via_read, str) else type(const_via_read).__name__)} "
+            f"runtime={EXPECTED_CLASSIFY_NODE_FUNC_SHA[:16]}",
+        )
+    except Exception as e:
+        _emit("V6c_classify_node_func_sha_constant_literal", False, f"read_constant err: {e!r}")
 
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)

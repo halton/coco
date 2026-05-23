@@ -99,7 +99,12 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   render_mermaid 改用 (source, const) 复合 key 后, 旧 EXPECTED_TARGET_FILE_SHA 跨
 #   source 合并的 1 个节点拆成 2 个; 加上其他 13 个 unknown 各自带 source 前缀, 总
 #   unknown 节点数从 collapsed-9 上升到 14 (实际 unknown 边总数, 每边一个独立节点)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 14
+# - phase-60 #3 (infra-110-backlog-classify-node-unknown-lock) 后: 15
+#   verify_infra_110 新加 EXPECTED_CLASSIFY_NODE_FUNC_SHA 第二份独立锁 (verify_infra_060
+#   主锁同名 const 已在 unknown 集合中, 但 verify_infra_110 的此 const 是新 source),
+#   build_graph 视为 unknown target 新增一条 (verify_infra_110, EXPECTED_CLASSIFY_NODE_FUNC_SHA)
+#   节点, 总 unknown 节点数 14 → 15。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 15
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
