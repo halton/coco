@@ -127,16 +127,17 @@ def _file_sha(p: Path) -> str:
 def _check_v4c_composite_key_src_stem_no_expected_substring(
     unknown_edges: List[Tuple[str, str, str]],
 ) -> tuple[bool, str]:
-    """V4c: 复合 key ``unknown_<src>_<const>`` 中 src 段不得含 ``EXPECTED`` / ``expected``.
+    """V4c: 复合 key ``unknown_<src>_<const>`` 中 src 段不得含 ``expected`` 子串 (大小写无关).
 
-    理论上 verify 脚本文件 stem 不会含 EXPECTED, 所以本 check 通常 vacuously PASS.
+    理论上 verify 脚本文件 stem 不会含 expected, 所以本 check 通常 vacuously PASS.
     预防性硬锁: 非贪婪 anchor regex ``^unknown_(?P<src>...?)_(?P<const>EXPECTED_...)$``
     在 src_stem 含 EXPECTED 时会切到第一个 ``_EXPECTED_`` 处, 把真 const 错切到 src,
     V4_composite_key_well_formed 仍 PASS 但语义错位; 此 check 显式 catch.
 
     实现: 从已 anchor-parse 出 ``unknown_<src>_<EXPECTED_*>`` 的 tgt_id 提取 src 段
     (用与 V4_composite_key_well_formed 相同的 anchor regex 重新 parse), 断言
-    每个 src 段大小写均不含 EXPECTED 子串.
+    每个 src 段以 ``.lower()`` 比较后不含 ``expected`` 子串
+    (覆盖 Expected / EXPECTeD / expecteD 等混合大小写绕过, phase-62 #3 加固).
     """
     composite_key_pattern = re.compile(
         r"^unknown_(?P<src>[a-zA-Z0-9_]+?)_(?P<const>EXPECTED_[A-Z0-9_]+)$"
@@ -150,11 +151,11 @@ def _check_v4c_composite_key_src_stem_no_expected_substring(
             continue
         src_seg = m.group("src")
         checked += 1
-        if "EXPECTED" in src_seg or "expected" in src_seg:
-            violations.append(f"{tgt} (src_seg={src_seg!r} contains EXPECTED/expected)")
+        if "expected" in src_seg.lower():
+            violations.append(f"{tgt} (src_seg={src_seg!r} contains 'expected' substring case-insensitively)")
     if violations:
         return False, f"violations={violations[:3]}"
-    return True, f"all {checked} composite key src segments free of EXPECTED/expected substring"
+    return True, f"all {checked} composite key src segments free of 'expected' substring (case-insensitive)"
 
 
 def _check_v7_classify_node_lock_doc_present() -> tuple[bool, str]:
