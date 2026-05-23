@@ -60,8 +60,8 @@ from _verify_lib import (
     assert_v5_reviewer_gate_evidence_bind,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "933e5e89d1dd3e20135dff0b2aeb87c729f81614c02001ba27aca51a9c61e09f"
-EXPECTED_HELPER_FUNC_SHA = "c1b3648640c5de7ff8fc30eace63b37dd2c6191a03c6a3f7d05a8f1573d3eb72"
+EXPECTED_VERIFY_LIB_FILE_SHA = "e583aed3fd27d6dcc1f55b7f326b2cd6296876d3bdb0c5b1a111994f3f4f99c1"
+EXPECTED_HELPER_FUNC_SHA = "9e69bab11675bc2c30055225614afc436362a5e6e4ea4671912ef564dfc00946"
 EXPECTED_SELF_MAIN_FUNC_SHA = "a1f4e1b5b5df77600d5cbd4a7eea150ba66e62980d949b6bcce1a1339dd0c6f1"
 
 DOCSTRING_SENTINEL = "INFRA_070_SHA_LOCKS"
@@ -105,6 +105,30 @@ def v0_scaffolding() -> None:
         "V0_docstring_sentinel",
         bool(doc) and DOCSTRING_SENTINEL in (doc or ""),
         f"sentinel={DOCSTRING_SENTINEL}",
+    )
+    # P294-followup: helper docstring 必须明确 tail 长度单位是 chars (codepoints), not bytes.
+    # 关键词锁: 'chars', 'codepoints', 'NOT raw bytes' 三者全在 helper docstring 中出现.
+    try:
+        lib_tree = ast.parse(LIB.read_text(encoding="utf-8"))
+        helper_doc = ""
+        for node in ast.walk(lib_tree):
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name == "verify_evidence_tail_stdout_sha"
+            ):
+                helper_doc = ast.get_docstring(node) or ""
+                break
+    except Exception as e:
+        helper_doc = ""
+        _emit("V0_helper_docstring_loaded", False, f"err: {e!r}")
+    else:
+        _emit("V0_helper_docstring_loaded", bool(helper_doc), f"len={len(helper_doc)}")
+    required_keywords = ("chars", "codepoints", "NOT raw bytes")
+    missing_kw = [k for k in required_keywords if k not in helper_doc]
+    _emit(
+        "V0_helper_docstring_chars_vs_bytes_keywords",
+        not missing_kw,
+        f"required={required_keywords} missing={missing_kw}",
     )
 
 

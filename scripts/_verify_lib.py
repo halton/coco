@@ -1368,6 +1368,13 @@ def verify_evidence_tail_stdout_sha(
 ) -> dict:
     """对 evidence.verify_runs 在 main HEAD 实跑并 sha256 比对 tail_stdout.
 
+    Tail 长度单位 (P294 followup 明确): **chars (Unicode codepoints), NOT raw bytes**.
+    具体: ``n_chars = len(evidence_tail_stdout)`` 是 Python ``str`` 的 codepoint 数,
+    取 ``actual_stdout[-n_chars:]`` 是按 codepoint slicing (非字节切片); 随后再
+    ``.encode("utf-8")`` 转 bytes 喂给 sha256. 因此 sha256 输入是 utf-8 bytes,
+    但 "同长" 比较的是 chars (codepoints). 非 ASCII (中文/emoji) 情况下 bytes 数
+    会大于 chars 数, 切勿误把 ``len(ev_tail)`` 当成字节数使用.
+
     算法 (sha256 anti-forgery):
 
     1. 校验 ``main_head_sha`` 可被 ``git rev-parse`` 解析为有效 commit。
@@ -1375,9 +1382,10 @@ def verify_evidence_tail_stdout_sha(
     3. 对 ``evidence['verify_runs']`` 每一项 (含 ``script``, ``tail_stdout``,
        ``tail_stdout_sha256``):
          - 在 worktree 内 ``python <script>`` 运行 (cwd = worktree root);
-         - 取 captured stdout 的 tail (与 ``len(evidence_tail_stdout)`` 同长字符数,
-           从末尾起取);
-         - 计算 sha256(tail_bytes) (utf-8 编码), 与 ``tail_stdout_sha256`` 比对;
+         - 取 captured stdout 的 tail (chars / Unicode codepoints, not raw bytes;
+           长度 = ``len(evidence_tail_stdout)``, 从末尾起按 codepoint slice);
+         - 计算 sha256(tail.encode("utf-8")) → 即 sha256 输入是 utf-8 字节序列,
+           与 ``tail_stdout_sha256`` 比对;
          - 不一致 → offending list 加一条 (含 script / expected / actual);
          - 缺失字段 (tail_stdout / tail_stdout_sha256) → reasons 加一条, ok=False。
     4. worktree 在 finally 中 ``git worktree remove --force`` 清理。
@@ -1542,7 +1550,8 @@ def verify_evidence_tail_stdout_sha(
                     checked += 1
                     continue
                 actual_stdout = proc_run.stdout or ""
-                # 取与 evidence tail_stdout 同字符长度的末尾子串
+                # 取与 evidence tail_stdout 同 chars (Unicode codepoints) 长度的末尾
+                # 子串 — NOT raw bytes. 见函数 docstring 「Tail 长度单位」段.
                 n_chars = len(ev_tail)
                 actual_tail = actual_stdout[-n_chars:] if n_chars > 0 else ""
                 actual_sha = hashlib.sha256(
