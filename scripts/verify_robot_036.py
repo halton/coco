@@ -53,8 +53,9 @@ EXPECTED_SENTINEL_LINE_SHA = (
 )
 
 # V4: sha256 锁 verify_robot_034.py 整体
+# robot-037-backlog-import-time-fail-fallback bump: verify_robot_034 顶层包了 try/except
 EXPECTED_VERIFY_034_SHA = (
-    "0e390ca10577016e24dc3f531a7a9aefa30a3305614cb609db4150d7db36eca2"
+    "2c7b49c23ed22feb52c40b9a72582d4bda3e8154f24c943c3646fc64b4a78983"
 )
 
 _results: List[Tuple[str, bool, str]] = []
@@ -101,14 +102,16 @@ def v0_no_hardcode() -> None:
     src = VERIFY_034.read_text(encoding="utf-8")
     # 禁止形如 `SENTINEL_LINE = "..."` 或 `SENTINEL_LINE = '...'` 的直接字面赋值。
     # 允许 `SENTINEL_LINE = <call/name expr>`, 如 `SENTINEL_LINE = _read_sentinel_from_verify_032()`。
-    bad = re.search(r"^SENTINEL_LINE\s*=\s*['\"]", src, re.MULTILINE)
+    # robot-037-backlog-import-time-fail-fallback: SENTINEL_LINE 现可能在 try/except
+    # 内缩进赋值, regex 允许前导空白 (但仍禁止直接字面)。
+    bad = re.search(r"^\s*SENTINEL_LINE\s*=\s*['\"]", src, re.MULTILINE)
     _emit(
         "V0_no_hardcode_literal",
         bad is None,
         f"match={bad.group(0)!r}" if bad else "no literal assignment",
     )
     # 同时确认 SENTINEL_LINE 名字仍存在 (避免误删导致后续 V0/V1/V3 调用面崩)。
-    has_name = re.search(r"^SENTINEL_LINE\s*=", src, re.MULTILINE) is not None
+    has_name = re.search(r"^\s*SENTINEL_LINE\s*=", src, re.MULTILINE) is not None
     _emit("V0_sentinel_name_present", has_name, "SENTINEL_LINE assignment exists")
 
     # verify_robot_032 中 _HEADINGS_SECTION_SENTINEL 仍存在
