@@ -8406,7 +8406,7 @@
     {
       "id": "infra-P290-classify-node-family-sets",
       "priority": "53-3",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 53,
       "area": "infra",
       "title": "_classify_node 用 frozenset 替代 OR 表达式",
