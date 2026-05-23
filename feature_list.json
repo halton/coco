@@ -16641,7 +16641,7 @@
       "area": "infra",
       "phase": 60,
       "title": "_classify_node unknown 分支加 func sha 锁",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-23",
       "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
       "scope": "_classify_node 中 unknown 分支当前无独立 func sha 锁；若被改动可能影响 render_mermaid 复合 key 路径而本 feature 的检查察觉不到。建议加一个 V*_classify_node_unknown_func_sha 锁。",
