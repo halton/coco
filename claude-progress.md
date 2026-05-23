@@ -7728,3 +7728,18 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - 无 cascade、无 verifier 变更、无 doc 改写
 - STALE pattern: 不需要 Reviewer fresh-context
 - `./init.sh` smoke: PASS (rc=0)
+
+## Session 2026-05-23 phase-51 #3.51 — infra-040-backlog-tmpl-reason-comment-style closeout
+
+- feature_id: infra-040-backlog-tmpl-reason-comment-style
+- pattern: backlog-direct-closeout (Reviewer fresh-context LGTM 已落, status not_started → passing)
+- main HEAD pre-merge: 69a1bc7
+- feat 分支 HEAD: 9724fa2
+- merge commit: 4ca8c20 (merge --no-ff feat/infra-040-backlog-tmpl-reason-comment-style)
+- 改动: .github/PULL_REQUEST_TEMPLATE/verify-script.md L17/L19/L21 三处 `- 理由: ___________` → `<!-- 理由: -->`; scripts/verify_infra_040.py V2 EXPECTED_TMPL_FILE_SHA 8c50f240→8d0cb524 (9 字节模板差, size 1891→1882)
+- verify_infra_040 @ 4ca8c20: ALL PASS 9/9
+- verify_infra_062 P278 gate @ 4ca8c20: ALL PASS 30/30
+- baseline @ main 69a1bc7 pre-merge: ALL PASS 9/9 (旧 V2 sha 8c50f240 锁旧模板 size=1891, 证明改动是 lock-bump 不是 mutant 绕过)
+- ./init.sh smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM, P0/P1/P2 全空
+- status: not_started → passing

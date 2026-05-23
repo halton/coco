@@ -6335,14 +6335,108 @@
       "area": "infra",
       "phase": 51,
       "title": "PR 模板 '理由: ___________' 改为 HTML 注释风格",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
+      "closed_at": "2026-05-23",
       "source": "infra-040 closeout Reviewer 建议",
       "scope": "把模板里的 '理由: ___________' 占位改为 <!-- 理由: --> HTML 注释风格，PR 渲染时不显示空占位行，作者填写后才出现在 PR 描述里。",
       "dependencies": [
         "infra-040"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_040.py V0-V5 ALL PASS 9/9 (V2 sha lock 8c50f240→8d0cb524 bump 同 9 字节模板差 size 1891→1882)",
+        "scripts/verify_infra_062.py P278 closeout-verify-trustworthy gate ALL PASS 30/30",
+        "baseline @ main 69a1bc7 (pre-merge) verify_infra_040 ALL PASS 9/9 (旧 sha 8c50f240 锁旧模板; 证明改动是 lock-bump 而非 mutant 绕过)",
+        "./init.sh smoke ALL PASS",
+        "Reviewer (sub-agent fresh-context): LGTM. 见 evidence.reviewer.summary"
+      ],
+      "reviewer_lgtm": true,
+      "reviewer_subagent": true,
+      "evidence": {
+        "verifier": "scripts/verify_infra_040.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_040.py",
+            "name": "scripts/verify_infra_040.py",
+            "status": "PASS",
+            "freshness_anchor": "4ca8c20",
+            "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "name": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "freshness_anchor": "4ca8c20",
+            "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=302 enforced=149 soft_skipped=153 violations=0 fire=True fired_features=30\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=54 enforced=8 soft_skipped=46 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=54 enforced=33 soft_skipped=21 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=33 enforced=24 legacy_allowlisted=9 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=54 enforced=45 soft_skipped=9 violations=0 min_count=3 first_violation=None\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=54 enforced=40 soft_skipped=14 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=54 enforced=36 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=54 enforced=36 soft_skipped=18 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=54 enforced=36 soft_skipped=18 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=54 enforced=36 soft_skipped=18 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=54 enforced=36 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=54 enforced=36 soft_skipped=18 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_040.py (baseline @ main 69a1bc7 pre-merge)",
+            "name": "scripts/verify_infra_040.py",
+            "status": "PASS",
+            "freshness_anchor": "69a1bc7",
+            "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1891\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8c50f240f7fd8ea4 expect=8c50f240f7fd8ea4\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+          }
+        ],
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "pre_existing_baseline_sha": "69a1bc7",
+        "baseline_tail_stdout": "[verify_infra_040][SUMMARY] ALL PASS (9 checks) (pre-merge baseline on main 69a1bc7, old V2 sha=8c50f240 locks pre-change tmpl size=1891)",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Reviewer fresh-context 独立确认 infra-040-backlog 改动收敛: verify-script.md L17/L19/L21 三处 reason 占位 `- 理由: ___________` 改成 HTML 注释 `<!-- 理由: -->` (render 时隐藏占位但保留 hint), verify_infra_040.py L51 sha bump 8c50f240→8d0cb524 与 9 字节模板差 (size 1891→1882) 一致; verify_infra_040 9/9 PASS, mutation probe (恢复其中一处 dash 占位) 触发 V2 sha mismatch FAIL 证明锁有效, baseline 在 main 69a1bc7 用旧 sha 8c50f240 同样 9/9 PASS; scope 把 L28「其他:」L32「列出受影响文件:」留 backlog 合理 (后者是 fill-in 占位语义不同于 reason 注释化); 无反向 sha 引用 cascade 完整; P261 合规 (status=not_started, reviewer 待 closeout 回填)。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        },
+        "closeout_verify": {
+          "main_head_sha": "4ca8c20",
+          "merge_commit_sha": "4ca8c20c25e4f62a16a3bad0b34256b5648ef312",
+          "baseline_head_echo": "69a1bc7",
+          "pre_existing_baseline_sha": "69a1bc7",
+          "baseline_tail_stdout": "[verify_infra_040][SUMMARY] ALL PASS (9 checks) (pre-merge baseline on main 69a1bc7, old V2 sha=8c50f240 locks pre-change tmpl size=1891)",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context 独立确认 infra-040-backlog 改动收敛: verify-script.md L17/L19/L21 三处 reason 占位 `- 理由: ___________` 改成 HTML 注释 `<!-- 理由: -->` (render 时隐藏占位但保留 hint), verify_infra_040.py L51 sha bump 8c50f240→8d0cb524 与 9 字节模板差 (size 1891→1882) 一致; verify_infra_040 9/9 PASS, mutation probe (恢复其中一处 dash 占位) 触发 V2 sha mismatch FAIL 证明锁有效, baseline 在 main 69a1bc7 用旧 sha 8c50f240 同样 9/9 PASS; scope 把 L28「其他:」L32「列出受影响文件:」留 backlog 合理 (后者是 fill-in 占位语义不同于 reason 注释化); 无反向 sha 引用 cascade 完整; P261 合规 (status=not_started, reviewer 待 closeout 回填)。",
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "checks_run": [
+              "verify_infra_040 9/9 PASS @ merge HEAD 4ca8c20",
+              "verify_infra_062 30/30 PASS @ merge HEAD 4ca8c20",
+              "verify_infra_040 baseline 9/9 PASS @ main 69a1bc7 (pre-merge, old V2 sha)",
+              "./init.sh smoke ALL PASS"
+            ]
+          },
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_040.py",
+              "name": "scripts/verify_infra_040.py",
+              "status": "PASS",
+              "freshness_anchor": "4ca8c20",
+              "tail_stdout": "[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "name": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "4ca8c20",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=54 enforced=36 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=54 enforced=36 soft_skipped=18 grace_skipped=34 grace_period_count=34 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 violations=0\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_040.py (baseline @ main 69a1bc7 pre-merge)",
+              "name": "scripts/verify_infra_040.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists size=1891\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8c50f240f7fd8ea4 expect=8c50f240f7fd8ea4\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][SUMMARY] ALL PASS (9 checks) (run @ main 69a1bc7 pre-merge baseline, captured during post-merge closeout)"
+            }
+          ]
+        }
+      }
     },
     {
       "id": "infra-040-backlog-mutant-needle-uniqueness-helper",
