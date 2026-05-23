@@ -7482,3 +7482,29 @@ phase-46 5 候选 promoted to not_started：
 - feature status: not_started → passing
 - 新增 backlog: infra-V6-backlog-verify-robot-035-lib-file-sha-rebump (priority 999)
 - closeout_verify P278 6 信号自校 PASS
+
+## Session 2026-05-23 (phase-47 closeout + phase-48 planning)
+
+### phase-47 终态（5/5 全部归档）
+- **#1.47** infra-P291-extend2-migrate-19-hard-rejecting-V5 → passing
+- **#2.47** infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump → STALE/closed_as_already_done（037/061/064 LIB sha bump 已自然达成，无需重做）
+- **#3.47** infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity → passing
+- **#4.47** infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump → passing (实测 21 files)
+- **#5.47** infra-P291-extend2-migrate-remaining-26-legacy-V5 → STALE/closed_as_already_done
+  - Engineer 审计 (commit 480e0d0 时) 实际可迁移文件数=0
+  - grep `assert_reviewer_lgtm` 业务调用仅余 071(5)+076(3) 均为 helper contract test 不可迁移
+  - 其余 33 个 grep 命中为 import 残留/V3_HELPER_FUNC_NAMES sha-lock 表/文档/scanner accepted_helpers 元组
+  - 业务 V5 hook (060/062/063/065 etc.) 早已 migrate 完毕
+
+### phase-47 累计新增 backlog（V6）
+- infra-V6-backlog-076-helper-tuple-extract-to-lib-constant
+- infra-V6-backlog-080-v4-4-mutant-assert-substituted-true
+- infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list
+- infra-V6-backlog-verify-robot-035-lib-file-sha-rebump
+
+### phase-48 candidates (5 个)
+- **#1.48** infra-V6-backlog-verify-robot-035-lib-file-sha-rebump — robot_035 EXPECTED_LIB_FILE_SHA cascade re-bump (P1, ~10min)
+- **#2.48** infra-V6-backlog-076-helper-tuple-extract-to-lib-constant — 076 helper tuple 抽 _verify_lib 模块常量
+- **#3.48** infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list — 080 V4_3 fixture docstring 增强
+- **#4.48** infra-V6-backlog-080-v4-4-mutant-assert-substituted-true — 080 V4_4 mutant 显式断言 substituted>=1
+- **#5.48** infra-V6-backlog-helper-docstring-clarify-live-set — _verify_lib helper docstring 显式 live set 自包含语义
