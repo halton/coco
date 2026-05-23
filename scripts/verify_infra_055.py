@@ -57,11 +57,11 @@ AGENTS_MD = REPO / "AGENTS.md"
 sys.path.insert(0, str(SCRIPTS))
 
 # infra-055 sha lock 常量 (V2)
-EXPECTED_LIB_FILE_SHA = "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
-EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA = "918a4e5ab40aad3b49e635081902ddc41e0ab47e394610c8f63a9df0d59febb5"
+EXPECTED_LIB_FILE_SHA = "7df5af6b9d48687e0a5efab7b3dc2e3dfc2fd54e6aa07d1583fb9d5a56604ef4"
+EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA = "7754106551f77aa43caaaa27593a3b40d0532ec791a90b22f77d7c5098beb084"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "83cee8d276bec9c1f596ea83bb96283627a4654fdf38627ebf61f1cf166f7414"
+EXPECTED_V4_CHECKER_FUNC_SHA = "805bd33c4bdc7fb951e09dcaea672b2d57c8b80536d255d778af06057efe2b3f"
 
 DOCSTRING_SENTINEL = "INFRA_055_SHA_LOCKS"
 
@@ -256,7 +256,8 @@ def v4_behavior() -> None:
         "[verify_infra_055][PASS] V1_y ok\n"
         "[verify_infra_055][SUMMARY] ALL PASS (2 checks)\n"
     )
-    r1 = assert_verify_passed(good, "verify_infra_055")
+    # P275 示范迁移 #1: 已知该正例 emit 2 checks, 显式锁 min_checks=2
+    r1 = assert_verify_passed(good, "verify_infra_055", min_checks=2)
     _emit(
         "V4_pass_case_passed_true",
         r1["passed"] is True,
@@ -313,12 +314,14 @@ def v4_behavior() -> None:
         "[verify_infra_034][PASS] V0_x ok\n"
         "[verify_infra_034] summary total=53 failed=0\n"
     )
-    r6 = assert_verify_passed(good_b, "verify_infra_034")
+    # P275 示范迁移 #2: 一段式 SUMMARY 已知 53 checks, 显式锁 min_checks=53
+    r6 = assert_verify_passed(good_b, "verify_infra_034", min_checks=53)
     _emit("V4_oneline_summary_pass_case", r6["passed"] is True, f"r={r6}")
     _emit("V4_oneline_summary_checks_count", r6["checks"] == 53, f"checks={r6['checks']} expect=53")
 
     good_b2 = "[verify_robot_035] summary total=8 failed=0\n"
-    r7 = assert_verify_passed(good_b2, "verify_robot_035")
+    # P275 示范迁移 #3: robot_035 一段式 8 checks, 锁 min_checks=8
+    r7 = assert_verify_passed(good_b2, "verify_robot_035", min_checks=8)
     _emit("V4_oneline_summary_robot_pass", r7["passed"] is True, f"r={r7}")
 
     # 反例 B: 一段式 failed=N>0 → passed=False
