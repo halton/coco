@@ -7124,14 +7124,80 @@
       "area": "infra",
       "phase": 51,
       "title": "_RE_V_NUM_HINT / _RE_BUMP_HINT 位数策略统一 + docstring 标语义",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "_RE_V_NUM_HINT 与 _RE_BUMP_HINT 当前在位数 / 大小写边界上策略不完全一致；统一两者位数与边界规则，并在 docstring 中标注捕获语义，避免 V7/V10+ bump 时漏识别。",
       "dependencies": [
         "infra-039-backlog-target-inference-refine"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "verifier": "scripts/verify_infra_039.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_039.py",
+            "status": "PASS",
+            "count": "21/21",
+            "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_043.py",
+            "status": "PASS",
+            "count": "13/13",
+            "tail_stdout": "[verify_infra_043][SUMMARY] ALL PASS (13 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_044.py",
+            "status": "PASS",
+            "count": "15/15",
+            "tail_stdout": "[verify_infra_044][SUMMARY] ALL PASS (15 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_047.py",
+            "status": "PASS",
+            "count": "15/15",
+            "tail_stdout": "[verify_infra_047][SUMMARY] ALL PASS (15 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_048.py",
+            "status": "PASS",
+            "count": "13/13",
+            "tail_stdout": "[verify_infra_048][SUMMARY] ALL PASS (13 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_053.py",
+            "status": "PASS",
+            "count": "18/18",
+            "tail_stdout": "[verify_infra_053][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_054.py",
+            "status": "PASS",
+            "count": "20/20",
+            "tail_stdout": "[verify_infra_054][SUMMARY] ALL PASS (20 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "status": "FAIL_PRE_EXISTING",
+            "count": "13/14",
+            "tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=3 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+          }
+        ],
+        "pre_existing_baseline_sha": "151d6e172340ba1d4aef466a77962072aee0cd9b",
+        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=3 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DOC_SHA'] (main HEAD 同 FAIL, 与本 PR 无关)",
+        "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "cascade_bumps": [
+          "EXPECTED_DUMP_FILE_SHA: d38727f0 → 2b6261e1 in 8 files (039/043/044/047/048/053/054/060)"
+        ],
+        "touched_verify_lib_body": false,
+        "used_assert_unique_needle": "n-a",
+        "engineer_self_assessment": "regex 字面位数统一为 \\d{2,4}, 既覆盖历史 NN 也覆盖新生 NNN; docstring 标语义; 仅常量 + 注释改动, _infer_target 函数体未变 (func_sha 不动); 仅 dump file_sha 变, cascade 8 处 EXPECTED_DUMP_FILE_SHA 同步 bump; verify_infra_060 V4_real_unknown_count_eq_one 在 main baseline 同 FAIL, pre-existing 无关项。",
+        "reviewer": {
+          "reviewer_kind": "pending",
+          "note": "Engineer 自评完成; Reviewer fresh-context 评审待主会话派出"
+        }
+      }
     },
     {
       "id": "infra-039-backlog-mermaid-unknown-target-id-collision",
