@@ -48,7 +48,7 @@ VERIFY_TMPL = GITHUB_DIR / "PULL_REQUEST_TEMPLATE" / "verify-script.md"
 DEFAULT_TMPL = GITHUB_DIR / "pull_request_template.md"
 
 # infra-040 sha lock 常量 (V2): verify-script.md 整体 file sha
-EXPECTED_VERIFY_TMPL_SHA = "8c50f240f7fd8ea4dd54b1cc6dc36b6cbd2509d42fc1677f9830796160d2326d"
+EXPECTED_VERIFY_TMPL_SHA = "8d0cb524ff580ce3fba6a9209fadd0095129186c4799341c30e23a22f64e6ebd"
 
 # infra-040 自身 v4_behavior 函数 sha (V1 自锁; 末尾自计算后回填)
 EXPECTED_V4_CHECKER_FUNC_SHA = "29a26bae07566dda05cd857fa8015af3010fc12f31f125344b2c75f0b04d137c"
