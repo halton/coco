@@ -15480,11 +15480,12 @@
     {
       "id": "infra-P290-backlog-verifier-tag-naming-doc",
       "priority": 999,
-      "status": "backlog",
+      "status": "in_progress",
       "phase": 58,
       "area": "infra",
       "title": "对齐 verify_infra_102 verifier tag 命名与 brief 文档口径",
-      "rationale": "来源: #3.53 Reviewer P2 finding. brief 文档使用 V4_uses_in_keyword / V1_family_sets_are_frozenset / V_classify_func_sha 等 tag 名, 实际 verify_infra_102.py 使用 V4_uses_in_{dump,hub,lib}_family / V3_{hub,lib,dump}_is_frozenset / V4b_self_main_func_sha. 仅口径不一致非功能问题, 后续在 brief/docstring 中统一命名以减少新人理解成本。"
+      "rationale": "来源: #3.53 Reviewer P2 finding. brief 文档使用 V4_uses_in_keyword / V1_family_sets_are_frozenset / V_classify_func_sha 等 tag 名, 实际 verify_infra_102.py 使用 V4_uses_in_{dump,hub,lib}_family / V3_{hub,lib,dump}_is_frozenset / V4b_self_main_func_sha. 仅口径不一致非功能问题, 后续在 brief/docstring 中统一命名以减少新人理解成本。",
+      "started_at": "2026-05-23"
     },
     {
       "id": "infra-P290-backlog-dump-family-equality-check",
