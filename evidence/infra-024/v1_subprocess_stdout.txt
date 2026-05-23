@@ -1,6 +1,6 @@
 ==> 环境基线
   python: 3.13.12
-  platform: Darwin 25.4.0 arm64
+  platform: Darwin 25.5.0 arm64
   reachy-mini: 1.4.0
   sounddevice: 0.5.5
   numpy: 2.4.4
@@ -26,5 +26,7 @@
   ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe
 ==> Smoke: publish (entry_points + Coco class import)
   ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp
+==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)
+  ok: total=309 well_formed=309 typo_count=0
 
 ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json

@@ -18720,13 +18720,105 @@
       "id": "infra-V4c-case-insensitive-promote",
       "title": "V4c case-insensitive expected-substring 推广 (case 盲点消除)",
       "area": "infra",
-      "status": "not_started",
+      "status": "passing",
       "phase": "phase-64",
       "priority": 3,
       "source": "phase-61 #4 V4c backlog infra-110-backlog-composite-key-src-stem-case-insensitive-expected",
       "scope": "verify_infra_110 V4c_composite_key_src_stem_no_expected_substring 当前 anchor regex 强制 const=EXPECTED_* 大写, src_seg 含 lowercase 'expected' 时 anchor 不形成 → V4c vacuously PASS. 加固: anchor regex 加 case-insensitive const 分支, 或 V4c 直接对 unknown_ 前缀 raw tgt_id substring 扫描.",
       "verification": "V4c 对 mixed-case Expected/expecteD/EXPECted mutation 全部 FAIL; smoke PASS; Reviewer LGTM",
-      "created_at": "2026-05-24"
+      "created_at": "2026-05-24",
+      "closeout_verify": {
+        "main_head_sha": "65a7aac607fc3b41a8bb7f03e5ababa002c358be",
+        "baseline_head_echo": "fa829d4",
+        "merge_commit_sha": "65a7aac607fc3b41a8bb7f03e5ababa002c358be",
+        "verify_runs": [
+          {
+            "name": "smoke",
+            "status": "PASS",
+            "tail_stdout": "  ok: total=309 well_formed=309 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+            "freshness_anchor": "post-merge main HEAD 65a7aac"
+          },
+          {
+            "name": "verify_infra_110",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V4d_unknown_tgt_raw_no_expected_substring: all 22 unknown_* tgt raw src segments free of 'expected' substring (case-insensitive, anchor-independent)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=4cc7d516805927ea expect=4cc7d516805927ea\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)",
+            "freshness_anchor": "V4d enforces 22 unknown_* tgt"
+          },
+          {
+            "name": "verify_infra_033",
+            "status": "PASS",
+            "tail_stdout": "[V3_mutant_reject] PASS\n[V4_sha256_full_file] PASS\n[V5_subprocess_invoke_verify_024] PASS",
+            "freshness_anchor": "infra-033 V1-V5 all pass"
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 soft_skipped=35 grace_skipped=34 violations=0\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+            "freshness_anchor": "30/30 emit-paths maintained"
+          },
+          {
+            "name": "verify_infra_037",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)",
+            "freshness_anchor": "15 checks"
+          },
+          {
+            "name": "verify_infra_039",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V8_discovered_count discovered=158 matched=18 not_found=137 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)",
+            "freshness_anchor": "25 checks"
+          },
+          {
+            "name": "verify_infra_P314_lib_sha_cascade",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+            "freshness_anchor": "8/8 P314 checks"
+          },
+          {
+            "name": "verify_infra_P290",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True\n[verify_infra_P290] summary: total=9 failed=0",
+            "freshness_anchor": "P290 9/9"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "phase-64 #3 infra-V4c-case-insensitive-promote: V4d 加固通过 fresh-context 评审 — anchor-independent case-insensitive 'expected' substring 扫描对 22 unknown_* tgt PASS, EXPECTED_SELF_MAIN_FUNC_SHA bump (3cdb3a80→4cc7d51680) 与实测 main fn sha 一致, 4 例 mutation 反证 (lowercase / mixed-case / src-embedded / clean-PASS) + 4 例 regex 边界探测 (greedy double-EXPECTED / 非 unknown_ 跳过 / unknown_EXPECTED_FOO quirk / clean-strip) 全部如设计触发, 与 V4c 互补语义清晰且无重复 FAIL, 整套 110/033/062/037/039/P314/smoke ALL PASS, 可入 main。",
+          "checks_run": [
+            "fresh-context branch checkout feat/infra-V4c-case-insensitive-promote",
+            "diff vs main fa829d4",
+            "verify_infra_110 ALL PASS 19 checks (含 V4d)",
+            "V4d anchor-independent case-insensitive 'expected' scan over 22 unknown_* tgt",
+            "EXPECTED_SELF_MAIN_FUNC_SHA bump 3cdb3a80→4cc7d51680 consistency",
+            "mutation lowercase 'expected' → FAIL",
+            "mutation mixed-case 'ExPeCtEd' → FAIL",
+            "mutation src-embedded 'expected' → FAIL",
+            "mutation clean → PASS",
+            "regex edge greedy double EXPECTED",
+            "regex edge non-unknown_ prefix skip",
+            "regex edge unknown_EXPECTED_FOO const-only quirk",
+            "regex edge clean strip path",
+            "verify_infra_033 PASS",
+            "verify_infra_062 PASS 30/30",
+            "verify_infra_037 PASS",
+            "verify_infra_039 PASS",
+            "smoke PASS"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {
+                "title": "regex `^(?P<rest>unknown_.+?)(_EXPECTED_[A-Z0-9_]+)?$` 的 lazy `.+?` + optional const 组合, 在 `unknown_EXPECTED_FOO` 这类 const-only 形态下 rest 吃整段、const_part=None, V4d 仍正确 FAIL (因 src_candidate='EXPECTED_FOO' 含 expected), 但 violation detail 中 src_candidate 字符串会包含未剥离的 const 段, 信息略带误导。当前 22 unknown_* tgt 无此形态, 不影响生产; 若后续真出现此 case 可考虑改为非 optional 或贪婪头部 `^unknown_(?P<src>.*?)_EXPECTED_[A-Z0-9_]+$` 并对未匹配 tgt 单独 reject。仅记录, 不阻 merge。"
+              },
+              {
+                "title": "V4c 与 V4d 重叠语义: 同一 tgt 若 anchor 成型且 src 含 'expected' (任意 case), V4c 与 V4d 都会 FAIL — 这是 by-design 的双锁冗余 (互补=覆盖面互补, 非语义互斥), 用户读 evidence 时会看到两条 FAIL 指向同一 tgt; 建议在后续 phase 文档中标注 '双 FAIL 同源' 以避免误读为两个独立缺陷。仅文档建议, 不阻 merge。"
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-P306-bump-helper-script-rollout",
@@ -18754,6 +18846,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-24T19:30:00Z"
+    "last_updated": "2026-05-24T20:30:00Z"
   }
 }

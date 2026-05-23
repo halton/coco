@@ -8932,3 +8932,20 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
   - verify_infra_P290: PASS (9 checks)
 - **Reviewer (sub-agent fresh-context)**: LGTM verbatim — V7 三类校验完备覆盖, 与 V4 字段存在性正交; V8 mutant 内置反证; 110.py docstring drift 修正与 dump_v4_sha_graph.py:657 实际函数名一致; EXPECTED_MIN_ENTRIES 14→18 + EXPECTED_SELF_FILE_SHA 同步 bump 自洽; Mutation A/B/C 三组反证 V7/V1+V2 全部按预期 FAIL, 反证后 working tree 完全恢复; 全套 verify + smoke 全 PASS rc=0. P0=[], P1=[], P2×5 (全 informational 不阻 merge, 不入 backlog)
 - **下一 candidate**: phase-64 #3 infra-V4c-case-insensitive-promote (V4c case-insensitive expected-substring 推广)
+
+## Session 2026-05-24 (phase-64 #3 closeout)
+- **Feature**: infra-V4c-case-insensitive-promote → passing
+- **NEW_MAIN_SHA**: 65a7aac607fc3b41a8bb7f03e5ababa002c358be
+- **merge_commit_sha**: 65a7aac (no-ff merge feat/infra-V4c-case-insensitive-promote)
+- **核心改动**: V4d 加固对 22 unknown_* tgt 做 anchor-independent case-insensitive 'expected' substring 扫描; EXPECTED_SELF_MAIN_FUNC_SHA bump 3cdb3a80→4cc7d51680 与实测一致; verify_infra_110 +1 check → 19/19
+- **closeout_verify runs (8/8)**:
+  - smoke: PASS
+  - verify_infra_110: PASS (19 checks, 含 V4d)
+  - verify_infra_033: PASS
+  - verify_infra_062: PASS (30/30 维持)
+  - verify_infra_037: PASS (15)
+  - verify_infra_039: PASS (25)
+  - verify_infra_P314_lib_sha_cascade: PASS (8/8)
+  - verify_infra_P290: PASS (9)
+- **Reviewer (sub-agent fresh-context)**: LGTM — V4d 加固 22 unknown_* tgt PASS, 4 mutation 反证 + 4 regex 边界探测全部如设计触发, V4c/V4d 互补语义清晰无重复 FAIL; P0=[], P1=[], P2×2 (informational, 不衍生 fu chain)
+- **下一 candidate**: phase-64 #4 infra-P306-bump-helper-script-rollout (P306 bump-helper-script 模式推广)
