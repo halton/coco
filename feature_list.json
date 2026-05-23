@@ -5827,13 +5827,60 @@
       "area": "infra",
       "phase": 53,
       "title": "bump_infra_034_v4_sha.py 写入改 tmp+os.replace 原子化",
-      "status": "not_started",
+      "status": "passing",
       "source": "infra-035-reviewer",
       "scope": "scripts/bump_infra_034_v4_sha.py 当前直接 open(json_path, 'w') 写 v4_sha.json；中途被 SIGKILL 或磁盘满会留半截 JSON。改为写 sibling tmp 文件 + os.replace 原子 rename，确保任何时刻 v4_sha.json 都是完整可解析状态。verify-only 工具脚本改动，0 业务源码影响。",
       "dependencies": [
         "infra-035"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_035.py ALL PASS (42 checks; V7_bump_atomic_write 3 sentinels: import os / os.replace( / .tmp)"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_035.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_035.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_035][PASS] V2_lock_verify_034 got=265f54b08d3099a1 expect=265f54b08d3099a1\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=1874 canonical_len=1874 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035] summary total=42 failed=0"
+          },
+          {
+            "script": "scripts/verify_infra_035.py",
+            "name": "baseline",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_035][PASS] V2_lock_verify_034 got=265f54b08d3099a1 expect=265f54b08d3099a1\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=724e391b89b2917d expect=724e391b89b2917d\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=1874 canonical_len=1874 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035] summary total=41 failed=0"
+          },
+          {
+            "script": "./init.sh",
+            "name": "smoke",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "64fab16"
+        },
+        "merge_commit_sha": "64fab16",
+        "baseline_head_echo": "385a487",
+        "pre_existing_baseline_sha": "385a487",
+        "baseline_tail_stdout": "[verify_infra_035][PASS] V2_lock_verify_034 got=265f54b08d3099a1 expect=265f54b08d3099a1\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=724e391b89b2917d expect=724e391b89b2917d\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=1874 canonical_len=1874 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035] summary total=41 failed=0",
+        "smoke_tail_stdout": "==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "scripts/bump_infra_034_v4_sha.py 在 dry-run 之后的实际写盘分支引入 tmp_path = V4_SHA_JSON.with_suffix(suffix + '.tmp') → tmp_path.write_text(...) → os.replace(tmp_path, V4_SHA_JSON) 原子 rename; except Exception 块清理残留 tmp 后 re-raise, 原文件不被触碰。verify_infra_035 新增 V7_bump_atomic_write 检查 3 个 sentinel (^import os regex / os.replace( / .tmp); BUMP_034_EXPECTED_SHA 724e391b→431881e3 同步; total 41→42。tmp 路径同目录 os.replace 原子合规, 异常无 leak, 跨平台。Mutation A (改回 write_text) V7+V4 双 FAIL; Mutation B (注释绕过) V7 假阳性但 V4 sha 锁兜底捕获; Baseline 385a487 41/0 PASS; 实际原子写功能验证 (篡改 v4_sha.json 后 bump) 成功, .tmp 被 rename 走, target 完整 15 targets。Minor finding: V7 可后续升级 AST 检查 ast.Call(Attribute(Name('os'),'replace')), 非阻断。",
+          "checks_run": [
+            "V7_bump_atomic_write sentinel 3 项 (import os / os.replace( / .tmp)",
+            "V4 sha 锁 BUMP_034_EXPECTED_SHA 431881e3",
+            "Mutation A/B regression",
+            "实际原子写功能验证 (篡改 v4_sha.json 后 bump 重写)"
+          ]
+        }
+      }
     },
     {
       "id": "infra-035-backlog-v4-sha-canonical-order",
@@ -5885,6 +5932,21 @@
         "infra-035"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-035-backlog-v7-ast-upgrade",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_035 V7 升级为 AST-level os.replace 检查",
+      "status": "backlog",
+      "source": "infra-035-backlog-bump-atomic-write-reviewer",
+      "scope": "scripts/verify_infra_035 V7_bump_atomic_write 可升级为 AST-level 检查 (ast.parse 找 Call(func=Attribute(value=Name('os'), attr='replace'))) 独立于 V4 sha 锁; 当前 V4 sha 锁兜底已足够。非阻断。",
+      "dependencies": [
+        "infra-035-backlog-bump-atomic-write"
+      ],
+      "verification": [],
+      "notes": "来源 #1.53 Reviewer P2 minor finding."
     },
     {
       "id": "robot-035",

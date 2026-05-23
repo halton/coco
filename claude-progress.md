@@ -7887,3 +7887,15 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 
 下一步: 主会话依持续开发模式立即派 sub-agent 拉 feat/infra-035-backlog-bump-atomic-write 分支启动 #1.53 实现。
 
+## Session 2026-05-23 #1.53 closeout — infra-035-backlog-bump-atomic-write
+
+- merge: feat/infra-035-backlog-bump-atomic-write → main, --no-ff merge commit 64fab16
+- verify_infra_035 post-merge: 42/0 PASS (新增 V7_bump_atomic_write 3 sentinel: import os / os.replace( / .tmp)
+- verify_infra_035 baseline @385a487: 41/0 PASS (旧 total, 无 V7)
+- verify_infra_062 P278 gate: ALL PASS 30/30
+- ./init.sh smoke: PASS (TTS / vision / face-tracker / VAD / wake / power-state / config / publish 全绿)
+- Reviewer (sub-agent fresh-context): LGTM, 双 mutation 通过, 篡改 v4_sha.json 后 bump 验证原子 rename 行为
+- 入账 1 backlog: infra-035-backlog-v7-ast-upgrade (P2 minor finding, V7 可后续升级 AST 检查)
+- main HEAD = 64fab16
+
+
