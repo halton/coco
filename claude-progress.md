@@ -8555,3 +8555,20 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 1 backlog 入账 (priority=999):
   - infra-110-backlog-classify-lock-cross-check-doc — verify_infra_110/060 docstring 注明 EXPECTED_CLASSIFY_*_FUNC_SHA 同值 cross-check 故意保留
 - 下一 candidate: phase-60 #4 infra-110-backlog-composite-key-strict-ordering
+
+## Session 2026-05-24 — phase-60 #5 infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma closeout
+
+- Merge feat/infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma → main, NEW_MAIN_SHA=cab28a452642c8318b2dc11226d5b536e44445c9
+- Reviewer (sub-agent fresh-context): LGTM — verify_infra_035 V8_self_file_sha_lock 由旧 'EXPECTED_SELF_SHA' 子串匹配 (5 行命中, 4 行非真常量被扩大剔除) 收紧为行尾 pragma `# V8-SELF-SHA-SKIP` 精确锚 (仅 line 85 真常量行命中); V8_SELF_SHA_LOCK_VERSION 1→2, BUMPED_AT 2026-05-23→2026-05-24, EXPECTED_SELF_FILE_SHA=efe3a9538570c0abbaa0ee5dbdeec1f6929258e5d5c7a54ee02c6603157a6071
+- Closeout verify (P278 trustworthy + P299 rc-read 模式 `cmd > /tmp/x.log 2>&1; rc=$?`):
+  - smoke PASS / v035 rc=0 (53 checks PASS) / v110 rc=0 (15 PASS) / v062 rc=1 FAIL 6/30 (pre-existing on baseline 840fda2 — same 6 emit-paths V4_closeout_* shape, baseline_tail_stdout attached, 与本 feature 无关) / vP301_full rc=0 (10 PASS) / vP290 rc=0 (9 PASS) / v039 rc=0 (21 PASS)
+- Mutation 实测 A/B/C/D 全符合预期:
+  - A (删除 line 85 pragma): rc=1 FAIL — actual=700fdd691241fbe8 expect=efe3a9538570c0ab ✓
+  - B (还原): rc=0 PASS — actual==expect ✓
+  - C (改 docstring 非 pragma 行一字符): rc=1 FAIL — actual=4061818830dcf038 ✓ 证明 docstring/注释也纳入 sha
+  - D (末尾插入伪 EXPECTED_FAKE_SHA 无 pragma): rc=1 FAIL — actual=8c39b27295bbc6c2 ✓ 证明无 pragma 的伪 SHA 也纳入 sha 不被绕过
+- 2 backlog 入账 (priority=999):
+  - infra-P305-backlog-pragma-cardinality-mechanical-assert — V9 机械断言: endswith pragma 行数恰好 == 1
+  - infra-P305-backlog-pragma-attached-to-real-constant-only — V10 机械断言: pragma 行必须正则匹配真 EXPECTED_SELF_FILE_SHA = "[0-9a-f]{64}"
+- Closeout commit SHA: 见下一行 git log
+- phase-60 5/5 完成 → 下一步 phase-61 planning
