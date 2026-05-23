@@ -8402,3 +8402,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 **phase-58 progress**: 1/5 passing (剩 infra-036-batch-3 / V6-helper-docstring / P301-v0-sha-version / robot-037-helper-docstring)
 
 **Next**: phase-58 #2 = infra-036-backlog-expand-docstring-batch-3 Engineer 阶段
+
+## Session 2026-05-23 — phase-58 #2 closeout (infra-036-backlog-expand-docstring-batch-3)
+- merge: feat/infra-036-backlog-expand-docstring-batch-3 (a39e377) → main, no-ff
+- main HEAD=05e6119; merge_commit_sha=05e6119d8e2a201f9149788df40ab3a72817c307; baseline=8bf4a9f
+- post-merge verify: smoke PASS; verify_robot_028 / verify_robot_029 / verify_interact_026 / verify_interact_027 / verify_infra_017 / verify_infra_035 / verify_robot_031 / verify_infra_062 全 PASS
+- verify_infra_034 rc=1 (V5_self_subprocess + V6_orphan_reverse_locks) — pre-existing baseline; worktree 8bf4a9f 同样 FAIL, baseline_tail 已记 evidence
+- Reviewer: sub_agent_fresh_context LGTM, mutation_test_done=true, 14 checks, P0/P1=0 P2=evidence 副作用已 stage
+- feature status: in_progress → passing, closed_at=2026-05-23
+- P2 副作用: evidence/*/verify_summary.json + evidence/_history/*.jsonl 约 12 个被 post-merge verify 自动重写, 一并 stage

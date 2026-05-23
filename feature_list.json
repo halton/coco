@@ -6264,7 +6264,7 @@
       "area": "infra",
       "phase": 58,
       "title": "infra-034 V4 docstring 覆盖第 3 波（再 +5 target）",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-036-reviewer",
       "scope": "infra-036 完成第 2 波 5 target 后，仍剩 12+ 历史 verify 未纳入 V4 sha 锁。下一波再挑 ≤5 高价值候选扩入 v4_sha.json + verify_infra_034 期望表。docstring + 期望表 only，0 verify 业务逻辑改。",
       "dependencies": [
@@ -6280,7 +6280,106 @@
       ],
       "started_at": "2026-05-23",
       "notes": "phase-58 #2: TARGETS 15→20 续推 (verify_robot_028/029 + verify_interact_026/027 + verify_infra_017) + v4_sha.json 5 新条目",
-      "acceptance": "verify_infra_034 V0-V5 全 PASS (TARGETS 15→20); 5 新目标 docstring 含 5 关键短语; evidence/infra-034/v4_sha.json 同步 5 新条目"
+      "acceptance": "verify_infra_034 V0-V5 全 PASS (TARGETS 15→20); 5 新目标 docstring 含 5 关键短语; evidence/infra-034/v4_sha.json 同步 5 新条目",
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "05e6119",
+          "merge_commit_sha": "05e6119d8e2a201f9149788df40ab3a72817c307",
+          "baseline_head_echo": "8bf4a9f",
+          "pre_existing_baseline_sha": "8bf4a9f",
+          "baseline_tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_robot_024.py_sha got=7999d0364d1273a5 expect=7999d0364d1273a5\n[verify_infra_034][PASS] V4_scripts/verify_robot_025.py_sha got=28ae86d1388d8f55 expect=28ae86d1388d8f55\n[verify_infra_034][PASS] V4_scripts/verify_robot_026.py_sha got=c231186ec1b6983e expect=c231186ec1b6983e\n[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=56\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=248\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=6; scripts/verify_infra_074.py:82 EXPECTED_VERIFY_059_FILE_SHA=610f575ca6cb81a3 (id=059; live same-id: scripts/verify_infra_059.py=9691aedd3980) | scripts/verify_infra_081.py:84 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_082.py:83 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_083.py:85 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | ...\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+          "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=280 well_formed=280 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_robot_028",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "  [PASS] V5-step2: bump rc==0: rc=0 stderr_tail=''\n  [PASS] V5-step2: bump stdout 含 '已更新' 或 '已一致'\n  [PASS] V5-step3: 恢复后字面 = verify_025 当前 sha: got=28ae86d1388d8f5584a89d65ec2f90ce190934f49a355d41cbf839195c897d10 expect=28ae86d1388d8f55...\n  [PASS] V5-step4: dry-run rc==0: rc=0\n  [PASS] V5-step4: dry-run 无副作用 (文件 bytes 未变)\n  [PASS] V5-step4: dry-run stdout 含 'OK: 已一致' 或 'DRY-RUN'\n  [PASS] V5-cleanup: verify_027 已恢复到测试前 bytes\n  elapsed=0.06s\n  evidence=/Users/halton/work/coco/evidence/robot-028/verify_summary.json\nALL PASS"
+            },
+            {
+              "name": "verify_robot_029",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "  \"verify_robot_010_sha256\": \"d58220977a814fdf127d9e9414d593bba280463f7c66b860f0bc2732cf20dc70\",\n  \"self_sha256\": \"5721eba3cfba4658772b9d1a74faab84ceb18762ec89f82e0440ce1022632647\",\n  \"setter_baseline_expected_sha\": \"abbc501624d8b98545cce43e9822581fd0f4497534d5eff26dab700c56074982\",\n  \"v010_expected_sha\": \"d58220977a814fdf127d9e9414d593bba280463f7c66b860f0bc2732cf20dc70\",\n  \"duration_s\": 0.12,\n  \"errors\": []\n}\n\n========== robot-029 verify done in 0.12s ==========\nALL PASS"
+            },
+            {
+              "name": "verify_interact_026",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_interact_026] PASS V0_fingerprint_sha256: {'fingerprints': [{'path': 'scripts/verify_interact_021.py', 'exists': True, 'size': 16790, 'sha256': 'c3e147b39a77'}, {'path': 'research/proactive_trace_contract.md', 'exists': True, 'size': 12259, 'sha256': '52bf4642d546'}, {'path': 'coco/proactive.py', 'exists': True, 'size': 78711, 'sha256': '929694d0fd56'}]}\n[verify_interact_026] PASS V1_code_constants_match_doc: {'latency_ms_kwarg_count': 4, 'expected_emit_sites': 4, 'stage_names_count': 6, 'expected_stage_names': 6, 'stages': ['arbit_winner', 'cooldown_hit', 'emotion_alert', 'fusion_boost', 'mm_proactive', 'normal']}\n[verify_interact_026] PASS V2_doc_phrases_lock: {'missing_phrases': [], 'leftover_stale_in_doc': [], 'leftover_stale_in_verify021': []}\n[verify_interact_026] PASS V3_neighbor_verify_regression: {'rcs': {'verify_interact_018.py': 0, 'verify_interact_021.py': 0, 'verify_interact_022.py': 0, 'verify_interact_023.py': 0, 'verify_interact_024.py': 0, 'verify_interact_025.py': 0}, 'bad': []}\n[verify_interact_026] PASS V4_smoke: {'rc': 0, 'stdout_tail_len': 1000}\n[verify_interact_026] SUMMARY all_pass=True (5/5)"
+            },
+            {
+              "name": "verify_interact_027",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_interact_027] PASS V0_fingerprint_sha256: sha256 锁面: coco/proactive.py=929694d0fd56, scripts/verify_interact_027.py=0829a54f197c\n[verify_interact_027] PASS V1_admit_arbit_winner_count: admit (arbit_winner) latency_ms=_lat_ms() emit-site == 1 at line 1064\n[verify_interact_027] PASS V2_reject_main_count: reject main (cooldown_hit/normal 三元式) latency_ms=_lat_ms() emit-site == 1 at line 1033\n[verify_interact_027] PASS V3_reject_preempt_count: reject preempt (arbit_emotion_preempt) latency_ms=_lat_ms() emit-site == 1 at line 1005\n[verify_interact_027] PASS V4_global_total_count_strict: 全局 latency_ms=_lat_ms() == 3 严格; per-site={'admit': [1064], 'reject_main': [1033], 'reject_preempt': [1005]}\n[verify_interact_027] PASS V5_single_delete_simulation: 3 单点删除模拟均被 per-stage/total 严格断言感知 (3/3 detected)\n[verify_interact_027] PASS V6_default_off_no_emit: default-OFF 无 trace 行 (ok_trigger=True, trace=0)\n[verify_interact_027] PASS V7_regression: all rc=0: {'scripts/verify_interact_018.py': 0, 'scripts/verify_interact_021.py': 0, 'scripts/verify_interact_022.py': 0, 'scripts/verify_interact_023.py': 0, 'scripts/verify_interact_024.py': 0, 'scripts/verify_interact_025.py': 0, 'scripts/verify_interact_026.py': 0}\n[verify_interact_027] PASS V8_smoke: init.sh rc=0 (stdout len=1767)\n[verify_interact_027] SUMMARY all_pass=True (9/9)"
+            },
+            {
+              "name": "verify_infra_017",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "\n--- v8 v8_regression ---\n  PASS: {'name': 'V8_regression_infra016_vision010', 'passed': True, 'results': {'verify_infra_016.py': {'rc': 0}, 'verify_vision_010.py': {'rc': 0}}}\n\n--- vZ v_zero_runtime_impact ---\n  PASS: {'name': 'V_zero_runtime_impact_disable_on', 'passed': True}\n\n[verify_infra_017] summary -> /Users/halton/work/coco/evidence/infra-017/verify_summary.json\n\ninfra-017 verify PASS (9/9)"
+            },
+            {
+              "name": "verify_infra_034",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_robot_026.py_sha got=c231186ec1b6983e expect=c231186ec1b6983e\n[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_028.py_sha got=c3c25fe070013617 expect=c3c25fe070013617\n[verify_infra_034][PASS] V4_scripts/verify_robot_029.py_sha got=5721eba3cfba4658 expect=5721eba3cfba4658\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=71\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=248\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=6; scripts/verify_infra_074.py:82 EXPECTED_VERIFY_059_FILE_SHA=610f575ca6cb81a3 (id=059; live same-id: scripts/verify_infra_059.py=9691aedd3980) | scripts/verify_infra_081.py:84 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_082.py:83 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_083.py:84 EXPECTED_VERIFY_062_FILE_SHA=21c0f98d5be3b691 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | scripts/verify_infra_083.py:85 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=8cc2a2f8241f) | ...\n[verify_infra_034] summary total=68 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+              "note": "V5+V6 pre-existing baseline FAIL; baseline 8bf4a9f 同样 FAIL (见 baseline_tail_stdout)"
+            },
+            {
+              "name": "verify_infra_035",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_035][PASS] V1_scripts/verify_robot_033.py_exists /Users/halton/work/coco/scripts/verify_robot_033.py\n[verify_infra_035][PASS] V2_lock_verify_034 got=0058fbead1d15b99 expect=0058fbead1d15b99\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035] summary total=52 failed=0"
+            },
+            {
+              "name": "verify_robot_031",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "  [PASS] verify_028 sha256 锁定 (字面一致): got=c3c25fe070013617 expect=c3c25fe070013617\n  [PASS] bump_028 sha256 锁定 (字面一致): got=25e31634925d2a2e expect=25e31634925d2a2e\n[V5] 端到端 subprocess\n  [PASS] V5: verify_robot_028.py rc==0: rc=0 stderr_tail=''\n  [PASS] V5: verify_028 stdout 含 'ALL PASS'\n  [PASS] V5: bump_028 --dry-run rc==0: rc=0\n  [PASS] V5: bump_028 --dry-run stdout 含 'OK: 已一致' 或 'DRY-RUN'\n  elapsed=0.18s\n  evidence=/Users/halton/work/coco/evidence/robot-031/verify_summary.json\nALL PASS"
+            },
+            {
+              "name": "verify_infra_062",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=84 enforced=58 soft_skipped=26 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=84 enforced=49 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=84 enforced=49 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=84 enforced=49 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=84 enforced=49 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=84 enforced=49 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=84 enforced=49 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "reviewer_kind": "sub_agent_fresh_context",
+            "summary": "infra-036-backlog-expand-docstring-batch-3 改动安全；7 个新 V4 targets 全 PASS；V5/V6 双 FAIL 已独立在 main HEAD=8bf4a9f 上复现确认为 pre-existing baseline；canonical + mutation A/B + cascade bump 全部正确；P278 schema 锁 PASS。LGTM 可 merge。",
+            "checks_run": [
+              "./init.sh smoke (rc=0)",
+              "verify_robot_028 PASS",
+              "verify_robot_029 PASS",
+              "verify_interact_026 PASS",
+              "verify_interact_027 PASS",
+              "verify_infra_017 PASS",
+              "verify_infra_035 PASS",
+              "verify_robot_031 PASS",
+              "verify_infra_034 rc=1 (2 pre-existing FAILs)",
+              "baseline confirm on main 8bf4a9f: verify_infra_034 rc=1 同样 V5+V6 FAIL",
+              "verify_infra_062 P278 schema rc=0",
+              "v4_sha.json canonical CANON_OK=True",
+              "Mutation A/B: 删除运行环境约定→ V1+V4 双 FAIL, 还原 PASS, git clean",
+              "cascade bump 035+031 验证 rc=0"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "evidence/*/verify_summary.json + evidence/_history/*.jsonl 约 18 个被 verify 自动重写（非语义副作用），closeout commit 已一并 stage"
+              ]
+            }
+          }
+        },
+        "real_machine_uat": "not_required (sim-only docstring/schema batch)"
+      }
     },
     {
       "id": "infra-036-backlog-sha-lock-graph-dump",

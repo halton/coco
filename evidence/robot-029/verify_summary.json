@@ -6,6 +6,6 @@
   "self_sha256": "5721eba3cfba4658772b9d1a74faab84ceb18762ec89f82e0440ce1022632647",
   "setter_baseline_expected_sha": "abbc501624d8b98545cce43e9822581fd0f4497534d5eff26dab700c56074982",
   "v010_expected_sha": "d58220977a814fdf127d9e9414d593bba280463f7c66b860f0bc2732cf20dc70",
-  "duration_s": 0.29,
+  "duration_s": 0.12,
   "errors": []
 }
