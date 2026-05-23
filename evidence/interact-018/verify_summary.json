@@ -10,7 +10,7 @@
   "ok": true,
   "results": [
     {
-      "detail": "1 trace events with latency_ms; sample lat=0.011 stage=arbit_winner; arbit_winner=1",
+      "detail": "1 trace events with latency_ms; sample lat=0.012 stage=arbit_winner; arbit_winner=1",
       "name": "V1_latency_wire_in_production",
       "ok": true
     },
@@ -25,7 +25,7 @@
       "ok": true
     },
     {
-      "detail": "1 mm_proactive reject emit(s); lat=0.009 (type=float) reason=rate_limit",
+      "detail": "1 mm_proactive reject emit(s); lat=0.01 (type=float) reason=rate_limit",
       "name": "V1e_mm_proactive_non_cooldown_reject_latency_wire",
       "ok": true
     },
@@ -50,5 +50,5 @@
       "ok": true
     }
   ],
-  "sha": "175cbc5fc6fde9300729d04b87259a9d4ea510b0"
+  "sha": "8bbca72d0231ace2199ec2c477f88072efbb5a1d"
 }
