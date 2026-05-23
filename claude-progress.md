@@ -8347,3 +8347,19 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 **phase-57 状态**: 5/5 complete (infra-039-backlog-mermaid-tuple-fanout / infra-104-backlog-v1-window-hardening / infra-P275-assert-verify-passed-min-checks / robot-037-backlog-import-time-fail-fallback / interact-036b-backlog-drift-trend-regression-alert) — phase-57 全 passing 收官
 
 **Next**: phase-58 planning (按 priority 最低数字 not_started 选 candidate)
+
+
+## Session 2026-05-23: phase-58 planning
+
+**main HEAD baseline**: 0dc9a12
+
+**phase-58 candidates (5, status=backlog locked to phase=58)**:
+1. infra-053-backlog-doc-hub-color-update — V4 Mermaid hub 配色描述同步 #f9f→#fc6（纯 doc，零 cascade，最 self-contained，phase-58 #1 入选）
+2. infra-P290-backlog-verifier-tag-naming-doc — Verifier tag 命名文档化（doc/lock 类，blast 小）
+3. infra-V6-backlog-helper-docstring-clarify-live-set — _verify_lib helper docstring 澄清 live-set 语义（V6 体系巩固，单文件 docstring + 一次 cascade）
+4. infra-P301-backlog-v0-sha-lock-version-field — V0 self_sha lock 增加 lock_schema_version 字段（cascade bump 时 diff 友好；多 verify 文件触及但 V0 段独立）
+5. robot-037-backlog-helper-docstring-module-only — robot helper docstring 限定 module-only（独立 robot 域，与 infra cascade 解耦）
+
+**选型准则**: blast radius 小 / cascade 影响小 / 防御纵深 / 优先 fresh 0-file-lock 项 / 平衡 V6 巩固 + 实用价值 / 同 phase 内尽量解耦. 已避开大 cascade item (P285 classifier 扩展 / infra-P291-extend2 等)
+
+**Next**: 立即开始 phase-58 #1 = infra-053-backlog-doc-hub-color-update Engineer 阶段（feat 分支 / status→in_progress / verify lock / 不切 passing 不 merge）
