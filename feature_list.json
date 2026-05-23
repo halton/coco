@@ -10747,11 +10747,104 @@
     {
       "id": "infra-P287-unknown-ids-set-lock",
       "priority": 204,
-      "status": "not_started",
+      "status": "passing",
       "phase": 62,
       "area": "infra",
       "title": "verify_infra_059 加锁 13 个 unknown_ids 完整 frozenset",
-      "rationale": "infra-048 (P278) V4 已锁 unknown_count=13 与 ≤max_allowed. 但 13 个 unknown_ids 的具体 ID 集合未锁; 若 _verify_lib 重构后某个 EXPECTED_*_FUNC_SHA 被改名 (例如 EXPECTED_VERIFY_UNKNOWN_NODE_COUNT_BOUND_FUNC_SHA → EXPECTED_VERIFY_UNKNOWN_BOUND_FUNC_SHA), 新名替换旧名, count 仍 13 不变, V4 检测不到成份漂移. 建议: verify_infra_059 加 EXPECTED_CURRENT_UNKNOWN_IDS=frozenset({...13 个 ID...}) 精确锁; 集合差异 (新增 / 缺失) 都报警. 中等价值, 捕获 count 锁掩盖不了的成份漂移."
+      "rationale": "infra-048 (P278) V4 已锁 unknown_count=13 与 ≤max_allowed. 但 13 个 unknown_ids 的具体 ID 集合未锁; 若 _verify_lib 重构后某个 EXPECTED_*_FUNC_SHA 被改名 (例如 EXPECTED_VERIFY_UNKNOWN_NODE_COUNT_BOUND_FUNC_SHA → EXPECTED_VERIFY_UNKNOWN_BOUND_FUNC_SHA), 新名替换旧名, count 仍 13 不变, V4 检测不到成份漂移. 建议: verify_infra_059 加 EXPECTED_CURRENT_UNKNOWN_IDS=frozenset({...13 个 ID...}) 精确锁; 集合差异 (新增 / 缺失) 都报警. 中等价值, 捕获 count 锁掩盖不了的成份漂移.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "6014734",
+          "baseline_head_echo": "02a1418",
+          "merge_commit_sha": "6014734aaa022bae824c22fdd8a32173d00d2db0",
+          "feat_branch": "feat/infra-P287-unknown-ids-set-lock",
+          "feat_head_sha": "bbbfb52",
+          "pre_existing_baseline_sha": "02a1418",
+          "baseline_tail_stdout": "[verify_infra_059][SUMMARY] FAIL 3/18: ['V4_real_within_bound', 'V4_real_count_eq_current', 'V4_real_total_nodes_within_tolerance']",
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "./init.sh",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "status_detail": "PASS"
+            },
+            {
+              "name": "scripts/verify_infra_035.py",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_035] summary total=55 failed=0",
+              "status_detail": "PASS total=55 failed=0"
+            },
+            {
+              "name": "scripts/verify_infra_110.py",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (18 checks)",
+              "status_detail": "ALL PASS (18 checks)"
+            },
+            {
+              "name": "scripts/verify_infra_062.py",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "status_detail": "ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "scripts/verify_infra_P290.py",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P290] summary: total=9 failed=0",
+              "status_detail": "PASS total=9 failed=0"
+            },
+            {
+              "name": "scripts/verify_infra_039.py",
+              "freshness_anchor": "6014734",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (22 checks)",
+              "status_detail": "ALL PASS (22 checks)"
+            },
+            {
+              "name": "scripts/verify_infra_059.py",
+              "freshness_anchor": "6014734",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_059][SUMMARY] FAIL 3/19: ['V4_real_within_bound', 'V4_real_count_eq_current', 'V4_real_total_nodes_within_tolerance']",
+              "status_detail": "FAIL rc=1 (3 pre-existing baseline FAIL only; new V6_unknown_ids_frozenset_sha PASS)"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "V6 unknown_ids frozenset sha lock 实现正确; sorted JSON canonical 实算 sha 与 EXPECTED 完全匹配; A/B/C/D mutation 全符合预期 (核心一进一出 case sha 不等 FAIL); 本 feature 不引入新 FAIL (feat FAIL 集合 ⊆ baseline FAIL 集合); cascade bump (060 count, 074 file/func sha) 完整; v062 30/30 PASS; smoke PASS; LGTM 可 merge.",
+            "checks_run": [
+              "V1_docstring_sentinel",
+              "V2_lib_file_sha",
+              "V3_helper_func_sha",
+              "V4_real_dump_run",
+              "V4_real_nodes_parsed",
+              "V4_tmp_positive_all_classified",
+              "V4_tmp_boundary_eq_max",
+              "V4_tmp_mutant_excess_detected",
+              "V4_tmp_mutant_zero_max",
+              "V5_reviewer_lgtm_gate",
+              "V6_unknown_ids_frozenset_sha",
+              "mutation_A_add_one_id",
+              "mutation_B_remove_one_id",
+              "mutation_C_swap_in_out",
+              "mutation_D_reorder_only_unchanged",
+              "cascade_bump_060_count",
+              "cascade_bump_074_file_sha",
+              "cascade_bump_074_func_sha"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-P294-Rx-verify-summary-exit-propagation",
@@ -17090,17 +17183,69 @@
           "baseline_head_echo": "5e93d09",
           "merge_commit_sha": "ccb7995",
           "verify_runs": [
-            {"name": "smoke", "status": "PASS", "rc": 0, "tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n==> Smoke 通过。", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_035", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_035] summary total=55 failed=0", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_110", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (18 checks)", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_062", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_P301_full", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_P301_full] summary: total=10 failed=0", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_P290", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_P290] summary: total=9 failed=0", "freshness_anchor": "ccb7995"},
-            {"name": "verify_infra_039", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (22 checks)", "freshness_anchor": "ccb7995"}
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_035",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_035] summary total=55 failed=0",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (18 checks)",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301_full] summary: total=10 failed=0",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_P290",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P290] summary: total=9 failed=0",
+              "freshness_anchor": "ccb7995"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (22 checks)",
+              "freshness_anchor": "ccb7995"
+            }
           ],
           "mutation_test": {
-            "A": {"description": "在 scripts/verify_infra_102.py main 函数体注入 `_x = 1`", "expected": "vP290 V2_target_func_sha FAIL", "observed": "FAIL got=06f903400a8257e5 expect=072652ad44846671 rc=2", "status": "PASS"},
-            "B": {"description": "在 scripts/verify_infra_102.py 模块 docstring 插入一行", "expected": "vP290 V2_target_func_sha PASS (弹性核心: docstring 改不影响 func-level lock)", "observed": "PASS got=072652ad44846671 expect=072652ad44846671 rc=0", "status": "PASS"}
+            "A": {
+              "description": "在 scripts/verify_infra_102.py main 函数体注入 `_x = 1`",
+              "expected": "vP290 V2_target_func_sha FAIL",
+              "observed": "FAIL got=06f903400a8257e5 expect=072652ad44846671 rc=2",
+              "status": "PASS"
+            },
+            "B": {
+              "description": "在 scripts/verify_infra_102.py 模块 docstring 插入一行",
+              "expected": "vP290 V2_target_func_sha PASS (弹性核心: docstring 改不影响 func-level lock)",
+              "observed": "PASS got=072652ad44846671 expect=072652ad44846671 rc=0",
+              "status": "PASS"
+            }
           },
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
@@ -17117,7 +17262,10 @@
               "P0": [],
               "P1": [],
               "P2": [
-                {"id": "v110-docstring-stale-narrative", "note": "verify_infra_110.py L16 historical narrative outdated post P290 func-level lock"}
+                {
+                  "id": "v110-docstring-stale-narrative",
+                  "note": "verify_infra_110.py L16 historical narrative outdated post P290 func-level lock"
+                }
               ]
             }
           }

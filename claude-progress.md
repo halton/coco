@@ -8769,3 +8769,31 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - v062 post-closeout 自检: PASS 30/30, 未退化
 - push: 单次尝试, 失败忽略
 - 下一候选: phase-62 #5 (priority=204) `infra-P287-unknown-ids-set-lock`
+
+## Session 2026-05-24 phase-62 #5 closeout — infra-P287-unknown-ids-set-lock (phase-62 全 5/5 完成)
+- 任务: phase-62 #5 — verify_infra_059 加锁 unknown_ids 完整 frozenset (count 锁掩盖不了的成份漂移)
+- feat 分支: feat/infra-P287-unknown-ids-set-lock HEAD=bbbfb52
+- baseline (pre-merge main): 02a1418
+- merge: 6014734 (`merge: phase-62 #5 infra-P287-unknown-ids-set-lock LGTM`)
+- 实现: scripts/verify_infra_059.py 新增 V6_unknown_ids_frozenset_sha check + EXPECTED_UNKNOWN_IDS_SHA=e39251d2fa8e606c1797c52bb34a2d99b50fd67f2bef630131c8b56dae43cc0f (n=16, sorted JSON canonical sha256); cascade bump verify_infra_060 (unknown count) + verify_infra_074 (file/func sha)
+- 7 verify_runs (P299 模式) post-merge:
+  - smoke rc=0 / v035 rc=0 (55/0) / v110 rc=0 (18/0) / v062 rc=0 (30/30) / vP290 rc=0 (9/0) / v039 rc=0 (22/0)
+  - v059 rc=1: 仅 3 项 pre-existing baseline FAIL (V4_real_within_bound, V4_real_count_eq_current, V4_real_total_nodes_within_tolerance), 新 V6_unknown_ids_frozenset_sha PASS got=e39251d2fa8e606c expect=e39251d2fa8e606c n=16
+- baseline 对照 (pre-merge 02a1418 上跑 v059): 同 3 项 FAIL → feat FAIL 集合 ⊆ baseline FAIL 集合, 不引入新 FAIL
+- mutation 实测 (Reviewer 数据沿用):
+  - A 加一 ID → sha 不等 FAIL ✓
+  - B 删一 ID → sha 不等 FAIL ✓
+  - C 一进一出 → sha 不等 FAIL (核心 case) ✓
+  - D 仅重排序 → sha 不变 PASS (sorted canonical) ✓
+- Reviewer: sub_agent_fresh_context LGTM (V6 实现正确, 4-mutation 全验证, cascade 完整, v062 30/30 PASS 无退化, P0/P1/P2 全空)
+- v062 post-closeout 自检: PASS 30/30, 未退化
+- push: 单次尝试, 失败忽略
+
+**phase-62 全 5/5 收官里程碑**:
+- #1 infra-P278-meta-lint v062 30/30 (首次清零)
+- #2 infra-110 V11 doc-value 字段精确锁
+- #3 infra-110 V4c case-insensitive expected 检查
+- #4 infra-P290 V2 func-level lock (降 churn)
+- #5 infra-P287 V6 unknown_ids frozenset sha lock (成份漂移检测)
+
+下一步: 进入 phase-63 planning. 候选起点从 feature_list.json status=backlog 中按 priority 升序挑选 (priority<999 优先), 主线候选包括 infra-110-backlog-docstring-narrative-update-post-p290-func-lock 与其余 V6/V7 类后续锁项. 主会话进入 phase-63 候选规划.
