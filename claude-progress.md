@@ -8363,3 +8363,19 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 **选型准则**: blast radius 小 / cascade 影响小 / 防御纵深 / 优先 fresh 0-file-lock 项 / 平衡 V6 巩固 + 实用价值 / 同 phase 内尽量解耦. 已避开大 cascade item (P285 classifier 扩展 / infra-P291-extend2 等)
 
 **Next**: 立即开始 phase-58 #1 = infra-053-backlog-doc-hub-color-update Engineer 阶段（feat 分支 / status→in_progress / verify lock / 不切 passing 不 merge）
+
+
+## Session 2026-05-23: phase-58 candidate swap
+
+**swap**:
+- OUT: infra-053-backlog-doc-hub-color-update (phase 58 → null) — 现有 notes 已记载该项 phase-51 #2.51 STALE audit 时被判 closed_as_already_done no-op（README/docs/research 全仓无 `#f9f` mention 可改），不实施。
+- IN: infra-036-backlog-expand-docstring-batch-3 (phase null → 58) — infra-034 V4 docstring 覆盖第 3 波 (+5 target), 纯 doc + sha lock cascade, self-contained.
+
+**phase-58 final set**:
+1. infra-P290-backlog-verifier-tag-naming-doc (#1, pure doc 对齐)
+2. infra-036-backlog-expand-docstring-batch-3
+3. infra-V6-backlog-helper-docstring-clarify-live-set
+4. infra-P301-backlog-v0-sha-lock-version-field
+5. robot-037-backlog-helper-docstring-module-only
+
+**Next**: phase-58 #1 = infra-P290-backlog-verifier-tag-naming-doc Engineer 阶段
