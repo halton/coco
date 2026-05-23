@@ -27,6 +27,22 @@ INFRA_P290_DOC_SHA_LOCKS
 - V5_reviewer_lgtm_gate (grace_period 兜底)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
+
+## Lock: EXPECTED_TARGET_FUNC_SHA
+- target_function: main
+- target_file: scripts/verify_infra_102.py
+- lock_kind: ast_func_sha
+- bump_when: verify_infra_102.py 中 main 函数 (含 _emit 调用集合) 实现变化
+- bump_protocol: recompute func_sha_by_name("main", scripts/verify_infra_102.py) then update constant
+- rationale: 锁 V102 emit tag 集合的 canonical 来源, 防止 emit 漂移让 docstring 一致性 lint 错过
+
+## Lock: EXPECTED_SELF_MAIN_FUNC_SHA
+- target_function: main
+- target_file: scripts/verify_infra_P290.py
+- lock_kind: ast_func_sha
+- bump_when: 本脚本 main 实现变化
+- bump_protocol: recompute func_sha_by_name("main", scripts/verify_infra_P290.py) then update constant
+- rationale: 自锁本脚本 main, 防止 checker 编排被悄改成永真
 """
 from __future__ import annotations
 

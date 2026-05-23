@@ -72,6 +72,30 @@ samples + V0(4)+V1(2)+V2(1)+V3(1)+V5(1)=17); 当前经多轮 P278 强化 enforce
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_VERIFY_LIB_FILE_SHA
+- target_function: N/A
+- target_file: scripts/_verify_lib.py
+- lock_kind: file_sha
+- bump_when: _verify_lib.py 文件 sha256 变 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/_verify_lib.py 并更新常量
+- rationale: 锁 closeout-verify-trustworthy helper 所在库整体, 防止 helper 被悄改导致 evidence 校验失效
+
+## Lock: EXPECTED_CLOSEOUT_FUNC_SHA
+- target_function: verify_closeout_evidence_trustworthy
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: verify_closeout_evidence_trustworthy 实现变化
+- bump_protocol: recompute func_sha_by_name("verify_closeout_evidence_trustworthy", scripts/_verify_lib.py) then update constant
+- rationale: P278 硬规则 5 条由这一函数实施; mutation 会让 closeout evidence 被错放行
+
+## Lock: EXPECTED_V4_CHECKER_FUNC_SHA
+- target_function: v4_behavior
+- target_file: scripts/verify_infra_062.py
+- lock_kind: ast_func_sha
+- bump_when: 本脚本 v4_behavior checker (合成样本 A-H 行为段) 实现变化
+- bump_protocol: recompute func_sha_by_name("v4_behavior", scripts/verify_infra_062.py) then update constant
+- rationale: 自锁 V4 行为 checker, 防止 A-H 样本断言被改成永真
 """
 from __future__ import annotations
 

@@ -39,6 +39,38 @@ INFRA_049_SHA_LOCKS
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_DUMP_INDEX_FILE_SHA
+- target_function: N/A
+- target_file: scripts/dump_reverse_sha_lock_index.py
+- lock_kind: file_sha
+- bump_when: dump_reverse_sha_lock_index.py 任何字节改动
+- bump_protocol: 重算 sha256 of scripts/dump_reverse_sha_lock_index.py 并更新常量
+- rationale: 锁反向 sha-lock 索引 dump 工具整体, 防止 audit 索引被悄改
+
+## Lock: EXPECTED_RENDER_TEXT_FUNC_SHA
+- target_function: render_text
+- target_file: scripts/dump_reverse_sha_lock_index.py
+- lock_kind: ast_func_sha
+- bump_when: render_text 实现变化
+- bump_protocol: recompute func_sha_by_name("render_text", scripts/dump_reverse_sha_lock_index.py) then update constant
+- rationale: 锁文本格式输出函数, mutation 会让 closeout 报告偏离 canonical
+
+## Lock: EXPECTED_RENDER_JSON_FUNC_SHA
+- target_function: render_json
+- target_file: scripts/dump_reverse_sha_lock_index.py
+- lock_kind: ast_func_sha
+- bump_when: render_json 实现变化
+- bump_protocol: recompute func_sha_by_name("render_json", scripts/dump_reverse_sha_lock_index.py) then update constant
+- rationale: 锁 JSON 格式输出函数, mutation 会让机械化下游消费链路漂移
+
+## Lock: EXPECTED_V4_CHECKER_FUNC_SHA
+- target_function: v4_behavior
+- target_file: scripts/verify_infra_049.py
+- lock_kind: ast_func_sha
+- bump_when: 本脚本 v4_behavior checker 实现变化
+- bump_protocol: recompute func_sha_by_name("v4_behavior", scripts/verify_infra_049.py) then update constant
+- rationale: 自锁 V4 行为 checker
 """
 from __future__ import annotations
 
