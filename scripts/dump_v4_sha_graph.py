@@ -430,10 +430,26 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_102.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_102.py:main (func-sha)",
+    # verify_infra_104 (infra-047-backlog-per-file-self-locks-comment) —
+    # phase-53 #5.53: 锁 dump_v4_sha_graph.py file sha + _verify_lib.py file sha + 自 main func sha。
+    ("verify_infra_104.py", "EXPECTED_DUMP_FILE_SHA"):
+        "scripts/dump_v4_sha_graph.py (file-sha)",
+    ("verify_infra_104.py", "EXPECTED_VERIFY_LIB_FILE_SHA"):
+        "scripts/_verify_lib.py (file-sha)",
+    ("verify_infra_104.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
+        "scripts/verify_infra_104.py:main (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
 # 当 (source_file, const_name) 未命中 _PER_FILE_LOCKS 时, 这里命中则返回 source_file 自锁标记。
+#
+# infra-047-backlog-per-file-self-locks-comment (phase-53 #5.53) — 集合边界说明:
+# 本集合 _PER_FILE_SELF_LOCKS 只装"target = source_file 自身的 file-sha 自锁" (整文件 sha 锁)。
+# 形似自锁但实际指向 source_file 内某段 func-sha / block-sha 的常量
+# (如 verify_robot_025.py 内的 SETTER_BLOCK_EXPECTED_SHA 锁 _apply_setter func-sha,
+# verify_robot_033.py 内的 EXCEPT_BLOCK_SHA 锁 except block func-sha)
+# 一律走上面的 _PER_FILE_LOCKS 二级查表, 不进本集合。
+# 维护规则: 新增常量若 target 不是 source_file 整文件 sha, 一律归 _PER_FILE_LOCKS。
 _PER_FILE_SELF_LOCKS: set = {
     "EXPECTED_FINGERPRINT",  # verify_infra_022 / verify_infra_028 自我 fingerprint
 }

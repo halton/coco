@@ -7462,7 +7462,7 @@
       "area": "infra",
       "phase": 53,
       "title": "_PER_FILE_SELF_LOCKS 旁加注释解释为何 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 不在 self-lock 集合",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-039-backlog-source-file-aware-inference closeout Reviewer 建议",
       "scope": "scripts/dump_v4_sha_graph.py 中 _PER_FILE_SELF_LOCKS 仅含真自锁 (如 EXPECTED_FINGERPRINT);SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 等虽形似自锁但实际指向 target file,留在 _PER_FILE_LOCKS。注释解释这一边界,降低后续维护误归类风险。",
