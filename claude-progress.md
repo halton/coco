@@ -7373,3 +7373,34 @@ phase-46 5 候选 promoted to not_started：
   - 074 自身 V1/V2/V3/V4_4 sha-lock + real-run-059 pre-existing FAIL 与本 feature 无关, 074 自己 backlog cover
 - feature_list.json: infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline status not_started → passing, 含完整 closeout_verify (3 verify_runs + smoke_tail_stdout + pre_existing_baseline + baseline_tail) + reviewer (sub_agent_fresh_context, LGTM, 2 P2). 新增 backlog: infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity (priority=999, status=backlog).
 - verify_infra_062 P278 6 信号自检: ALL PASS 30/30 (含 main_head_sha_format / merge_commit_sha_format / baseline_head_echo_format / verify_runs_shape / reviewer_block_shape / closeout_verify_runs_freshness)
+
+---
+
+## Session 2026-05-23 phase-46 收官
+
+- 主题: V4/V5/V6 closeout-verify hard 化 + LIB sha cascade + V5 实读 evidence 闸门升级
+- 5/5 close:
+  - #1.46 infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-graduate-sentinel — passing
+  - #2.46 infra-V6-backlog-062-v4-closeout-verify-runs-freshness-anchor-field — passing
+  - #3.46 infra-P294-followup-070-verify-lib-file-sha-bump — passing
+  - #4.46 infra-P294-followup-v5-reviewer-gate-evidence-bind — passing (merge=ac7cdd5, V5 真实读 evidence.reviewer 闸门由 FAIL→PASS 实证)
+  - #5.46 infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline — passing (merge=2e0dac3, V4_4 emit 条件解耦 074 整体 rc, 仅断言 074 v4_behavior 两 tag)
+- 累积统计 (post-#5.46): passing=243, backlog=117 (phase-46 末)
+- main HEAD=fa9c7ac (含 #5.46 真修与 closeout brief 修)
+- push 策略: 各 close commit 后已尝试 push origin main 一次, 失败一律忽略继续推进
+- phase-46 关键产出: V5_reviewer_lgtm_gate 由"字段存在"升级为"sub_agent_fresh_context + verdict=LGTM + 非空 summary"实读三段闸门; V4_closeout_verify_runs 加 freshness_anchor 字段 + V4 shape grace_graduate sentinel; LIB file_sha cascade helper bump_reverse_sha_lock 落地; 074 V4_4 解耦 case study 入档.
+
+---
+
+## Session 2026-05-23 phase-47 planning
+
+- 主题: 历史 floor sha-lock graduate + V5 闸门 backfill + python 版本敏感守门 + V2 cascade 批量 rebump
+- 5 候选 promote (status=backlog→not_started, phase=null→47, priority=999→1.47..5.47):
+  - #1.47 infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate (priority=1.47, area=infra) — V5_reviewer_lgtm_gate 实读 helper graduation: 剩余历史 verify_infra_*.py 切换 (源自 #4.46 评审延续)
+  - #2.47 infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump (priority=2.47, area=infra) — 037/061/064 lib_file_sha 历史 floor 锁 bump (源自 #2.45 残留)
+  - #3.47 infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity (priority=3.47, area=infra) — verify_infra sha-lock 对 python 版本敏感 — 加版本守门 (源自 #5.46 评审 P2 finding 新建)
+  - #4.47 infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump (priority=4.47, area=infra) — 历史 V2 FILE_SHA cascade rebump (12 files) bulk
+  - #5.47 infra-P291-extend2-migrate-remaining-26-legacy-V5 (priority=5.47, area=infra) — 迁移剩余 26 个 legacy V5_reviewer_lgtm_gate 接入 assert_reviewer_lgtm (V5 helper 覆盖面扩张)
+- 选择原则: (a) 优先 P278/V4/V5 域已半成的延续项 (b) 优先历史 sha-lock graduate (c) 避开真机 UAT 类 (d) area 全部 infra 集中收割 V6 backlog
+- 起点候选: #1.47 priority=1.47 (V5 historical graduate 与 phase-46 收尾最紧衔接)
+- post-promote 统计: backlog=112 passing=243 phase47_total=5
