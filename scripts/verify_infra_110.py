@@ -63,6 +63,7 @@ INFRA_110_SHA_LOCKS
 - V6b reverse_sha meta-lock: _classify_node func sha (同 V3b, 第二份独立持有)
 - V6c read_constant 自校 EXPECTED_CLASSIFY_NODE_FUNC_SHA 文字常量化
 - V7 classify_node lock doc present (本 docstring 顶部 Lock 元信息小节自锁)
+- V11 classify_node lock doc values (V7 升级: 字段值精确锁, 防字段值被悄改)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
@@ -104,7 +105,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "d9067a35851c773171dc5c100868c3f39aa95b6240cabcaa12f046d873ae042b"
+EXPECTED_SELF_MAIN_FUNC_SHA = "3cdb3a802191701332114043eea3790773b7caf9c68b31a418dd01b32071f368"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -177,6 +178,61 @@ def _check_v7_classify_node_lock_doc_present() -> tuple[bool, str]:
     if missing:
         return False, f"missing fields in top-50-line docstring: {missing}"
     return True, f"all {len(required_fields)} fields present in top-50-line docstring"
+
+
+def _check_v11_classify_node_lock_doc_values() -> tuple[bool, str]:
+    """V11: SELF 文件顶部 docstring (前 50 行) Lock 字段值必须精确匹配期望.
+
+    V7 (字段名存在) 的升级版: 不仅锁字段名, 还锁字段值. 防止有人保留
+    `- target_function:` 字段名但把值改成无关内容 (V7 仍 PASS 但语义被悄改).
+    V11 与 V7 互补 — V7 防字段缺失, V11 防字段值篡改, 二者均需 PASS.
+
+    前 3 字段精确等值; 后 3 字段宽松 startswith 期望前缀 (允许末尾扩写).
+    """
+    expected_exact = {
+        "- target_function:": "classify_node",
+        "- target_file:": "scripts/dump_v4_sha_graph.py",
+        "- lock_kind:": "ast_func_sha",
+    }
+    expected_prefix = {
+        "- bump_when:": "classify_node implementation changes",
+        "- bump_protocol:": "recompute func_sha_by_name",
+        "- rationale:": "lock 防止 unknown collision",
+    }
+    self_lines = Path(__file__).read_text(encoding="utf-8").splitlines()[:50]
+    violations: List[str] = []
+    checked = 0
+    for field, expect_value in expected_exact.items():
+        found = False
+        for line in self_lines:
+            if line.lstrip().startswith(field):
+                value = line.split(":", 1)[1].strip()
+                checked += 1
+                found = True
+                if value != expect_value:
+                    violations.append(
+                        f"{field!r} exact-match fail: got={value!r} expect={expect_value!r}"
+                    )
+                break
+        if not found:
+            violations.append(f"{field!r} not found in top-50-line docstring")
+    for field, expect_prefix in expected_prefix.items():
+        found = False
+        for line in self_lines:
+            if line.lstrip().startswith(field):
+                value = line.split(":", 1)[1].strip()
+                checked += 1
+                found = True
+                if not value.startswith(expect_prefix):
+                    violations.append(
+                        f"{field!r} prefix-match fail: got={value!r} expect_startswith={expect_prefix!r}"
+                    )
+                break
+        if not found:
+            violations.append(f"{field!r} not found in top-50-line docstring")
+    if violations:
+        return False, f"violations={violations[:3]}"
+    return True, f"all {checked} lock field values match expected (3 exact + 3 prefix)"
 
 
 def main() -> None:
@@ -399,6 +455,10 @@ def main() -> None:
     # V7 classify_node lock doc present (docstring 元信息姊妹锁)
     v7_ok, v7_detail = _check_v7_classify_node_lock_doc_present()
     _emit("V7_classify_node_lock_doc_present", v7_ok, v7_detail)
+
+    # V11 classify_node lock doc values (V7 升级: 字段值精确锁)
+    v11_ok, v11_detail = _check_v11_classify_node_lock_doc_values()
+    _emit("V11_classify_node_lock_doc_values", v11_ok, v11_detail)
 
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
