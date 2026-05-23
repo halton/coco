@@ -162,11 +162,11 @@ def v3_numeric_consistency(stdout: str) -> None:
 def v4_no_old_format_regression(stdout: str) -> None:
     # stdout 中不应出现旧格式 SUMMARY
     old_in_stdout = _RE_OLD_SUMMARY.search(stdout) is not None
-    # docstring 中也不应残留 "(N checks)" 形式的旧 SUMMARY 自描述
+    # 精确锁 print f-string 不含旧文案 ``ALL PASS ({total} checks)``
+    # (P294 backlog #4.54 清理: 原 `has_old_fstring = A or (B and C)` 是 dead code
+    # 且运算符优先级与命名暗示不符, 已删除; 真正生效检查仅为 has_old_print 字符串
+    # exact-match — 这才是阻止 SUMMARY 输出回退到旧文案的精确锁。)
     src = TARGET.read_text(encoding="utf-8")
-    # docstring 段可能描述格式样例, 这里只防 SUMMARY 输出残留旧 f-string
-    has_old_fstring = '({total} checks)' in src or "(N checks)" in src and "ALL PASS (N checks)" in src
-    # 精确锁 print f-string 不含旧文案
     has_old_print = "ALL PASS ({total} checks)" in src
     ok = (not old_in_stdout) and (not has_old_print)
     _emit(
