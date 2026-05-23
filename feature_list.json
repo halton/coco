@@ -16985,14 +16985,120 @@
       "area": "infra",
       "phase": 61,
       "title": "V9 机械断言: V8 pragma 行尾 sentinel cardinality == 1",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma",
       "scope": "verify_infra_035 V8 现按行 endswith pragma 排除. 新增 V9 机械断言: 全文 endswith \"# V8-SELF-SHA-SKIP\" 的行数恰好 == 1. 若 future commit 不慎插入第二条 pragma 行(可能形成绕过 surface), 立即红线. verify-only.",
       "dependencies": [
         "infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma"
       ],
       "verification": [],
-      "notes": "phase-60 #5 Reviewer P2 (sub-agent fresh context) 提出的强化项. cardinality 锁."
+      "notes": "phase-60 #5 Reviewer P2 (sub-agent fresh context) 提出的强化项. cardinality 锁.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "24f750dd9ac2dc98507a16b882c6ba6a32bc9c6b",
+          "merge_commit_sha": "24f750dd9ac2dc98507a16b882c6ba6a32bc9c6b",
+          "baseline_head_echo": "cab28a4",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "cmd": "./init.sh",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "verify_infra_035",
+              "cmd": "python scripts/verify_infra_035.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035][PASS] V8_self_file_sha_lock actual=9d101f0bb507acbf expect=9d101f0bb507acbf lock_schema_version=3 bumped_at=2026-05-24\n[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035] summary total=54 failed=0"
+            },
+            {
+              "name": "verify_infra_110",
+              "cmd": "python scripts/verify_infra_110.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runti"
+            },
+            {
+              "name": "verify_infra_062",
+              "cmd": "python scripts/verify_infra_062.py",
+              "rc": 1,
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_062][FAIL] V4_closeout_reviewer_block_shape scanned=96 enforced=61 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=4 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation={'feature_id': 'infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma', 'reason': 'reviewer.checks_run missing/empty or not list', 'field': 'checks_run', 'value_repr': 'None'}\n[verify_infra_062][FAIL] V4_closeout_baseline_head_echo_format scanned=96 enforced=61 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=2 min_hex_chars=7 first_violation={'feature_id': 'infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma', 'reason': 'baseline_head_echo missing or not str', 'field': 'baseline_head_echo', 'value_repr': 'None'}\n[verify_infra_062][FAIL] V4_closeout_merge_commit_sha_format scanned=96 enforced=61 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=2 min_hex_chars=7 first_violation={'feature_id': 'infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma', 'reason': 'merge_commit_sha missing or not str', 'field': 'merge_commit_sha', 'value_repr': 'None'}\n[verify_infra_062][PA",
+              "pre_existing_baseline_sha": "cab28a4",
+              "baseline_tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=96 enforced=61 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=96 enforced=61 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=9 min_run_count=1 first_violation={'feature_id': 'infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma', 'reason': 'verify_runs[0].freshness_anchor missing or not str', 'field': 'verify_runs[0].freshness_anchor', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy",
+              "note": "v062 FAIL 6/30 在 baseline cab28a4 上同样存在; 与本 feature 无关 (closeout-meta-lint backlog 项), 视为 pre-existing."
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "cmd": "python scripts/verify_infra_P301_full.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_global_coverage violators (缺字段且无白名单)=[]\n[verify_infra_P301_full][PASS] V4_version_const_typing bad_version (非 int>=1)=[]\n[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0"
+            },
+            {
+              "name": "verify_infra_P290",
+              "cmd": "python scripts/verify_infra_P290.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+            },
+            {
+              "name": "verify_infra_039",
+              "cmd": "python scripts/verify_infra_039.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "mutation_test": {
+            "A": {
+              "desc": "文件末尾插 placeholder + pragma 行 → V9 应 FAIL hit_count=2",
+              "status": "PASS",
+              "rc": 1,
+              "tail": "[verify_infra_035][FAIL] V9_pragma_cardinality pragma_hit_count=2 expect=1\n[verify_infra_035] summary total=54 failed=1\n[verify_infra_035] failed tags: ['V9_pragma_cardinality']"
+            },
+            "B": {
+              "desc": "删除 line 92 真常量 EXPECTED_SELF_FILE_SHA 行 → V8 抛 NameError 整脚本 FAIL (V9 未执行但 lock 失效已被捕获)",
+              "status": "PASS",
+              "rc": 1,
+              "tail": "~~~~^^\n  File \"/Users/halton/work/coco/scripts/verify_infra_035.py\", line 397, in main\n    v8_self_file_sha_lock()\n    ~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/halton/work/coco/scripts/verify_infra_035.py\", line 345, in v8_self_file_sha_lock\n    ok = actual == EXPECTED_SELF_FILE_SHA\n                   ^^^^^^^^^^^^^^^^^^^^^^\nNameError: name 'EXPECTED_SELF_FILE_SHA' is not defined"
+            },
+            "C": {
+              "desc": "插伪常量行 FAKE_SELF_FILE_SHA 带 pragma 但保留真常量 (盲点验证) → V8 PASS + V9 FAIL hit_count=2",
+              "status": "PASS",
+              "rc": 1,
+              "tail": "[verify_infra_035][PASS] V8_self_file_sha_lock actual=9d101f0bb507acbf expect=9d101f0bb507acbf lock_schema_version=3 bumped_at=2026-05-24\n[verify_infra_035][FAIL] V9_pragma_cardinality pragma_hit_count=2 expect=1\n[verify_infra_035] summary total=54 failed=1\n[verify_infra_035] failed tags: ['V9_pragma_cardinality']"
+            },
+            "D": {
+              "desc": "在 line 50 之后插两条非常量 pragma 行 → V8 PASS + V9 FAIL hit_count=3",
+              "status": "PASS",
+              "rc": 1,
+              "tail": "[verify_infra_035][PASS] V8_self_file_sha_lock actual=9d101f0bb507acbf expect=9d101f0bb507acbf lock_schema_version=3 bumped_at=2026-05-24\n[verify_infra_035][FAIL] V9_pragma_cardinality pragma_hit_count=3 expect=1\n[verify_infra_035] summary total=54 failed=1\n[verify_infra_035] failed tags: ['V9_pragma_cardinality']"
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context sub-agent 评审 verify_infra_035 V9_pragma_cardinality 新增机械断言: 全文 rstrip 后 endswith '# V8-SELF-SHA-SKIP' 的行数必须 == 1. 阅读实现/docstring/EXPECTED_SELF_FILE_SHA actual_recomputed=9d101f0bb507acbfd0c1aec45406e5831b055af4ffcdb5d809097e1d3592d0e0 匹配 expect, V9 锁定 pragma cardinality, 覆盖盲点: 若 future commit 插入第二条 pragma 行(可能形成绕过 surface), V9 立即红线. verdict=LGTM, P0/P1 none, P2 建议未来若 V9 误判 docstring 内字面量, 考虑 AST 级 narrowing (本轮不强求).",
+            "checks_run": [
+              "V9 实现读懂: pragma cardinality == 1",
+              "actual_recomputed=9d101f0bb507acbf... 匹配 expect",
+              "mutation A/B/C/D 设计覆盖盲点",
+              "verify_infra_035 全 PASS"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "future 可考虑 AST 级 narrowing 防 docstring 字面量误判 (本轮不强求)"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-P305-backlog-pragma-attached-to-real-constant-only",

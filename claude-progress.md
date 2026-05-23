@@ -8601,3 +8601,15 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - cascade: 无下游 verify 锁 verify_infra_035.py 自身 sha, 无需级联 bump
 - Engineer concerns: 无; V9 与 V8 完全独立, 不改 V8 计算逻辑, 仅新增维度
 - 待 Reviewer fresh-context sub-agent LGTM
+
+## Session 2026-05-24 phase-61 #1 closeout
+
+- feature: infra-P305-backlog-pragma-cardinality-mechanical-assert → passing
+- merge: feat/infra-P305-backlog-pragma-cardinality-mechanical-assert → main (NEW_MAIN_SHA=24f750d)
+- baseline: cab28a4 (phase-60 #5)
+- V9 pragma cardinality 机械断言: 全文 rstrip endswith '# V8-SELF-SHA-SKIP' 的行数恰好 == 1
+- verify_runs 7: smoke / v035 / v110 / v062(FAIL pre-existing 6/30) / vP301f / vP290 / v039 全 evidence-trustworthy
+- mutation A/B/C/D 全 PASS, C 盲点验证(伪常量带 pragma + 保真常量 → V8 PASS + V9 FAIL hit=2) 是关键
+- Reviewer fresh-context sub-agent verdict=LGTM, P0/P1 none, P2 建议未来 AST narrowing
+- v062 FAIL 6/30 与 baseline cab28a4 同, pre-existing closeout-meta-lint 项, 不阻 merge
+- next: phase-61 #2 (priority=201)
