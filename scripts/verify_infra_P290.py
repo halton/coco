@@ -9,14 +9,15 @@ infra-P290-backlog-verifier-tag-naming-doc (phase-58 #1):
 
 INFRA_P290_DOC_SHA_LOCKS
 ------------------------
-- ``scripts/verify_infra_102.py`` file sha: EXPECTED_TARGET_FILE_SHA
+- ``scripts/verify_infra_102.py`` ``main`` func sha: EXPECTED_TARGET_FUNC_SHA
 - self ``main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA (V0 自锁)
 
 校验层级 (V0-V5):
 
 - V0_self_main_func_sha: 自身 ``main`` func sha 锁
 - V1_docstring_sentinel: ``INFRA_P290_DOC_SHA_LOCKS`` 自锁存在
-- V2_target_file_sha: verify_infra_102.py file sha 锁
+- V2_target_func_sha: verify_infra_102.py ``main`` func sha 锁 (func-level
+  lock, 相比 file sha 对 docstring / 空行 / 无关编辑弹性)
 - V3_docstring_tags_nonempty: docstring 中可抽 >= 6 个 Vx_ tag
 - V3_emit_tags_nonempty: target 中可抽 >= 6 个 Vx_ tag 字面常量
 - V4_doc_subset_of_emit: docstring 中出现的 Vx_ tag 全部能在 target 中找到
@@ -30,7 +31,6 @@ INFRA_P290_DOC_SHA_LOCKS
 from __future__ import annotations
 
 import ast
-import hashlib
 import re
 import sys
 from pathlib import Path
@@ -47,11 +47,11 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-EXPECTED_TARGET_FILE_SHA = (
-    "8f8d8c65f86ddabf4a1e7355a9ef64e9b5416a88cdcceda428022f832d5a97fb"
+EXPECTED_TARGET_FUNC_SHA = (
+    "072652ad44846671abec9b9b38aa5d229bbe71d21e9b90d7bee3f356cdacbc2f"
 )
 EXPECTED_SELF_MAIN_FUNC_SHA = (
-    "0ff1ac646febf74822bea6db76193361a8d7bdfa067e4a6d4fe28c631ced15af"
+    "02e54a1fb197287f185cd2df7441f161fbd9cb86521c7196a8c674e53eccdc68"
 )
 
 DOCSTRING_SENTINEL = "INFRA_P290_DOC_SHA_LOCKS"
@@ -82,10 +82,6 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
     mark = "PASS" if ok else "FAIL"
     print(f"[verify_infra_P290][{mark}] {tag} {detail}", flush=True)
     _results.append((tag, ok, detail))
-
-
-def _file_sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _extract_docstring_tags(src: str) -> Set[str]:
@@ -137,15 +133,15 @@ def v1_docstring_sentinel() -> None:
     )
 
 
-def v2_target_file_sha() -> None:
+def v2_target_func_sha() -> None:
     if not TARGET.is_file():
-        _emit("V2_target_file_sha", False, f"missing {TARGET}")
+        _emit("V2_target_func_sha", False, f"missing {TARGET}")
         return
-    got = _file_sha(TARGET)
+    got = func_sha_by_name(TARGET, "main")
     _emit(
-        "V2_target_file_sha",
-        got == EXPECTED_TARGET_FILE_SHA,
-        f"got={got[:16]} expect={EXPECTED_TARGET_FILE_SHA[:16]}",
+        "V2_target_func_sha",
+        got == EXPECTED_TARGET_FUNC_SHA,
+        f"got={got[:16]} expect={EXPECTED_TARGET_FUNC_SHA[:16]}",
     )
 
 
@@ -217,7 +213,7 @@ def v5_reviewer_gate() -> None:
 def main() -> None:
     v0_self_main_func_sha()
     v1_docstring_sentinel()
-    v2_target_file_sha()
+    v2_target_func_sha()
     v3_v4_tag_consistency()
     v5_reviewer_gate()
 
