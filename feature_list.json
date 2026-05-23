@@ -6132,14 +6132,102 @@
       "area": "infra",
       "phase": 59,
       "title": "verify_infra_035 加 V6 self-hash 锁防 docstring 漂移",
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-035-engineer",
       "scope": "scripts/verify_infra_035.py 当前 V0-V5 不含自体 sha 锁；docstring 微调即可悄悄改变脚本而无 verify 红线。补 V6 self-hash 检查（与 verify_infra_034 / verify_robot_036 V0 同模式），将期望 sha 写入脚本 docstring。verify-only，0 业务影响。",
       "dependencies": [
         "infra-035"
       ],
+      "verification": [
+        "V8: 自体 sha 锁（sentinel-skip EXPECTED 常量行）",
+        "Mutation A: 非 sentinel 行任何字节变动触发 V8 FAIL",
+        "Mutation B: EXPECTED 字面值漂移触发 V8 FAIL（字符串 == 比较）",
+        "restore 后 verify V8 PASS 且 git 干净",
+        "verify_infra_062 LGTM 守门"
+      ],
+      "started_at": "2026-05-23",
+      "closed_at": "2026-05-23",
+      "evidence": "phase-59 #2 closeout. main HEAD=88500af merge_commit=88500af feat=4a8b92d. verify_infra_035 53 checks PASS (含 V8_self_file_sha_lock actual=04d66709c1a2206c) + verify_infra_062 30/30 PASS + smoke PASS + Reviewer (sub-agent fresh-context) LGTM mutation_test_done=true.",
+      "closeout_verify": {
+        "main_head_sha": "88500af1c22669d370b2b8d43bf94881de0ef1c1",
+        "merge_commit_sha": "88500af1c22669d370b2b8d43bf94881de0ef1c1",
+        "baseline_head_echo": "cf86635",
+        "baseline_tail_stdout": "[verify_infra_035][PASS] V1_scripts/verify_robot_032.py_exists /Users/halton/work/coco/scripts/verify_robot_032.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_033.py_exists /Users/halton/work/coco/scripts/verify_robot_033.py\n[verify_infra_035][PASS] V2_lock_verify_034 got=0058fbead1d15b99 expect=0058fbead1d15b99\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035] summary total=52 failed=0",
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=283 well_formed=283 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "verify_runs": [
+          {
+            "name": "smoke",
+            "freshness_anchor": "post-merge-rerun",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=283 well_formed=283 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "name": "verify_infra_035",
+            "freshness_anchor": "post-merge-rerun",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035][PASS] V8_self_file_sha_lock actual=04d66709c1a2206c expect=04d66709c1a2206c lock_schema_version=1 bumped_at=2026-05-23\n[verify_infra_035] summary total=53 failed=0"
+          },
+          {
+            "name": "verify_infra_062",
+            "freshness_anchor": "post-merge-rerun",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=89 enforced=54 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=89 enforced=54 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "V8 自体 sha 锁机制有效：sentinel-skip 把 EXPECTED 常量行剔出 sha 范围使 bump 不自循环，但 EXPECTED 字面值漂移仍被字符串 == 比较捕获（Mutation B 反证）。非 sentinel 行任何字节变动触发 V8 FAIL（Mutation A 反证）。verify_infra_035 53 checks PASS，verify_infra_062 PASS，restore byte-equal，仓库干净。命名 V8 合理（V0-V7 已占用）。",
+          "checks_run": [
+            "smoke",
+            "verify_infra_035",
+            "verify_infra_062",
+            "Mutation-A: add non-sentinel line → V8 FAIL",
+            "Mutation-B: flip EXPECTED last char → V8 FAIL",
+            "restore verify V8 PASS git clean"
+          ],
+          "mutation_test_done": true,
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "sentinel substring 命中 5 行（28/77/81/308/316），其中 4 行（28/77/308/316）非真常量行被剔出 sha 范围 → infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma",
+              "无独立 bump 助手脚本，与 V2/V4 风格不一致 → infra-P306-backlog-bump-infra-035-self-sha-helper-script",
+              "Engineer 自报疑点 #2 已被 Mutation B 反证（实际 FAIL，更强保护）"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_035 V8 自锁 sentinel 改 pragma 注释精确锚",
+      "status": "backlog",
+      "source": "infra-035-backlog-verify-infra-035-self-hash-reviewer",
+      "scope": "verify_infra_035 V8_self_file_sha_lock 当前用 'EXPECTED_SELF_SHA' 子串匹配剔出 sha 范围；该 sentinel 在文件内命中 5 行（28/77/81/308/316），其中 4 行非真常量行被剔出，扩大了 skip 集合。可改为更严格的 pragma 注释锚（如 '# verify_infra_035:self-sha-anchor'）或紧贴常量名的单行检测，缩小 skip 集合到 1 行。verify-only，0 业务影响。",
+      "dependencies": [
+        "infra-035-backlog-verify-infra-035-self-hash"
+      ],
       "verification": [],
-      "started_at": "2026-05-23"
+      "notes": "来源 phase-59 #2 Reviewer P2 finding。"
+    },
+    {
+      "id": "infra-P306-backlog-bump-infra-035-self-sha-helper-script",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "scripts/bump_infra_035_self_sha.py 独立 bump 助手",
+      "status": "backlog",
+      "source": "infra-035-backlog-verify-infra-035-self-hash-reviewer",
+      "scope": "verify_infra_035 V8 自锁目前未配套独立 bump 助手，与 V2 (bump_v4_sha) / V4 (bump_reverse_sha_lock) 风格不一致。补 scripts/bump_infra_035_self_sha.py（dry-run 与原子写入），统一 helper 风格，方便未来 docstring 改动后一键更新 EXPECTED。verify-only。",
+      "dependencies": [
+        "infra-035-backlog-verify-infra-035-self-hash"
+      ],
+      "verification": [],
+      "notes": "来源 phase-59 #2 Reviewer P2 finding。"
     },
     {
       "id": "infra-035-backlog-v7-ast-upgrade",

@@ -8470,3 +8470,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer: sub_agent_fresh_context LGTM, mutation_test_done=true (删 raise → V6+V2 双 FAIL, restore PASS git clean), 6 checks, P0/P1=0, P2=2 (mkstemp 略绕 nit; P290 pre-existing FAIL)
 - feature status: in_progress → passing, closed_at=2026-05-23
 - push: 待 closeout commit 后单次尝试 origin main + feat 分支, 失败忽略
+
+## Session 2026-05-23 (phase-59 #2 closeout — infra-035-backlog-verify-infra-035-self-hash)
+- feat: feat/infra-035-backlog-verify-infra-035-self-hash (4a8b92d) → merge --no-ff → main 88500af
+- baseline (cf86635): verify_infra_035 52 checks PASS (V8 lock 不存在)
+- post-merge: smoke PASS + verify_infra_035 53 checks PASS (含 V8_self_file_sha_lock actual=04d66709c1a2206c) + verify_infra_062 30/30 PASS
+- Reviewer: sub_agent_fresh_context LGTM, mutation_test_done=true (Mutation A non-sentinel 行 → V8 FAIL; Mutation B EXPECTED 字面值漂移 → V8 FAIL; restore git clean), 6 checks, P0/P1=0, P2=3
+- 2 backlog 入账: infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma (sentinel 改 pragma 锚), infra-P306-backlog-bump-infra-035-self-sha-helper-script (独立 bump 助手)
+- feature status: in_progress → passing, closed_at=2026-05-23
+- push: 待 closeout commit 后单次尝试 origin main + feat 分支, 失败忽略
