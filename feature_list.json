@@ -6530,15 +6530,17 @@
       "area": "infra",
       "phase": 56,
       "title": "assert_unique_needle 边界行为锁: 空 needle + 重叠 substring",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-040-backlog-mutant-needle-uniqueness-helper closeout Reviewer 建议",
       "scope": "assert_unique_needle 边界行为锁: 空 needle reject + 重叠 substring (str.count 不重叠计数) docstring 显式 + V4 case 锁住",
       "dependencies": [
         "infra-040-backlog-mutant-needle-uniqueness-helper"
       ],
-      "verification": [],
-      "updated_at": "2026-05-23T19:02:59"
+      "verification": [
+        "python scripts/verify_infra_040.py  # V6a/V6b file+func sha + V6c source literal + V6d empty-needle reject + V6e overlap aaa/aa unique + V6f aaaa/aa non-unique"
+      ],
+      "updated_at": "2026-05-23T19:30:00"
     },
     {
       "id": "infra-042-backlog-cmpflipper-bidirectional",

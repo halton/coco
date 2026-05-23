@@ -64,7 +64,7 @@ BOOTSTRAP = SCRIPTS / "bootstrap_verify_self_checker.py"
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981cc357a93b"
+EXPECTED_VERIFY_LIB_FILE_SHA = "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
 EXPECTED_BOOTSTRAP_FILE_SHA = "e5c85fe60ce70711c3d351da78b8d728867b5b954c022220ad53a8641fdee229"
 EXPECTED_CANARY_FUNC_SHA = "12cef322c3671b196d39781c9ce6568f7f3f224e17a876f282dbd77f40c38c90"
 EXPECTED_CANARY_CONST_SHA = "5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249"
