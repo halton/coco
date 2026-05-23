@@ -75,7 +75,7 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "29a26bae07566dda05cd857fa8015af3010fc12f31f12534
 
 # infra-040-backlog-bis (V6): _verify_lib.py 整体 file sha + assert_unique_needle func sha
 # 锁 helper 当前实现 (含空 needle reject + str.count 非重叠语义 docstring), 防 mutant 静默回退。
-EXPECTED_VERIFY_LIB_FILE_SHA = "f7248f548eab36eab74ff678aa84e567928b5fc02e9a085f9289539aaef1ee99"
+EXPECTED_VERIFY_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
 EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA = "3b92e4f2a058b1bd7a26091d3adc6d7fa5efa06b0d187fad738ddd1217ed58f4"
 
 VERIFY_LIB_PATH = Path(__file__).resolve().parent / "_verify_lib.py"

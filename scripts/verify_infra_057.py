@@ -58,7 +58,7 @@ from _verify_lib import (
 )
 
 # infra-057 sha lock 常量 (V2 / V3)
-EXPECTED_LIB_FILE_SHA = "f7248f548eab36eab74ff678aa84e567928b5fc02e9a085f9289539aaef1ee99"
+EXPECTED_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
 EXPECTED_VERIFY_EP_FUNC_SHA = "092041818bd1bcd3232b250d064aa52ff7d125112389629b1e3aecbab3d5754c"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填

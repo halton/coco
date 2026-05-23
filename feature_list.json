@@ -7181,18 +7181,25 @@
     },
     {
       "id": "infra-037-backlog-nested-name-error-clarity",
-      "priority": 999,
+      "priority": 590,
       "area": "infra",
       "phase": 59,
-      "title": "嵌套同名函数歧义时 raise 更具体错误信息",
-      "status": "backlog",
+      "title": "func_sha_by_name 同名顶层函数歧义时 raise 具体 ValueError",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-037 closeout Reviewer 建议",
       "scope": "当同一文件中存在多个同名顶层/嵌套 FunctionDef 时，func_sha_by_name 应 raise 含 line-no 列表的明确错误（而非默默返回第一个或 KeyError），降低误锁风险。",
       "dependencies": [
         "infra-037"
       ],
-      "verification": []
+      "verification": [
+        "V0: docstring + sha256 自锁 (verify_infra_037 V0_self_sha_lock_version=2)",
+        "V1: func_sha_by_name 单一同名 case 仍 PASS (现有调用面不破坏)",
+        "V2: func_sha_by_name 重复同名 case 触发 ValueError, 错误消息含 found N 与 line list",
+        "V3: smoke + verify_infra_037 ALL PASS"
+      ],
+      "started_at": "2026-05-23",
+      "user_visible_behavior": "当 scripts/_verify_lib.py 中 func_sha_by_name(path, name) 在 path 的 Module.body 顶层发现 ≥2 个同名 FunctionDef/AsyncFunctionDef 时, 不再静默取第一个, 而是 raise ValueError 明示 found N definitions + 所有 lineno 列表, 防止调用方在静态 sha lock 场景下取到错误候选导致 lock 漂移。"
     },
     {
       "id": "infra-037-backlog-canonical-algo-unify",

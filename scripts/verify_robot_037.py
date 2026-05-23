@@ -64,7 +64,7 @@ VERIFY_034 = SCRIPTS / "verify_robot_034.py"
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 变更
 # infra-P281-expected-prefix-typo-guard bump (P281): 新增 verify_expected_prefix_typo_guard helper
 # robot-037-backlog (phase-58 #5): read_constant docstring 加 '只扫 Module.body' 显式声明
-EXPECTED_VERIFY_LIB_FILE_SHA = "f7248f548eab36eab74ff678aa84e567928b5fc02e9a085f9289539aaef1ee99"
+EXPECTED_VERIFY_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
 EXPECTED_READ_CONSTANT_FUNC_SHA = "a62e365a65572ffdd048b26ac37b70904c423868286faa9b4e1973eb33e03aae"
 
 # 本脚本关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)

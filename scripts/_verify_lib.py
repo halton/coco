@@ -543,6 +543,15 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
     - ``ast.unparse(node)`` 拿 canonical 源码 (Python 3.9+)
     - utf-8 encode 后 ``sha256().hexdigest()``
 
+    歧义处理 (infra-037-backlog-nested-name-error-clarity):
+    - 文件 Module.body 顶层若发现 **多于 1 个** 同名 FunctionDef/AsyncFunctionDef,
+      不再静默取第一个, 而是 ``raise ValueError``, 错误消息包含:
+      * ``found N definitions`` (N >= 2)
+      * 所有 candidate 的 ``lineno`` 列表
+      * 文件路径
+      原因: 静态 sha lock 场景下取错候选会导致 lock 漂移且难以察觉; raise 让调用方
+      显式选择 (例如把其中一个 rename, 或加 dotted-name 解析)。
+
     TODO(infra-037+): class method 暂不支持; 后续如需 ``ClassName.method`` 形式
     可在本 helper 上加 dotted-name 解析分支, 不破坏现有调用面。
 
@@ -555,7 +564,7 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
 
     Raises:
         FileNotFoundError: path 不存在。
-        ValueError: func_name 未在文件顶层找到。
+        ValueError: func_name 未在文件顶层找到, **或** 顶层存在 ≥2 个同名定义。
 
     Examples:
         >>> from pathlib import Path
@@ -576,11 +585,20 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
         raise FileNotFoundError(f"source file not found: {p}")
     src = p.read_text(encoding="utf-8")
     tree = ast.parse(src)
+    matches: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
-            canonical = ast.unparse(node)
-            return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    raise ValueError(f"top-level function {func_name!r} not found in {p}")
+            matches.append(node)
+    if not matches:
+        raise ValueError(f"top-level function {func_name!r} not found in {p}")
+    if len(matches) > 1:
+        linenos = [n.lineno for n in matches]
+        raise ValueError(
+            f"top-level function {func_name!r} ambiguous in {p}: "
+            f"found {len(matches)} definitions at lineno={linenos}"
+        )
+    canonical = ast.unparse(matches[0])
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def read_constant(path: str | Path, const_name: str) -> Any:

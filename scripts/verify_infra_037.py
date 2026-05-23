@@ -20,6 +20,9 @@ V4 行为验证: 调用 func_sha_by_name 对 _verify_lib.py 中已知 helper
    不存在 func_name 抛 ValueError; 不存在 path 抛 FileNotFoundError。
 V5 Reviewer-LGTM gate (print-only, 提示后续 closeout 阶段必须有
    sub-agent fresh-context Reviewer LGTM 记录在 evidence 中)。
+V6 (infra-037-backlog-nested-name-error-clarity): 构造临时文件含 2 个顶层同名
+   函数, 期望 func_sha_by_name raise ValueError, 错误消息包含 ``found 2``
+   与 ``lineno`` 关键字; 单同名 case 仍正常返回 hex sha。
 
 INFRA_037_SHA_LOCKS
 -------------------
@@ -50,8 +53,8 @@ VERIFY_LIB = SCRIPTS / "_verify_lib.py"
 # infra-037 sha lock 常量 (V2)
 # infra-040-backlog bump: 新增 assert_unique_needle helper 后 file sha 变更
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 再变更
-EXPECTED_VERIFY_LIB_FILE_SHA = "f7248f548eab36eab74ff678aa84e567928b5fc02e9a085f9289539aaef1ee99"
-EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA = "eb38e7ae19edba98aa4a87d6200ef460dd45b4980b56595a8ad1e180b88f09ca"
+EXPECTED_VERIFY_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
+EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA = "781650973120bca1e7aa9d0eebfaad12c323d3002f5ff68eccc913ac6ecfb09e"
 
 # infra-037 自身关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)
 EXPECTED_V2_CHECKER_FUNC_SHA = "d625d1aeaea5e8429fa897d38cc0e293eb606f784452da014039ee4eebc89130"
@@ -176,7 +179,7 @@ def v2_sha_locks() -> None:
 # ---------------------------------------------------------------------------
 def v3_mutant() -> None:
     original = VERIFY_LIB.read_text(encoding="utf-8")
-    mutant = original.replace("canonical = ast.unparse(node)", "canonical = str(node)", 1)
+    mutant = original.replace("canonical = ast.unparse(matches[0])", "canonical = str(matches[0])", 1)
     if mutant == original:
         _emit("V3_mutant_apply", False, "no replacement target found")
         return
@@ -278,6 +281,77 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: duplicate-name ValueError (infra-037-backlog-nested-name-error-clarity)
+# ---------------------------------------------------------------------------
+def v6_duplicate_name_error() -> None:
+    """构造临时 .py: 含 2 个同名顶层函数, 期望 func_sha_by_name raise ValueError.
+
+    错误消息须含 ``found 2`` 与 ``lineno`` 关键字; 单同名 case 仍 PASS。
+    """
+    import tempfile
+    import os
+    try:
+        lib = _load_lib()
+    except Exception as e:
+        _emit("V6_helper_load", False, f"import err: {e!r}")
+        return
+    src_dup = (
+        "def dup_target():\n"
+        "    return 1\n"
+        "\n"
+        "def other():\n"
+        "    return 2\n"
+        "\n"
+        "def dup_target():\n"
+        "    return 3\n"
+    )
+    fd, path = tempfile.mkstemp(suffix="_v6_dup.py", prefix="verify_infra_037_")
+    os.close(fd)
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(src_dup)
+        raised = False
+        msg = ""
+        try:
+            lib.func_sha_by_name(path, "dup_target")
+        except ValueError as e:
+            raised = True
+            msg = str(e)
+        except Exception as e:
+            _emit("V6_duplicate_raises_value_error", False, f"wrong exc: {e!r}")
+            return
+        has_found2 = "found 2" in msg
+        has_lineno = "lineno" in msg
+        _emit(
+            "V6_duplicate_raises_value_error",
+            raised and has_found2 and has_lineno,
+            f"raised={raised} found2={has_found2} lineno_in_msg={has_lineno} msg={msg!r}",
+        )
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    src_single = "def single_target():\n    return 1\n"
+    fd, path2 = tempfile.mkstemp(suffix="_v6_single.py", prefix="verify_infra_037_")
+    os.close(fd)
+    try:
+        with open(path2, "w", encoding="utf-8") as fh:
+            fh.write(src_single)
+        try:
+            sha = lib.func_sha_by_name(path2, "single_target")
+            ok = isinstance(sha, str) and len(sha) == 64
+            _emit("V6_single_name_still_works", ok, f"sha={sha[:16]} len={len(sha)}")
+        except Exception as e:
+            _emit("V6_single_name_still_works", False, f"unexpected err: {e!r}")
+    finally:
+        try:
+            os.unlink(path2)
+        except OSError:
+            pass
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_lock()
@@ -285,6 +359,7 @@ def main() -> int:
     v3_mutant()
     v4_behavior()
     v5_reviewer_gate()
+    v6_duplicate_name_error()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
         print(f"[verify_infra_037][SUMMARY] FAILED tags: {failed}", flush=True)
