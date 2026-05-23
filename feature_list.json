@@ -5471,7 +5471,7 @@
       "id": "infra-033-backlog-multi-verify-venv-docstring",
       "name": "将 verify_*.py venv 运行环境 docstring + sha256 lock 模式推广到其他 verify 入口",
       "area": "infra",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 63,
       "priority": 209,
       "origin_backlog": [
@@ -5479,7 +5479,34 @@
       ],
       "description": "把 infra-033 在 scripts/verify_infra_024.py 上确立的\"运行环境约定 docstring + sha256 锁 + sentinel meta-verify\"模式推广到其他 scripts/verify_*.py 入口（如 verify_*.py 系列）。纯文档化，不改业务源码；每个被推广脚本配一份 sha256 锁与 meta-verify 校验项。",
       "verification": null,
-      "evidence": {}
+      "evidence": {
+        "lock_docstring_rollout": {
+          "rolled_out_files": [
+            "scripts/verify_infra_037.py",
+            "scripts/verify_infra_039.py",
+            "scripts/verify_infra_049.py",
+            "scripts/verify_infra_062.py",
+            "scripts/verify_infra_P290.py"
+          ],
+          "new_verify": "scripts/verify_infra_033_lock_doc_rollout.py",
+          "verify_rc": 0,
+          "checks": 6,
+          "scan_entries_before": 3,
+          "scan_entries_after": 18,
+          "EXPECTED_MIN_ENTRIES": 14,
+          "mutant": "V6 drop ## Lock: header in 039 → scan no longer reports → PASS",
+          "smoke_rc": 0,
+          "affected_verify_rc": {
+            "verify_infra_037.py": "1 (pre-existing V2_lib_file_sha drift, baseline on main also FAIL — _verify_lib.py sha changed since 037 last bumped; unrelated to this docstring rollout)",
+            "verify_infra_039.py": 0,
+            "verify_infra_049.py": 0,
+            "verify_infra_062.py": "0 (30/30 PASS)",
+            "verify_infra_110.py": 0,
+            "verify_infra_P290.py": 0
+          },
+          "caveat": "verify_infra_037 V2_lib_file_sha pre-existing baseline drift; 入 backlog 单独处理, 不在本 feature 内 cascade"
+        }
+      }
     },
     {
       "id": "interact-036a-backlog-drift-jsonl-rotation",
@@ -18490,6 +18517,18 @@
         "infra-V6-backlog-strict-area-match-mode"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-037-backlog-verify-lib-file-sha-cascade",
+      "name": "verify_infra_037 V2_lib_file_sha bump (cascade pre-existing baseline drift)",
+      "area": "infra",
+      "status": "not_started",
+      "phase": 63,
+      "priority": 3108,
+      "origin_backlog": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring",
+      "description": "verify_infra_037 V2_lib_file_sha expect=c923b8de60e1930b 但当前 _verify_lib.py sha=f789e0d870c9e6c3. 此 FAIL 在 main baseline 上也成立 (与 infra-033 docstring 推广无关), 是 _verify_lib.py 后续修改未 cascade bump 到 037 的遗漏. 单独立项 bump EXPECTED_VERIFY_LIB_FILE_SHA in 037, 同时审视是否还有其他持有此常量的 verify 漂移.",
+      "verification": "verify_infra_037 V2_lib_file_sha PASS; smoke PASS; reviewer fresh-context LGTM",
+      "evidence": {}
     }
   ],
   "_meta": {

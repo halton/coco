@@ -31,6 +31,22 @@ INFRA_039_SHA_LOCKS
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_DUMP_FILE_SHA
+- target_function: N/A
+- target_file: scripts/dump_v4_sha_graph.py
+- lock_kind: file_sha
+- bump_when: dump_v4_sha_graph.py 任何字节改动
+- bump_protocol: 重算 sha256 of scripts/dump_v4_sha_graph.py 并更新常量
+- rationale: 锁 V4 sha-lock 链路 DAG 可视化工具整体, 防止图谱生成被悄改导致 audit 漏锁
+
+## Lock: EXPECTED_V4_CHECKER_FUNC_SHA
+- target_function: v4_behavior
+- target_file: scripts/verify_infra_039.py
+- lock_kind: ast_func_sha
+- bump_when: 本脚本 v4_behavior checker 实现变化
+- bump_protocol: recompute func_sha_by_name("v4_behavior", scripts/verify_infra_039.py) then update constant
+- rationale: 自锁 V4 行为 checker, 防止 checker 自身被改成永真
 """
 from __future__ import annotations
 

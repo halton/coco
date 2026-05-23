@@ -36,6 +36,30 @@ INFRA_037_SHA_LOCKS
 ------------------------
 本脚本必须在已激活的 .venv 下运行 (``.venv/bin/python``); 不要用系统
 ``python3`` 直接调用, 否则模块加载路径可能与 ``./init.sh`` smoke 不一致。
+
+## Lock: EXPECTED_VERIFY_LIB_FILE_SHA
+- target_function: N/A
+- target_file: scripts/_verify_lib.py
+- lock_kind: file_sha
+- bump_when: _verify_lib.py 文件 sha256 变 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/_verify_lib.py 并更新常量
+- rationale: 锁住 V4 sha-lock 公共 helper 库的整体内容, 防止悄改污染 canonical 化逻辑
+
+## Lock: EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA
+- target_function: func_sha_by_name
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: func_sha_by_name 实现变化
+- bump_protocol: recompute func_sha_by_name("func_sha_by_name", scripts/_verify_lib.py) then update constant
+- rationale: 锁 V4 lock 最底层的 canonical func sha 生成器, mutation 会让全套 func-sha 锁集体失效
+
+## Lock: EXPECTED_V2_CHECKER_FUNC_SHA
+- target_function: v2_sha_locks
+- target_file: scripts/verify_infra_037.py
+- lock_kind: ast_func_sha
+- bump_when: 本脚本 v2_sha_locks checker 实现变化
+- bump_protocol: recompute func_sha_by_name("v2_sha_locks", scripts/verify_infra_037.py) then update constant
+- rationale: 自检 checker, 防止 checker 自身被悄改成永真
 """
 from __future__ import annotations
 
