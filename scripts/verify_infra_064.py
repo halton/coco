@@ -19,7 +19,7 @@ INFRA_064_SHA_LOCKS
 - V1 docstring sentinel ``INFRA_064_SHA_LOCKS`` + 本脚本 v4_behavior 自锁
 - V2 _verify_lib.py file sha
 - V3 helper func sha (本 verify 自身的 _gitignore_has_target / _file_is_ignored
-  两个核心 helper func sha 自锁)
+  / _file_sha / _emit 四个核心 helper func sha 自锁; P298 full coverage)
 - V4 行为:
   - V4.1: 读 ``.gitignore`` 内容, 断言含 ``evidence/_history/smoke_history.jsonl``
     (精确字符串匹配 — 防有人改成更宽通配又改其他文件)
@@ -60,6 +60,8 @@ from _verify_lib import func_sha_by_name, assert_v5_reviewer_gate_evidence_bind 
 EXPECTED_VERIFY_LIB_FILE_SHA = "e583aed3fd27d6dcc1f55b7f326b2cd6296876d3bdb0c5b1a111994f3f4f99c1"
 EXPECTED_GITIGNORE_HELPER_FUNC_SHA = "b6bbd8e96e3078a335db3f535ecd67f62cef1dc1db6585ce73f6295b7744fb08"
 EXPECTED_FILE_IGNORED_HELPER_FUNC_SHA = "042ac55f55ee97de823a8547e7728fef3e63b11d34c392312a2215c10b8621b3"
+EXPECTED_V3_FILE_SHA_FUNC_SHA = "bf3f234f390e86f18855109507664076b887aa1706e7d9b0dde9bbb54843ca15"
+EXPECTED_V3_EMIT_FUNC_SHA = "7be3e01c58ca04c63f2e3246a7cd87762cbf844a6e6523ff7a4c9d057b30cfa5"
 EXPECTED_V4_CHECKER_FUNC_SHA = "7919b8c04e99db2efc2667fefbc760f0d85da35705aa09314b12f6f15db06054"
 
 DOCSTRING_SENTINEL = "INFRA_064_SHA_LOCKS"
@@ -202,6 +204,37 @@ def v3_helper_func_sha() -> None:
             "V3_file_ignored_helper_func_sha",
             got_fi == EXPECTED_FILE_IGNORED_HELPER_FUNC_SHA,
             f"got={got_fi[:16]} expect={EXPECTED_FILE_IGNORED_HELPER_FUNC_SHA[:16]}",
+        )
+    # P298: _file_sha helper self-lock
+    try:
+        got_fs = func_sha_by_name(self_path, "_file_sha")
+    except Exception as e:
+        _emit("V3_file_sha_helper_func_sha", False, f"compute err: {e!r}")
+        got_fs = None
+    if got_fs is not None:
+        if EXPECTED_V3_FILE_SHA_FUNC_SHA == "__BUMP_ME__":
+            _emit("V3_file_sha_helper_func_sha", False,
+                  f"placeholder; bump EXPECTED_V3_FILE_SHA_FUNC_SHA={got_fs}")
+        else:
+            _emit(
+                "V3_file_sha_helper_func_sha",
+                got_fs == EXPECTED_V3_FILE_SHA_FUNC_SHA,
+                f"got={got_fs[:16]} expect={EXPECTED_V3_FILE_SHA_FUNC_SHA[:16]}",
+            )
+    # P298: _emit helper self-lock
+    try:
+        got_em = func_sha_by_name(self_path, "_emit")
+    except Exception as e:
+        _emit("V3_emit_helper_func_sha", False, f"compute err: {e!r}")
+        return
+    if EXPECTED_V3_EMIT_FUNC_SHA == "__BUMP_ME__":
+        _emit("V3_emit_helper_func_sha", False,
+              f"placeholder; bump EXPECTED_V3_EMIT_FUNC_SHA={got_em}")
+    else:
+        _emit(
+            "V3_emit_helper_func_sha",
+            got_em == EXPECTED_V3_EMIT_FUNC_SHA,
+            f"got={got_em[:16]} expect={EXPECTED_V3_EMIT_FUNC_SHA[:16]}",
         )
 
 
