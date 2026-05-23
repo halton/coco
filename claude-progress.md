@@ -8525,3 +8525,14 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - infra-P290-backlog-v2-target-sha-func-level-lock (priority=999) — P290 整文件 sha → func_sha_by_name 减少 churn
   - infra-039-backlog-v4-output-anchors-lower-bound (priority=999) — v039 anchor 字面 → lower-bound 或动态读 v4_sha.json
 - 下一 candidate: phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all
+
+## Session 2026-05-24 — phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all closeout DONE
+- merge feat → main: 600d52f (merge --no-ff)
+- feat branch HEAD: 120352a, baseline: c56c393
+- Reviewer (sub-agent fresh-context): LGTM — verify_infra_P301_full.py 10 checks (V0-V5) 全扫 V0-locked verify 脚本 + ALLOWED_MISSING 白名单, 三层自校 (targets_valid + no_redundant + global_coverage) 互锁, 44 条 historical-batch-pending + 1 条 P301-self 豁免; Mutation A/B/C 按预期 FAIL/PASS; 5/5 抽样白名单审核通过
+- closeout verify (P278 trustworthy + P299 rc-read): smoke PASS / v301f 10/10 PASS / v301 9/9 PASS / v290 9/9 PASS / v036b 6/6 PASS / v110 12/12 PASS / v062 FAIL 6/30 (pre-existing on c56c393, baseline_tail_stdout 已 attach, 与本 feature 无关)
+- 3 个非阻塞 P2 finding 入 backlog (priority=999):
+  - infra-P301-backlog-allowlist-reason-typed-enum — ALLOWED_MISSING reason 自由文本 → typed enum
+  - infra-P301-backlog-v0-marker-extended-naming — V0 canonical marker 命名约定补 docstring + 异类命名扫描
+  - infra-P301-backlog-runtime-echo-evidence — V0_SELF_SHA_LOCK_VERSION/BUMPED_AT 进 closeout evidence runtime echo
+- 下一 candidate: phase-60 #3 infra-110-backlog-classify-node-unknown-lock

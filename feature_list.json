@@ -16322,7 +16322,7 @@
       "priority": 201,
       "area": "infra",
       "title": "V0 sha lock version field: 扫全集 + ALLOWED_MISSING 白名单",
-      "status": "in_progress",
+      "status": "passing",
       "phase": 60,
       "created_at": "2026-05-23",
       "source": "infra-P301 Reviewer P2-1",
@@ -16330,7 +16330,102 @@
       "dependencies": [
         "infra-P301-backlog-v0-sha-lock-version-field"
       ],
-      "started_at": "2026-05-24"
+      "started_at": "2026-05-24",
+      "verification": "scripts/verify_infra_P301_full.py",
+      "evidence": {
+        "reviewer_lgtm": true,
+        "reviewer_subagent": true,
+        "closeout_verify": {
+          "main_head_sha": "600d52f",
+          "baseline_head_echo": "c56c393",
+          "merge_commit_sha": "600d52f",
+          "feat_branch_head_sha": "120352a",
+          "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=289 well_formed=289 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0",
+              "freshness_anchor": "600d52f"
+            },
+            {
+              "name": "verify_infra_P301",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301][PASS] V4_v0_lock_emits_metadata has_version=True has_bumped_at=True\n[verify_infra_P301][PASS] V5_reviewer_lgtm_gate target=infra-P301-backlog-v0-sha-lock-version-field helper_ok=True reason=feature_id='infra-P301-backlog-v0-sha-lock-version-field' in grace_period (skipped)\n[verify_infra_P301] summary: total=9 failed=0",
+              "freshness_anchor": "600d52f"
+            },
+            {
+              "name": "verify_infra_P290",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0",
+              "freshness_anchor": "600d52f"
+            },
+            {
+              "name": "verify_interact_036b",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_interact_036b] PASS V5_subprocess_invoke: rc=0 payload_triggered=True stdout_tail={\"any_triggered\": true, \"kind\": \"interact_036b_drift_trend_alert\", \"sample_count\n\n[verify_interact_036b] SUMMARY total=6 pass=6 fail=0",
+              "freshness_anchor": "600d52f"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110][SUMMARY] ALL PASS (12 checks)",
+              "freshness_anchor": "600d52f"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=92 enforced=57 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=2 min_run_count=1 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'verify_runs[0].freshness_anchor missing or not str', 'field': 'verify_runs[0].freshness_anchor', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "freshness_anchor": "600d52f",
+              "pre_existing_baseline_sha": "c56c393",
+              "baseline_tail_stdout": "[verify_infra_062][FAIL] V4_closeout_merge_commit_sha_format scanned=92 enforced=57 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=1 min_hex_chars=7 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'merge_commit_sha missing or not str', 'field': 'merge_commit_sha', 'value_repr': 'None'}\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=92 enforced=57 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=92 enforced=57 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=2 min_run_count=1 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'verify_runs[0].freshness_anchor missing or not str', 'field': 'verify_runs[0].freshness_anchor', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "note": "pre-existing FAIL 6/30 在 baseline c56c393 同样 FAIL, 与本 feature 无关 (V4_closeout_* 系列由 infra-V6-backlog-080-v4-4-mutant 等历史 evidence shape 不全触发)"
+            },
+            {
+              "name": "smoke (./init.sh)",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=289 well_formed=289 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "600d52f"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "新增 verify_infra_P301_full.py (10 checks, V0-V5) 全量扫描 V0-locked verify 脚本并以 ALLOWED_MISSING 白名单管理元信息字段缺失; 三层自校 (targets_valid + no_redundant + global_coverage) 互锁, 44 条 historical-batch-pending 入白名单 + 1 条 P301-self 个性化豁免; Mutation A/B/C 全部按预期触发 FAIL/PASS; 5/5 抽样确认白名单条目全是 V0-locked 且确实缺字段; smoke PASS + 新 verify 10/10 + 关联 verify (P301/P290/036b/110) 全 PASS; v062 仍 pre-existing FAIL 6/30 与本 feature 无关.",
+            "checks_run": [
+              "new_file_baseline_main_absent",
+              "allowlist_audit_5_of_5",
+              "mutation_A_remove_allowlist_FAIL",
+              "mutation_B_add_redundant_FAIL",
+              "mutation_C_self_targets_valid_FAIL",
+              "verify_suite_7_of_7",
+              "v062_pre_existing_orthogonal"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "ALLOWED_MISSING reason 字段是自由文本, 后续条目多时难分类 — 建议改 typed enum (已入 backlog infra-P301-backlog-allowlist-reason-typed-enum)",
+                "V0 canonical marker 命名约定 (V0_SELF_SHA_LOCK_VERSION / BUMPED_AT) 未在 docstring 中明确, 异类命名扫不到 — 已入 backlog infra-P301-backlog-v0-marker-extended-naming",
+                "V0_SELF_SHA_LOCK_VERSION / BUMPED_AT 应在 closeout evidence runtime echo, 便于回溯 — 已入 backlog infra-P301-backlog-runtime-echo-evidence"
+              ]
+            }
+          },
+          "mutation_test": {
+            "kind": "tri_a_b_c",
+            "A_remove_allowlist_FAIL": "去掉一条 ALLOWED_MISSING 后 verify_infra_P301_full V0/V2 报 missing 字段 FAIL",
+            "B_add_redundant_FAIL": "加入实际已有 V0_SELF_SHA_LOCK_VERSION 的脚本到白名单, no_redundant 自校触发 FAIL",
+            "C_self_targets_valid_FAIL": "白名单写入不存在 / 非 V0-locked 路径时, targets_valid 自校触发 FAIL"
+          }
+        }
+      }
     },
     {
       "id": "infra-P302-backlog-v0-bumped-at-helper-or-hook",
@@ -16358,6 +16453,48 @@
       "description": "当前 V0_SELF_SHA_LOCK_VERSION=1 是每个 verify 脚本独立的 int 常量, 与外部 schema (例如 _verify_lib 集中表) 无联动, 后续若要批量升级到 v=2, 需手工扫一遍所有 V0 锁脚本. 提案: 在 scripts/_verify_lib 加 CURRENT_V0_SHA_LOCK_SCHEMA_VERSION 单一来源, 各 verify 脚本 import 而非自定义 int; verifier 强制校验 imported equality. 不阻 merge.",
       "dependencies": [
         "infra-P301-backlog-v0-sha-lock-version-field"
+      ]
+    },
+    {
+      "id": "infra-P301-backlog-allowlist-reason-typed-enum",
+      "priority": 999,
+      "area": "infra",
+      "title": "ALLOWED_MISSING reason 字段改 typed enum / 分类",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "source": "phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-1",
+      "description": "verify_infra_P301_full.py 的 ALLOWED_MISSING 白名单当前 reason 字段是自由文本 (44 条 historical-batch-pending + 1 条 P301-self). 条目变多时难分类与统计. 提案: reason 改 typed enum (如 historical_batch_pending / canonical_marker_renamed / self_exempt 等), verifier 校验 reason 必须在枚举内. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-extend-allowed-missing-allowlist-scan-all"
+      ]
+    },
+    {
+      "id": "infra-P301-backlog-v0-marker-extended-naming",
+      "priority": 999,
+      "area": "infra",
+      "title": "V0 canonical marker 命名约定补 docstring + 支持异类命名扫描",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "source": "phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-2",
+      "description": "verify_infra_P301_full.py 通过 V0_SELF_SHA_LOCK_VERSION / V0_SELF_SHA_LOCK_BUMPED_AT 字面标记识别 V0-locked 脚本, 命名约定未在 docstring 明示, 异类命名 (例如 SELF_SHA_LOCK_VERSION 缺 V0_ 前缀) 会被漏扫. 提案: 在脚本 docstring 显式记录命名约定, 同时扫 broader pattern + 报告 near-miss 候选. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-extend-allowed-missing-allowlist-scan-all"
+      ]
+    },
+    {
+      "id": "infra-P301-backlog-runtime-echo-evidence",
+      "priority": 999,
+      "area": "infra",
+      "title": "V0_SELF_SHA_LOCK_VERSION/BUMPED_AT 进 closeout evidence runtime echo",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "source": "phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-3",
+      "description": "当前 V0_SELF_SHA_LOCK_VERSION 与 V0_SELF_SHA_LOCK_BUMPED_AT 仅静态写在脚本里, closeout evidence 中并未 runtime echo, 后续回溯 (例如 mass-bump 后想确认特定脚本元数据值) 需重新扫文件. 提案: closeout_verify.verify_runs 中加 v0_sha_lock_meta 字段, runtime 把 (version, bumped_at) 也写入 evidence 便于审计. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-extend-allowed-missing-allowlist-scan-all"
       ]
     },
     {
