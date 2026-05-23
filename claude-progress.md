@@ -8379,3 +8379,26 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 5. robot-037-backlog-helper-docstring-module-only
 
 **Next**: phase-58 #1 = infra-P290-backlog-verifier-tag-naming-doc Engineer 阶段
+
+
+## Session 2026-05-23: phase-58 #1 infra-P290-backlog-verifier-tag-naming-doc → passing + merged
+
+**closeout**:
+- Reviewer fresh-context (sub_agent) LGTM, mutation_test_done=true; checks_run=6 (smoke / verify_infra_P290 / verify_infra_102 / Mutation A emit-tag rename / Mutation B stale alias 注入 / 还原后重跑)
+- Mutation A: emit tag rename → V4_doc_subset_of_emit + V4_emit_subset_of_doc + V2_target_file_sha 三重 FAIL (rc=2)
+- Mutation B: stale alias V4_uses_in_keyword 注入 → V4_no_stale_aliases FAIL (rc=2)
+- P2 findings 3 项（_extract_emit_tags 全局 walk 范围 / V5 grace_period 自身白名单 / V2 file sha 多层防御），acceptable 不衍生 backlog
+
+**merge**:
+- feat HEAD=593e9b4, merged --no-ff into main; merge_commit_sha=6343832; baseline=5033e39
+- baseline 上 verify_infra_P290 不存在 (新增脚本), verify_infra_102 baseline ALL PASS (27 checks)
+
+**post-merge verify (P299 形态 rc=$?)**:
+- ./init.sh smoke: rc=0
+- verify_infra_P290.py: 9/9 PASS, rc=0
+- verify_infra_102.py: 27/27 PASS, rc=0
+- verify_infra_062.py: 30 emit-paths / 30 unique check tags ALL PASS, rc=0
+
+**phase-58 progress**: 1/5 passing (剩 infra-036-batch-3 / V6-helper-docstring / P301-v0-sha-version / robot-037-helper-docstring)
+
+**Next**: phase-58 #2 = infra-036-backlog-expand-docstring-batch-3 Engineer 阶段

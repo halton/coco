@@ -15480,12 +15480,73 @@
     {
       "id": "infra-P290-backlog-verifier-tag-naming-doc",
       "priority": 999,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 58,
       "area": "infra",
       "title": "对齐 verify_infra_102 verifier tag 命名与 brief 文档口径",
       "rationale": "来源: #3.53 Reviewer P2 finding. brief 文档使用 V4_uses_in_keyword / V1_family_sets_are_frozenset / V_classify_func_sha 等 tag 名, 实际 verify_infra_102.py 使用 V4_uses_in_{dump,hub,lib}_family / V3_{hub,lib,dump}_is_frozenset / V4b_self_main_func_sha. 仅口径不一致非功能问题, 后续在 brief/docstring 中统一命名以减少新人理解成本。",
-      "started_at": "2026-05-23"
+      "started_at": "2026-05-23",
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "branch": "feat/infra-P290-backlog-verifier-tag-naming-doc",
+        "feat_head_sha": "593e9b4",
+        "closeout_verify": {
+          "main_head_sha": "6343832",
+          "merge_commit_sha": "6343832",
+          "baseline_head_echo": "5033e39",
+          "baseline_tail_stdout": "verify_infra_P290: baseline_pre_existing_skipped: file_not_in_baseline (scripts/verify_infra_P290.py 在 5033e39 不存在, 由本 feature 新建); verify_infra_102 在 baseline 5033e39 跑 [verify_infra_102][SUMMARY] ALL PASS (27 checks) rc=0",
+          "smoke_tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=280 well_formed=280 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\nrc=0",
+          "verify_runs": [
+            {
+              "name": "init.sh smoke",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=280 well_formed=280 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\nrc=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_infra_P290.py",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P290][PASS] V0_self_main_func_sha got=0ff1ac646febf748\n[verify_infra_P290][PASS] V1_docstring_sentinel sentinel='INFRA_P290_DOC_SHA_LOCKS'\n[verify_infra_P290][PASS] V2_target_file_sha got=3a3195a0191669a6 expect=3a3195a0191669a6\n[verify_infra_P290][PASS] V3_docstring_tags_nonempty count=27\n[verify_infra_P290][PASS] V3_emit_tags_nonempty count=27\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0\nrc=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_infra_102.py",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_102][PASS] V4_classify_default_module got='module' expect='module'\n[verify_infra_102][PASS] V4_no_or_chain\n[verify_infra_102][PASS] V4_uses_in_dump_family\n[verify_infra_102][PASS] V4_uses_in_hub_family\n[verify_infra_102][PASS] V4_uses_in_lib_family\n[verify_infra_102][PASS] V4b_self_main_func_sha got=072652ad44846671\n[verify_infra_102][PASS] V5_reviewer_lgtm_gate target=infra-P290-classify-node-family-sets helper_ok=True grace_skipped=True\n[verify_infra_102][SUMMARY] ALL PASS (27 checks)\nrc=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=83 enforced=49 soft_skipped=34 grace_skipped=16 violations=0\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=83 enforced=49 grace_skipped=14 violations=0\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=83 enforced=49 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=83 enforced=49 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)\nrc=0",
+              "status": "PASS"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-P290 docstring↔emit tag 一致性 lint 设计合理且 mutation 反证有效；V0-V5 9 checks 全 PASS，smoke PASS，工作树 clean",
+            "checks_run": [
+              "init.sh smoke (rc=0)",
+              "verify_infra_P290 baseline (rc=0, 9/9 PASS)",
+              "verify_infra_102 baseline (rc=0, 27/27 PASS)",
+              "Mutation A: emit tag rename → V4_doc_subset_of_emit + V4_emit_subset_of_doc + V2_target_file_sha 三重 FAIL (rc=2)",
+              "Mutation B: stale alias V4_uses_in_keyword 注入 → V4_no_stale_aliases FAIL (rc=2)",
+              "源码还原后 baseline 重跑 PASS, git status clean"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "_extract_emit_tags 全局 walk 范围: 当前 scan 整个 verify_infra_102.py 顶层而非仅 main 函数, 若未来在模块顶层添加非 emit 的字符串字面量也可能误匹配。acceptable, 实际风险低。",
+                "V5 grace_period 自身白名单: verify_infra_P290 自身处于 grace_period 时 V5 skipped, 这是设计预期但 evidence 中需明确标记 reason=grace_period。acceptable, helper 已正确返回 reason。",
+                "V2 file sha 锁多层防御: V0 self_main_func_sha + V2 target_file_sha + V3 emit_tags_nonempty 形成三重防御, 任一篡改都会触发 FAIL, 锁强度充分。acceptable, 不需要进一步加固。"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-P290-backlog-dump-family-equality-check",
