@@ -45,6 +45,7 @@ __all__ = [
     "read_constant",
     "assert_unique_needle",
     "scan_reverse_sha_locks",
+    "scan_reverse_sha_locks_ast",
     "live_verify_sha_set",
     "verify_reverse_sha_lock_consistency",
     "verify_expected_pattern_consistency",
@@ -157,6 +158,82 @@ def scan_reverse_sha_locks(scripts_dir: str | Path) -> list[dict]:
                     "sha_hex": sha_hex,
                     "kind": kind,
                 })
+    return results
+
+
+def scan_reverse_sha_locks_ast(scripts_dir: str | Path) -> list[dict]:
+    """AST 版反向 sha lock 扫描, 规避 regex 字面量假阳性。
+
+    infra-V6-backlog-scan-ast-based: regex 路径在 docstring/注释/嵌套 tuple
+    内的字面赋值字符串上可能误报 (实际 regex 用 `^...$` line anchor + 缩进 0,
+    docstring 内逐行内容若行首即形如 ``EXPECTED_X_SHA256 = "abc..."`` 仍会被匹到)。
+    AST 路径只识别真正的 module-toplevel ``ast.Assign`` 节点 + ``Name`` target
+    + ``Constant(str)`` value, docstring/comment/nested-tuple 内字面值不会被
+    解析为赋值, 因此天然忽略。
+
+    返回 schema 与 :func:`scan_reverse_sha_locks` 一致:
+    list of dict: {file, lineno, const_name, sha_hex, kind}
+    kind 仍为 "verify_id" 或 "expected_pattern", 不满足两者的 const 不收录。
+    """
+    base = Path(scripts_dir)
+    results: list[dict] = []
+    targets = sorted(base.glob("verify_*.py"))
+    lib = base / "_verify_lib.py"
+    if lib.is_file():
+        targets.append(lib)
+    for p in targets:
+        try:
+            src = p.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        try:
+            tree = ast.parse(src)
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if len(node.targets) != 1:
+                continue
+            tgt = node.targets[0]
+            if not isinstance(tgt, ast.Name):
+                continue
+            const_name = tgt.id
+            if "SHA" not in const_name:
+                continue
+            value = node.value
+            sha_hex: str | None = None
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                v = value.value
+                if len(v) == 64 and all(c in "0123456789abcdef" for c in v):
+                    sha_hex = v
+            elif isinstance(value, ast.Tuple) and value.elts:
+                # 取 tuple 中第一个 64-hex str constant 作为 sha
+                for el in value.elts:
+                    if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                        v = el.value
+                        if len(v) == 64 and all(c in "0123456789abcdef" for c in v):
+                            sha_hex = v
+                            break
+            if not sha_hex:
+                continue
+            if _RE_REVLOCK_VERIFY_ID.search(const_name):
+                kind = "verify_id"
+            elif _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
+                kind = "expected_pattern"
+            else:
+                continue
+            try:
+                rel = str(p.relative_to(base.parent)) if base.parent in p.parents else str(p)
+            except ValueError:
+                rel = str(p)
+            results.append({
+                "file": rel,
+                "lineno": node.lineno,
+                "const_name": const_name,
+                "sha_hex": sha_hex,
+                "kind": kind,
+            })
     return results
 
 

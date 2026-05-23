@@ -9445,7 +9445,34 @@
       "dependencies": [
         "infra-V6-backlog-extract-to-verify-lib"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "verify_script": "scripts/verify_infra_V6_scan_ast.py",
+        "ast_function_name": "scripts._verify_lib.scan_reverse_sha_locks_ast",
+        "verify_runs": [
+          {
+            "cmd": "python scripts/verify_infra_V6_scan_ast.py",
+            "rc": 0,
+            "status": "ALL PASS",
+            "tail_stdout": [
+              "[verify_infra_V6_scan_ast] PASS V1_self_sha: sentinel present; EXPECTED_SELF_FILE_SHA256 is __BUMP_ME__ placeholder (first-run bootstrap)",
+              "[verify_infra_V6_scan_ast] PASS V2_ast_vs_regex_clean: ast=250 regex=250 ast-only=0 regex-only=0",
+              "[verify_infra_V6_scan_ast] PASS V3_ast_ignores_docstring_literal: ast_names=['EXPECTED_REAL_VERIFY_999_SHA256'] re_names=['EXPECTED_FAKE_VERIFY_888_SHA256', 'EXPECTED_REAL_VERIFY_999_SHA256']",
+              "[verify_infra_V6_scan_ast] PASS V4_ast_ignores_comment_literal: ast_names=['EXPECTED_REAL_VERIFY_998_SHA256'] re_names=['EXPECTED_REAL_VERIFY_998_SHA256']",
+              "[verify_infra_V6_scan_ast] PASS V5_ast_ignores_nested_tuple_literal: ast_names=['EXPECTED_REAL_VERIFY_997_SHA256'] re_names=['EXPECTED_REAL_VERIFY_997_SHA256']",
+              "[verify_infra_V6_scan_ast][SUMMARY] ALL PASS (5 checks)"
+            ]
+          }
+        ],
+        "smoke": "./init.sh PASS",
+        "mutant_coverage": {
+          "V3_docstring_literal": "regex 误报 EXPECTED_FAKE_VERIFY_888_SHA256, AST 正确忽略 (ast ⊊ regex)",
+          "V4_comment_literal": "# 起首注释, regex/AST 都忽略 (regex line-anchor 行首要字母, AST 自然忽略)",
+          "V5_nested_tuple_literal": "OTHER_VAR = (\"EXPECTED_NESTED_*\", \"<hex>\") 嵌套 tuple, regex/AST 都忽略"
+        },
+        "reviewer": "pending (next step: Reviewer sub-agent fresh-context LGTM)"
+      },
+      "notes": "phase-63 #1 Engineer 完成: scripts/_verify_lib.py 新增 scan_reverse_sha_locks_ast(scripts_dir), ast.parse → module body Assign + Name target + Constant(str) value, len(v)==64 + 全 [0-9a-f] 判定; tuple value 取第一个 64-hex constant. kind 判定与 regex 路径一致 (verify_id / expected_pattern). 原 regex 路径保留作对照. 250 真实条目 AST/regex 集合等同. 新 verify_infra_V6_scan_ast.py V1-V5 全 PASS, smoke PASS. 保持 in_progress (P261 Engineer 不切 passing)."
     },
     {
       "id": "infra-V6-backlog-helper-docstring-clarify-live-set",
