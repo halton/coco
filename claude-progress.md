@@ -8858,3 +8858,12 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
 - P278 trustworthy verify: smoke PASS + verify_infra_P289(8) + 062(30) + 035(55) + 110(18) + P290(9) + 039(25) 全 PASS, 0 FAIL.
 - 3 backlog 入账: infra-P309-per-file-locks-V4-strict-mode / infra-P310-lock-doc-field-typo-guard / infra-P311-parse-lock-docstring-spec-doc (priority=999, status=backlog, phase=null).
 - 下一 candidate: priority=4 infra-V6-backlog-strict-area-match-mode.
+
+## Session 2026-05-24 phase-63 #4 closeout — infra-V6-backlog-strict-area-match-mode
+
+- Reviewer (sub-agent fresh-context) LGTM: P0/P1 空, P2×2 (EXPECTED_STRICT_UNKNOWN_SHA repo 强耦合 / parse_area regex 限制全字母).
+- Closeout cascade fix on feat branch (commit fc837a2): bump EXPECTED_VERIFY_LIB_FILE_SHA (v062+v110) → f789e0d8…, register 3 new helpers (parse_area_from_verify_path / scan_unknown_area_nnns / scan_reverse_sha_lock_consistency_strict) into v062 V3_HELPER_FUNC_NAMES.
+- merge: feat/infra-V6-backlog-strict-area-match-mode → main = a018e2f2.
+- P278 trustworthy verify @ main HEAD a018e2f2 (P299 mode, rc=$? after redirect): smoke PASS + V6_strict_area(6) + 062(30) + 035(55) + 110(18) + P290(9) + 039(25) 全 PASS, 0 FAIL.
+- 2 backlog 入账: infra-P312-strict-unknown-sha-auto-bump / infra-P313-parse-area-regex-policy (priority=3106/3107, status=not_started, phase=null).
+- 下一 candidate: priority=5 infra-033-backlog-multi-verify-venv-docstring.
