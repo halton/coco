@@ -1,5 +1,20 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-52 规划 (5 candidates promoted from V6/P-series backlog)
+
+- 上一 phase: phase-51 5/5 完整收官 (main HEAD=d5534b3, #1.51-#5.51 全 passing)
+- backlog 池规模: 108 项 (V6 backlog 12 项, P-series follow-up 30+ 项)
+- 选取标准: 优先 area=infra 小型 docstring/sha 锁/PR template 清理类; 避开 phase-48 已 STALE demote 的 id (080-v4-4-mutant / V6-helper-docstring-clarify-live-set); 避免 5 个都集中同一文件; 优先 phase-51 衍生 (verify-robot-037-lib-sha-bump + infra-040 default-tmpl-content-lock 为 phase-51 P0/P2 衍生 backlog)
+- 5 个候选 phase-52:
+  1. **52-1**: `infra-V6-backlog-verify-robot-037-lib-sha-bump` — verify_robot_037.py EXPECTED_VERIFY_LIB_FILE_SHA 持旧值 a80af008, sha bump cascade (phase-51 衍生 P0)
+  2. **52-2**: `infra-040-backlog-default-tmpl-content-lock` — default pull_request_template.md 内容反向回退保护 (V0b grep hint 或 V2b sha lock) (phase-51 衍生 P2)
+  3. **52-3**: `infra-P294-followup-helper-tail-chars-vs-bytes-doc` — `verify_evidence_tail_stdout_sha` helper docstring 明确 "chars not bytes" 语义 (纯 docstring 调整)
+  4. **52-4**: `infra-V6-bump-helper-lib-target` — bump_reverse_sha_lock 支持 `_verify_lib.py` 作为反向锁 target (NNN-agnostic fallback)
+  5. **52-5**: `infra-P298-verify-infra-064-helper-sha-full-coverage` — verify_infra_064.py V3 helper func sha 补全 (_file_sha / _emit 自锁)
+- 主题: 收尾 phase-51 衍生 (52-1/52-2) + V6 bump helper 扩展 (52-4) + 单点 sha 锁补全 (52-3/52-5); 5 个分布于不同文件 (verify_robot_037 / pull_request_template / _verify_lib docstring / bump_reverse_sha_lock / verify_infra_064), 避免同文件集中
+- 真机 UAT: 无 (本批全 sim-first, 持续开发模式 sim-first 默认)
+- 注: 初选 080-v4-4-mutant 与 V6-helper-docstring-clarify-live-set 经 progress log 校验已在 phase-48 #4.48/#5.48 STALE demote (closed_as_already_done), 换成 52-3/52-5
+
 ## Session 2026-05-23 — phase-51 规划 (5 candidates promoted from backlog)
 
 - backlog 池规模: 110 项 (V6 backlog 主要由 infra/V6/sha 锁体系延续 + 部分 robot/interact 残项)。
