@@ -16902,12 +16902,122 @@
       "area": "infra",
       "phase": 61,
       "title": "verify_infra_110 与 verify_infra_060 docstring 注明 EXPECTED_CLASSIFY_*_FUNC_SHA 同值 cross-check 故意保留",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-24",
       "source": "phase-60 #3 infra-110-backlog-classify-node-unknown-lock Reviewer 非阻塞 finding (concern1)",
       "scope": "infra-110 引入 V3b/V6b/V6c 三个 classify_node 锁的 EXPECTED sha 为同值, 这是跨脚本 cross-check 设计 (verify_infra_110 与 verify_infra_060 互证); 但当前 docstring 未声明意图, 后来者可能误以为是重复冗余而合并。建议在两脚本 docstring 注明意图。",
       "dependencies": [],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "1d1c113b378cd78beea6032ea1ca8c280bf1d4b5",
+          "baseline_head_echo": "fb6f253",
+          "merge_commit_sha": "1d1c113b378cd78beea6032ea1ca8c280bf1d4b5",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_035",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only matched=True\n[verify_infra_035] summary total=55 failed=0",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110][SUMMARY] ALL PASS (16 checks)",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "pre_existing_baseline_sha": "fb6f253",
+              "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "smoke_tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate\n[verify_infra_P301_full] summary: total=10 failed=0",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_P290",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290] summary: total=9 failed=0",
+              "freshness_anchor": "1d1c113"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)",
+              "freshness_anchor": "1d1c113"
+            }
+          ],
+          "mutation_test": {
+            "A": {
+              "desc": "delete '- bump_when:' line from V7 doc lock section in verify_infra_110.py",
+              "expected": "V7 FAIL",
+              "observed_rc": 2,
+              "observed_tail": "[verify_infra_110] FAIL V7_classify_node_lock_doc_present: missing fields in top-50-line docstring: ['- bump_when:']",
+              "result": "PASS"
+            },
+            "B": {
+              "desc": "uppercase field name '- target_function:' -> '- TARGET_FUNCTION:' (case-sensitive guard)",
+              "expected": "V7 FAIL",
+              "observed_rc": 2,
+              "observed_tail": "[verify_infra_110] FAIL V7_classify_node_lock_doc_present: missing fields in top-50-line docstring: ['- target_function:']",
+              "result": "PASS"
+            },
+            "C": {
+              "desc": "push Lock section past line 50 by inserting 60 padding lines before docstring fields",
+              "expected": "V7 FAIL (all 6 fields missing in top-50)",
+              "observed_rc": 2,
+              "observed_tail": "[verify_infra_110] FAIL V7_classify_node_lock_doc_present: missing fields in top-50-line docstring: ['- target_function:', '- target_file:', '- lock_kind:', '- bump_when:', '- bump_protocol:', '- rationale:']",
+              "result": "PASS"
+            },
+            "D": {
+              "desc": "modify _classify_node body in scripts/dump_v4_sha_graph.py (add 'if False: pass' before verify_ branch)",
+              "expected": "V3b/V6b func-sha FAIL, V7 doc-lock PASS (orthogonal locks)",
+              "observed_rc": 2,
+              "observed_tail": "[verify_infra_110] FAIL V3b_classify_node_func_sha: got=ea4bad19916a0c50 expect=8dffcf4ebd018624\n[verify_infra_110] FAIL V6b_classify_node_func_sha_meta\n[verify_infra_110] PASS V7_classify_node_lock_doc_present",
+              "result": "PASS"
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context 评审: V7 doc lock 字段集合 + 行号边界正确, A/B/C 三种字段消失场景全覆盖; D 场景证明 doc lock 与 sha lock 正交互补, 不会被对方掩盖. 两个非阻塞文档措辞建议(D mutation 描述与 func_sha_by_name 参数顺序)转 backlog 不修.",
+            "checks_run": [
+              "V7 doc lock field-set",
+              "case sensitivity",
+              "top-50-line boundary",
+              "orthogonality with V3b/V6b sha lock"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "D mutation 描述措辞可更精确",
+                "func_sha_by_name 参数顺序文档化"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-110-backlog-mermaid-node-id-readability",
@@ -17206,6 +17316,18 @@
           "summary": "Reviewer fresh-context 评审 infra-P305 V10_pragma_attached_to_real_constant_only: 验证 V10 正则收紧 (要求 pragma 必须挂在 EXPECTED_SELF_FILE_SHA = \"<64 lowercase hex>\" 这种真常量赋值行末尾，覆盖 V9 仅查 pragma 出现次数的盲点)；4 路 mutation A/B/C/D 全 FAIL；V9/V10 独立无 cascade；expected actual sha=a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73 匹配；feat 分支 HEAD=979080f；LGTM 通过。"
         }
       }
+    },
+    {
+      "id": "infra-110-backlog-classify-lock-doc-value-assert",
+      "title": "V8 doc-lock 升级 — 不仅锁字段名, 还锁字段值精确匹配",
+      "area": "infra",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "depends_on": [
+        "infra-110-backlog-classify-lock-cross-check-doc"
+      ],
+      "rationale": "phase-61 #3 Reviewer 2 个非阻塞文档措辞建议合并入此 backlog: 当前 V7 仅校验 '- target_function:' 等 6 字段名存在; 升级 V8 需进一步锁定 '- target_function: classify_node' 等 6 字段的值精确匹配, 防止字段名保留但 value 被改成 wrong identifier (如 - target_function: render_mermaid) 造成 doc lock 错锁到不同函数. D mutation 描述措辞细化与 func_sha_by_name 参数顺序文档化也并入此项."
     }
   ],
   "_meta": {

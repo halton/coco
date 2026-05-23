@@ -8625,3 +8625,20 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 7 verify_runs (P299 模式): smoke/v035/v110 PASS, v062 FAIL (pre-existing 6/30 emit-paths, 与本 feature 无关, baseline_sha=cb5d4195 baseline emit-paths 一致), vP301f/vP290/v039 PASS
 - push: github socket timeout, 失败即忽略不重试
 - 下一候选: phase-61 #3 (priority=202) infra-110-backlog-classify-lock-cross-check-doc
+
+## Session 2026-05-24 (phase-61 #3 closeout: infra-110-backlog-classify-lock-cross-check-doc)
+
+- feature `infra-110-backlog-classify-lock-cross-check-doc` 关闭 → status=`passing`
+- feat 分支 HEAD=3434d59, baseline=fb6f253
+- merge --no-ff → NEW_MAIN_SHA=1d1c113b378cd78beea6032ea1ca8c280bf1d4b5
+- V7 doc lock: SELF 文件顶部 docstring 前 50 行必须含 `- target_function:` `- target_file:` `- lock_kind:` `- bump_when:` `- bump_protocol:` `- rationale:` 6 个字段(大小写敏感, markdown 列表前缀); 与 V3b/V6b 的 _classify_node func sha 锁正交互补
+- 7 verify_runs (P299 模式): smoke rc=0, v035 rc=0, v110 rc=0, v062 rc=1 (FAIL 6/30 pre-existing baseline=fb6f253 emit-paths 一致, 与本 feature 无关), vP301f rc=0, vP290 rc=0, v039 rc=0
+- mutation A/B/C/D 全 PASS:
+  - A: 删 `- bump_when:` 行 → V7 FAIL ✓
+  - B: 字段大写 `- TARGET_FUNCTION:` → V7 FAIL ✓ (case-sensitive)
+  - C: Lock 小节挪到 50 行后 → V7 FAIL ✓ (top-50-line boundary)
+  - D: 改 _classify_node 函数体 → V3b/V6b sha FAIL, V7 doc PASS ✓ (正交性证明)
+- Reviewer fresh-context sub-agent verdict=LGTM, P0/P1 none, P2 2 个非阻塞文档措辞建议(D mutation 描述与 func_sha_by_name 参数顺序) → 合并为新 backlog `infra-110-backlog-classify-lock-doc-value-assert` (priority=999): V8 doc-lock 升级——不仅锁字段名, 还锁字段值精确匹配 (防止字段名保留但 value 被改成不同函数名)
+- closeout commit sha: 见 git log
+- push: socket/网络失败忽略不重试
+- 下一候选: phase-61 #4 (priority=203) infra-110-backlog-composite-key-src-stem-no-expected-substring
