@@ -7441,3 +7441,16 @@ phase-46 5 候选 promoted to not_started：
   - infra-V6-backlog-076-helper-tuple-extract-to-lib-constant
   - infra-V6-backlog-080-v4-4-mutant-assert-substituted-true
   - infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list
+
+## Session 2026-05-23 phase-47 #3.47 Engineer
+- feature: infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity
+- 根因: phase-46 #5.46 仲裁——inspect.getsource() 在 py3.9 vs 3.13 输出差异，导致 V1_self_main_func_sha / V3_helper_func_sha 出 ghost FAIL
+- 修复: scripts/_verify_lib.py 顶部加 sys.version_info < (3, 13) 守门 raise RuntimeError
+- LIB_FILE_SHA: 48a283fba25bb498 → b3005a7d9272fb06 (full=b3005a7d9272fb06c30bc254d8530848d481f2854b77580ef6bb2a7f6166bf55)
+- cascade bump: 36 files (verify_infra_037/061-098 含相关)
+- 验证:
+  - verify_infra_062 ALL PASS (30 checks，含 V1/V3/V4_byte_match/V5)
+  - 抽样 076/080/097/098 ALL PASS
+  - 守门测试: /usr/bin/python3 (3.9) raise RuntimeError 命中；.venv/bin/python (3.13) PASS
+  - smoke ./init.sh 通过
+- feature 仍 not_started，待 Reviewer + closeout
