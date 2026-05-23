@@ -6530,7 +6530,7 @@
       "area": "infra",
       "phase": 56,
       "title": "assert_unique_needle 边界行为锁: 空 needle + 重叠 substring",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-040-backlog-mutant-needle-uniqueness-helper closeout Reviewer 建议",
       "scope": "assert_unique_needle 边界行为锁: 空 needle reject + 重叠 substring (str.count 不重叠计数) docstring 显式 + V4 case 锁住",
@@ -6540,7 +6540,54 @@
       "verification": [
         "python scripts/verify_infra_040.py  # V6a/V6b file+func sha + V6c source literal + V6d empty-needle reject + V6e overlap aaa/aa unique + V6f aaaa/aa non-unique"
       ],
-      "updated_at": "2026-05-23T19:30:00"
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "3c6ebe6",
+          "merge_commit_sha": "3c6ebe6",
+          "baseline_head_echo": "f5ef0c3",
+          "pre_existing_baseline_sha": "f9720b4b",
+          "baseline_tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one'] -- pre-existing baseline: unknown_count=9 (EXPECTED_AGENTS_MD_FILE_SHA + 8 others), 持续 FAIL 属预期, 与本 feature 范围无关",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=267 well_formed=267 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_040",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_040][PASS] V6d_empty_needle_rejects raised=ValueError('empty needle: assert_unique_needle 不接受空字符串') msg_match=True\n[verify_infra_040][PASS] V6e_overlap_aaa_aa_unique count=1 (non-overlap) treated as unique\n[verify_infra_040][PASS] V6f_aaaa_aa_non_unique raised=ValueError(\"needle 不唯一: count=2, needle='aa'\") count_in_msg=True\n[verify_infra_040][SUMMARY] ALL PASS (18 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_060",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=74 enforced=42 soft_skipped=32 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-040 bis: assert_unique_needle 边界行为锁完整。V6d 空 needle reject (ValueError msg 含 'empty needle'), V6e overlap aaa/aa unique via str.count 不重叠, V6f aaaa/aa non-unique count=2。docstring 显式锁住 '非重叠' 语义。mutation A (删除 empty-needle raise) / mutation B (改为 in 重叠匹配) 双方向 drift verified, 18 checks 全 PASS, 53 cascade EXPECTED_VERIFY_LIB_FILE_SHA 同步更新到 eb8b778efa96, V6b helper func_sha 锁住 3b92e4f2a058b1bd。Reviewer fresh-context LGTM。",
+            "checks_run": [
+              "V6a verify_lib_file_sha lock",
+              "V6b assert_unique_needle func_sha lock",
+              "V6c source literal '空 needle' / '非重叠' present",
+              "V6d empty needle reject ValueError msg match",
+              "V6e overlap aaa/aa unique (count=1 non-overlap)",
+              "V6f aaaa/aa non-unique (count=2 in msg)",
+              "mutation A: 删除 empty-needle raise -> V6d drift",
+              "mutation B: 改 str.count 为 in/find -> V6e/V6f drift",
+              "53 cascade EXPECTED_VERIFY_LIB_FILE_SHA 同步 eb8b778efa96"
+            ],
+            "mutation_test_done": true
+          }
+        }
+      },
+      "updated_at": "2026-05-23T20:00:00"
     },
     {
       "id": "infra-042-backlog-cmpflipper-bidirectional",

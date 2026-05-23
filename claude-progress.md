@@ -8132,3 +8132,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - **56-5 interact-036a-backlog-drift-jsonl-rotation** (prev 999, cascade≈零): drift jsonl size cap / rotation, 价值: V0/V4 rotation 行为锁
 - big_item_head: 无 (本 phase 全规避)
 - 下一步: 派 sub-agent 执行 phase-56 #1 (infra-040-backlog-bis-empty-needle-and-overlap) 开发
+
+## Session 2026-05-23 phase-56 #1 closeout (infra-040-backlog-bis-empty-needle-and-overlap)
+
+- feature: infra-040-backlog-bis-empty-needle-and-overlap, status not_started -> in_progress -> passing
+- baseline main HEAD: f5ef0c3 (phase-56 plan commit)
+- feat branch HEAD: be968f2 (bis helper empty-needle + overlap edge case lock)
+- merge --no-ff -> merge_commit_sha = 3c6ebe6 (54 files: 1 lib + 1 verify_infra_040 + 1 verify_infra_099 helper sha + 53 cascade EXPECTED_VERIFY_LIB_FILE_SHA -> eb8b778efa96)
+- verify_infra_040 post-merge rerun: ALL PASS (18 checks: V6a/V6b/V6c×2/V6d/V6e/V6f all green)
+- verify_infra_060 baseline echo: V4_real_unknown_count_eq_one FAIL (unknown_count=9, pre-existing, 与本 feature 无关; 其余 13/14 PASS)
+- verify_infra_062 trustworthy lock: 30/30 PASS (30 emit-paths / 30 unique check tags)
+- smoke: PASS (typo-guard total=267 well_formed=267 typo_count=0)
+- Reviewer: sub_agent_fresh_context LGTM, mutation A/B drift verified, checks_run 9 items
+- helper assert_unique_needle 状态: empty-needle ValueError + 非重叠 docstring, func_sha=3b92e4f2a058b1bd, lib file_sha=eb8b778efa96cf72
+- phase_56_status: 1/5 complete
+- 下一步: 派 sub-agent 执行 phase-56 #2 (infra-100-backlog-shell-rc-soft-warning)
