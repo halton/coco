@@ -8572,3 +8572,32 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - infra-P305-backlog-pragma-attached-to-real-constant-only — V10 机械断言: pragma 行必须正则匹配真 EXPECTED_SELF_FILE_SHA = "[0-9a-f]{64}"
 - Closeout commit SHA: 见下一行 git log
 - phase-60 5/5 完成 → 下一步 phase-61 planning
+
+## Session 2026-05-24 phase-61 planning + #1 Engineer
+
+### phase-61 promote (5 candidates, priority 200-204)
+
+| pri | feature-id | 概要 |
+|---:|---|---|
+| 200 | infra-P305-backlog-pragma-cardinality-mechanical-assert | V9 机械断言: V8 pragma 行 cardinality == 1, 防新增第二条 pragma 形成绕过 surface |
+| 201 | infra-P305-backlog-pragma-attached-to-real-constant-only | V10 机械断言: pragma 行必须匹配 ^EXPECTED_SELF_FILE_SHA = "[0-9a-f]{64}"  # V8-SELF-SHA-SKIP$ |
+| 202 | infra-110-backlog-classify-lock-cross-check-doc | verify_infra_110/060 docstring 注明 EXPECTED_CLASSIFY_*_FUNC_SHA 同值是 cross-check 故意保留 |
+| 203 | infra-110-backlog-composite-key-src-stem-no-expected-substring | V4_composite_key_well_formed src_stem 边界 lookahead + 命名约束 |
+| 204 | infra-039-backlog-v4-output-anchors-lower-bound | v039 V4_output_anchors anchor 字面值改 lower-bound 或动态读 v4_sha.json |
+
+### phase-61 #1 Engineer: infra-P305-backlog-pragma-cardinality-mechanical-assert
+
+- branch: feat/infra-P305-backlog-pragma-cardinality-mechanical-assert (from main HEAD=61efc38)
+- 改动文件: scripts/verify_infra_035.py
+  - 新增 v9_pragma_cardinality() 函数 + docstring (全文 rstrip endswith "# V8-SELF-SHA-SKIP" 行数 == 1)
+  - 在 docstring 加 V9 段落
+  - main() 调用 v9_pragma_cardinality()
+  - V8 bump: V8_SELF_SHA_LOCK_VERSION 2→3, EXPECTED_SELF_FILE_SHA efe3a953→9d101f0b (因新增 V9 + docstring 改动)
+- verify 结果: rc=0, 54/54 PASS (含 V9_pragma_cardinality pragma_hit_count=1 expect=1)
+- mutation 自测:
+  - A 注入第二条 pragma 行 → V9 FAIL hit_count=2; V8 仍 PASS (证明 V9 catch 了 V8 盲点)
+  - B 移除真常量 pragma → V8 FAIL + V9 FAIL hit_count=0 (双锁)
+- smoke: ./init.sh rc=0
+- cascade: 无下游 verify 锁 verify_infra_035.py 自身 sha, 无需级联 bump
+- Engineer concerns: 无; V9 与 V8 完全独立, 不改 V8 计算逻辑, 仅新增维度
+- 待 Reviewer fresh-context sub-agent LGTM
