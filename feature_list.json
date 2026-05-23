@@ -8069,21 +8069,27 @@
               "status": "PASS",
               "tail_stdout": "[verify_infra_104][PASS] V6d_dict_literal_seg_extracted seg_len=85\n[verify_infra_104][PASS] V6d_dict_literal_clean polluters_in_dict_value=[]\n[verify_infra_104][SUMMARY] ALL PASS (22 checks)",
               "context": "post-merge-rerun",
-              "checks": 22
+              "checks": 22,
+              "name": "verify_infra_104",
+              "freshness_anchor": "post-merge-rerun"
             },
             {
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
               "context": "post-merge-rerun",
-              "checks": "30/30"
+              "checks": "30/30",
+              "name": "verify_infra_062",
+              "freshness_anchor": "post-merge-rerun"
             },
             {
               "script": "scripts/verify_infra_060.py",
               "status": "FAIL",
               "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
               "context": "post-merge-rerun (pre-existing baseline, P2 not regression)",
-              "pre_existing_baseline_sha": "f7974db"
+              "pre_existing_baseline_sha": "f7974db",
+              "name": "verify_infra_060",
+              "freshness_anchor": "post-merge-rerun"
             }
           ],
           "reviewer": {
