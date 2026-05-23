@@ -13027,14 +13027,15 @@
     },
     {
       "id": "infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump",
-      "priority": 1.49,
-      "phase": 49,
-      "status": "not_started",
+      "priority": 999,
+      "phase": null,
+      "status": "backlog",
       "area": "infra",
       "title": "037/061/064 lib_file_sha 历史 floor 锁 bump",
       "rationale": "phase-45 #2.45 Reviewer P2 指出 037/061/064 verify_infra 涉及 _verify_lib 历史 floor 锁，随 lib 持续演进需周期性 bump；本 backlog 跟踪。",
       "description": "verify_infra_037 / 061 / 064 中针对 _verify_lib.py 的 file_sha 历史 floor 锁随 _verify_lib 多次扩展（新增 grace_period 参数等）已漂移；需 bump floor sha 或加 grace_set。",
-      "acceptance": "037/061/064 V3/V4 helper_func_sha 与当前 _verify_lib 一致或显式 grace"
+      "acceptance": "037/061/064 V3/V4 helper_func_sha 与当前 _verify_lib 一致或显式 grace",
+      "notes": "STALE @ phase-49 #1.49: Engineer 复查 main HEAD 75ea69c 上 _verify_lib.py sha = b3005a7d9272fb06... (已 #3.47 守门), 037/061/064 的 EXPECTED_VERIFY_LIB_FILE_SHA 已全部 = b3005a7d, 三 verify 全 PASS, 无需 bump. 注: 前次审计 sub-agent 在错误侧分支测量得旧 sha 是观测误差非实际矛盾, 侧分支已删. closed_as_already_done."
     },
     {
       "id": "infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate",

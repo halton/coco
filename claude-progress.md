@@ -7554,3 +7554,16 @@ phase-46 5 候选 promoted to not_started：
   - 5.49 infra-P299-shell-verify-rc-usage-doc (shell verify rc 用法文档)
 - 062 30/30 PASS、smoke PASS（venv py3.13）
 - 主会话编排，sub-agent 执行 audit/edit/verify/commit
+
+## Session 2026-05-23 phase-49 #1.49 STALE demote + #2.49 STOP
+
+- **#1.49** infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump — STALE @ phase-49 (closed_as_already_done)
+  - main HEAD 75ea69c 上 _verify_lib.py sha = b3005a7d9272fb06c30bc254d8530848d481f2854b77580ef6bb2a7f6166bf55（已 #3.47 守门）
+  - 037/061/064 三 verify 全 PASS，EXPECTED_VERIFY_LIB_FILE_SHA 已全 = b3005a7d，无需 bump
+  - 前次审计 sub-agent 在错误侧分支 feat/infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump (commit 3047563) 测量得旧 sha 是观测误差；该侧分支已 `git branch -D` 删除
+  - feature demote: status=backlog, priority=999, phase=null
+  - 062 30/30 PASS、smoke PASS（venv py3.13）
+- **#2.49** infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup — STOP（候选分批方案待主会话决策）
+  - 审计：verify_infra_062/066/067/068/069/070 脚本内**无** baseline_v0/v1/v3 引用；scripts/ 下亦无 V0/V1/V3 placeholder 残留
+  - feature 实质要求在 _verify_lib 抽 helper（pre_existing_baseline 查找逻辑）并跨多脚本 cascade bump，触碰 LIB sha 全链 cascade（被本轮指令明令禁止动 _verify_lib 函数体内容）+ 工作量 >5min
+  - 建议候选：A) 收窄为"closeout evidence 语义文档化"（仅改 AGENTS.md/CLAUDE.md，无代码 cascade）；B) 拆两阶段（先 helper 设计 spike，再 cascade bump 单独立 feature）；C) 也走 STALE demote（P291 历史 evidence 已自然收敛）
