@@ -8162,3 +8162,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - helper assert_unique_needle 状态: empty-needle ValueError + 非重叠 docstring, func_sha=3b92e4f2a058b1bd, lib file_sha=eb8b778efa96cf72
 - phase_56_status: 1/5 complete
 - 下一步: 派 sub-agent 执行 phase-56 #2 (infra-100-backlog-shell-rc-soft-warning)
+
+## Session 2026-05-23 phase-56 #3 (infra-036-backlog-sha-lock-graph-dump) closeout (stale_already_done)
+- feature: infra-036-backlog-sha-lock-graph-dump (priority 56-3)
+- 模式: stale_already_done — scope (V4 sha 锁链路 DAG dump helper) 已被 phase-50/51 infra-039 系列 + infra-043/044 完整实现并锁定
+- 当前 scripts/dump_v4_sha_graph.py 覆盖 v4_sha.json hub (15 targets) + 253 reverse sha locks，_classify_node 6 类持续锁住
+- main HEAD before: 077849c
+- merge commit: b97a6a8 (no-ff: feat/infra-036-backlog-sha-lock-graph-dump @ 6610f10)
+- post-merge smoke: PASS 10/10 (typo-guard 267/267)
+- verify_infra_060: FAIL 1/14 V4_real_unknown_count_eq_one (unknown_count=9) — pre-existing baseline @ f9720b4b, 与 infra-036 stale 收敛范围解耦
+- verify_infra_062: ALL PASS 30/30 (post-fix evidence schema: verify_runs 3 items, baseline_head_echo=077849c ≠ main_head_sha=b97a6a8, freshness_anchor=post-merge-rerun)
+- dump_v4_sha_graph.py --json: rc=0, hub count=15 targets + 253 reverse locks
+- Reviewer: sub_agent_fresh_context LGTM (verdict_original=LGTM_stale_already_done, summary 前缀 [stale_already_done], 8 checks_run, mutation_test_done=false)
+- 0 业务源码改动 (仅 feature_list.json status 收敛 + closed_as_already_done=true)
+- phase_56_status: 3/5 complete
+- 下一步: 派 sub-agent 执行 phase-56 #4
