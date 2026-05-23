@@ -7447,7 +7447,7 @@
       "area": "infra",
       "phase": 56,
       "title": "dump_reverse_sha_lock_index stats 加 kind 拆解",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Engineer 自报",
       "scope": "dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解，便于观测两类锁规模演化。",
@@ -7455,8 +7455,13 @@
         "infra-049-backlog-reverse-lock-pattern-expand"
       ],
       "verification": [],
-      "notes": "promoted to phase-50 #3.50 | STALE @ phase-50 #3.50: scope 被 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整覆盖。stats.kind_breakdown dict 已暴露 per-kind 计数 (expected_pattern/verify_id), verify_infra_049 V4_json_kind_breakdown 锁 sum_eq_scanned=True. closed_as_already_done.",
-      "updated_at": "2026-05-23T19:02:59"
+      "notes": "promoted to phase-50 #3.50 | STALE @ phase-50 #3.50: scope 被 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整覆盖。stats.kind_breakdown dict 已暴露 per-kind 计数 (expected_pattern/verify_id), verify_infra_049 V4_json_kind_breakdown 锁 sum_eq_scanned=True. closed_as_already_done @ phase-56 #2.",
+      "updated_at": "2026-05-23T00:00:00",
+      "closed_at": "2026-05-23",
+      "closed_as_already_done": true,
+      "evidence": [
+        "phase-56 #2 Engineer: scope 已被 phase-49 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整实现并锁定。stats.kind_breakdown={'expected_pattern': 216, 'verify_id': 13} sum_eq_scanned=True 由 verify_infra_049 V4_json_kind_breakdown 持续锁定。baseline verify_infra_049 rc=0 ALL PASS (19 checks); ./init.sh smoke 5/5 PASS。0 业务源码改动 (本 feature 不引入新代码，仅做 status 收敛)。"
+      ]
     },
     {
       "id": "infra-049-backlog-infer-target-to-verify-lib",
