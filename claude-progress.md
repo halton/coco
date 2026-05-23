@@ -8073,3 +8073,20 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer (sub-agent fresh-context): LGTM, P0/P1/P2 均空
 - backlog 入账: 无
 - 下一候选: infra-P299-baseline-cross-check-v4-invalid-ref-coverage (#3.55)
+
+### phase-55 #3.55 closeout — infra-P299-baseline-cross-check-v4-invalid-ref-coverage (2026-05-23)
+- 合并 feat/infra-P299-baseline-cross-check-v4-invalid-ref-coverage 到 main (no-ff)
+- main HEAD: 76aaa6b (merge_commit_sha=76aaa6bdd3d814267a7f127540c0e043b887626b)
+- baseline (pre-merge main): 4a0a3e7
+- 改动: scripts/verify_infra_065.py v4_behavior +49/-1, 新增 V4.4b x3 (not_a_ref / foo..bar / foo bar) + V4.4c x2 (空串 / 纯空格), 共 5 个 invalid ref emit
+- cascade=0 (verify_infra_065 自闭, 不涉 _verify_lib helper)
+- post-merge verify (HEAD=76aaa6b):
+  - verify_infra_065.py: ALL PASS (18/18) — V4.4 / V4.4b x3 / V4.4c x2 全 PASS
+  - verify_infra_060.py: FAIL 1/14 V4_real_unknown_count_eq_one (pre-existing baseline @ 4a0a3e7, 与本 PR 无关)
+  - verify_infra_062.py: ALL PASS (30/30)
+  - ./init.sh smoke: 通过
+- Reviewer (sub-agent fresh-context): LGTM
+  - mutation test: short-circuit helper → V4.4c FAIL + V1_self_checker_func_sha lock FAIL 双层抓, 还原干净
+  - P0/P1 空; P2 nit: V4.4c 空串/纯空格容忍设计可接受 (不入账)
+- backlog 入账: 无
+- 下一候选: infra-P283-palette-distinct-helper-edge-case-locks (#4.55)

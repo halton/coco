@@ -9789,13 +9789,70 @@
     {
       "id": "infra-P299-baseline-cross-check-v4-invalid-ref-coverage",
       "priority": "55-3",
-      "status": "not_started",
+      "status": "passing",
       "phase": 55,
       "area": "infra",
       "title": "V4.4 invalid baseline ref 用例补纯非法字符串覆盖",
       "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。 || phase-55 plan: P294-R4 Reviewer finding 留尾, 加固 P278 closeout-verify-trustworthy gate 的 invalid ref 错误捕获覆盖.",
       "spec": "scripts/verify_infra_062.py V4.4 当前用 40-hex 'deadbeef…' 触发 git rev-parse fail; 补 V4.4b (纯非法字符串 'not_a_ref') / V4.4c (含空格 / 含 '..' 的 ref) 用例, 锁住 rev-parse 错误捕获边界. 同步 verify_infra_062 自 sha bump.",
-      "cascade_est": "0 (verify_infra_062 自闭, 不涉 _verify_lib helper)"
+      "cascade_est": "0 (verify_infra_062 自闭, 不涉 _verify_lib helper)",
+      "verification": "scripts/verify_infra_065.py",
+      "evidence": {
+        "summary": "phase-55 #3.55 P299 V4.4 invalid baseline ref 覆盖加固 — verify_infra_065 v4_behavior +49/-1 新增 V4.4b x3 (not_a_ref / foo..bar / 含空格) + V4.4c x2 (空串 / 纯空格), 共 5 个新 invalid ref emit, 全在 post-merge HEAD=76aaa6b 实跑 18/18 PASS; cascade=0 (verify_infra_065 自闭, 不涉 _verify_lib helper). Reviewer fresh-context mutation test: short-circuit helper → V4.4c FAIL + SHA lock FAIL 双层抓, 还原干净. 060 V4_real_unknown_count_eq_one pre-existing FAIL (baseline=4a0a3e7) 与本 feature 无关.",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_065.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_065][PASS] V4.4_invalid_baseline_ref_errors got err=\"baseline_ref invalid: 'deadbeef1234567890abcdef1234567890abcdef' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.4b_invalid_baseline_ref_string_not_a_ref bad_ref='not_a_ref' got err=\"baseline_ref invalid: 'not_a_ref' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.4b_invalid_baseline_ref_string_range_dotdot bad_ref='foo..bar' got err=\"baseline_ref invalid: 'foo..bar' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.4b_invalid_baseline_ref_string_contains_space bad_ref='foo bar' got err=\"baseline_ref invalid: 'foo bar' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.4c_invalid_baseline_ref_blank_empty bad_ref='' got err=\"baseline_ref invalid: '' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.4c_invalid_baseline_ref_blank_whitespace bad_ref='   ' got err=\"baseline_ref invalid: '   ' (git rev-parse stderr='fatal: Needed a single revision')\" total=0\n[verify_infra_065][PASS] V4.5_mixed_claims_partial_contradiction got total=2 verified=1 contradicted=1 err=None\n[verify_infra_065][PASS] V5_reviewer_lgtm_gate target=infra-P294-R4-fail-baseline-cross-check helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P294-R4-fail-baseline-cross-check' in grace_period (skipped)\"\n[verify_infra_065][SUMMARY] ALL PASS (18 checks)",
+            "freshness_anchor": "post-merge-rerun",
+            "name": "scripts/verify_infra_065.py"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "status": "FAIL",
+            "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+            "freshness_anchor": "post-merge-rerun",
+            "name": "scripts/verify_infra_060.py",
+            "note": "pre-existing baseline FAIL (4a0a3e7), V4_real_unknown_count_eq_one unknown_count=7 expect=1, 与本 feature P299 无关 (verify_infra_065 自闭, cascade=0)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=71 enforced=39 soft_skipped=32 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=71 enforced=39 soft_skipped=32 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+            "freshness_anchor": "post-merge-rerun",
+            "name": "scripts/verify_infra_062.py"
+          }
+        ],
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=264 well_formed=264 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "pre_existing_baseline_sha": "4a0a3e7",
+        "baseline_tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "baseline_head_echo": "4a0a3e7",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "verify_infra_065 v4_behavior +49/-1 新增 V4.4b/V4.4c 共 5 个 invalid ref emit (not_a_ref / foo..bar / 含空格 / 空串 / 纯空格), 全 PASS; mutation test: short-circuit helper → V4.4c FAIL + V1_self_checker_func_sha lock FAIL 双层抓, 还原干净; cascade=0, verify_infra_065 自闭, 不涉 _verify_lib helper; P2 nit: V4.4c 容忍设计 (空串/空格也走 rev-parse fail path) 可接受",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "V4.4c 空串/纯空格容忍设计可接受, 不需进一步细分 ValueError vs rev-parse fail"
+            ]
+          },
+          "checks_run": {
+            "mutation_test_done": "short_circuit_helper",
+            "cascade_verified": true,
+            "verify_runs_freshness_checked": true
+          }
+        },
+        "closeout_verify": {
+          "main_head_sha": "76aaa6bdd3d814267a7f127540c0e043b887626b",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM"
+          }
+        },
+        "merge_commit_sha": "76aaa6bdd3d814267a7f127540c0e043b887626b"
+      }
     },
     {
       "id": "infra-P299-followup-engineer-stale-verify-evidence",
