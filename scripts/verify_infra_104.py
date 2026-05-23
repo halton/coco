@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""verify_infra_104: _PER_FILE_SELF_LOCKS 集合边界 comment 自锁 (verify-only).
+"""verify_infra_104: _PER_FILE_SELF_LOCKS 集合边界 comment 自锁 (V1 window 加固).
 
 infra-047-backlog-per-file-self-locks-comment (phase-53 #5.53):
 ``scripts/dump_v4_sha_graph.py`` 的 ``_PER_FILE_SELF_LOCKS`` 仅装"target =
@@ -8,21 +8,39 @@ func-sha / block-sha 的常量 (如 ``SETTER_BLOCK_EXPECTED_SHA`` /
 ``EXCEPT_BLOCK_SHA``) 留在 ``_PER_FILE_LOCKS`` 二级查表。本 feature 在
 ``_PER_FILE_SELF_LOCKS`` 上方加 comment 解释这一边界, 防止后续维护误归类。
 
+infra-104-backlog-v1-window-hardening (phase-57 #2):
+原 V1 用 ``[target_idx-12, target_idx)`` 行号偏移窗口扫 comment 关键词,
+当 ``_PER_FILE_LOCKS`` dict 体量增长时上方窗口可能误纳入 dict 末尾行造成假阳/假阴。
+本次改为 AST 锚 + sentinel comment 双锁:
+  1. AST 解析 dump_v4_sha_graph.py, 找 ``_PER_FILE_SELF_LOCKS`` 顶层赋值, 取其 lineno
+     作为 anchor (不依赖字符串 startswith / 行号偏移);
+  2. 在 anchor 上方 (含整文件) literal-grep ``V1_SELF_LOCKS_COMMENT_BEGIN`` /
+     ``V1_SELF_LOCKS_COMMENT_END`` 双 sentinel; 两个 sentinel 之间的精确窗口才是
+     V1 comment 区, 关键词必须在其中出现; dict literal 内容不能进入窗口;
+  3. V6 behavior 实测: 从源文件 extract sentinel-delimited window, assert
+     ``_PER_FILE_SELF_LOCKS`` 顶层赋值 lineno 在 ``V1_SELF_LOCKS_COMMENT_END``
+     之下, 且所有 V1 关键词均在 sentinel window 内, dict literal 内绝不含
+     sentinel.
+
 INFRA_104_SHA_LOCKS
 -------------------
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
 - self ``main`` func sha: EXPECTED_SELF_MAIN_FUNC_SHA
 
-校验层级 (V0-V5):
+校验层级 (V0-V6):
 
-- V0 scaffolding: dump_v4_sha_graph.py 存在 + _PER_FILE_SELF_LOCKS 与
-  _PER_FILE_LOCKS 两个顶层符号存在
-- V1 comment 关键词: _PER_FILE_SELF_LOCKS 上方 10 行 comment 必须同时含
-  "SETTER_BLOCK_EXPECTED_SHA" + "func-sha" + "_PER_FILE_LOCKS" 三个关键词
+- V0 scaffolding: dump_v4_sha_graph.py 存在 + _PER_FILE_SELF_LOCKS / _PER_FILE_LOCKS 顶层符号
+- V1 sentinel-delimited window 内含 ("SETTER_BLOCK_EXPECTED_SHA", "func-sha", "_PER_FILE_LOCKS")
 - V2 双 file sha 锁 (dump + lib)
+- V3 dump file sha 自锁 (与 V2 共享常量, V3 单独 emit 强调 V1 anchor 文件)
 - V4b 自身 main func sha 自锁
 - V5 Reviewer LGTM gate (grace_period 兜底)
+- V6 sentinel + AST anchor 行为锁:
+  * V6a sentinel begin/end literal present in dump_v4_sha_graph.py
+  * V6b AST 找到 _PER_FILE_SELF_LOCKS 顶层 assign, lineno > sentinel_end_lineno
+  * V6c sentinel window 内全部 V1 关键词命中
+  * V6d dict literal body (assign value source segment) 不含任何 sentinel / V1 关键词
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
@@ -32,7 +50,7 @@ import ast
 import hashlib
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
@@ -46,29 +64,31 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-# infra-047-backlog sha lock 常量 (V2)
+# infra-047-backlog sha lock 常量 (V2 / V3)
 EXPECTED_DUMP_FILE_SHA = (
-    "286daf7f061dca0e046e75ad6ff47556a7756e9a41b30b468846dd3a38f36a83"
+    "ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
 EXPECTED_SELF_MAIN_FUNC_SHA = (
-    "96bf631ccd781706a7b26304544d97926d1332e8cd03d624f07d5b9e94c9a915"
+    "704e17edd1d890f22df06d9a2cf4417da736f4966f9b3c780b12d42482bc108d"
 )
 
 DOCSTRING_SENTINEL = "INFRA_104_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 V5_GATE_FEATURE_ID = "infra-047-backlog-per-file-self-locks-comment"
 
-# V1: _PER_FILE_SELF_LOCKS 上方 comment 必须同时含这三个关键词
+# V1: sentinel-delimited window 必须含这三个关键词 (与原 feature 含义一致)
 V1_COMMENT_KEYWORDS = (
     "SETTER_BLOCK_EXPECTED_SHA",
     "func-sha",
     "_PER_FILE_LOCKS",
 )
-V1_COMMENT_WINDOW = 12  # 向上扫描的行数
+SENTINEL_BEGIN = "V1_SELF_LOCKS_COMMENT_BEGIN"
+SENTINEL_END = "V1_SELF_LOCKS_COMMENT_END"
+SELF_LOCKS_NAME = "_PER_FILE_SELF_LOCKS"
 
 _results: List[Tuple[str, bool, str]] = []
 
@@ -81,6 +101,40 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
 
 def _file_sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _find_self_locks_assign_lineno(src: str) -> Optional[int]:
+    """AST 锚定 ``_PER_FILE_SELF_LOCKS`` 顶层赋值的 lineno (1-based)."""
+    tree = ast.parse(src)
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id == SELF_LOCKS_NAME:
+                return node.lineno
+        elif isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == SELF_LOCKS_NAME:
+                    return node.lineno
+    return None
+
+
+def _find_self_locks_assign_node(src: str) -> Optional[ast.stmt]:
+    tree = ast.parse(src)
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id == SELF_LOCKS_NAME:
+                return node
+        elif isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == SELF_LOCKS_NAME:
+                    return node
+    return None
+
+
+def _line_index_of(src_lines: List[str], needle: str) -> int:
+    for i, line in enumerate(src_lines):
+        if needle in line:
+            return i
+    return -1
 
 
 # ---------------------------------------------------------------------------
@@ -109,34 +163,64 @@ def v0_scaffolding() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V1: _PER_FILE_SELF_LOCKS 上方 comment 必须含三个关键词
+# V1: sentinel-delimited window 内含 V1_COMMENT_KEYWORDS (替代旧 [-12,0) 行偏移)
 # ---------------------------------------------------------------------------
 def v1_comment_keywords() -> None:
-    src_lines = DUMP_PY.read_text(encoding="utf-8").splitlines()
-    target_idx = -1
-    for i, line in enumerate(src_lines):
-        # 匹配 "_PER_FILE_SELF_LOCKS: set = {" 或赋值起始行
-        if line.startswith("_PER_FILE_SELF_LOCKS"):
-            target_idx = i
-            break
+    src = DUMP_PY.read_text(encoding="utf-8")
+    src_lines = src.splitlines()
+
+    anchor_lineno = _find_self_locks_assign_lineno(src)
     _emit(
-        "V1_self_locks_line_found",
-        target_idx >= 0,
-        f"_PER_FILE_SELF_LOCKS line idx={target_idx}",
+        "V1_self_locks_ast_anchor",
+        anchor_lineno is not None,
+        f"AST anchor lineno={anchor_lineno}",
     )
-    if target_idx < 0:
+    if anchor_lineno is None:
         for kw in V1_COMMENT_KEYWORDS:
-            _emit(f"V1_comment_has_{kw.replace('_', '').replace('-', '')[:24]}",
-                  False, "anchor missing")
+            _emit(
+                f"V1_comment_has_{kw.replace('_', '').replace('-', '')[:24]}",
+                False,
+                "AST anchor missing",
+            )
         return
-    start = max(0, target_idx - V1_COMMENT_WINDOW)
-    window_text = "\n".join(src_lines[start:target_idx])
+
+    begin_idx = _line_index_of(src_lines, SENTINEL_BEGIN)
+    end_idx = _line_index_of(src_lines, SENTINEL_END)
+    _emit(
+        "V1_sentinel_begin_found",
+        begin_idx >= 0,
+        f"{SENTINEL_BEGIN} idx={begin_idx}",
+    )
+    _emit(
+        "V1_sentinel_end_found",
+        end_idx >= 0,
+        f"{SENTINEL_END} idx={end_idx}",
+    )
+    if begin_idx < 0 or end_idx < 0:
+        for kw in V1_COMMENT_KEYWORDS:
+            _emit(
+                f"V1_comment_has_{kw.replace('_', '').replace('-', '')[:24]}",
+                False,
+                "sentinel missing",
+            )
+        return
+
+    # sentinel 必须在 anchor 上方 (lineno 1-based, idx 0-based; idx < anchor_lineno-1)
+    sentinel_above_anchor = end_idx < anchor_lineno - 1 and begin_idx < end_idx
+    _emit(
+        "V1_sentinel_above_anchor_ordered",
+        sentinel_above_anchor,
+        f"begin_idx={begin_idx} end_idx={end_idx} anchor_lineno={anchor_lineno}",
+    )
+
+    # sentinel 之间的精确 window (含两端)
+    window_text = "\n".join(src_lines[begin_idx : end_idx + 1])
     for kw in V1_COMMENT_KEYWORDS:
         tag_suffix = kw.replace("_", "").replace("-", "")[:24]
         _emit(
             f"V1_comment_has_{tag_suffix}",
             kw in window_text,
-            f"window=[{start},{target_idx}) keyword={kw!r}",
+            f"sentinel_window=[{begin_idx},{end_idx}] keyword={kw!r}",
         )
 
 
@@ -162,6 +246,25 @@ def v2_file_sha() -> None:
         "V2_verify_lib_file_sha",
         got_lib == EXPECTED_VERIFY_LIB_FILE_SHA,
         f"got={got_lib[:16]} expect={EXPECTED_VERIFY_LIB_FILE_SHA[:16]}",
+    )
+
+
+# ---------------------------------------------------------------------------
+# V3: dump file sha 自锁 (V1 anchor file lock — 单独 emit 突出 V1 加固范围)
+# ---------------------------------------------------------------------------
+def v3_dump_file_self_lock() -> None:
+    got = _file_sha(DUMP_PY)
+    if EXPECTED_DUMP_FILE_SHA == "__BUMP_ME__":
+        _emit(
+            "V3_dump_file_self_lock",
+            False,
+            f"placeholder; bump EXPECTED_DUMP_FILE_SHA={got}",
+        )
+        return
+    _emit(
+        "V3_dump_file_self_lock",
+        got == EXPECTED_DUMP_FILE_SHA,
+        f"V1_anchor_file_sha got={got[:16]} expect={EXPECTED_DUMP_FILE_SHA[:16]}",
     )
 
 
@@ -210,12 +313,88 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: sentinel + AST 双锚行为锁 (V1 加固 — infra-104)
+# ---------------------------------------------------------------------------
+def v6_sentinel_ast_behavior() -> None:
+    src = DUMP_PY.read_text(encoding="utf-8")
+    src_lines = src.splitlines()
+
+    # V6a sentinel literal present
+    begin_count = sum(1 for ln in src_lines if SENTINEL_BEGIN in ln)
+    end_count = sum(1 for ln in src_lines if SENTINEL_END in ln)
+    _emit(
+        "V6a_sentinel_begin_literal",
+        begin_count == 1,
+        f"{SENTINEL_BEGIN} count={begin_count} expect=1",
+    )
+    _emit(
+        "V6a_sentinel_end_literal",
+        end_count == 1,
+        f"{SENTINEL_END} count={end_count} expect=1",
+    )
+
+    # V6b AST anchor 找到 + sentinel_end 在 anchor 上方
+    node = _find_self_locks_assign_node(src)
+    _emit(
+        "V6b_ast_assign_found",
+        node is not None,
+        f"_PER_FILE_SELF_LOCKS AST assign node={'found' if node else 'missing'}",
+    )
+    if node is None:
+        return
+    anchor_lineno = node.lineno
+    end_idx = _line_index_of(src_lines, SENTINEL_END)
+    _emit(
+        "V6b_sentinel_end_above_anchor",
+        end_idx >= 0 and end_idx < anchor_lineno - 1,
+        f"sentinel_end_idx={end_idx} anchor_lineno={anchor_lineno}",
+    )
+
+    # V6c sentinel window 内所有 V1 关键词命中
+    begin_idx = _line_index_of(src_lines, SENTINEL_BEGIN)
+    if begin_idx < 0 or end_idx < 0:
+        _emit("V6c_window_keywords_all_present", False, "sentinel missing")
+    else:
+        window_text = "\n".join(src_lines[begin_idx : end_idx + 1])
+        missing = [kw for kw in V1_COMMENT_KEYWORDS if kw not in window_text]
+        _emit(
+            "V6c_window_keywords_all_present",
+            not missing,
+            f"missing={missing} window_lines={end_idx - begin_idx + 1}",
+        )
+
+    # V6d dict literal body (AST 节点 value 的 source segment) 不含 sentinel / V1 关键词
+    # 防止 dict 末尾行混入 V1 window
+    try:
+        value_seg = ast.get_source_segment(src, node.value) or ""
+    except Exception as e:
+        value_seg = ""
+        _emit("V6d_dict_literal_seg_extracted", False, f"err={e!r}")
+    else:
+        _emit(
+            "V6d_dict_literal_seg_extracted",
+            bool(value_seg.strip()),
+            f"seg_len={len(value_seg)}",
+        )
+
+    polluters = [SENTINEL_BEGIN, SENTINEL_END] + list(V1_COMMENT_KEYWORDS)
+    found_pollute = [p for p in polluters if p in value_seg]
+    _emit(
+        "V6d_dict_literal_clean",
+        not found_pollute,
+        f"polluters_in_dict_value={found_pollute}",
+    )
+
+
 def main() -> None:
     v0_scaffolding()
     v1_comment_keywords()
     v2_file_sha()
+    v3_dump_file_self_lock()
     v4b_self_main_func_sha()
     v5_reviewer_gate()
+    v6_sentinel_ast_behavior()
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
     if failed:

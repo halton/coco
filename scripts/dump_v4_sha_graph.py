@@ -443,6 +443,7 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
 # 当 (source_file, const_name) 未命中 _PER_FILE_LOCKS 时, 这里命中则返回 source_file 自锁标记。
 #
+# V1_SELF_LOCKS_COMMENT_BEGIN  (infra-104-backlog-v1-window-hardening sentinel — DO NOT REMOVE)
 # infra-047-backlog-per-file-self-locks-comment (phase-53 #5.53) — 集合边界说明:
 # 本集合 _PER_FILE_SELF_LOCKS 只装"target = source_file 自身的 file-sha 自锁" (整文件 sha 锁)。
 # 形似自锁但实际指向 source_file 内某段 func-sha / block-sha 的常量
@@ -450,6 +451,7 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
 # verify_robot_033.py 内的 EXCEPT_BLOCK_SHA 锁 except block func-sha)
 # 一律走上面的 _PER_FILE_LOCKS 二级查表, 不进本集合。
 # 维护规则: 新增常量若 target 不是 source_file 整文件 sha, 一律归 _PER_FILE_LOCKS。
+# V1_SELF_LOCKS_COMMENT_END  (infra-104-backlog sentinel — DO NOT REMOVE)
 _PER_FILE_SELF_LOCKS: set = {
     "EXPECTED_FINGERPRINT",  # verify_infra_022 / verify_infra_028 自我 fingerprint
 }
