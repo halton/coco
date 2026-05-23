@@ -7462,12 +7462,84 @@
       "area": "infra",
       "phase": 53,
       "title": "_PER_FILE_SELF_LOCKS 旁加注释解释为何 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 不在 self-lock 集合",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-039-backlog-source-file-aware-inference closeout Reviewer 建议",
       "scope": "scripts/dump_v4_sha_graph.py 中 _PER_FILE_SELF_LOCKS 仅含真自锁 (如 EXPECTED_FINGERPRINT);SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 等虽形似自锁但实际指向 target file,留在 _PER_FILE_LOCKS。注释解释这一边界,降低后续维护误归类风险。",
       "dependencies": [
         "infra-039-backlog-source-file-aware-inference"
+      ],
+      "verification": [],
+      "evidence": {
+        "verifier": "scripts/verify_infra_104.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_104.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_104][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_104][PASS] V2_verify_lib_file_sha got=e583aed3fd27d6dc expect=e583aed3fd27d6dc\n[verify_infra_104][PASS] V4b_self_main_func_sha got=96bf631ccd781706 expect=96bf631ccd781706\n[verify_infra_104][PASS] V5_reviewer_lgtm_gate target=infra-047-backlog-per-file-self-locks-comment helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-047-backlog-per-file-self-locks-comment' in grace_period (skipped)\"\n[verify_infra_104][SUMMARY] ALL PASS (11 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "name": "baseline_preexisting_fail",
+            "status": "FAIL",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+          },
+          {
+            "script": "./init.sh",
+            "name": "smoke",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "c3711a0"
+        },
+        "merge_commit_sha": "c3711a0",
+        "baseline_head_echo": "e952db7",
+        "pre_existing_baseline_sha": "e952db7",
+        "baseline_tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "V0-V5 全 PASS，Mutation A/B 反证均触发 FAIL，baseline V4_real_unknown_count_eq_one 是 pre-existing 与本 PR 无关，cascade 10 处 EXPECTED_DUMP_FILE_SHA 全量同步 f9720b4b，dump_v4_sha_graph.py 三条 _PER_FILE_LOCKS mapping 已加。",
+          "checks_run": [
+            "git diff stat 12 files +257/-11",
+            "dump_v4_sha_graph.py 确认 7 行边界 comment + 3 条 _PER_FILE_LOCKS mapping",
+            "通读 verify_infra_104.py 231 行",
+            "verify_infra_104 11/11 PASS",
+            "verify_infra_060 pre-existing FAIL 求证 main 同 FAIL",
+            "抽样 verify_infra_039/044/048/102 ALL PASS",
+            "Mutation A 改 comment 关键词 catch V1+V2",
+            "Mutation B 加 dummy const 入 _PER_FILE_SELF_LOCKS catch V2",
+            "Cascade 10 处 EXPECTED_DUMP_FILE_SHA 统一 f9720b4b 无 stale"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "verify_infra_104 V1 窗口 [target_idx-12, target_idx) 若改 13 行会误把 dict 末尾行捞入造成 V1 假阳, 建议后续 backlog 加固"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-104-backlog-v1-window-hardening",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_104 V1 window [-12,0) 边界加固防止 dict 末尾行误捞",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "infra-047-backlog-per-file-self-locks-comment closeout Reviewer P2 finding (#5.53)",
+      "scope": "verify_infra_104.py V1 检查使用 [target_idx-12, target_idx) 窗口扫 comment 关键词；若后续 _PER_FILE_LOCKS dict 体量增长到 13+ 行末尾，会把 dict 末行误纳入 V1 窗口造成假阳。需改为基于 AST / sentinel marker 的 robust window 而非固定行偏移，或在窗口扩张前自检关键词不能出现在 dict literal 内。",
+      "dependencies": [
+        "infra-047-backlog-per-file-self-locks-comment"
       ],
       "verification": []
     },

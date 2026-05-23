@@ -7922,3 +7922,16 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - smoke: `./init.sh` PASS (TTS / vision / face-tracker / VAD / wake / power-state / config / publish 全绿)
 - Reviewer fresh-context LGTM (sub-agent): Mutation A (SUMMARY 回退) V1+V3+V4 catch, Mutation B (删 R6 关键词) V2 catch, cascade=0
 - 新增 1 backlog: `infra-P294-backlog-verify-103-old-fstring-cleanup` (P2 dead-code / 运算符优先级)
+
+
+## Session 2026-05-23 — #5.53 closeout: infra-047 per-file self-locks comment (phase-53 5/5 收官)
+
+- merge: feat/infra-047-backlog-per-file-self-locks-comment → main via merge commit `c3711a0`, baseline `e952db7`
+- 改动: scripts/dump_v4_sha_graph.py 在 _PER_FILE_SELF_LOCKS 旁加 7 行边界 comment + 3 条 _PER_FILE_LOCKS mapping; 新增 verify_infra_104.py (231 行, 11 checks V0-V5); cascade 10 处 EXPECTED_DUMP_FILE_SHA 全量同步到 f9720b4b
+- verify_infra_104 post-merge: ALL PASS (11/11)
+- verify_infra_062 P278 gate: ALL PASS (30/30 emit-paths / 30 unique check tags)
+- baseline @e952db7: verify_infra_060 V4_real_unknown_count_eq_one FAIL (unknown_count=5 expect=1) 复现, pre-existing 与本 PR 无关
+- smoke: `./init.sh` PASS
+- Reviewer fresh-context LGTM (sub-agent): Mutation A 改 comment 关键词 catch V1+V2, Mutation B 加 dummy const 入 _PER_FILE_SELF_LOCKS catch V2; cascade 全量同步无 stale
+- 新增 1 backlog: `infra-104-backlog-v1-window-hardening` (P2 V1 [-12,0) 行偏移窗口加固)
+- **phase-53 收官**: 5/5 feature 落地 (#1.53 #3.53 #4.53 #5.53 closeout 完成; #2.53 推迟到 phase-54)
