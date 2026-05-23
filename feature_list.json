@@ -8753,7 +8753,7 @@
       "area": "robot",
       "phase": 58,
       "title": "read_constant docstring 显式声明 '只扫 Module.body'",
-      "status": "in_progress",
+      "status": "passing",
       "started_at": "2026-05-23",
       "created_at": "2026-05-20",
       "source": "robot-037 closeout Reviewer 建议",
@@ -8761,7 +8761,70 @@
       "dependencies": [
         "robot-037"
       ],
-      "verification": []
+      "verification": [],
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "7b63a7a1726ad1d26610a760cbe80f3b68b01cfe",
+          "merge_commit_sha": "7b63a7a1726ad1d26610a760cbe80f3b68b01cfe",
+          "baseline_head_echo": "468bf65",
+          "baseline_tail_stdout": "baseline_pre_existing_passed_with_old_sha",
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=282 well_formed=282 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_robot_037",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_037][PASS] V6a_sentinel_fallback_const needle=_SENTINEL_FALLBACK\n[verify_robot_037][PASS] V6b_verify_034_file_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_037][PASS] V6c_verify_034_main_func_sha got=f995f51c1578e556 expect=f995f51c1578e556\n[verify_robot_037][PASS] V6d_import_time_fallback_behavior rc=0 stdout=\"[verify_robot_034][WARN] import-time read_constant failed: RuntimeError('ROBOT_037_BACKLOG_INJECTED_FAIL'); using fallba\"\n[verify_robot_037][SUMMARY] ALL PASS (23 checks)",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_robot_034",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_034][PASS] V4_doc_sha_print sha=33f4484cc7108a3a match=True\n[verify_robot_034][PASS] V5_self_subprocess rc=0 stdout_lines=13\n[verify_robot_034] summary total=11 failed=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_robot_036",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_036][PASS] V4_verify_034_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_036][PASS] V5_self_subprocess rc=0 stdout_lines=11\n[verify_robot_036] summary total=11 failed=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_infra_062",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "status": "PASS"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "robot-037-backlog 给 _verify_lib.read_constant 补『扫描范围』docstring 段，显式声明 5 条 module-only 扫描约束（只扫 Module.body 顶层 / 不进入函数 / 不进入类 / 不进入 async / 嵌套同名不命中）+ Raises ValueError 契约。cascade 54 文件 EXPECTED_VERIFY_LIB_FILE_SHA 一致 bump 到 f7248f54（旧值 7df5af6b 0 残留）；verify_robot_037 EXPECTED_READ_CONSTANT_FUNC_SHA 同步 bump 到 a62e365a。Mutation 反证强：删任一约束行 V2 双 FAIL，还原 ALL PASS，证明 docstring 已被纳入 sha 锁定，不是装饰性文档。",
+            "checks_run": [
+              "smoke PASS",
+              "verify_robot_037 PASS 23",
+              "verify_robot_034 PASS 11",
+              "verify_robot_036 PASS 11",
+              "verify_infra_062 PASS 30",
+              "verify_infra_037 PASS 13",
+              "verify_infra_099 PASS 14",
+              "verify_interact_036b PASS 6",
+              "verify_robot_028 PASS",
+              "verify_robot_029 PASS"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "cascade 一致性核实通过",
+                "54 命中新 sha / 0 残留旧 sha"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "robot-037-backlog-verify_robot_036-inline-helper-consolidate",

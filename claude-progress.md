@@ -1,5 +1,20 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-58 #5 closeout + phase-58 5/5 全收官 (robot-037-backlog helper docstring module-only)
+
+- feature: `robot-037-backlog-helper-docstring-module-only` (priority 999 phase=58, area=robot)
+- 性质: `_verify_lib.read_constant` docstring 补『扫描范围』段,显式 5 条 module-only 约束 (只扫 Module.body 顶层 / 不进入函数 / 不进入类 / 不进入 async / 嵌套同名不命中) + Raises ValueError 契约
+- Engineer (sub-agent): _verify_lib.py docstring 扩展 + 54 文件 EXPECTED_VERIFY_LIB_FILE_SHA cascade bump (7df5af6b → f7248f54, 0 残留) + verify_robot_037 EXPECTED_READ_CONSTANT_FUNC_SHA bump (→ a62e365a) (feat HEAD=05dc271)
+- Reviewer (sub-agent fresh-context): LGTM, mutation_test_done=true (删任一约束行 V2 双 FAIL, 还原 ALL PASS); 10 checks; findings P0/P1=[], P2=2 项 (cascade 一致性核实通过 / 54 命中新 sha 0 残留旧 sha)
+- Closeout (本 sub-agent): main HEAD pre-merge=468bf65 → merge --no-ff feat/robot-037-backlog-helper-docstring-module-only → main HEAD=7b63a7a (merge_commit=7b63a7a1726ad1d26610a760cbe80f3b68b01cfe)
+- post-merge verify_robot_037: ALL PASS 23/23 (freshness_anchor=post-merge-rerun)
+- post-merge verify_robot_034: ALL PASS 11/11
+- post-merge verify_robot_036: ALL PASS 11/11
+- post-merge verify_infra_062: ALL PASS 30/30 (closeout shape 全 PASS 含新 evidence)
+- ./init.sh smoke: 14/14 PASS
+- baseline 468bf65: baseline_pre_existing_passed_with_old_sha
+- **phase-58 5/5 全收官**: #1-#3 V6 helper docstring 三连 (close-set / stale / clarify) + #4 infra-P301 V0 sha lock version field + #5 robot-037-backlog helper docstring module-only
+
 ## Session 2026-05-23 — phase-58 #4 closeout (infra-P301 V0 sha lock version field)
 
 - feature: `infra-P301-backlog-v0-sha-lock-version-field` (priority 999 phase=58, area=infra)
