@@ -46,7 +46,7 @@ from _verify_lib import assert_unique_needle, func_sha_by_name, assert_v5_review
 
 # infra-042 sha lock 常量 (V2)
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 变更
-EXPECTED_LIB_FILE_SHA = "f789e0d870c9e6c3764b893a6bcbcca356bfc464520d9c49f3d4b17045ecd243"
+EXPECTED_LIB_FILE_SHA = "43d352534301242f13ef33909cdba2585f8f18734d9e052f2e0de0d075955d75"
 EXPECTED_HELPER_FUNC_SHA = "e3223584fbdb5f1bbe426a8f483ae74ab2d17c7586206db3578a83c233c1bcaf"
 
 DOCSTRING_SENTINEL = "INFRA_042_SHA_LOCKS"

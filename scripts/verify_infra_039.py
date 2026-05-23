@@ -55,7 +55,7 @@ import hashlib
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
@@ -470,110 +470,114 @@ def v7_filter_option() -> None:
 # ---------------------------------------------------------------------------
 # V8: _infer_target auto-discovery 一致性
 # (infra-039-backlog-infer-target-auto-discovery, phase-63 #2)
+# (infra-P316-v039-V8-not-found-reduce, phase-65 #1: 多源 resolve + acceptlist)
 # ---------------------------------------------------------------------------
 def v8_auto_discovery_consistency() -> None:
     """扫所有 scripts/verify_infra_*.py 内的 ``EXPECTED_*_FUNC_SHA[256]`` 常量,
-    从命名规约派生 func_name guess, 在候选 source file 中 AST 找定义,
-    算 ``func_sha_by_name`` 与锁值比对。
+    走 ``_v8_resolve_target`` 多源 resolve (docstring → self_convention →
+    dump_table → explicit → naming_guess) 并按 best-match-wins 判定。
 
-    候选 source file 顺序 (启发式):
-      1) verify 脚本自身 (self-checker func sha 占多数)
-      2) ``scripts/_verify_lib.py``
-      3) ``scripts/bump_reverse_sha_lock.py``
-      4) ``scripts/dump_reverse_sha_lock_index.py`` (若存在)
-      5) ``scripts/dump_v4_sha_graph.py``
+    P316 (phase-65 #1) 起 V8 不再依赖单一 naming guess, 也不再用 not_found /
+    ambiguous 概念。每个 lock 的 status 落到下列之一:
 
-    判定:
-      * 候选中**唯一** match 且 sha 一致 → ok
-      * 唯一 match 但 sha 不一致 → mismatch (FAIL)
-      * 多个候选都有该 func name → ambiguous (作 not_found, warning)
-      * 所有候选都不含该 func → not_found (warning, 跨脚本引用不在本 helper 范围)
+      * ok                — 至少一个 candidate 的 func sha 与 expect 相等。
+      * mismatch          — 全部 candidate 都不等且**包含 strong source**
+                            (docstring/self_convention) → V8 FAIL。
+      * weak_mismatch     — 全部 candidate 都不等但**仅有 weak source**
+                            (dump_table/explicit/naming_guess) → V8 不 FAIL
+                            (target verify 脚本自己的 self-lock 已覆盖)。
+      * acceptlisted      — 显式 acceptlist 项 (e.g. pre-existing baseline FAIL)。
+      * not_found         — 任何 source 都未解析出 candidate, 且不在 acceptlist。
+                            **V8 FAIL** (新的 hard gate)。
+      * skip_non_func     — dump_table 指向 file-sha / line-sha (非 V8 范围)。
 
-    overall PASS 条件: discovered >= 1 且 mismatches == 0。
+    overall PASS 条件: discovered >= 1 且 strong_mismatches == 0 且
+    unaccepted_not_found == 0。
     """
     import sys as _sys
     _sys.path.insert(0, str(SCRIPTS))
     try:
-        from _verify_lib import _discover_func_locks_in_verify, func_sha_by_name
+        from _verify_lib import (
+            _discover_func_locks_in_verify,
+            _v8_resolve_target,
+        )
     except Exception as e:
         _emit("V8_helper_importable", False, f"err: {e!r}")
         return
     _emit("V8_helper_importable", True, "")
 
-    extra_candidates = [
-        SCRIPTS / "_verify_lib.py",
-        SCRIPTS / "bump_reverse_sha_lock.py",
-        SCRIPTS / "dump_reverse_sha_lock_index.py",
-        SCRIPTS / "dump_v4_sha_graph.py",
-    ]
-
     discovered = 0
-    matched = 0
-    mismatches: List[Tuple[str, str, str, str]] = []
-    not_found: List[Tuple[str, str, str]] = []
-    ambiguous: List[Tuple[str, str, str, int]] = []
+    counts = {
+        "ok": 0,
+        "mismatch": 0,
+        "weak_mismatch": 0,
+        "acceptlisted": 0,
+        "not_found": 0,
+        "skip_non_func": 0,
+    }
+    via_counts: Dict[str, int] = {}
+    strong_mismatches: List[Tuple[str, str, str]] = []
+    weak_mismatch_samples: List[Tuple[str, str, str]] = []
+    not_found_samples: List[Tuple[str, str]] = []
+    repo_root = SCRIPTS.parent
 
     for verify_py in sorted(SCRIPTS.glob("verify_infra_*.py")):
-        locks = _discover_func_locks_in_verify(verify_py)
-        for lock in locks:
+        for lock in _discover_func_locks_in_verify(verify_py):
             discovered += 1
-            const = lock["const_name"]
-            guess = lock["func_name_guess"]
-            expected_sha = lock["sha_hex"]
-            # 候选顺序: verify 自身优先 (self-checker 占多数), 然后 extras
-            sources = [verify_py] + extra_candidates
-            hits: List[Tuple[Path, str]] = []
-            for src in sources:
-                if not src.is_file():
-                    continue
-                try:
-                    got = func_sha_by_name(src, guess)
-                    hits.append((src, got))
-                except (ValueError, FileNotFoundError):
-                    continue
-                except Exception:
-                    continue
-            if not hits:
-                not_found.append((verify_py.name, const, guess))
-                continue
-            if len(hits) > 1:
-                # 多源命中 → ambiguous, 不做 mismatch 判定 (避免误报):
-                # 仅在常量名暗示 self-lock (含 CHECKER / SELF) 且 verify 自身命中时,
-                # 才以 verify 自身为准。
-                self_hit = [h for h in hits if h[0] == verify_py]
-                is_self_lock_hint = ("CHECKER" in const) or ("SELF" in const)
-                if self_hit and is_self_lock_hint:
-                    src_used, got_sha = self_hit[0]
-                else:
-                    ambiguous.append((verify_py.name, const, guess, len(hits)))
-                    continue
-            else:
-                src_used, got_sha = hits[0]
-            if got_sha == expected_sha:
-                matched += 1
-            else:
-                mismatches.append(
-                    (verify_py.name, const, expected_sha[:16],
-                     got_sha[:16] + f"@{src_used.name}")
+            r = _v8_resolve_target(
+                verify_py, lock["const_name"], lock["sha_hex"],
+                repo_root=repo_root,
+            )
+            counts[r["status"]] = counts.get(r["status"], 0) + 1
+            via = r.get("resolved_via") or "none"
+            via_counts[via] = via_counts.get(via, 0) + 1
+            if r["status"] == "mismatch":
+                strong_mismatches.append(
+                    (verify_py.name, lock["const_name"], r["reason"])
                 )
+            elif r["status"] == "weak_mismatch" and len(weak_mismatch_samples) < 5:
+                weak_mismatch_samples.append(
+                    (verify_py.name, lock["const_name"], r["reason"])
+                )
+            elif r["status"] == "not_found":
+                not_found_samples.append((verify_py.name, lock["const_name"]))
 
     _emit(
         "V8_discovered_count",
         discovered >= 1,
-        f"discovered={discovered} matched={matched} "
-        f"not_found={len(not_found)} ambiguous={len(ambiguous)} "
-        f"mismatches={len(mismatches)}",
+        f"discovered={discovered} ok={counts['ok']} "
+        f"mismatch={counts['mismatch']} weak_mismatch={counts['weak_mismatch']} "
+        f"acceptlisted={counts['acceptlisted']} "
+        f"not_found={counts['not_found']} "
+        f"skip_non_func={counts['skip_non_func']}",
     )
     _emit(
-        "V8_no_mismatches",
-        len(mismatches) == 0,
-        f"mismatches={mismatches[:5]}" if mismatches else "0",
+        "V8_no_strong_mismatches",
+        counts["mismatch"] == 0,
+        f"strong_mismatches={strong_mismatches[:5]}"
+        if strong_mismatches else "0",
     )
-    if not_found or ambiguous:
+    # P316 新 gate: 任何未 acceptlist 的 not_found 都 FAIL — 强迫维护者
+    # 在 _V8_EXPLICIT_TARGETS 或 _V8_ACCEPTLIST 显式登记每个 new lock。
+    _emit(
+        "V8_no_unaccepted_not_found",
+        counts["not_found"] == 0,
+        f"not_found={not_found_samples[:5]}" if not_found_samples else "0",
+    )
+    # 覆盖率指标 — 不直接 gate, 只 emit 报告; 用 ok+acceptlisted+skip 占比衡量。
+    accepted = counts["ok"] + counts["acceptlisted"] + counts["skip_non_func"]
+    coverage_pct = (100.0 * accepted / discovered) if discovered else 0.0
+    _emit(
+        "V8_resolution_coverage",
+        coverage_pct >= 95.0,
+        f"coverage={coverage_pct:.1f}% accepted={accepted}/{discovered} "
+        f"via={via_counts}",
+    )
+    if counts["weak_mismatch"] or counts["acceptlisted"]:
         print(
-            f"[verify_infra_039][INFO] V8 not_found={len(not_found)} "
-            f"ambiguous={len(ambiguous)} "
-            f"(nf_sample={not_found[:3]} amb_sample={ambiguous[:3]})",
+            f"[verify_infra_039][INFO] V8 weak_mismatch={counts['weak_mismatch']} "
+            f"acceptlisted={counts['acceptlisted']} "
+            f"(weak_sample={weak_mismatch_samples[:3]})",
             flush=True,
         )
 

@@ -72,7 +72,7 @@ EXPECTED_SELF_MAIN_FUNC_SHA = (
     "dbbe9162414d608119e8bd15a04b722427cec1c85f3dbf1dd0d23026a5ad4217"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
-    "f789e0d870c9e6c3764b893a6bcbcca356bfc464520d9c49f3d4b17045ecd243"
+    "43d352534301242f13ef33909cdba2585f8f18734d9e052f2e0de0d075955d75"
 )
 
 # --- V0 metadata schema bump marker (供 cascade bump diff 用) ---------------
