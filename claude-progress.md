@@ -8613,3 +8613,15 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer fresh-context sub-agent verdict=LGTM, P0/P1 none, P2 建议未来 AST narrowing
 - v062 FAIL 6/30 与 baseline cab28a4 同, pre-existing closeout-meta-lint 项, 不阻 merge
 - next: phase-61 #2 (priority=201)
+
+## Session 2026-05-24 (phase-61 #2 closeout: infra-P305-backlog-pragma-attached-to-real-constant-only)
+
+- feature `infra-P305-backlog-pragma-attached-to-real-constant-only` 关闭 → status=`passing`
+- feat 分支 `feat/infra-P305-backlog-pragma-attached-to-real-constant` HEAD=979080f, baseline cb5d4195 (本地 main 实际 HEAD; 上下文给定 24f750d 不匹配, 以仓库实际 baseline 为准)
+- merge --no-ff 后 NEW_MAIN_SHA=d45e88f5
+- V10_pragma_attached_to_real_constant_only 新增规则: pragma 必须挂在 `EXPECTED_SELF_FILE_SHA = "<64 lowercase hex>"  # V8-SELF-SHA-SKIP` 的真常量赋值行末尾, 覆盖 V9 只看 pragma 计数的盲点
+- Reviewer fresh-context verdict=LGTM (sub_agent_fresh_context)
+- 4 mutation 全 FAIL ✓ (A: pragma 漂离真常量行; B: 63 hex; C: 大写 A; D: 非 hex g)
+- 7 verify_runs (P299 模式): smoke/v035/v110 PASS, v062 FAIL (pre-existing 6/30 emit-paths, 与本 feature 无关, baseline_sha=cb5d4195 baseline emit-paths 一致), vP301f/vP290/v039 PASS
+- push: github socket timeout, 失败即忽略不重试
+- 下一候选: phase-61 #3 (priority=202) infra-110-backlog-classify-lock-cross-check-doc

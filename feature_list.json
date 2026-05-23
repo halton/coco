@@ -17106,14 +17106,106 @@
       "area": "infra",
       "phase": 61,
       "title": "V10 机械断言: pragma 行必须匹配真 EXPECTED_SELF_FILE_SHA 64hex 模式",
-      "status": "not_started",
+      "status": "passing",
       "source": "infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma",
       "scope": "verify_infra_035 V8 pragma 当前只校验 endswith. 新增 V10 机械断言: 命中 pragma 的那一行必须正则匹配 `^EXPECTED_SELF_FILE_SHA = \"[0-9a-f]{64}\"  # V8-SELF-SHA-SKIP$`. 防止 attacker / drift 把 pragma 挂到伪常量或 docstring 行而仍剔除. verify-only.",
       "dependencies": [
         "infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma"
       ],
       "verification": [],
-      "notes": "phase-60 #5 Reviewer P2 (sub-agent fresh context) 提出的强化项. shape 锁."
+      "notes": "phase-60 #5 Reviewer P2 (sub-agent fresh context) 提出的强化项. shape 锁.",
+      "closeout_verify": {
+        "main_head_sha": "d45e88f55470c6efb3278bf54ad5d693b18509fa",
+        "baseline_head_echo": "cb5d4195",
+        "merge_commit_sha": "d45e88f5",
+        "verify_runs": [
+          {
+            "name": "smoke",
+            "cmd": "./init.sh",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n"
+          },
+          {
+            "name": "verify_infra_035",
+            "cmd": "python scripts/verify_infra_035.py",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0\n"
+          },
+          {
+            "name": "verify_infra_110",
+            "cmd": "python scripts/verify_infra_110.py",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110][SUMMARY] ALL PASS (15 checks)\n"
+          },
+          {
+            "name": "verify_infra_062",
+            "cmd": "python scripts/verify_infra_062.py",
+            "rc": 1,
+            "status": "FAIL",
+            "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']\n",
+            "pre_existing_baseline_sha": "cb5d4195",
+            "baseline_tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']\n",
+            "note": "pre-existing FAIL 6/30 emit-paths identical at baseline; not caused by infra-P305 (V9/V10 additions are scoped to scripts/verify_infra_035.py only)"
+          },
+          {
+            "name": "verify_infra_P301_full",
+            "cmd": "python scripts/verify_infra_P301_full.py",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0\n"
+          },
+          {
+            "name": "verify_infra_P290",
+            "cmd": "python scripts/verify_infra_P290.py",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0\n"
+          },
+          {
+            "name": "verify_infra_039",
+            "cmd": "python scripts/verify_infra_039.py",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)\n"
+          }
+        ],
+        "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n",
+        "mutation_test": {
+          "A_pragma_floating_no_real_constant": {
+            "desc": "真常量行删 pragma + 末尾加 placeholder # V8-SELF-SHA-SKIP",
+            "V9_pragma_cardinality": "PASS (count=1)",
+            "V10_pragma_attached_to_real_constant_only": "FAIL",
+            "verify_rc": 1,
+            "expected": "V10 must FAIL (pragma not on real EXPECTED_SELF_FILE_SHA = \"<64 hex>\" line)"
+          },
+          "B_sha_63_hex": {
+            "desc": "sha 改为 63 hex (末尾砍 1 字符)",
+            "V10_pragma_attached_to_real_constant_only": "FAIL",
+            "verify_rc": 1,
+            "expected": "V10 must FAIL (regex requires exactly 64 hex)"
+          },
+          "C_sha_contains_uppercase_A": {
+            "desc": "sha 首字符改 A (大写)",
+            "V10_pragma_attached_to_real_constant_only": "FAIL",
+            "verify_rc": 1,
+            "expected": "V10 must FAIL (regex restricts to lowercase a-f0-9)"
+          },
+          "D_sha_contains_nonhex_g": {
+            "desc": "sha 首字符改 g (非 hex)",
+            "V10_pragma_attached_to_real_constant_only": "FAIL",
+            "verify_rc": 1,
+            "expected": "V10 must FAIL (regex 64 hex only)"
+          }
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Reviewer fresh-context 评审 infra-P305 V10_pragma_attached_to_real_constant_only: 验证 V10 正则收紧 (要求 pragma 必须挂在 EXPECTED_SELF_FILE_SHA = \"<64 lowercase hex>\" 这种真常量赋值行末尾，覆盖 V9 仅查 pragma 出现次数的盲点)；4 路 mutation A/B/C/D 全 FAIL；V9/V10 独立无 cascade；expected actual sha=a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73 匹配；feat 分支 HEAD=979080f；LGTM 通过。"
+        }
+      }
     }
   ],
   "_meta": {
