@@ -8642,3 +8642,15 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - closeout commit sha: 见 git log
 - push: socket/网络失败忽略不重试
 - 下一候选: phase-61 #4 (priority=203) infra-110-backlog-composite-key-src-stem-no-expected-substring
+
+## Session 2026-05-24 phase-61 #4 closeout (infra-110-backlog-composite-key-src-stem-no-expected-substring)
+- merge feat/infra-110-backlog-composite-key-src-stem-no-expected -> main NEW_MAIN_SHA=0dadca7c0f1c957e47266029611d20b6c88fb9a9
+- baseline phase-61 #3 closeout sha=5a573c3
+- verify_runs (P299 模式, 7 项): smoke PASS / v035 PASS / v110 PASS (17 checks 含新 V4c) / v062 FAIL 6/30 pre-existing (baseline 5a573c3 同 FAIL 6/30, 与本 feature 无关) / vP301f PASS / vP290 PASS / v039 PASS
+- mutation A/B/C/D: A FAIL ✓ / B FAIL ✓ (Reviewer 注: 因非贪婪 anchor regex 该 case 不会有机形成, V4c 为预防性硬锁) / C PASS (case 盲点已确认, anchor 强制 const 大写, src_seg 含 lower-case 'expected' anchor 不形成, V4c 内层 check 触发不到 — 风险极低已转 backlog) / D PASS ✓
+- Reviewer: sub_agent_fresh_context, verdict=LGTM, 0 P0/P1, 1 P2 (C case 盲点 → backlog)
+- 新增 1 backlog: infra-110-backlog-composite-key-src-stem-case-insensitive-expected (priority=999)
+- status: passing
+- closeout commit sha: 见 git log
+- push: socket/网络失败忽略不重试
+- 下一候选: phase-61 #5 (priority=204) infra-039-backlog-v4-output-anchors-lower-bound

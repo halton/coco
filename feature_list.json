@@ -17062,10 +17062,128 @@
       "area": "infra",
       "phase": 61,
       "title": "composite key src_stem 文件命名约束 + 正则边界 lookahead",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-24",
       "source": "phase-60 #4 infra-110 Reviewer non-blocking finding concern_1",
-      "scope": "V4_composite_key_well_formed 当前 src 段用 (src,) 精确等值，但若未来 src_stem 含 EXPECTED_ 前缀子串可能 vacuous，加 lookahead 边界与文件命名规约。"
+      "scope": "V4_composite_key_well_formed 当前 src 段用 (src,) 精确等值，但若未来 src_stem 含 EXPECTED_ 前缀子串可能 vacuous，加 lookahead 边界与文件命名规约。",
+      "dependencies": [],
+      "verification": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "0dadca7c0f1c957e47266029611d20b6c88fb9a9",
+          "baseline_head_echo": "5a573c3",
+          "merge_commit_sha": "0dadca7c0f1c957e47266029611d20b6c88fb9a9",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_035",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only matched=True\n[verify_infra_035] summary total=55 failed=0",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110][SUMMARY] ALL PASS (17 checks)",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "pre_existing_baseline_sha": "5a573c3",
+              "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "smoke_tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_P290",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc\n[verify_infra_P290] summary: total=9 failed=0",
+              "freshness_anchor": "0dadca7"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)",
+              "freshness_anchor": "0dadca7"
+            }
+          ],
+          "mutation_test": {
+            "A": {
+              "desc": "delete _check_v4c_composite_key_src_stem_no_expected_substring call (skip V4c emit entirely)",
+              "expected": "V4c not emitted -> verify FAIL on missing check (or vacuous PASS detected)",
+              "result": "PASS (Reviewer-confirmed)"
+            },
+            "B": {
+              "desc": "force-inject unknown edge with src_seg containing 'EXPECTED' (e.g. src='FOO_EXPECTED_BAR') via test fixture",
+              "expected": "V4c FAIL: src_seg contains EXPECTED substring",
+              "result": "PASS (Reviewer-confirmed: V4c correctly raises FAIL when injected at unknown_edges level; note: due to non-greedy anchor regex this scenario cannot arise organically — V4c is preventive)"
+            },
+            "C": {
+              "desc": "force-inject unknown edge with src_seg containing lowercase 'expected' substring",
+              "expected": "V4c FAIL if case-sensitive cover, PASS if blind spot",
+              "result": "PASS (V4c实测对 lower-case 'expected' 子串 catch; 但完整 flow 中由于 anchor 不形成, 实际属 vacuous PASS — case 盲点风险极低, 已转 backlog infra-110-backlog-composite-key-src-stem-case-insensitive-expected)"
+            },
+            "D": {
+              "desc": "legit edge with src_seg free of EXPECTED (e.g. src='verify_x', const='EXPECTED_X')",
+              "expected": "V4c PASS (vacuous, all clean)",
+              "result": "PASS (Reviewer-confirmed: V4c correctly passes)"
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context 评审 phase-61 #4 V4c composite key src_stem no EXPECTED substring 锁: 实现正确 (非贪婪 anchor regex 重 parse + EXPECTED/expected substring 检测), docstring 完整说明 'vacuously PASS' 与预防性硬锁意图, A/B/D mutation 全部符合预期. C mutation 揭示 case 盲点 (anchor regex 强制 const=EXPECTED_* 大写, src_seg 含 'expected' 小写时不会形成 unknown_edge, V4c 内层 lower-case check 触发不到 — 属 vacuous PASS), 风险极低 (verify 脚本 stem 全部 verify_infra_*, 无 expected 子串可能), 转 backlog 不阻当前 close-out. 无 P0/P1 阻塞 finding.",
+            "checks_run": [
+              "V4c implementation correctness",
+              "non-greedy anchor regex behavior",
+              "EXPECTED/expected substring detection",
+              "mutation A/B/C/D coverage",
+              "docstring intent clarity",
+              "orthogonality with V4 composite_key_well_formed"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "C case 盲点: src_seg 含 lowercase 'expected' 时由于 anchor const=EXPECTED_* 大写约束, anchor 不形成, V4c 内层 lower-case check 触发不到 — 转 backlog"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-110-backlog-composite-key-src-stem-case-insensitive-expected",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "V4c 加固为 case-insensitive 覆盖 Expected/expecteD 等混合大小写 src_seg 变体",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "phase-61 #4 infra-110-backlog-composite-key-src-stem-no-expected-substring Reviewer P2 (sub_agent_fresh_context)",
+      "scope": "当前 V4c 内层用 ('EXPECTED' in src_seg or 'expected' in src_seg), 但完整 V4c flow 因 anchor regex 强制 const=EXPECTED_* 大写, src_seg 含 lowercase 'expected' / 'Expected' / 'expecteD' 等混合大小写时 anchor 不形成, V4c vacuously PASS. 加固方案: anchor regex 增加 case-insensitive const 分支, 或 V4c 直接对 unknown_ 前缀 raw tgt_id substring 扫描 (不依赖 anchor parse). 风险极低 (现有 verify 脚本 stem 全部 verify_infra_*, 无 expected 子串可能), 但作为预防性硬锁应消除 case 盲点.",
+      "dependencies": [],
+      "verification": []
     },
     {
       "id": "infra-110-backlog-composite-key-const-case-extension",
