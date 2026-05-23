@@ -8105,3 +8105,15 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - P0/P1 空; P2: 三条边界 silent-skip 契约现已机械化锁定, 后续如要改 helper 行为必须先改 V4 断言防静默漂移 (不入账, 已被本 feature 锁定覆盖)
 - backlog 入账: 无
 - 下一候选: infra-P294-followup-070-mini-repo-env-isolation (#5.55)
+
+## Session 2026-05-23 phase-55 #5.55 closeout
+- feature: infra-P294-followup-070-mini-repo-env-isolation passing
+- branch feat/infra-P294-followup-070-mini-repo-env-isolation @ 1d06eab → merge_commit f12f334 → main HEAD f12f334
+- 实现: verify_infra_070._make_mini_repo 显式 env.pop GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE (subprocess.run env=env_iso); 新增 V6_make_mini_repo_func_sha (ffa946cdcd37086b) + V6_env_isolation_source_keys 双锁
+- spec 偏差: 原 spec 写 GIT_DIR='' 改为 .pop(), 经验证空串使 rc=128 (git invalid path), pop 语义等价且更鲁棒; inline 注释保留, 不入账
+- verify post-merge rerun: verify_infra_070 ALL PASS (19 checks), verify_infra_060 pre-existing FAIL 1/14 (V4_real_unknown_count_eq_one unknown_count=8 含本 feature 新增 EXPECTED_MAKE_MINI_REPO_FUNC_SHA, classifier 未识别属预期, 不阻 merge), verify_infra_062 ALL PASS (30/30), smoke 通过
+- Reviewer sub_agent_fresh_context LGTM (spec 偏差合理性 + mutation 双锁同时 FAIL + baseline 060 pre-existing 确认)
+- cascade=0 (verify_infra_070 自闭)
+- backlog 入账: 无
+- **phase-55 5/5 完整收官**: #5.51 helper-tail-chars-vs-bytes-doc + #5.52 helper-line-vs-byte-edge-case-doc + #5.53 verify-058-edge-case-hard-lock + #5.54 verify-058-helper-silent-skip-contract-hard-lock + #5.55 P294-followup-070-mini-repo-env-isolation 全 passing
+- 下一步: phase-56 planning
