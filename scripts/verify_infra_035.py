@@ -22,6 +22,11 @@ V6 v4_sha.json canonical 字节序锁 (infra-035-backlog #5.50): 文件内容 ==
 V7 bump 助手原子写锁 (infra-035-backlog-bump-atomic-write #1.53): bump 助手
     源码必须含 `os.replace(` + `.tmp` 字面量 + `import os`, 锁住 tmp+rename
     原子写模式 (防回退至 write_text 直写半文件).
+V8 verify_infra_035 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash
+    phase-59 #2): 对本脚本自身整体 sha256 锁住, 防 docstring / 逻辑悄悄漂移
+    而无 verify 红线. 自指处理: 计算 sha 时跳过含
+    ``EXPECTED_SELF_FILE_SHA = `` 的那一行 (sentinel line), 其余字节参与 hash.
+    设计参考 verify_interact_036b.py V0 schema metadata 字段语义.
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码.
 
@@ -67,6 +72,15 @@ VERIFY_034_EXPECTED_SHA = (
 BUMP_034_EXPECTED_SHA = (
     "431881e31551aadffc9c7b4ad15ae5855d2f9ccab53931a7fc1eecc598f0c4e9"
 )
+
+# V8 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash, phase-59 #2)
+# 计算时跳过含 `EXPECTED_SELF_FILE_SHA = ` 的那一行 (sentinel), 其余字节参与 sha256.
+# 元信息字段语义参考 verify_interact_036b.py V0 schema metadata.
+V8_SELF_SHA_LOCK_VERSION = 1
+V8_SELF_SHA_LOCK_BUMPED_AT = "2026-05-23"
+EXPECTED_SELF_FILE_SHA = "04d66709c1a2206c688fe8c474a3cb61e25fa26b142732c96fae3bb00499fcc1"
+
+SELF = Path(__file__).resolve()
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -287,6 +301,45 @@ def v7_bump_atomic_write() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V8: verify_infra_035 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash)
+# ---------------------------------------------------------------------------
+def _self_sha_skip_sentinel() -> str:
+    """计算本脚本自体 sha256, 跳过含 ``EXPECTED_SELF_FILE_SHA = `` 的那一行.
+
+    自指处理: 把 sentinel 行整行剔除后, 对剩余字节作 sha256. 这样修改
+    EXPECTED_SELF_FILE_SHA 常量值本身不会改变计算结果, 但任何其它字节
+    (含 docstring / 逻辑微调) 都会让 sha 漂移并触发 V8 红线.
+    """
+    raw = SELF.read_text(encoding="utf-8")
+    lines = raw.splitlines(keepends=True)
+    kept = [ln for ln in lines if "EXPECTED_SELF_FILE_SHA = " not in ln]
+    blob = "".join(kept).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
+def v8_self_file_sha_lock() -> None:
+    """锁本脚本自身整体 sha (跳过 sentinel 行) 防 docstring / 逻辑漂移.
+
+    与 V2/V4 对外部脚本的 sha 锁互补: 那些是被 sha 锁住的目标, 而本脚本
+    (锁的发起者) 此前未被任何 sha 锁监控, docstring 微调即可悄悄改变,
+    无 verify 红线. V8 补齐这一漏洞. bump 路径: 把 EXPECTED_SELF_FILE_SHA
+    设回占位 ``"__PLACEHOLDER_WILL_BE_FILLED__"`` 跑一次, 把日志里 actual
+    回填即可 (因 sentinel 行整行剔除, 占位字符串本身不影响 sha 计算).
+    """
+    actual = _self_sha_skip_sentinel()
+    ok = actual == EXPECTED_SELF_FILE_SHA
+    _emit(
+        "V8_self_file_sha_lock",
+        ok,
+        (
+            f"actual={actual[:16]} expect={EXPECTED_SELF_FILE_SHA[:16]} "
+            f"lock_schema_version={V8_SELF_SHA_LOCK_VERSION} "
+            f"bumped_at={V8_SELF_SHA_LOCK_BUMPED_AT}"
+        ),
+    )
+
+
 def main() -> int:
     v0_schema()
     v1_targets_exist()
@@ -296,6 +349,7 @@ def main() -> int:
     v5_bump_dryrun()
     v6_canonical_bytes()
     v7_bump_atomic_write()
+    v8_self_file_sha_lock()
 
     failed = [t for t, ok, _ in _results if not ok]
     total = len(_results)
