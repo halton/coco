@@ -741,8 +741,16 @@ def render_mermaid(graph: Dict) -> str:
                     nodes.add(tgt_id)
                 out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
         else:
-            # unknown target — 用占位节点
-            tgt_id = _node_id("unknown_" + lock["const"])
+            # unknown target — 用 (source, const) 复合 key 的占位节点
+            # infra-039-backlog-mermaid-unknown-target-id-collision (phase-59 #4):
+            # 早期实现 ``tgt_id = _node_id("unknown_" + lock["const"])`` 仅用 const 名
+            # 作为 unknown 节点 id, 跨 source 同名 const (如 ``EXPECTED_TARGET_FILE_SHA``
+            # 在 verify_infra_P290 与 verify_infra_P301 中都出现) 会被合并到同一个
+            # ``unknown_<CONST>`` 节点, 视觉上把多 source 共享一个 unknown 目标的拓扑
+            # 错误地呈现为一个 unknown 节点接收多条入边, 实际上它们是两个互不相干的
+            # 未识别 target。改为 (source_stem, const) 复合 key, 保证每个 source 的
+            # 未知 target 独立成节点, label 仍是 ``?<CONST>`` 保持可读性。
+            tgt_id = _node_id(f"unknown_{src_stem}_{lock['const']}")
             if tgt_id not in nodes:
                 out.append(f'    {tgt_id}["?{lock["const"]}"]')
                 nodes.add(tgt_id)

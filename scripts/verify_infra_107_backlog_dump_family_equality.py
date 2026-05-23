@@ -45,7 +45,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-P290-backlog sha lock 常量
 EXPECTED_DUMP_FILE_SHA = (
-    "ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b"
+    "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
 EXPECTED_SELF_MAIN_FUNC_SHA = (
