@@ -1,5 +1,18 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-54 plan
+
+- pre-state: main HEAD=`c802ce0` (phase-53 5/5 收官)
+- planner sub-agent 落地 phase-54 5 个候选 (priority 54-1..54-5, status=not_started, phase=54)
+- **#1.54 `infra-037-backlog-helper-doctest`** (推迟头位 from phase-53 #2.53; 改 `coco/scripts/_verify_lib.py` func_sha_by_name docstring 加 doctest; cascade ~42 大, 必须头位单跑独占, 不与他项并行)
+- **#2.54 `infra-P293-typo-guard-check-count-doc-reconcile`** (纯文档对齐: verify_infra_061 SUMMARY '18 checks' → '18 emit-paths / 17 unique check tags'; cascade ~0, 不动 impl)
+- **#3.54 `infra-P290-backlog-dump-family-equality-check`** (verify_infra_102 V3_dump_family_contents 设计点 docstring/comment 记录 frozenset vs set `==` 同元素歧义 + isinstance 双信号兜底; cascade ~1, 自 sha bump)
+- **#4.54 `infra-P294-backlog-verify-103-old-fstring-cleanup`** (verify_infra_103 has_old_fstring `A or (B and C)` 运算符优先级清理 / dead-code 加括号; cascade ~1, 自 sha bump)
+- **#5.54 `infra-P293-typo-guard-hash-suffix-policy`** (P281 typo-guard `*_HASH` allowlist 或降 warn 级别; 改 verify_infra_xxx typo-guard 配置 / 自 sha bump; cascade ~1)
+- 顺序硬约束: #1.54 必须最先单跑独占 (cascade 大, 改核心 _verify_lib.py 触发反向锁链); #2.54-#5.54 改不同 target file (verify_infra_061 / 102 / 103 / typo-guard), 相互无 sha 冲撞, 顺序无强约束
+- area 分布: 全 infra (5/5), 全 verify-only / docs-only / typo-guard 配置, 主路径 bytewise 等价 main, 无新 env / 无业务源码改动
+- backlog 来源: 1 个推迟项 (#1.54) + 2 个 P293 typo-guard 系列 + 1 个 P290 P-finding + 1 个 P294 P-finding, 全部 status=backlog (priority=999) 升级
+
 ## Session 2026-05-23 — phase-52 #2.52 closeout (infra-040-backlog-default-tmpl-content-lock)
 
 - feature: `infra-040-backlog-default-tmpl-content-lock` (#2.52) → status `passing`
