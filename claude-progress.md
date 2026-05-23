@@ -8318,3 +8318,32 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 4 层锁: file_sha=2c7b49c23ed22feb, main func_sha=f995f51c1578e556, V6a try/except literal sentinel, V6d behavioral monkeypatch inject ROBOT_037_BACKLOG_INJECTED_FAIL
 - Reviewer fresh-context sub-agent LGTM: 12 checks_run, mutation_test_done=true, P0=[] P1=[] P2=2 项 (infra-059 baseline + 已修 062)
 - phase_57 进度: 4/5 complete; next = phase-57 #5
+
+
+## Session 2026-05-23: phase-57 #5 closeout (interact-036b-backlog-drift-trend-regression-alert)
+
+**关键信号**:
+- feature: interact-036b-backlog-drift-trend-regression-alert (fresh implementation, drift 历史趋势单调上行 / OLS 斜率回归告警)
+- feat branch HEAD: 51ac983 → merge --no-ff to main → merge_commit_sha=85099e1
+- baseline main HEAD: b65a1f4 (fresh add, 新建 scripts/drift_trend_alert.py + scripts/verify_interact_036b.py, baseline 无此文件 → baseline_pre_existing_skipped=file_not_in_baseline)
+- Reviewer (sub-agent fresh-context): LGTM, mutation done (slope sign reversal → V1+V2+V3 FAIL, 还原 6/6 PASS), P0=[] P1=[] P2=3 项入 backlog
+
+**新增文件**:
+- scripts/drift_trend_alert.py (analyze_drift_history + _ols_slope + _is_monotonic_up + format_alert_line, default-OFF 主路径零开销)
+- scripts/verify_interact_036b.py (V0-V5 共 6 checks, sha 三层锁 + 行为 + mutant negative + subprocess)
+
+**Post-merge verify**:
+- ./init.sh smoke ALL PASS (audio/ASR/TTS/vision/face-tracker/VAD/wake-word/power-state/config/publish/typo-guard)
+- verify_interact_036b V0-V5 6/6 PASS (file_sha=8874f864f170, mono=True flat=True slope=True, mutant 反向序列/常数/单样本均不触发)
+- verify_infra_062 P278 evidence schema lock 30/30 PASS (scanned 82 → 83, 新 closeout block 通过全部 closeout-verify 校验)
+
+**Backlog 入账** (Reviewer P2 拆解, 不衍生 fu chain):
+- interact-036c-backlog-recalibrate-slope-threshold (priority=999, 真实 >=20 样本后重校准 slope_threshold=0.5 / window=10)
+- infra-P301-backlog-v0-sha-lock-version-field (priority=999, V0 sha lock 加 lock_schema_version + bumped_at 元数据)
+- interact-036d-backlog-v6-warn-banner-assert (priority=999, WARN 路径 stdout banner 字符串校验作 V6)
+
+**Status**: interact-036b-backlog-drift-trend-regression-alert status=passing, closed_at=2026-05-23
+
+**phase-57 状态**: 5/5 complete (infra-039-backlog-mermaid-tuple-fanout / infra-104-backlog-v1-window-hardening / infra-P275-assert-verify-passed-min-checks / robot-037-backlog-import-time-fail-fallback / interact-036b-backlog-drift-trend-regression-alert) — phase-57 全 passing 收官
+
+**Next**: phase-58 planning (按 priority 最低数字 not_started 选 candidate)
