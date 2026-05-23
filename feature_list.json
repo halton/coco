@@ -11845,8 +11845,59 @@
       "area": "infra",
       "phase": 48,
       "priority": 1.48,
-      "status": "not_started",
-      "notes": "Reviewer #4.47 P1 finding: scripts/verify_robot_035.py 的 EXPECTED_LIB_FILE_SHA 仍是旧 a80af0088b53116b, 实际 _verify_lib.py 已是 b3005a7d9272fb06 (since #3.47). 导致 V4_lib_file_sha FAIL + V5_self_subprocess FAIL。本不在 #4.47 的 verify_infra_* glob 范围内, 单独入账。"
+      "status": "passing",
+      "notes": "Reviewer #4.47 P1 finding: scripts/verify_robot_035.py 的 EXPECTED_LIB_FILE_SHA 仍是旧 a80af0088b53116b, 实际 _verify_lib.py 已是 b3005a7d9272fb06 (since #3.47). 导致 V4_lib_file_sha FAIL + V5_self_subprocess FAIL。本不在 #4.47 的 verify_infra_* glob 范围内, 单独入账。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "a3185d9f5b6b",
+          "main_head_sha_full": "a3185d9f5b6b1c5932683fd18404448c50761403",
+          "verify_runs": [
+            {
+              "name": "verify_robot_035",
+              "cmd": ".venv/bin/python scripts/verify_robot_035.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_035][PASS] V0_lib_file_exists /Users/halton/work/coco/scripts/_verify_lib.py\n[verify_robot_035][PASS] V0_lib_helper_def helper=parse_headings_from_doc\n[verify_robot_035][PASS] V0_lib_all_export __all__ contains 'parse_headings_from_doc'\n[verify_robot_035][PASS] V1_subprocess_import len=12 first='## 概述'\n[verify_robot_035][PASS] V2_helper_sha got=98890e28f76d0952 expect=98890e28f76d0952\n[verify_robot_035][PASS] V3_mutant_diff real_len=12 mutant_len=0\n[verify_robot_035][PASS] V4_lib_file_sha got=b3005a7d9272fb06 expect=b3005a7d9272fb06\n[verify_robot_035][PASS] V5_self_subprocess rc=0 stdout_lines=9\n[verify_robot_035] summary total=8 failed=0",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_062",
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=43 enforced=36 soft_skipped=7 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=43 enforced=36 soft_skipped=7 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "cmd": ".venv/bin/python scripts/smoke.py",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "robot_035 EXPECTED_LIB_FILE_SHA cascade 修复正确，所有同源锁均已对齐新 sha，独立验算+独立 verify 三件套全 PASS",
+          "checks_run": [
+            "independent_sha256",
+            "cascade_pin_scan",
+            "diff_scope",
+            "V3_helper_func_sha_drift",
+            "verify_robot_035",
+            "verify_infra_062",
+            "smoke"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        },
+        "freshness_anchor": "post-merge-rerun",
+        "closeout_notes": "Reviewer P0=P1=P2=[]；diff scope 仅 robot_035 一处 +2/-1；V3 helper sha 未漂移"
+      }
     },
     {
       "id": "infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline",
