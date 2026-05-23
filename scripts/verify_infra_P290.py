@@ -48,7 +48,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 EXPECTED_TARGET_FILE_SHA = (
-    "3a3195a0191669a66aed76ca20a1f4d4919fd561184d2bd268d4bd474843924d"
+    "8f8d8c65f86ddabf4a1e7355a9ef64e9b5416a88cdcceda428022f832d5a97fb"
 )
 EXPECTED_SELF_MAIN_FUNC_SHA = (
     "0ff1ac646febf74822bea6db76193361a8d7bdfa067e4a6d4fe28c631ced15af"
