@@ -1,5 +1,20 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-58 #4 closeout (infra-P301 V0 sha lock version field)
+
+- feature: `infra-P301-backlog-v0-sha-lock-version-field` (priority 999 phase=58, area=infra)
+- 性质: V0 self_sha lock 段新增 lock_schema_version (int) + bumped_at (ISO date) 元数据, 单点示范 (drift_trend_alert + interact-036b)
+- Engineer (sub-agent): scripts/verify_infra_P301.py 新增 (9 checks) + verify_interact_036b.py V0 段扩展 emit 元信息 (feat HEAD=12b1e44)
+- Reviewer (sub-agent fresh-context): LGTM, mutation_test_done=true; checks_run=6 (smoke + 3 verifier + mutation A/B); findings P0/P1=[], P2=3 项 (扫全集白名单 / bumped_at helper / version schema 单一来源)
+- Closeout (本 sub-agent): main HEAD pre-merge=1b3f6e9 → merge --no-ff feat/infra-P301-backlog-v0-sha-lock-version-field → main HEAD=aa0cb19 (merge_commit=aa0cb19fbdf4fd8a1d7fbb896b52ca98c44093ae)
+- post-merge verify_infra_P301: ALL PASS 9/9 (freshness_anchor=post-merge-rerun)
+- post-merge verify_interact_036b: ALL PASS 6/6
+- post-merge verify_infra_062: ALL PASS 30/30 (closeout shape 全 PASS 含新 evidence)
+- ./init.sh smoke: 14/14 PASS
+- baseline 1b3f6e9: scripts/verify_infra_P301.py file_not_in_baseline (新 verifier 合规缺省)
+- backlog 入账 3 项 (Reviewer P2): infra-P301-extend-allowed-missing-allowlist-scan-all / infra-P302-backlog-v0-bumped-at-helper-or-hook / infra-P303-backlog-v0-sha-lock-version-schema-single-source (priority=999 status=backlog phase=null, dependencies=[infra-P301-backlog-v0-sha-lock-version-field])
+- phase-58 进度: 4/N (closed: #1 V6 helper docstring close-set / #2 V6 helper docstring stale / #3 V6 helper docstring clarify / #4 infra-P301)
+
 ## Session 2026-05-23 — phase-56 #2 closeout (infra-049 stale closed_as_already_done)
 
 - feature: `infra-049-backlog-dump-index-kind-stats` (priority 56-2, area=infra)

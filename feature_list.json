@@ -15842,13 +15842,108 @@
       "priority": 999,
       "area": "infra",
       "title": "V0 sha lock 加版本号字段 (批量升级 baseline 可追溯)",
-      "status": "in_progress",
+      "status": "passing",
       "phase": 58,
       "created_at": "2026-05-23",
       "source": "interact-036b Reviewer P2-2",
       "description": "当前 V0/V1/V2 sha lock 直接 hardcode hex, 当批量升级 baseline (cascade bump) 时, 无法快速 diff 出哪个 lock 是新一轮 bump、哪个是旧轮残留. 提案: 在 V0 self_sha 段同时写入 lock_schema_version (int) + bumped_at (date) 元数据, scripts/_verify_lib 加 helper 读 / 校验. 不阻 merge, polish.",
       "dependencies": [],
-      "started_at": "2026-05-23"
+      "started_at": "2026-05-23",
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "aa0cb19",
+          "merge_commit_sha": "aa0cb19fbdf4fd8a1d7fbb896b52ca98c44093ae",
+          "baseline_head_echo": "1b3f6e9",
+          "baseline_tail_stdout": "fatal: path 'scripts/verify_infra_P301.py' exists on disk, but not in '1b3f6e9' (file_not_in_baseline: 新增 verifier 在 baseline 中不存在, 故无 baseline tail; 此为合规缺省, smoke + 三 verifier 全 PASS 作为 freshness 证据)",
+          "smoke_tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=282 well_formed=282 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_P301.py",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P301][PASS] V3_version_const_present V0_SELF_SHA_LOCK_VERSION=1 is_int=True\n[verify_infra_P301][PASS] V4_version_range V0_SELF_SHA_LOCK_VERSION=1 >=1 ? True\n[verify_infra_P301][PASS] V3_bumped_at_const_present V0_SELF_SHA_LOCK_BUMPED_AT='2026-05-23' is_str=True\n[verify_infra_P301][PASS] V4_bumped_at_format V0_SELF_SHA_LOCK_BUMPED_AT='2026-05-23' matches YYYY-MM-DD ? True\n[verify_infra_P301][PASS] V4_v0_lock_emits_metadata has_version=True has_bumped_at=True\n[verify_infra_P301][PASS] V5_reviewer_lgtm_gate target=infra-P301-backlog-v0-sha-lock-version-field helper_ok=True reason=feature_id='infra-P301-backlog-v0-sha-lock-version-field' in grace_period (skipped)\n[verify_infra_P301] summary: total=9 failed=0"
+            },
+            {
+              "name": "verify_interact_036b.py",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_interact_036b] PASS V0_self_sha_recorded: self_sha=d742cff76b6e lock_schema_version=1 bumped_at=2026-05-23\n[verify_interact_036b] PASS V1_file_sha_lock: actual=8874f864f170 expected=8874f864f170\n[verify_interact_036b] PASS V2_func_sha_lock: analyze_drift_history=ok _ols_slope=ok _is_monotonic_up=ok format_alert_line=ok\n[verify_interact_036b] PASS V3_behavior: mono=True flat=True slope=True\n[verify_interact_036b] PASS V4_mutant_negative: dec=False const=False one=False\n[verify_interact_036b] PASS V5_subprocess_invoke: rc=0 payload_triggered=True\n[verify_interact_036b] SUMMARY total=6 pass=6 fail=0"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=86 enforced=51 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=86 enforced=51 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 missing=[] extra=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-P301 V0 sha lock version field 落地干净。description 明确允许在 V0 self_sha 段写入 lock_schema_version + bumped_at，未要求扫全集，单点示范路线在 brief 范围内。9 个 check 覆盖常量存在/类型/范围/ISO 日期格式/函数 emit 元信息，mutation A 删常量正确触发 FAIL。V5 走 grace_period 自兜底，合规。",
+            "checks_run": [
+              "smoke PASS rc=0",
+              "verify_infra_P301 PASS rc=0 9/9",
+              "verify_interact_036b PASS rc=0 6/6",
+              "verify_infra_062 PASS rc=0 30/30",
+              "mutation_A (del V0_SELF_SHA_LOCK_VERSION) FAIL as expected rc=2",
+              "mutation_B (restore) PASS rc=0"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "drift-risk-1: 仅锁示范脚本未扫全集 + ALLOWED_MISSING 白名单 -> infra-P301-extend-allowed-missing-allowlist-scan-all",
+                "drift-risk-2: V0_SELF_SHA_LOCK_BUMPED_AT 字面 hardcode -> infra-P302-backlog-v0-bumped-at-helper-or-hook",
+                "drift-risk-3: V0_SELF_SHA_LOCK_VERSION=1 与外部 schema 无联动 -> infra-P303-backlog-v0-sha-lock-version-schema-single-source"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-P301-extend-allowed-missing-allowlist-scan-all",
+      "priority": 999,
+      "area": "infra",
+      "title": "V0 sha lock version field: 扫全集 + ALLOWED_MISSING 白名单",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-23",
+      "source": "infra-P301 Reviewer P2-1",
+      "description": "infra-P301 仅在示范脚本 (drift_trend_alert + interact-036b verify) 上锁了 V0 self_sha 段的 lock_schema_version + bumped_at 元数据, 未覆盖全部 V0 sha lock 节点. 提案: 让 verify_infra_P301 或新 verifier 扫 scripts/ 全集, 对每个含 V0 self sha lock 段强制要求 lock_schema_version + bumped_at; 对历史/示例脚本提供 ALLOWED_MISSING 白名单维护表, 显式列出豁免理由. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-backlog-v0-sha-lock-version-field"
+      ]
+    },
+    {
+      "id": "infra-P302-backlog-v0-bumped-at-helper-or-hook",
+      "priority": 999,
+      "area": "infra",
+      "title": "V0_SELF_SHA_LOCK_BUMPED_AT 自动维护 helper / pre-commit hook",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-23",
+      "source": "infra-P301 Reviewer P2-2",
+      "description": "当前 V0_SELF_SHA_LOCK_BUMPED_AT 字面 hardcode 字符串 '2026-05-23', 每次 bump V0 sha lock 时人工同步该字段易遗漏 (字段与 self_sha drift). 提案: 在 scripts/_verify_lib 加 helper `bump_v0_sha_lock(file, new_sha)` 同时改 self_sha + 写 bumped_at=today; 或 pre-commit hook 检测 V0_SELF_SHA_LOCK 行变更时同步 bumped_at. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-backlog-v0-sha-lock-version-field"
+      ]
+    },
+    {
+      "id": "infra-P303-backlog-v0-sha-lock-version-schema-single-source",
+      "priority": 999,
+      "area": "infra",
+      "title": "V0_SELF_SHA_LOCK_VERSION 与外部 schema 单一来源",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-23",
+      "source": "infra-P301 Reviewer P2-3",
+      "description": "当前 V0_SELF_SHA_LOCK_VERSION=1 是每个 verify 脚本独立的 int 常量, 与外部 schema (例如 _verify_lib 集中表) 无联动, 后续若要批量升级到 v=2, 需手工扫一遍所有 V0 锁脚本. 提案: 在 scripts/_verify_lib 加 CURRENT_V0_SHA_LOCK_SCHEMA_VERSION 单一来源, 各 verify 脚本 import 而非自定义 int; verifier 强制校验 imported equality. 不阻 merge.",
+      "dependencies": [
+        "infra-P301-backlog-v0-sha-lock-version-field"
+      ]
     },
     {
       "id": "interact-036d-backlog-v6-warn-banner-assert",
