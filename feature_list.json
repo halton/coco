@@ -16322,14 +16322,15 @@
       "priority": 201,
       "area": "infra",
       "title": "V0 sha lock version field: 扫全集 + ALLOWED_MISSING 白名单",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 60,
       "created_at": "2026-05-23",
       "source": "infra-P301 Reviewer P2-1",
       "description": "infra-P301 仅在示范脚本 (drift_trend_alert + interact-036b verify) 上锁了 V0 self_sha 段的 lock_schema_version + bumped_at 元数据, 未覆盖全部 V0 sha lock 节点. 提案: 让 verify_infra_P301 或新 verifier 扫 scripts/ 全集, 对每个含 V0 self sha lock 段强制要求 lock_schema_version + bumped_at; 对历史/示例脚本提供 ALLOWED_MISSING 白名单维护表, 显式列出豁免理由. 不阻 merge.",
       "dependencies": [
         "infra-P301-backlog-v0-sha-lock-version-field"
-      ]
+      ],
+      "started_at": "2026-05-24"
     },
     {
       "id": "infra-P302-backlog-v0-bumped-at-helper-or-hook",
