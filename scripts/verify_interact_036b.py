@@ -44,6 +44,16 @@ ROOT = Path(__file__).resolve().parent.parent
 TARGET = ROOT / "scripts" / "drift_trend_alert.py"
 SELF = Path(__file__).resolve()
 
+# ---- V0 lock schema metadata (infra-P301) --------------------------------
+# 元信息字段, 用于在批量升级 baseline (cascade bump) 时快速 diff 出哪个 lock
+# 是新一轮 bump、哪个是旧轮残留. 字段语义:
+#   V0_SELF_SHA_LOCK_VERSION : int, 整个 sha 锁组 (V0/V1/V2) 的 schema 版本号,
+#                              每次集体 bump 时 +1; 不随单纯的 hex 重算变化.
+#   V0_SELF_SHA_LOCK_BUMPED_AT: ISO date, 最近一次 bump 的日期.
+# 不参与运行时校验 (避免自指), 仅由 verify_infra_P301.py lint 锁定字段存在 + 类型.
+V0_SELF_SHA_LOCK_VERSION = 1
+V0_SELF_SHA_LOCK_BUMPED_AT = "2026-05-23"
+
 # ---- 静态 sha 锁常量 (interact-036b baseline) ----------------------------
 EXPECTED_FILE_SHA = "8874f864f1702a43c4b452a646dab17a0508eea697d350c94226ccb8e796b3e0"
 EXPECTED_FUNC_SHA = {
@@ -81,7 +91,15 @@ def v0_self_sha_lock() -> None:
         _record("V0_target_exists", False, "drift_trend_alert.py missing")
         return
     self_sha = hashlib.sha256(SELF.read_bytes()).hexdigest()
-    _record("V0_self_sha_recorded", True, f"self_sha={self_sha[:12]}")
+    _record(
+        "V0_self_sha_recorded",
+        True,
+        (
+            f"self_sha={self_sha[:12]} "
+            f"lock_schema_version={V0_SELF_SHA_LOCK_VERSION} "
+            f"bumped_at={V0_SELF_SHA_LOCK_BUMPED_AT}"
+        ),
+    )
 
 
 # ---- V1 ------------------------------------------------------------------
