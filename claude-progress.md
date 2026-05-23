@@ -8754,3 +8754,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - v062 post-closeout 自检: PASS 30/30, 未退化
 - push: 单次尝试, 失败忽略
 - 下一候选: phase-62 #4 (priority=203) `infra-P290-backlog-v2-target-sha-func-level-lock`
+
+## Session 2026-05-24 phase-62 #4 closeout — infra-P290-backlog-v2-target-sha-func-level-lock
+- 任务: phase-62 #4 — P290 V2 整文件 file_sha 锁 → func-level lock (func_sha_by_name(verify_infra_102.py, 'main'))，降 false-FAIL churn
+- 来源: phase-62 #3 closeout 后衔接 (priority=203)
+- baseline: 5e93d09 (phase-62 #3 closeout chore)
+- merge: feat/infra-P290-backlog-v2-target-sha-func-level-lock 8c8fe66 → main NEW=ccb7995
+- 7 verify_runs (P299 模式) 全 PASS: smoke / v035 / v110 / v062 / vP301_full / vP290 / v039
+- mutation_test:
+  - A: 在 scripts/verify_infra_102.py main 函数体注入 `_x = 1` → vP290 V2_target_func_sha FAIL got=06f903400a8257e5 expect=072652ad44846671 (锁有效)
+  - B: 在 scripts/verify_infra_102.py 模块 docstring 插入一行 → vP290 V2_target_func_sha PASS (弹性核心: docstring 改不影响 func-level lock)
+- Reviewer: sub_agent_fresh_context LGTM (4 mutation A/B/C/D 全验证, cascade=0, v062 30/30 PASS 无退化)
+- backlog 入账 1 项: infra-110-backlog-docstring-narrative-update-post-p290-func-lock (priority=999, P2 信息性, doc-only)
+- v062 post-closeout 自检: PASS 30/30, 未退化
+- push: 单次尝试, 失败忽略
+- 下一候选: phase-62 #5 (priority=204) `infra-P287-unknown-ids-set-lock`

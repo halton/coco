@@ -17078,12 +17078,53 @@
       "priority": 203,
       "area": "infra",
       "title": "P290 V2_target_file_sha 改 func_sha_by_name 减少 false FAIL churn",
-      "status": "not_started",
+      "status": "passing",
       "phase": 62,
       "created_at": "2026-05-24",
       "source": "infra-P304-backlog-P290-v2-target-sha-resync closeout Reviewer P2",
       "description": "P290 V2_target_file_sha 当前是整文件 sha256 锁 (EXPECTED_VERIFY_LIB_FILE_SHA), 任何 helper 改动 (含无关函数) 都会 cascade FAIL P290, 每次需重新 resync. 提案: 改为 func_sha_by_name 字典只锁特定关键函数 (如 _expect_function_call_count / _expect_assert_substring 等 P290 真正关心的几个), 减少 churn.",
-      "dependencies": []
+      "dependencies": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "ccb7995",
+          "baseline_head_echo": "5e93d09",
+          "merge_commit_sha": "ccb7995",
+          "verify_runs": [
+            {"name": "smoke", "status": "PASS", "rc": 0, "tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n==> Smoke 通过。", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_035", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_035] summary total=55 failed=0", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_110", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (18 checks)", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_062", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_P301_full", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_P301_full] summary: total=10 failed=0", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_P290", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_P290] summary: total=9 failed=0", "freshness_anchor": "ccb7995"},
+            {"name": "verify_infra_039", "status": "PASS", "rc": 0, "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (22 checks)", "freshness_anchor": "ccb7995"}
+          ],
+          "mutation_test": {
+            "A": {"description": "在 scripts/verify_infra_102.py main 函数体注入 `_x = 1`", "expected": "vP290 V2_target_func_sha FAIL", "observed": "FAIL got=06f903400a8257e5 expect=072652ad44846671 rc=2", "status": "PASS"},
+            "B": {"description": "在 scripts/verify_infra_102.py 模块 docstring 插入一行", "expected": "vP290 V2_target_func_sha PASS (弹性核心: docstring 改不影响 func-level lock)", "observed": "PASS got=072652ad44846671 expect=072652ad44846671 rc=0", "status": "PASS"}
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-62 #4 P290 V2 从整文件 file_sha 改为 func_sha_by_name(verify_infra_102.py, 'main') func-level lock。4 mutation A/B/C/D 全验证：A 改 102 main func 体触发 V2 FAIL（锁有效），B 改 102 docstring 不触发（弹性核心成立），C 正常 baseline PASS，D 无关 helper 改动不触发 cascade FAIL（churn 降低目标达成）。v062 30/30 PASS 无退化，cascade=0。LGTM 准 merge。",
+            "checks_run": [
+              "fresh_context_review",
+              "verify_lock_check",
+              "mutation_A_B_C_D_replay",
+              "cascade_impact_check",
+              "v062_no_regression_check"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                {"id": "v110-docstring-stale-narrative", "note": "verify_infra_110.py L16 historical narrative outdated post P290 func-level lock"}
+              ]
+            }
+          }
+        },
+        "closeout_at": "2026-05-24",
+        "main_head_sha_short": "ccb7995"
+      }
     },
     {
       "id": "infra-039-backlog-v4-output-anchors-lower-bound",
@@ -17847,9 +17888,21 @@
         "closeout_at": "2026-05-24",
         "main_head_sha_short": "8d7fcc2"
       }
+    },
+    {
+      "id": "infra-110-backlog-docstring-narrative-update-post-p290-func-lock",
+      "priority": 999,
+      "area": "infra",
+      "title": "verify_infra_110.py L16 docstring 历史叙事更新（P290 file_sha → func_sha）",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "source": "phase-62 #4 infra-P290-backlog-v2-target-sha-func-level-lock closeout Reviewer P2",
+      "description": "verify_infra_110.py L16 docstring 历史叙事陈旧 — 描述仍按 P290 V2_target_file_sha 整文件 sha 锁口径写; phase-62 #4 已将 V2 改为 func_sha_by_name(verify_infra_102.py, 'main') 的 func-level lock, docstring 需相应更新, 反映 file_sha → func_sha 演进, 避免新读者按旧叙事理解 P290 行为。仅文档改动, 不动实现。",
+      "dependencies": []
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-23T03:00:00Z"
+    "last_updated": "2026-05-24T00:00:00Z"
   }
 }
