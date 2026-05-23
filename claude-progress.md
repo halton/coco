@@ -8191,3 +8191,28 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 0 业务源码改动 (仅 feature_list.json status=passing + closed_as_already_done=true + closed_at=2026-05-23 + 完整 closeout_verify schema)
 - phase_56_status: 4/5 complete
 - 下一步: 派 sub-agent 执行 phase-56 #5 (interact-036a-backlog-drift-jsonl-rotation)
+
+## Session 2026-05-23 phase-56 #5 closeout — interact-036a-backlog-drift-jsonl-rotation (stale_already_done)
+
+- feature: interact-036a-backlog-drift-jsonl-rotation
+- feat branch HEAD: 01d7200
+- main HEAD before merge: c471923 (baseline)
+- merge_commit_sha: b70d760 (main HEAD after merge)
+- merge strategy: --no-ff "merge: interact-036a-backlog closed_as_already_done by interact-037"
+- 覆盖来源: interact-037 (drift JSONL rotation / size cap, status=passing, merge HEAD 71c0154)
+- 实现位置: scripts/verify_interact_024.py L84-L129 _append_drift_history (_MAX_BYTES=256KB rotate to .jsonl.1, try/except 全包)
+- followup backlog (独立追踪, 不在本 closeout 内): interact-037a (N 代 retention) / interact-037b (filelock 多进程并发) / interact-037c (verify 自锁全文件 sha vs 函数级双锁策略)
+- verify_interact_036: PASS (V0-V5 全 PASS, 6/6 all_pass=True, end-to-end append +1 line)
+- verify_infra_060: FAIL 1/14 V4_real_unknown_count_eq_one unknown_count=9 (pre-existing baseline @ c471923, 9 EXPECTED_* unknown 与 baseline 完全一致, 本 stale closeout 不引入新 unknown)
+- verify_infra_062: ALL PASS 30/30 (30 emit-paths / 30 unique check tags; closeout reviewer block shape + main_head_sha + merge_commit_sha + baseline_head_echo + verify_runs_freshness 五道 closeout 校验全 PASS)
+- smoke: 全 PASS (vision / face-tracker / VAD / wake-word / power-state / config / publish / typo-guard)
+- Reviewer: sub_agent_fresh_context LGTM (verdict_original=LGTM_stale_already_done, summary 前缀 [stale_already_done], 6 checks_run, mutation_test_done=false, findings P0/P1/P2 all empty)
+- 0 业务源码改动 (仅 feature_list.json status=passing + closed_as_already_done=true + closed_at=2026-05-23 + 完整 P278 closeout_verify schema)
+- phase_56_status: 5/5 complete
+- phase-56 总览 (5 项):
+  - #1 infra-040-backlog-source-file-aware: fresh closeout (passing, 真改动)
+  - #2 infra-049-backlog: stale_already_done (covered by infra-053/infra-054 等)
+  - #3 infra-036-backlog: stale_already_done (covered by infra-040)
+  - #4 robot-032-backlog-doc-verify-single-source: stale_already_done (covered by robot-034/robot-035)
+  - #5 interact-036a-backlog-drift-jsonl-rotation: stale_already_done (covered by interact-037)
+- 下一步: phase-57 planning（按 priority 最低数字 not_started 选 candidate）

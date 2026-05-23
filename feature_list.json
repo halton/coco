@@ -5486,24 +5486,71 @@
       "title": "interact_024_drift_history.jsonl rotation / retention",
       "area": "interact",
       "priority": "56-5",
-      "status": "closed_as_already_done",
+      "status": "passing",
       "phase": 56,
       "description": "evidence/_history/interact_024_drift_history.jsonl 当前为 append-only，跨 commit 无界增长。补 size cap / N-行 rotation 或纳入 evidence/_history 整体 retention 策略，避免长期堆积。低优先级，不阻 merge。",
       "source": "interact-036 closeout follow-up",
-      "updated_at": "2026-05-23T19:02:59",
-      "evidence": "closed_as_already_done by interact-037 (drift JSONL rotation / size cap, status=passing). scripts/verify_interact_024.py 行 84-129 已实现 _DRIFT_HISTORY_PATH + _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1 (覆盖式, 仅保留 2 代); _append_drift_history 在 append 前若 > _MAX_BYTES 触发 rotate, 全 try/except 包裹 fail-soft. interact-037 V0-V5 验收 PASS + subprocess fixture 触发 rotate 产出 .archive/ + Reviewer (sub-agent) LGTM (merge main HEAD 71c0154). 本 backlog (scope=size cap / N-行 rotation 或 retention 策略) 已被 interact-037 完整覆盖, 无独立增量价值. 后续 N 代 retention / filelock 等增强已拆为 interact-037a / 037b / 037c backlog 追踪.",
-      "closeout_verify": {
-        "kind": "stale_already_done",
-        "covered_by": "interact-037",
-        "covered_by_status": "passing",
-        "covered_by_merge_head": "71c0154",
+      "updated_at": "2026-05-23T20:00:00",
+      "closed_as_already_done": true,
+      "covered_by": ["interact-037"],
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "finding": "interact-036a-backlog scope (drift JSONL size cap / N-行 rotation / retention) 已被 phase-30 interact-037 完整覆盖",
+        "interact_037": "scripts/verify_interact_024.py L84-L129 _append_drift_history 已实现 _DRIFT_HISTORY_PATH + _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1 (覆盖式, 单代 retention); 全 try/except 包裹 fail-soft; interact-037 V0-V5 验收 PASS + subprocess fixture 触发 rotate 产出 .archive/ + Reviewer (sub-agent) LGTM; merge main HEAD 71c0154 status=passing",
         "rotation_implementation_locus": "scripts/verify_interact_024.py:_append_drift_history (lines ~84-129)",
         "rotation_policy": "size cap 256KB single-gen rotate to .jsonl.1",
-        "followup_backlog": [
-          "interact-037a",
-          "interact-037b",
-          "interact-037c"
-        ]
+        "followup_backlog": ["interact-037a", "interact-037b", "interact-037c"],
+        "smoke": "PASS (本 stale closeout 不动业务)",
+        "closeout_verify": {
+          "main_head_sha": "b70d76028880f8d4e6a49c2000f1123a17d4fa45",
+          "merge_commit_sha": "b70d76028880f8d4e6a49c2000f1123a17d4fa45",
+          "baseline_head_echo": "c471923",
+          "pre_existing_baseline_sha": "c471923988cc70381e9bd79d5de291b93b1a08581",
+          "baseline_tail_stdout": "main@c471923 V4_real_unknown_count_eq_one unknown_count=9 (pre-existing baseline; 9 EXPECTED_* unknown 已存在于 main HEAD c471923，本 stale closeout 不引入新 unknown，与 baseline 完全一致)",
+          "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=267 well_formed=267 typo_count=0\n==> Smoke 通过。",
+          "verify_runs": [
+            {
+              "verify_script": "scripts/verify_interact_036.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_interact_036] PASS V0_preflight\n[verify_interact_036] PASS V1_sentinels: 6 关键短语全部命中\n[verify_interact_036] PASS V2_structural_locks: 6 结构锁全部命中 + 函数体 try/except 包裹\n[verify_interact_036] PASS V3_mutant_proof\n[verify_interact_036] PASS V4_sha256_lock: verify_024 sha256=9e5af28633783184..\n[verify_interact_024] PASS V1_source_anchors\n[verify_interact_036] PASS V5_end_to_end_append: append +1 行 (before=7 after=8)\n[verify_interact_036] SUMMARY all_pass=True (6/6)",
+              "run_context": "post-merge-rerun"
+            },
+            {
+              "verify_script": "scripts/verify_infra_060.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=29250\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=9 (pre-existing baseline @ c471923)\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14",
+              "run_context": "post-merge-rerun",
+              "pre_existing_baseline_sha": "c471923988cc70381e9bd79d5de291b93b1a08581",
+              "baseline_tail_stdout": "main@c471923 V4_real_unknown_count_eq_one unknown_count=9; 本 stale closeout 不引入新 unknown，与 baseline 完全一致"
+            },
+            {
+              "verify_script": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=78 enforced=45 violations=0\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=78 enforced=45 violations=0\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=78 enforced=45 violations=0\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=78 enforced=45 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=78 enforced=45 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "run_context": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "verdict_original": "LGTM_stale_already_done",
+            "summary": "[stale_already_done] interact-036a-backlog scope (drift JSONL size cap / N-行 rotation / retention) 已被 phase-30 interact-037 完整覆盖：scripts/verify_interact_024.py L84-L129 _append_drift_history 已实现 _DRIFT_HISTORY_PATH + _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1，全 try/except 包裹 fail-soft；interact-037 V0-V5 PASS + Reviewer LGTM + merge HEAD 71c0154 passing；后续 N 代 retention / filelock / 全文件 sha 评估已拆为 interact-037a/b/c backlog；本 backlog 作 already-done 收敛，无新增源码改动",
+            "checks_run": [
+              "对照 interact-036a-backlog description 与 interact-037 evidence 比对 scope 覆盖度（drift JSONL size cap / rotation / retention 三轴）",
+              "确认 scripts/verify_interact_024.py L84-L129 _append_drift_history 实现 _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1 且 try/except 包裹 fail-soft",
+              "确认 interact-037 status=passing + merge main HEAD 71c0154 + V0-V5 全 PASS 已落地",
+              "重跑 scripts/verify_interact_036.py 确认 rc=0 + 6/6 all_pass=True + V5 end-to-end append 行数 +1",
+              "确认 followup backlog interact-037a/037b/037c 已在 feature_list.json 立项追踪剩余增强",
+              "确认本 stale closeout 不引入新业务源码改动 (feature_list.json + claude-progress.md 之外 0 diff)"
+            ],
+            "mutation_test_done": false,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          }
+        }
       }
     },
     {
