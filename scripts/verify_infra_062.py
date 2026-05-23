@@ -47,6 +47,28 @@ INFRA_062_SHA_LOCKS
     防伪机制后再回归。
 - V5 Reviewer LGTM gate (print-only)
 
+R6 SAMPLE-COUNT TERMINOLOGY (infra-P294-R6-sample-count-doc / phase-53 #4.53)
+----------------------------------------------------------------------------
+SUMMARY 尾行历史上以 ``ALL PASS (N checks)`` 行文, 但实际 N 计的是
+``_results`` 的 emit 次数 (即 ``_emit(tag, ok, detail)`` 的调用次数), 而
+非"独立可执行 check 数量"。对本脚本而言, 当前每个 ``_emit`` 调用对应
+一个唯一 tag (emit-paths == unique check tags == 30, 1:1 映射), 但未来若同
+一 tag 被多次 emit (例如循环扫描每个 sample 都 emit 同名 tag), emit-paths
+会大于 unique check tags。为消除歧义, SUMMARY 行格式已改为
+``ALL PASS (N emit-paths / M unique check tags)``, 与 sibling
+``infra-P293-typo-guard-check-count-doc-reconcile`` 在 verify_infra_061
+上的同质处理保持一致。术语定义:
+
+- emit-paths: 一次 verify_infra_062 run 中 ``_emit`` 被调用的总次数 (即
+  PASS/FAIL 行的总条数), 等于 ``len(_results)``。
+- unique check tags: ``_results`` 中 ``tag`` 字段去重后的数量, 即
+  ``len({tag for tag, _, _ in _results})``。
+
+注: feature rationale 中"17 emit-paths"为 Round-2 早期快照 (V4 还只有 8
+samples + V0(4)+V1(2)+V2(1)+V3(1)+V5(1)=17); 当前经多轮 P278 强化 enforce
+检查累加, 实测值为 30 emit-paths / 30 unique check tags。verifier 锁实测
+当前值, rationale 中的 17 仅为历史快照, 不再权威。
+
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
@@ -1417,11 +1439,18 @@ def main() -> int:
     _enforce_v3_helper_drift_detector()
     v5_reviewer_gate()
     total = len(_results)
+    unique_tags = len({t for t, _, _ in _results})
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_062][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(
+            f"[verify_infra_062][SUMMARY] FAIL {len(failed)}/{total} emit-paths: {failed}",
+            flush=True,
+        )
         return 1
-    print(f"[verify_infra_062][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(
+        f"[verify_infra_062][SUMMARY] ALL PASS ({total} emit-paths / {unique_tags} unique check tags)",
+        flush=True,
+    )
     return 0
 
 

@@ -8818,11 +8818,12 @@
     {
       "id": "infra-P294-R6-sample-count-doc",
       "priority": "53-4",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 53,
       "area": "infra",
       "title": "verify_infra_062 SUMMARY '17 checks' 用语精准化",
-      "rationale": "Round-2 V4 改为 8 个合成样本 (A-H) + V0(4) + V1(2) + V2(1) + V3(1) + V5(1) = 17 emit-paths. 与 verify_infra_061 'N checks vs N emit-paths' 同质问题 (见 infra-P293-typo-guard-check-count-doc-reconcile). 建议未来统一用 '17 emit-paths / unique check tags'. 纯文档对齐, 不动 impl."
+      "rationale": "Round-2 V4 改为 8 个合成样本 (A-H) + V0(4) + V1(2) + V2(1) + V3(1) + V5(1) = 17 emit-paths. 与 verify_infra_061 'N checks vs N emit-paths' 同质问题 (见 infra-P293-typo-guard-check-count-doc-reconcile). 建议未来统一用 '17 emit-paths / unique check tags'. 纯文档对齐, 不动 impl.",
+      "branch": "feat/infra-P294-R6-sample-count-doc"
     },
     {
       "id": "infra-P286-total-nodes-lock",
