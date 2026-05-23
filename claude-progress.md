@@ -8117,3 +8117,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - backlog 入账: 无
 - **phase-55 5/5 完整收官**: #5.51 helper-tail-chars-vs-bytes-doc + #5.52 helper-line-vs-byte-edge-case-doc + #5.53 verify-058-edge-case-hard-lock + #5.54 verify-058-helper-silent-skip-contract-hard-lock + #5.55 P294-followup-070-mini-repo-env-isolation 全 passing
 - 下一步: phase-56 planning
+
+## Session 2026-05-23 phase-56 planning
+
+- prev main HEAD: 049c93a (phase-55 5/5 收官)
+- backlog 池: 94 项 (排除 uat-*); 大 cascade item 5 项识别在案 (P275 / P291-extend2 / P289 / V6-verify-lib-legacy-9 / V6-076-helper-tuple-step2)
+- 选取策略: 跨 3 area (infra/robot/interact) 全选小～中 cascade, **无 BIG 入选**, 头位无需独占
+- file_lock_conflicts_check: 已确认 5 项分别落在不同 verify 脚本 / 工具脚本 / docs, 无 file_sha lock 互撞
+- selected 5 candidates (priority 56-1 → 56-5):
+  - **56-1 infra-040-backlog-bis-empty-needle-and-overlap** (prev 999, cascade≈低): bis 工具边界增强 (empty needle / overlap), 锁定 scripts/_verify_lib.py 内 bis helper, 价值: V0/V4 双锁可写
+  - **56-2 infra-049-backlog-dump-index-kind-stats** (prev 999, cascade≈低): dump_v4_sha_graph 输出补 kind 统计, 价值: 工具 stdout 契约可锁
+  - **56-3 infra-036-backlog-sha-lock-graph-dump** (prev 999, cascade≈低): sha lock graph dump 扩展, 与 56-2 在同 area 但触不同输出/文件区段
+  - **56-4 robot-032-backlog-doc-verify-single-source** (prev 999, cascade≈零): docs/proactive_scheduler_block_policy.md 与 verify_robot_032 单一事实源, 价值: doc-driven verify 契约
+  - **56-5 interact-036a-backlog-drift-jsonl-rotation** (prev 999, cascade≈零): drift jsonl size cap / rotation, 价值: V0/V4 rotation 行为锁
+- big_item_head: 无 (本 phase 全规避)
+- 下一步: 派 sub-agent 执行 phase-56 #1 (infra-040-backlog-bis-empty-needle-and-overlap) 开发
