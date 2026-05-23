@@ -6810,14 +6810,65 @@
       "area": "infra",
       "phase": 54,
       "title": "func_sha_by_name 加 doctest example",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-037 closeout Reviewer 建议",
       "scope": "在 _verify_lib.func_sha_by_name docstring 末尾加 doctest（>>> 调用样例 + 期望 sha 前缀），提升可读性与离线自检能力。",
       "dependencies": [
         "infra-037"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "verifier": "scripts/verify_infra_105_backlog_helper_doctest.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_105_backlog_helper_doctest.py",
+            "name": "verify_infra_105",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_105][PASS] V3_verify_lib_file_sha got=6098f8c1b0a70331 expect=6098f8c1b0a70331 [verify_infra_105][PASS] V4_self_main_func_sha got=b1782a7fa034c6ac expect=b1782a7fa034c6ac [verify_infra_105][PASS] V5_reviewer_lgtm_gate target=infra-037-backlog-helper-doctest helper_ok=True grace_skipped=True reason=grace_period [verify_infra_105][SUMMARY] ALL PASS (10 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[] [verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True [verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "script": "scripts/verify_infra_060.py",
+            "name": "verify_infra_060",
+            "status": "FAIL",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph'] [verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True [verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one'] (pre-existing baseline FAIL; unrelated to this feature — backlog tracked as infra-P285)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "24ace30"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Fresh-context Reviewer 审 infra-037-backlog-helper-doctest: cascade_total_observed=51 (50 EXPECTED_VERIFY_LIB_FILE_SHA + 2 EXPECTED_FUNC_SHA_BY_NAME), doctest 12 tests pass, _verify_lib new file_sha=6098f8c1b0a70331, baseline 区分确认 verify_infra_060 V4_real_unknown_count_eq_one 为 pre-existing FAIL (与本 feature 无关), verify_infra_105 ALL PASS。LGTM。",
+          "checks_run": [
+            "cascade_bump_count_verified",
+            "doctest_executes_clean",
+            "verify_lib_file_sha_consistent",
+            "pre_existing_baseline_distinguished",
+            "verify_infra_105_all_pass"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        },
+        "pre_existing_baseline_sha": "a5fe1fe",
+        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=5 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA'] [verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one'] (pre-existing on a5fe1fe before merge — unrelated to infra-037-backlog-helper-doctest)",
+        "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)   ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'] ==> Smoke: publish (entry_points + Coco class import)   ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp  ==> Smoke 通过。",
+        "merge_commit_sha": "24ace3000d12427262e0a5c135eb25d969854b7c",
+        "baseline_head_echo": "a5fe1fe"
+      }
     },
     {
       "id": "interact-033b-backlog-site-specs-5tuple-relock",

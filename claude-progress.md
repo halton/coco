@@ -7948,3 +7948,17 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - Reviewer fresh-context LGTM (sub-agent): Mutation A 改 comment 关键词 catch V1+V2, Mutation B 加 dummy const 入 _PER_FILE_SELF_LOCKS catch V2; cascade 全量同步无 stale
 - 新增 1 backlog: `infra-104-backlog-v1-window-hardening` (P2 V1 [-12,0) 行偏移窗口加固)
 - **phase-53 收官**: 5/5 feature 落地 (#1.53 #3.53 #4.53 #5.53 closeout 完成; #2.53 推迟到 phase-54)
+
+## Session 2026-05-23 phase-54 #1.54 closeout (infra-037-backlog-helper-doctest)
+
+- merge feat/infra-037-backlog-helper-doctest → main: merge_commit_sha=24ace3000d12427262e0a5c135eb25d969854b7c (baseline=a5fe1fe)
+- cascade total observed = 51 (50 EXPECTED_VERIFY_LIB_FILE_SHA + 2 EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA, 含 dump_v4_sha_graph 1 处即 cascade=51 不含自身 lib)
+- _verify_lib.func_sha_by_name 新增 doctest example (12 doctests pass clean rc=0 stdout=0 stderr=0)
+- _verify_lib new file_sha = 6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981cc357a93b
+- 新 verifier scripts/verify_infra_105_backlog_helper_doctest.py (10 checks ALL PASS, self_main_func_sha=b1782a7fa034c6ac)
+- post-merge-rerun (P278 freshness_anchor) evidence 完整：105 PASS, 062 PASS, 060 FAIL (V4_real_unknown_count_eq_one, pre-existing baseline 与本 feature 无关, 已记 backlog/infra-P285)
+- Reviewer fresh-context LGTM (sub-agent): cascade=51, doctest 12 tests pass, baseline 区分确认
+- closeout self-check verify_infra_062: ALL PASS (30 emit-paths)
+- smoke `./init.sh` rc=0 通过
+- feature_list.json status: not_started → passing
+- 下一 candidate: infra-P293-typo-guard-check-count-doc-reconcile (#2.54)
