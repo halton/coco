@@ -43,7 +43,7 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-039 sha lock 常量 (V2): dump_v4_sha_graph.py 整体 file sha
-EXPECTED_DUMP_FILE_SHA = "6acd1eb56ba358cd8209899766561267929d079d580359486fdb9950195848a5"
+EXPECTED_DUMP_FILE_SHA = "b14982e3f9f13cbeb3c1251e159883a0aee04fe59cedffce0699fd8f21c76878"
 
 # infra-039 自身 v4_behavior 函数 sha (V1 自锁, 占位; 末尾自计算后回填)
 EXPECTED_V4_CHECKER_FUNC_SHA = "7ae405196b8a92f2191d92871cdd8278dcbdcc43d7a4ac21e71b76dcd7084fea"
@@ -256,6 +256,80 @@ def v4_behavior() -> None:
 # ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate (print-only)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# V6: --show-full-sha 选项行为锁 (infra-039-backlog-dump-show-full-sha, phase-50 #1.50)
+# ---------------------------------------------------------------------------
+def v6_show_full_sha_option() -> None:
+    """锁住 dump_v4_sha_graph.py 的 ``--show-full-sha`` CLI 选项行为契约。
+
+    contract:
+      * default 模式输出含 ``...`` 截断标记 (16 hex + ``...``)。
+      * ``--show-full-sha`` 模式: 输出至少含一个 64 hex sha 完整串, 且
+        默认的 ``[:16]...`` 截断不出现在 sha-lock 行(以 '@' 或 '=' 分隔的 sha 值后)。
+      * JSON / mermaid 模式不受影响 (--show-full-sha 与 --json 共用时仍输出 JSON)。
+    """
+    import re as _re
+    # default 模式
+    try:
+        out_def = subprocess.run(
+            [sys.executable, str(DUMP_PY)],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+    except Exception as e:
+        _emit("V6_default_run", False, f"err: {e!r}")
+        return
+    _emit("V6_default_run", out_def.returncode == 0, f"rc={out_def.returncode}")
+    # default 应含 "..." 省略号 (sha[:16]... 模式)
+    has_ellipsis_default = "..." in out_def.stdout
+    _emit(
+        "V6_default_has_ellipsis",
+        has_ellipsis_default,
+        f"len_stdout={len(out_def.stdout)}",
+    )
+    # --show-full-sha 模式
+    try:
+        out_full = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--show-full-sha"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+    except Exception as e:
+        _emit("V6_full_run", False, f"err: {e!r}")
+        return
+    _emit("V6_full_run", out_full.returncode == 0, f"rc={out_full.returncode}")
+    # 应含至少一个 64 hex sha 完整串
+    full_sha_re = _re.compile(r"\b[0-9a-f]{64}\b")
+    full_hits = full_sha_re.findall(out_full.stdout)
+    _emit(
+        "V6_full_emits_64hex",
+        len(full_hits) >= 1,
+        f"hits={len(full_hits)} sample={full_hits[0] if full_hits else None}",
+    )
+    # full 模式不应在 sha 值后跟 "..."(@ 或 = 后接 16 hex + ...)
+    trunc_re = _re.compile(r"[@=]\s*[0-9a-f]{16}\.\.\.")
+    trunc_hits = trunc_re.findall(out_full.stdout)
+    _emit(
+        "V6_full_no_truncation",
+        len(trunc_hits) == 0,
+        f"trunc_hits={len(trunc_hits)}",
+    )
+    # JSON 模式 + --show-full-sha 仍应 emit valid JSON (text-only 选项不应破坏 JSON)
+    try:
+        out_jf = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--json", "--show-full-sha"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        import json as _json
+        graph_jf = _json.loads(out_jf.stdout)
+        ok_jf = out_jf.returncode == 0 and isinstance(graph_jf.get("locks"), list)
+        _emit(
+            "V6_json_with_full_sha_unaffected",
+            ok_jf,
+            f"rc={out_jf.returncode} locks={len(graph_jf.get('locks', []))}",
+        )
+    except Exception as e:
+        _emit("V6_json_with_full_sha_unaffected", False, f"err: {e!r}")
+
+
 def v5_reviewer_gate() -> None:
     """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
 
@@ -289,6 +363,7 @@ def main() -> int:
     v2_dump_file_sha()
     v3_mutant()
     v4_behavior()
+    v6_show_full_sha_option()
     v5_reviewer_gate()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
