@@ -28,6 +28,13 @@ V8 verify_infra_035 自体 sha 锁 (infra-035-backlog-verify-infra-035-self-hash
     标记 (hash)+空格+``V8-SELF-SHA-SKIP`` 的那一行 (见 infra-P305 phase-60 #5,
     把宽松子串匹配收紧到显式 pragma 锚), 其余字节参与 hash.
     设计参考 verify_interact_036b.py V0 schema metadata 字段语义.
+V9 V8 pragma cardinality 机械断言 (infra-P305-backlog-pragma-cardinality-
+    mechanical-assert, phase-61 #1): 全文 rstrip 后 endswith
+    ``# V8-SELF-SHA-SKIP`` 的行数必须恰好 == 1. 若 future commit / drift /
+    attacker 不慎或恶意插入第二条 pragma 行 (例如把 pragma 复制到伪常量或
+    docstring 上), V8 skip 集合会被悄悄扩大形成绕过 surface, 而 V8 自身仍
+    PASS (因伪行被一并剔除, sha 等式仍成立). V9 在 V8 之外独立锁住 pragma
+    行的 *cardinality*, 任何 ≠1 立即红线. verify-only, 不改 V8 计算逻辑.
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码.
 
@@ -80,9 +87,9 @@ BUMP_034_EXPECTED_SHA = (
 # 仅 EXPECTED_SELF_FILE_SHA 真常量行打 pragma; 其余字节(含 docstring / 注释 /
 # 逻辑) 一律纳入 sha256 -> 任何漂移都会触发 V8 红线, 不再被宽松子串绕过.
 # 元信息字段语义参考 verify_interact_036b.py V0 schema metadata.
-V8_SELF_SHA_LOCK_VERSION = 2
+V8_SELF_SHA_LOCK_VERSION = 3
 V8_SELF_SHA_LOCK_BUMPED_AT = "2026-05-24"
-EXPECTED_SELF_FILE_SHA = "efe3a9538570c0abbaa0ee5dbdeec1f6929258e5d5c7a54ee02c6603157a6071"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "9d101f0bb507acbfd0c1aec45406e5831b055af4ffcdb5d809097e1d3592d0e0"  # V8-SELF-SHA-SKIP
 
 SELF = Path(__file__).resolve()
 
@@ -348,6 +355,37 @@ def v8_self_file_sha_lock() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V9: V8 pragma cardinality 机械断言
+#     (infra-P305-backlog-pragma-cardinality-mechanical-assert, phase-61 #1)
+# ---------------------------------------------------------------------------
+def v9_pragma_cardinality() -> None:
+    """全文 rstrip 后 endswith ``# V8-SELF-SHA-SKIP`` 的行数恰好 == 1.
+
+    与 V8 互补: V8 锁住 *剔除 pragma 行后* 的 sha; V9 锁住 pragma 行本身
+    的 *计数*. 若有人 (无心或恶意) 在脚本内再加一条 pragma 行 (例如复制
+    到伪常量、docstring 例子、注释中), V8 skip 集合会扩大为 2 行 -> V8
+    sha 等式仍可能成立 (取决于 attacker 操作), 形成绕过 surface; V9 在
+    cardinality 维度独立锁定, 任何 ≠1 立即红线.
+
+    本 emit 的 "pragma 行" 自身在脚本内出现 1 次 = ``EXPECTED_SELF_FILE_SHA``
+    那条真常量行; 本 docstring 内的 ``# V8-SELF-SHA-SKIP`` 字面量以双反引号
+    inline-code 形式书写 (即 ``\\`\\`# V8-SELF-SHA-SKIP\\`\\``), rstrip 后
+    不 endswith pragma 文本, 不计入.
+    """
+    _PRAGMA = "# V8-SELF-SHA-SKIP"
+    raw = SELF.read_text(encoding="utf-8")
+    hits = [
+        ln for ln in raw.splitlines() if ln.rstrip().endswith(_PRAGMA)
+    ]
+    ok = len(hits) == 1
+    _emit(
+        "V9_pragma_cardinality",
+        ok,
+        f"pragma_hit_count={len(hits)} expect=1",
+    )
+
+
 def main() -> int:
     v0_schema()
     v1_targets_exist()
@@ -358,6 +396,7 @@ def main() -> int:
     v6_canonical_bytes()
     v7_bump_atomic_write()
     v8_self_file_sha_lock()
+    v9_pragma_cardinality()
 
     failed = [t for t, ok, _ in _results if not ok]
     total = len(_results)
