@@ -1,5 +1,15 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-49 #4.49 infra-049-backlog-dump-index-expose-kind (Closeout)
+
+- merge: feat/infra-049-backlog-dump-index-expose-kind (28e87a0) → main, merge sha=56e8dea, base=cbb970c
+- 修改：scripts/dump_reverse_sha_lock_index.py 在 entries 中暴露 kind 字段（schema v2 additive 升级），verify_infra_049.py V4 新增 kind_breakdown + entry kind_values 双重 check；49/50/51 联动 bump EXPECTED_DUMP_INDEX_FILE_SHA。
+- verify_infra_049 ALL PASS 19/19；verify_infra_062 ALL PASS 30/30；smoke PASS。
+- Reviewer (sub-agent fresh-context): LGTM。"kind 字段透传 + schema v2 additive 升级 clean，V4 双重 check 可抓字段拿掉/改名/退化 unknown 三类 mutation；sha cascade 049+050+051 同步完成；19/19 + 17/17 PASS；051 4 FAIL 已确认 pre-existing baseline，本 PR 不引入也不掩盖。"
+- pre-existing baseline note: verify_infra_051 在 cbb970c 上 FAIL 4/19 (V4_check_*) 为 verify_infra_083 反向锁 orphan 引起，与本 PR 无关；evidence 已含 pre_existing_baseline_sha=cbb970c + baseline_tail_stdout。
+- feature_list.json: status=not_started → passing, phase=49, priority=4.49。
+- P278 6 信号自检：main_head_sha (56e8dea) ✓, verify_runs 带 tail_stdout+status ✓, pre_existing_baseline_sha + baseline_tail_stdout ✓ (因 051 baseline FAIL), smoke_tail_stdout ✓, reviewer.reviewer_kind=sub_agent_fresh_context ✓, reviewer.summary >=20 chars ✓。
+
 ## Session 2026-05-23 — phase-48 #4.48 + #5.48 STALE demote (closeout phase-48 收官)
 
 - #4.48 `infra-V6-backlog-080-v4-4-mutant-assert-substituted-true`: Engineer 审计 V4_4 当前 emit 已含 substituted=True / n_sub=1 / has_True_violation=True / mutant_ok=False / v_count=1，五项语义断言全覆盖（且 has_True_violation 由 detector arg1_source=="True" 复核，强于纯文本搜串）。STALE demote → status=backlog, priority=999, phase=null, closed_as_already_done.

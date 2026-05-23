@@ -6754,14 +6754,34 @@
       "area": "infra",
       "phase": 49,
       "title": "评估 dump_reverse_sha_lock_index entries 是否暴露 kind 字段",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Reviewer 建议",
       "scope": "scan_reverse_sha_locks 已带 kind=verify_id|expected_pattern；评估 dump_reverse_sha_lock_index entries 是否加 kind 字段，便于消费者区分两类锁。涉及 schema v2 + V4 keys 更新。",
       "dependencies": [
         "infra-049-backlog-reverse-lock-pattern-expand"
       ],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "verifier": "scripts/verify_infra_049.py",
+        "verify_runs": [
+          {
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_049][PASS] V0_dump_index_exists path=/Users/halton/work/coco/scripts/dump_reverse_sha_lock_index.py\n[verify_infra_049][PASS] V0_dump_index_symbols found 8/8\n[verify_infra_049][PASS] V1_docstring_sentinel sentinel=INFRA_049_SHA_LOCKS\n[verify_infra_049][PASS] V1_self_checker_func_sha got=e14bcb199f572f1d expect=e14bcb199f572f1d\n[verify_infra_049][PASS] V2_dump_index_file_sha got=256df4c6d17e32de expect=256df4c6d17e32de\n[verify_infra_049][PASS] V2_render_text_func_sha got=238e4d140baf6c01 expect=238e4d140baf6c01\n[verify_infra_049][PASS] V2_render_json_func_sha got=ec31d571f053a0c7 expect=ec31d571f053a0c7\n[verify_infra_049][PASS] V3_mutant_sha_drift baseline=238e4d140baf6c01 mutant=1a0dee75cc1aedf0\n[verify_infra_049][PASS] V3_baseline_matches_expected baseline=238e4d140baf6c01 expect=238e4d140baf6c01\n[verify_infra_049][PASS] V4_json_subprocess rc=0\n[verify_infra_049][PASS] V4_json_schema schema='reverse_sha_lock_index/v2'\n[verify_infra_049][PASS] V4_json_scanned_count scanned_count=204 (require >= 5)\n[verify_infra_049][PASS] V4_json_kind_breakdown kind_breakdown={'expected_pattern': 191, 'verify_id': 13} sum_eq_scanned=True\n[verify_infra_049][PASS] V4_json_entry_keys all 7 keys present (n=204)\n[verify_infra_049][PASS] V4_json_entry_kind_values kinds_seen=['expected_pattern', 'verify_id']\n[verify_infra_049][PASS] V4_text_subprocess rc=0\n[verify_infra_049][PASS] V4_text_needles all 3 needles present\n[verify_infra_049][PASS] V4_mutex_rejected rc=2 stderr_tail='dump_reverse_sha_lock_index: error: argument --text: not allowed with argument --json'\n[verify_infra_049][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_049__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_049__' in grace_period (skipped)\"\n[verify_infra_049][SUMMARY] ALL PASS (19 checks)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "56e8dea"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "kind 字段透传 + schema v2 additive 升级 clean，V4 双重 check (kind_breakdown + entry kind_values) 可抓字段拿掉/改名/退化 unknown 三类 mutation；sha cascade 049+050+051 同步完成 EXPECTED_DUMP_INDEX_FILE_SHA bump，V1 自检全通过；19/19 + 17/17 PASS；051 4 FAIL 已在 main 复跑确认为 verify_infra_083 反向锁 orphan 引起的 pre-existing baseline，本 PR 不引入也不掩盖；未触碰 _verify_lib.py"
+        },
+        "pre_existing_baseline_sha": "cbb970c",
+        "baseline_tail_stdout": "[verify_infra_051][PASS] V2_render_check_json_func_sha got=310d1b6bda8ecebf expect=310d1b6bda8ecebf\n[verify_infra_051][PASS] V2_cmd_check_func_sha got=5cc2173fe5eb1192 expect=5cc2173fe5eb1192\n[verify_infra_051][PASS] V2_build_arg_parser_func_sha got=9fd746f61a1705f6 expect=9fd746f61a1705f6\n[verify_infra_051][PASS] V3_mutant_sha_drift baseline=310d1b6bda8ecebf mutant=cbf755bbda033801\n[verify_infra_051][PASS] V3_baseline_matches_expected baseline=310d1b6bda8ecebf expect=310d1b6bda8ecebf\n[verify_infra_051][FAIL] V4_check_rc_and_text rc=1 stdout_head='[dump_reverse_sha_lock_index][--check] scanned=204 live=233 orphans=1 all_match=False'\n[verify_infra_051][FAIL] V4_check_json_rc rc=1\n[verify_infra_051][PASS] V4_check_json_schema schema='reverse_sha_lock_consistency/v1'\n[verify_infra_051][FAIL] V4_check_json_all_match all_match=False\n[verify_infra_051][PASS] V4_check_json_counts scanned_count=204 live_count=233\n[verify_infra_051][PASS] V4_check_json_orphans_list orphans_type=list\n[verify_infra_051][FAIL] V4_check_text_equiv rc=1 equiv=True\n[verify_infra_051][PASS] V4_mutex_rejected rc=2 stderr_tail='dump_reverse_sha_lock_index: error: argument --json: not allowed with argument --text'\n[verify_infra_051][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_051__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_051__' in grace_period (skipped)\"\n[verify_infra_051][SUMMARY] FAIL 4/19: ['V4_check_rc_and_text', 'V4_check_json_rc', 'V4_check_json_all_match', 'V4_check_text_equiv']",
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+      }
     },
     {
       "id": "infra-049-backlog-dump-index-kind-stats",
