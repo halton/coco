@@ -7185,7 +7185,7 @@
       "area": "infra",
       "phase": 59,
       "title": "func_sha_by_name 同名顶层函数歧义时 raise 具体 ValueError",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-037 closeout Reviewer 建议",
       "scope": "当同一文件中存在多个同名顶层/嵌套 FunctionDef 时，func_sha_by_name 应 raise 含 line-no 列表的明确错误（而非默默返回第一个或 KeyError），降低误锁风险。",
@@ -7199,7 +7199,79 @@
         "V3: smoke + verify_infra_037 ALL PASS"
       ],
       "started_at": "2026-05-23",
-      "user_visible_behavior": "当 scripts/_verify_lib.py 中 func_sha_by_name(path, name) 在 path 的 Module.body 顶层发现 ≥2 个同名 FunctionDef/AsyncFunctionDef 时, 不再静默取第一个, 而是 raise ValueError 明示 found N definitions + 所有 lineno 列表, 防止调用方在静态 sha lock 场景下取到错误候选导致 lock 漂移。"
+      "closed_at": "2026-05-23",
+      "user_visible_behavior": "当 scripts/_verify_lib.py 中 func_sha_by_name(path, name) 在 path 的 Module.body 顶层发现 ≥2 个同名 FunctionDef/AsyncFunctionDef 时, 不再静默取第一个, 而是 raise ValueError 明示 found N definitions + 所有 lineno 列表, 防止调用方在静态 sha lock 场景下取到错误候选导致 lock 漂移。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "a5f88ac",
+          "merge_commit_sha": "a5f88ac",
+          "feat_branch_head_sha": "bb5a1bd",
+          "baseline_head_echo": "4af7763",
+          "pre_existing_baseline_sha": "4af7763",
+          "baseline_tail_stdout": "[verify_infra_P290][PASS] V0_self_main_func_sha got=0ff1ac646febf748 expect=0ff1ac646febf748\n[verify_infra_P290][PASS] V1_docstring_sentinel sentinel='INFRA_P290_DOC_SHA_LOCKS'\n[verify_infra_P290][FAIL] V2_target_file_sha got=e9d4ad3678edca71 expect=3a3195a0191669a6\n[verify_infra_P290][PASS] V3_docstring_tags_nonempty count=27\n[verify_infra_P290][PASS] V3_emit_tags_nonempty count=27\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=1",
+          "smoke_tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=282 well_formed=282 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_037",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True msg=\"top-level function 'dup_target' ambiguous in /var/folders/.../verify_infra_037_*_v6_dup.py: found 2 definitions at lineno=[1, 7]\"\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=88 enforced=53 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=88 enforced=53 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278 grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_infra_P290",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_P290][PASS] V0_self_main_func_sha got=0ff1ac646febf748 expect=0ff1ac646febf748\n[verify_infra_P290][PASS] V1_docstring_sentinel sentinel='INFRA_P290_DOC_SHA_LOCKS'\n[verify_infra_P290][FAIL] V2_target_file_sha got=563d5028063dee5d expect=3a3195a0191669a6\n[verify_infra_P290][PASS] V3_docstring_tags_nonempty count=27\n[verify_infra_P290][PASS] V3_emit_tags_nonempty count=27\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_P290] summary: total=9 failed=1"
+            },
+            {
+              "name": "verify_infra_P301",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P301][PASS] V3_bumped_at_const_present V0_SELF_SHA_LOCK_BUMPED_AT='2026-05-23'\n[verify_infra_P301][PASS] V4_bumped_at_format matches YYYY-MM-DD\n[verify_infra_P301][PASS] V4_v0_lock_emits_metadata has_version=True has_bumped_at=True\n[verify_infra_P301][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_P301] summary: total=9 failed=0"
+            },
+            {
+              "name": "verify_infra_100",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_105_backlog_helper_doctest",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_105][PASS] V3_verify_lib_file_sha got=6098f8c1b0a70331 expect=6098f8c1b0a70331\n[verify_infra_105][PASS] V4_self_main_func_sha got=b1782a7fa034c6ac expect=b1782a7fa034c6ac\n[verify_infra_105][PASS] V5_reviewer_lgtm_gate target=infra-037-backlog-helper-doctest helper_ok=True grace_skipped=True\n[verify_infra_105][SUMMARY] ALL PASS (10 checks)"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "func_sha_by_name 顶层同名 ≥2 raise ValueError 错误消息含 'found N' + 'lineno=[...]' + 文件路径; V6 双 check (duplicate raise + single name still works) 用 tempfile.mkstemp + try/finally cleanup 完整; mutation test 把 raise 块删掉立刻被 V6 + V2 double-lock 抓住; cascade 55 文件 EXPECTED_VERIFY_LIB_FILE_SHA bump 全部到位 (54 new hits / 0 old 残留); P290 pre-existing baseline FAIL 与本改动无关。",
+            "checks_run": [
+              "smoke PASS rc=0",
+              "verify_infra_037 PASS 15 checks",
+              "cascade 8 verify 抽查: 7 PASS + 1 pre-existing FAIL (P290 V2)",
+              "verify_infra_062 PASS 30",
+              "mutation: 删 raise → V6+V2 双 FAIL, restore PASS git clean",
+              "cascade sha 替换: c923b8de=54/f7248f54=0; 78165097=2/eb38e7ae=0"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "V6 用 tempfile.mkstemp 略绕, 可考虑 NamedTemporaryFile delete=False 更简洁 (nit, 不阻 merge)",
+                "P290 V2_target_file_sha baseline 已 FAIL (got!=expect, _verify_lib.py 内容随本 feature 改动), 与 nested-name-error-clarity 无逻辑相关; 已登记 infra-P304-backlog-P290-v2-target-sha-resync"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-037-backlog-canonical-algo-unify",
@@ -16029,9 +16101,23 @@
       "dependencies": [
         "interact-036b-backlog-drift-trend-regression-alert"
       ]
+    },
+    {
+      "id": "infra-P304-backlog-P290-v2-target-sha-resync",
+      "priority": 999,
+      "area": "infra",
+      "title": "verify_infra_P290 V2_target_file_sha 与 _verify_lib.py 当前内容同步",
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-23",
+      "source": "infra-037-backlog-nested-name-error-clarity closeout Reviewer P2",
+      "description": "verify_infra_P290 V2_target_file_sha 期望值 (expect=3a3195a0191669a6) 早于 _verify_lib.py 最近多次改动 (含 infra-037 nested-name-error-clarity 增加的 V6 lineno raise 路径与 P301 V0 sha lock version field), 在 main 4af7763 即已 FAIL (got=e9d4ad3678edca71), post-merge 仍 FAIL (got=563d5028063dee5d). 与 nested-name-error-clarity 改动无逻辑相关, 属 P290 lock 长期未 resync. 提案: 重新计算 _verify_lib.py 当前 sha 写回 EXPECTED_VERIFY_LIB_FILE_SHA, 同时审视 P290 是否应改用 func_sha_by_name 锁特定函数而非整文件 sha (避免任何 helper 改动都 cascade FAIL P290).",
+      "dependencies": [
+        "infra-P290-backlog-verifier-tag-naming-doc"
+      ]
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-23T02:00:00Z"
+    "last_updated": "2026-05-23T03:00:00Z"
   }
 }

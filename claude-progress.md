@@ -8461,3 +8461,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - post-merge verify (P299 形态 rc=0): ./init.sh smoke 13/13 PASS, verify_infra_099 ALL PASS 14/14, verify_infra_P275 ALL PASS 16/16, verify_infra_062 ALL PASS 30/30 emit-paths (scanned 85→86 含本 feature)
 - Reviewer: sub_agent_fresh_context LGTM (verdict_original=LGTM_stale_already_done), mutation_test_done=false (audit-only 路线), 5 checks, P0/P1=0 P2=1 (module-level docstring 可选改进, 触发 LIB sha cascade 成本过高本期不做)
 - feature status: in_progress → passing, closed_as_already_done=true, covered_by="infra-V6-backlog-helper-docstring-clarify-live-set @ phase-48 #5.48 audit", closed_at=2026-05-23
+
+## Session 2026-05-23 (cont.) — phase-59 #1 infra-037-backlog-nested-name-error-clarity closeout
+
+- main HEAD=a5f88ac (merge: phase-59 #1 infra-037 nested name error clarity), feat=bb5a1bd, baseline=4af7763
+- post-merge verify (P299 形态, 单独 file rc=$? 不 pipe): smoke PASS, verify_infra_037 PASS 15/15 (含 V6_duplicate_raises_value_error + V6_single_name_still_works), verify_infra_062 PASS 30/30, verify_infra_P301 PASS, verify_infra_100 PASS, verify_infra_105 PASS
+- verify_infra_P290 V2_target_file_sha pre-existing FAIL (baseline 4af7763 got=e9d4ad3678edca71, post-merge got=563d5028063dee5d, expect=3a3195a0191669a6); 与本 feature 无逻辑相关, 入账 backlog infra-P304-backlog-P290-v2-target-sha-resync
+- Reviewer: sub_agent_fresh_context LGTM, mutation_test_done=true (删 raise → V6+V2 双 FAIL, restore PASS git clean), 6 checks, P0/P1=0, P2=2 (mkstemp 略绕 nit; P290 pre-existing FAIL)
+- feature status: in_progress → passing, closed_at=2026-05-23
+- push: 待 closeout commit 后单次尝试 origin main + feat 分支, 失败忽略
