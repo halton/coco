@@ -7713,3 +7713,18 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - Reviewer (sub-agent fresh-context): LGTM
 - 改动: scripts/dump_v4_sha_graph.py 加 `_RE_V_NUM_HINT` / `_RE_BUMP_HINT` / `_RE_VERIFY_HINT` 位数统一 `\d{2,4}` (兼容 NN/NNN/NNNN); cascade 8 处 EXPECTED_DUMP_FILE_SHA d38727f0 → 2b6261e1 (039/043/044/047/048/053/054/060)
 - status: in_progress → passing
+
+## Session 2026-05-23 phase-51 #2.51 — infra-053-backlog-doc-hub-color-update STALE demote
+
+- feature_id: infra-053-backlog-doc-hub-color-update
+- pattern: STALE demote (类比 #1.49/#2.49/#3.50)
+- main HEAD pre-merge: c037308
+- merge commit: 1d2012f (merge --no-ff feat/infra-053-backlog-doc-hub-color-update)
+- audit 原因摘要 (Engineer):
+  - hub 配色 `#fc6` 已三层锁定: AGENTS.md / docs / scripts/verify_*.py 均已统一
+  - README/research/docs 全文搜索: 无任何 mermaid hub 配色 mention 待改
+  - 唯一 `#f9f` 残留: 仅出现在 claude-progress.md 历史日志 (事件流水账, 不需改写)
+- 改动: feature_list.json 单条 demote (priority=999, status=backlog, phase=null, notes 加 closed_as_already_done)
+- 无 cascade、无 verifier 变更、无 doc 改写
+- STALE pattern: 不需要 Reviewer fresh-context
+- `./init.sh` smoke: PASS (rc=0)
