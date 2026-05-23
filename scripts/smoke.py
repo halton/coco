@@ -419,6 +419,36 @@ def smoke_publish() -> None:
     print("  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp")
 
 
+def smoke_typo_guard() -> None:
+    """infra-P293-typo-guard-ci-integration (phase-55 #1.55): 把 P281 typo-guard
+    helper 挂到 smoke, 让开发者每次跑 ./init.sh 都触发一次 EXPECTED_* 前缀 typo 扫描.
+
+    原行为: ``verify_expected_prefix_typo_guard`` 仅被 ``verify_infra_061`` 主动调用,
+    平时跑 smoke 不会触发 → 护栏价值依赖开发者记得跑 verify_infra_061。
+    新行为: smoke 阶段一律扫一次, 秒级 (ast parse 当前 ~80 个 verify_*.py),
+    typo_count > 0 → SystemExit('FAIL: ...') → init.sh smoke 整体失败。
+    """
+    print("==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)")
+    # 复用 verify_*.py 用的 _verify_lib helper, 不复制实现
+    scripts_dir = Path(__file__).resolve().parent
+    sys.path.insert(0, str(scripts_dir))
+    try:
+        from _verify_lib import verify_expected_prefix_typo_guard  # type: ignore
+    except Exception as e:  # noqa: BLE001
+        sys.exit(f"FAIL: 无法 import verify_expected_prefix_typo_guard ({e})")
+    res = verify_expected_prefix_typo_guard(scripts_dir)
+    total = res.get("total_expected_consts", 0)
+    well_formed = res.get("well_formed", 0)
+    typo_count = res.get("typo_count", 0)
+    if typo_count > 0:
+        samples = res.get("typo_samples", [])
+        sys.exit(
+            f"FAIL: typo-guard 命中 {typo_count} 个 EXPECTED_* typo "
+            f"(total={total} well_formed={well_formed}); samples={samples}"
+        )
+    print(f"  ok: total={total} well_formed={well_formed} typo_count=0")
+
+
 def smoke_daemon() -> None:
     """起 mockup-sim daemon，用 ReachyMini 客户端 ping，关 daemon。
 
@@ -569,6 +599,7 @@ def main() -> int:
         ("power_state", smoke_power_state),
         ("config", smoke_config),
         ("publish", smoke_publish),
+        ("typo_guard", smoke_typo_guard),
     ]:
         ok = _run(nm, fn)
         if not ok:
