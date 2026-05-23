@@ -8488,3 +8488,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer: sub_agent_fresh_context verdict=LGTM (verdict_original=LGTM_stale_already_done), summary 以 "[stale_already_done]" 开头, checks_run=5, mutation_test_done=false (audit-only 路线), P0/P1=0, P2=1 (robot-036/037 重复议题保留两个 backlog id + superseded_by 指引)
 - feature status: backlog → passing, closed_as_already_done=true, covered_by=robot-037-backlog-import-time-fail-fallback @ phase-57 #4, closed_at=2026-05-23
 - main 单 commit (不走 feat 分支), push origin main 一次失败忽略
+
+## Session 2026-05-23 — phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision DONE
+
+- merge: feat/infra-039-backlog-mermaid-unknown-target-id-collision (f2dda53) → main, NEW_MAIN_SHA=f987e32
+- Reviewer (sub-agent fresh-context): LGTM
+- closeout-verify: smoke PASS, verify_infra_110 PASS (12/12), verify_infra_039 FAIL V4_output_anchors (pre-existing baseline 95ecb45 同 FAIL), verify_infra_062/060/104/109 ALL PASS
+- mutation A/B 反证：单 key FAIL 5/12 含 V4_no_unknown_id_collision + V4_composite_key_well_formed；复合 key 全 PASS
+- 入账 3 个 backlog：composite-key-strict-ordering / classify-node-unknown-lock / mermaid-node-id-readability
+- 下一个 candidate: phase-59 #5 infra-V6-backlog-080-v4-4-mutant-assert-substituted-true

@@ -8670,7 +8670,7 @@
       "area": "infra",
       "phase": 59,
       "title": "render_mermaid unknown target id 用复合 key 避免跨 source 同 const 名合并",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "started_at": "2026-05-23",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
@@ -8678,7 +8678,90 @@
       "dependencies": [
         "infra-039-backlog-dump-mermaid-output"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_110.py ALL PASS (12 checks): V0-V6 含 V4_no_unknown_id_collision + V4_composite_key_well_formed",
+        "scripts/verify_infra_039.py FAIL V4_output_anchors (pre-existing baseline 95ecb45 同 FAIL，与本 feature 无关)",
+        "verify_infra_062 30/30 PASS (closeout-verify-trustworthy schema 全检)",
+        "verify_infra_060/104/109 ALL PASS (cascade 13 verify 文件 sha 联动)",
+        "./init.sh smoke ALL PASS (287 typo-guard)"
+      ],
+      "closed_at": "2026-05-23",
+      "evidence": [
+        {
+          "verification": "phase-59 #4 closeout — render_mermaid unknown target id 复合 key (unknown_<src_stem>_<CONST>) 消除跨 verify 同名 const 节点合并",
+          "result": "pass",
+          "closeout_verify": {
+            "main_head_sha": "f987e32",
+            "merge_commit_sha": "f987e32",
+            "pre_existing_baseline_sha": "95ecb45",
+            "baseline_head_echo": "95ecb45",
+            "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=287 well_formed=287 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+            "baseline_tail_stdout": "[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] FAILED tags: ['V2_dump_file_sha', 'V4_output_anchors']",
+            "verify_runs": [
+              {
+                "name": "smoke",
+                "script": "./init.sh",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=287 well_formed=287 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+              },
+              {
+                "name": "verify_infra_110",
+                "script": "scripts/verify_infra_110.py",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_110] PASS V4_composite_key_well_formed: all 14 edges have composite key\n[verify_infra_110] PASS V4b_self_main_func_sha: got=a26fcd972d4941d4 expect=a26fcd972d4941d4\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110][SUMMARY] ALL PASS (12 checks)"
+              },
+              {
+                "name": "verify_infra_039",
+                "script": "scripts/verify_infra_039.py",
+                "status": "FAIL",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] FAILED tags: ['V4_output_anchors']",
+                "pre_existing_baseline_sha": "95ecb45",
+                "baseline_tail_stdout": "[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] FAILED tags: ['V2_dump_file_sha', 'V4_output_anchors']"
+              },
+              {
+                "name": "verify_infra_062",
+                "script": "scripts/verify_infra_062.py",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=90 enforced=55 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=90 enforced=55 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+              },
+              {
+                "name": "verify_infra_060",
+                "script": "scripts/verify_infra_060.py",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              },
+              {
+                "name": "verify_infra_104",
+                "script": "scripts/verify_infra_104.py",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_104][PASS] V6c_window_keywords_all_present missing=[] window_lines=9\n[verify_infra_104][PASS] V6d_dict_literal_seg_extracted seg_len=85\n[verify_infra_104][PASS] V6d_dict_literal_clean polluters_in_dict_value=[]\n[verify_infra_104][SUMMARY] ALL PASS (22 checks)"
+              },
+              {
+                "name": "verify_infra_109",
+                "script": "scripts/verify_infra_109.py",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_109] PASS V6_fanout_edge_literal_count: mermaid_arrows=325 expected_min_fanout=47\n[verify_infra_109] PASS V4b_self_main_func_sha: got=63fc082201fccd77 expect=63fc082201fccd77\n[verify_infra_109] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-tuple-fanout helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-tuple-fanout' in grace_period (skipped)\"\n[verify_infra_109][SUMMARY] ALL PASS (12 checks)"
+              }
+            ],
+            "reviewer": {
+              "reviewer_kind": "sub_agent_fresh_context",
+              "verdict": "LGTM",
+              "summary": "render_mermaid 把 unknown target id 从单 key `unknown_<CONST>` 升级为复合 key `unknown_<src_stem>_<CONST>`，消除跨 verify 同名 const 的节点合并伪影；新增 verify_infra_110 V0-V6 12 checks 含 V4_no_unknown_id_collision + V4_composite_key_well_formed，mutation A/B 反证有效，cascade 13 个 verify 文件 sha 联动一致，旧 sha (ea7e205d/bbce6da5) 零残留。"
+            },
+            "mutation_test": {
+              "a_single_key": "verify_infra_110 FAIL 5/12 含 V4_no_unknown_id_collision + V4_composite_key_well_formed",
+              "b_restore": "verify_infra_110 PASS 12/12"
+            }
+          }
+        }
+      ]
     },
     {
       "id": "infra-039-backlog-mermaid-tuple-fanout",
@@ -16277,6 +16360,45 @@
       "dependencies": [
         "infra-P290-backlog-verifier-tag-naming-doc"
       ]
+    },
+    {
+      "id": "infra-110-backlog-composite-key-strict-ordering",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_110 V4_composite_key_well_formed 加严格 ordering / anchor 正则",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
+      "scope": "当前 V4_composite_key_well_formed 检查所有 14 个 edge 都有复合 key，但未对 key 的 ordering (src_stem 在前 / CONST 在后) 与 anchor 边界做严格正则；未来若 render_mermaid 改回顺序，本 check 不一定能截住。建议加 `^unknown_[a-z0-9_]+_[A-Z][A-Z0-9_]+$` 正则锁。",
+      "dependencies": [],
+      "verification": []
+    },
+    {
+      "id": "infra-110-backlog-classify-node-unknown-lock",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_classify_node unknown 分支加 func sha 锁",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
+      "scope": "_classify_node 中 unknown 分支当前无独立 func sha 锁；若被改动可能影响 render_mermaid 复合 key 路径而本 feature 的检查察觉不到。建议加一个 V*_classify_node_unknown_func_sha 锁。",
+      "dependencies": [],
+      "verification": []
+    },
+    {
+      "id": "infra-110-backlog-mermaid-node-id-readability",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "长 const node id 用 hash-suffix 截短提升 mermaid 可读性 (可选)",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
+      "scope": "复合 key `unknown_<src_stem>_<CONST>` 当 CONST 很长时（例如 EXPECTED_REVERSE_SHA_LOCK_FUNC_SHA）mermaid 节点 id 视觉冗长。可选改进：超过阈值用 `unknown_<src_stem>_<hash8>` 截短，并在 label 保留全名。",
+      "dependencies": [],
+      "verification": []
     }
   ],
   "_meta": {
