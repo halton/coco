@@ -8411,7 +8411,7 @@
     {
       "id": "infra-P283-palette-distinct-helper-edge-case-locks",
       "priority": "55-4",
-      "status": "not_started",
+      "status": "passing",
       "phase": 55,
       "area": "infra",
       "title": "verify_palette_fills_distinct 边界静默契约显式锁入 V4",
@@ -8419,11 +8419,97 @@
       "source": "P277 infra-053-backlog-classdef-fills-distinct-check closeout — helper 当前对边界输入静默返回 (空 dict / entry 缺 fill / entry 非 dict) 但无显式断言锁，未来若改实现可能静默漂移",
       "scope": "verify_infra_058.py V4 追加 3 条断言: (a) 空 dict 输入 → distinct_fill_count=0/duplicates=[]/all_distinct=True; (b) entry 缺 fill 字段 (如 {a:{color:'#aaa'}}) → 静默跳过, distinct_fill_count 不计入; (c) entry 非 dict (如 {a:'#aaa'}) → 静默跳过, 不抛 TypeError。同步 bump verify_infra_058 自 sha 并触发 V6 反向锁链。",
       "dependencies": [],
-      "verification": [],
-      "evidence": [],
+      "verification": [
+        "python scripts/verify_infra_058.py 全 PASS (19 checks, 含 3 条新边界锁)",
+        "python scripts/verify_infra_060.py pre-existing baseline FAIL (V4_real_unknown_count_eq_one)",
+        "python scripts/verify_infra_062.py 全 PASS (30/30 evidence schema)",
+        "./init.sh smoke 全通过"
+      ],
+      "evidence": {
+        "summary": "phase-55 #4.55 P283 palette distinct helper edge case locks closeout — verify_infra_058 v4_behavior +57/-1 新增 V4_edge_empty_dict_silent / V4_edge_missing_fill_silent_skip / V4_edge_non_dict_entry_silent_skip 三条边界静默契约锁 (空 dict → distinct=0/duplicates=[]/all_distinct=True; entry 缺 fill → 静默跳过; entry 非 dict → 静默跳过不抛 TypeError)，全在 post-merge HEAD=b21926d 实跑 19/19 PASS；cascade=0 (verify_infra_058 自闭, 不涉 _verify_lib helper); Reviewer fresh-context mutation test: silent-skip → raise TypeError → 058 FAIL, 还原 PASS。060/062/smoke 一并 post-merge-rerun, 060 V4_real_unknown_count_eq_one pre-existing FAIL (baseline=0b971e6) 与本 feature 无关。",
+        "closeout_verify": {
+          "main_head_sha": "b21926d65a109bae40c49956b693ab260493ce68",
+          "merge_commit_sha": "b21926d65a109bae40c49956b693ab260493ce68",
+          "baseline_head_echo": "0b971e6",
+          "pre_existing_baseline_sha": "0b971e6",
+          "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28669\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+          "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=264 well_formed=264 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "verify_infra_058 v4_behavior +57/-1 新增 V4_edge_empty_dict_silent / V4_edge_missing_fill_silent_skip / V4_edge_non_dict_entry_silent_skip 三条边界静默契约锁，全 PASS；mutation test: silent-skip → raise TypeError → 058 FAIL 抓住实现漂移, 还原干净 PASS；cascade=0 (verify_infra_058 自闭, 不涉 _verify_lib helper)；060 V4_real_unknown_count_eq_one 在 baseline 0b971e6 上已 pre-existing FAIL, 与本 feature 无关；062 evidence schema 自检 30/30 PASS, smoke 全通过。",
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "三条边界 silent-skip 契约现已机械化锁定, 后续如要改 helper 行为 (例如对 non-dict entry 抛 TypeError) 必须先改 verify_infra_058 V4 断言, 防止静默漂移"
+              ]
+            },
+            "checks_run": [
+              "mutation_test_done: silent-skip → raise TypeError → 058 V4_edge_non_dict_entry_silent_skip FAIL 抓住, 还原 PASS",
+              "cascade_verified: true (verify_infra_058 自闭, 不涉 _verify_lib helper, cascade=0)",
+              "verify_runs_freshness_checked: true (post-merge-rerun on main HEAD=b21926d)",
+              "verify_infra_058 19/19 PASS",
+              "verify_infra_060 pre-existing baseline FAIL (V4_real_unknown_count_eq_one) 与本 feature 无关",
+              "verify_infra_062 evidence schema 30/30 PASS",
+              "./init.sh smoke 全通过"
+            ],
+            "mutation_test_done": true
+          },
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_058.py",
+              "name": "scripts/verify_infra_058.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_058][PASS] V0_verify_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_058][PASS] V0_helper_def_present expect 'def verify_palette_fills_distinct(' in lib\n[verify_infra_058][PASS] V0_helper_in_all __all__ contains 33 names\n[verify_infra_058][PASS] V1_docstring_sentinel sentinel=INFRA_058_SHA_LOCKS\n[verify_infra_058][PASS] V1_self_checker_func_sha got=eccdbf04b367d01a expect=eccdbf04b367d01a\n[verify_infra_058][PASS] V2_lib_file_sha got=6098f8c1b0a70331 expect=6098f8c1b0a70331\n[verify_infra_058][PASS] V3_helper_func_sha got=8415eca01361eb6b expect=8415eca01361eb6b\n[verify_infra_058][PASS] V4_real_load_palette keys=['hub', 'verify', 'lib', 'dump', 'module', 'unknown']\n[verify_infra_058][PASS] V4_real_all_distinct all_distinct=True duplicates=[]\n[verify_infra_058][PASS] V4_real_distinct_count_eq_6 distinct_fill_count=6 expect=6\n[verify_infra_058][PASS] V4_real_total_keys_eq_6 total_keys=6 expect=6\n[verify_infra_058][PASS] V4_real_duplicates_empty duplicates=[]\n[verify_infra_058][PASS] V4_tmp_positive_all_distinct all_distinct=True distinct=2 duplicates=[]\n[verify_infra_058][PASS] V4_tmp_mutant_detects_duplicate all_distinct=False duplicates=[('a', 'b', '#aaa')] distinct=1 total=2\n[verify_infra_058][PASS] V4_tmp_mutant_three_way_pairs duplicates=[('a', 'b', '#aaa'), ('a', 'c', '#aaa'), ('b', 'c', '#aaa')]\n[verify_infra_058][PASS] V4_edge_empty_dict_silent all_distinct=True distinct=0 duplicates=[] total=0 fills=[]\n[verify_infra_058][PASS] V4_edge_missing_fill_silent_skip all_distinct=True distinct=1 duplicates=[] fills=[('b', '#bbb')]\n[verify_infra_058][PASS] V4_edge_non_dict_entry_silent_skip raised=False all_distinct=True distinct=1 duplicates=[] fills=[('d', '#ddd')]\n[verify_infra_058][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_058__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_058__' in grace_period (skipped)\"\n[verify_infra_058][SUMMARY] ALL PASS (19 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "script": "scripts/verify_infra_060.py",
+              "name": "scripts/verify_infra_060.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28669\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "freshness_anchor": "post-merge-rerun",
+              "pre_existing_baseline_sha": "0b971e6",
+              "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28669\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "note": "pre-existing baseline FAIL on 0b971e6 (V4_real_unknown_count_eq_one unknown_count=7 expect=1), 与本 feature P283 无关 (verify_infra_058 自闭, cascade=0)"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "name": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=72 enforced=46 soft_skipped=26 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=72 enforced=40 soft_skipped=32 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=72 enforced=40 soft_skipped=32 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=72 enforced=40 soft_skipped=32 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=72 enforced=40 soft_skipped=32 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=72 enforced=40 soft_skipped=32 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=72 enforced=40 soft_skipped=32 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "verify_infra_058 v4_behavior +57/-1 新增 V4_edge_empty_dict_silent / V4_edge_missing_fill_silent_skip / V4_edge_non_dict_entry_silent_skip 三条边界静默契约锁，全 PASS；mutation test: silent-skip → raise TypeError → 058 FAIL 抓住实现漂移, 还原干净 PASS；cascade=0 (verify_infra_058 自闭, 不涉 _verify_lib helper)；060 V4_real_unknown_count_eq_one 在 baseline 0b971e6 上已 pre-existing FAIL, 与本 feature 无关；062 evidence schema 自检 30/30 PASS, smoke 全通过。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "三条边界 silent-skip 契约现已机械化锁定, 后续如要改 helper 行为 (例如对 non-dict entry 抛 TypeError) 必须先改 verify_infra_058 V4 断言, 防止静默漂移"
+            ]
+          },
+          "checks_run": [
+            "mutation_test_done: silent-skip → raise TypeError → 058 V4_edge_non_dict_entry_silent_skip FAIL 抓住, 还原 PASS",
+            "cascade_verified: true (verify_infra_058 自闭, 不涉 _verify_lib helper, cascade=0)",
+            "verify_runs_freshness_checked: true (post-merge-rerun on main HEAD=b21926d)",
+            "verify_infra_058 19/19 PASS",
+            "verify_infra_060 pre-existing baseline FAIL (V4_real_unknown_count_eq_one) 与本 feature 无关",
+            "verify_infra_062 evidence schema 30/30 PASS",
+            "./init.sh smoke 全通过"
+          ],
+          "mutation_test_done": true
+        }
+      },
       "spec": "scripts/verify_infra_058.py V4 追加 3 条断言锁 helper 边界静默契约: (a) 空 dict 输入 → distinct_fill_count=0/duplicates=[]/all_distinct=True; (b) entry 缺 fill 字段 → 静默跳过, distinct_fill_count 不计入; (c) entry 非 dict → 静默跳过, 不抛 TypeError. 同步 bump verify_infra_058 自 sha 并触发 V6 反向锁链.",
       "rationale": "phase-55 plan: P277 infra-053-backlog-classdef-fills-distinct-check closeout 遗留, 防 helper 实现改动导致边界静默漂移.",
-      "cascade_est": "0-1 (verify_infra_058 自 sha bump + V6 反向锁链可能 0-1 处)"
+      "cascade_est": "0-1 (verify_infra_058 自 sha bump + V6 反向锁链可能 0-1 处)",
+      "branch": "feat/infra-P283-palette-distinct-helper-edge-case-locks"
     },
     {
       "id": "infra-P284-smoke-history-jsonl-policy",

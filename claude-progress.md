@@ -8090,3 +8090,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - P0/P1 空; P2 nit: V4.4c 空串/纯空格容忍设计可接受 (不入账)
 - backlog 入账: 无
 - 下一候选: infra-P283-palette-distinct-helper-edge-case-locks (#4.55)
+
+## Session 2026-05-23 phase-55 #4.55 closeout — infra-P283-palette-distinct-helper-edge-case-locks
+
+- merge feat/infra-P283-palette-distinct-helper-edge-case-locks (147e9bc) → main, merge_commit_sha=b21926d, main_head_sha=b21926d
+- post-merge-rerun:
+  - verify_infra_058: ALL PASS (19 checks, 含 3 条新边界静默契约锁 V4_edge_empty_dict_silent / V4_edge_missing_fill_silent_skip / V4_edge_non_dict_entry_silent_skip)
+  - verify_infra_060: pre-existing baseline FAIL (V4_real_unknown_count_eq_one unknown_count=7 expect=1) on 0b971e6, 与本 feature 无关
+  - verify_infra_062: ALL PASS (30/30 evidence schema 自检, 含本次嵌套 closeout_verify schema)
+  - ./init.sh smoke: 全通过
+- Reviewer (sub-agent, fresh context): LGTM
+  - mutation test: silent-skip → raise TypeError → verify_infra_058 V4_edge_non_dict_entry_silent_skip FAIL 抓住实现漂移, 还原 PASS
+  - cascade=0 (verify_infra_058 自闭, 不涉 _verify_lib helper)
+  - P0/P1 空; P2: 三条边界 silent-skip 契约现已机械化锁定, 后续如要改 helper 行为必须先改 V4 断言防静默漂移 (不入账, 已被本 feature 锁定覆盖)
+- backlog 入账: 无
+- 下一候选: infra-P294-followup-070-mini-repo-env-isolation (#5.55)
