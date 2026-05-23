@@ -57,7 +57,7 @@ from _verify_lib import (  # noqa: E402
 # infra-101 sha lock 常量 (V2)
 EXPECTED_BUMP_FILE_SHA = "b85d7dda59abe58498bbbcfa206bace654868a112a9619c304ba563533f45b9e"
 EXPECTED_VERIFY_LIB_FILE_SHA = (
-    "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
+    "7df5af6b9d48687e0a5efab7b3dc2e3dfc2fd54e6aa07d1583fb9d5a56604ef4"
 )
 
 DOCSTRING_SENTINEL = "INFRA_101_SHA_LOCKS"

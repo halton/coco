@@ -653,7 +653,11 @@ _RE_VERIFY_EMIT_LINE = re.compile(
 )
 
 
-def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
+def assert_verify_passed(
+    stdout_text: str,
+    verify_name: str,
+    min_checks: "int | None" = None,
+) -> dict:
     """校验一份 ``scripts/verify_*.py`` 的实测 stdout 是否真的 ALL PASS。
 
     infra-P273-evidence-report-accuracy (P274): P273 暴露 sub-agent 上报
@@ -661,6 +665,13 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
     054 V1 FAIL 错误归因到 044/047 称 "pre-existing"). 本 helper 提供机器辅助
     的反失真校验入口, 让 sub-agent 在 evidence 中附 stdout 与 helper 结论形成
     双重锚, 减少凭印象编造的空间。
+
+    infra-P275-assert-verify-passed-min-checks: P274 dogfood 暴露
+    ``summary total=0 failed=0`` 仍被判 passed=True 的盲点 —— 若 verify
+    脚本因 bug 一个 check 都没跑就 emit summary, sub-agent 仍可被误导。
+    新增 ``min_checks`` 参数, 调用方可在已知该 verify 应当 emit 至少 N 个
+    check 时显式锁住下界; 实际 checks < min_checks → passed=False, 在
+    ``reason`` 中追加 ``checks=X < min_checks=N``.
 
     校验规则:
       1. 必须找到形如
@@ -675,10 +686,15 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
          (例如 docstring / 行内说明), 由步骤 1/2 已经独立判定, 不在此处误伤。
       4. ``verify_name`` 必须精确匹配 SUMMARY 行中的 ``[verify_xxx]`` 名字
          (防止把 A 脚本的 stdout 当 B 脚本的证据上报).
+      5. (P275) 若提供 ``min_checks`` 且 ``checks < min_checks`` → passed=False.
+         ``min_checks=None`` (默认) 保留旧语义, 完全 backward compatible.
 
     Args:
         stdout_text: ``subprocess.run(...).stdout`` 或文件 cat 出来的字面文本。
         verify_name: 期望脚本名 (不含 ``.py``), 例如 ``"verify_infra_055"``。
+        min_checks: (P275) 可选下界。若提供, 实测 ``checks`` 必须 >= 此值,
+            否则即便 SUMMARY ALL PASS 也判 ``passed=False``。默认 ``None``
+            (旧语义, 不做下界检查)。
 
     Returns:
         dict 结构:
@@ -711,6 +727,12 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
         >>> assert_verify_passed(bad, "verify_infra_055")["passed"]
         False
         >>> assert_verify_passed("", "verify_infra_055")["passed"]
+        False
+        >>> # P275: total=0 失真模式 — 旧语义判 passed=True, min_checks 锁住
+        >>> empty = "[verify_infra_055] summary total=0 failed=0\\n"
+        >>> assert_verify_passed(empty, "verify_infra_055")["passed"]
+        True
+        >>> assert_verify_passed(empty, "verify_infra_055", min_checks=1)["passed"]
         False
     """
     summary_line = ""
@@ -761,11 +783,18 @@ def assert_verify_passed(stdout_text: str, verify_name: str) -> dict:
     if fail_emits:
         reasons.append(f"fail_emits={len(fail_emits)}")
 
+    # P275: min_checks 下界 (None=旧语义, 不检查)
+    min_checks_ok = True
+    if min_checks is not None and checks < min_checks:
+        min_checks_ok = False
+        reasons.append(f"checks={checks} < min_checks={min_checks}")
+
     passed = (
         bool(summary_line)
         and parsed_name == verify_name
         and verdict == "ALL PASS"
         and not fail_emits
+        and min_checks_ok
     )
 
     return {
