@@ -1,23 +1,5 @@
 # Pull Request
 
-> verify-script PR 请用 `?template=verify-script.md` query 切换至专用模板:
-> `https://github.com/<owner>/<repo>/compare/main...<branch>?template=verify-script.md`
-
-## 摘要
-<!-- 一两句话说明本 PR 做了什么 -->
-
-## 关联 feature
-- feature-id: `<feature-id>`
-
-## 类型
-- [ ] feat (新功能)
-- [ ] fix (bug 修复)
-- [ ] refactor (无行为变更)
-- [ ] docs (仅文档)
-- [ ] infra / scaffolding
-- [ ] verify-script (请改用 `?template=verify-script.md`)
-
-## 验证证据
-- [ ] `./init.sh` smoke 11/11
-- [ ] 相关 `scripts/verify_*.py` rc=0
-- [ ] Reviewer fresh-context LGTM
+<!-- 一两句话描述本 PR; 关联 feature-id 与验证证据按需补充. -->
+<!-- verify-script PR 请改用专用模板: 在 compare URL 末尾追加
+     `?template=verify-script.md` 切换到决策矩阵 checkbox 模板. -->
