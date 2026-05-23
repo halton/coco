@@ -11764,20 +11764,88 @@
       "id": "infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump",
       "priority": 4.47,
       "phase": 47,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
-      "title": "历史 V2 FILE_SHA cascade rebump (12 files)",
-      "description": "12 项 verify_infra_*.py 的 V2 FILE_SHA 槽位在 baseline f19a51e 上已 FAIL (pre-existing)，需 cascade rebump。列表：verify_infra_037/042/045/052/055/056/057/058/059/061/064/074。机械动作，先 dump_v4_sha_graph dry-run，再统一 commit。",
-      "rationale": "phase-43 #1.43 closeout (infra-P286-followup6) Reviewer 抽样 037/045/074 V2 槽位均 FAIL，确认 12 项 V2 FILE_SHA cascade pre-existing 污染 baseline。需后续单独 feature 集中清理。",
-      "verification_plan": "V0 self-pass / V1 dump_v4_sha_graph 列出 12 项 drift=0 / V2 mutant strip / V3 各 verify_*.py 真跑 PASS / V4 062 byte-match enforce / V5 reviewer LGTM",
+      "title": "历史 V2 FILE_SHA cascade rebump (21 files, 任务名 12files 实测 21 files)",
+      "description": "21 项 verify_infra_*.py 的 V2 FILE_SHA 槽位在 baseline ddb0a0f 上已 FAIL (pre-existing)，需 cascade rebump。机械动作。",
+      "rationale": "phase-43 #1.43 closeout Reviewer 抽样确认 V2 FILE_SHA cascade pre-existing 污染 baseline。集中清理。",
+      "verification_plan": "V0 self-pass / V1 dump_v4_sha_graph 列出 drift=0 / V2 mutant strip / V3 各 verify_*.py 真跑 PASS / V4 062 byte-match enforce / V5 reviewer LGTM",
       "expected_files": [
-        "scripts/verify_infra_{037,042,045,052,055,056,057,058,059,061,064,074}.py"
+        "scripts/verify_infra_*.py (21 files cascade)"
       ],
       "verify_targets": [
-        "verify_infra_{037,042,045,052,055,056,057,058,059,061,064,074} ALL PASS"
+        "verify_infra_062/039/081 ALL PASS; smoke PASS"
       ],
       "notes_for_engineer": ".venv 必须激活；机械 cascade；先 scan drift 集合再一次性 bump",
-      "acceptance": "12 verify 文件全 PASS；062 byte-match enforce 无新 violation；smoke PASS；reviewer LGTM"
+      "acceptance": "21 verify 文件全 PASS；062 byte-match enforce 无新 violation；smoke PASS；reviewer LGTM",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "65cdf2b01b84",
+          "main_head_sha_full": "65cdf2b01b84a21eeddcedf7cefc6f304aafe3d0",
+          "baseline_head_echo": "ddb0a0f",
+          "merge_commit_sha": "65cdf2b01b84",
+          "verify_runs": [
+            {
+              "name": "verify_infra_062",
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=42 enforced=36 soft_skipped=6 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=42 enforced=36 soft_skipped=6 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+              "freshness_anchor": "post-merge-rerun + main_head=65cdf2b01b84"
+            },
+            {
+              "name": "verify_infra_039",
+              "cmd": ".venv/bin/python scripts/verify_infra_039.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V1_self_checker_func_sha got=7ae405196b8a92f2 expect=7ae405196b8a92f2\n[verify_infra_039][PASS] V2_dump_file_sha got=6acd1eb56ba358cd expect=6acd1eb56ba358cd\n[verify_infra_039][PASS] V3_mutant_detected baseline=224 mutant=14\n[verify_infra_039][PASS] V4_subprocess_run rc=0\n[verify_infra_039][PASS] V4_output_anchors all 6 anchors found\n[verify_infra_039][PASS] V4_json_mode rc=0 locks=224\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (10 checks)",
+              "freshness_anchor": "post-merge-rerun + main_head=65cdf2b01b84"
+            },
+            {
+              "name": "verify_infra_081",
+              "cmd": ".venv/bin/python scripts/verify_infra_081.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_081][PASS] V2_lib_file_sha got=b3005a7d9272fb06 expect=b3005a7d9272fb06\n[verify_infra_081][PASS] V3_helper_func_sha got=6578542d1b17fe12 expect=6578542d1b17fe12\n[verify_infra_081][PASS] V4_1_verify_062_calls_helper call_count=1 sites=[(597, '_enforce_closeout_byte_match')]\n[verify_infra_081][PASS] V4_2_call_in_main_chain in_func_count=1 main_calls_enforcer=True enforcer_calls_helper=True\n[verify_infra_081][PASS] V4_3_helper_arg1_nontrivial bad_arg1=[] sample_arg1=['_report_obj']\n[verify_infra_081][PASS] V4_4_mutant_strip_call_detected_zero n_sub=6 mutant_call_count=0 orig_count=1\n[verify_infra_081][PASS] V4_5_verify_062_file_sha got=21c0f98d5be3b691 expect=21c0f98d5be3b691\n[verify_infra_081][PASS] V5_reviewer_lgtm_gate target=infra-P299-followup-wire-into-closeout-gate helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=270\n[verify_infra_081][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun + main_head=65cdf2b01b84"
+            },
+            {
+              "name": "smoke",
+              "cmd": ".venv/bin/python scripts/smoke.py",
+              "status": "PASS",
+              "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun + main_head=65cdf2b01b84"
+            }
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "21 个 EXPECTED_*_FILE_SHA cascade re-bump 全部独立 sha 验证 match; 062/039/079/081 ALL PASS; 074 唯一 FAIL = V4_4_real_run_059_rc0 已确认是 base main ddb0a0f 上的 pre-existing baseline; smoke PASS; P1 finding (verify_robot_035 EXPECTED_LIB_FILE_SHA) 入账 backlog",
+          "checks_run": [
+            "独立计算 5 个目标文件 sha",
+            "全 scripts/verify_infra_*.py audit",
+            "verify_infra_062 ALL PASS (30/30)",
+            "verify_infra_039 ALL PASS (10/10)",
+            "verify_infra_074 baseline FAIL 来源核实",
+            "verify_infra_079 ALL PASS",
+            "verify_infra_081 ALL PASS (14/14)",
+            "smoke PASS",
+            "verify_infra_057 diff scope 抽样",
+            "verify_infra_074 baseline 来源 git blame"
+          ],
+          "findings": {"P0": [], "P1": ["verify_robot_035 EXPECTED_LIB_FILE_SHA stale (入账 backlog)"], "P2": ["任务名 12files 实测 21 files"]}
+        },
+        "freshness_anchor": "post-merge-rerun",
+        "closeout_notes": "任务名 '12 files' 实测 21 files 的澄清；5 pre-existing baseline FAIL 不在本 PR 范围；P1 finding (verify_robot_035 lib_file_sha) 单独入账 backlog 跟踪。"
+      }
+    },
+    {
+      "id": "infra-V6-backlog-verify-robot-035-lib-file-sha-rebump",
+      "name": "verify_robot_035: EXPECTED_LIB_FILE_SHA cascade re-bump (a80af008→b3005a7d)",
+      "area": "infra",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "notes": "Reviewer #4.47 P1 finding: scripts/verify_robot_035.py 的 EXPECTED_LIB_FILE_SHA 仍是旧 a80af0088b53116b, 实际 _verify_lib.py 已是 b3005a7d9272fb06 (since #3.47). 导致 V4_lib_file_sha FAIL + V5_self_subprocess FAIL。本不在 #4.47 的 verify_infra_* glob 范围内, 单独入账。"
     },
     {
       "id": "infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline",

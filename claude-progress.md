@@ -7466,3 +7466,19 @@ phase-46 5 候选 promoted to not_started：
 - feature status: not_started → passing
 - P2 提示 (非阻断): _MIN_PYTHON_VERSION=(3,13) 略严可 env override；cascade 37 引用/36 sha 赋值 (044 字面值)
 - closeout_verify 6 信号自校 PASS
+
+## Session 2026-05-23 — #4.47 closeout (historical V2 file_sha cascade 21 files)
+
+- Feature: infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump (任务名 12files 实测 21 files)
+- Branch: feat/infra-V6-backlog-historical-v2-file-sha-cascade-12files-rebump → merged main
+- merge sha: 65cdf2b01b84 (full 65cdf2b01b84a21eeddcedf7cefc6f304aafe3d0)
+- base main: ddb0a0f (#3.47 closeout)
+- Post-merge verify:
+  - verify_infra_062.py: PASS (30/30)
+  - verify_infra_039.py: PASS (10/10)
+  - verify_infra_081.py: PASS (14/14)
+  - smoke.py: PASS
+- Reviewer (sub_agent_fresh_context): LGTM。P0=[]。P1=verify_robot_035 EXPECTED_LIB_FILE_SHA stale → 入账 backlog。P2=任务名 12files 实测 21 files。
+- feature status: not_started → passing
+- 新增 backlog: infra-V6-backlog-verify-robot-035-lib-file-sha-rebump (priority 999)
+- closeout_verify P278 6 信号自校 PASS
