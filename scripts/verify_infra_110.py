@@ -87,7 +87,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "ce334aeb5a73dbc0123cd9692476058645906e28cd2ff2849d9f99c3ffbd5859"
+EXPECTED_SELF_MAIN_FUNC_SHA = "cec748f99b6bad9ffbaadbd924af41790ccaaabcffbae51bda875bbef1c9b661"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -219,22 +219,36 @@ def main() -> None:
         f"collisions={list(collisions.items())[:3]}" if collisions else f"all {len(tgt_to_keys)} unknown_* tgt_ids unique per (src,const)",
     )
 
-    # V4_composite_key_well_formed: 每个 unknown_<src>_<CONST> 必须能拆出 src 与 const
-    # 复合 key 的字符特征: 形如 unknown_<src_stem>_<CONST> 且 CONST 出现在 edge 标签中
+    # V4_composite_key_well_formed: 每个 unknown_<src>_<CONST> 必须严格匹配
+    # anchor 正则 ^unknown_<src_stem>_<EXPECTED_CONST>$ 且 (src, const) 与 edge 完全一致。
+    # 严格 ordering 锁: 不允许 unknown_{const}_{src} (B 颠倒) 或 unknown_xxx_{src}_{const} (C 中插)
+    # 等任何顺序变体。正则要求 src 段必须由小写字母/数字/下划线组成且整体以 EXPECTED_ 开头。
+    # phase-60 #4 infra-110-backlog-composite-key-strict-ordering
+    composite_key_pattern = re.compile(
+        r"^unknown_(?P<src>[a-zA-Z0-9_]+?)_(?P<const>EXPECTED_[A-Z0-9_]+)$"
+    )
     malformed: List[str] = []
     for src, const, tgt in unknown_edges:
-        # tgt 应以 "unknown_" + src + "_" 开头, 后跟 const (sanitize 后)
         const_sanitized = re.sub(r"[^A-Za-z0-9_]", "_", const.strip())
         src_sanitized = re.sub(r"[^A-Za-z0-9_]", "_", src)
-        expected_prefix = f"unknown_{src_sanitized}_"
-        if not tgt.startswith(expected_prefix):
-            malformed.append(f"{tgt} (expected prefix {expected_prefix})")
-        elif const_sanitized not in tgt:
-            malformed.append(f"{tgt} (missing const {const_sanitized})")
+        m = composite_key_pattern.match(tgt)
+        if not m:
+            malformed.append(f"{tgt} (anchor regex mismatch)")
+            continue
+        got_src = m.group("src")
+        got_const = m.group("const")
+        if got_src != src_sanitized:
+            malformed.append(
+                f"{tgt} (src segment={got_src!r} expect={src_sanitized!r})"
+            )
+        elif got_const != const_sanitized:
+            malformed.append(
+                f"{tgt} (const segment={got_const!r} expect={const_sanitized!r})"
+            )
     _emit(
         "V4_composite_key_well_formed",
         len(malformed) == 0,
-        f"malformed={malformed[:3]}" if malformed else f"all {len(unknown_edges)} edges have composite key",
+        f"malformed={malformed[:3]}" if malformed else f"all {len(unknown_edges)} edges have strict-ordered composite key",
     )
 
     # V4b self main func sha
