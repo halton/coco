@@ -11833,7 +11833,15 @@
             "verify_infra_057 diff scope 抽样",
             "verify_infra_074 baseline 来源 git blame"
           ],
-          "findings": {"P0": [], "P1": ["verify_robot_035 EXPECTED_LIB_FILE_SHA stale (入账 backlog)"], "P2": ["任务名 12files 实测 21 files"]}
+          "findings": {
+            "P0": [],
+            "P1": [
+              "verify_robot_035 EXPECTED_LIB_FILE_SHA stale (入账 backlog)"
+            ],
+            "P2": [
+              "任务名 12files 实测 21 files"
+            ]
+          }
         },
         "freshness_anchor": "post-merge-rerun",
         "closeout_notes": "任务名 '12 files' 实测 21 files 的澄清；5 pre-existing baseline FAIL 不在本 PR 范围；P1 finding (verify_robot_035 lib_file_sha) 单独入账 backlog 跟踪。"
@@ -13195,6 +13203,16 @@
       "title": "080 V4_3 合成 fixture docstring 写明 V4_2 enrolled list 维护",
       "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_3 已改为合成 fixture，与原 079 历史硬绿样本解耦；但 docstring 未说明 V4_2 enrolled (grace_period helper graduate list) 后续若新增 helper 需手扩。",
       "acceptance": "080 V4_3 docstring/comment 明确指引：新增 helper 入 enrolled list 时同步更新 V4_2 expect 集"
+    },
+    {
+      "id": "infra-V6-backlog-076-helper-tuple-step2-hoist-to-verify-lib",
+      "name": "step2: hoist 076 _V5_ACCEPTED_HELPER_NAMES to _verify_lib.py with full cascade",
+      "area": "infra",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "description": "Engineer #2.48 decision: phase-48 #2.48 采用方案 A 仅在 076 文件抽常量 _V5_ACCEPTED_HELPER_NAMES, 避免触发 LIB sha cascade. step2 在未来需要把该常量真正提升到 scripts/_verify_lib.py 作为 public 常量并完成 ~37 verify_infra_*.py 的 EXPECTED_VERIFY_LIB_FILE_SHA cascade bump. Reviewer #1.47 P1 follow-up 完整闭环.",
+      "updated_at": "2026-05-23T03:46:01"
     }
   ],
   "_meta": {
