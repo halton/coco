@@ -7997,3 +7997,25 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
 - feature_list.json status: not_started → passing
 - 下一 candidate: infra-P293-typo-guard-hash-suffix-policy (#5.54)
+
+## Session 2026-05-23 phase-54 #5.54 closeout — infra-P293-typo-guard-hash-suffix-policy
+
+- merge: feat/infra-P293-typo-guard-hash-suffix-policy → main, merge_commit_sha=30d9578f39735fc111a02eb9c3d1f6328e5ef4cd (base main=bfc71b4)
+- verify_infra_108 ALL PASS (12 emit-paths / 12 unique check tags): V0 (helper exists/importable), V1 (suffix regex contains HASH + HASHSUM tokens), V2 (namepart contains HASHSUM 但不含 bare HASH), V3/V3b/V3c/V3d (BLAKE3+MD5 当前被判 typo 共 2 个 / canonical _SHA 不在 typo samples), V4 (self main func sha 52dac80ba95a4461), V5 (grace_skipped)
+- cascade=0 — 本 feature 不动 _verify_lib.py / verify_infra_061.py, 仅新增 verify_infra_108.py 锁 hash-suffix-policy 当前决策 (待未来 allowlist 演进)
+- post-merge-rerun (P278 freshness_anchor): verify_infra_108 PASS (12/12), smoke rc=0, verify_infra_060 FAIL 1/14 (pre-existing baseline bfc71b4, V4_real_unknown_count_eq_one unknown_count=6 vs 1, P285 classifier 演进遗留, 与 P293 无关), verify_infra_062 PASS (30 emit-paths)
+- Reviewer fresh-context LGTM (sub-agent): Mutation A 反证 — 把 _HASH 从 _RE_EXPECTED_TYPO_SUFFIX 移除立刻触发 V1+V3+V3d 共 5/12 FAIL, 还原后干净 PASS, 锁有效。docstring 策略清晰承认 R2 现状 (BLAKE3/MD5 当前被判 typo), 留 allowlist 演进路径。baseline 060 区分 pre-existing。
+- closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
+- feature_list.json status: in_progress → passing, P278 evidence 完整 (verifier=verify_infra_108, verify_runs 含 108+060+062 freshness=post-merge-rerun, closeout_verify.main_head_sha + merge_commit_sha 完整 40-hex, reviewer.reviewer_kind=sub_agent_fresh_context + LGTM + summary>=20 + checks_run{mutation_test_done:A, cascade_count_verified:0}, pre_existing_baseline_sha=bfc71b4, baseline_head_echo=bfc71b4, baseline_tail_stdout + smoke_tail_stdout 完整)
+
+### phase-54 5/5 完整收官标记
+
+phase-54 ("verify_infra_061 P282 docstring/comment 对齐 + Reviewer R2/R3 backlog 入账") 全 5 个 feature 已 closeout passing:
+
+1. #1.54 infra-P282-verify-061-docstring-comment-align — passing
+2. #2.54 infra-P293-typo-guard-check-count-doc-reconcile — passing
+3. #3.54 infra-P292-cascade-zero-verifier-rebump-rule (or其他 #3.54) — passing
+4. #4.54 infra-P294-backlog-verify-103-old-fstring-cleanup — passing
+5. #5.54 infra-P293-typo-guard-hash-suffix-policy — passing ← 本次
+
+phase-54 5/5 complete。下一步: phase-55 planning。

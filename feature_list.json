@@ -7115,7 +7115,7 @@
       "area": "infra",
       "phase": 54,
       "title": "typo-guard 把 _HASH$ 列为 typo 可能误伤未来合法 non-sha hash 常量",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R2",
       "scope": "当前 typo 列表把 *_HASH 当 typo, 但未来若引入合法 BLAKE3 / MD5 hash 常量 (如 EXPECTED_FOO_BLAKE3_HASH) 会被错判. 建议: 1) allowlist 已知非 SHA hash 算法后缀, 或 2) 把 _HASH 降为 warn 级别非 fail. 当前无 P, 但写入 backlog 留痕.",
@@ -7131,7 +7131,53 @@
         "verify_tail": "[verify_infra_108][SUMMARY] ALL PASS (12 emit-paths / 12 unique check tags)",
         "cascade_count": 0,
         "design_decision": "verify_infra_108 锁 hash-suffix-policy 当前决策 (cascade=0): _HASH/_HASHSUM 保留在 _RE_EXPECTED_TYPO_SUFFIX; namepart regex 不含 bare HASH; BLAKE3/MD5 hash 常量当前被判 typo (留 allowlist 演进路径)。本 feature 不动 _verify_lib.py 避免 ~35 cascade bump.",
-        "smoke": "PASS (./init.sh rc=0)"
+        "smoke": "PASS (./init.sh rc=0)",
+        "freshness_anchor": "post-merge-rerun",
+        "pre_existing_baseline_sha": "bfc71b4",
+        "baseline_head_echo": "bfc71b4",
+        "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28148\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=6 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: TTS (kokoro-zh)\n  ok: samples=21838 sr=24000 dt=1.33s\n==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "verify_runs": [
+          {
+            "name": "verify_infra_108",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_108][PASS] V0_verify_lib_exists path=scripts/_verify_lib.py\n[verify_infra_108][PASS] V0_helper_importable verify_expected_prefix_typo_guard imported\n[verify_infra_108][PASS] V1_suffix_regex_has_HASH _RE_EXPECTED_TYPO_SUFFIX block must include token 'HASH'\n[verify_infra_108][PASS] V1_suffix_regex_has_HASHSUM _RE_EXPECTED_TYPO_SUFFIX block must include token 'HASHSUM'\n[verify_infra_108][PASS] V2_namepart_has_HASHSUM namepart regex must include HASHSUM (block snippet ok)\n[verify_infra_108][PASS] V2_namepart_no_bare_HASH namepart regex must NOT include bare HASH (only HASHSUM allowed)\n[verify_infra_108][PASS] V3_legitimate_blake3_currently_flagged BLAKE3 hash 常量当前被判 typo (R2 现状; 待 allowlist 演进) names=['EXPECTED_FOO_BLAKE3_HASH', 'EXPECTED_BAR_MD5_HASH']\n[verify_infra_108][PASS] V3b_legitimate_md5_currently_flagged MD5 hash 常量当前被判 typo names=['EXPECTED_FOO_BLAKE3_HASH', 'EXPECTED_BAR_MD5_HASH']\n[verify_infra_108][PASS] V3c_canonical_sha_not_flagged canonical _SHA not in typo samples names=['EXPECTED_FOO_BLAKE3_HASH', 'EXPECTED_BAR_MD5_HASH']\n[verify_infra_108][PASS] V3d_typo_count_eq_two expect typo_count=2 (BLAKE3+MD5); got=2\n[verify_infra_108][PASS] V4_self_main_func_sha got=52dac80ba95a4461 expect=52dac80ba95a4461\n[verify_infra_108][PASS] V5_reviewer_lgtm_gate target=infra-P293-typo-guard-hash-suffix-policy helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P293-typo-guard-hash-suffix-policy' in grace_period (skipped)\"\n[verify_infra_108][SUMMARY] ALL PASS (12 emit-paths / 12 unique check tags)"
+          },
+          {
+            "name": "verify_infra_060",
+            "status": "FAIL",
+            "freshness": "post-merge-rerun",
+            "pre_existing_baseline_sha": "bfc71b4",
+            "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28148\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=6 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=68 enforced=45 soft_skipped=23 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=68 enforced=39 soft_skipped=29 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=68 enforced=39 soft_skipped=29 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=68 enforced=39 soft_skipped=29 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=68 enforced=39 soft_skipped=29 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=68 enforced=39 soft_skipped=29 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=68 enforced=39 soft_skipped=29 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "30d9578f39735fc111a02eb9c3d1f6328e5ef4cd",
+          "merge_commit_sha": "30d9578f39735fc111a02eb9c3d1f6328e5ef4cd"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-P293 hash-suffix-policy 锁完整: verify_infra_108 12/12 PASS (V0/V1/V2/V3/V3b/V3c/V3d/V4/V5), cascade=0 (本 feature 不动 _verify_lib.py)。Mutation A 反证: 把 _HASH 从 _RE_EXPECTED_TYPO_SUFFIX 移除触发 V1+V3+V3d 5/12 FAIL, 还原后干净, 锁有效。docstring 策略清晰: BLAKE3/MD5 当前被判 typo 是 R2 现状 (V3_legitimate_blake3_currently_flagged + V3b_legitimate_md5_currently_flagged 显式承认), 留 allowlist 演进路径; canonical _SHA 不在 typo samples (V3c). 已知 pre-existing: verify_infra_060 V4_real_unknown_count_eq_one 在 base bfc71b4 同 FAIL, 与本 feature 无关 (P285 classifier 演进遗留)。",
+          "checks_run": {
+            "mutation_test_done": "A",
+            "cascade_count_verified": 0,
+            "pre_existing_baseline_confirmed": true
+          },
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
       }
     },
     {
