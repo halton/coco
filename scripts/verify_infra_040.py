@@ -12,9 +12,12 @@ verify-script 模板 file sha、mutant 反证、行为验证 (关键 section hea
 存在性). 0 业务源码改动。
 
 V0 scaffolding: 两份 PR 模板文件存在 + 非空。
+V0b default_tmpl 含 verify-script 切换引导 (grep ``?template=verify-script.md``).
+   (#2.52 backlog: 防止默认模板内容被回退覆盖,丢失切换引导.)
 V1 docstring sentinel + 本脚本 v4_behavior checker 自身 func sha 自锁
    (sentinel section ``INFRA_040_SHA_LOCKS`` 必须存在).
 V2 verify-script.md 整体 file-sha 锁 (避免无脑改模板).
+V2b default_tmpl 整体 file-sha 锁 (#2.52 backlog: 反向回退保护).
 V3 mutant 反证 — 临时删模板中的 "决策矩阵" section heading,
    subprocess 跑 V4 行为验证应失败, finally 还原.
 V4 行为验证 — 解析 verify-script.md, 检查关键 section heading 全在
@@ -25,6 +28,7 @@ V5 Reviewer-LGTM gate (print-only).
 INFRA_040_SHA_LOCKS
 -------------------
 - ``.github/PULL_REQUEST_TEMPLATE/verify-script.md`` file sha: EXPECTED_VERIFY_TMPL_SHA
+- ``.github/pull_request_template.md`` file sha: EXPECTED_DEFAULT_TMPL_SHA (V2b, #2.52)
 - 本脚本 v4_behavior 自 checker func sha: EXPECTED_V4_CHECKER_FUNC_SHA
 
 退出码 0=ALL PASS / 1=任一 FAIL.
@@ -49,6 +53,9 @@ DEFAULT_TMPL = GITHUB_DIR / "pull_request_template.md"
 
 # infra-040 sha lock 常量 (V2): verify-script.md 整体 file sha
 EXPECTED_VERIFY_TMPL_SHA = "8d0cb524ff580ce3fba6a9209fadd0095129186c4799341c30e23a22f64e6ebd"
+
+# infra-040-backlog #2.52: default pull_request_template.md 整体 file sha 反向回退保护 (V2b)
+EXPECTED_DEFAULT_TMPL_SHA = "11f006469bbf9a1e61f8f38f750e2f81efc69a0e45d02b9f4d7337c58227239a"
 
 # infra-040 自身 v4_behavior 函数 sha (V1 自锁; 末尾自计算后回填)
 EXPECTED_V4_CHECKER_FUNC_SHA = "29a26bae07566dda05cd857fa8015af3010fc12f31f125344b2c75f0b04d137c"
@@ -92,6 +99,22 @@ def v0_scaffolding() -> None:
             continue
         size = path.stat().st_size
         _emit(f"V0_{label}_exists", size > 0, f"{path} size={size}")
+    # V0b (#2.52 backlog): default tmpl 必须含 verify-script 切换引导
+    # 防止默认模板内容被回退覆盖丢失引导。
+    if DEFAULT_TMPL.is_file():
+        text = DEFAULT_TMPL.read_text(encoding="utf-8")
+        hint = "?template=verify-script.md"
+        _emit(
+            "V0b_default_tmpl_contains_verify_template_hint",
+            hint in text,
+            f"hint={hint!r} present={hint in text}",
+        )
+    else:
+        _emit(
+            "V0b_default_tmpl_contains_verify_template_hint",
+            False,
+            f"missing {DEFAULT_TMPL}",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +159,22 @@ def v2_tmpl_file_sha() -> None:
         "V2_verify_tmpl_file_sha",
         got == EXPECTED_VERIFY_TMPL_SHA,
         f"got={got[:16]} expect={EXPECTED_VERIFY_TMPL_SHA[:16]}",
+    )
+
+
+# ---------------------------------------------------------------------------
+# V2b (#2.52 backlog): default pull_request_template.md 整体 file sha 锁
+# 防止默认模板内容被回退覆盖,丢失 verify-script 切换引导。
+# ---------------------------------------------------------------------------
+def v2b_default_tmpl_file_sha() -> None:
+    if not DEFAULT_TMPL.is_file():
+        _emit("V2b_default_tmpl_file_sha", False, f"missing {DEFAULT_TMPL}")
+        return
+    got = _file_sha(DEFAULT_TMPL)
+    _emit(
+        "V2b_default_tmpl_file_sha",
+        got == EXPECTED_DEFAULT_TMPL_SHA,
+        f"got={got[:16]} expect={EXPECTED_DEFAULT_TMPL_SHA[:16]}",
     )
 
 
@@ -249,6 +288,7 @@ def main() -> int:
     v0_scaffolding()
     v1_self_lock()
     v2_tmpl_file_sha()
+    v2b_default_tmpl_file_sha()
     v3_mutant()
     v4_behavior()
     v5_reviewer_gate()
