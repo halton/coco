@@ -59,7 +59,7 @@ sys.path.insert(0, str(SCRIPTS))
 EXPECTED_LIB_FILE_SHA = "6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981cc357a93b"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 用 bootstrap helper 取真值后回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "1f115d4689e26bc053494c3cb4759eab6b5be0417dda01883e522e357afabc28"
+EXPECTED_V4_CHECKER_FUNC_SHA = "0269c13abf4c3c3c9d90df840d07cf82f64967cfc37992dfc3107231bad6fbc6"
 
 DOCSTRING_SENTINEL = "INFRA_056_SHA_LOCKS"
 AGENTS_MD_SECTION_SENTINEL = "New verify-script self-checker bootstrap protocol (P275)"
@@ -279,6 +279,13 @@ def v4_behavior() -> None:
             "V4_helper_paste_line_format",
             "EXPECTED_V4_CHECKER_FUNC_SHA" in paste_line and direct_sha in paste_line,
             f"paste_line={paste_line!r}",
+        )
+        # infra-P277: schema_version=1 锚点 — JSON 输出必须含整数 schema_version 等于 1
+        schema_version = payload.get("schema_version") if isinstance(payload, dict) else None
+        _emit(
+            "V4_helper_schema_version_eq_1",
+            schema_version == 1,
+            f"schema_version={schema_version!r} expect=1",
         )
 
         # 3) 反例: 函数名不存在 → helper 应非 0 退出

@@ -283,7 +283,9 @@ def main() -> int:
         return 1
 
     if args.json:
+        # infra-P277: schema_version=1 锚点, 未来加字段或重命名时做兼容判定
         payload = {
+            "schema_version": 1,
             "verify_script": str(verify_path),
             "v4_func_name": args.func_name,
             "actual_func_sha": sha_hex,
