@@ -8970,3 +8970,18 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
 - closeout verify 10 PASS: smoke / 033 / 110 / 062 (30/30 维持) / 037 / 039 (25) / 044 / 047 / P306 (10/10) / P314_lib_sha_cascade (8/8)
 - 2 backlog 入账: P317-V12-syspath-restore, P318-V13-v4-checker-docstring-rollout
 - phase-64 5/5 完整收官 (#1 / #2 / #3 / #4 / #5 全 passing)
+
+## Session 2026-05-24 phase-65 规划 (sub-agent)
+
+phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
+
+**4 候选 (phase=65)**:
+1. infra-P316-v039-V8-not-found-reduce (priority 1, not_started) — V8 not_found=137 主线减项, acceptlist / 命名映射缺口
+2. infra-P318-V13-v4-checker-docstring-rollout (priority 2, not_started) — V13 docstring lock 推广到 V4_CHECKER / UNKNOWN_IDS_SHA, unknown 15 → <10
+3. infra-P317-V12-syspath-restore (priority 3, not_started) — V12 _infer_target sys.path try/finally 加固
+4. infra-P315-v033-docstring-v1v6-fix (priority 4, not_started) — V1-V5 → V1-V6 docstring 修订
+
+**verify**:
+- scripts/verify_infra_062.py: SUMMARY ALL PASS (30/30) — feature_list.json 改动合法
+
+**下一步**: phase-65 #1 Engineer (infra-P316-v039-V8-not-found-reduce)
