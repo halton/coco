@@ -57,6 +57,12 @@ INFRA_110_SHA_LOCKS
     ``_EXPECTED_``, 把真正的 const 段错切到 src; V4 仍 PASS 但语义错位.
     本 check 单独把 src 段拎出来断言无 EXPECTED 子串, 显式 catch 这种 vacuous.
     (infra-110-backlog-composite-key-src-stem-no-expected-substring, phase-61 #4)
+  - V4d_unknown_tgt_raw_no_expected_substring: anchor-independent 加固; 对所有
+    unknown_* tgt_id 贪婪剥离尾部 ``_EXPECTED_<UPPER>$`` 后剩余 src_stem 做
+    case-insensitive 'expected' substring 扫描. 对 anchor 不成型场景 (例如
+    lowercase const 'expected_foo' / mixed-case 'Expected_FOO') 也触发 FAIL.
+    与 V4c 互补 (V4c 锁 anchor 成型场景, V4d 锁 case 盲点 / anchor 不成型场景).
+    (infra-V4c-case-insensitive-promote, phase-64 #3)
 - V4b self main func sha
 - V5 Reviewer LGTM gate (grace_period 兜底)
 - V6 reverse_sha meta-lock: render_mermaid func sha (同 V3, 第二份独立持有)
@@ -105,7 +111,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "3cdb3a802191701332114043eea3790773b7caf9c68b31a418dd01b32071f368"
+EXPECTED_SELF_MAIN_FUNC_SHA = "4cc7d516805927ea2501f438f80c781b6e19c93e0133fa2e2d19c6dc409e0f48"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -122,6 +128,54 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
 
 def _file_sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def _check_v4d_unknown_tgt_raw_no_expected_substring(
+    unknown_edges: List[Tuple[str, str, str]],
+) -> tuple[bool, str]:
+    """V4d: 对所有 unknown_* tgt_id 做 anchor-independent 的 case-insensitive
+    'expected' substring 扫描 (infra-V4c-case-insensitive-promote, phase-64 #3).
+
+    背景: V4c 仅在 anchor regex ``^unknown_<src>_<EXPECTED_*>$`` 匹配成功的
+    tgt 上做 src_seg 'expected' lower() 检查. 若有人引入 lowercase const 命名
+    (例如 mermaid edge ``... -->|Expected_FOO| unknown_verify_xyz_Expected_FOO``)
+    anchor regex 因 ``[A-Z0-9_]+`` 强制全大写而不匹配, V4c 因 ``if not m: continue``
+    被 vacuously skip; 此时 V4 也会报 malformed FAIL, 但 src_stem 自身含
+    'expected' 子串的语义错位**没有任何 check 显式 catch**, 仅作为 V4
+    malformed 副作用露出.
+
+    V4d 直接对 raw tgt_id 操作: 把尾部 ``_EXPECTED_<UPPER...>$`` 贪婪剥离作
+    'const 段', 剩余视为 src_stem; 在剩余 src_stem 上做 case-insensitive
+    'expected' substring 扫描. 对 anchor 不成型的 tgt (如 const 大小写绕过),
+    也会触发 FAIL — anchor-independent 硬锁.
+
+    与 V4c 互补: V4c 锁 anchor 成型场景的 mixed-case src; V4d 锁 anchor
+    不成型场景的 mixed-case src/const (case 盲点消除).
+    """
+    # 贪婪剥离尾部 EXPECTED_<UPPER...>$, 剩余视为 src_stem (含前缀 'unknown_')
+    strip_pat = re.compile(r"^(?P<rest>unknown_.+?)(_EXPECTED_[A-Z0-9_]+)?$")
+    violations: List[str] = []
+    checked = 0
+    for _src_edge, _const_edge, tgt in unknown_edges:
+        if not tgt.startswith("unknown_"):
+            continue
+        checked += 1
+        m = strip_pat.match(tgt)
+        # m 一定 match (至少 'unknown_' 前缀+1字符). rest 含前缀 'unknown_'
+        rest = m.group("rest") if m else tgt
+        # 去掉 'unknown_' 前缀, 剩余是 src_stem 候选 (可能含 mixed-case const)
+        src_candidate = rest[len("unknown_") :] if rest.startswith("unknown_") else rest
+        if "expected" in src_candidate.lower():
+            violations.append(
+                f"{tgt} (src_candidate={src_candidate!r} contains 'expected' "
+                f"case-insensitively; anchor-independent check)"
+            )
+    if violations:
+        return False, f"violations={violations[:3]}"
+    return True, (
+        f"all {checked} unknown_* tgt raw src segments free of 'expected' "
+        f"substring (case-insensitive, anchor-independent)"
+    )
 
 
 def _check_v4c_composite_key_src_stem_no_expected_substring(
@@ -385,6 +439,11 @@ def main() -> None:
     # (infra-110-backlog-composite-key-src-stem-no-expected-substring, phase-61 #4)
     v4c_ok, v4c_detail = _check_v4c_composite_key_src_stem_no_expected_substring(unknown_edges)
     _emit("V4c_composite_key_src_stem_no_expected_substring", v4c_ok, v4c_detail)
+
+    # V4d_unknown_tgt_raw_no_expected_substring: anchor-independent case-insensitive
+    # (infra-V4c-case-insensitive-promote, phase-64 #3)
+    v4d_ok, v4d_detail = _check_v4d_unknown_tgt_raw_no_expected_substring(unknown_edges)
+    _emit("V4d_unknown_tgt_raw_no_expected_substring", v4d_ok, v4d_detail)
 
     # V4b self main func sha
     try:
