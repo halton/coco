@@ -586,6 +586,13 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
 def read_constant(path: str | Path, const_name: str) -> Any:
     """静态读取 path 中名为 const_name 的**模块级**常量字面值 (不 import, 不执行)。
 
+    扫描范围 (robot-037-backlog: 显式声明, 防止调用方误用为深扫):
+    - **只扫 Module.body 顶层** ``ast.Assign`` 节点。
+    - **不进入** 函数体 / 类体 / async 函数体 / 任何嵌套作用域。
+    - 即使某个嵌套作用域内存在同名 ``const_name = <literal>`` 赋值, 也**不**会被找到。
+    - 这一约束与 Python 模块级常量的常见用法一致, 也是 verify 脚本之间静态读取
+      sentinel / sha lock 常量的契约前提。
+
     实现:
     - ``ast.parse`` 文件源码
     - 扫描 Module.body, 找形如 ``const_name = <literal>`` 的 ``ast.Assign`` 节点
@@ -606,7 +613,8 @@ def read_constant(path: str | Path, const_name: str) -> Any:
 
     Raises:
         FileNotFoundError: path 不存在。
-        ValueError: const_name 未在文件模块级找到, 或 value 非 literal。
+        ValueError: const_name 未在文件**模块级**找到 (嵌套作用域内的同名常量
+            **不会**被识别), 或 value 非 literal。
     """
     p = Path(path)
     if not p.exists():
