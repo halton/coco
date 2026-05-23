@@ -7864,8 +7864,19 @@
       "reviewer": {
         "reviewer_kind": "sub_agent_fresh_context",
         "verdict": "LGTM",
-        "checks_run": ["V0_helper_design", "V1_whitelist_coverage", "V2_mutation_AB", "V3_baseline_compare", "V4_smoke", "V5_verify_101_14checks"],
-        "findings": {"P0": [], "P1": [], "P2": []},
+        "checks_run": [
+          "V0_helper_design",
+          "V1_whitelist_coverage",
+          "V2_mutation_AB",
+          "V3_baseline_compare",
+          "V4_smoke",
+          "V5_verify_101_14checks"
+        ],
+        "findings": {
+          "P0": [],
+          "P1": [],
+          "P2": []
+        },
         "summary": "bump_reverse_sha_lock.py 的 _candidates_for NNN-agnostic 分支设计正确: 早 return 显式 in 白名单 (EXPECTED_LIB_FILE_SHA, EXPECTED_VERIFY_LIB_FILE_SHA), endswith _verify_lib.py 触发; 白名单覆盖仓库内所有锁 _verify_lib.py file sha 的 48 处 (9+39); FUNC_SHA 后缀天然排除不会误命中; verify_infra_101 14 checks 覆盖 V0/V1/V2/V3/V4/V5 完整; verify_infra_101 14/14 PASS + verify_infra_046 21/21 PASS + smoke PASS; 行为测试 locks_found=48; mutation A 删白名单第二项 48→9 证明白名单第二项生效; mutation B 改 EXPECTED_BUMP_FILE_SHA 末位触发 V2 FAIL; baseline 6d0acb9 同命令报空操作 WARN 确认 feat 彻底修复。"
       },
       "evidence": "Reviewer (sub-agent fresh-context): LGTM. bump-helper-design 正确 (_candidates_for NNN-agnostic 早 return 白名单 + endswith _verify_lib.py 触发), 白名单覆盖 48 处锁 (9+39), FUNC_SHA 后缀天然排除. verify_infra_101 14/14 PASS + verify_infra_046 21/21 PASS + smoke PASS. mutation A (删白名单第二项 48→9) + mutation B (改 EXPECTED_BUMP_FILE_SHA 触发 V2 FAIL) 证明锁严格. baseline 6d0acb9 报 WARN 空操作确认修复。"
@@ -9611,44 +9622,51 @@
         "code_head": "0ef13dc",
         "merge_commit": "944fc8d",
         "closeout_verify": {
-          "main_head_sha": "944fc8d22d0bf2f4196391e2802616cb352f0835",
+          "main_head_sha": "944fc8d",
+          "merge_commit_sha": "944fc8d22d0bf2f4196391e2802616cb352f0835",
+          "baseline_head_echo": "b29eb00",
           "pre_existing_baseline_sha": "b29eb00",
           "baseline_tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)  (baseline b29eb00, delta=+2 V0_helper_docstring_loaded + V0_helper_docstring_chars_vs_bytes_keywords)",
           "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
-          "verify_runs": [
-            {
-              "round": 1,
-              "results": [
-                {
-                  "script": "verify_infra_070.py",
-                  "rc": 0,
-                  "status": "ALL PASS",
-                  "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (17 checks)",
-                  "tail_stdout_sha256": "merged-main-944fc8d"
-                },
-                {
-                  "script": "verify_infra_062.py",
-                  "rc": 0,
-                  "status": "ALL PASS",
-                  "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
-                  "tail_stdout_sha256": "merged-main-944fc8d"
-                },
-                {
-                  "script": "verify_infra_070.py@baseline",
-                  "rc": 0,
-                  "status": "ALL PASS",
-                  "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
-                  "tail_stdout_sha256": "baseline-b29eb00"
-                }
-              ]
-            }
-          ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "P294-followup 在 verify_evidence_tail_stdout_sha helper docstring 加了 「Tail 长度单位 chars (Unicode codepoints) NOT raw bytes」 明确段, 内联到 helper 函数体取 tail 处的注释；verify_infra_070 新增 V0_helper_docstring_loaded + V0_helper_docstring_chars_vs_bytes_keywords 锁定 ('chars','codepoints','NOT raw bytes') 三关键词；同步 bump EXPECTED_VERIFY_LIB_FILE_SHA (e583aed3) 与 EXPECTED_HELPER_FUNC_SHA (9e69bab1); cascade 实际 37 verifier 锁 _verify_lib.py file sha 全 bump (含 multi-line 098/099)。Mutation A (删 chars) 触发三层防御 V0/V2/V3 同时 FAIL；Mutation B (改 lib sha 末位) V2 FAIL；Baseline b29eb00 15/15 PASS delta=+2 符合。Docstring 技术准确 (Python len(str)=codepoints, encode utf-8 才转 bytes).",
-            "findings": {"P0": [], "P1": [], "P2": []}
-          }
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "checks_run": [
+              "verify_infra_070 17/17 PASS @ merge HEAD 944fc8d",
+              "verify_infra_062 30/30 PASS @ merge HEAD 944fc8d",
+              "verify_infra_070 baseline 15/15 PASS @ main b29eb00 (pre-merge)",
+              "./init.sh smoke ALL PASS"
+            ]
+          },
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_070.py",
+              "name": "scripts/verify_infra_070.py",
+              "status": "PASS",
+              "freshness_anchor": "944fc8d",
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "name": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "944fc8d",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_070.py (baseline @ main b29eb00 pre-merge)",
+              "name": "scripts/verify_infra_070.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)"
+            }
+          ]
         }
       }
     },
