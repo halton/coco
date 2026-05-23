@@ -7567,3 +7567,11 @@ phase-46 5 候选 promoted to not_started：
   - 审计：verify_infra_062/066/067/068/069/070 脚本内**无** baseline_v0/v1/v3 引用；scripts/ 下亦无 V0/V1/V3 placeholder 残留
   - feature 实质要求在 _verify_lib 抽 helper（pre_existing_baseline 查找逻辑）并跨多脚本 cascade bump，触碰 LIB sha 全链 cascade（被本轮指令明令禁止动 _verify_lib 函数体内容）+ 工作量 >5min
   - 建议候选：A) 收窄为"closeout evidence 语义文档化"（仅改 AGENTS.md/CLAUDE.md，无代码 cascade）；B) 拆两阶段（先 helper 设计 spike，再 cascade bump 单独立 feature）；C) 也走 STALE demote（P291 历史 evidence 已自然收敛）
+
+## Session 2026-05-23 phase-49 #2.49 STALE demote
+
+- **#2.49** infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup — STALE @ phase-49 (closed_as_already_done)
+  - 依据：上轮 audit sub-agent 原文 "grep V0/V1/V3 baseline placeholder：scripts/ 下**无残留**（仅 verify_robot_031 一处 `__BUMP_SHA_PLACEHOLDER__` 无关）...P291 历史 evidence 已自然收敛"
+  - 方案 B 触碰 _verify_lib.py 函数体禁区，方案 A 仅改 AGENTS.md/CLAUDE.md 价值过低，故选 C STALE demote
+  - feature demote: status=backlog, priority=999, phase=null, notes 追加 STALE 原因
+  - smoke PASS（venv py3.13）

@@ -9629,13 +9629,14 @@
     },
     {
       "id": "infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup",
-      "priority": 2.49,
-      "status": "not_started",
-      "phase": 49,
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
       "area": "infra",
       "title": "V0/V1/V3 self/helper sha 是否 pre-existing 统一收口",
       "rationale": "Reviewer P2 backlog: 062/066/067/068/069/070 V0/V1/V3 self/helper sha 在多个 closeout 中作 pre_existing_baseline 处理, 但 baseline 来源不统一, 有时引 main HEAD 有时引旧 baseline. 需要统一基线源, 并在 helper 层抽取查找逻辑.",
-      "description": "V0/V1/V3 self/helper sha pre-existing baseline 统一收口. Verify: 跨 062/066/067/068/069/070 baseline 引用方式一致 (要么 main HEAD 要么固定 ref). Reviewer acceptance: closeout 报告中 pre_existing_baseline_sha 字段语义统一."
+      "description": "V0/V1/V3 self/helper sha pre-existing baseline 统一收口. Verify: 跨 062/066/067/068/069/070 baseline 引用方式一致 (要么 main HEAD 要么固定 ref). Reviewer acceptance: closeout 报告中 pre_existing_baseline_sha 字段语义统一.",
+      "notes": "STALE @ phase-49 #2.49: 复审 scripts/ 下无 V0/V1/V3 baseline placeholder 残留 (仅 verify_robot_031 一处 __BUMP_SHA_PLACEHOLDER__ 无关), P291 历史 evidence 已自然收敛. 方案 B 触碰 _verify_lib.py 函数体禁区, 方案 A 仅改 AGENTS.md/CLAUDE.md 价值过低. closed_as_already_done."
     },
     {
       "id": "infra-P299-engineer-report-vs-impl-trustworthy",
