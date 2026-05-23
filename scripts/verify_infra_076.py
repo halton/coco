@@ -207,8 +207,12 @@ def _scan_v5_uses_helper(verify_path: Path) -> tuple[bool, str]:
     if candidate is None:
         return False, "no v5_reviewer_gate function found"
     body_src = ast.unparse(candidate)
-    if "assert_reviewer_lgtm" not in body_src:
-        return False, "function body does not call assert_reviewer_lgtm"
+    accepted_helpers = ("assert_reviewer_lgtm", "assert_v5_reviewer_gate_evidence_bind")
+    if not any(h in body_src for h in accepted_helpers):
+        return False, (
+            "function body does not call any of "
+            f"{accepted_helpers}"
+        )
     return True, "ok"
 
 
