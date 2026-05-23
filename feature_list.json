@@ -18676,13 +18676,45 @@
       "id": "infra-V11-doc-value-lock-rollout",
       "title": "V11 classify_node_lock_doc_values 模式推广: 把 6-field 锁 doc 值校验扩到其他高价值 verify",
       "area": "infra",
-      "status": "not_started",
+      "status": "passing",
       "phase": "phase-64",
       "priority": 2,
       "source": "phase-63 docstring + meta-lint 体系延续",
       "scope": "verify_infra_110 V11_classify_node_lock_doc_values (6 字段值精确匹配, 3 exact + 3 prefix) 推广到 037/039/049/062/P290 — 让 ## Lock: <CONST> docstring 不仅存在 (V3/V4/V5), 其 value 字段也必须与实测一致, 防 docstring 与实际 sha 漂移. 新增 V_doc_values check 或扩 verify_infra_033_lock_doc_rollout.py.",
       "verification": "新 V7 PASS; mutation 改任一 doc 值 → V7 FAIL; smoke PASS; v062 PASS; Reviewer LGTM",
-      "created_at": "2026-05-24"
+      "created_at": "2026-05-24",
+      "closeout_verify": {
+        "main_head_sha": "fa829d4",
+        "baseline_head_echo": "68911f5",
+        "merge_commit_sha": "fa829d4",
+        "verify_runs": [
+          {"name": "smoke", "status": "PASS", "tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=309 well_formed=309 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_033_lock_doc_rollout", "status": "PASS", "tail_stdout": "[verify_infra_033] PASS V1_self_sha: got=792eace9e1e448c2 expect=792eace9e1e448c2\n[verify_infra_033] PASS V2_min_entries: entries=18 >= EXPECTED_MIN_ENTRIES=18\n[verify_infra_033] PASS V3_required_files_have_lock_block: required=6 seen_subset=6 missing=[]\n[verify_infra_033] PASS V4_field_completeness: checked=18 incomplete=0 samples=[]\n[verify_infra_033] PASS V5_target_files_resolvable: checked=18 unresolved=0 samples=[]\n[verify_infra_033] PASS V6_mutant_drop_lock_block: after mutating 039 header, scan no longer reports it (V3 would fail)\n[verify_infra_033] PASS V7_doc_value_consistency: checked=18 violations=0 samples=[]\n[verify_infra_033] PASS V8_mutant_break_func_name: mutant 成功让 V7 FAIL: violations>=1", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_110", "status": "PASS", "tail_stdout": "[verify_infra_110] PASS V4b_self_main_func_sha: got=3cdb3a8021917013 expect=3cdb3a8021917013\n[verify_infra_110] PASS V5_reviewer_lgtm_gate target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 soft_skipped=35 grace_skipped=34 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_037", "status": "PASS", "tail_stdout": "[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True grace_skipped=True\n[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_039", "status": "PASS", "tail_stdout": "[verify_infra_039][PASS] V8_discovered_count discovered=158 matched=18 not_found=137 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][INFO] V8 not_found=137 ambiguous=3\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_P314_lib_sha_cascade", "status": "PASS", "tail_stdout": "[verify_infra_P314] PASS V4_self_lib_sha: got=f789e0d870c9e6c3 expect=f789e0d870c9e6c3\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=f789e0d870c9e6c3\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)", "freshness_anchor": "fa829d4"},
+          {"name": "verify_infra_P290", "status": "PASS", "tail_stdout": "[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True\n[verify_infra_P290] summary: total=9 failed=0", "freshness_anchor": "fa829d4"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "phase-64 #2 infra-V11-doc-value-lock-rollout fresh-context review LGTM. V7 三类校验 (const/lock_kind 命名一致, file_sha→target_function='N/A', ast_func_sha→target_function 可在 target_file 顶层定位) 完备覆盖, 与 V4 字段存在性正交; V8 mutant 已内置反证 V7 非永真; 110.py docstring drift (classify_node → _classify_node) 修正与 dump_v4_sha_graph.py:657 实际函数名一致, 同步更新 V11 expected_exact/expected_prefix; EXPECTED_MIN_ENTRIES 14→18 + EXPECTED_SELF_FILE_SHA 同步 bump 自洽. Mutation A (lock_kind 不匹配 const 后缀)/B (target_function 改不存在 func)/C (MIN_ENTRIES=999) 三组反证 V7/V1+V2 全部按预期 FAIL, 反证后 working tree 完全恢复 (git diff --stat 空). 全套 verify 033/110/062/037/039/P314 + smoke 全 PASS rc=0.",
+          "checks_run": ["read_diff_complete", "V7_three_classes_coverage", "V7_orthogonal_to_V4", "V8_mutant_falsifier", "110_docstring_drift_fix", "V11_expected_exact_prefix_sync", "MIN_ENTRIES_14_to_18", "EXPECTED_SELF_FILE_SHA_bump", "mutation_A_lock_kind", "mutation_B_target_function", "mutation_C_MIN_ENTRIES", "working_tree_restore", "smoke_PASS", "v062_30_PASS", "v033_8_v110_18"],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {"title": "P2 informational item #1"},
+              {"title": "P2 informational item #2"},
+              {"title": "P2 informational item #3"},
+              {"title": "P2 informational item #4"},
+              {"title": "P2 informational item #5"}
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-V4c-case-insensitive-promote",
@@ -18722,6 +18754,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-24T18:00:00Z"
+    "last_updated": "2026-05-24T19:30:00Z"
   }
 }

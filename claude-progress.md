@@ -8915,3 +8915,20 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
   - verify_infra_P314_lib_sha_cascade: PASS (V4 self_lib_sha=f789e0d870c9e6c3, V2 stale=0 found=46, V3 found=46 min=30, V_mutant 检测 1 victim=037)
 - **Reviewer (sub-agent fresh-context)**: LGTM verbatim — diff 55 文件 = 53 bump + 1 新 P314 + _verify_lib.py 未动; 抽样 6 个 (037/040/075/P275/robot_035/robot_037) diff 仅 sha 行; 062/110 baseline 已是 f789e0d8 未被误 bump; Mutation A/B/C 三反证全过; V_mutant tempdir 隔离; P314 docstring 含 ## Lock 段. P0=[], P1=[], P2×1 informational (found=46 vs 54 差异 = AST unique holders vs bumped lines)
 - **下一 candidate**: phase-64 #2 infra-V11-doc-value-lock-rollout (V11 doc-value 锁推广到 037/039/049/062/P290)
+
+## Session 2026-05-24 phase-64 #2 infra-V11-doc-value-lock-rollout closeout passing
+- **NEW_MAIN_SHA**: fa829d4 (merge --no-ff feat/infra-V11-doc-value-lock-rollout, baseline 68911f5)
+- **V7/V8 加锁**: verify_infra_033_lock_doc_rollout 新增 V7_doc_value_consistency (3 类: const/lock_kind 命名一致, file_sha→target_function='N/A', ast_func_sha→target_function 可在 target_file 顶层定位) + V8_mutant_break_func_name 反证 V7 非永真
+- **110.py docstring drift 修**: classify_node → _classify_node (与 dump_v4_sha_graph.py:657 实际函数名一致), 同步 V11 expected_exact/expected_prefix
+- **EXPECTED_MIN_ENTRIES**: 14 → 18 (反映当前 lock 块 count) + EXPECTED_SELF_FILE_SHA 同步 bump 自洽
+- verify_runs (8 项, P299 模式 rc 显式读取):
+  - smoke: PASS rc=0
+  - verify_infra_033_lock_doc_rollout: PASS (8 checks V1-V8)
+  - verify_infra_110: PASS (18 checks)
+  - verify_infra_062: PASS (30/30 emit-paths / 30 unique check tags 维持)
+  - verify_infra_037: PASS (15 checks)
+  - verify_infra_039: PASS (25 checks)
+  - verify_infra_P314_lib_sha_cascade: PASS (8 checks)
+  - verify_infra_P290: PASS (9 checks)
+- **Reviewer (sub-agent fresh-context)**: LGTM verbatim — V7 三类校验完备覆盖, 与 V4 字段存在性正交; V8 mutant 内置反证; 110.py docstring drift 修正与 dump_v4_sha_graph.py:657 实际函数名一致; EXPECTED_MIN_ENTRIES 14→18 + EXPECTED_SELF_FILE_SHA 同步 bump 自洽; Mutation A/B/C 三组反证 V7/V1+V2 全部按预期 FAIL, 反证后 working tree 完全恢复; 全套 verify + smoke 全 PASS rc=0. P0=[], P1=[], P2×5 (全 informational 不阻 merge, 不入 backlog)
+- **下一 candidate**: phase-64 #3 infra-V4c-case-insensitive-promote (V4c case-insensitive expected-substring 推广)
