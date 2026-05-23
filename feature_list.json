@@ -7685,12 +7685,13 @@
     },
     {
       "id": "infra-053-backlog-doc-hub-color-update",
-      "priority": "51-2",
-      "status": "not_started",
-      "phase": 51,
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
       "area": "infra",
       "description": "若 README / research / docs 中提到 V4 Mermaid hub 节点配色（旧 #f9f），需同步更新描述为 #fc6 并说明与 milestone 区分。源自 infra-048-backlog-hub-color-distinguish closeout caveat。",
-      "origin_backlog": "infra-048-backlog-hub-color-distinguish"
+      "origin_backlog": "infra-048-backlog-hub-color-distinguish",
+      "notes": "closed_as_already_done (phase-51 #2.51 STALE audit, main HEAD=c037308, 2026-05-23): STALE audit grep `#f9f|#fc6|hub.*color|hub.*配色|classDef hub` 全仓 *.md *.txt 结果: (a) README.md 完全不含 mermaid/classDef/hub 配色描述; (b) research/ 与 docs/ 目录无任何 hub 配色 mention; (c) 唯一含 `#f9f` 的文件 claude-progress.md L5536/L5538/L5543 全是 P272 infra-048 closeout 历史 closeout 日志 (cascade `#f9f → #fc6` 与 hub vs milestone `#f9f` 对照), 是事件流水账非当前规范, 改了反而抹历史. 故 infra-053 设的前提『docs 中提到旧 hub 配色』在事实层面不存在, 任务 no-op. hub `#fc6` 当前已被 scripts/verify_infra_053.py EXPECTED_HUB_FILL + 6 classDef 全色值锁 + V4 distinct check 三层锁定, 任何未来漂移会立即被 verify_infra_053/058 catch. demote 至 priority=999/status=backlog/phase=null, 不实施."
     },
     {
       "id": "infra-P283-palette-distinct-helper-edge-case-locks",
