@@ -7115,16 +7115,24 @@
       "area": "infra",
       "phase": 54,
       "title": "typo-guard 把 _HASH$ 列为 typo 可能误伤未来合法 non-sha hash 常量",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R2",
       "scope": "当前 typo 列表把 *_HASH 当 typo, 但未来若引入合法 BLAKE3 / MD5 hash 常量 (如 EXPECTED_FOO_BLAKE3_HASH) 会被错判. 建议: 1) allowlist 已知非 SHA hash 算法后缀, 或 2) 把 _HASH 降为 warn 级别非 fail. 当前无 P, 但写入 backlog 留痕.",
       "dependencies": [
         "infra-P281-expected-prefix-typo-guard"
       ],
-      "verification": [],
-      "branch": "",
-      "evidence": {}
+      "verification": [
+        ".venv/bin/python scripts/verify_infra_108.py"
+      ],
+      "branch": "feat/infra-P293-typo-guard-hash-suffix-policy",
+      "evidence": {
+        "verifier": "scripts/verify_infra_108.py",
+        "verify_tail": "[verify_infra_108][SUMMARY] ALL PASS (12 emit-paths / 12 unique check tags)",
+        "cascade_count": 0,
+        "design_decision": "verify_infra_108 锁 hash-suffix-policy 当前决策 (cascade=0): _HASH/_HASHSUM 保留在 _RE_EXPECTED_TYPO_SUFFIX; namepart regex 不含 bare HASH; BLAKE3/MD5 hash 常量当前被判 typo (留 allowlist 演进路径)。本 feature 不动 _verify_lib.py 避免 ~35 cascade bump.",
+        "smoke": "PASS (./init.sh rc=0)"
+      }
     },
     {
       "id": "infra-P293-typo-guard-check-count-doc-reconcile",
