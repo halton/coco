@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""verify_infra_109: render_mermaid tuple/multi-target fanout 渲染 (verify-only).
+"""verify_infra_110: render_mermaid unknown target 复合 key 防 collision (verify-only).
 
-infra-039-backlog-mermaid-tuple-fanout (phase-57 #1):
-``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 此前对 multi-target lock
-(target 字段含逗号分隔的多个 ``.py`` 文件, 由 _RE_VERIFY_HINT / _RE_V_NUM_HINT /
-_RE_BUMP_HINT 分支生成) 只取第一个 stem 作为单 edge target, 把真实的 1→N 反向 sha
-耦合压缩成 1→1 渲染, 视觉上丢失 fanout 拓扑。本 verify 锁住 fanout 改写后的行为:
+infra-039-backlog-mermaid-unknown-target-id-collision (phase-59 #4):
+``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 此前对 unknown target
+(``_infer_target`` 返回 ``<unknown target>``, 即 target 字段中无 ``.py`` token 的
+反向锁) 用 ``unknown_<CONST>`` 作为占位 node id; 跨 source 同名 const (例如
+``EXPECTED_TARGET_FILE_SHA`` 同时出现在 verify_infra_P290 与 verify_infra_P301)
+会被合并到同一个 ``unknown_<CONST>`` 节点, 视觉上把多个互不相干的 unknown target
+错误地呈现为一个节点接收多条入边。本 verify 锁住复合 key 改写后的行为:
 
 - render_mermaid func sha 锁 (改写痕迹)
-- behavior: build_graph 中存在的 multi-target lock 在 mermaid 输出里必须 emit
-  N 条独立 edge (每个 target 一条), 而不是 1 条 edge
+- behavior: build_graph 中若存在跨 source 同 const → unknown 的场景, mermaid 输出
+  中每条 unknown 边的 target node id 必须互不相同 (即 outbound 到 unknown 的
+  ``(src, const)`` 二元组与 ``tgt_id`` 一一对应, 不存在两个不同 source 指向同一个
+  ``unknown_*`` 节点的退化)
 
-INFRA_109_SHA_LOCKS
+INFRA_110_SHA_LOCKS
 -------------------
 - ``scripts/dump_v4_sha_graph.py`` file sha: EXPECTED_DUMP_FILE_SHA
 - ``scripts/_verify_lib.py`` file sha: EXPECTED_VERIFY_LIB_FILE_SHA
@@ -21,29 +25,29 @@ INFRA_109_SHA_LOCKS
 校验层级 (V0-V6):
 
 - V0 scaffolding: dump_v4_sha_graph.py 存在 + render_mermaid 顶层符号在
-- V1 docstring sentinel ``INFRA_109_SHA_LOCKS`` 自锁
+- V1 docstring sentinel ``INFRA_110_SHA_LOCKS`` 自锁
 - V2 双 file sha 锁 (dump + lib)
-- V3 render_mermaid func sha 锁 (与 verify_infra_043 主锁同步;
-  本 verify 独立持有第二份锁, render_mermaid 任何漂移都会击中)
-- V4 fanout behavior (live):
-  - V4_multi_target_locks_exist: build_graph 至少含 1 条 target 含逗号 multi-py 的 lock
-  - V4_fanout_edges_match_targets: 对每条 multi-target lock, mermaid 输出中
-    ``src -->|const| tgt`` 字面 edge 数必须 == 该 lock target 中独立 .py stem 数
-  - V4_no_single_edge_for_multi: 不能再出现"multi-target lock 仅 1 条 edge"的退化
-- V6 reverse_sha meta-lock: render_mermaid func sha + 字面 fanout 边计数双锁
-  (即 mermaid 输出中 ``-->|`` 字面出现次数必须 >= 已知 fanout edges 下限)
+- V3 render_mermaid func sha 锁
+- V4 behavior (live):
+  - V4_unknown_edges_exist: build_graph 至少含 1 条 unknown target lock
+  - V4_no_unknown_id_collision: 渲染出的 mermaid 输出中, 不存在「两条 unknown
+    入边落到同一个 unknown_* node id」的情况; 即每条 unknown 边的 ``tgt_id``
+    必须唯一, 且 ``tgt_id`` 形如 ``unknown_<src_stem>_<CONST>``
+  - V4_composite_key_well_formed: 每个 unknown_* node id 必须能解析出 src_stem
+    与 const 两段, 验证复合 key 设计而非单 key 退化
+- V4b self main func sha
 - V5 Reviewer LGTM gate (grace_period 兜底)
+- V6 reverse_sha meta-lock: render_mermaid func sha (同 V3, 第二份独立持有)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
 from __future__ import annotations
 
-import ast
 import hashlib
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
@@ -57,7 +61,7 @@ from _verify_lib import (  # noqa: E402
     verify_summary_exit,
 )
 
-# infra-039-backlog-mermaid-tuple-fanout sha lock 常量 (V2 + V3)
+# infra-039-backlog-mermaid-unknown-target-id-collision sha lock 常量
 EXPECTED_DUMP_FILE_SHA = (
     "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
 )
@@ -68,13 +72,11 @@ EXPECTED_RENDER_MERMAID_FUNC_SHA = (
     "7c7a3ff794c99af00d24b42346f4e73ce879ab0a9cde462b3966d778be236685"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = (
-    "63fc082201fccd77441ab570ed3a2ef3dde7c8f444e104fd5437a6ca0fcf352c"
-)
+EXPECTED_SELF_MAIN_FUNC_SHA = "a26fcd972d4941d479e9db1a0df3c2ddfb7cf077fd7c8d4508e06ac1229beaff"
 
-DOCSTRING_SENTINEL = "INFRA_109_SHA_LOCKS"
+DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
-V5_GATE_FEATURE_ID = "infra-039-backlog-mermaid-tuple-fanout"
+V5_GATE_FEATURE_ID = "infra-039-backlog-mermaid-unknown-target-id-collision"
 
 _results: List[Tuple[str, bool, str]] = []
 
@@ -82,7 +84,7 @@ _results: List[Tuple[str, bool, str]] = []
 def _emit(tag: str, ok: bool, detail: str = "") -> None:
     _results.append((tag, ok, detail))
     status = "PASS" if ok else "FAIL"
-    print(f"[verify_infra_109] {status} {tag}: {detail}", flush=True)
+    print(f"[verify_infra_110] {status} {tag}: {detail}", flush=True)
 
 
 def _file_sha(p: Path) -> str:
@@ -114,11 +116,7 @@ def main() -> None:
     # V2 file sha (dump + lib)
     got_dump = _file_sha(DUMP_PY)
     if EXPECTED_DUMP_FILE_SHA == "__BUMP_ME__":
-        _emit(
-            "V2_dump_file_sha",
-            False,
-            f"placeholder; bump EXPECTED_DUMP_FILE_SHA={got_dump}",
-        )
+        _emit("V2_dump_file_sha", False, f"placeholder; bump EXPECTED_DUMP_FILE_SHA={got_dump}")
     else:
         _emit(
             "V2_dump_file_sha",
@@ -127,11 +125,7 @@ def main() -> None:
         )
     got_lib = _file_sha(VERIFY_LIB)
     if EXPECTED_VERIFY_LIB_FILE_SHA == "__BUMP_ME__":
-        _emit(
-            "V2_verify_lib_file_sha",
-            False,
-            f"placeholder; bump EXPECTED_VERIFY_LIB_FILE_SHA={got_lib}",
-        )
+        _emit("V2_verify_lib_file_sha", False, f"placeholder; bump EXPECTED_VERIFY_LIB_FILE_SHA={got_lib}")
     else:
         _emit(
             "V2_verify_lib_file_sha",
@@ -159,76 +153,52 @@ def main() -> None:
                 f"got={got_render[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
             )
 
-    # V4 fanout behavior (live build_graph + render_mermaid)
+    # V4 behavior — live build_graph + render_mermaid 观测 unknown 边
     from dump_v4_sha_graph import build_graph, render_mermaid  # noqa: E402
 
     g = build_graph()
-    locks = g.get("locks", [])
-    # 找出 target 字段含 ≥2 个 .py 的 multi-target lock
-    multi_locks: List[dict] = []
-    for lk in locks:
-        stems = re.findall(r"([A-Za-z0-9_]+)\.py", lk.get("target", ""))
-        uniq = sorted(set(stems))
-        if len(uniq) >= 2:
-            multi_locks.append({**lk, "_stems": uniq})
+    mermaid = render_mermaid(g)
+    # 抓所有 edge ``src -->|const| tgt`` 中 tgt 以 ``unknown_`` 开头者
+    edge_pat = re.compile(
+        r"^\s*([A-Za-z0-9_]+)\s+-->\|([^|]+)\|\s+(unknown_\S+)\s*$",
+        re.MULTILINE,
+    )
+    unknown_edges: List[Tuple[str, str, str]] = edge_pat.findall(mermaid)
     _emit(
-        "V4_multi_target_locks_exist",
-        len(multi_locks) >= 1,
-        f"multi-target lock count={len(multi_locks)}",
+        "V4_unknown_edges_exist",
+        len(unknown_edges) >= 1,
+        f"unknown_edge_count={len(unknown_edges)}",
     )
 
-    if multi_locks:
-        mermaid = render_mermaid(g)
-        # 检查每条 multi-target lock 在 mermaid 输出中 emit 了 N 条独立 edge
-        mismatch: List[str] = []
-        edge_count_total = 0
-        for lk in multi_locks:
-            src_stem = Path(lk["source"]).stem
-            const = lk["const"]
-            # 形如: "    verify_xxx -->|CONST| verify_yyy"
-            pat = re.compile(
-                rf"^\s*{re.escape(src_stem)}\s+-->\|{re.escape(const)}\|\s+(\S+)",
-                re.MULTILINE,
-            )
-            found = pat.findall(mermaid)
-            edge_count_total += len(found)
-            if len(found) != len(lk["_stems"]):
-                mismatch.append(
-                    f"{src_stem}|{const}: edges={len(found)} expected={len(lk['_stems'])}"
-                )
-        _emit(
-            "V4_fanout_edges_match_targets",
-            len(mismatch) == 0,
-            f"mismatch={mismatch[:3]} (total multi={len(multi_locks)}, edges={edge_count_total})"
-            if mismatch
-            else f"all {len(multi_locks)} multi-target locks fanout correctly (total fanout edges={edge_count_total})",
-        )
-        # V4_no_single_edge_for_multi: 至少有一条 multi-lock 输出 >=2 edges
-        any_fanout = any(
-            len(
-                re.compile(
-                    rf"^\s*{re.escape(Path(lk['source']).stem)}\s+-->\|{re.escape(lk['const'])}\|",
-                    re.MULTILINE,
-                ).findall(mermaid)
-            )
-            >= 2
-            for lk in multi_locks
-        )
-        _emit(
-            "V4_no_single_edge_for_multi",
-            any_fanout,
-            f"at_least_one_fanout={any_fanout}",
-        )
+    # V4_no_unknown_id_collision: 不存在两条来自不同 (src, const) 的边落到同一 tgt_id
+    # 反过来也要保证: 同一个 tgt_id 只对应一个 (src, const) 组合
+    tgt_to_keys: Dict[str, set] = {}
+    for src, const, tgt in unknown_edges:
+        tgt_to_keys.setdefault(tgt, set()).add((src, const.strip()))
+    collisions = {tgt: keys for tgt, keys in tgt_to_keys.items() if len(keys) > 1}
+    _emit(
+        "V4_no_unknown_id_collision",
+        len(collisions) == 0,
+        f"collisions={list(collisions.items())[:3]}" if collisions else f"all {len(tgt_to_keys)} unknown_* tgt_ids unique per (src,const)",
+    )
 
-        # V6 字面 fanout 边计数下限锁 (deterministic 行为锁)
-        # 多 target lock 的总 fanout edges = sum(len(stems))
-        expected_min_fanout_edges = sum(len(lk["_stems"]) for lk in multi_locks)
-        all_arrows = mermaid.count("-->|")
-        _emit(
-            "V6_fanout_edge_literal_count",
-            all_arrows >= expected_min_fanout_edges,
-            f"mermaid_arrows={all_arrows} expected_min_fanout={expected_min_fanout_edges}",
-        )
+    # V4_composite_key_well_formed: 每个 unknown_<src>_<CONST> 必须能拆出 src 与 const
+    # 复合 key 的字符特征: 形如 unknown_<src_stem>_<CONST> 且 CONST 出现在 edge 标签中
+    malformed: List[str] = []
+    for src, const, tgt in unknown_edges:
+        # tgt 应以 "unknown_" + src + "_" 开头, 后跟 const (sanitize 后)
+        const_sanitized = re.sub(r"[^A-Za-z0-9_]", "_", const.strip())
+        src_sanitized = re.sub(r"[^A-Za-z0-9_]", "_", src)
+        expected_prefix = f"unknown_{src_sanitized}_"
+        if not tgt.startswith(expected_prefix):
+            malformed.append(f"{tgt} (expected prefix {expected_prefix})")
+        elif const_sanitized not in tgt:
+            malformed.append(f"{tgt} (missing const {const_sanitized})")
+    _emit(
+        "V4_composite_key_well_formed",
+        len(malformed) == 0,
+        f"malformed={malformed[:3]}" if malformed else f"all {len(unknown_edges)} edges have composite key",
+    )
 
     # V4b self main func sha
     try:
@@ -267,13 +237,21 @@ def main() -> None:
     else:
         _emit("V5_reviewer_lgtm_gate", False, f"feature_list not found: {REAL_FEATURE_LIST}")
 
+    # V6 reverse_sha meta-lock (与 V3 同 render_mermaid func sha, 独立持有)
+    if got_render and EXPECTED_RENDER_MERMAID_FUNC_SHA != "__BUMP_ME__":
+        _emit(
+            "V6_render_mermaid_func_sha_meta",
+            got_render == EXPECTED_RENDER_MERMAID_FUNC_SHA,
+            f"meta got={got_render[:16]} expect={EXPECTED_RENDER_MERMAID_FUNC_SHA[:16]}",
+        )
+
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
     if failed:
         names = [t for t, ok, _ in _results if not ok]
-        print(f"[verify_infra_109][SUMMARY] FAIL {failed}/{total}: {names}", flush=True)
+        print(f"[verify_infra_110][SUMMARY] FAIL {failed}/{total}: {names}", flush=True)
     else:
-        print(f"[verify_infra_109][SUMMARY] ALL PASS ({total} checks)", flush=True)
+        print(f"[verify_infra_110][SUMMARY] ALL PASS ({total} checks)", flush=True)
     verify_summary_exit(failed)
 
 

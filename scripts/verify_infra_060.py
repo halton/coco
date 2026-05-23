@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b"
+EXPECTED_DUMP_FILE_SHA = "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -91,8 +91,15 @@ EXPECTED_NEW_LOCKS: tuple = (
     ("verify_infra_058.py", "EXPECTED_PALETTE_FUNC_SHA", "_verify_lib.py"),
     ("verify_infra_059.py", "EXPECTED_UNKNOWN_FUNC_SHA", "_verify_lib.py"),
 )
-# 当前实测 unknown 节点数精确锁 (P285 后): 13 → 1
-EXPECTED_CURRENT_UNKNOWN_COUNT = 1
+# 当前实测 unknown 节点数精确锁:
+# - P285 前: 13
+# - P285 后: 1 (13 个 unknown 通过新增 _KNOWN_NON_NUMERIC_TARGETS / lib helper 推断
+#   被归为 lib/dump, 1 个保留为合理 unknown — EXPECTED_DOC_SHA, target=docs/)
+# - phase-59 #4 (infra-039-backlog-mermaid-unknown-target-id-collision) 后: 14
+#   render_mermaid 改用 (source, const) 复合 key 后, 旧 EXPECTED_TARGET_FILE_SHA 跨
+#   source 合并的 1 个节点拆成 2 个; 加上其他 13 个 unknown 各自带 source 前缀, 总
+#   unknown 节点数从 collapsed-9 上升到 14 (实际 unknown 边总数, 每边一个独立节点)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 14
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
