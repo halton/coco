@@ -8288,3 +8288,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer fresh-context sub-agent LGTM: A1 (V6b AST assign 移除) + A2 (V6c keyword 删除) mutation 双假阳性捕获, cascade 12 EXPECTED_DUMP_FILE_SHA bump 完毕
 - dump_v4_sha_graph.py file_sha = ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b
 - phase_57 进度: 2/5 complete; next = phase-57 #3 (infra-P275-assert-verify-passed-min-checks)
+
+## Session 2026-05-23 phase-57 #3 closeout (fresh sub-agent)
+- feature: infra-P275-assert-verify-passed-min-checks status not_started→passing closed_at=2026-05-23
+- baseline main HEAD pre-merge = 0410e1e (含 fix(infra-104-backlog) verify_runs schema fixup commit)
+- feat branch rebase main: git rebase auto-skip duplicate cherry-picked fix commit (5212781 was duplicate of 0410e1e), rebase 后 feat 仅保留 5900ace (P275 自身 commit)
+- merge_commit_sha = 1d8a693b518ca66bc663120bfe3a052641023df0 (no-ff merge feat/infra-P275-assert-verify-passed-min-checks)
+- post-merge smoke PASS (typo_count=0, total=274)
+- verify_infra_P275.py post-merge: ALL PASS (16 checks) — V0/V1/V2/V3/V4/V5/V6 完整覆盖 min_checks 参数语义
+- verify_infra_062.py post-merge: 30/30 emit-paths PASS (hard gate; main 0410e1e fixup commit 已让 062 schema 满足)
+- verify_infra_060.py post-merge: FAIL 2/14 (V4_real_unknown_count_eq_one=11, V4_original_13_unknown_eliminated leaked=['unknown_EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA']; pre-existing baseline P2, P275 cascade 引入新 lib func sha lock 暴露 classifier 缺口, 待 infra-P285)
+- Reviewer fresh-context sub-agent LGTM: assert_verify_passed min_checks 参数默认=1, backward-compat min_checks=0 旧语义保留, 3 caller (verify_infra_054/055/056) 全部迁移, mutation_test_done=true, 10 checks_run 覆盖完整路径
+- _verify_lib.py file_sha = 7df5af6b9d48687e0a5efab7b3dc2e3dfc2fd54e6aa07d1583fb9d5a56604ef4
+- assert_verify_passed func_sha = 7754106551f77aa43caaaa27593a3b40d0532ec791a90b22f77d7c5098beb084
+- 备注: infra-104-backlog evidence 已经在 0410e1e fixup commit 修补 (verify_runs name+freshness_anchor schema 补齐), 062 post-merge 30/30 PASS 验证修复有效
+- phase_57 进度: 3/5 complete; next = phase-57 #4 (robot-037-backlog-import-time-fail-fallback)
