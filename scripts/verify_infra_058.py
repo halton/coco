@@ -32,6 +32,8 @@ INFRA_058_SHA_LOCKS
   - tmp 正例: ``{a:{fill:#aaa},b:{fill:#bbb}}`` → all_distinct=True
   - tmp 反例 (mutant): ``{a:{fill:#aaa},b:{fill:#aaa}}`` → all_distinct=False,
     duplicates=[("a","b","#aaa")]
+  - 边界 (P283): 空 dict / entry 缺 fill / entry 非 dict 三种静默契约锁
+    — helper 静默跳过, 不抛 TypeError, distinct_fill_count 只计有效 entry
 - V5 Reviewer LGTM gate (print-only)
 
 退出码 0=ALL PASS / 1=任一 FAIL.
@@ -64,7 +66,7 @@ EXPECTED_LIB_FILE_SHA = "6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981
 EXPECTED_PALETTE_FUNC_SHA = "8415eca01361eb6b841bc8670bd608a1174ed51610315622ad56f5145d5ee456"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "9a6b74bda0eca36e7ac2096fa04075a262564fec4b41bbb10aed3d8366748a80"
+EXPECTED_V4_CHECKER_FUNC_SHA = "eccdbf04b367d01a1006e9aa315b8239f9dbc9a26c7c3dfbdd01720f99df1b2d"
 
 DOCSTRING_SENTINEL = "INFRA_058_SHA_LOCKS"
 
@@ -268,6 +270,60 @@ def v4_behavior() -> None:
         r_neg3.get("all_distinct") is False
         and r_neg3.get("duplicates") == expected_dups3,
         f"duplicates={r_neg3.get('duplicates')}",
+    )
+
+    # 5) 边界 (P283, infra-P283-palette-distinct-helper-edge-case-locks):
+    #    helper 对边界输入的静默契约显式锁, 防未来实现改动导致静默漂移.
+    # 5a) 空 dict → distinct_fill_count=0, duplicates=[], all_distinct=True, total_keys=0
+    r_empty = verify_palette_fills_distinct({})
+    _emit(
+        "V4_edge_empty_dict_silent",
+        r_empty.get("all_distinct") is True
+        and r_empty.get("distinct_fill_count") == 0
+        and r_empty.get("duplicates") == []
+        and r_empty.get("total_keys") == 0
+        and r_empty.get("fills") == [],
+        f"all_distinct={r_empty.get('all_distinct')} "
+        f"distinct={r_empty.get('distinct_fill_count')} "
+        f"duplicates={r_empty.get('duplicates')} "
+        f"total={r_empty.get('total_keys')} fills={r_empty.get('fills')}",
+    )
+
+    # 5b) entry 缺 fill 字段 → helper 应静默跳过, 不计入 distinct_fill_count;
+    #     total_keys 仍是输入 key 总数 (按 docstring 语义).
+    missing_fill = {"a": {"color": "#aaa"}, "b": {"fill": "#bbb"}}
+    r_missing = verify_palette_fills_distinct(missing_fill)
+    _emit(
+        "V4_edge_missing_fill_silent_skip",
+        r_missing.get("all_distinct") is True
+        and r_missing.get("distinct_fill_count") == 1
+        and r_missing.get("duplicates") == []
+        and r_missing.get("fills") == [("b", "#bbb")],
+        f"all_distinct={r_missing.get('all_distinct')} "
+        f"distinct={r_missing.get('distinct_fill_count')} "
+        f"duplicates={r_missing.get('duplicates')} "
+        f"fills={r_missing.get('fills')}",
+    )
+
+    # 5c) entry 非 dict (如 str / None / int) → 静默跳过, 不抛 TypeError.
+    non_dict = {"a": "#aaa", "b": None, "c": 123, "d": {"fill": "#ddd"}}
+    try:
+        r_nondict = verify_palette_fills_distinct(non_dict)
+        raised = False
+    except TypeError as e:
+        r_nondict = {}
+        raised = True
+    _emit(
+        "V4_edge_non_dict_entry_silent_skip",
+        not raised
+        and r_nondict.get("all_distinct") is True
+        and r_nondict.get("distinct_fill_count") == 1
+        and r_nondict.get("duplicates") == []
+        and r_nondict.get("fills") == [("d", "#ddd")],
+        f"raised={raised} all_distinct={r_nondict.get('all_distinct')} "
+        f"distinct={r_nondict.get('distinct_fill_count')} "
+        f"duplicates={r_nondict.get('duplicates')} "
+        f"fills={r_nondict.get('fills')}",
     )
 
 
