@@ -6132,13 +6132,14 @@
       "area": "infra",
       "phase": 59,
       "title": "verify_infra_035 加 V6 self-hash 锁防 docstring 漂移",
-      "status": "backlog",
+      "status": "in_progress",
       "source": "infra-035-engineer",
       "scope": "scripts/verify_infra_035.py 当前 V0-V5 不含自体 sha 锁；docstring 微调即可悄悄改变脚本而无 verify 红线。补 V6 self-hash 检查（与 verify_infra_034 / verify_robot_036 V0 同模式），将期望 sha 写入脚本 docstring。verify-only，0 业务影响。",
       "dependencies": [
         "infra-035"
       ],
-      "verification": []
+      "verification": [],
+      "started_at": "2026-05-23"
     },
     {
       "id": "infra-035-backlog-v7-ast-upgrade",
