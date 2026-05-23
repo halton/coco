@@ -17681,11 +17681,106 @@
       "area": "infra",
       "phase": 62,
       "priority": 201,
-      "status": "not_started",
+      "status": "passing",
       "depends_on": [
         "infra-110-backlog-classify-lock-cross-check-doc"
       ],
-      "rationale": "phase-61 #3 Reviewer 2 个非阻塞文档措辞建议合并入此 backlog: 当前 V7 仅校验 '- target_function:' 等 6 字段名存在; 升级 V8 需进一步锁定 '- target_function: classify_node' 等 6 字段的值精确匹配, 防止字段名保留但 value 被改成 wrong identifier (如 - target_function: render_mermaid) 造成 doc lock 错锁到不同函数. D mutation 描述措辞细化与 func_sha_by_name 参数顺序文档化也并入此项."
+      "rationale": "phase-61 #3 Reviewer 2 个非阻塞文档措辞建议合并入此 backlog: 当前 V7 仅校验 '- target_function:' 等 6 字段名存在; 升级 V8 需进一步锁定 '- target_function: classify_node' 等 6 字段的值精确匹配, 防止字段名保留但 value 被改成 wrong identifier (如 - target_function: render_mermaid) 造成 doc lock 错锁到不同函数. D mutation 描述措辞细化与 func_sha_by_name 参数顺序文档化也并入此项.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "8d7fcc224d225e8b5b050cb386b4d1b9af9dc26a",
+          "merge_commit_sha": "8d7fcc224d225e8b5b050cb386b4d1b9af9dc26a",
+          "baseline_head_echo": "144b262",
+          "baseline_head_sha": "144b262",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "verifier": "./init.sh",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "  ok: total=292 well_formed=292 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "v035",
+              "verifier": "scripts/verify_infra_035.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0"
+            },
+            {
+              "name": "v110",
+              "verifier": "scripts/verify_infra_110.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "name": "v062",
+              "verifier": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "vP301_full",
+              "verifier": "scripts/verify_infra_P301_full.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0"
+            },
+            {
+              "name": "vP290",
+              "verifier": "scripts/verify_infra_P290.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+            },
+            {
+              "name": "v039",
+              "verifier": "scripts/verify_infra_039.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (22 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "  ok: total=292 well_formed=292 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "mutation_test": {
+            "A": {
+              "desc": "scripts/verify_infra_110.py docstring 第5行 '- target_function: classify_node' → '- target_function: foo'",
+              "expected": "V11 FAIL, V7 PASS (字段名仍在, 字段值改写)",
+              "observed": "v110 rc=2 PASS V7_classify_node_lock_doc_present + FAIL V11_classify_node_lock_doc_values violations=[\"'- target_function:' exact-match fail: got='foo' expect='classify_node'\"]",
+              "restored": true
+            },
+            "B": {
+              "desc": "scripts/verify_infra_110.py docstring 第7行 '- lock_kind: ast_func_sha' → '- lock_kind: text_hash'",
+              "expected": "V11 FAIL (前缀字段 lock_kind 精确锁失败)",
+              "observed": "v110 rc=2 PASS V7_classify_node_lock_doc_present + FAIL V11_classify_node_lock_doc_values violations=[\"'- lock_kind:' exact-match fail: got='text_hash' expect='ast_func_sha'\"]",
+              "restored": true
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-62 #2 infra-110-backlog-classify-lock-doc-value-assert: V11_classify_node_lock_doc_values 升级在 V7 字段名存在检查之上加 6 字段值精确锁 (3 exact: target_function/target_file/lock_kind; 3 prefix: bump_when/bump_protocol/rationale)。4-mutation A/B/C/D 设计完整, A (target_function=foo) 与 B (lock_kind=text_hash) 实测均触发 V11 FAIL 同时 V7 PASS 证明语义补强生效, V7/V11 互补无冗余。无 cascade, evidence schema 字段齐全。",
+            "baseline_head_echo": "144b262",
+            "checks_run": [
+              "v11-exact-prefix-semantic",
+              "v7-v11-complementarity",
+              "mutation-A-target-function",
+              "mutation-B-lock-kind",
+              "mutation-C-D-design-review",
+              "cascade-scan"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          }
+        },
+        "closeout_at": "2026-05-24",
+        "main_head_sha_short": "8d7fcc2"
+      }
     }
   ],
   "_meta": {

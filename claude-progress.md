@@ -8721,3 +8721,17 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - closeout commit sha: 见 git log（chore commit + merge commit 3ab1988）
 - push: 单次尝试，失败忽略
 - 下一候选: phase-62 #2 (priority=201) `infra-110-backlog-classify-lock-doc-value-assert`
+
+## Session 2026-05-24 — phase-62 #2 closeout (infra-110-backlog-classify-lock-doc-value-assert)
+
+- 目标: V11_classify_node_lock_doc_values 在 V7 字段名存在检查上加 6 字段精确值锁 (3 exact + 3 prefix), 防止字段值被悄改至无关 identifier 而 V7 仍 PASS。
+- 实现: scripts/verify_infra_110.py 新增 V11 check, EXPECTED_CLASSIFY_NODE_LOCK_DOC_FIELDS 表 (3 exact: target_function/target_file/lock_kind; 3 prefix: bump_when/bump_protocol/rationale)。`[SUMMARY]` 升级到 18 checks。
+- merge: 144b262 → 8d7fcc2 (`merge: phase-62 #2 infra-110-backlog-classify-lock-doc-value-assert LGTM`)
+- 7 verify_runs post-merge: smoke/v035/v110/v062/vP301_full/vP290/v039 全部 rc=0 PASS (P299 模式: redirect to /tmp/*.log 后 tail)
+- v062 post-closeout: PASS 0/30 FAIL (维持 phase-62 #1 首次清零状态)
+- mutation 实测 (post-merge main HEAD, 完后还原):
+  - A: docstring 第5行 `target_function: classify_node` → `foo` → v110 rc=2, V7 PASS + V11 FAIL `'- target_function:' exact-match fail: got='foo' expect='classify_node'` ✓
+  - B: docstring 第7行 `lock_kind: ast_func_sha` → `text_hash` → v110 rc=2, V7 PASS + V11 FAIL `'- lock_kind:' exact-match fail: got='text_hash' expect='ast_func_sha'` ✓
+- Reviewer: sub_agent_fresh_context LGTM (V7/V11 互补无冗余, A/B/C/D 4-mutation 设计完整, 无 cascade, P0/P1/P2 全空)
+- push: 单次尝试, 失败忽略
+- 下一候选: phase-62 #3 (priority=202) `infra-110-backlog-composite-key-src-stem-case-insensitive-expected`
