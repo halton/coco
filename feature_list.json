@@ -5492,14 +5492,20 @@
       "source": "interact-036 closeout follow-up",
       "updated_at": "2026-05-23T20:00:00",
       "closed_as_already_done": true,
-      "covered_by": ["interact-037"],
+      "covered_by": [
+        "interact-037"
+      ],
       "closed_at": "2026-05-23",
       "evidence": {
         "finding": "interact-036a-backlog scope (drift JSONL size cap / N-行 rotation / retention) 已被 phase-30 interact-037 完整覆盖",
         "interact_037": "scripts/verify_interact_024.py L84-L129 _append_drift_history 已实现 _DRIFT_HISTORY_PATH + _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1 (覆盖式, 单代 retention); 全 try/except 包裹 fail-soft; interact-037 V0-V5 验收 PASS + subprocess fixture 触发 rotate 产出 .archive/ + Reviewer (sub-agent) LGTM; merge main HEAD 71c0154 status=passing",
         "rotation_implementation_locus": "scripts/verify_interact_024.py:_append_drift_history (lines ~84-129)",
         "rotation_policy": "size cap 256KB single-gen rotate to .jsonl.1",
-        "followup_backlog": ["interact-037a", "interact-037b", "interact-037c"],
+        "followup_backlog": [
+          "interact-037a",
+          "interact-037b",
+          "interact-037c"
+        ],
         "smoke": "PASS (本 stale closeout 不动业务)",
         "closeout_verify": {
           "main_head_sha": "b70d76028880f8d4e6a49c2000f1123a17d4fa45",
@@ -5557,9 +5563,9 @@
       "id": "interact-036b-backlog-drift-trend-regression-alert",
       "title": "drift 历史趋势可视化 / 单调上行回归告警",
       "area": "interact",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "57-5",
+      "status": "not_started",
+      "phase": 57,
       "description": "读取 evidence/_history/interact_024_drift_history.jsonl，若最近 N 条 drift 单调上行（或趋势斜率超阈值）则 stdout dump 警告；独立 verify_*.py 脚本跑 trend regression，不阻 merge，仅作早期预警。",
       "source": "interact-036 closeout follow-up"
     },
@@ -8036,11 +8042,11 @@
     },
     {
       "id": "infra-104-backlog-v1-window-hardening",
-      "priority": 999,
+      "priority": "57-2",
       "area": "infra",
-      "phase": null,
+      "phase": 57,
       "title": "verify_infra_104 V1 window [-12,0) 边界加固防止 dict 末尾行误捞",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-23",
       "source": "infra-047-backlog-per-file-self-locks-comment closeout Reviewer P2 finding (#5.53)",
       "scope": "verify_infra_104.py V1 检查使用 [target_idx-12, target_idx) 窗口扫 comment 关键词；若后续 _PER_FILE_LOCKS dict 体量增长到 13+ 行末尾，会把 dict 末行误纳入 V1 窗口造成假阳。需改为基于 AST / sentinel marker 的 robust window 而非固定行偏移，或在窗口扩张前自检关键词不能出现在 dict literal 内。",
@@ -8190,11 +8196,11 @@
     },
     {
       "id": "infra-039-backlog-mermaid-tuple-fanout",
-      "priority": 999,
+      "priority": "57-1",
       "area": "infra",
-      "phase": null,
+      "phase": 57,
       "title": "元组形式反向锁在 mermaid 中 fanout 渲染（多边到多 target）",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
       "scope": "build_graph 已展开 tuple-form 反向锁；render_mermaid 应将一个 source 节点 fanout 出多条边到各 target，呈现真正的 1→N 耦合而非单边。",
@@ -8338,11 +8344,11 @@
     },
     {
       "id": "robot-037-backlog-import-time-fail-fallback",
-      "priority": 999,
+      "priority": "57-4",
       "area": "robot",
-      "phase": null,
+      "phase": 57,
       "title": "verify_robot_034 顶层 read_constant 调用包 try/except 降级 V0 FAIL",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-20",
       "source": "robot-037 closeout Reviewer 建议",
       "scope": "verify_robot_034 当前在模块 import-time 调用 read_constant；若 _verify_lib 异常或目标常量缺失，整个 verify 直接 ImportError 崩溃。包 try/except 降级为 V0 FAIL 单测项，让其他 V 阶段仍可继续报告。",
@@ -8941,9 +8947,9 @@
     },
     {
       "id": "infra-P275-assert-verify-passed-min-checks",
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
+      "phase": 57,
+      "priority": "57-3",
+      "status": "not_started",
       "area": "infra",
       "title": "assert_verify_passed 加 min_checks 防 total=0 失真",
       "rationale": "P274 dogfood 发现 `[verify_x] summary total=0 failed=0` 会判 passed=True；若 verify 脚本因 bug 一个 check 都没跑就直接 print summary，sub-agent 仍会被误导。建议 helper 增加 `min_checks: int = 1` 参数，或在 caller 侧锁最小 check 数。"

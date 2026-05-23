@@ -8216,3 +8216,33 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - #4 robot-032-backlog-doc-verify-single-source: stale_already_done (covered by robot-034/robot-035)
   - #5 interact-036a-backlog-drift-jsonl-rotation: stale_already_done (covered by interact-037)
 - 下一步: phase-57 planning（按 priority 最低数字 not_started 选 candidate）
+
+---
+
+## Session 2026-05-23 — phase-57 planning
+
+**Plan**: 从 90 个 backlog 中挑选 5 candidates，fresh-first，避开 file_sha lock 互撞与 uat-* 真机项。
+
+**Selected 5** (priority 57-1..57-5, phase=57, status=not_started):
+
+| # | id | precheck | cascade | file_locks |
+|---|---|---|---|---|
+| 57-1 (head) | infra-039-backlog-mermaid-tuple-fanout | fresh | 大（dump_v4_sha_graph.py 多 verify 引用） | scripts/dump_v4_sha_graph.py |
+| 57-2 | infra-104-backlog-v1-window-hardening | fresh | 小（verify_infra_104.py local） | scripts/verify_infra_104.py |
+| 57-3 | infra-P275-assert-verify-passed-min-checks | fresh | 中（assert helper 跨 verify 引用，但是 API 扩展非 sha 改） | scripts/_verify_lib/* (helper) |
+| 57-4 | robot-037-backlog-import-time-fail-fallback | fresh | 小（verify_robot_034 top-level wrap） | scripts/verify_robot_034.py |
+| 57-5 | interact-036b-backlog-drift-trend-regression-alert | fresh（新建脚本） | 0（新文件） | scripts/verify_interact_*.py 新建 |
+
+**Pre-check 结论**:
+- STALE 候选已排除: infra-053-backlog-doc-hub-color-update (notes 已 closed_as_already_done), infra-V6-backlog-helper-docstring-clarify-live-set (notes 已 STALE @ phase-48 #5.48)
+- 5 个全部为 fresh implementation (新代码 / 新逻辑 / 新文件)
+- 大 cascade 仅 1 个 (57-1 mermaid-tuple-fanout) 且头位独占
+- file_sha lock 互撞检查：dump_v4 / verify_infra_104 / _verify_lib helper / verify_robot_034 / 新建 verify_interact 五个 target 文件互不重叠
+- uat-* 真机项已全部规避
+
+**stale_predicted_count**: 0 (5 candidates 全 fresh)
+
+**big_item_head**: infra-039-backlog-mermaid-tuple-fanout
+
+**Next**: phase-57 #1 (mermaid tuple fanout) 执行。
+
