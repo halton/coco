@@ -1,5 +1,16 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-59 planning + #1 启动 (infra-037 nested-name-error-clarity)
+
+- 5 candidates 锁定 phase=59 (status 仍 backlog 直到各自 in_progress):
+  1. `infra-037-backlog-nested-name-error-clarity` — func_sha_by_name 同名顶层函数 ≥2 时 raise 具体 ValueError(含 lineno + 计数), 替代当前"取第一个"行为
+  2. `infra-035-backlog-verify-infra-035-self-hash` — verify_infra_035 加 V6 self-file sha lock 防 docstring 漂移
+  3. `robot-036-backlog-read-sentinel-graceful-fallback` — _read_sentinel_from_verify_032 顶层 import 加 try/except, 缺失时 graceful skip + 显式 emit
+  4. `infra-039-backlog-mermaid-unknown-target-id-collision` — dump_v4_sha_graph render_mermaid unknown target 用 (source, const) 复合 key 避免合并
+  5. `infra-V6-backlog-080-v4-4-mutant-assert-substituted-true` — verify_infra_080 V4_4 mutant 显式 regex 断言 substituted=True 标志
+- 选择理由: 全单文件 / 0 cross-cascade / 互解耦 / V6 体系巩固; 避开 P285 / P291-extend2 等 cascade 大件
+- phase-59 #1 启动 (Engineer 阶段, 不切 passing 不 merge)
+
 ## Session 2026-05-23 — phase-58 #5 closeout + phase-58 5/5 全收官 (robot-037-backlog helper docstring module-only)
 
 - feature: `robot-037-backlog-helper-docstring-module-only` (priority 999 phase=58, area=robot)
