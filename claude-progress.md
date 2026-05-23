@@ -7866,3 +7866,24 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 | #5.52 | infra-P298-verify-infra-064-helper-sha-full-coverage | passing |
 
 phase-52 主轴: V6 反向 sha 锁 / helper 抽取 / NNN-agnostic target / V3 helper 全覆盖 / cascade fix。main 工作树稳定, ./init.sh smoke 持续 PASS, P278 gate ALL PASS, V3 helper func sha drift_detector 全锁。phase-52 全 5 features 全 sim-first PASS。下一 phase 由主会话规划。
+
+## Session 2026-05-23 phase-53 plan
+
+phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布在 5 个不同文件的 infra 小型 cleanup, 低风险高 sim 通过率:
+
+| # | feature id | 目标文件 | 选取理由 |
+|---|---|---|---|
+| 53-1 | infra-035-backlog-bump-atomic-write | scripts/bump_infra_034_v4_sha.py | 写入改 tmp+os.replace 原子化, 防中途崩溃残留半文件 |
+| 53-2 | infra-037-backlog-helper-doctest | scripts/_verify_lib.py | func_sha_by_name 加 doctest example, 提升 helper 自文档性 |
+| 53-3 | infra-P290-classify-node-family-sets | scripts/dump_v4_sha_graph.py | _classify_node 用 frozenset 替代 OR 表达式, 表达力 + 可扩展性 |
+| 53-4 | infra-P294-R6-sample-count-doc | scripts/verify_infra_062.py | SUMMARY "17 checks" 用语精准化 (实为 18 emit-paths / 17 unique tags) |
+| 53-5 | infra-047-backlog-per-file-self-locks-comment | scripts/verify_infra_047.py | _PER_FILE_SELF_LOCKS 旁加注释解释为何 SETTER_BLOCK_EXPECTED_SHA / EXCEPT_BLOCK_SHA 不在 self-locks 表 |
+
+选取原则:
+- 全 area=infra, 小型清理 / docstring / 注释 / 算法等价替换, 无业务逻辑改动
+- 跨文件分布: 5 个 candidate 触及 5 个不同 scripts/ 文件
+- 避开 STALE / closed_as_already_done
+- P-编号 (P290 / P294) 衍生项与编号衍生项 (035/037/047) 混合, 利于推进 Reviewer findings tail
+
+下一步: 主会话依持续开发模式立即派 sub-agent 拉 feat/infra-035-backlog-bump-atomic-write 分支启动 #1.53 实现。
+
