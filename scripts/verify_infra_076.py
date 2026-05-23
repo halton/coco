@@ -69,6 +69,16 @@ EXPECTED_VERIFY_LIB_FILE_SHA = "b3005a7d9272fb06c30bc254d8530848d481f2854b77580e
 EXPECTED_HELPER_FUNC_SHA = "e12b6675e4e6b0b50345e6385b999279f80a023d003c62c3c22912b1bfeb295b"
 EXPECTED_SELF_MAIN_FUNC_SHA = "936e0411d4c7bc9445e04c3c0cf061da54128552eaebb2a9f0a78f3cc2e7e881"
 
+# Reviewer #1.47 P1 follow-up (#2.48 step1, 方案 A):
+# V5 reviewer-gate canonical helper names. 这里就地集中, 避免散落在
+# _scan_v5_uses_helper 体内. step2 (单独 backlog) 会把该常量真正提升到
+# scripts/_verify_lib.py 作为公共常量, 那时需要全链 cascade bump
+# EXPECTED_VERIFY_LIB_FILE_SHA (~37 verify_infra_*.py).
+_V5_ACCEPTED_HELPER_NAMES = (
+    "assert_reviewer_lgtm",
+    "assert_v5_reviewer_gate_evidence_bind",
+)
+
 DOCSTRING_SENTINEL = "INFRA_076_SHA_LOCKS"
 
 # 文件名 → owning feature_id (供 V4_1 静态扫描断言, V4_3 sanity 用)
@@ -207,11 +217,10 @@ def _scan_v5_uses_helper(verify_path: Path) -> tuple[bool, str]:
     if candidate is None:
         return False, "no v5_reviewer_gate function found"
     body_src = ast.unparse(candidate)
-    accepted_helpers = ("assert_reviewer_lgtm", "assert_v5_reviewer_gate_evidence_bind")
-    if not any(h in body_src for h in accepted_helpers):
+    if not any(h in body_src for h in _V5_ACCEPTED_HELPER_NAMES):
         return False, (
             "function body does not call any of "
-            f"{accepted_helpers}"
+            f"{_V5_ACCEPTED_HELPER_NAMES}"
         )
     return True, "ok"
 
