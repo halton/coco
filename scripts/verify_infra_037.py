@@ -77,7 +77,7 @@ VERIFY_LIB = SCRIPTS / "_verify_lib.py"
 # infra-037 sha lock 常量 (V2)
 # infra-040-backlog bump: 新增 assert_unique_needle helper 后 file sha 变更
 # infra-V6-backlog bump (P264): 抽 V6 scan_reverse_sha_locks 等 helper 后 file sha 再变更
-EXPECTED_VERIFY_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
+EXPECTED_VERIFY_LIB_FILE_SHA = "f789e0d870c9e6c3764b893a6bcbcca356bfc464520d9c49f3d4b17045ecd243"
 EXPECTED_FUNC_SHA_BY_NAME_FUNC_SHA = "781650973120bca1e7aa9d0eebfaad12c323d3002f5ff68eccc913ac6ecfb09e"
 
 # infra-037 自身关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)
