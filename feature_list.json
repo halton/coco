@@ -17318,12 +17318,78 @@
       "area": "infra",
       "phase": 62,
       "title": "V4c 加固为 case-insensitive 覆盖 Expected/expecteD 等混合大小写 src_seg 变体",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-24",
       "source": "phase-61 #4 infra-110-backlog-composite-key-src-stem-no-expected-substring Reviewer P2 (sub_agent_fresh_context)",
       "scope": "当前 V4c 内层用 ('EXPECTED' in src_seg or 'expected' in src_seg), 但完整 V4c flow 因 anchor regex 强制 const=EXPECTED_* 大写, src_seg 含 lowercase 'expected' / 'Expected' / 'expecteD' 等混合大小写时 anchor 不形成, V4c vacuously PASS. 加固方案: anchor regex 增加 case-insensitive const 分支, 或 V4c 直接对 unknown_ 前缀 raw tgt_id substring 扫描 (不依赖 anchor parse). 风险极低 (现有 verify 脚本 stem 全部 verify_infra_*, 无 expected 子串可能), 但作为预防性硬锁应消除 case 盲点.",
       "dependencies": [],
-      "verification": []
+      "verification": [],
+      "closeout_verify": {
+        "main_head_sha": "ddd69bdca334",
+        "verify_runs": [
+          {
+            "name": "smoke (./init.sh)",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "ok: total=292 well_formed=292 typo_count=0"
+          },
+          {
+            "name": "verify_infra_035",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035] summary total=55 failed=0"
+          },
+          {
+            "name": "verify_infra_110",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "name": "verify_infra_062",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "name": "verify_infra_P301_full",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P301_full] summary: total=10 failed=0"
+          },
+          {
+            "name": "verify_infra_P290",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P290] summary: total=9 failed=0"
+          },
+          {
+            "name": "verify_infra_039",
+            "rc": 0,
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][SUMMARY] ALL PASS (22 checks)"
+          }
+        ],
+        "mutation_test": {
+          "A": {
+            "scenario": "src_seg='foo_Expected_bar' (title-case Expected)",
+            "expected": "V4c FAIL",
+            "observed": "ok=False violations=['unknown_foo_Expected_bar_EXPECTED_FOO_SHA (src_seg='foo_Expected_bar' contains 'expected' substring case-insensitively)']",
+            "result": "PASS (mutation triggers V4c FAIL as designed)"
+          },
+          "B": {
+            "scenario": "src_seg='foo_EXPECTeD_bar' (mixed-case EXPECTeD)",
+            "expected": "V4c FAIL",
+            "observed": "ok=False violations=['unknown_foo_EXPECTeD_bar_EXPECTED_BAR_SHA (src_seg='foo_EXPECTeD_bar' contains 'expected' substring case-insensitively)']",
+            "result": "PASS (mutation triggers V4c FAIL as designed)"
+          }
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Reviewer (sub_agent_fresh_context) LGTM: V4c case-insensitive 'expected' substring check correctly uses src_seg.lower(); 5 mutations A/B/C/D/E all behave as expected (A/B/C/D FAIL on mixed/upper/lower case Expected variants; E vacuous negative PASS without false positive). Engineer description typo noted but does not affect code logic; no cascade impact."
+        }
+      }
     },
     {
       "id": "infra-110-backlog-composite-key-const-case-extension",

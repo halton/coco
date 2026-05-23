@@ -8735,3 +8735,22 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer: sub_agent_fresh_context LGTM (V7/V11 互补无冗余, A/B/C/D 4-mutation 设计完整, 无 cascade, P0/P1/P2 全空)
 - push: 单次尝试, 失败忽略
 - 下一候选: phase-62 #3 (priority=202) `infra-110-backlog-composite-key-src-stem-case-insensitive-expected`
+
+## Session 2026-05-24 — phase-62 #3 closeout (infra-110-backlog-composite-key-src-stem-case-insensitive-expected)
+
+- feature: `infra-110-backlog-composite-key-src-stem-case-insensitive-expected` (priority=202)
+- feat 分支: `feat/infra-110-backlog-composite-key-src-stem-case-insensitive-expected` HEAD=f58b841
+- merge commit (NEW_MAIN_SHA): `ddd69bd` (`git merge --no-ff ...`)
+- 实现: scripts/verify_infra_110.py V4c `_check_v4c_composite_key_src_stem_no_expected_substring`
+  从 'EXPECTED' substring 检查升级为 `src_seg.lower()` 大小写无关检查, 覆盖
+  Expected / EXPECTeD / expecteD 等混合大小写绕过
+- 7 verify_runs (P299 模式, 全 PASS):
+  smoke rc=0 / v035 rc=0 / v110 rc=0 / v062 rc=0 (30/30) / vP301_full rc=0 / vP290 rc=0 / v039 rc=0
+- mutation test (main HEAD 上, helper-level):
+  - A: src='foo_Expected_bar' → V4c FAIL `src_seg contains 'expected' substring case-insensitively` ✓
+  - B: src='foo_EXPECTeD_bar' → V4c FAIL 同上 ✓
+  - (扩展验证) C lower control / N negative 行为正确
+- Reviewer: sub_agent_fresh_context LGTM (代码逻辑正确, Engineer 描述笔误不影响实际代码, 5 mutation 全验证含 vacuous case 不误报, 无 cascade)
+- v062 post-closeout 自检: PASS 30/30, 未退化
+- push: 单次尝试, 失败忽略
+- 下一候选: phase-62 #4 (priority=203) `infra-P290-backlog-v2-target-sha-func-level-lock`
