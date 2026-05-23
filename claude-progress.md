@@ -7454,3 +7454,15 @@ phase-46 5 候选 promoted to not_started：
   - 守门测试: /usr/bin/python3 (3.9) raise RuntimeError 命中；.venv/bin/python (3.13) PASS
   - smoke ./init.sh 通过
 - feature 仍 not_started，待 Reviewer + closeout
+
+## Session 2026-05-23 — phase-47 #3.47 closeout (infra-V6-backlog python-version-guardrail)
+- merge feat/infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity → main
+- merge sha: 4d1980aa13f6 (full 4d1980aa13f6042fb7e9d5c8d7a0750d4aa3d46e)
+- post-merge rerun (venv py3.13):
+  - verify_infra_062.py: ALL PASS (30 checks)
+  - verify_infra_098.py: ALL PASS (14 checks)
+  - smoke.py: PASS
+- Reviewer (sub_agent_fresh_context): LGTM (summary 158 字符)
+- feature status: not_started → passing
+- P2 提示 (非阻断): _MIN_PYTHON_VERSION=(3,13) 略严可 env override；cascade 37 引用/36 sha 赋值 (044 字面值)
+- closeout_verify 6 信号自校 PASS

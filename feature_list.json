@@ -12989,13 +12989,62 @@
     {
       "id": "infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity",
       "priority": 3.47,
-      "status": "not_started",
+      "status": "passing",
       "phase": 47,
       "area": "infra",
       "title": "verify_infra sha-lock 对 python 版本敏感 — 加版本守门",
       "rationale": "phase-46 #5.46 closeout 期间 Reviewer 用系统 python 3.9 跑 079/062 出 ghost FAIL（V1/V2/V3 func_sha + file_sha 全漂移）；用 venv python 3.13 跑 14/14+30/30 ALL PASS。根因：inspect.getsource 在 py3.9 vs 3.13 行为差异（typing/dataclass 等改写）→ func_sha 漂移。4-way 仲裁（venv+pyc clean / venv+脏 / sys+pyc clean / sys+脏）确认 venv 是基线权威。",
       "description": "在 _verify_lib.py 加 python 版本守门（启动断言 sys.version_info >= (3,13) 或在 expect_sha 表附 python 版本标记），避免 Reviewer/CI/用户用系统 python 跑出 ghost FAIL。",
-      "acceptance": "_verify_lib 启动时若 python 版本不匹配则显式 FAIL 并提示切 venv；或 expect_sha 按版本分桶"
+      "acceptance": "_verify_lib 启动时若 python 版本不匹配则显式 FAIL 并提示切 venv；或 expect_sha 按版本分桶",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "4d1980aa13f6",
+          "main_head_sha_full": "4d1980aa13f6042fb7e9d5c8d7a0750d4aa3d46e"
+        },
+        "verify_runs": [
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=41 enforced=36 soft_skipped=5 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=41 enforced=36 soft_skipped=5 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_098.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_098][PASS] V1_self_main_func_sha got=00b8541e1f915a06 expect=00b8541e1f915a06\n[verify_infra_098][PASS] V2_lib_file_sha got=b3005a7d9272fb06 expect=b3005a7d9272fb06\n[verify_infra_098][PASS] V3_helper_func_sha got=f27436457cf1bd3b expect=f27436457cf1bd3b\n[verify_infra_098][PASS] V4_5_wrong_reviewer_kind_fails ok=False kind='main_context_self' reason=\"feature 'FX-wrong-kind' reviewer_kind='main_context_self', expected 'sub_agent_f\"\n[verify_infra_098][PASS] V5_reviewer_lgtm_gate target=infra-P294-followup-v5-reviewer-gate-evidence-bind helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=158 reason=\"feature 'infra-P294-followup-v5-reviewer-gate-evidence-bind': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=158 OK\"\n[verify_infra_098][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/smoke.py",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Python version guardrail 在 _verify_lib 启动时断言 sys.version_info >= (3,13)，否则 raise RuntimeError 提示切 venv；cascade 37 个 verify_infra_*.py 全部 import 该 lib，间接保证 sha-lock 表只在 py3.13 环境下生效；4-way 仲裁交叉确认 venv 基线权威 (LGTM)",
+          "checks_run": [
+            "lib_sha_match",
+            "gate_py39_raise",
+            "gate_py313_ok",
+            "cascade_completeness",
+            "gate_module_level",
+            "error_msg_quality",
+            "verify_062",
+            "verify_076_080_097_098",
+            "smoke"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "_MIN_PYTHON_VERSION=(3,13) 略严，未来可加 env override (例如 COCO_VERIFY_MIN_PY)",
+              "cascade 共 37 引用文件 / 36 sha 赋值（044 是字符串字面值，非 sha 赋值），需在后续 backlog 澄清"
+            ]
+          }
+        },
+        "freshness_anchor": "post-merge-rerun",
+        "closeout_notes": "P2 提示（非阻断）：(1) _MIN_PYTHON_VERSION=(3,13) 略严，未来可 env override；(2) cascade 共 37 引用文件 / 36 sha 赋值（044 是字符串字面值，非 sha 赋值）"
+      }
     },
     {
       "id": "infra-V6-backlog-076-helper-tuple-extract-to-lib-constant",
