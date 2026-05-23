@@ -291,12 +291,6 @@ def v4_behavior() -> None:
         _emit("V4_json_mode", False, f"err: {e!r}")
 
 
-# ---------------------------------------------------------------------------
-# V5: Reviewer LGTM gate (print-only)
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# V6: --show-full-sha 选项行为锁 (infra-039-backlog-dump-show-full-sha, phase-50 #1.50)
-# ---------------------------------------------------------------------------
 def v6_show_full_sha_option() -> None:
     """锁住 dump_v4_sha_graph.py 的 ``--show-full-sha`` CLI 选项行为契约。
 
@@ -457,6 +451,117 @@ def v7_filter_option() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V8: _infer_target auto-discovery 一致性
+# (infra-039-backlog-infer-target-auto-discovery, phase-63 #2)
+# ---------------------------------------------------------------------------
+def v8_auto_discovery_consistency() -> None:
+    """扫所有 scripts/verify_infra_*.py 内的 ``EXPECTED_*_FUNC_SHA[256]`` 常量,
+    从命名规约派生 func_name guess, 在候选 source file 中 AST 找定义,
+    算 ``func_sha_by_name`` 与锁值比对。
+
+    候选 source file 顺序 (启发式):
+      1) verify 脚本自身 (self-checker func sha 占多数)
+      2) ``scripts/_verify_lib.py``
+      3) ``scripts/bump_reverse_sha_lock.py``
+      4) ``scripts/dump_reverse_sha_lock_index.py`` (若存在)
+      5) ``scripts/dump_v4_sha_graph.py``
+
+    判定:
+      * 候选中**唯一** match 且 sha 一致 → ok
+      * 唯一 match 但 sha 不一致 → mismatch (FAIL)
+      * 多个候选都有该 func name → ambiguous (作 not_found, warning)
+      * 所有候选都不含该 func → not_found (warning, 跨脚本引用不在本 helper 范围)
+
+    overall PASS 条件: discovered >= 1 且 mismatches == 0。
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(SCRIPTS))
+    try:
+        from _verify_lib import _discover_func_locks_in_verify, func_sha_by_name
+    except Exception as e:
+        _emit("V8_helper_importable", False, f"err: {e!r}")
+        return
+    _emit("V8_helper_importable", True, "")
+
+    extra_candidates = [
+        SCRIPTS / "_verify_lib.py",
+        SCRIPTS / "bump_reverse_sha_lock.py",
+        SCRIPTS / "dump_reverse_sha_lock_index.py",
+        SCRIPTS / "dump_v4_sha_graph.py",
+    ]
+
+    discovered = 0
+    matched = 0
+    mismatches: List[Tuple[str, str, str, str]] = []
+    not_found: List[Tuple[str, str, str]] = []
+    ambiguous: List[Tuple[str, str, str, int]] = []
+
+    for verify_py in sorted(SCRIPTS.glob("verify_infra_*.py")):
+        locks = _discover_func_locks_in_verify(verify_py)
+        for lock in locks:
+            discovered += 1
+            const = lock["const_name"]
+            guess = lock["func_name_guess"]
+            expected_sha = lock["sha_hex"]
+            # 候选顺序: verify 自身优先 (self-checker 占多数), 然后 extras
+            sources = [verify_py] + extra_candidates
+            hits: List[Tuple[Path, str]] = []
+            for src in sources:
+                if not src.is_file():
+                    continue
+                try:
+                    got = func_sha_by_name(src, guess)
+                    hits.append((src, got))
+                except (ValueError, FileNotFoundError):
+                    continue
+                except Exception:
+                    continue
+            if not hits:
+                not_found.append((verify_py.name, const, guess))
+                continue
+            if len(hits) > 1:
+                # 多源命中 → ambiguous, 不做 mismatch 判定 (避免误报):
+                # 仅在常量名暗示 self-lock (含 CHECKER / SELF) 且 verify 自身命中时,
+                # 才以 verify 自身为准。
+                self_hit = [h for h in hits if h[0] == verify_py]
+                is_self_lock_hint = ("CHECKER" in const) or ("SELF" in const)
+                if self_hit and is_self_lock_hint:
+                    src_used, got_sha = self_hit[0]
+                else:
+                    ambiguous.append((verify_py.name, const, guess, len(hits)))
+                    continue
+            else:
+                src_used, got_sha = hits[0]
+            if got_sha == expected_sha:
+                matched += 1
+            else:
+                mismatches.append(
+                    (verify_py.name, const, expected_sha[:16],
+                     got_sha[:16] + f"@{src_used.name}")
+                )
+
+    _emit(
+        "V8_discovered_count",
+        discovered >= 1,
+        f"discovered={discovered} matched={matched} "
+        f"not_found={len(not_found)} ambiguous={len(ambiguous)} "
+        f"mismatches={len(mismatches)}",
+    )
+    _emit(
+        "V8_no_mismatches",
+        len(mismatches) == 0,
+        f"mismatches={mismatches[:5]}" if mismatches else "0",
+    )
+    if not_found or ambiguous:
+        print(
+            f"[verify_infra_039][INFO] V8 not_found={len(not_found)} "
+            f"ambiguous={len(ambiguous)} "
+            f"(nf_sample={not_found[:3]} amb_sample={ambiguous[:3]})",
+            flush=True,
+        )
+
+
 def v5_reviewer_gate() -> None:
     """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
 
@@ -492,6 +597,7 @@ def main() -> int:
     v4_behavior()
     v6_show_full_sha_option()
     v7_filter_option()
+    v8_auto_discovery_consistency()
     v5_reviewer_gate()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:

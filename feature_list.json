@@ -8642,7 +8642,7 @@
       "area": "infra",
       "phase": 63,
       "title": "_infer_target 扫 EXPECTED_*_FUNC_SHA 自动推 func 名 + AST 验证",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "扫描 verify_*.py 内 EXPECTED_*_FUNC_SHA 常量，按命名规约自动推断 func 名，并用 AST 验证 target file 内确有对应 func，使查表可自维护、抗常量增删漂移。",

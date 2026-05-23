@@ -4198,3 +4198,63 @@ def assert_v5_reviewer_gate_evidence_bind(
         f"summary_len={out['summary_len']} OK"
     )
     return out
+
+
+# ---------------------------------------------------------------------------
+# infra-039-backlog-infer-target-auto-discovery (phase-63 #2):
+# AST 扫 verify 脚本 toplevel ``EXPECTED_*_FUNC_SHA[256]`` 常量,
+# 从常量名前缀派生 func_name guess。配合 func_sha_by_name 形成 _infer_target
+# auto-discovery, 不再依赖硬编码 _KNOWN_NON_NUMERIC_TARGETS / _PER_FILE_LOCKS。
+# ---------------------------------------------------------------------------
+_RE_EXPECTED_FUNC_SHA = re.compile(
+    r'^EXPECTED_(.+?)_FUNC_SHA(?:256)?$'
+)
+
+
+def _discover_func_locks_in_verify(verify_path: str | Path) -> list[dict]:
+    """AST 扫 verify 脚本 toplevel, 抽 EXPECTED_<NAME>_FUNC_SHA[256] 常量。
+
+    返回 list of dict {const_name, func_name_guess, sha_hex, lineno}。
+    - func_name_guess: 从 group(1) 取下来后 ``.lower()``, 例如
+      ``EXPECTED_CLASSIFY_NODE_FUNC_SHA`` -> ``classify_node``。
+    - 仅识别 module-toplevel ``ast.Assign`` + ``Name`` target + ``Constant(str)``
+      value 且为 64-hex 串; tuple/嵌套/docstring 内字面值不收。
+    - 文件读取或 parse 失败时返回空 list (不抛)。
+
+    infra-039-backlog-infer-target-auto-discovery (phase-63 #2)。
+    """
+    p = Path(verify_path)
+    try:
+        src = p.read_text(encoding="utf-8")
+    except Exception:
+        return []
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return []
+    results: list[dict] = []
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if len(node.targets) != 1:
+            continue
+        tgt = node.targets[0]
+        if not isinstance(tgt, ast.Name):
+            continue
+        m = _RE_EXPECTED_FUNC_SHA.match(tgt.id)
+        if not m:
+            continue
+        v = node.value
+        if not isinstance(v, ast.Constant) or not isinstance(v.value, str):
+            continue
+        sha = v.value
+        if len(sha) != 64 or not all(c in "0123456789abcdef" for c in sha):
+            continue
+        func_name_guess = m.group(1).lower()
+        results.append({
+            "const_name": tgt.id,
+            "func_name_guess": func_name_guess,
+            "sha_hex": sha,
+            "lineno": node.lineno,
+        })
+    return results
