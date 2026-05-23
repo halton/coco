@@ -7241,19 +7241,85 @@
       "area": "infra",
       "phase": 55,
       "title": "typo-guard helper 只被 verify_infra_061 主动调用, 考虑 smoke / lib import 时 lazy 自检",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R4",
       "scope": "scan_expected_prefix_typos helper 当前只在 verify_infra_061 主动调用, 若开发者只跑 smoke 不会触发 typo 扫描. 建议: 1) 把 typo 扫加进 init.sh smoke (秒级), 或 2) _verify_lib import 时 lazy 自检 main scope (cost 低). 提升触发频率即提升护栏价值. P3 可选.",
       "dependencies": [
         "infra-P281-expected-prefix-typo-guard"
       ],
-      "verification": [],
-      "branch": "",
-      "evidence": {},
+      "verification": [
+        "scripts/verify_infra_P293_typo_guard_ci_integration.py 全 PASS (10 emit-paths / 10 unique check tags)",
+        "./init.sh smoke 含 typo-guard 步骤 PASS (typo_count=0)",
+        "verify_infra_062 evidence self-check PASS",
+        "verify_infra_060 V4_real_unknown_count_eq_one FAIL 为 pre-existing baseline (3aa5d44)"
+      ],
+      "branch": "feat/infra-P293-typo-guard-ci-integration",
+      "evidence": {
+        "verifier": "scripts/verify_infra_P293_typo_guard_ci_integration.py",
+        "merge_commit_sha": "2189cad113ee2a066f4586c38e915cebf214e5e3",
+        "baseline_head_echo": "3aa5d44",
+        "pre_existing_baseline_sha": "3aa5d44",
+        "cascade": 0,
+        "closeout_verify": {
+          "main_head_sha": "2189cad113ee2a066f4586c38e915cebf214e5e3",
+          "freshness": "post-merge-rerun"
+        },
+        "verify_runs": [
+          {
+            "verifier": "scripts/verify_infra_P293_typo_guard_ci_integration.py",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_P293_typo_guard_ci_integration][PASS] V0_smoke_py_exists path=scripts/smoke.py\n[verify_infra_P293_typo_guard_ci_integration][PASS] V0_smoke_typo_guard_present expect 'def smoke_typo_guard(' in smoke.py\n[verify_infra_P293_typo_guard_ci_integration][PASS] V1_loop_entry_present expect literal '(\"typo_guard\", smoke_typo_guard)' in smoke.py\n[verify_infra_P293_typo_guard_ci_integration][PASS] V2_helper_import_present expect token 'verify_expected_prefix_typo_guard' in smoke.py\n[verify_infra_P293_typo_guard_ci_integration][PASS] V3_smoke_py_file_sha got=50f166a3287e5648 expect=50f166a3287e5648\n[verify_infra_P293_typo_guard_ci_integration][PASS] V4_runtime_smoke_rc rc=0\n[verify_infra_P293_typo_guard_ci_integration][PASS] V4_stdout_token__Smoke_typo_guard expect token in stdout: '==> Smoke: typo-guard'\n[verify_infra_P293_typo_guard_ci_integration][PASS] V4_stdout_token_typo_count_0 expect token in stdout: 'typo_count=0'\n[verify_infra_P293_typo_guard_ci_integration][PASS] V4b_self_main_func_sha got=2ac1a8498b102f85 expect=2ac1a8498b102f85\n[verify_infra_P293_typo_guard_ci_integration][PASS] V5_reviewer_lgtm_gate target=infra-P293-typo-guard-ci-integration helper_ok=True grace_skipped=True\n[verify_infra_P293_typo_guard_ci_integration][SUMMARY] ALL PASS (10 emit-paths / 10 unique check tags)"
+          },
+          {
+            "verifier": "scripts/verify_infra_060.py",
+            "status": "FAIL",
+            "freshness": "post-merge-rerun",
+            "note": "pre-existing baseline; V4_real_unknown_count_eq_one unknown_count=7 期望=1; 与 P293 本 PR 无关",
+            "tail_stdout": "[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28669\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+          },
+          {
+            "verifier": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=69 enforced=45 soft_skipped=24 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=69 enforced=39 soft_skipped=30 violations=0\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=69 enforced=39 soft_skipped=30 grace_skipped=22 violations=0\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=69 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=69 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=69 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=69 enforced=39 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=264 well_formed=264 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "P293 把 typo-guard 集成进 ./init.sh smoke (scripts/smoke.py 新增 smoke_typo_guard 函数 + loop entry ('typo_guard', smoke_typo_guard) + 从 _verify_lib import verify_expected_prefix_typo_guard); 新 verify_infra_P293_typo_guard_ci_integration.py 提供机械锁 10 check-tag PASS (V0 文件/函数存在, V1 loop entry literal substring, V2 helper import token, V3 smoke.py file_sha=50f166a3287e5648, V4 runtime smoke rc=0 + stdout token 'Smoke: typo-guard' + 'typo_count=0', V4b self main func_sha=2ac1a8498b102f85, V5 reviewer gate); Mutation A 反证: 注释 loop entry 触发 V1+V4 3 项 FAIL 还原干净 guard 有效; cascade=0 (init.sh smoke 路径无下游 sha lock); V060 V4_real_unknown_count_eq_one FAIL 为 3aa5d44 pre-existing baseline 与本 PR 无关; smoke 全 PASS (含 typo_count=0); 无私有数据外泄 / 无 secret",
+          "checks_run": {
+            "mutation_test_done": "A_comment_out_loop_entry"
+          },
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": ["NIT V1 literal substring 非阻塞: 已入 backlog infra-P293-backlog-typo-guard-ci-v1-ast-hardening"]
+          }
+        }
+      },
       "spec": "把 scan_expected_prefix_typos / typo-guard 自检挂到 ./init.sh smoke (秒级) 或 _verify_lib import 时 lazy 自检 main scope, 提升触发频率即提升护栏价值. 优先选 init.sh smoke 集成路径以保持 cascade=0; 若选 _verify_lib import 路径需评估 51 文件 cascade 影响.",
       "rationale": "phase-55 plan: phase-55 候选: typo-guard 当前只被 verify_infra_061 主动调用, 开发者只跑 smoke 不会触发. 集成路径选定后 cascade 应可控 (init.sh 路径 cascade=0).",
       "cascade_est": "0-1 (init.sh smoke 路径)"
+    },
+    {
+      "id": "infra-P293-backlog-typo-guard-ci-v1-ast-hardening",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "P293 V1 literal substring 检查升级到 AST-based loop entry 校验",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "infra-P293-typo-guard-ci-integration Reviewer NIT (sub_agent_fresh_context, phase-55 #1.55)",
+      "scope": "verify_infra_P293_typo_guard_ci_integration.py V1 用 literal substring '(\"typo_guard\", smoke_typo_guard)' 检测 loop entry, 对 quote / 空白格式变化敏感. 建议升级到 AST: 解析 smoke.py, 找 STEPS / loop list, 校验存在 tuple-literal (Str('typo_guard'), Name('smoke_typo_guard')). 提升 guard 鲁棒性. P3 可选, 非阻塞 merge.",
+      "dependencies": [
+        "infra-P293-typo-guard-ci-integration"
+      ],
+      "verification": []
     },
     {
       "id": "infra-P282-infra-046-grep-to-lib-sha-migration",

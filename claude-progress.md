@@ -8041,3 +8041,19 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 避开 uat-* 真机异步项 (sim-first)
 
 下一步: 主会话依持续开发模式立即派 sub-agent 拉 feat/infra-P293-typo-guard-ci-integration 分支启动 #1.55 实现 (Engineer dispatch)。
+
+## Session 2026-05-23 (phase-55 #1.55 closeout)
+
+- feature: infra-P293-typo-guard-ci-integration → passing
+- merge_commit_sha: 2189cad113ee2a066f4586c38e915cebf214e5e3 (no-ff from feat/infra-P293-typo-guard-ci-integration @ a1a580f, base main=3aa5d44)
+- main_head_sha post-merge: 2189cad
+- cascade: 0 (init.sh smoke 路径无下游 sha lock)
+- mutation_test: A_comment_out_loop_entry (注释 loop entry 触发 V1+V4 3 项 FAIL, guard 有效)
+- post-merge verify (freshness=post-merge-rerun):
+  - verify_infra_P293_typo_guard_ci_integration.py: PASS (10 emit-paths / 10 unique check tags)
+  - ./init.sh smoke: PASS (含 typo-guard total=264 typo_count=0)
+  - verify_infra_060.py: FAIL 1/14 V4_real_unknown_count_eq_one (pre-existing baseline @ 3aa5d44, 与本 PR 无关)
+  - verify_infra_062.py: ALL PASS (30/30)
+- Reviewer (sub-agent fresh-context): LGTM, NIT V1 literal substring 非阻塞
+- backlog 入账: infra-P293-backlog-typo-guard-ci-v1-ast-hardening (priority=999, phase=null, status=backlog)
+- 下一候选: infra-P277-bootstrap-helper-json-schema-version (#2.55)
