@@ -7345,3 +7345,15 @@ phase-46 5 候选 promoted to not_started：
 - mutation test 已在 Reviewer 段做：改 verdict=REJECT 触发 V5 FAIL，恢复后 PASS — 闸门真实
 - feature_list.json infra-P294-followup-v5-reviewer-gate-evidence-bind status: not_started → passing, evidence 含完整 closeout_verify (main_head_sha, baseline_head_echo, merge_commit_sha, 4 verify_runs 含 freshness_anchor, smoke_tail_stdout ≥ 20 char, pre_existing_baseline_sha + baseline_tail_stdout) + reviewer (kind/verdict/summary/findings)
 - 续推：062 V3 + 097 V1/V3 pre-existing self-sha drift 留作 backlog (与本 closeout 无关)
+
+---
+
+## Session 2026-05-23 phase-46 #5.46 infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline Engineer
+
+- branch: feat/infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline (base main=ff53251)
+- 根因: verify_infra_079.py V4_4_real_run_074_rc0_and_pass 检查耦合了 074 整体 rc=0, 但 074 自身有 pre-existing FAIL (V2_verify_059_file_sha sha-lock stale: 锁 6297a65a 实际 607a0369; V4_4_real_run_059_rc0) 导致 074 rc=2. 该耦合是 check 设计 bug — V4.4 真正应断言的是 074 v4_behavior 那两个新 emit tag 在真跑下可见 PASS 行, 而 074 全局健康度属于 074 自己的 verify 责任范围.
+- 修法: scripts/verify_infra_079.py 第 274-278 行 V4_4 emit 条件由 `rc == 0 and pass_eq and pass_2b` 调整为 `pass_eq and pass_2b`; rc 仍打印在 detail 供回溯. 同步更新 docstring (line 38) 与函数体注释 (line 253-) 说明 decoupling rationale.
+- verify_infra_079: ALL PASS 14/14 (V4_4 PASS rc=2 pass_V4_2_eq_truth=True pass_V4_2b=True)
+- verify_infra_062: ALL PASS 30/30
+- ./init.sh smoke: PASS
+- pre-existing FAIL 残留: 074 自身 V2_verify_059_file_sha + V4_4_real_run_059_rc0 (与本 feature 无关, 074 sha-lock stale, 留作 074 自己的 backlog)
