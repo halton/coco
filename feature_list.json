@@ -16628,12 +16628,97 @@
       "area": "infra",
       "phase": 60,
       "title": "verify_infra_110 V4_composite_key_well_formed 加严格 ordering / anchor 正则",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-23",
       "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
       "scope": "当前 V4_composite_key_well_formed 检查所有 14 个 edge 都有复合 key，但未对 key 的 ordering (src_stem 在前 / CONST 在后) 与 anchor 边界做严格正则；未来若 render_mermaid 改回顺序，本 check 不一定能截住。建议加 `^unknown_[a-z0-9_]+_[A-Z][A-Z0-9_]+$` 正则锁。",
       "dependencies": [],
-      "verification": []
+      "verification": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "aefca05",
+          "merge_commit_sha": "aefca05",
+          "baseline_head_echo": "8bfd6d9",
+          "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+            },
+            {
+              "name": "verify_infra_060",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_104",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_104][PASS] V6d_dict_literal_seg_extracted seg_len=85\n[verify_infra_104][PASS] V6d_dict_literal_clean polluters_in_dict_value=[]\n[verify_infra_104][SUMMARY] ALL PASS (22 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=94 enforced=59 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=94 enforced=59 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=2 min_run_count=1 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'verify_runs[0].freshness_anchor missing or not str', 'field': 'verify_runs[0].freshness_anchor', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "pre_existing_baseline_sha": "8bfd6d9",
+              "baseline_tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=94 enforced=68 soft_skipped=26 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_shape scanned=94 enforced=59 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=2 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'run_index': 0, 'reason': 'verify_runs[0].name empty or not str', 'field': 'name', 'value_repr': 'None'}\n[verify_infra_062][FAIL] V4_closeout_reviewer_block_shape scanned=94 enforced=59 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=2 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'reviewer.checks_run missing/empty or not list', 'field': 'checks_run', 'value_repr': 'None'}\n[verify_infra_062][FAIL] V4_closeout_baseline_head_echo_format scanned=94 enforced=59 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=1 min_hex_chars=7 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'baseline_head_echo missing or not str', 'field': 'baseline_head_echo', 'value_repr': 'None'}\n[verify_infra_062][FAIL] V4_closeout_merge_commit_sha_format scanned=94 enforced=59 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=1 min_hex_chars=7 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'merge_commit_sha missing or not str', 'field': 'merge_commit_sha', 'value_repr': 'None'}\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=94 enforced=59 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=94 enforced=59 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=2 min_run_count=1 first_violation={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'verify_runs[0].freshness_anchor missing or not str', 'field': 'verify_runs[0].freshness_anchor', 'value_repr': 'None'}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "note": "pre-existing FAIL 6/30 on baseline 8bfd6d9 (closeout meta-lint legacy infra-V6-backlog-080)"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0"
+            },
+            {
+              "name": "init.sh smoke",
+              "status": "PASS",
+              "freshness_anchor": "aefca05",
+              "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "V4_composite_key_well_formed 改写为 anchor regex + (src,const) 双段精确等值校验，严格 ordering 锁成立。Mutations A/B/C/D 4 项独立复现全部符合预期；旧 V4 vacuous case 实为 unknown_{src}_xxx_{CONST} 形态。Engineer 核心结论 anchor regex + src 段等值比较是 OLD V4 没有的能力 LGTM。main_func_sha_match cec748f99b6bad9f 实算等值。3 项非阻塞 finding 转 backlog。",
+            "checks_run": [
+              "V4_anchor_regex_strict_ordering",
+              "mutation_A",
+              "mutation_B",
+              "mutation_C",
+              "mutation_D",
+              "vacuous_case_analysis",
+              "main_func_sha_match"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "concern_1 src_stem-no-expected-substring 边界 lookahead",
+                "concern_3 const_case 小写 const anchor 扩展",
+                "NB-2 verify_infra_062 历史 6/30 meta-lint"
+              ]
+            }
+          },
+          "mutation_test": {
+            "A": "PASS - swap src/const order detected",
+            "B": "PASS - inject extra char between segments detected",
+            "C": "PASS - const segment substring mismatch detected",
+            "D": "PASS - src segment substring mismatch detected"
+          },
+          "vacuous_case_demonstrated": "unknown_{src}_xxx_{CONST}"
+        }
+      }
     },
     {
       "id": "infra-110-backlog-classify-node-unknown-lock",
@@ -16712,8 +16797,21 @@
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "infra-110 给 _classify_node 加 V3b/V6b/V6c 三重锁; mutation 实证 startswith(\"unknown_\") typo 在 V3b+V6b 双独立 FAIL; V6c 实证 const 非字面量化时 FAIL (read_constant raise ValueError); 全 verify suite PASS; v062 FAIL 6/30 为 main baseline pre-existing 无关本 feature.",
-            "checks_run": ["V3b_classify_node_func_sha", "V6b_classify_node_func_sha_meta", "V6c_classify_node_func_sha_constant_literal", "mutation_A1_unknown_typo", "mutation_A2_const_non_literal", "B_restore_all_pass"],
-            "findings": {"P0": [], "P1": [], "P2": ["concern1: V3b/V6b/V6c 同 EXPECTED sha 为 cross-check 设计 (建议 docstring 注明)"]}
+            "checks_run": [
+              "V3b_classify_node_func_sha",
+              "V6b_classify_node_func_sha_meta",
+              "V6c_classify_node_func_sha_constant_literal",
+              "mutation_A1_unknown_typo",
+              "mutation_A2_const_non_literal",
+              "B_restore_all_pass"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "concern1: V3b/V6b/V6c 同 EXPECTED sha 为 cross-check 设计 (建议 docstring 注明)"
+              ]
+            }
           },
           "mutation_test": {
             "A1": "改 startswith(\"unknown_\") typo → V3b + V6b + V2 三处独立 FAIL",
@@ -16772,6 +16870,39 @@
       "source": "infra-P304-backlog-P290-v2-target-sha-resync closeout Reviewer P2",
       "description": "verify_infra_039.py V4_output_anchors 当前用字面 EXPECTED anchor 锁 .planning/intel/v4_sha.json 内容, 任何新 target 加入都需 resync. 提案: 改为 lower-bound 校验 (targets >= N) 或在 verify 内动态读 v4_sha.json 计算, 避免字面 anchor lock-step.",
       "dependencies": []
+    },
+    {
+      "id": "infra-110-backlog-composite-key-src-stem-no-expected-substring",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "composite key src_stem 文件命名约束 + 正则边界 lookahead",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "phase-60 #4 infra-110 Reviewer non-blocking finding concern_1",
+      "scope": "V4_composite_key_well_formed 当前 src 段用 (src,) 精确等值，但若未来 src_stem 含 EXPECTED_ 前缀子串可能 vacuous，加 lookahead 边界与文件命名规约。"
+    },
+    {
+      "id": "infra-110-backlog-composite-key-const-case-extension",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "composite key anchor regex 支持小写 const",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "phase-60 #4 infra-110 Reviewer non-blocking finding concern_3",
+      "scope": "当前 anchor regex 仅匹配大写 EXPECTED_*；若未来引入小写 const，需扩展 case 分支或统一命名约定。"
+    },
+    {
+      "id": "infra-P278-backlog-meta-lint-cleanup",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "收口 verify_infra_062 历史 6/30 closeout meta lint FAIL",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "phase-60 #4 infra-110 Reviewer NB-2",
+      "scope": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true 等历史 feature 缺 closeout meta 字段。回填 meta 或加 allowlist。"
     }
   ],
   "_meta": {

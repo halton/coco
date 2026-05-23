@@ -1,5 +1,14 @@
 # 进度日志
 
+## Session 2026-05-24 — phase-60 #4 infra-110-backlog-composite-key-strict-ordering closeout DONE
+
+- main HEAD=aefca05 (merge: phase-60 #4 LGTM)
+- V4_composite_key_well_formed 改写 anchor regex + (src,const) 双段精确等值; Mutations A/B/C/D 4 项独立复现全部符合预期
+- vacuous case 实为 `unknown_{src}_xxx_{CONST}` 形态
+- closeout verify: smoke+v110+v039+v060+v104+v301f PASS; v062 pre-existing FAIL 6/30 on 8bfd6d9 (legacy infra-V6-backlog-080 meta-lint)
+- Reviewer (sub-agent fresh context): LGTM-with-3-non-blocking, 3 项转 backlog (infra-110-backlog-composite-key-src-stem-no-expected-substring, infra-110-backlog-composite-key-const-case-extension, infra-P278-backlog-meta-lint-cleanup)
+- 下一 candidate: phase-60 #5 infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma
+
 ## Session 2026-05-23 — phase-59 planning + #1 启动 (infra-037 nested-name-error-clarity)
 
 - 5 candidates 锁定 phase=59 (status 仍 backlog 直到各自 in_progress):
