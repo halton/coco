@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
 import re
 import subprocess
 import sys
@@ -102,6 +103,15 @@ EXPECTED_CURRENT_UNKNOWN_COUNT = 1
 # bump 该常量 (并复审是否新 lock 真的有效)。
 EXPECTED_CURRENT_TOTAL_NODES: int = 86
 TOTAL_NODES_TOLERANCE: int = 10
+
+# infra-P287-unknown-ids-set-lock (phase-62 #5): 锁完整 unknown_ids frozenset。
+# 现有 EXPECTED_CURRENT_UNKNOWN_COUNT 只锁数量, 若开发者一进一出 (同总数
+# 但不同成员) 替换 unknown 节点, count 锁无法发现。新增 sha 锁 frozenset
+# 的 sorted JSON canonical form → catch member 替换。
+# sha 来源: hashlib.sha256(json.dumps(sorted(unknown_ids), separators=(",",":")).encode()).hexdigest()
+# 当前实测 (15 个 unknown ids, 详见 dump_v4_sha_graph --mermaid)。
+# 未来若新增/移除 unknown 节点应有意识地 bump (同时 bump EXPECTED_CURRENT_UNKNOWN_COUNT)。
+EXPECTED_UNKNOWN_IDS_SHA = "e39251d2fa8e606c1797c52bb34a2d99b50fd67f2bef630131c8b56dae43cc0f"
 
 DOCSTRING_SENTINEL = "INFRA_059_SHA_LOCKS"
 
@@ -392,6 +402,50 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: unknown_ids frozenset sha lock (infra-P287)
+# ---------------------------------------------------------------------------
+def v6_unknown_ids_frozenset() -> None:
+    """锁完整 unknown_ids frozenset (sha256 of sorted JSON canonical form)。
+
+    若开发者一进一出替换 unknown 节点 (count 不变, 成员变了),
+    EXPECTED_CURRENT_UNKNOWN_COUNT 锁无法发现; 本 check 通过 sha 全等断言
+    catch 替换。
+    """
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--mermaid"],
+            capture_output=True, text=True, timeout=60, check=True,
+        )
+        mermaid_text = proc.stdout
+    except Exception as e:
+        _emit("V6_unknown_ids_frozenset_dump", False, f"dump err: {e!r}")
+        return
+    nodes = _derive_nodes_from_mermaid(mermaid_text)
+    unknown_ids = sorted(n["id"] for n in nodes if n.get("kind") == "unknown")
+    got_sha = hashlib.sha256(
+        json.dumps(unknown_ids, separators=(",", ":")).encode()
+    ).hexdigest()
+    if EXPECTED_UNKNOWN_IDS_SHA == "__BUMP_ME__":
+        _emit(
+            "V6_unknown_ids_frozenset_sha",
+            False,
+            f"placeholder; bump EXPECTED_UNKNOWN_IDS_SHA={got_sha} "
+            f"(n={len(unknown_ids)})",
+        )
+        return
+    ok = got_sha == EXPECTED_UNKNOWN_IDS_SHA
+    detail = (
+        f"got={got_sha[:16]} expect={EXPECTED_UNKNOWN_IDS_SHA[:16]} "
+        f"n={len(unknown_ids)}"
+    )
+    if not ok:
+        # 错误时打印 actual sorted ids 前 200 字符以便 diff
+        ids_preview = json.dumps(unknown_ids, separators=(",", ":"))[:200]
+        detail += f" actual_ids_preview={ids_preview}"
+    _emit("V6_unknown_ids_frozenset_sha", ok, detail)
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_lock()
@@ -399,6 +453,7 @@ def main() -> int:
     v3_helper_func_sha()
     v4_behavior()
     v5_reviewer_gate()
+    v6_unknown_ids_frozenset()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
