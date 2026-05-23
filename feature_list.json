@@ -7412,14 +7412,38 @@
       "area": "infra",
       "phase": 49,
       "title": "V6 regex 放宽时应用 assert_unique_needle 原则",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "V6 未来若放宽 regex 识别更多锁式样（如 r'verify_(\\w+)_(\\d+)' 变体），同步应用 assert_unique_needle 原则，避免 regex 误抓非 sha 锁字面值。",
       "dependencies": [
         "infra-038-backlog-V6-pre-flight-grep-check"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_099.py V0-V5 全 PASS (14 checks)"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_099.py",
+        "branch": "feat/infra-V6-backlog-regex-unique-needle-discipline",
+        "feat_head_sha": "d81d07c",
+        "merge_sha": "a8e877c",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_099.py",
+            "status": "PASS",
+            "phase": "closeout",
+            "tail_stdout": "[verify_infra_099][PASS] V0_verify_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_099][PASS] V0_helper_def_present expect 'def assert_unique_needle(' in lib\n[verify_infra_099][PASS] V0_helper_in_all __all__ contains 33 names\n[verify_infra_099][PASS] V0_self_main_entry expect __main__ guard + def main()\n[verify_infra_099][PASS] V0_v6_regex_constants_present needed=['_RE_REVLOCK_SINGLELINE', '_RE_REVLOCK_VERIFY_ID', '_RE_REVLOCK_EXPECTED_PATTERN'] missing=[]\n[verify_infra_099][PASS] V1_self_main_func_sha got=23b30488714538e5 expect=23b30488714538e5\n[verify_infra_099][PASS] V2_lib_file_sha got=b3005a7d9272fb06 expect=b3005a7d9272fb06\n[verify_infra_099][PASS] V3_helper_func_sha got=e3223584fbdb5f1b expect=e3223584fbdb5f1b\n[verify_infra_099][PASS] V4_1_unique_needle_no_raise count=1\n[verify_infra_099][PASS] V4_2_duplicate_needle_raises_count2 raised ValueError; msg=\"needle 不唯一: count=2, needle='000000000000000000000000000000000000000000000000000\"\n[verify_infra_099][PASS] V4_3_missing_needle_raises_count0 raised ValueError; msg=\"needle 不唯一: count=0, needle='000000000000000000000000000000000000000000000000000\"\n[verify_infra_099][PASS] V4_4_v6_regex_unique_capture_passes captured=1111111111111111 unique\n[verify_infra_099][PASS] V4_5_v6_regex_duplicate_capture_raises raised ValueError; msg=\"needle 不唯一: count=2, needle='222222222222222222222222222222222222222222222222222\"\n[verify_infra_099][PASS] V5_reviewer_lgtm_gate target=infra-V6-backlog-regex-unique-needle-discipline helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=501 reason=\"feature 'infra-V6-backlog-regex-unique-needle-discipline': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=501 OK\"\n[verify_infra_099][SUMMARY] ALL PASS (14 checks)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "a8e877c"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-099 verifier 把 'V6 regex 抓 needle → assert_unique_needle 唯一性收口' 这条 P258/infra-040-backlog 教训锁成机器检查: V0 scaffolding (5) + V1/V2/V3 三层 sha cascade + V4 helper 三出口 (1/count=2/count=0) + V4_4/V4_5 regex+helper 复合演示 + V5 closeout gate, 共 14 checks; mutation probe 实测 silent-return 与 >=2 偏移两种 mutant 均被 V4 + V3 sha 双层抓住; 未触碰 _verify_lib.py 函数体, 仅复刻 V6 singleline regex 供本地演示并由 V2 file sha 锁监管漂移; placeholder 路径 fail-loud, 当前 expected sha 三项均为实值无残留; V5 pending FAIL 符合 P278 6 信号 closeout-gate 设计. LGTM."
+        }
+      }
     },
     {
       "id": "infra-053-backlog-classdef-fills-distinct-check",

@@ -7575,3 +7575,14 @@ phase-46 5 候选 promoted to not_started：
   - 方案 B 触碰 _verify_lib.py 函数体禁区，方案 A 仅改 AGENTS.md/CLAUDE.md 价值过低，故选 C STALE demote
   - feature demote: status=backlog, priority=999, phase=null, notes 追加 STALE 原因
   - smoke PASS（venv py3.13）
+
+## Session 2026-05-23 — infra-V6-backlog-regex-unique-needle-discipline #3.49 closeout
+
+- feature: infra-V6-backlog-regex-unique-needle-discipline (phase-49 #3.49) status: not_started → passing
+- branch: feat/infra-V6-backlog-regex-unique-needle-discipline HEAD=d81d07c
+- merge: --no-ff into main → merge sha a8e877c (main HEAD after closeout commit will follow)
+- verifier: scripts/verify_infra_099.py — V0-V5 ALL PASS (14 checks)
+- closeout self-check: scripts/verify_infra_062.py P278 6-信号 gate — ALL PASS (30 checks)
+- smoke: ./init.sh PASS (12 smokes)
+- Reviewer: sub_agent_fresh_context LGTM (summary 501 chars 入 evidence)
+- evidence dict 含 verifier / verify_runs[tail_stdout] / closeout_verify.main_head_sha=a8e877c / reviewer.{reviewer_kind,verdict,summary}
