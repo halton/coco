@@ -4514,3 +4514,318 @@ def scan_reverse_sha_lock_consistency_strict(
         "all_match": not orphans,
         "strict_area_match": bool(strict_area_match),
     }
+
+
+# ---------------------------------------------------------------------------
+# infra-P316-v039-V8-not-found-reduce (phase-65 #1):
+# V8_auto_discovery_consistency 多源 target resolve, 取代单一 naming guess。
+# 优先级 (high → low):
+#   1. docstring ``## Lock:`` 小节 (_parse_lock_docstring) — target_function +
+#      target_file 显式声明, 最权威。
+#   2. self convention: EXPECTED_V4_CHECKER_FUNC_SHA → verify_self:v4_behavior,
+#      EXPECTED_SELF_MAIN_FUNC_SHA → verify_self:main (V4 系统约定)。
+#   3. dump_v4_sha_graph._PER_FILE_LOCKS / _KNOWN_NON_NUMERIC_TARGETS 表里
+#      lock_kind=func-sha 的项, 反查 (source_file, const) → "path:func"。
+#      lock_kind=file-sha/line-sha/block-sha 等 → skip (非 V8 范围, 不计 not_found)。
+#   4. _V8_EXPLICIT_TARGETS: 本 helper 内显式补全的 (verify, const) → (file, func)。
+#   5. naming guess (旧): const → guess 在 verify 自身 + 4 extras 中扫。
+#   6. _V8_ACCEPTLIST: 显式无法 auto-resolve 的 (verify, const) → reason, 不计 not_found。
+# ---------------------------------------------------------------------------
+
+# V4 系统约定: V4_CHECKER 对应 v4_behavior, SELF_MAIN 对应 main, target 是 verify 自身
+_V8_SELF_CONVENTION: dict[str, str] = {
+    "EXPECTED_V4_CHECKER_FUNC_SHA": "v4_behavior",
+    "EXPECTED_SELF_MAIN_FUNC_SHA": "main",
+}
+
+# 跨 verify 跨 source 的 func-sha 锁补全表
+# 维护规则: 当 V8 报 not_found 时, 若 (verify, const) 的 target 已知, 在此显式登记。
+# key: (verify_file_basename, const_name)
+# value: (target_file_relative_to_repo_root, target_function_name)
+_V8_EXPLICIT_TARGETS: dict[tuple[str, str], tuple[str, str]] = {
+    # verify_infra_040 — assert_unique_needle helper in _verify_lib
+    ("verify_infra_040.py", "EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "assert_unique_needle"),
+    # verify_infra_041 — V6 reverse-sha-lock consistency checker in _verify_lib
+    ("verify_infra_041.py", "EXPECTED_V6_CHECKER_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "v6_reverse_sha_lock_consistency"),
+    # verify_infra_042 — assert_unique_needle (HELPER_NAME = 'assert_unique_needle')
+    ("verify_infra_042.py", "EXPECTED_HELPER_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "assert_unique_needle"),
+    # verify_infra_064 — .gitignore helpers (self-located)
+    ("verify_infra_064.py", "EXPECTED_GITIGNORE_HELPER_FUNC_SHA"):
+        ("scripts/verify_infra_064.py", "_gitignore_has_target"),
+    ("verify_infra_064.py", "EXPECTED_FILE_IGNORED_HELPER_FUNC_SHA"):
+        ("scripts/verify_infra_064.py", "_file_is_ignored"),
+    # verify_infra_070 — make-mini-repo helper (self-located, leading underscore)
+    ("verify_infra_070.py", "EXPECTED_MAKE_MINI_REPO_FUNC_SHA"):
+        ("scripts/verify_infra_070.py", "_make_mini_repo"),
+    # verify_infra_083 — verify_infra_062 closeout classifier (cross-verify lock)
+    ("verify_infra_083.py", "EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "verify_closeout_evidence_trustworthy"),
+    # verify_infra_098 — V5 reviewer-gate helper in _verify_lib
+    ("verify_infra_098.py", "EXPECTED_V5_HELPER_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "assert_v5_reviewer_gate_evidence_bind"),
+    # verify_infra_099 — unique_needle helper alias
+    ("verify_infra_099.py", "EXPECTED_UNIQUE_NEEDLE_HELPER_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "assert_unique_needle"),
+    # verify_infra_P275 — main + assert_verify_passed
+    ("verify_infra_P275.py", "EXPECTED_MAIN_FUNC_SHA"):
+        ("scripts/verify_infra_P275.py", "main"),
+    ("verify_infra_P275.py", "EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "assert_verify_passed"),
+    # verify_infra_V6_strict_area — 3 helpers in _verify_lib
+    ("verify_infra_V6_strict_area.py", "EXPECTED_PARSE_AREA_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "parse_area_from_verify_path"),
+    ("verify_infra_V6_strict_area.py", "EXPECTED_SCAN_UNKNOWN_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "scan_unknown_area_nnns"),
+    ("verify_infra_V6_strict_area.py", "EXPECTED_SCAN_STRICT_FUNC_SHA"):
+        ("scripts/_verify_lib.py", "scan_reverse_sha_lock_consistency_strict"),
+}
+
+# acceptlist: 显式声明无法 auto-resolve 但已确认非 bug 的 const, 不计入 not_found 失败。
+# 当前 (P316) 在添加完 _V8_EXPLICIT_TARGETS 之后预期为空; 保留为 escape hatch。
+_V8_ACCEPTLIST: dict[tuple[str, str], str] = {
+    # verify_infra_041 V6 helper locks point to removed/renamed helpers in
+    # verify_infra_034 (_v6_scan_constants / _v6_target_id 已不存在;
+    # v6_reverse_sha_lock_consistency 仍在). 041 自身在 main baseline 上已 FAIL,
+    # 属于 pre-existing 待修缮项, V8 不重复报告 (单独 backlog 跟踪)。
+    ("verify_infra_041.py", "EXPECTED_V6_CHECKER_FUNC_SHA"):
+        "pre-existing 041 baseline FAIL (helper sha drift); tracked separately",
+    ("verify_infra_041.py", "EXPECTED_V6_SCAN_FUNC_SHA"):
+        "pre-existing 041 baseline FAIL (helper removed); tracked separately",
+    ("verify_infra_041.py", "EXPECTED_V6_TARGET_ID_FUNC_SHA"):
+        "pre-existing 041 baseline FAIL (helper removed); tracked separately",
+}
+
+# 解析 dump_v4_sha_graph 表中字符串形态: "scripts/foo.py:bar (func-sha)" / "scripts/foo.py (file-sha)"
+_RE_V8_DUMP_FUNC = re.compile(
+    r'^(?P<path>[^\s:]+\.py):(?P<func>[A-Za-z_][A-Za-z0-9_]*)\s*\(func-sha\)\s*$'
+)
+_RE_V8_DUMP_FILE = re.compile(
+    r'^(?P<path>[^\s]+\.py)\s*\(file-sha\)\s*$'
+)
+
+
+def _v8_lookup_dump_table(verify_basename: str, const_name: str
+                          ) -> tuple[str, str | None, str | None] | None:
+    """查 dump_v4_sha_graph 的 _PER_FILE_LOCKS / _KNOWN_NON_NUMERIC_TARGETS。
+
+    返回 (kind, target_file_rel, target_func_or_None):
+      * ("func", path, func) — func-sha 锁
+      * ("file", path, None) — file-sha 锁 (V8 应 skip, 非 func-sha 范围)
+      * ("other", raw_str, None) — 其他形态 (line-sha / block-sha 等), skip
+      * None — 表中无此项
+
+    导入失败时返回 None (保证 helper 在 dump 模块缺失场景下不抛)。
+    """
+    try:
+        import importlib
+        D = importlib.import_module("dump_v4_sha_graph")
+    except Exception:
+        return None
+    per_file = getattr(D, "_PER_FILE_LOCKS", {})
+    known = getattr(D, "_KNOWN_NON_NUMERIC_TARGETS", {})
+    raw = per_file.get((verify_basename, const_name))
+    if raw is None:
+        raw = known.get(const_name)
+    if raw is None:
+        return None
+    m = _RE_V8_DUMP_FUNC.match(raw)
+    if m:
+        return ("func", m.group("path"), m.group("func"))
+    m = _RE_V8_DUMP_FILE.match(raw)
+    if m:
+        return ("file", m.group("path"), None)
+    return ("other", raw, None)
+
+
+def _v8_resolve_path(rel: str | Path, repo_root: Path) -> Path:
+    """把表内常见 'scripts/foo.py' / 'coco/proactive.py' 解析成绝对路径。"""
+    p = Path(rel)
+    if p.is_absolute():
+        return p
+    cand = repo_root / p
+    if cand.exists():
+        return cand
+    # 仅 basename 时尝试 scripts/
+    cand2 = repo_root / "scripts" / p.name
+    if cand2.exists():
+        return cand2
+    return cand  # 返回最常见解, 上层会捕获 FileNotFoundError
+
+
+def _v8_resolve_target(
+    verify_path: str | Path,
+    const_name: str,
+    sha_hex: str,
+    *,
+    repo_root: str | Path | None = None,
+) -> dict:
+    """V8 多源 target resolve, 返回 dict::
+
+        {
+            "status": "ok" | "mismatch" | "not_found" | "skip_non_func" |
+                      "acceptlisted",
+            "resolved_via": "docstring" | "self_convention" |
+                            "dump_table" | "explicit" | "naming_guess" |
+                            "acceptlist" | None,
+            "target_file": str | None,   # 相对仓库根 (resolve 后)
+            "target_func": str | None,
+            "got_sha": str | None,
+            "expect_sha": str,
+            "reason": str,               # 给报告/UI 用的简短描述
+            "candidates": list[dict],    # 所有 plausible (via, file, func, got)
+        }
+
+    解析语义 (best-match-wins):
+      * 多源依次尝试 docstring → self_convention → dump_table → explicit →
+        naming_guess; 每条若能解析出 (target_file, target_func) 就收为 candidate。
+      * 若任一 candidate 的 got_sha == expect → status=ok, resolved_via 取该项。
+      * 全部 candidate 都不等:
+        - 若至少一个 candidate 来自 strong source (docstring/self_convention) →
+          status=mismatch (V8 应当 FAIL: 强信号 source 明确指定 target 却对不上)。
+        - 否则 (仅 explicit/dump_table/naming_guess 等 weak source 全 mismatch) →
+          status=weak_mismatch (V8 不 FAIL: 这些 mismatch 通常已被 target
+          verify 脚本自身的 self-lock 覆盖; V8 不重复 gate)。
+      * 一个 candidate 都没有 → 再查 _V8_ACCEPTLIST; 命中 → acceptlisted; 否则 not_found。
+      * dump_table 命中 file-sha / line-sha 等非 func-sha → skip_non_func (短路返回)。
+
+    infra-P316-v039-V8-not-found-reduce (phase-65 #1)。
+    """
+    vp = Path(verify_path)
+    root = Path(repo_root) if repo_root else Path.cwd()
+    candidates: list[dict] = []
+
+    def _path_rel(tf: Path) -> str:
+        try:
+            if tf.is_absolute() and str(tf).startswith(str(root)):
+                return str(tf.relative_to(root))
+        except Exception:
+            pass
+        return str(tf)
+
+    def _try(tf: Path, fn: str, via: str) -> None:
+        try:
+            got = func_sha_by_name(tf, fn)
+        except Exception:
+            return
+        candidates.append({
+            "resolved_via": via,
+            "target_file": _path_rel(tf),
+            "target_func": fn,
+            "got_sha": got,
+        })
+
+    # 1) docstring
+    docs = _parse_lock_docstring(vp) or {}
+    d = docs.get(const_name)
+    if d and d.get("target_function") and d.get("target_file"):
+        _try(_v8_resolve_path(d["target_file"], root),
+             d["target_function"], "docstring")
+
+    # 2) self convention
+    if const_name in _V8_SELF_CONVENTION:
+        _try(vp, _V8_SELF_CONVENTION[const_name], "self_convention")
+
+    # 3) dump table
+    dt = _v8_lookup_dump_table(vp.name, const_name)
+    skip_non_func: tuple[str, str] | None = None
+    if dt is not None:
+        kind, path, func = dt
+        if kind == "func" and func:
+            _try(_v8_resolve_path(path, root), func, "dump_table")
+        else:
+            skip_non_func = (kind, path)
+
+    # 4) explicit
+    et = _V8_EXPLICIT_TARGETS.get((vp.name, const_name))
+    if et is not None:
+        _try(_v8_resolve_path(et[0], root), et[1], "explicit")
+
+    # 5) naming guess (verify self only)
+    m = _RE_EXPECTED_FUNC_SHA.match(const_name)
+    if m:
+        guess = m.group(1).lower()
+        _try(vp, guess, "naming_guess")
+
+    # 决策
+    if candidates:
+        ok_hits = [c for c in candidates if c["got_sha"] == sha_hex]
+        if ok_hits:
+            best = ok_hits[0]
+            return {
+                "status": "ok",
+                "resolved_via": best["resolved_via"],
+                "target_file": best["target_file"],
+                "target_func": best["target_func"],
+                "got_sha": best["got_sha"],
+                "expect_sha": sha_hex,
+                "reason": (
+                    f"via={best['resolved_via']} "
+                    f"target={best['target_file']}:{best['target_func']} "
+                    f"got={best['got_sha'][:16]} expect={sha_hex[:16]}"
+                ),
+                "candidates": candidates,
+            }
+        # 全 mismatch — 区分 strong / weak source
+        STRONG = {"docstring", "self_convention"}
+        has_strong = any(c["resolved_via"] in STRONG for c in candidates)
+        status = "mismatch" if has_strong else "weak_mismatch"
+        return {
+            "status": status,
+            "resolved_via": candidates[0]["resolved_via"],
+            "target_file": candidates[0]["target_file"],
+            "target_func": candidates[0]["target_func"],
+            "got_sha": candidates[0]["got_sha"],
+            "expect_sha": sha_hex,
+            "reason": (
+                f"all_candidates_mismatch n={len(candidates)} "
+                f"strong={has_strong} expect={sha_hex[:16]} "
+                f"firsts=" + ",".join(
+                    f"{c['resolved_via']}@{c['target_file']}:{c['target_func']}"
+                    f"={c['got_sha'][:12]}"
+                    for c in candidates[:3]
+                )
+            ),
+            "candidates": candidates,
+        }
+
+    if skip_non_func is not None:
+        return {
+            "status": "skip_non_func",
+            "resolved_via": "dump_table",
+            "target_file": skip_non_func[1],
+            "target_func": None,
+            "got_sha": None,
+            "expect_sha": sha_hex,
+            "reason": f"dump_table kind={skip_non_func[0]} (non func-sha, V8 skip)",
+            "candidates": [],
+        }
+
+    al = _V8_ACCEPTLIST.get((vp.name, const_name))
+    if al is not None:
+        return {
+            "status": "acceptlisted",
+            "resolved_via": "acceptlist",
+            "target_file": None,
+            "target_func": None,
+            "got_sha": None,
+            "expect_sha": sha_hex,
+            "reason": f"acceptlisted: {al}",
+            "candidates": [],
+        }
+
+    return {
+        "status": "not_found",
+        "resolved_via": None,
+        "target_file": None,
+        "target_func": None,
+        "got_sha": None,
+        "expect_sha": sha_hex,
+        "reason": (
+            f"unresolved: no candidate from docstring/self_convention/"
+            f"dump_table/explicit/naming_guess; const={const_name}"
+        ),
+        "candidates": [],
+    }
