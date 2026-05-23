@@ -8797,3 +8797,17 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - #5 infra-P287 V6 unknown_ids frozenset sha lock (成份漂移检测)
 
 下一步: 进入 phase-63 planning. 候选起点从 feature_list.json status=backlog 中按 priority 升序挑选 (priority<999 优先), 主线候选包括 infra-110-backlog-docstring-narrative-update-post-p290-func-lock 与其余 V6/V7 类后续锁项. 主会话进入 phase-63 候选规划.
+
+## Session 2026-05-24 phase-63 planning
+
+phase-62 全 5/5 已收官 (main HEAD=237eca9). 从 backlog pool (86 项) 挑选 5 个 candidate, 分散于不同 verify 脚本, 优先 V6/V7 锁链巩固与 docstring/AST 模式推广. 已避开 STALE (infra-P291-extend2-migrate-remaining-26-legacy-V5 已 closed_).
+
+phase-63 5 个 candidate (priority 205-209):
+
+- #1 (priority=205, in_progress) **infra-V6-backlog-scan-ast-based**: scan_reverse_sha_locks 用 ast 替代 regex, 规避字面量假阳性. 与刚收官 P287 unknown_ids frozenset 同属 V6 体系自然延续, 为后续 V6/V7 项目提供 AST 工具基础.
+- #2 (priority=206) **infra-039-backlog-infer-target-auto-discovery**: _infer_target 扫 EXPECTED_*_FUNC_SHA 自动推 func 名 + AST 验证. 减少手动维护 hint 表.
+- #3 (priority=207) **infra-P289-per-file-locks-auto-derive**: _PER_FILE_LOCKS 从 verify 脚本 docstring 自动推导, 替代硬编码表.
+- #4 (priority=208) **infra-V6-backlog-strict-area-match-mode**: V6 加 NNN→area 强匹配 opt-in 严格模式. 防 area 漂移.
+- #5 (priority=209) **infra-033-backlog-multi-verify-venv-docstring**: 把 infra-024 上确立的 "运行环境 docstring + sha256 + sentinel meta-verify" 模式推广到剩余 verify 脚本.
+
+主会话进入 phase-63 持续开发模式. 第 1 个 candidate 已派 Engineer.
