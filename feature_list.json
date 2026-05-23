@@ -9119,8 +9119,9 @@
             {
               "name": "verify_infra_060",
               "verifier": "scripts/verify_infra_060.py",
-              "status": "FAIL_pre_existing",
+              "status": "FAIL",
               "freshness_anchor": "post-merge-rerun",
+              "pre_existing_baseline_sha": "0410e1e",
               "note": "pre-existing baseline FAIL on 0410e1e; P275 cascade 引入新 lib lock EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA, classifier 尚未识别该新增 lib func sha (unknown_count 由 baseline 增至 11). 待 infra-P285 classifier 升级覆盖 lib func sha 后自然消化, 与 P275 本身正确性无关.",
               "tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=11 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA', 'unknown_EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_MAIN_FUNC_SHA', 'unknown_EXPECTED_MAKE_MINI_REPO_FUNC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][FAIL] V4_original_13_unknown_eliminated leaked=['unknown_EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA']\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 2/14: ['V4_real_unknown_count_eq_one', 'V4_original_13_unknown_eliminated']"
             }
