@@ -6495,12 +6495,125 @@
       "area": "infra",
       "phase": 51,
       "title": "pull_request_template.md 缩到 5-6 行减少常规 PR 模板噪音",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-040 closeout Reviewer 建议",
       "scope": "把默认 .github/pull_request_template.md 缩到 5-6 行最小化模式（only 引导 verify-script 类 PR 切到 ?template=verify-script.md），减少常规非 verify-script PR 的模板噪音。",
       "dependencies": [
         "infra-040"
+      ],
+      "verification": [
+        "scripts/verify_infra_040.py V0-V5 ALL PASS 9/9 (default tmpl size 615→249, 5 行最小化模式 + verify-script.md compare URL hint)",
+        "scripts/verify_infra_062.py P278 closeout-verify-trustworthy gate ALL PASS 30/30",
+        "baseline @ main c818422 (pre-merge) verify_infra_040 ALL PASS 9/9 (V2 sha 8d0cb524 仍锁 verify-script.md, 与本 feature 改 default tmpl 解耦)",
+        "./init.sh smoke ALL PASS",
+        "Reviewer (sub-agent fresh-context): LGTM. 见 evidence.reviewer.summary"
+      ],
+      "closed_at": "2026-05-23",
+      "reviewer_lgtm": true,
+      "reviewer_subagent": true,
+      "evidence": {
+        "verifier": "scripts/verify_infra_040.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_040.py",
+            "name": "scripts/verify_infra_040.py",
+            "status": "PASS",
+            "freshness_anchor": "387583b",
+            "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=249\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "name": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "freshness_anchor": "387583b",
+            "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=305 enforced=152 soft_skipped=153 violations=0 fire=True fired_features=31\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=55 enforced=8 soft_skipped=47 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=55 enforced=34 soft_skipped=21 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=33 enforced=24 legacy_allowlisted=9 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=55 enforced=46 soft_skipped=9 violations=0 min_count=3 first_violation=None\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=55 enforced=40 soft_skipped=15 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=55 enforced=37 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=55 enforced=37 soft_skipped=18 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=55 enforced=37 soft_skipped=18 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_040.py (baseline @ main c818422 pre-merge)",
+            "name": "scripts/verify_infra_040.py",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+          }
+        ],
+        "smoke_tail_stdout": "==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=14 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "pre_existing_baseline_sha": "c818422",
+        "baseline_tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-040-backlog default tmpl minimal-mode 合理: 新 5 行内容保留 verify-script 模板切换引导 (compare URL 加 `?template=verify-script.md`), 缩到一两句话描述 + HTML 注释, 符合 GitHub 默认 PR 模板\"轻引导\"惯例。verify_infra_040 9/9 PASS (含 mutation probe + baseline c818422 双求证)。V0 锁覆盖范围不足 (只锁 size>0, 不锁内容/sha) 是已知设计选择, 不在本 feature scope 内 — 本 feature 是\"精简内容\", 不是\"加锁\"。若需 default tmpl 内容反向回退保护应单独立 backlog (建议 P2)。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "未来可加 V0b_default_tmpl_contains_verify_template_hint (grep `?template=verify-script.md`) 或 V2b_default_tmpl_file_sha 锁 default tmpl 内容反向回退保护 — 已 promote 为 infra-040-backlog-default-tmpl-content-lock"
+            ]
+          }
+        },
+        "closeout_verify": {
+          "main_head_sha": "387583b",
+          "merge_commit_sha": "387583b",
+          "baseline_head_echo": "c818422",
+          "pre_existing_baseline_sha": "c818422",
+          "baseline_tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-040-backlog default tmpl minimal-mode 合理: 新 5 行内容保留 verify-script 模板切换引导 (compare URL 加 `?template=verify-script.md`), 缩到一两句话描述 + HTML 注释, 符合 GitHub 默认 PR 模板\"轻引导\"惯例。verify_infra_040 9/9 PASS (含 mutation probe + baseline c818422 双求证)。V0 锁覆盖范围不足 (只锁 size>0, 不锁内容/sha) 是已知设计选择, 不在本 feature scope 内 — 本 feature 是\"精简内容\", 不是\"加锁\"。若需 default tmpl 内容反向回退保护应单独立 backlog (建议 P2)。",
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "未来可加 V0b_default_tmpl_contains_verify_template_hint (grep `?template=verify-script.md`) 或 V2b_default_tmpl_file_sha 锁 default tmpl 内容反向回退保护 — 已 promote 为 infra-040-backlog-default-tmpl-content-lock"
+              ]
+            },
+            "checks_run": [
+              "verify_infra_040 9/9 PASS @ merge HEAD 387583b",
+              "verify_infra_062 30/30 PASS @ merge HEAD 387583b",
+              "verify_infra_040 baseline 9/9 PASS @ main c818422 (pre-merge)",
+              "./init.sh smoke ALL PASS"
+            ]
+          },
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_040.py",
+              "name": "scripts/verify_infra_040.py",
+              "status": "PASS",
+              "freshness_anchor": "387583b",
+              "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=249\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "name": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "387583b",
+              "tail_stdout": "[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=[\"verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)\"]\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=305 enforced=152 soft_skipped=153 violations=0 fire=True fired_features=31\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=55 enforced=8 soft_skipped=47 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=55 enforced=34 soft_skipped=21 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=33 enforced=24 legacy_allowlisted=9 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=55 enforced=46 soft_skipped=9 violations=0 min_count=3 first_violation=None\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=55 enforced=40 soft_skipped=15 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=55 enforced=37 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=55 enforced=37 soft_skipped=18 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=55 enforced=37 soft_skipped=18 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=55 enforced=37 soft_skipped=18 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "script": "scripts/verify_infra_040.py (baseline @ main c818422 pre-merge)",
+              "name": "scripts/verify_infra_040.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_040][PASS] V0_verify_tmpl_exists /Users/halton/work/coco/.github/PULL_REQUEST_TEMPLATE/verify-script.md size=1882\n[verify_infra_040][PASS] V0_default_tmpl_exists /Users/halton/work/coco/.github/pull_request_template.md size=615\n[verify_infra_040][PASS] V1_docstring_sentinel sentinel=INFRA_040_SHA_LOCKS\n[verify_infra_040][PASS] V1_self_checker_func_sha got=29a26bae07566dda expect=29a26bae07566dda\n[verify_infra_040][PASS] V2_verify_tmpl_file_sha got=8d0cb524ff580ce3 expect=8d0cb524ff580ce3\n[verify_infra_040][PASS] V3_mutant_detected missing=['锁类型选择']\n[verify_infra_040][PASS] V4_anchors all 9 anchors found\n[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][SUMMARY] ALL PASS (9 checks)"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "infra-040-backlog-default-tmpl-content-lock",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "default pull_request_template.md 内容反向回退保护 (V0b grep hint 或 V2b sha lock)",
+      "status": "backlog",
+      "created_at": "2026-05-23",
+      "source": "infra-040-backlog-default-tmpl-minimal-mode #4.51 closeout Reviewer P2 findings",
+      "scope": "为 .github/pull_request_template.md 加内容反向回退保护: (a) V0b_default_tmpl_contains_verify_template_hint grep `?template=verify-script.md`, 或 (b) V2b_default_tmpl_file_sha 锁 default tmpl sha — 防止默认模板内容被回退覆盖,丢失 verify-script 切换引导。当前 V0 只锁 size>0 不锁内容。",
+      "dependencies": [
+        "infra-040-backlog-default-tmpl-minimal-mode"
       ],
       "verification": []
     },
@@ -7313,7 +7426,11 @@
           "reviewer_kind": "sub_agent_fresh_context",
           "verdict": "LGTM",
           "summary": "regex 位数策略统一 \\d{2,4} 兼容 NN/NNN/NNNN 三档, _infer_target 函数体与 _verify_lib 均未触碰; cascade 8 处 EXPECTED_DUMP_FILE_SHA bump 完整; 060 V4_real_unknown_count_eq_one FAIL 与 main HEAD=151d6e1 同 FAIL 同 ids 确认 pre-existing 无关; mutation probe 显示 V2_dump_file_sha + verify_infra_044 V4_v_num_hint 语义锁联合可抓回退; Engineer 预置 evidence 但 status 仍 in_progress + reviewer.reviewer_kind=pending, 未违反 P261; regex completeness audit 显示无遗漏统一项; 可推进 closeout merge。",
-          "findings": {"P0": [], "P1": [], "P2": []}
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
         }
       }
     },

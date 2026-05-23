@@ -7743,3 +7743,19 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - ./init.sh smoke: PASS
 - Reviewer (sub-agent fresh-context): LGTM, P0/P1/P2 全空
 - status: not_started → passing
+
+## Session 2026-05-23 phase-51 #4.51 — infra-040-backlog-default-tmpl-minimal-mode closeout + 1 backlog 入账
+
+- feature_id: infra-040-backlog-default-tmpl-minimal-mode
+- pattern: backlog-direct-closeout (Reviewer fresh-context LGTM 已落, status not_started → passing)
+- main HEAD pre-merge: c818422
+- feat 分支 HEAD: c016770
+- merge commit: 387583b (merge --no-ff feat/infra-040-backlog-default-tmpl-minimal-mode)
+- 改动: .github/pull_request_template.md 缩到 5 行最小化模式 (size 615→249); 保留 verify-script.md compare URL hint (`?template=verify-script.md`) + 一两句话描述 + HTML 注释
+- verify_infra_040 @ 387583b: ALL PASS 9/9 (V2 sha 8d0cb524 不动, V0 default_tmpl_exists size=249)
+- verify_infra_062 P278 gate @ 387583b: ALL PASS 30/30
+- baseline @ main c818422 pre-merge: ALL PASS 9/9 (V2 sha 8d0cb524 仍锁 verify-script.md, 与 default tmpl 改动解耦)
+- ./init.sh smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM, P2 finding 已 promote 为 infra-040-backlog-default-tmpl-content-lock
+- 衍生 backlog 入账: infra-040-backlog-default-tmpl-content-lock (priority=999, area=infra, status=backlog, phase=null) — 为 default tmpl 加内容反向回退保护 (V0b grep hint 或 V2b sha lock)
+- status: not_started → passing
