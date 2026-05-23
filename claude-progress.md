@@ -7288,3 +7288,18 @@ phase-46 5 候选 promoted to not_started：
 - #5.46 infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline（修 verify_infra_079 V4.4 pre-existing FAIL）
 
 候选选择理由：均为 sim 内可验证、与 phase-45 V4/V6/P278/P294/P299 family 强延续、无真机依赖。
+
+## Session — 2026-05-23: phase-46 #2.46 (infra-P299-followup-engineer-stale-verify-evidence) close-out
+
+- status: not_started → passing；phase=46 priority=2.46
+- merge_commit_sha=77a2283 (e570ec0 → 77a2283)；base=e570ec0
+- verify_runs (post-merge re-run on main):
+  - verify_infra_062.py: ALL PASS (30/30), freshness_anchor=77a2283
+  - verify_infra_097.py: ALL PASS (14/14), freshness_anchor=post-merge-rerun (在 grace 内但仍标 anchor)
+  - verify_infra_088.py: ALL PASS (14/14), freshness_anchor=77a2283
+- smoke ./init.sh: PASS
+- pre-existing baseline FAIL (on e570ec0): verify_infra_066.py FAIL 2/14
+- Re-Reviewer (sub_agent_fresh_context) LGTM；反驳前 Reviewer P0 误报 (根因：工作树 dirty + pyc cache 残留)
+- Re-Reviewer P2 提醒：后续 Reviewer 跑前先 `git status` 确认 clean + 必要时 `find . -name __pycache__ -exec rm -rf {} +`，避免重复此类矛盾
+- 本 feature 引入 V4_closeout_verify_runs_freshness hard check：所有非 grace 内 feature 的 evidence.closeout_verify.verify_runs[*] 必须含非空字符串 freshness_anchor
+- close-out 拆 A+B：A 写 evidence + status，B bump main_head_sha 自指
