@@ -75,6 +75,9 @@ __all__ = [
     "assert_closeout_verify_runs_freshness",
     "assert_v5_reviewer_gate_evidence_bind",
     "scan_per_file_locks_from_docstrings",
+    "parse_area_from_verify_path",
+    "scan_unknown_area_nnns",
+    "scan_reverse_sha_lock_consistency_strict",
 ]
 
 
@@ -4385,3 +4388,129 @@ def scan_per_file_locks_from_docstrings(scripts_dir: str | Path) -> dict[tuple[s
         for const_name, meta in parsed.items():
             result[(fp.name, const_name)] = meta
     return result
+
+
+# ---------------------------------------------------------------------------
+# infra-V6-backlog-strict-area-match-mode (phase-63 #4, P???):
+# NNN→area opt-in 严格匹配模式, 降低 V6 跨-area 候选假阳性
+# ---------------------------------------------------------------------------
+# verify_<area>_<NNN>.py 文件名形态. area 仅匹配字母 (无数字、下划线允许内部),
+# 例如: verify_infra_079.py / verify_audio_003.py / verify_robot_001_daemon.py。
+# 注: trailing 部分 (NNN 之后) 可有附加段 (如 _daemon), 此处只要求 NNN 之前是 area。
+_RE_VERIFY_AREA = re.compile(r"^verify_([a-z][a-z]*)_(\d{3})(?:[._].*)?$")
+
+
+def parse_area_from_verify_path(path: str | Path) -> str | None:
+    """从 verify_*.py 文件名抽取 area (e.g. infra/audio/robot/companion/...).
+
+    返回:
+      - area 字符串 (小写字母) 若文件名形态匹配 ``verify_<area>_<NNN>(...).py``
+      - None 若不匹配 (例如 ``_verify_lib.py`` / ``verify_publish.py`` 等无 NNN 形态)
+
+    infra-V6-backlog-strict-area-match-mode (phase-63 #4)。
+    """
+    p = Path(path)
+    name = p.name
+    if not name.endswith(".py"):
+        return None
+    stem = name[:-3]
+    m = _RE_VERIFY_AREA.match(stem)
+    if not m:
+        return None
+    return m.group(1)
+
+
+def scan_unknown_area_nnns(
+    scripts_dir: str | Path,
+    known_area_nnns: frozenset[str] | set[str] | None = None,
+) -> list[str]:
+    """列出 scripts_dir 下所有 verify_*.py 中 NNN→area 推断**未登记**的 NNN。
+
+    设计:
+      - 默认 known_area_nnns=None 等价于 frozenset() (空表), 此时所有可推断 area
+        的 NNN 都视为 unknown (用于建立 V3 EXPECTED 锁基准)。
+      - 调用方可传入显式 known_area_nnns (e.g. ``frozenset({'079', '081'})``),
+        unknown = (可推断 area NNNs) - known_area_nnns。
+      - 文件名不带 NNN (例如 ``verify_publish.py`` / ``_verify_lib.py``) 不计入,
+        因为这些不参与 NNN→area 映射。
+
+    返回: sorted list[str], 每项为 3-digit NNN。
+
+    infra-V6-backlog-strict-area-match-mode (phase-63 #4)。
+    """
+    base = Path(scripts_dir)
+    if not base.is_dir():
+        return []
+    known = frozenset(known_area_nnns or [])
+    seen: set[str] = set()
+    for p in sorted(base.glob("verify_*.py")):
+        stem = p.name[:-3]
+        m = _RE_VERIFY_AREA.match(stem)
+        if not m:
+            continue
+        nnn = m.group(2)
+        if nnn in known:
+            continue
+        seen.add(nnn)
+    return sorted(seen)
+
+
+def scan_reverse_sha_lock_consistency_strict(
+    scripts_dir: str | Path,
+    strict_area_match: bool = False,
+) -> dict:
+    """V6 主入口 (strict-area opt-in 版).
+
+    strict_area_match=False (默认): 行为等价于
+    :func:`verify_reverse_sha_lock_consistency`, candidates 通过 ``_<NNN>.py$``
+    宽匹配填充, 跨 area 候选会一并列出。
+
+    strict_area_match=True: candidates 进一步过滤为与 host 同 area 的 target。
+    - host 通过 :func:`parse_area_from_verify_path` 推断 area; 若 host 无 area
+      (例如 ``_verify_lib.py``), strict 模式下 candidates 仍按 loose 行为给出
+      (因为没有 host area 锚定基准, 不应反向收紧)。
+    - target 同样推断 area, 仅保留同 area 项。
+
+    返回 dict schema 与 loose 版同, 附加 ``strict_area_match`` 字段反映入参。
+
+    infra-V6-backlog-strict-area-match-mode (phase-63 #4)。
+    """
+    base = Path(scripts_dir)
+    live = live_verify_sha_set(base)
+    live_sha_values = set(live.values())
+    scanned = scan_reverse_sha_locks(base)
+    orphans: list[dict] = []
+    for item in scanned:
+        if item.get("kind") != "verify_id":
+            continue
+        sha_val = item["sha_hex"]
+        if sha_val in live_sha_values:
+            continue
+        m = _RE_REVLOCK_VERIFY_ID.search(item["const_name"])
+        tid = m.group(1) if m else ""
+        same_id_candidates = sorted(
+            rel for rel in live
+            if re.search(rf"_{tid}\.py$", rel)
+        ) if tid else []
+        if strict_area_match and tid:
+            host_area = parse_area_from_verify_path(item["file"])
+            if host_area is not None:
+                same_id_candidates = [
+                    rel for rel in same_id_candidates
+                    if parse_area_from_verify_path(rel) == host_area
+                ]
+        orphans.append({
+            "file": item["file"],
+            "lineno": item["lineno"],
+            "const_name": item["const_name"],
+            "sha_hex": sha_val,
+            "target_id": tid,
+            "candidates": {rel: live[rel] for rel in same_id_candidates},
+        })
+    return {
+        "scanned_count": len(scanned),
+        "live_count": len(live),
+        "orphans": orphans,
+        "all_match": not orphans,
+        "strict_area_match": bool(strict_area_match),
+    }

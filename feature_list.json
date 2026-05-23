@@ -9696,7 +9696,7 @@
       "area": "infra",
       "phase": 63,
       "title": "V6 加 NNN→area 强匹配 opt-in 严格模式",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-20",
       "source": "infra-V6 closeout Reviewer 建议",
       "scope": "V6 当前同 id (NNN) 在 infra/interact/robot 多脚本会三候选列出；加 opt-in 严格模式：根据外部锁所在脚本的 area，只在同 area target 内匹配，降低假阳性候选数。",
