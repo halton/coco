@@ -1,5 +1,4 @@
 {
-  "version": 1,
   "comment": "infra-035/036/038: externalized V4 sha256 lock table for scripts/verify_infra_034.py. Maintained by scripts/bump_infra_034_v4_sha.py. Update via that helper when any listed verify is intentionally modified; verify_infra_035.py asserts schema + mutant FAIL.",
   "targets": {
     "scripts/verify_infra_018.py": "7a89b35b6db711cb1b35fb78687fd5f818d8d6ac9e29d03abedabefc67d9e9ac",
@@ -17,5 +16,6 @@
     "scripts/verify_robot_027.py": "b9aec9a6c34c2ef033ff37fca560b232a2489ae404dab20b4f818ed5925a2825",
     "scripts/verify_robot_032.py": "2a4fcb7f065d53d9ed5398e9b2c2416167907be90b4f20aa784d7062b1c02069",
     "scripts/verify_robot_033.py": "72893cd29605a78ba3166d7328e9335440c87db285b9d94c3bfe37f95df09acb"
-  }
+  },
+  "version": 1
 }

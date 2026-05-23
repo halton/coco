@@ -73,14 +73,17 @@ def bump(dry_run: bool) -> int:
         return 0
 
     data["targets"] = new_table
-    # 保留 version + comment + 排序 targets
+    # 保留 version + comment + targets, 强制 canonical 序 (infra-035-backlog #5.50):
+    # sort_keys=True 锁顶层 key 字典序 + targets 子 dict key 字典序, 保证不同
+    # Python 版本 / dict 实现下输出 bytewise 一致, 避免 v4_sha.json 键序漂移
+    # 干扰 diff 与 sha 锁链.
     out = {
         "version": data.get("version", 1),
         "comment": data.get("comment", ""),
         "targets": new_table,
     }
     V4_SHA_JSON.write_text(
-        json.dumps(out, ensure_ascii=False, indent=2, sort_keys=False) + "\n",
+        json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     # 写回再校验
