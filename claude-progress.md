@@ -7840,3 +7840,29 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - status: not_started → passing
 - phase-52 #4.52 done
 
+
+## Session 2026-05-23 phase-52 #5.52 closeout (phase-52 收官)
+
+- feature: infra-P298-verify-infra-064-helper-sha-full-coverage (verify_infra_064.py V3 _file_sha / _emit helper func sha 自锁 + cascade)
+- merge: feat/infra-P298-verify-infra-064-helper-sha-full-coverage 537ef89 → main 300f2e8 (no-ff)
+- verify_infra_064 (post-merge): ALL PASS 17/17 (V0x4 + V1x2 + V2x1 + V3x4 + V4x5 + V5x1, 含新增 V3_file_sha_helper_func_sha=bf3f234f / V3_emit_helper_func_sha=7be3e01c)
+- verify_infra_062 P278 gate: ALL PASS 30/30 (drift_detector scanned=34 v3_table=34 allowlist=0)
+- verify_infra_060 (cascade target): FAIL 1/14 V4_real_unknown_count_eq_one (pre-existing — baseline a1c0404 同 FAIL, 与本 feature 无关)
+- baseline 求证: a1c0404 跑 verify_infra_060 → 同 FAIL 1/14 V4_real_unknown_count_eq_one, 确认 pre-existing
+- ./init.sh smoke: PASS (TTS / vision / face-tracker / VAD / wake-word / power-state / config / publish 全通)
+- Reviewer round 1 sub-agent fresh-context: P0 finding — cascade 漏 bump 7 个 verifier 的 EXPECTED_DUMP_FILE_SHA
+- Reviewer round 2 sub-agent fresh-context: LGTM — cascade fix HEAD=537ef89, 8 个 verifier (039/043/044/047/048/053/054 + 060) EXPECTED_DUMP_FILE_SHA 全部 bump 到 213f3a54af907212ff3ee2afbb2ebcea173f06c75563a4cb4cd94a7cb0aef070; 7/8 ALL PASS, verify_infra_064 17/17 PASS; verify_infra_060 FAIL 经 baseline 求证 pre-existing
+- status: not_started → passing
+- phase-52 #5.52 done
+
+### phase-52 收官总结 (5/5 features done)
+
+| # | feature | status |
+|---|---|---|
+| #1.52 | infra-V6-backlog: extract V6 helpers to _verify_lib | passing |
+| #2.52 | infra-V6-backlog: bump_reverse_sha_lock helper + verify_infra_046 | passing |
+| #3.52 | infra-P294-followup-helper-tail-chars-vs-bytes-doc | passing |
+| #4.52 | infra-V6-bump-helper-lib-target | passing |
+| #5.52 | infra-P298-verify-infra-064-helper-sha-full-coverage | passing |
+
+phase-52 主轴: V6 反向 sha 锁 / helper 抽取 / NNN-agnostic target / V3 helper 全覆盖 / cascade fix。main 工作树稳定, ./init.sh smoke 持续 PASS, P278 gate ALL PASS, V3 helper func sha drift_detector 全锁。phase-52 全 5 features 全 sim-first PASS。下一 phase 由主会话规划。

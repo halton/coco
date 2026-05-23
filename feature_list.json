@@ -8113,7 +8113,7 @@
       "id": "infra-P298-verify-infra-064-helper-sha-full-coverage",
       "priority": "52-5",
       "phase": 52,
-      "status": "not_started",
+      "status": "passing",
       "area": "infra",
       "title": "verify_infra_064.py V3 helper func sha 补全 (_file_sha / _emit 自锁)",
       "created_at": "2026-05-22",
@@ -8125,8 +8125,24 @@
         "python scripts/verify_infra_064.py 全 PASS (17 checks)",
         "python scripts/verify_infra_060.py 全 PASS (cascade)"
       ],
-      "evidence": [],
-      "notes": "low-risk followup, 不阻 phase 推进; 待后续 phase backlog review 时入 milestone"
+      "evidence": [
+        "verifier: scripts/verify_infra_064.py",
+        "verify_runs: [",
+        "  {script: scripts/verify_infra_064.py, status: PASS, tail_stdout: '[verify_infra_064][PASS] V4.5_jsonl_schema_ok jsonl absent or empty (skip schema check) | [verify_infra_064][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_064__ helper_ok=True grace_skipped=True | [verify_infra_064][SUMMARY] ALL PASS (17 checks)'},",
+        "  {script: scripts/verify_infra_062.py, status: PASS, tail_stdout: '[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[] | [verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True | [verify_infra_062][SUMMARY] ALL PASS (30 checks)'},",
+        "  {script: scripts/verify_infra_060.py, status: FAIL, note: pre-existing baseline FAIL, tail_stdout: '[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=[dump_reverse_sha_lock_index, dump_v4_sha_graph] | [verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True | [verify_infra_060][SUMMARY] FAIL 1/14: [V4_real_unknown_count_eq_one]'}",
+        "]",
+        "closeout_verify.main_head_sha: 300f2e8",
+        "merge_commit_sha: 300f2e8",
+        "baseline_head_echo: a1c0404",
+        "pre_existing_baseline_sha: a1c0404",
+        "baseline_tail_stdout: '[verify_infra_060][SUMMARY] FAIL 1/14: [V4_real_unknown_count_eq_one]' (on a1c0404, same FAIL — confirms pre-existing, unrelated to this feature)",
+        "smoke_tail_stdout: '==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp | ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json'",
+        "reviewer: {reviewer_kind: sub_agent_fresh_context, verdict: LGTM, checks_run: [verify_infra_064 17/17 PASS, verify_infra_060 cascade (1 pre-existing FAIL 不计), verify_infra_039/043/044/047/048/053/054 cascade ALL PASS, verify_infra_062 30/30 PASS], summary: 'phase-52 #5.52 P298 cascade 修复 (HEAD=537ef89) 评审通过。上一轮 P0 finding (cascade 漏 7 verifier) 已修：8 个 verifier 的 EXPECTED_DUMP_FILE_SHA 常量已全部 bump 到 213f3a54af907212ff3ee2afbb2ebcea173f06c75563a4cb4cd94a7cb0aef070。7/8 verifier ALL PASS (039/043/044/047/048/053/054)，verify_infra_064 17/17 PASS。verify_infra_060 FAIL 1/14 V4_real_unknown_count_eq_one 经 baseline 求证为 pre-existing (a1c0404 同 FAIL)，与本 feature 无关。cascade 完整、SHA 锁链一致、无残留 placeholder。'}",
+        "merge commit: 300f2e8 — merge --no-ff feat/infra-P298-verify-infra-064-helper-sha-full-coverage (#5.52)",
+        "feat 分支 HEAD: 537ef89 (含 cascade fix)"
+      ],
+      "notes": "low-risk followup, 不阻 phase 推进; 已 phase-52 收官入账"
     },
     {
       "id": "infra-P273-evidence-report-accuracy",
