@@ -7664,3 +7664,26 @@ phase-46 5 候选 promoted to not_started：
 - Reviewer (sub_agent_fresh_context): LGTM (docstring sentinel + mapping needles 唯一性 / 两次 mutation probe 验证 / sha cascade 049/050/051 三处同步无遗漏)
 - feature_list.json: status=passing, evidence 全字段写入 (verifier/verify_runs/closeout_verify.main_head_sha=c2c5064/reviewer/pre_existing_baseline_sha=5f707fb/baseline_tail_stdout/smoke_tail_stdout)
 - closeout_main_head=c2c5064
+
+
+## Session 2026-05-23 — closeout #5.50 (infra-035-backlog-v4-sha-canonical-order) + phase-50 5/5 收官
+
+- feat 分支 HEAD=2435430 merged --no-ff 入 main，merge commit **4c128a0**
+- baseline 上 main HEAD=c0adfdf 跑 verify_infra_034 复现 53/2 FAIL (V5_self_subprocess + V6_orphan_reverse_locks) — pre-existing on main，与本 PR 无关；verify_infra_051 4/19 FAIL 同 #4.49 pre-existing
+- closeout 跑 verify_infra_035 ALL PASS 41/41（含新增 V6_canonical_bytes + V6_bump_sort_keys_true 双锁；mutation 双向验证均能抓 sort_keys=False 漂移）
+- verify_infra_062 (P278 closeout-verify-trustworthy gate) ALL PASS 30/30
+- ./init.sh smoke 通过
+- Reviewer (sub_agent_fresh_context): LGTM — V6 双锁经 mutation 双向验证均能抓；cascade BUMP_034_EXPECTED_SHA 已正确 bump 到 724e391b；nested dict 递归 sorted；bump 脚本唯一 json.dumps 调用点已覆盖；未触 _verify_lib.py
+- feature_list.json: status=passing, evidence 全字段写入 (verifier / verify_runs / closeout_verify.main_head_sha=4c128a0 / reviewer / pre_existing_baseline_sha=c0adfdf / baseline_tail_stdout / smoke_tail_stdout)
+- closeout_main_head=**4c128a0**
+
+### phase-50 5/5 完整收官摘要
+
+- #1.50 `infra-046-backlog-bump-reverse-sha-lock-helper` — **passing**
+- #2.50 `infra-048-backlog-render-json-target-asc-sort` — **passing**
+- #3.50 `infra-049-backlog-dump-index-kind-stats` — **STALE** (demote backlog, scope 被 #4.49 完整覆盖)
+- #4.50 `infra-050-backlog-sort-order-label-docstring` — **passing**
+- #5.50 `infra-035-backlog-v4-sha-canonical-order` — **passing**
+
+phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
+

@@ -5841,14 +5841,36 @@
       "area": "infra",
       "phase": 50,
       "title": "v4_sha.json bump 输出强制 sort_keys 规范序",
-      "status": "not_started",
+      "status": "passing",
       "source": "infra-035-reviewer",
       "scope": "scripts/bump_infra_034_v4_sha.py 当前 json.dump 未显式 sort_keys；不同 Python 版本或后续 dict 重构可能导致 v4_sha.json 键序漂移，干扰 diff 与 sha 锁。bump 输出统一 sort_keys=True + ensure_ascii=False + indent=2，保证 canonical 形式。verify-only。",
       "dependencies": [
         "infra-035"
       ],
-      "verification": [],
-      "notes": "promoted to phase-50 #5.50"
+      "verification": [
+        "scripts/verify_infra_035.py ALL PASS (41 checks; V6_canonical_bytes + V6_bump_sort_keys_true)"
+      ],
+      "notes": "promoted to phase-50 #5.50",
+      "evidence": {
+        "verifier": "scripts/verify_infra_035.py",
+        "verify_runs": [
+          {
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035][PASS] V1_scripts/verify_robot_026.py_exists /Users/halton/work/coco/scripts/verify_robot_026.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_027.py_exists /Users/halton/work/coco/scripts/verify_robot_027.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_032.py_exists /Users/halton/work/coco/scripts/verify_robot_032.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_033.py_exists /Users/halton/work/coco/scripts/verify_robot_033.py\n[verify_infra_035][PASS] V2_lock_verify_034 got=265f54b08d3099a1 expect=265f54b08d3099a1\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=724e391b89b2917d expect=724e391b89b2917d\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=1874 canonical_len=1874 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035] summary total=41 failed=0"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "4c128a0"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-035-backlog v4_sha.json canonical 字节序锁 LGTM. V6 双锁 (canonical bytes + bump src sort_keys=True 字面量) 经 mutation 双向验证均能抓; 41/41 PASS; verify_infra_034 baseline 与 main 完全一致; cascade BUMP_034_EXPECTED_SHA 已正确 bump 到 724e391b; nested dict 递归 sorted; bump 脚本唯一 json.dumps 调用点已覆盖; 未触 _verify_lib.py; 062 P278 gate ALL PASS"
+        },
+        "pre_existing_baseline_sha": "c0adfdf",
+        "baseline_tail_stdout": "[verify_infra_034][PASS] V4_scripts/verify_robot_027.py_sha got=b9aec9a6c34c2ef0 expect=b9aec9a6c34c2ef0\n[verify_infra_034][PASS] V4_scripts/verify_robot_032.py_sha got=2a4fcb7f065d53d9 expect=2a4fcb7f065d53d9\n[verify_infra_034][PASS] V4_scripts/verify_robot_033.py_sha got=72893cd29605a78b expect=72893cd29605a78b\n[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][FAIL] V5_self_subprocess rc=1 stdout_lines=56\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=234\n[verify_infra_034][FAIL] V6_orphan_reverse_locks count=1; scripts/verify_infra_083.py:85 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA=1055318f4513bbb6 (id=062; live same-id: scripts/verify_infra_062.py=21c0f98d5be3)\n[verify_infra_034] summary total=53 failed=2\n[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+      }
     },
     {
       "id": "infra-035-backlog-verify-infra-035-self-hash",
