@@ -7788,3 +7788,17 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - 衍生 backlog 入账: infra-V6-backlog-verify-robot-037-lib-sha-bump (priority=999, area=infra, status=backlog, phase=null) — 清理 verify_robot_037.py 持旧 lib sha a80af008 残留
 - status: in_progress → passing
 - phase-51 #5.51 done
+
+## Session 2026-05-23 — phase-52 #1.52 infra-V6-backlog-verify-robot-037-lib-sha-bump closeout
+- feature_id: infra-V6-backlog-verify-robot-037-lib-sha-bump (phase=52, priority=52-1)
+- branch: feat/infra-V6-backlog-verify-robot-037-lib-sha-bump (HEAD=73bd3b0)
+- baseline main HEAD before merge: fa901f3
+- merge_sha (--no-ff): fb8d80e (main HEAD after merge)
+- 改动: scripts/verify_robot_037.py:57 EXPECTED_VERIFY_LIB_FILE_SHA a80af0088b53116b → 933e5e89d1dd3e20 (纯 sha 字面值 bump, 单行)
+- verify_robot_037: ALL PASS (18 checks), V2_lib_file_sha got=933e5e89 expect=933e5e89
+- verify_infra_062 (P278 gate): ALL PASS (30 checks), scanned=58 enforced=38
+- baseline 求证: 在 fa901f3 上跑 verify_robot_037 → V2_lib_file_sha FAIL (got=933e5e89 expect=a80af008), 与本 feature 修复目标完全一致, 证明 bump 是 forward fix 非 false-positive
+- ./init.sh smoke: PASS (11/11)
+- Reviewer (sub-agent fresh-context): LGTM — 独立计算 sha256 匹配, mutation probe (末位 f→e) 触发 V2_lib_file_sha FAIL 证明锁有效, cascade EXPECTED_VERIFY_LIB_FILE_SHA="933e5e89 共 36 处 (35 cascade + verify_robot_037 自身) 全部一致; 无 P0/P1/P2 findings
+- status: not_started → passing
+- phase-52 #1.52 done

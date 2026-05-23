@@ -13844,11 +13844,58 @@
       "area": "infra",
       "phase": 52,
       "priority": "52-1",
-      "status": "not_started",
+      "status": "passing",
+      "branch": "feat/infra-V6-backlog-verify-robot-037-lib-sha-bump",
       "notes": "P293 #5.51 Reviewer 发现 verify_robot_037.py:57 仍持旧 lib sha a80af008, 应 bump 到当前 933e5e89 (或后续最新)。pre-existing baseline 与 P293 无关, 但应清理。",
       "description": "phase-51 #5.51 P293 closeout 期间 Reviewer fresh-context 与 baseline 求证均观察到 verify_robot_037.py V2_lib_file_sha FAIL: EXPECTED_VERIFY_LIB_FILE_SHA=a80af0088b53116b 与当前 _verify_lib.py file sha 933e5e89d1dd3e20 不一致。在 baseline 3c40001 同样 FAIL (got=b3005a7d9272fb06), 与 P293 无关. 后续 follow-up 应把 verify_robot_037.py 的 EXPECTED_VERIFY_LIB_FILE_SHA bump 到当时 _verify_lib.py 最新 sha, 与 verify_robot_035.py + verify_infra_037/042/045/052/055-099 cascade 路径保持一致.",
       "created_at": "2026-05-23",
-      "updated_at": "2026-05-23"
+      "updated_at": "2026-05-23",
+      "verification": [
+        ".venv/bin/python scripts/verify_robot_037.py"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_robot_037.py",
+        "scripts": [
+          "scripts/verify_robot_037.py (EXPECTED_VERIFY_LIB_FILE_SHA a80af0088b53116b → 933e5e89d1dd3e20)"
+        ],
+        "closeout_verify": {
+          "main_head_sha": "fb8d80e",
+          "merge_commit_sha": "fb8d80e",
+          "baseline_head_sha": "fa901f3",
+          "pre_existing_baseline_sha": "fa901f3",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_robot_037.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_037][PASS] V1_self_checker_func_sha got=3f6c7a303b4f0a43 expect=3f6c7a303b4f0a43\n[verify_robot_037][PASS] V2_lib_file_sha got=933e5e89d1dd3e20 expect=933e5e89d1dd3e20\n[verify_robot_037][PASS] V2_read_constant_func_sha got=a06af8a80fe201ec expect=a06af8a80fe201ec\n[verify_robot_037][PASS] V3_mutant_detected mut=b208b42e7f9c60c7 baseline=a06af8a80fe201ec\n[verify_robot_037][PASS] V3_mutant_call_still_works_for_literal_str val='_HEADINGS_SECTION_SENTINEL'\n[verify_robot_037][PASS] V4_helper_load _verify_lib loaded\n[verify_robot_037][PASS] V4_helper_call val='_HEADINGS_SECTION_SENTINEL'\n[verify_robot_037][PASS] V4_value_error_missing ValueError raised as expected\n[verify_robot_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_robot_037][PASS] V4_value_error_non_literal ValueError on non-literal Path expr\n[verify_robot_037][PASS] V5_reviewer_lgtm_gate closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)\n[verify_robot_037][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=57 enforced=38 soft_skipped=19 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=57 enforced=38 soft_skipped=19 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_robot_037.py @ baseline fa901f3",
+              "status": "FAIL",
+              "tail_stdout": "[verify_robot_037][PASS] V1_self_checker_func_sha got=3f6c7a303b4f0a43 expect=3f6c7a303b4f0a43\n[verify_robot_037][FAIL] V2_lib_file_sha got=933e5e89d1dd3e20 expect=a80af0088b53116b\n[verify_robot_037][PASS] V2_read_constant_func_sha got=a06af8a80fe201ec expect=a06af8a80fe201ec\n[verify_robot_037][SUMMARY] FAILED tags: ['V2_lib_file_sha']"
+            }
+          ],
+          "baseline_tail_stdout": "[verify_robot_037][PASS] V1_self_checker_func_sha got=3f6c7a303b4f0a43 expect=3f6c7a303b4f0a43\n[verify_robot_037][FAIL] V2_lib_file_sha got=933e5e89d1dd3e20 expect=a80af0088b53116b\n[verify_robot_037][PASS] V2_read_constant_func_sha got=a06af8a80fe201ec expect=a06af8a80fe201ec\n[verify_robot_037][SUMMARY] FAILED tags: ['V2_lib_file_sha'] (pre-existing in baseline fa901f3, 与本 feature 修复目标完全一致: bump EXPECTED_VERIFY_LIB_FILE_SHA a80af008→933e5e89)",
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "verify_robot_037 EXPECTED_VERIFY_LIB_FILE_SHA bump 验证通过：独立计算 scripts/_verify_lib.py sha256 前 16 hex = 933e5e89d1dd3e20，与 verify_robot_037.py:57 锁值一致；18/18 PASS（含 V2_lib_file_sha got=933e5e89... expect=933e5e89...）；mutation probe（末位 f→e）成功触发 V2_lib_file_sha FAIL，证明锁有效；baseline 求证（fa901f3 旧锁 a80af0088b53116b）正确暴露 pre-existing FAIL ids = ['V2_lib_file_sha'] 且 got/expect mismatch 显示 933e5e89 vs a80af008；cascade 仓库内 EXPECTED_VERIFY_LIB_FILE_SHA = \"933e5e89 总数 36（35 cascade 锁 + verify_robot_037 自身），与预期一致；恢复后 final rc=0 ALL PASS。改动为纯 sha 字面值 bump，无逻辑回归风险，可 merge。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
+      }
     }
   ],
   "_meta": {
