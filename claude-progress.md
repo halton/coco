@@ -7596,3 +7596,20 @@ phase-46 5 候选 promoted to not_started：
 - smoke: ./init.sh PASS (12 smokes)
 - Reviewer: sub_agent_fresh_context LGTM (summary 501 chars 入 evidence)
 - evidence dict 含 verifier / verify_runs[tail_stdout] / closeout_verify.main_head_sha=a8e877c / reviewer.{reviewer_kind,verdict,summary}
+
+## Session 2026-05-23 — phase-49 closeout #5.49 (infra-P299-shell-verify-rc-usage-doc)
+
+- main HEAD before: d0ec0c9
+- merge: infra-P299 shell verify rc usage doc (#5.49) → main HEAD=ccbfbca
+- verify_infra_100.py: 14/14 PASS (V0_*5 + V1 self_main_func_sha + V2 agents_md_file_sha + V3 claude_md_file_sha + V4_1..V4_5 + V5_reviewer_lgtm_gate)
+- verify_infra_062.py: PASS 30/30 (P278 closeout gate)
+- smoke: ./init.sh PASS (12 smokes)
+- Reviewer: sub_agent_fresh_context LGTM (summary 342 chars 入 evidence)
+- evidence dict 含 verifier / verify_runs[tail_stdout, freshness_anchor] / closeout_verify.main_head_sha=ccbfbca / reviewer.{reviewer_kind,verdict,summary}
+
+### phase-49 5/5 完整收官
+- #1.49 STALE
+- #2.49 STALE
+- #3.49 passing
+- #4.49 passing
+- #5.49 passing — 本次 closeout

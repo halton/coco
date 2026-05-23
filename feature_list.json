@@ -8646,11 +8646,33 @@
     {
       "id": "infra-P299-shell-verify-rc-usage-doc",
       "priority": 5.49,
-      "status": "not_started",
+      "status": "passing",
       "phase": 49,
       "area": "infra",
       "title": "AGENTS.md / CLAUDE.md 文档化 verify_*.py 调用 shell 必须正确读 rc",
-      "rationale": "P294-Rx 根因暴露: round-1 Engineer 误判 'verify rc=0 bug' 实因 shell `python verify_xxx.py | tail; echo $?` 模式让 tail 的 rc 覆盖了上游 verify 脚本的真 rc, 把真 FAIL 当 PASS. 建议在 AGENTS.md / CLAUDE.md 显式写: (a) verify_*.py 必须 `python verify_xxx.py; rc=$?` 紧跟不通过任何管道, 或 (b) `set -o pipefail` 启用后再 pipe, 或 (c) 把 stdout 重定向到文件再 tail 文件 (`python verify_xxx.py > /tmp/v.log 2>&1; rc=$?; tail /tmp/v.log`). 显式禁用 `| tail; echo $?` 模式. 同步在 sub-agent brief 模板里加这条 reminder."
+      "rationale": "P294-Rx 根因暴露: round-1 Engineer 误判 'verify rc=0 bug' 实因 shell `python verify_xxx.py | tail; echo $?` 模式让 tail 的 rc 覆盖了上游 verify 脚本的真 rc, 把真 FAIL 当 PASS. 建议在 AGENTS.md / CLAUDE.md 显式写: (a) verify_*.py 必须 `python verify_xxx.py; rc=$?` 紧跟不通过任何管道, 或 (b) `set -o pipefail` 启用后再 pipe, 或 (c) 把 stdout 重定向到文件再 tail 文件 (`python verify_xxx.py > /tmp/v.log 2>&1; rc=$?; tail /tmp/v.log`). 显式禁用 `| tail; echo $?` 模式. 同步在 sub-agent brief 模板里加这条 reminder.",
+      "verification": "scripts/verify_infra_100.py",
+      "evidence": {
+        "summary": "phase-49 #5.49 P299 shell verify rc usage doc — AGENTS.md 新增 sentinel 段落含三正确形态 (rc=$? 紧跟 / set -o pipefail / stdout 重定向到文件) + 明确标注 anti-pattern `| tail; echo $?`; CLAUDE.md 加 P299 回链; verify_infra_100 14/14 PASS (V0-V4 sha cascade + sentinel 唯一 + mutation probe 全覆盖, V5 reviewer gate evidence 入档后转 PASS); Reviewer fresh-context LGTM。",
+        "verifier": "scripts/verify_infra_100.py",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_100.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_100][PASS] V0_agents_md_exists path=/Users/halton/work/coco/AGENTS.md\n[verify_infra_100][PASS] V0_claude_md_exists path=/Users/halton/work/coco/CLAUDE.md\n[verify_infra_100][PASS] V0_self_main_entry expect __main__ guard + def main()\n[verify_infra_100][PASS] V0_doc_sentinel_in_agents sentinel='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\n[verify_infra_100][PASS] V0_claude_cross_ref_in_claude_md expect 'P299' marker in CLAUDE.md\n[verify_infra_100][PASS] V1_self_main_func_sha got=8c2d2684657a54da expect=8c2d2684657a54da\n[verify_infra_100][PASS] V2_agents_md_file_sha got=68cb7a3282f8172c expect=68cb7a3282f8172c\n[verify_infra_100][PASS] V3_claude_md_file_sha got=ef8341404bebd438 expect=ef8341404bebd438\n[verify_infra_100][PASS] V4_1_agents_md_sentinel_unique sentinel unique in AGENTS.md count=1\n[verify_infra_100][PASS] V4_2_agents_md_has_three_good_forms missing=[]\n[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+            "freshness_anchor": "post-merge-rerun",
+            "name": "scripts/verify_infra_100.py"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "ccbfbca"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "P299 shell verify rc usage doc 锁定到位; sentinel 唯一 + 三正确形态全命中 + anti-pattern 明确标注 + CLAUDE.md 回链 OK; V4_1/V4_5 dogfood V6 assert_unique_needle helper, 是 #5.49 后首批 sub_agent_fresh_context-grade dogfood verifier; sha cascade (self/agents/claude) + 语义 needle 双层防护, mutation probe 全覆盖; _verify_lib.py 函数体未触; V5 FAIL 为设计意图, 评审入档后转 PASS, 可推进 closeout"
+        }
+      }
     },
     {
       "id": "infra-P299-old-verify-summary-helper-migration",
