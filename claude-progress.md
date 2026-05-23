@@ -7986,3 +7986,14 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
 - feature_list.json status: not_started → passing
 - 下一 candidate: infra-P294-backlog-verify-103-old-fstring-cleanup (#4.54)
+
+## Session 2026-05-23 (phase-54 #4.54 closeout)
+- feature: infra-P294-backlog-verify-103-old-fstring-cleanup passing
+- main HEAD: ae609a9d813888a5d691a15a23afdc63f4e17c72 (merge-commit; base b4a39a1)
+- Engineer 改: scripts/verify_infra_103.py +4/-4 — has_old_fstring 表达式 `A or (B and C)` 改写为显式加括号 `(A) or ((B) and (C))` 消除歧义 (功能等价, 不改变 V4_no_old_format_regression 检测语义)
+- cascade=0 (仅触及 verify_infra_103.py 自身, 无下游 sha lock)
+- post-merge-rerun (P278 freshness_anchor): 103 PASS (6/6), smoke rc=0, 060 FAIL 1/14 (pre-existing baseline b4a39a1, P285 unknown_count, 与 P294 无关), 062 PASS (30 emit-paths)
+- Reviewer fresh-context LGTM (sub-agent): Mutation B 精确字面量注入反证 — 把 verify_infra_062.py 内一个 SUMMARY 字符串临时替换为 062-old-style f-string sentinel, V4_no_old_format_regression old_in_stdout / old_fstring_in_src 立刻 FAIL → 复原后 PASS, 反证清理后的 has_old_fstring guard 仍能精确探测旧格式残留; baseline 区分 060 pre-existing
+- closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
+- feature_list.json status: not_started → passing
+- 下一 candidate: infra-P293-typo-guard-hash-suffix-policy (#5.54)

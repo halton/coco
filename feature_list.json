@@ -14491,14 +14491,60 @@
     {
       "id": "infra-P294-backlog-verify-103-old-fstring-cleanup",
       "priority": "54-4",
-      "status": "not_started",
+      "status": "passing",
       "phase": 54,
       "area": "infra",
       "title": "verify_infra_103 has_old_fstring dead-code / 运算符优先级清理",
-      "rationale": "来源: #4.53 Reviewer P2 finding. scripts/verify_infra_103.py:168 has_old_fstring 表达式 `A or (B and C)` 运算符优先级与命名暗示不符, 是 dead code / 易误读。建议未来清理或加括号显式标注意图。非阻塞 finding, 不影响 V4_no_old_format_regression 检测能力。"
+      "rationale": "来源: #4.53 Reviewer P2 finding. scripts/verify_infra_103.py:168 has_old_fstring 表达式 `A or (B and C)` 运算符优先级与命名暗示不符, 是 dead code / 易误读。建议未来清理或加括号显式标注意图。非阻塞 finding, 不影响 V4_no_old_format_regression 检测能力。",
+      "branch": "feat/infra-P294-backlog-verify-103-old-fstring-cleanup",
+      "evidence": {
+        "verifier": "scripts/verify_infra_103.py",
+        "freshness_anchor": "post-merge-rerun",
+        "verify_runs": [
+          {
+            "name": "verify_infra_103",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_103][PASS] V0_target_exists path=verify_infra_062.py has_main_guard=True has_main_def=True\n[verify_infra_103][PASS] V1_summary_new_format matched=True emit=30 tags=30\n[verify_infra_103][PASS] V2_docstring_terminology has_emit_paths=True has_unique_tags=True has_p294_anchor=True has_r6_header=True\n[verify_infra_103][PASS] V3_numeric_consistency summary_emit=30 pass_emit=30 summary_tags=30 unique_tags=30\n[verify_infra_103][PASS] V4_no_old_format_regression old_in_stdout=False old_fstring_in_src=False\n[verify_infra_103][PASS] V5_reviewer_lgtm_gate target=infra-P294-R6-sample-count-doc helper_ok=True grace_skipped=True reason=\"feature_id='infra-P294-R6-sample-count-doc' in grace_period (skipped)\"\n[verify_infra_103][SUMMARY] ALL PASS (6 emit-paths / 6 unique check tags)"
+          },
+          {
+            "name": "verify_infra_060",
+            "status": "FAIL",
+            "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28001\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=6 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+            "note": "pre-existing baseline FAIL at main=b4a39a1 (P285 unknown_count). unrelated to P294 (which only edits verify_infra_103.py +4/-4)."
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=67 enforced=45 soft_skipped=22 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=67 enforced=39 soft_skipped=28 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=67 enforced=39 soft_skipped=28 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=67 enforced=39 soft_skipped=28 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=67 enforced=39 soft_skipped=28 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=67 enforced=39 soft_skipped=28 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=67 enforced=39 soft_skipped=28 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "ae609a9"
+        },
+        "merge_commit_sha": "ae609a9d813888a5d691a15a23afdc63f4e17c72",
+        "baseline_head_echo": "b4a39a1",
+        "pre_existing_baseline_sha": "b4a39a1",
+        "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][PASS] V2_dump_file_sha got=f9720b4b4f7f0474 expect=f9720b4b4f7f0474\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28001\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=6 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-P294 backlog finding 转 active feature: verify_infra_103.py +4/-4 dead-code / 运算符优先级清理 — 把 has_old_fstring 表达式从 `A or (B and C)` 改写成显式加括号 `(A) or ((B) and (C))` 形态消除歧义 (功能等价, 不改变 V4_no_old_format_regression 检测语义); Mutation B 精确字面量注入反证: 把 verify_infra_062.py 内一个 SUMMARY 字符串临时替换为 062-old-style f-string sentinel, V4_no_old_format_regression old_in_stdout / old_fstring_in_src 立刻 FAIL → 复原后 PASS, 反证清理后的 has_old_fstring guard 仍能精确探测旧格式残留; cascade=0 (仅触及 verify_infra_103.py 自身, 无下游 sha lock); pre-existing baseline FAIL V060 V4_real_unknown_count_eq_one 在 main=b4a39a1 已存在 (P285 unknown_count), 与本 PR 无关; verify_infra_062 self-check ALL PASS; smoke 全 PASS; 无私有数据外泄 / 无 secret",
+          "checks_run": {
+            "mutation_test_done": "B (precise literal injection)",
+            "cascade": 0,
+            "design_pattern": "dead-code cleanup with explicit operator-precedence parens; semantic equivalence preserved"
+          },
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
+      }
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-23T01:00:00Z"
+    "last_updated": "2026-05-23T02:00:00Z"
   }
 }
