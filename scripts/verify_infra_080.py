@@ -94,6 +94,30 @@ ENROLLED_TRUE_GATE_VERIFY: Tuple[str, ...] = (
 # 历史 soft-PASS 脚本 (硬绿写法), 用于 V4_3 回归保护
 KNOWN_SOFT_PASS_VERIFY: str = "verify_infra_060.py"
 
+# ----------------------------------------------------------------------------
+# V4_3 fixture documentation (added by phase-48 #3.48):
+#
+# V4_3 模拟的 anti-pattern 场景:
+#   V5_reviewer_lgtm_gate 用硬编码 True 作为 _emit 的第二位参数 (硬绿写法,
+#   helper 的 ok 返回值未参与 emit 判定). 这是 phase-47 #1.47 之前真实仓库
+#   存在过的反模式 (历史 soft-PASS exemplar = verify_infra_060.py); graduate
+#   完成后真实仓库已无此写法, 故改用本地合成 fixture 验证 detector 仍有效.
+#
+# Enrolled (合成进 tmp fixture 文件) 的内容:
+#   - 文件名: _080_v4_3_fixture.py (写到 TemporaryDirectory 后立删)
+#   - 函数体: def v5_reviewer_gate(): _emit("V5_reviewer_lgtm_gate", True, ...)
+#   - 即一个硬编码 True 的 V5 gate 反模式样本
+#
+# detector = assert_v5_gate_emit_uses_helper_return; 期望对该 fixture 返回:
+#   - ok = False                       (检测到反模式)
+#   - violations 长度 >= 1             (至少一条违规)
+#   - 存在 arg1_source == "True" 的违规 (定位到硬编码 True 那一行)
+#
+# 同时对真实 KNOWN_SOFT_PASS_VERIFY (verify_infra_060.py) 跑一次 detector 仅
+# 作 informational 用途 (graduate 后预期 ok=True), 不作为 V4_3 通过/不通过的
+# 判定依据.
+# ----------------------------------------------------------------------------
+
 HELPER_RETURN_SCHEMA_KEYS = (
     "ok", "checked", "v5_gate_found", "calls_assert_helper",
     "helper_return_names", "emit_calls", "violations", "error",
