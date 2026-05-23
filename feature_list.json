@@ -7362,18 +7362,19 @@
     },
     {
       "id": "infra-V6-backlog-helper-docstring-clarify-live-set",
-      "priority": 5.48,
+      "priority": 999,
       "area": "infra",
-      "phase": 48,
+      "phase": null,
       "title": "_verify_lib helper docstring 显式说明 live set 自包含语义",
-      "status": "not_started",
+      "status": "backlog",
       "created_at": "2026-05-20",
       "source": "infra-V6 extract closeout Reviewer 建议",
       "scope": "_verify_lib.live_verify_sha_set / verify_reverse_sha_lock_consistency docstring 显式说明 \"_verify_lib.py 自身参与 live set\" 的语义（防止后续 contributor 误以为只扫 verify_*.py）。",
       "dependencies": [
         "infra-V6-backlog-extract-to-verify-lib"
       ],
-      "verification": []
+      "verification": [],
+      "notes": "STALE @ phase-48 #5.48: Engineer 审计 _verify_lib.live_verify_sha_set docstring 已显式写明 \"含 scripts_dir 下所有 verify_*.py + _verify_lib.py\"，且 code 169-173 行将 lib 自身加入 targets 与 docstring 自洽; verify_reverse_sha_lock_consistency 通过 live_verify_sha_set 间接覆盖该语义. 补任何 helper 函数体说明都会触发 LIB sha 全链 36+ cascade（方案 B 禁用），而方案 A 在 module-level 加注释亦无新增信息. closed_as_already_done."
     },
     {
       "id": "infra-V6-backlog-strict-area-match-mode",
@@ -13248,13 +13249,14 @@
     },
     {
       "id": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true",
-      "priority": 4.48,
-      "status": "not_started",
-      "phase": 48,
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
       "area": "infra",
       "title": "080 V4_4 mutant regex 显式断言 substituted=True",
       "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_4 mutant 替换当前生效 (n_sub=1)，但 regex 写死；未来 emit 形变化 (例如不同间距/换行) 可能 substituted=0 时静默走过 (mutant 未触发但 v_count 仍偶然合规)。建议显式断言 substituted_count >= 1 否则 FAIL。",
-      "acceptance": "080 V4_4 在 substituted=0 时 raise/FAIL；mutant detector 不再静默漂"
+      "acceptance": "080 V4_4 在 substituted=0 时 raise/FAIL；mutant detector 不再静默漂",
+      "notes": "STALE @ phase-48 #4.48: Engineer 审计 V4_4 当前 emit 已含 substituted=True / n_sub=1 / has_True_violation=True / mutant_ok=False / v_count=1，五项语义断言全覆盖（且 has_True_violation 由 detector arg1_source==\"True\" 复核，强于纯文本搜串）. closed_as_already_done."
     },
     {
       "id": "infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list",
@@ -13305,7 +13307,13 @@
             "062 30/30",
             "smoke"
           ],
-          "findings": {"P0": [], "P1": [], "P2": ["注释中 '立删' 措辞略不严谨, 实际是 with TemporaryDirectory 块结束自动清理（行为等价, 不阻 merge）"]}
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "注释中 '立删' 措辞略不严谨, 实际是 with TemporaryDirectory 块结束自动清理（行为等价, 不阻 merge）"
+            ]
+          }
         },
         "freshness_anchor": "post-merge-rerun",
         "closeout_notes": "纯文档增强 +24 行模块顶层注释, 零行为变更, V1/V3 sha 未漂移. P2: 注释中 '立删' 应为 'with TemporaryDirectory 块结束自动清理'（行为等价, 不阻 merge）"

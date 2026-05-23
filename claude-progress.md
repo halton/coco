@@ -1,5 +1,13 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-48 #4.48 + #5.48 STALE demote (closeout phase-48 收官)
+
+- #4.48 `infra-V6-backlog-080-v4-4-mutant-assert-substituted-true`: Engineer 审计 V4_4 当前 emit 已含 substituted=True / n_sub=1 / has_True_violation=True / mutant_ok=False / v_count=1，五项语义断言全覆盖（且 has_True_violation 由 detector arg1_source=="True" 复核，强于纯文本搜串）。STALE demote → status=backlog, priority=999, phase=null, closed_as_already_done.
+- #5.48 `infra-V6-backlog-helper-docstring-clarify-live-set`: Engineer 审计 `_verify_lib.live_verify_sha_set` docstring (line 164) 已显式写明"含 scripts_dir 下所有 verify_*.py + _verify_lib.py"，且 code 169-173 行实际把 lib 自身加入 targets 与 docstring 自洽；`verify_reverse_sha_lock_consistency` 通过 `live_verify_sha_set` 间接覆盖该语义。补任何 helper 函数体说明会触发 LIB sha 全链 36+ cascade（方案 B 禁用），方案 A 在 module-level 加注释无新增信息。STALE demote → status=backlog, priority=999, phase=null, closed_as_already_done.
+- verify_infra_062: 30/30 PASS (P278 self-check 含)
+- smoke: PASS
+- phase-48 终态：3 passing (#1.48/#2.48/#3.48) + 2 STALE (#4.48/#5.48) = 5/5 完成。
+
 ## Session 2026-05-23 — phase-48 #3.48 infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list (Closeout)
 
 - merge: feat/infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list (c3bead6) → main, merge sha=4ad94acc0478 (full=4ad94acc0478820f8aa75e17f26d24e84983f1e8), base=48a4560
