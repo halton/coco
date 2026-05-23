@@ -8411,3 +8411,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer: sub_agent_fresh_context LGTM, mutation_test_done=true, 14 checks, P0/P1=0 P2=evidence 副作用已 stage
 - feature status: in_progress → passing, closed_at=2026-05-23
 - P2 副作用: evidence/*/verify_summary.json + evidence/_history/*.jsonl 约 12 个被 post-merge verify 自动重写, 一并 stage
+
+## Session 2026-05-23 — phase-58 #3 closeout (stale_already_done)
+
+- feature: infra-V6-backlog-helper-docstring-clarify-live-set (phase-58 #3)
+- 路线: stale_already_done — Engineer audit @ phase-48 #5.48 已证明 _verify_lib.live_verify_sha_set docstring 自包含语义已就位 (L163-185 + code 169-173 自洽), 0 业务源码/docstring delta
+- merge: main 1a4d75d ← feat/infra-V6-backlog-helper-docstring-clarify-live-set 5377ba7, no-ff merge_commit=10855d7
+- post-merge verify (P299 形态 rc=0): ./init.sh smoke 13/13 PASS, verify_infra_099 ALL PASS 14/14, verify_infra_P275 ALL PASS 16/16, verify_infra_062 ALL PASS 30/30 emit-paths (scanned 85→86 含本 feature)
+- Reviewer: sub_agent_fresh_context LGTM (verdict_original=LGTM_stale_already_done), mutation_test_done=false (audit-only 路线), 5 checks, P0/P1=0 P2=1 (module-level docstring 可选改进, 触发 LIB sha cascade 成本过高本期不做)
+- feature status: in_progress → passing, closed_as_already_done=true, covered_by="infra-V6-backlog-helper-docstring-clarify-live-set @ phase-48 #5.48 audit", closed_at=2026-05-23

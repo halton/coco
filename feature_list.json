@@ -8969,7 +8969,7 @@
       "area": "infra",
       "phase": 58,
       "title": "_verify_lib helper docstring 显式说明 live set 自包含语义",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-V6 extract closeout Reviewer 建议",
       "scope": "_verify_lib.live_verify_sha_set / verify_reverse_sha_lock_consistency docstring 显式说明 \"_verify_lib.py 自身参与 live set\" 的语义（防止后续 contributor 误以为只扫 verify_*.py）。",
@@ -8977,8 +8977,70 @@
         "infra-V6-backlog-extract-to-verify-lib"
       ],
       "verification": [],
-      "notes": "STALE @ phase-48 #5.48: Engineer 审计 _verify_lib.live_verify_sha_set docstring 已显式写明 \"含 scripts_dir 下所有 verify_*.py + _verify_lib.py\"，且 code 169-173 行将 lib 自身加入 targets 与 docstring 自洽; verify_reverse_sha_lock_consistency 通过 live_verify_sha_set 间接覆盖该语义. 补任何 helper 函数体说明都会触发 LIB sha 全链 36+ cascade（方案 B 禁用），而方案 A 在 module-level 加注释亦无新增信息. closed_as_already_done.",
-      "started_at": "2026-05-23"
+      "notes": "STALE @ phase-48 #5.48: Engineer 审计 _verify_lib.live_verify_sha_set docstring 已显式写明 \"含 scripts_dir 下所有 verify_*.py + _verify_lib.py\"，且 code 169-173 行将 lib 自身加入 targets 与 docstring 自洽; verify_reverse_sha_lock_consistency 通过 live_verify_sha_set 间接覆盖该语义. 补任何 helper 函数体说明都会触发 LIB sha 全链 36+ cascade（方案 B 禁用），而方案 A 在 module-level 加注释亦无新增信息. closed_as_already_done @ phase-58 #3.",
+      "started_at": "2026-05-23",
+      "updated_at": "2026-05-23T22:30:00",
+      "closed_at": "2026-05-23",
+      "closed_as_already_done": true,
+      "covered_by": [
+        "infra-V6-backlog-helper-docstring-clarify-live-set @ phase-48 #5.48 audit"
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "10855d7",
+          "merge_commit_sha": "10855d7",
+          "baseline_head_echo": "1a4d75d",
+          "baseline_tail_stdout": "audit_only_no_code_delta_baseline_pre_existing_skipped",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=280 well_formed=280 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "init_sh_smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=280 well_formed=280 typo_count=0\n==> Smoke 通过 (post-merge-rerun rc=0)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_099",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_099][PASS] V4_4_v6_regex_unique_capture_passes captured=1111111111111111 unique\n[verify_infra_099][PASS] V4_5_v6_regex_duplicate_capture_raises raised ValueError\n[verify_infra_099][PASS] V5_reviewer_lgtm_gate target=infra-V6-backlog-regex-unique-needle-discipline helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=501\n[verify_infra_099][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_P275",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P275][PASS] V5_caller_r1_min_checks expect r1 migration: min_checks=2\n[verify_infra_P275][PASS] V5_caller_r6_min_checks expect r6 migration: min_checks=53\n[verify_infra_P275][PASS] V5_caller_r7_min_checks expect r7 migration: min_checks=8\n[verify_infra_P275][PASS] V6_min_checks_eq_pass r_ok passed=True checks=5\n[verify_infra_P275][PASS] V6_min_checks_gt_rejects r_short passed=False reason='checks=5 < min_checks=99'\n[verify_infra_P275][SUMMARY] ALL PASS (16 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=85 enforced=50 grace_skipped=22 violations=0 allowed_verdicts=['LGTM', 'conditional', 'REJECT']\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=85 enforced=50 violations=0\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=85 enforced=50 violations=0\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=85 enforced=50 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=85 enforced=50 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "verdict_original": "LGTM_stale_already_done",
+            "summary": "[stale_already_done] infra-V6-backlog-helper-docstring-clarify-live-set 是 stale closed_as_already_done feature: scope (_verify_lib.live_verify_sha_set / verify_reverse_sha_lock_consistency docstring 显式说明 lib 自包含语义) 已被 phase-48 #5.48 Engineer audit 完整覆盖。当前 _verify_lib.py L163-185 live_verify_sha_set docstring 已显式列出 'scripts_dir 下所有 verify_*.py + _verify_lib.py' 自包含语义，code 169-173 将 lib 自身加入 targets 与 docstring 自洽，verify_reverse_sha_lock_consistency 通过 live_verify_sha_set 间接覆盖该语义。0 业务源码/docstring 新增 (本 feature 仅 status 收敛 + closed_as_already_done=true 标记, 因此 mutation_test_done=false: audit-only 路线无 code/docstring delta 可 mutate)。post-merge ./init.sh smoke 13/13 PASS, verify_infra_099 ALL PASS 14/14, verify_infra_P275 ALL PASS 16/16, verify_infra_062 ALL PASS 30/30 emit-paths。Reviewer fresh-context LGTM_stale_already_done.",
+            "checks_run": [
+              "smoke PASS rc=0",
+              "verify_infra_099 PASS rc=0 14/14",
+              "verify_infra_P275 PASS rc=0 16/16",
+              "verify_infra_062 PASS rc=0 30 emit-paths",
+              "静态审阅 scripts/_verify_lib.py:163-185"
+            ],
+            "mutation_test_done": false,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "可选改进：若后续 contributor 仍误读 live_verify_sha_set 范围, 可考虑在 _verify_lib.py module-level docstring 顶部加一行注释指向 live_verify_sha_set helper (本期不做, 触发 LIB sha cascade 成本过高)"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-strict-area-match-mode",
