@@ -7645,3 +7645,11 @@ phase-46 5 候选 promoted to not_started：
 - pre-existing baseline (main c70bf28): verify_infra_060 V4_real_unknown_count_eq_one FAIL (3 md sha unknown 节点) + V2_dump_file_sha FAIL；与本 PR 无关；merge 后 V2 已随 cascade bump 修复，V4 unknown 3 节点仍 pre-existing
 - feature_list.json: infra-039-backlog-dump-filter-pattern status not_started → passing，evidence (verifier/verify_runs.tail/closeout_verify.main_head_sha=3573702/reviewer/pre_existing_baseline_sha=c70bf28/baseline_tail_stdout/smoke_tail_stdout) 全部入账
 - 下一候选：phase-50 内下一个 not_started feature
+
+## Session 2026-05-23 — phase-50 #3.50 STALE demote
+
+- feature `infra-049-backlog-dump-index-kind-stats` 被 demote 到 backlog (priority=999, phase=null, status=backlog)
+- 理由：scope 被 phase-49 #4.49 (`infra-049-backlog-dump-index-expose-kind`, passing) 完整覆盖。`dump_reverse_sha_lock_index` stats 顶层已含 `kind_breakdown` dict `{expected_pattern: 191, verify_id: 13}`，`verify_infra_049` `V4_json_kind_breakdown` 已锁 `sum_eq_scanned=True`，命名上 dict 比顶层平铺更可扩展。
+- notes 追加 `STALE @ phase-50 #3.50 ... closed_as_already_done.`
+- closeout_baseline_main_head=a035199
+

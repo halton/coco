@@ -6786,11 +6786,11 @@
     },
     {
       "id": "infra-049-backlog-dump-index-kind-stats",
-      "priority": 3,
+      "priority": 999,
       "area": "infra",
-      "phase": 50,
+      "phase": null,
       "title": "dump_reverse_sha_lock_index stats 加 kind 拆解",
-      "status": "not_started",
+      "status": "backlog",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-reverse-lock-pattern-expand (P271) Engineer 自报",
       "scope": "dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解，便于观测两类锁规模演化。",
@@ -6798,7 +6798,7 @@
         "infra-049-backlog-reverse-lock-pattern-expand"
       ],
       "verification": [],
-      "notes": "promoted to phase-50 #3.50"
+      "notes": "promoted to phase-50 #3.50 | STALE @ phase-50 #3.50: scope 被 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整覆盖。stats.kind_breakdown dict 已暴露 per-kind 计数 (expected_pattern/verify_id), verify_infra_049 V4_json_kind_breakdown 锁 sum_eq_scanned=True. closed_as_already_done."
     },
     {
       "id": "infra-049-backlog-infer-target-to-verify-lib",
