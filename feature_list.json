@@ -6937,15 +6937,37 @@
       "area": "infra",
       "phase": 50,
       "title": "dump_v4_sha_graph 加 --filter 选项",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议",
       "scope": "dump_v4_sha_graph.py 增加 --filter <pattern> 选项，按 verify-name 或 target-path 子串过滤输出，便于在大量 lock 时聚焦特定子集。",
       "dependencies": [
         "infra-039"
       ],
-      "verification": [],
-      "notes": "promoted to phase-50 #2.50"
+      "verification": [
+        "Reviewer (sub-agent fresh-context): LGTM. --filter 选项实现纯函数过滤 (build_graph 后、render 前), JSON/text 路径一致, hub 保留, V7 五子 check 锁住 baseline/partial_hit/no_match_zero/hub_preserved/text_mode 五个契约面; cascade EXPECTED_DUMP_FILE_SHA 8 处 bump 完整; 21/21 PASS"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_039.py",
+        "verify_runs": [
+          {
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V4_subprocess_run rc=0\n[verify_infra_039][PASS] V4_output_anchors all 6 anchors found\n[verify_infra_039][PASS] V4_json_mode rc=0 locks=230\n[verify_infra_039][PASS] V6_default_run rc=0\n[verify_infra_039][PASS] V6_default_has_ellipsis len_stdout=33838\n[verify_infra_039][PASS] V6_full_run rc=0\n[verify_infra_039][PASS] V6_full_emits_64hex hits=245 sample=7a89b35b6db711cb1b35fb78687fd5f818d8d6ac9e29d03abedabefc67d9e9ac\n[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0\n[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=230\n[verify_infra_039][PASS] V7_baseline_json baseline_locks=230\n[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=3 baseline=230\n[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=1694\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "3573702"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "--filter 选项实现纯函数过滤 (build_graph 后、render 前), JSON/text 路径一致, hub 保留, V7 五子 check 锁住 baseline/partial_hit/no_match_zero/hub_preserved/text_mode 五个契约面; cascade EXPECTED_DUMP_FILE_SHA 8 处 bump 完整; verify_infra_060 V4_real_unknown_count_eq_one FAIL 已确认为 pre-existing baseline (main c70bf28 同 FAIL, 3 个 md sha unknown 节点, 与本 PR 无关); _verify_lib.py 未触碰; 21/21 PASS"
+        },
+        "pre_existing_baseline_sha": "c70bf28",
+        "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists path=/Users/halton/work/coco/scripts/dump_v4_sha_graph.py\n[verify_infra_060][PASS] V0_per_file_locks_present expect '_PER_FILE_LOCKS' dict in dump_v4_sha_graph\n[verify_infra_060][PASS] V0_classify_node_present expect 'def _classify_node(' in dump_v4_sha_graph\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V1_self_checker_func_sha got=8b709e3bc54acf5a expect=8b709e3bc54acf5a\n[verify_infra_060][FAIL] V2_dump_file_sha got=b14982e3f9f13cbe expect=6acd1eb56ba358cd\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=25616\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=3 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] FAIL 2/14: ['V2_dump_file_sha', 'V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+      },
+      "notes": "promoted to phase-50 #2.50; closed out at main HEAD 3573702"
     },
     {
       "id": "infra-039-backlog-dump-show-full-sha",

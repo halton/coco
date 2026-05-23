@@ -7634,3 +7634,14 @@ phase-46 5 候选 promoted to not_started：
 - Reviewer (sub_agent_fresh_context): LGTM — render_text 新增 show_full_sha 形参 + _fmt 闭包 default False 零侵入；V6 6-check 锁 default 省略号、full 模式 245 个 64-hex 命中 trunc=0、--json+--show-full-sha JSON 结构稳定；mutation probe 全可被抓住；_verify_lib.py 未触碰；无 placeholder 残留
 - feature_list.json: infra-039-backlog-dump-show-full-sha status not_started → passing，evidence (verifier/verify_runs.tail/closeout_verify.main_head_sha=90f0669/reviewer block) 全部入账
 - 下一候选：#2.50 infra-039-backlog-dump-filter-pattern (dump_v4_sha_graph 加 --filter 选项)
+
+## Session 2026-05-23 — #2.50 closeout infra-039-backlog-dump-filter-pattern
+
+- merge: feat/infra-039-backlog-dump-filter-pattern → main, merge HEAD=3573702 (before c70bf28)
+- verify_infra_039.py: ALL PASS (21 checks，含 V7 5 子项: baseline_json / filter_partial_hit / filter_no_match_zero_locks / filter_no_match_hub_preserved / filter_text_mode)
+- verify_infra_062.py P278 gate: ALL PASS (30 checks)
+- ./init.sh smoke: PASS
+- Reviewer (sub_agent_fresh_context): LGTM — --filter 选项纯函数过滤 (build_graph 后、render 前)，JSON/text 路径一致，hub 保留；cascade EXPECTED_DUMP_FILE_SHA 8 处 bump 完整；_verify_lib.py 未触碰；21/21 PASS
+- pre-existing baseline (main c70bf28): verify_infra_060 V4_real_unknown_count_eq_one FAIL (3 md sha unknown 节点) + V2_dump_file_sha FAIL；与本 PR 无关；merge 后 V2 已随 cascade bump 修复，V4 unknown 3 节点仍 pre-existing
+- feature_list.json: infra-039-backlog-dump-filter-pattern status not_started → passing，evidence (verifier/verify_runs.tail/closeout_verify.main_head_sha=3573702/reviewer/pre_existing_baseline_sha=c70bf28/baseline_tail_stdout/smoke_tail_stdout) 全部入账
+- 下一候选：phase-50 内下一个 not_started feature
