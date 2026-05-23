@@ -67,7 +67,21 @@ def _compute_target_sha(target: Path) -> str:
 
 
 def _candidates_for(target_rel: str, live: dict[str, str], const_name: str) -> bool:
-    """判断该反向锁常量是否指向 target_rel (基于 VERIFY_<NNN> 推断)。"""
+    """判断该反向锁常量是否指向 target_rel。
+
+    匹配规则:
+    1. NNN-based (verify_<sub>_NNN.py): 常量名含 ``VERIFY_<NNN>`` 且 target 末尾
+       匹配 ``_NNN.py``。
+    2. NNN-agnostic fallback (``_verify_lib.py``): target 是
+       ``scripts/_verify_lib.py`` 时, 匹配 file-level sha 常量名:
+       ``EXPECTED_LIB_FILE_SHA`` / ``EXPECTED_VERIFY_LIB_FILE_SHA``。
+       func-level sha (``EXPECTED_<FUNC>_FUNC_SHA``) 不匹配, 因为它锁的是函数
+       源码 sha 而非文件 sha, bump 成 file sha 会立刻 FAIL。
+    """
+    # NNN-agnostic: _verify_lib.py file-level lock
+    if target_rel.endswith("_verify_lib.py"):
+        return const_name in ("EXPECTED_LIB_FILE_SHA", "EXPECTED_VERIFY_LIB_FILE_SHA")
+    # NNN-based: VERIFY_<NNN> ↔ target_<NNN>.py
     m = re.search(r"VERIFY_(\d{3})", const_name)
     if not m:
         return False
