@@ -108,7 +108,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "c923b8de60e1930b02d43b84d6638ebbe7064976c881e0bb6da2d652bfc825fb"
+EXPECTED_VERIFY_LIB_FILE_SHA = "3e647db781ae6fa6ee79869e4dc6f921feedec10abd2de42587ef2131c185fdc"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -142,6 +142,7 @@ V3_HELPER_FUNC_NAMES = (
     "parse_headings_from_doc",
     "read_constant",
     "scan_reverse_sha_locks",
+    "scan_reverse_sha_locks_ast",
     "scan_reviewer_text",
     "verify_baseline_fail_claims",
     "verify_closeout_evidence_trustworthy",
