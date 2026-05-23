@@ -15891,14 +15891,40 @@
     },
     {
       "id": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true",
-      "priority": 999,
-      "status": "backlog",
+      "priority": 5.59,
+      "status": "passing",
       "phase": 59,
       "area": "infra",
       "title": "080 V4_4 mutant regex 显式断言 substituted=True",
       "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_4 mutant 替换当前生效 (n_sub=1)，但 regex 写死；未来 emit 形变化 (例如不同间距/换行) 可能 substituted=0 时静默走过 (mutant 未触发但 v_count 仍偶然合规)。建议显式断言 substituted_count >= 1 否则 FAIL。",
       "acceptance": "080 V4_4 在 substituted=0 时 raise/FAIL；mutant detector 不再静默漂",
-      "notes": "STALE @ phase-48 #4.48: Engineer 审计 V4_4 当前 emit 已含 substituted=True / n_sub=1 / has_True_violation=True / mutant_ok=False / v_count=1，五项语义断言全覆盖（且 has_True_violation 由 detector arg1_source==\"True\" 复核，强于纯文本搜串）. closed_as_already_done."
+      "notes": "STALE @ phase-48 #4.48: Engineer 审计 V4_4 当前 emit 已含 substituted=True / n_sub=1 / has_True_violation=True / mutant_ok=False / v_count=1，五项语义断言全覆盖（且 has_True_violation 由 detector arg1_source==\"True\" 复核，强于纯文本搜串）. closed_as_already_done @ phase-59 #5.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "1ecdea8",
+          "closed_as_already_done": true,
+          "covered_by": "verify_infra_080.py L333 计算 substituted=n_sub_total>=1 and mutant_src!=src79 + L348 V4_4_mutant_returns_fail emit 显式断言 substituted and rm.get('ok') is False and has_true_violation (has_true_violation 源自 detector arg1_source=='True')；自 phase-48 #4.48 审计起已覆盖 backlog 原始诉求，无需代码改动。",
+          "verify_runs": [
+            {
+              "cmd": "./init.sh smoke",
+              "status": "PASS",
+              "tail_stdout": "ok: total=287 well_formed=287 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_080.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True n_sub=1 mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok', 'checked', 'v5_gate_found', 'calls_assert_helper', 'helper_return_names', 'emit_calls', 'violations', 'error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=485\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "ok: total=287 well_formed=287 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "verdict_original": "LGTM_stale_already_done",
+            "summary": "[stale_already_done] verify_infra_080 L333 计算 substituted=n_sub_total>=1 and mutant_src!=src79，L348 V4_4_mutant_returns_fail emit 显式断言 substituted and ok is False and has_true_violation；backlog 原始诉求 (substituted=0 raise/FAIL + detector 不静默漂) 早已由现状代码覆盖，无需代码改动，走 stale_already_done 闭单。verify_infra_080 14 checks ALL PASS，smoke 287 typo=0 PASS。"
+          }
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list",

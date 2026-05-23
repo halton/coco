@@ -8497,3 +8497,10 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - mutation A/B 反证：单 key FAIL 5/12 含 V4_no_unknown_id_collision + V4_composite_key_well_formed；复合 key 全 PASS
 - 入账 3 个 backlog：composite-key-strict-ordering / classify-node-unknown-lock / mermaid-node-id-readability
 - 下一个 candidate: phase-59 #5 infra-V6-backlog-080-v4-4-mutant-assert-substituted-true
+
+## Session 2026-05-23 phase-59 #5 closeout (stale_already_done)
+- infra-V6-backlog-080-v4-4-mutant-assert-substituted-true: stale_already_done 闭单（audit-only，无代码改动）
+- 覆盖证据：verify_infra_080 L333 substituted=n_sub_total>=1 and mutant_src!=src79 + L348 emit 显式断言 substituted and ok is False and has_true_violation（has_true_violation 来自 detector arg1_source=='True'）
+- verify_runs: smoke PASS (287 typo=0) + verify_infra_080 PASS (14 checks ALL PASS, V4_4 substituted=True n_sub=1 mutant_ok=False has_True_violation=True)
+- Reviewer fresh-context: LGTM (verdict_original=LGTM_stale_already_done)
+- 下一个 candidate: phase-60 规划
