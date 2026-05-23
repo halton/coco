@@ -49,11 +49,19 @@ _RE_TUPLE_OPEN = re.compile(r'^([A-Z_][A-Z0-9_]*)\s*=\s*\(\s*$')
 _RE_TUPLE_HEX = re.compile(r'^\s*["\']([0-9a-f]{64})["\']\s*,?\s*$')
 
 # 用于推断 target: 例如 EXPECTED_VERIFY_024_SHA256 -> verify_interact_024 / verify_robot_024 / verify_infra_024 等
-_RE_VERIFY_HINT = re.compile(r'VERIFY_(\d+)_')
-_RE_LIB_HINT = re.compile(r'(LIB|VERIFY_LIB|HELPER)')
-# infra-039-backlog-target-inference: 形如 V018_EXPECTED_SHA / EXPECTED_V024_SHA256 / V010_EXPECTED_SHA / BUMP_028_EXPECTED_SHA
-_RE_V_NUM_HINT = re.compile(r'V(\d{3})_')
-_RE_BUMP_HINT = re.compile(r'BUMP_(\d+)_')
+#
+# infra-039-backlog-bump-regex-normalize (phase-51 #1.51):
+# - 位数策略统一: 所有 *_NUM_HINT / *_HINT 命名空间内, 形如 "前缀_<digits>_" 的捕获组,
+#   一律使用宽松匹配 \d{2,4} (而非裸 \d+ 或固定 \d{3}); 既覆盖历史 2 位 (NN) 与新生 3 位 (NNN)
+#   feature id 范畴, 也避免 \d+ 误吞过长数字串。
+# - docstring 语义: 每条 _RE_* 注释中标明 (a) 期望匹配的常量名样例,
+#   (b) 捕获组语义 (NN-NNN feature 序号字符串), (c) 调用方在 _infer_target 中的用途。
+_RE_VERIFY_HINT = re.compile(r'VERIFY_(\d{2,4})_')  # 例: VERIFY_024 / VERIFY_1024; group1 = 数字串
+_RE_LIB_HINT = re.compile(r'(LIB|VERIFY_LIB|HELPER)')  # 关键字命中即视为 _verify_lib 相关
+# 形如 V018_EXPECTED_SHA / EXPECTED_V024_SHA256 / V010_EXPECTED_SHA; group1 = 2-4 位 feature 序号
+_RE_V_NUM_HINT = re.compile(r'V(\d{2,4})_')
+# 形如 BUMP_028_EXPECTED_SHA / BUMP_1024_*; group1 = 2-4 位 feature 序号 (与 V_NUM 对齐, 避免 \d+ 误吞)
+_RE_BUMP_HINT = re.compile(r'BUMP_(\d{2,4})_')
 
 # infra-039-backlog-target-inference: 非数字常量名 → 文件路径 查表 (fingerprint / bump-only / dump 自锁)
 # 用于覆盖 _RE_VERIFY_HINT 无法识别的复合 sha 锁; 含通用文件 sha 与 func sha
