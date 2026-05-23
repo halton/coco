@@ -17,7 +17,7 @@ V2 dump_v4_sha_graph.py 整体 file-sha 锁 (避免无脑改 dump).
 V3 mutant 反证 — 临时把 dump 的 ``_RE_SINGLELINE`` 改成永不匹配的 regex,
    subprocess 运行 dump, 输出 locks 计数应比 baseline 显著减少, finally 还原.
 V4 行为验证 — subprocess 调 dump, grep 输出含若干已知锁
-   ("v4_sha.json", "15 targets", "verify_infra_034.py", "verify_infra_037.py").
+   ("v4_sha.json", "20 targets", "verify_infra_034.py", "verify_infra_037.py").
 V5 Reviewer-LGTM gate (print-only).
 
 INFRA_039_SHA_LOCKS
@@ -46,7 +46,7 @@ DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 EXPECTED_DUMP_FILE_SHA = "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
 
 # infra-039 自身 v4_behavior 函数 sha (V1 自锁, 占位; 末尾自计算后回填)
-EXPECTED_V4_CHECKER_FUNC_SHA = "7ae405196b8a92f2191d92871cdd8278dcbdcc43d7a4ac21e71b76dcd7084fea"
+EXPECTED_V4_CHECKER_FUNC_SHA = "22573b730b65f87c3c54e42612169aab93d04c0e6c3277b6cb5c8b74fde0a4c1"
 
 DOCSTRING_SENTINEL = "INFRA_039_SHA_LOCKS"
 
@@ -219,7 +219,7 @@ def v4_behavior() -> None:
     text = out.stdout
     anchors = [
         "v4_sha.json",
-        "15 targets",
+        "20 targets",
         "verify_infra_034.py",
         "verify_infra_037.py",
         "=== V4 SHA-LOCK GRAPH ===",

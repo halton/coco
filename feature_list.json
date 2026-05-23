@@ -16378,7 +16378,7 @@
       "priority": 200,
       "area": "infra",
       "title": "verify_infra_P290 V2_target_file_sha 与 _verify_lib.py 当前内容同步",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 60,
       "created_at": "2026-05-23",
       "source": "infra-037-backlog-nested-name-error-clarity closeout Reviewer P2",
