@@ -8642,14 +8642,86 @@
       "area": "infra",
       "phase": 63,
       "title": "_infer_target 扫 EXPECTED_*_FUNC_SHA 自动推 func 名 + AST 验证",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039-backlog-target-inference-refine closeout Reviewer 建议",
       "scope": "扫描 verify_*.py 内 EXPECTED_*_FUNC_SHA 常量，按命名规约自动推断 func 名，并用 AST 验证 target file 内确有对应 func，使查表可自维护、抗常量增删漂移。",
       "dependencies": [
         "infra-039-backlog-target-inference-refine"
       ],
-      "verification": []
+      "verification": [],
+      "closeout_verify": {
+        "main_head_sha": "f159bdab0e65d6245a2a55ccb550fd63f13e0c40",
+        "baseline_head_echo": "cd58293",
+        "merge_commit_sha": "f159bdab0e65d6245a2a55ccb550fd63f13e0c40",
+        "verify_runs": [
+          {
+            "script": "scripts/verify_infra_039.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=3 baseline=276\n[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=152 matched=18 not_found=131 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][INFO] V8 not_found=131 ambiguous=3 (nf_sample=[('verify_infra_037.py', 'EXPECTED_V2_CHECKER_FUNC_SHA', 'v2_checker'), ('verify_infra_039.py', 'EXPECTED_V4_CHECKER_FUNC_SHA', 'v4_checker'), ('verify_infra_040.py', 'EXPECTED_V4_CHECKER_FUNC_SHA', 'v4_checker')] amb_sample=[('verify_infra_046.py', 'EXPECTED_MAIN_FUNC_SHA', 'main', 4), ('verify_infra_049.py', 'EXPECTED_RENDER_TEXT_FUNC_SHA', 'render_text', 2), ('verify_infra_P275.py', 'EXPECTED_MAIN_FUNC_SHA', 'main', 4)])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=105 enforced=74 soft_skipped=31 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=105 enforced=70 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=35 v3_table=35 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "script": "scripts/verify_infra_035.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035][PASS] V8_self_file_sha_lock actual=a5901bb7a3ae9b8a expect=a5901bb7a3ae9b8a lock_schema_version=4 bumped_at=2026-05-24\n[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0"
+          },
+          {
+            "script": "scripts/verify_infra_110.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V4_composite_key_well_formed: all 16 edges have strict-ordered composite key\n[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 16 composite key src segments free of 'expected' substring (case-insensitive)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=3cdb3a8021917013 expect=3cdb3a8021917013\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "script": "scripts/verify_infra_P290.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P290][PASS] V0_self_main_func_sha got=02e54a1fb197287f expect=02e54a1fb197287f\n[verify_infra_P290][PASS] V1_docstring_sentinel sentinel='INFRA_P290_DOC_SHA_LOCKS'\n[verify_infra_P290][PASS] V2_target_func_sha got=072652ad44846671 expect=072652ad44846671\n[verify_infra_P290][PASS] V3_docstring_tags_nonempty count=27 sample=['V0__DUMP_FAMILY_present', 'V0__HUB_FAMILY_present', 'V0__LIB_FAMILY_present', 'V0_classify_node_present', 'V0_dump_exists']\n[verify_infra_P290][PASS] V3_emit_tags_nonempty count=27 sample=['V0__DUMP_FAMILY_present', 'V0__HUB_FAMILY_present', 'V0__LIB_FAMILY_present', 'V0_classify_node_present', 'V0_dump_exists']\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+          },
+          {
+            "script": "scripts/verify_infra_V6_scan_ast.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_V6_scan_ast] PASS V1_self_sha: sentinel present; EXPECTED_SELF_FILE_SHA256 is __BUMP_ME__ placeholder (first-run bootstrap)\n[verify_infra_V6_scan_ast] PASS V2_ast_vs_regex_clean: ast=250 regex=250 ast-only=0 regex-only=0\n[verify_infra_V6_scan_ast] PASS V3_ast_ignores_docstring_literal: ast_names=['EXPECTED_REAL_VERIFY_999_SHA256'] re_names=['EXPECTED_FAKE_VERIFY_888_SHA256', 'EXPECTED_REAL_VERIFY_999_SHA256']\n[verify_infra_V6_scan_ast] PASS V4_ast_ignores_comment_literal: ast_names=['EXPECTED_REAL_VERIFY_998_SHA256'] re_names=['EXPECTED_REAL_VERIFY_998_SHA256']\n[verify_infra_V6_scan_ast] PASS V5_ast_ignores_nested_tuple_literal: ast_names=['EXPECTED_REAL_VERIFY_997_SHA256'] re_names=['EXPECTED_REAL_VERIFY_997_SHA256']\n[verify_infra_V6_scan_ast][SUMMARY] ALL PASS (5 checks)"
+          }
+        ],
+        "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=294 well_formed=294 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "V8 auto-discovery audit 设计合理可接受 (fresh-context 评审 phase-63 #2 infra-039-backlog-infer-target-auto-discovery, HEAD=2a91651): (1) _discover_func_locks_in_verify 真用 ast.parse, 仅匹配 toplevel ast.Assign + Name target + Constant(str) + 64-hex; regex 同时覆盖 FUNC_SHA 与 FUNC_SHA256; file/syntax 失败返回 [] 不抛. (2) V8_auto_discovery_consistency 候选源顺序合理 (verify 自身优先 → _verify_lib → bump → dump_index → dump_v4); mismatch 判定: unique-hit + sha!=lock → FAIL; ambiguous (multi-hit) 当 warning, self-lock-hint (CHECKER/SELF) 时取 verify 自身可接受; not_found 131 多为 v?_checker 命名规约不对齐, brief 明确允许. (3) Mutation A (v037 末字节翻转) → rc=1 V8_no_mismatches FAIL 恢复 rc=0; B (regex 永不匹配) → rc=1 V8_discovered_count FAIL discovered=0 恢复 rc=0; C (_verify_lib.func_sha_by_name body 加 noop) → rc=1 mismatches=2 跨文件灵敏 恢复 rc=0. A/B/C 全部反证 V8 真校验 + discovery 真工作 + 跨文件灵敏. (4) baseline V8 stats discovered=152 matched=18 ambiguous=3 not_found=131 mismatches=0. (5) smoke rc=0; v062 仅 V2_lib_file_sha 漂移 留 closeout; baseline cd58293 上 v062 30/30 PASS 确认无其他回归. (6) 设计取舍: audit-only 渐进可接受, _infer_target 硬编码未消除留 P1 注记.",
+          "checks_run": [
+            "_discover_func_locks_in_verify_ast_audit",
+            "V8_auto_discovery_consistency_design",
+            "mutation_A_v037_byte_flip",
+            "mutation_B_regex_never_match",
+            "mutation_C_func_sha_by_name_body_noop",
+            "baseline_V8_stats",
+            "smoke",
+            "v062",
+            "v062_baseline_check",
+            "ann_assign_grep",
+            "artifact_clean"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [
+              {
+                "title": "audit-only 渐进, _infer_target 硬编码未消除"
+              }
+            ],
+            "P2": [
+              {
+                "title": "_discover_func_locks_in_verify 未处理 ast.AnnAssign"
+              },
+              {
+                "title": "is_self_lock_hint SELF 子串可能 future false-positive"
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-039-backlog-bump-regex-normalize",
@@ -18140,6 +18212,51 @@
       "source": "phase-62 #4 infra-P290-backlog-v2-target-sha-func-level-lock closeout Reviewer P2",
       "description": "verify_infra_110.py L16 docstring 历史叙事陈旧 — 描述仍按 P290 V2_target_file_sha 整文件 sha 锁口径写; phase-62 #4 已将 V2 改为 func_sha_by_name(verify_infra_102.py, 'main') 的 func-level lock, docstring 需相应更新, 反映 file_sha → func_sha 演进, 避免新读者按旧叙事理解 P290 行为。仅文档改动, 不动实现。",
       "dependencies": []
+    },
+    {
+      "id": "infra-P306-infer-target-真消除硬编码",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_infer_target 真消除硬编码 (第二阶段, 用 V8 auto-discovery 数据)",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "infra-039-backlog-infer-target-auto-discovery Reviewer P1",
+      "scope": "第二阶段, 让 dump_v4_sha_graph._infer_target 实际消除 _KNOWN_NON_NUMERIC_TARGETS / _PER_FILE_LOCKS 硬编码, 改用 V8 auto-discovery 数据",
+      "dependencies": [
+        "infra-039-backlog-infer-target-auto-discovery"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-P307-discover-func-locks-annassign-support",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "_discover_func_locks_in_verify 加 ast.AnnAssign 分支",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "infra-039-backlog-infer-target-auto-discovery Reviewer P2",
+      "scope": "_discover_func_locks_in_verify 当前仅匹配 ast.Assign; 加 ast.AnnAssign 分支以覆盖 `NAME: type = \"sha\"` 风格 toplevel 常量",
+      "dependencies": [
+        "infra-039-backlog-infer-target-auto-discovery"
+      ],
+      "verification": []
+    },
+    {
+      "id": "infra-P308-is-self-lock-hint-tighten",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "is_self_lock_hint 替子串 SELF 为更严格匹配",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "infra-039-backlog-infer-target-auto-discovery Reviewer P2",
+      "scope": "is_self_lock_hint 用子串匹配 'SELF' 可能 future false-positive; 改为更严格的 token / 分段匹配, 例如 const 名以 _SELF_ 或 SELF_ 包围作为分隔 token",
+      "dependencies": [
+        "infra-039-backlog-infer-target-auto-discovery"
+      ],
+      "verification": []
     }
   ],
   "_meta": {
