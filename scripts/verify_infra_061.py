@@ -38,6 +38,30 @@ INFRA_061_SHA_LOCKS
     与合法非 sha 常量 (``EXPECTED_PALETTE`` 类)
 - V5 Reviewer LGTM gate (print-only)
 
+R3 SAMPLE-COUNT TERMINOLOGY (infra-P293-typo-guard-check-count-doc-reconcile / phase-54 #2.54)
+---------------------------------------------------------------------------------------------
+SUMMARY 尾行历史上以 ``ALL PASS (N checks)`` 行文, 但实际 N 计的是
+``_results`` 的 emit 次数 (即 ``_emit(tag, ok, detail)`` 的调用次数), 而
+非"独立可执行 check 数量"。对本脚本而言, 当前每个被触发的 ``_emit``
+调用 (happy path) 对应一个唯一 tag (emit-paths == unique check tags == 18,
+1:1 映射), 但源码静态有 24 个 ``_emit`` 调用点 (含 error-branch 备用)
+覆盖同样 18 个 unique tag; 未来若同一 tag 被多次 emit (例如循环扫描每个
+sample 都 emit 同名 tag), 运行时 emit-paths 也可能大于 unique check tags。
+为消除歧义, SUMMARY 行格式已改为
+``ALL PASS (N emit-paths / M unique check tags)``, 与 sibling
+``infra-P294-R6-sample-count-doc`` 在 verify_infra_062 上的同质处理保持
+一致。术语定义:
+
+- emit-paths: 一次 verify_infra_061 run 中 ``_emit`` 被调用的总次数 (即
+  PASS/FAIL 行的总条数), 等于 ``len(_results)``。
+- unique check tags: ``_results`` 中 ``tag`` 字段去重后的数量, 即
+  ``len({tag for tag, _, _ in _results})``。
+
+注: feature rationale 中"18 emit-paths / 17 unique check tags"为
+P281 Reviewer Round-1 早期快照, 当前实测 (phase-54) 为 18 emit-paths /
+18 unique check tags (1:1)。verifier 锁实测当前值, rationale 中的 17
+仅为历史快照, 不再权威。
+
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
@@ -346,11 +370,15 @@ def main() -> int:
     v4_behavior()
     v5_reviewer_gate()
     total = len(_results)
+    unique_tags = len({t for t, _, _ in _results})
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
-        print(f"[verify_infra_061][SUMMARY] FAIL {len(failed)}/{total}: {failed}", flush=True)
+        print(f"[verify_infra_061][SUMMARY] FAIL {len(failed)}/{total} emit-paths: {failed}", flush=True)
         return 1
-    print(f"[verify_infra_061][SUMMARY] ALL PASS ({total} checks)", flush=True)
+    print(
+        f"[verify_infra_061][SUMMARY] ALL PASS ({total} emit-paths / {unique_tags} unique check tags)",
+        flush=True,
+    )
     return 0
 
 
