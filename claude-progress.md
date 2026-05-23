@@ -1,5 +1,27 @@
 # 进度日志
 
+## Session 2026-05-24 — phase-62 规划 + #1 infra-P278-backlog-meta-lint-cleanup engineer
+
+- main HEAD=10d9f9a (phase-61 #5 closeout, phase-61 5/5 完成)
+- phase-62 5 候选 promote (status=not_started, phase=62):
+  1. p=200 `infra-P278-backlog-meta-lint-cleanup` — 收口 v062 历史 6/30 closeout meta lint FAIL (本轮主任务)
+  2. p=201 `infra-110-backlog-classify-lock-doc-value-assert` — V8 doc-lock 字段值精确匹配
+  3. p=202 `infra-110-backlog-composite-key-src-stem-case-insensitive-expected` — V4c case-insensitive 加固
+  4. p=203 `infra-P290-backlog-v2-target-sha-func-level-lock` — V2 改 func_sha 减 false FAIL
+  5. p=204 `infra-P287-unknown-ids-set-lock` — verify_infra_059 加锁 13 unknown_ids frozenset
+- phase-62 #1 Engineer: 在 feat/infra-P278-backlog-meta-lint-cleanup 分支
+  - 修法: evidence-repair (零代码改动), 给 4 个 violator features 补齐缺失 closeout_verify 字段
+    - infra-V6-backlog-080-v4-4-mutant-assert-substituted-true: verify_runs[0/1].name + 第 3 条 SKIP run, baseline_head_echo=f987e32, merge_commit_sha, freshness_anchor 全补, reviewer.checks_run + findings={P0:[],P1:[],P2:[]}
+    - infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma: 7 runs freshness_anchor 全补, baseline_head_echo=840fda2 (pre-merge HEAD ≠ main), merge_commit_sha, reviewer.checks_run + findings
+    - infra-039-backlog-v4-output-anchors-lower-bound: reviewer.checks_run + findings, 7 runs freshness_anchor
+    - infra-P305-backlog-pragma-cardinality-mechanical-assert: 7 runs freshness_anchor, baseline_head_echo=61efc38, reviewer.findings (P2 非空)
+  - v062 emit-paths: 6/30 FAIL → 0/30 FAIL (ALL PASS)
+  - Mutation A: 移 freshness_anchor → rc=1 ✓
+  - Mutation B: baseline_head_echo == main_head_sha[:7] → rc=1 ✓
+  - Restore → rc=0 ✓
+  - smoke PASS
+- 待 Reviewer fresh-context 评审
+
 ## Session 2026-05-24 — phase-60 #4 infra-110-backlog-composite-key-strict-ordering closeout DONE
 
 - main HEAD=aefca05 (merge: phase-60 #4 LGTM)
