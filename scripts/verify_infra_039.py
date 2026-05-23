@@ -43,7 +43,7 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-039 sha lock 常量 (V2): dump_v4_sha_graph.py 整体 file sha
-EXPECTED_DUMP_FILE_SHA = "b14982e3f9f13cbeb3c1251e159883a0aee04fe59cedffce0699fd8f21c76878"
+EXPECTED_DUMP_FILE_SHA = "d38727f06682f4197d9a244426c87da65f738f7905e851daa6bc6b23b06b288c"
 
 # infra-039 自身 v4_behavior 函数 sha (V1 自锁, 占位; 末尾自计算后回填)
 EXPECTED_V4_CHECKER_FUNC_SHA = "7ae405196b8a92f2191d92871cdd8278dcbdcc43d7a4ac21e71b76dcd7084fea"
@@ -330,6 +330,95 @@ def v6_show_full_sha_option() -> None:
         _emit("V6_json_with_full_sha_unaffected", False, f"err: {e!r}")
 
 
+# ---------------------------------------------------------------------------
+# V7: --filter <regex> 选项行为锁 (infra-039-backlog-dump-filter-pattern, phase-50 #2.50)
+# ---------------------------------------------------------------------------
+def v7_filter_option() -> None:
+    """锁住 dump_v4_sha_graph.py 的 ``--filter <regex>`` CLI 选项行为契约。
+
+    contract:
+      * default (no --filter): JSON locks 数为 baseline N (N>=1)。
+      * --filter '<具体匹配子串>': 0 < hit < baseline (用 ``verify_infra_060`` 作 anchor)。
+      * --filter '<不可能匹配的串>': locks 数 == 0; v4_sha_json hub 段仍保留。
+      * text 模式 --filter 同样过滤 (输出不含被过滤掉的 source 文件名)。
+    """
+    import json as _json
+    # baseline JSON
+    try:
+        out_base = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--json"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        graph_b = _json.loads(out_base.stdout)
+        baseline_n = len(graph_b.get("locks", []))
+    except Exception as e:
+        _emit("V7_baseline_json", False, f"err: {e!r}")
+        return
+    _emit("V7_baseline_json", baseline_n >= 1, f"baseline_locks={baseline_n}")
+
+    # 命中部分 — 锚 verify_infra_060
+    try:
+        out_hit = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--json", "--filter", "verify_infra_060"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        graph_h = _json.loads(out_hit.stdout)
+        hit_n = len(graph_h.get("locks", []))
+    except Exception as e:
+        _emit("V7_filter_partial_hit", False, f"err: {e!r}")
+        return
+    _emit(
+        "V7_filter_partial_hit",
+        0 < hit_n < baseline_n,
+        f"hit_locks={hit_n} baseline={baseline_n}",
+    )
+
+    # 不命中 — 期望 0 lock, hub 仍在
+    try:
+        out_miss = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--json", "--filter",
+             "THIS_PATTERN_MATCHES_NOTHING_xyz_zzz"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        graph_m = _json.loads(out_miss.stdout)
+        miss_n = len(graph_m.get("locks", []))
+        hub_kept = isinstance(graph_m.get("v4_sha_json"), dict)
+    except Exception as e:
+        _emit("V7_filter_no_match", False, f"err: {e!r}")
+        return
+    _emit(
+        "V7_filter_no_match_zero_locks",
+        miss_n == 0,
+        f"miss_locks={miss_n}",
+    )
+    _emit(
+        "V7_filter_no_match_hub_preserved",
+        hub_kept,
+        f"hub_kept={hub_kept}",
+    )
+
+    # text 模式 --filter 同样过滤
+    try:
+        out_text = subprocess.run(
+            [sys.executable, str(DUMP_PY), "--filter", "verify_infra_060"],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        # SUMMARY 行体现 source-group 计数, --filter 命中后应仅剩 1 source file
+        text_ok = (
+            out_text.returncode == 0
+            and "verify_infra_060.py" in out_text.stdout
+            and "across 1 files ===" in out_text.stdout
+        )
+    except Exception as e:
+        _emit("V7_filter_text_mode", False, f"err: {e!r}")
+        return
+    _emit(
+        "V7_filter_text_mode",
+        text_ok,
+        f"rc={out_text.returncode} len={len(out_text.stdout)}",
+    )
+
+
 def v5_reviewer_gate() -> None:
     """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
 
@@ -364,6 +453,7 @@ def main() -> int:
     v3_mutant()
     v4_behavior()
     v6_show_full_sha_option()
+    v7_filter_option()
     v5_reviewer_gate()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:

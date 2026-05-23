@@ -12,6 +12,7 @@ verify_<id> 交叉锁 / _verify_lib file 锁 / v4_sha.json 表), 以文本或 JS
     python scripts/dump_v4_sha_graph.py --mermaid  # mermaid graph LR 语法
     python scripts/dump_v4_sha_graph.py --out F    # 写入文件 F
     python scripts/dump_v4_sha_graph.py --show-full-sha  # 文本模式展示完整 64 hex sha
+    python scripts/dump_v4_sha_graph.py --filter <regex>  # 按 source/const/target 子串过滤 locks
 
 本脚本是 *只读* 工具, 不修改任何文件, 不依赖 reachy-mini SDK。
 """
@@ -543,6 +544,29 @@ def build_graph() -> Dict:
     return graph
 
 
+def filter_locks(graph: Dict, pattern: str) -> Dict:
+    """infra-039-backlog-dump-filter-pattern: 按 regex 过滤 ``graph['locks']``。
+
+    匹配 source / const / target 任一字段 ``re.search`` 命中即保留。仅过滤 ``locks``
+    数组; ``v4_sha_json`` hub 段原样保留 (它是 V4 hub 元信息, 不是 lock 行)。
+    返回**新 dict**, 不原地修改入参。
+
+    pattern 为 None / 空串时原样返回 (caller 应自己判 short-circuit, 此处也兜底)。
+    """
+    if not pattern:
+        return graph
+    rx = re.compile(pattern)
+    new_locks = [
+        lk for lk in graph.get("locks", [])
+        if rx.search(lk.get("source", ""))
+        or rx.search(lk.get("const", ""))
+        or rx.search(lk.get("target", ""))
+    ]
+    new_graph = dict(graph)
+    new_graph["locks"] = new_locks
+    return new_graph
+
+
 def render_text(graph: Dict, show_full_sha: bool = False) -> str:
     """渲染文本 graph。
 
@@ -681,11 +705,20 @@ def main() -> int:
         action="store_true",
         help="text mode emits full 64 hex sha (no truncation); JSON/mermaid unaffected (infra-039-backlog-dump-show-full-sha)",
     )
+    ap.add_argument(
+        "--filter",
+        dest="filter_pattern",
+        type=str,
+        default=None,
+        help="regex 过滤 locks (按 source/const/target 字段 re.search), JSON/text 路径都过滤 (infra-039-backlog-dump-filter-pattern)",
+    )
     args = ap.parse_args()
     if args.json and args.mermaid:
         print("[dump_v4_sha_graph] --json and --mermaid are mutually exclusive", file=sys.stderr)
         return 2
     graph = build_graph()
+    if args.filter_pattern:
+        graph = filter_locks(graph, args.filter_pattern)
     if args.json:
         output = json.dumps(graph, indent=2, sort_keys=True)
     elif args.mermaid:
