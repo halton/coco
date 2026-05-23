@@ -74,7 +74,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 EXPECTED_SELF_MAIN_FUNC_SHA = (
-    "00b8541e1f915a06c183e7ca5a4be042a812c83805ff25795dc60365d3d0f622"
+    "aad0e302134fb6c72acfbf7ab5add861f886ce2dd61ea7bc932e5c40183c6ea1"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"

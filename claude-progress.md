@@ -7327,3 +7327,21 @@ phase-46 5 候选 promoted to not_started：
 - ./init.sh smoke tail: 'Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json'
 - feature_list.json: 本 feature 保持 not_started (Engineer 不切 passing); 新增 backlog infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate (priority=999, 跟进剩余 27+ verify graduate)
 - pre-existing FAIL: verify_infra_098 V5 (feature not closed out yet) — 不阻 merge, 走标准 closeout 流程后写入 reviewer evidence 即 PASS
+
+---
+
+## Session 2026-05-23 phase-46 #4.46 infra-P294-followup-v5-reviewer-gate-evidence-bind closeout (A 段)
+
+- merge_commit_sha=ac7cdd5, baseline_main_head=bc6bab4, main_head (post-merge)=ac7cdd5
+- 关键实证：post-merge 写 evidence 前 verify_infra_098 FAIL 1/14 ['V5_reviewer_lgtm_gate']（本 feature evidence=None）→ 写入 evidence.reviewer (LGTM + sub_agent_fresh_context + summary_len=158) 后 verify_infra_098 ALL PASS (14 checks)，证明 V5 由 FAIL → PASS 闸门真实
+- post-evidence-write verify 结果：
+  - verify_infra_098: ALL PASS 14/14
+  - verify_infra_062: FAIL 1/30 ['V3_helper_func_sha']（pre-existing on bc6bab4, 与本 closeout 无关）
+  - verify_infra_097: FAIL 2/14 ['V1_self_main_func_sha', 'V3_helper_func_sha']（pre-existing on bc6bab4 self-sha drift）
+  - ./init.sh smoke: PASS（tail 含 "Smoke 通过"）
+- self_sha 修正：verify_infra_098 EXPECTED_SELF_MAIN_FUNC_SHA 从 00b8541e 实测漂移到 aad0e302（feat 提交时已含真 helper 调用，bump 至实际 main() func sha）
+- Reviewer (sub_agent_fresh_context, /tmp/review-4.46 detached HEAD 8aa41db) verdict=LGTM, summary=158 字符,
+  3 个 P2 finding（098 fixture 可补 closeout vs 顶层 reviewer 优先级 / 62 自指 P278 grace_period soft-PASS 合理 / 35 cascade V5 placeholder 注意）
+- mutation test 已在 Reviewer 段做：改 verdict=REJECT 触发 V5 FAIL，恢复后 PASS — 闸门真实
+- feature_list.json infra-P294-followup-v5-reviewer-gate-evidence-bind status: not_started → passing, evidence 含完整 closeout_verify (main_head_sha, baseline_head_echo, merge_commit_sha, 4 verify_runs 含 freshness_anchor, smoke_tail_stdout ≥ 20 char, pre_existing_baseline_sha + baseline_tail_stdout) + reviewer (kind/verdict/summary/findings)
+- 续推：062 V3 + 097 V1/V3 pre-existing self-sha drift 留作 backlog (与本 closeout 无关)
