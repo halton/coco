@@ -7814,3 +7814,15 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - Reviewer (sub-agent fresh-context): LGTM — 独立计算 sha256 匹配, mutation probe (末位 f→e) 触发 V2_lib_file_sha FAIL 证明锁有效, cascade EXPECTED_VERIFY_LIB_FILE_SHA="933e5e89 共 36 处 (35 cascade + verify_robot_037 自身) 全部一致; 无 P0/P1/P2 findings
 - status: not_started → passing
 - phase-52 #1.52 done
+
+## Session 2026-05-23 phase-52 #3.52 closeout
+
+- feature: infra-P294-followup-helper-tail-chars-vs-bytes-doc (verify_evidence_tail_stdout_sha helper docstring 明确 chars not bytes)
+- merge: feat/infra-P294-followup-helper-tail-chars-vs-bytes-doc 0ef13dc → main 944fc8d22d (no-ff)
+- verify_infra_070 (post-merge): ALL PASS 17/17 (含新 V0_helper_docstring_loaded + V0_helper_docstring_chars_vs_bytes_keywords)
+- verify_infra_062 P278 gate: ALL PASS 30/30
+- baseline 求证: b29eb00 跑 verify_infra_070 → 15/15 PASS (无新 V0), delta=+2 与 Reviewer 摘要一致
+- ./init.sh smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM — Mutation A (删 chars) 触发 V0/V2/V3 三层 FAIL; Mutation B (改 lib sha 末位) V2 FAIL; cascade 37 verifier bump EXPECTED_VERIFY_LIB_FILE_SHA=e583aed3 一致
+- status: not_started → passing
+- phase-52 #3.52 done

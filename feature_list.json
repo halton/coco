@@ -9555,11 +9555,56 @@
     {
       "id": "infra-P294-followup-helper-tail-chars-vs-bytes-doc",
       "priority": "52-3",
-      "status": "not_started",
+      "status": "passing",
       "phase": 52,
       "area": "infra",
       "title": "verify_evidence_tail_stdout_sha helper docstring 明确 chars not bytes",
-      "rationale": "P294 Reviewer P2 info finding: helper verify_evidence_tail_stdout_sha 当前 docstring 未明确 tail_stdout 长度限制是 'chars' 还是 'bytes'. 实测取 last line decode 后的 string, 应在 docstring 写明 'chars (Unicode codepoints, not raw bytes)' 防误用."
+      "rationale": "P294 Reviewer P2 info finding: helper verify_evidence_tail_stdout_sha 当前 docstring 未明确 tail_stdout 长度限制是 'chars' 还是 'bytes'. 实测取 last line decode 后的 string, 应在 docstring 写明 'chars (Unicode codepoints, not raw bytes)' 防误用.",
+      "evidence": {
+        "branch": "feat/infra-P294-followup-helper-tail-chars-vs-bytes-doc",
+        "code_head": "0ef13dc",
+        "merge_commit": "944fc8d",
+        "closeout_verify": {
+          "main_head_sha": "944fc8d22d0bf2f4196391e2802616cb352f0835",
+          "pre_existing_baseline_sha": "b29eb00",
+          "baseline_tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)  (baseline b29eb00, delta=+2 V0_helper_docstring_loaded + V0_helper_docstring_chars_vs_bytes_keywords)",
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "round": 1,
+              "results": [
+                {
+                  "script": "verify_infra_070.py",
+                  "rc": 0,
+                  "status": "ALL PASS",
+                  "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (17 checks)",
+                  "tail_stdout_sha256": "merged-main-944fc8d"
+                },
+                {
+                  "script": "verify_infra_062.py",
+                  "rc": 0,
+                  "status": "ALL PASS",
+                  "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+                  "tail_stdout_sha256": "merged-main-944fc8d"
+                },
+                {
+                  "script": "verify_infra_070.py@baseline",
+                  "rc": 0,
+                  "status": "ALL PASS",
+                  "tail_stdout": "[verify_infra_070][SUMMARY] ALL PASS (15 checks)",
+                  "tail_stdout_sha256": "baseline-b29eb00"
+                }
+              ]
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "P294-followup 在 verify_evidence_tail_stdout_sha helper docstring 加了 「Tail 长度单位 chars (Unicode codepoints) NOT raw bytes」 明确段, 内联到 helper 函数体取 tail 处的注释；verify_infra_070 新增 V0_helper_docstring_loaded + V0_helper_docstring_chars_vs_bytes_keywords 锁定 ('chars','codepoints','NOT raw bytes') 三关键词；同步 bump EXPECTED_VERIFY_LIB_FILE_SHA (e583aed3) 与 EXPECTED_HELPER_FUNC_SHA (9e69bab1); cascade 实际 37 verifier 锁 _verify_lib.py file sha 全 bump (含 multi-line 098/099)。Mutation A (删 chars) 触发三层防御 V0/V2/V3 同时 FAIL；Mutation B (改 lib sha 末位) V2 FAIL；Baseline b29eb00 15/15 PASS delta=+2 符合。Docstring 技术准确 (Python len(str)=codepoints, encode utf-8 才转 bytes).",
+            "findings": {"P0": [], "P1": [], "P2": []}
+          }
+        }
+      }
     },
     {
       "id": "infra-P291-followup-extend-helper-to-other-v5",
