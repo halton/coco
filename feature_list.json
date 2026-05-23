@@ -6886,7 +6886,7 @@
       "area": "infra",
       "phase": 51,
       "title": "typo-guard helper docstring 与 impl 关于 HSA 判定不一致",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R1",
       "scope": "helper docstring 称 EXPECTED_FUNC_HSA_SHA 不算 typo (因后缀含 _SHA), 但实测被 namepart 'HSA' 判 typo. 需对齐 docstring 与 impl: 要么实现改为只看尾后缀, 要么 docstring 改为 '任何 namepart 与 SHA 编辑距离=1 都算 typo'. 现状 impl 更严格 (更安全), 建议保留 impl, 改 docstring + 加单测说明该 case.",
@@ -6906,8 +6906,44 @@
         ],
         "verify_tail": "[verify_infra_P293][SUMMARY] ALL PASS (6 checks)",
         "smoke": "PASS (./init.sh rc=0)",
-        "closeout_verify": {},
-        "reviewer": {}
+        "verifier": "scripts/verify_infra_P293.py",
+        "closeout_verify": {
+          "main_head_sha": "44e177f",
+          "merge_commit_sha": "44e177f",
+          "baseline_head_sha": "3c40001",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_P293.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P293][PASS] V0_helper_docstring_namepart_clause has_namepart=True has_override=True has_HSA_SHA_example=True\n[verify_infra_P293][PASS] V1_p293_anchor_in_comment has_P293=True has_HSA_SHA=True has_override_phrase=True\n[verify_infra_P293][PASS] V2_HSA_SHA_judged_typo typo_count=1 names=['EXPECTED_FUNC_HSA_SHA'] all_well_formed=False\n[verify_infra_P293][PASS] V3_namepart_only_judged_typo typo_count=1 names=['EXPECTED_LIB_SHAH_FILE']\n[verify_infra_P293][PASS] V4_clean_canonical_not_typo typo_count=0 well_formed=1 all_well_formed=True\n[verify_infra_P293][PASS] V5_legit_non_sha_not_typo typo_count=0 well_formed=2\n[verify_infra_P293][SUMMARY] ALL PASS (6 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_061.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_061][PASS] V2_lib_file_sha got=933e5e89d1dd3e20 expect=933e5e89d1dd3e20\n[verify_infra_061][PASS] V3_helper_func_sha got=fdaa72c220fcccd5 expect=fdaa72c220fcccd5\n[verify_infra_061][PASS] V4_tmp_samples_capped_at_10 typo_count=14 samples_len=10\n[verify_infra_061][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_061__ helper_ok=True grace_skipped=True\n[verify_infra_061][SUMMARY] ALL PASS (18 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+            }
+          ],
+          "pre_existing_baseline_sha": "3c40001",
+          "baseline_tail_stdout": "[verify_robot_037][PASS] V1_self_checker_func_sha got=3f6c7a303b4f0a43 expect=3f6c7a303b4f0a43\n[verify_robot_037][FAIL] V2_lib_file_sha got=b3005a7d9272fb06 expect=a80af0088b53116b\n[verify_robot_037][PASS] V2_read_constant_func_sha got=a06af8a80fe201ec expect=a06af8a80fe201ec\n[verify_robot_037][SUMMARY] FAILED tags: ['V2_lib_file_sha'] (pre-existing in baseline 3c40001, 与 P293 无关; 已开 backlog infra-V6-backlog-verify-robot-037-lib-sha-bump)",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-P293 typo-guard helper docstring/comment 与 impl 一致性锁完整: verify_infra_P293 6/6 PASS, verify_infra_061 18/18 PASS (新 helper sha fdaa72c2 + lib sha 933e5e89 双锁); cascade 35 个 verify_*.py bump 到 933e5e89, smoke PASS。docstring 正确反映「namepart sha-ish typo 即便后缀规范也判 typo」的严格语义,与 impl line 839-865 完全一致。强 mutation 验证 V0/V1 docstring 锁有效 (RC=1)。已知 pre-existing: verify_robot_037.py 仍持 a80af008 (在 main 3c40001 baseline 同 FAIL 同标签 V2_lib_file_sha, 与本 feature 无关);verify_infra_083 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA orphan 与本 feature 无关。",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
       }
     },
     {
@@ -13801,6 +13837,18 @@
       "status": "backlog",
       "description": "Engineer #2.48 decision: phase-48 #2.48 采用方案 A 仅在 076 文件抽常量 _V5_ACCEPTED_HELPER_NAMES, 避免触发 LIB sha cascade. step2 在未来需要把该常量真正提升到 scripts/_verify_lib.py 作为 public 常量并完成 ~37 verify_infra_*.py 的 EXPECTED_VERIFY_LIB_FILE_SHA cascade bump. Reviewer #1.47 P1 follow-up 完整闭环.",
       "updated_at": "2026-05-23T03:46:01"
+    },
+    {
+      "id": "infra-V6-backlog-verify-robot-037-lib-sha-bump",
+      "name": "verify_robot_037.py EXPECTED_VERIFY_LIB_FILE_SHA stale at a80af008",
+      "area": "infra",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "notes": "P293 #5.51 Reviewer 发现 verify_robot_037.py:57 仍持旧 lib sha a80af008, 应 bump 到当前 933e5e89 (或后续最新)。pre-existing baseline 与 P293 无关, 但应清理。",
+      "description": "phase-51 #5.51 P293 closeout 期间 Reviewer fresh-context 与 baseline 求证均观察到 verify_robot_037.py V2_lib_file_sha FAIL: EXPECTED_VERIFY_LIB_FILE_SHA=a80af0088b53116b 与当前 _verify_lib.py file sha 933e5e89d1dd3e20 不一致。在 baseline 3c40001 同样 FAIL (got=b3005a7d9272fb06), 与 P293 无关. 后续 follow-up 应把 verify_robot_037.py 的 EXPECTED_VERIFY_LIB_FILE_SHA bump 到当时 _verify_lib.py 最新 sha, 与 verify_robot_035.py + verify_infra_037/042/045/052/055-099 cascade 路径保持一致.",
+      "created_at": "2026-05-23",
+      "updated_at": "2026-05-23"
     }
   ],
   "_meta": {

@@ -7759,3 +7759,17 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - Reviewer (sub-agent fresh-context): LGTM, P2 finding 已 promote 为 infra-040-backlog-default-tmpl-content-lock
 - 衍生 backlog 入账: infra-040-backlog-default-tmpl-content-lock (priority=999, area=infra, status=backlog, phase=null) — 为 default tmpl 加内容反向回退保护 (V0b grep hint 或 V2b sha lock)
 - status: not_started → passing
+
+## Session 2026-05-23 (phase-51 #5.51 closeout) — infra-P293 typo-guard docstring vs impl 收官 + 1 backlog 入账
+- feature: infra-P293-typo-guard-docstring-vs-impl-mismatch
+- merge: feat/infra-P293-typo-guard-docstring-vs-impl-mismatch → main (no-ff merge commit 44e177f)
+- main HEAD: 44e177f (was 3c40001)
+- verify_infra_P293: ALL PASS 6/6 (V0 docstring namepart clause, V1 P293 anchor in comment, V2 HSA_SHA judged typo, V3 namepart-only judged typo, V4 clean canonical not typo, V5 legit non-sha not typo)
+- verify_infra_061: ALL PASS 18/18 (V2 lib_file_sha 933e5e89 + V3 helper_func_sha fdaa72c2 双锁)
+- verify_infra_062 (P278 gate): ALL PASS 30/30
+- baseline @ main 3c40001 pre-merge: verify_robot_037 V2_lib_file_sha FAIL (got=b3005a7d expect=a80af008, pre-existing 与 P293 无关)
+- ./init.sh smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM (docstring 与 impl line 839-865 完全一致; 强 mutation 验证 V0/V1 docstring 锁有效)
+- 衍生 backlog 入账: infra-V6-backlog-verify-robot-037-lib-sha-bump (priority=999, area=infra, status=backlog, phase=null) — 清理 verify_robot_037.py 持旧 lib sha a80af008 残留
+- status: in_progress → passing
+- phase-51 #5.51 done
