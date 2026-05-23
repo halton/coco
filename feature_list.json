@@ -7815,14 +7815,60 @@
       "area": "infra",
       "phase": 52,
       "title": "bump_reverse_sha_lock 支持 _verify_lib.py 作为反向锁 target",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-V6-backlog-scope-extend-bump-helpers closeout Reviewer 建议",
       "scope": "扩展 scripts/bump_reverse_sha_lock.py 支持 NNN-agnostic fallback target（如 scripts/_verify_lib.py），让非 verify_NNN_*.py 命名的共享 helper 文件也能成为反向 sha 锁目标。",
       "dependencies": [
         "infra-V6-backlog-scope-extend-bump-helpers"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_101.py 14/14 PASS (V0/V1/V2/V3/V4/V5 完整)",
+        "scripts/verify_infra_046.py 21/21 PASS (helper file_sha 同步)",
+        "scripts/verify_infra_062.py P278 gate (pre-existing baseline failure on infra-P294-followup-helper-tail-chars-vs-bytes-doc, 与本 feature 无关)",
+        "baseline 6d0acb9 同命令 helper 报 '没有反向锁指向该 target (空操作)' 证明 feat 修复",
+        "./init.sh smoke 全 PASS"
+      ],
+      "started_at": "2026-05-20",
+      "verifier": "scripts/verify_infra_101.py",
+      "closeout_verify": {
+        "main_head_sha": "368a138",
+        "merge_commit_sha": "368a138",
+        "baseline_head_echo": "6d0acb9",
+        "pre_existing_baseline_sha": "6d0acb9",
+        "baseline_tail_stdout": "target=scripts/_verify_lib.py\ntarget_new_sha=e583aed3fd27d6dcc1f55b7f326b2cd6296876d3bdb0c5b1a111994f3f4f99c1\nWARN: 没有反向锁指向该 target (空操作)",
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "verify_runs": [
+          {
+            "name": "verify_infra_101",
+            "status": "PASS",
+            "freshness_anchor": "368a138",
+            "tail_stdout": "[verify_infra_101][PASS] V4_nnn_target_exists target=scripts/verify_robot_025.py\n[verify_infra_101][PASS] V4_nnn_lock_found locks_count=1\n[verify_infra_101][PASS] V4_nnn_lock_has_verify_025 const_names=['VERIFY_025_EXPECTED_SHA']\n[verify_infra_101][PASS] V5_reviewer_lgtm_gate target=infra-V6-bump-helper-lib-target helper_ok=True grace_skipped=True\n[verify_infra_101][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "name": "verify_infra_046",
+            "status": "PASS",
+            "freshness_anchor": "368a138",
+            "tail_stdout": "[verify_infra_046][PASS] V4_dry_run_no_disk_change before=b85d7dda59abe584 after=b85d7dda59abe584\n[verify_infra_046][PASS] V4_dry_run_rc_ok rc=0\n[verify_infra_046][PASS] V5_reviewer_lgtm_gate helper_ok=True grace_skipped=True\n[verify_infra_046][SUMMARY] ALL PASS (21 checks)"
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "FAIL",
+            "freshness_anchor": "368a138",
+            "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 — first_violation 全部指向 'infra-P294-followup-helper-tail-chars-vs-bytes-doc' (pre-existing baseline failure, 与 infra-V6-bump-helper-lib-target 无关)",
+            "pre_existing_baseline_sha": "6d0acb9",
+            "note": "P278 gate 报 pre-existing failure on prior feature; 本 feature evidence 完整满足 P278 要求"
+          }
+        ]
+      },
+      "reviewer": {
+        "reviewer_kind": "sub_agent_fresh_context",
+        "verdict": "LGTM",
+        "checks_run": ["V0_helper_design", "V1_whitelist_coverage", "V2_mutation_AB", "V3_baseline_compare", "V4_smoke", "V5_verify_101_14checks"],
+        "findings": {"P0": [], "P1": [], "P2": []},
+        "summary": "bump_reverse_sha_lock.py 的 _candidates_for NNN-agnostic 分支设计正确: 早 return 显式 in 白名单 (EXPECTED_LIB_FILE_SHA, EXPECTED_VERIFY_LIB_FILE_SHA), endswith _verify_lib.py 触发; 白名单覆盖仓库内所有锁 _verify_lib.py file sha 的 48 处 (9+39); FUNC_SHA 后缀天然排除不会误命中; verify_infra_101 14 checks 覆盖 V0/V1/V2/V3/V4/V5 完整; verify_infra_101 14/14 PASS + verify_infra_046 21/21 PASS + smoke PASS; 行为测试 locks_found=48; mutation A 删白名单第二项 48→9 证明白名单第二项生效; mutation B 改 EXPECTED_BUMP_FILE_SHA 末位触发 V2 FAIL; baseline 6d0acb9 同命令报空操作 WARN 确认 feat 彻底修复。"
+      },
+      "evidence": "Reviewer (sub-agent fresh-context): LGTM. bump-helper-design 正确 (_candidates_for NNN-agnostic 早 return 白名单 + endswith _verify_lib.py 触发), 白名单覆盖 48 处锁 (9+39), FUNC_SHA 后缀天然排除. verify_infra_101 14/14 PASS + verify_infra_046 21/21 PASS + smoke PASS. mutation A (删白名单第二项 48→9) + mutation B (改 EXPECTED_BUMP_FILE_SHA 触发 V2 FAIL) 证明锁严格. baseline 6d0acb9 报 WARN 空操作确认修复。"
     },
     {
       "id": "infra-V6-bump-helper-atomic-apply",

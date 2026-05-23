@@ -7826,3 +7826,17 @@ phase-50 (5 in-flight) 全部收官；4 passing + 1 STALE，0 blocked。
 - Reviewer (sub-agent fresh-context): LGTM — Mutation A (删 chars) 触发 V0/V2/V3 三层 FAIL; Mutation B (改 lib sha 末位) V2 FAIL; cascade 37 verifier bump EXPECTED_VERIFY_LIB_FILE_SHA=e583aed3 一致
 - status: not_started → passing
 - phase-52 #3.52 done
+
+## Session 2026-05-23 phase-52 #4.52 closeout
+
+- feature: infra-V6-bump-helper-lib-target (bump_reverse_sha_lock 支持 _verify_lib.py NNN-agnostic target)
+- merge: feat/infra-V6-bump-helper-lib-target f22e0e7 → main 368a138 (no-ff)
+- verify_infra_101 (post-merge): ALL PASS 14/14 (V0/V1/V2/V3/V4/V5 完整, locks_count=48)
+- verify_infra_046 (post-merge): ALL PASS 21/21
+- verify_infra_062 P278 gate: FAIL 6/30 — first_violation 全部指向 infra-P294-followup-helper-tail-chars-vs-bytes-doc (pre-existing baseline failure, 与本 feature 无关; 本 feature evidence 完整满足 P278 字段要求)
+- baseline 求证: 6d0acb9 跑 `python scripts/bump_reverse_sha_lock.py --target scripts/_verify_lib.py` → 'WARN: 没有反向锁指向该 target (空操作)' rc=0 (旧 helper 不识别 _verify_lib.py target), feat 修复证据
+- ./init.sh smoke: PASS
+- Reviewer (sub-agent fresh-context): LGTM — _candidates_for NNN-agnostic 分支早 return 白名单设计正确; 白名单覆盖仓库 48 处锁 (9+39); FUNC_SHA 后缀天然排除不会误命中; mutation A 删白名单第二项 48→9 证明白名单生效; mutation B 改 EXPECTED_BUMP_FILE_SHA 末位 V2 FAIL
+- status: not_started → passing
+- phase-52 #4.52 done
+
