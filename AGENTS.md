@@ -220,6 +220,27 @@ Closeout sub-agent 提交的 verify 报告必须满足以下 6 条机械化校�
 
 **已知边界 (P278 round-2 显式承认)**: 当前 helper **只验 schema 不验 stdout 字符串真伪** —— 即 Engineer 可在 evidence 里写任意 `tail_stdout = "ALL PASS"` 字符串而 helper 不会反查 main HEAD 实测。tail_stdout 真伪验证留待 backlog `infra-P294-closeout-stdout-sha-verification` (sha256-of-stdout + main HEAD re-run 比对) 与 `infra-P294-R4-fail-baseline-cross-check` (FAIL run 的 baseline_tail_stdout 交叉校验)。当前阶段 trust gate 仍由 Reviewer fresh-context 人工对照实测 stdout 把关。
 
+## Shell verify rc 读取硬规则 (P299, phase-49 #5.49)
+
+INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL —— 此 sentinel 由 `scripts/verify_infra_100.py` 静态锁定，本节文案不得静默漂移。
+
+P294-Rx round-1 Engineer 把真 FAIL 误判为 PASS, 根因不是 verify 脚本 bug, 而是 shell 调用形态:
+`python scripts/verify_xxx.py | tail; echo $?` 输出的 rc **是 `tail` 的 rc (恒为 0)**, 上游 verify 脚本的真 rc 被 pipe 吞掉。这条 shell pitfall 必须显式禁止并文档化。
+
+**强制规范 (三选一; 在 evidence / sub-agent brief / 报告里都按此格式)**:
+
+- (a) **不 pipe, 直接读 `$?`**:
+  `python scripts/verify_xxx.py; rc=$?; echo "rc=$rc"` (verify 全量 stdout 直接进终端, rc 来自 verify 本体)
+- (b) **`set -o pipefail` 后才允许 pipe**:
+  `set -o pipefail; python scripts/verify_xxx.py | tail -n 20; rc=$?` (pipefail 后 `$?` 反映管道中任一段 non-zero, verify FAIL 不会被 tail 吞)
+- (c) **stdout 重定向到文件, 读完整再 tail**:
+  `python scripts/verify_xxx.py > /tmp/v.log 2>&1; rc=$?; tail -n 20 /tmp/v.log; echo "rc=$rc"` (rc 来自 verify 本体, tail 只读文件不影响)
+
+**显式禁止 (anti-pattern)**:
+`python scripts/verify_xxx.py | tail; echo $?` —— **rc 来自 tail 不来自 verify**, 把真 FAIL 当 PASS 报告即视为 evidence 不可信, 由 Reviewer fresh-context 直接 reject。
+
+**同步要求**: 派 sub-agent 跑 verify 时, brief 模板里须复述以上三选一形态之一; sub-agent 返回 verify tail 同时返回 `rc=<int>` 字段并显式声明用了 (a) / (b) / (c) 哪种形态。
+
 ## 收尾
 
 结束会话前：
