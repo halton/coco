@@ -13259,12 +13259,57 @@
     {
       "id": "infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list",
       "priority": 3.48,
-      "status": "not_started",
+      "status": "passing",
       "phase": 48,
       "area": "infra",
       "title": "080 V4_3 合成 fixture docstring 写明 V4_2 enrolled list 维护",
       "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_3 已改为合成 fixture，与原 079 历史硬绿样本解耦；但 docstring 未说明 V4_2 enrolled (grace_period helper graduate list) 后续若新增 helper 需手扩。",
-      "acceptance": "080 V4_3 docstring/comment 明确指引：新增 helper 入 enrolled list 时同步更新 V4_2 expect 集"
+      "acceptance": "080 V4_3 docstring/comment 明确指引：新增 helper 入 enrolled list 时同步更新 V4_2 expect 集",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "4ad94acc0478",
+          "main_head_sha_full": "4ad94acc0478820f8aa75e17f26d24e84983f1e8"
+        },
+        "verify_runs": [
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_080.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_080][PASS] V4_3_soft_pass_exemplar_returns_fail fixture_ok=False fixture_v=1 has_True=True real_target=verify_infra_060.py real_ok=True real_v=0 reason='graduate complete, detector verified via synthetic fixture'\n[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True n_sub=1 mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok', 'checked', 'v5_gate_found', 'calls_assert_helper', 'helper_return_names', 'emit_calls', 'violations', 'error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=485\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=45 enforced=36 soft_skipped=9 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=45 enforced=36 soft_skipped=9 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/smoke.py",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "V4_3 fixture docstring 准确描述 anti-pattern/fixture 内容/期望 detector 行为, 与 285-310 行实现 1:1 对应, 模块顶层注释未漂移 V1/V3 sha, 14/14 + 30/30 + smoke 全 PASS",
+          "checks_run": [
+            "diff scope",
+            "docstring 顶层位置",
+            "anti-pattern 描述一致",
+            "fixture 文件名一致",
+            "TemporaryDirectory 描述一致",
+            "detector 期望一致",
+            "real informational 一致",
+            "V1_self_main_func_sha",
+            "V3_helper_func_sha",
+            "080 14/14",
+            "062 30/30",
+            "smoke"
+          ],
+          "findings": {"P0": [], "P1": [], "P2": ["注释中 '立删' 措辞略不严谨, 实际是 with TemporaryDirectory 块结束自动清理（行为等价, 不阻 merge）"]}
+        },
+        "freshness_anchor": "post-merge-rerun",
+        "closeout_notes": "纯文档增强 +24 行模块顶层注释, 零行为变更, V1/V3 sha 未漂移. P2: 注释中 '立删' 应为 'with TemporaryDirectory 块结束自动清理'（行为等价, 不阻 merge）"
+      }
     },
     {
       "id": "infra-V6-backlog-076-helper-tuple-step2-hoist-to-verify-lib",

@@ -1,5 +1,14 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-48 #3.48 infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list (Closeout)
+
+- merge: feat/infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list (c3bead6) → main, merge sha=4ad94acc0478 (full=4ad94acc0478820f8aa75e17f26d24e84983f1e8), base=48a4560
+- 纯文档增强：scripts/verify_infra_080.py 模块顶层 +24 行 docstring，描述 V4_3 anti-pattern/fixture 内容/detector 期望/与原 079 解耦背景。零行为变更，V1/V3 sha 未漂移。
+- Post-merge rerun (venv py3.13): 080 14/14 PASS, 062 30/30 PASS, smoke PASS。
+- Reviewer (sub-agent fresh-context): LGTM, P0=P1=[], P2=[1 项 "立删" 措辞建议改 "with TemporaryDirectory 自动清理"，行为等价，不阻 merge]。
+- feature_list.json: status=passing, phase=48, priority=3.48。
+- P278 6 信号自校：main_head_sha (4ad94acc0478) ✓, verify_runs 3 条带 tail_stdout+status ✓, 无 FAIL 故 baseline 不要求 ✓, smoke_tail_stdout ✓, reviewer.reviewer_kind=sub_agent_fresh_context ✓。
+
 ## Session 2026-05-22 — phase-46 #1.46 infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate (Closeout A)
 
 - merge: feat/infra-V6-backlog-062-v4-closeout-verify-runs-shape-grace-period-17-graduate (726909c) → main, merge sha=d244ce4, base=16af96d
