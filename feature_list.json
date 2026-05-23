@@ -8641,7 +8641,7 @@
             "script": "scripts/verify_infra_062.py",
             "status": "PASS",
             "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=36 enforced=34 soft_skipped=2 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=36 enforced=34 soft_skipped=2 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=33 v3_table=33 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
-            "freshness_anchor": "77a2283",
+            "freshness_anchor": "8257e3c",
             "name": "scripts/verify_infra_062.py"
           },
           {
@@ -8655,7 +8655,7 @@
             "script": "scripts/verify_infra_088.py",
             "status": "PASS",
             "tail_stdout": "[verify_infra_088][PASS] V4_3_helper_real_run_ok ok=True scanned=33 v3_table=33 missing=0 extra=0\n[verify_infra_088][PASS] V4_4_helper_real_run_violation ok=False removed_name=assert_baseline_head_echo_present_and_matches missing_count=1 first_missing=assert_baseline_head_echo_present_and_matches restored_ok=True\n[verify_infra_088][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_088][PASS] V5_reviewer_lgtm_gate target=infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 helper_ok=True reason=\"feature 'infra-V6-backlog-062-v3-helper-func-sha-rebump-round2': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_088][SUMMARY] ALL PASS (14 checks)",
-            "freshness_anchor": "77a2283",
+            "freshness_anchor": "8257e3c",
             "name": "scripts/verify_infra_088.py"
           }
         ],
@@ -8675,7 +8675,7 @@
           }
         },
         "closeout_verify": {
-          "main_head_sha": "77a2283",
+          "main_head_sha": "8257e3c",
           "merge_commit_sha": "77a228392d09cc4be6cbfaf90e1c84c0ba70e1e9",
           "baseline_head_echo": "e570ec0",
           "pre_existing_baseline_sha": "e570ec0",
@@ -8707,7 +8707,7 @@
               "script": "scripts/verify_infra_062.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=36 enforced=34 soft_skipped=2 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=36 enforced=34 soft_skipped=2 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=33 v3_table=33 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
-              "freshness_anchor": "77a2283",
+              "freshness_anchor": "8257e3c",
               "name": "scripts/verify_infra_062.py"
             },
             {
@@ -8721,7 +8721,7 @@
               "script": "scripts/verify_infra_088.py",
               "status": "PASS",
               "tail_stdout": "[verify_infra_088][PASS] V4_3_helper_real_run_ok ok=True scanned=33 v3_table=33 missing=0 extra=0\n[verify_infra_088][PASS] V4_4_helper_real_run_violation ok=False removed_name=assert_baseline_head_echo_present_and_matches missing_count=1 first_missing=assert_baseline_head_echo_present_and_matches restored_ok=True\n[verify_infra_088][PASS] V4_5_mutant_strip_call_detected_zero n_sub=2 mutant_call_count=0 orig_count=1\n[verify_infra_088][PASS] V5_reviewer_lgtm_gate target=infra-V6-backlog-062-v3-helper-func-sha-rebump-round2 helper_ok=True reason=\"feature 'infra-V6-backlog-062-v3-helper-func-sha-rebump-round2': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_088][SUMMARY] ALL PASS (14 checks)",
-              "freshness_anchor": "77a2283",
+              "freshness_anchor": "8257e3c",
               "name": "scripts/verify_infra_088.py"
             }
           ]
