@@ -8873,11 +8873,54 @@
     {
       "id": "infra-P294-followup-070-verify-lib-file-sha-bump",
       "priority": "3.46",
-      "status": "not_started",
+      "status": "passing",
       "phase": 46,
       "area": "infra",
       "title": "cascade bump EXPECTED_VERIFY_LIB_FILE_SHA across stale verify_infra_*.py",
-      "rationale": "P294 phase-46 cascade: scripts/_verify_lib.py 当前 sha=4f168152, 但 24 个 verify_infra_*.py (037/061/063-068/070-073/075-082/084-087) EXPECTED_VERIFY_LIB_FILE_SHA 仍锁旧值 (a80af008 或 2c412eec). 批量 bump 到 4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd 以解除 V2_verify_lib_file_sha cascade FAIL."
+      "rationale": "P294 phase-46 cascade: scripts/_verify_lib.py 当前 sha=4f168152, 但 24 个 verify_infra_*.py (037/061/063-068/070-073/075-082/084-087) EXPECTED_VERIFY_LIB_FILE_SHA 仍锁旧值 (a80af008 或 2c412eec). 批量 bump 到 4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd 以解除 V2_verify_lib_file_sha cascade FAIL.",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "443d8e3",
+          "baseline_head_echo": "2599a3a",
+          "merge_commit_sha": "443d8e3984fa3467566f8104f8a24e3c56782184",
+          "pre_existing_baseline_sha": "2599a3a",
+          "baseline_tail_stdout": "无 FAIL，pre-merge baseline 见 reviewer evidence /tmp/review-3.46@195ba69",
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp  ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_070",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_070][PASS] V5_reviewer_lgtm_gate target=infra-P294-closeout-stdout-sha-verification helper_ok=True reason=\"feature 'infra-P294-closeout-stdout-sha-verification': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\" [verify_infra_070][SUMMARY] ALL PASS (15 checks)",
+              "freshness_anchor": "post-merge-rerun + main_head=443d8e3"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=False reason=\"feature 'infra-P278-closeout-verify-trustworthy' evidence.reviewer (or evidence.closeout_verify.reviewer) missing or not a dict\" [verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+              "freshness_anchor": "post-merge-rerun + main_head=443d8e3"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp  ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun + main_head=443d8e3"
+            }
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "cascade bump 24 verify_*.py 把 EXPECTED_VERIFY_LIB_FILE_SHA 同步到 4f168152，全部 V2 PASS，070 实测 15/15、062 实测 30/30，smoke 通过",
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "commit msg 070=13/15 vs 实测 15/15，描述偏保守",
+              "stale feature demote note 表述可微调"
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-P294-followup-v5-reviewer-gate-evidence-bind",

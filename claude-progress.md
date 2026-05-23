@@ -7303,3 +7303,12 @@ phase-46 5 候选 promoted to not_started：
 - Re-Reviewer P2 提醒：后续 Reviewer 跑前先 `git status` 确认 clean + 必要时 `find . -name __pycache__ -exec rm -rf {} +`，避免重复此类矛盾
 - 本 feature 引入 V4_closeout_verify_runs_freshness hard check：所有非 grace 内 feature 的 evidence.closeout_verify.verify_runs[*] 必须含非空字符串 freshness_anchor
 - close-out 拆 A+B：A 写 evidence + status，B bump main_head_sha 自指
+
+## Session: phase-46 #3.46 closeout (infra-P294-followup-070-verify-lib-file-sha-bump)
+
+- main_head_sha=443d8e3, merge_commit=443d8e39, baseline=2599a3a
+- verify_runs: verify_infra_070 PASS 15/15, verify_infra_062 PASS 30/30, smoke PASS
+- Reviewer (sub_agent_fresh_context): LGTM @195ba69 (/tmp/review-3.46)
+- Reviewer P2: (1) commit msg 070=13/15 vs 实测 15/15 偏保守 (2) stale feature demote note 表述可微调
+- cascade bump 24 verify_*.py 的 EXPECTED_VERIFY_LIB_FILE_SHA → 4f168152cb1c4def，全 V2 PASS
+- B 段 (bump 其他 verify 的 main_head_sha 锁) 留下一个 sub-agent
