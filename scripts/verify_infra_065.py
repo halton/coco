@@ -61,7 +61,7 @@ from _verify_lib import func_sha_by_name, verify_baseline_fail_claims, assert_re
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "6098f8c1b0a70331a12407d0e184b7d30c6a014e5a7b37090ff4981cc357a93b"
 EXPECTED_BASELINE_FAIL_CROSS_CHECK_FUNC_SHA = "4aa6b31c7b5e79b1ea8f17f33c323e68fa0c20932c090848d6e322db0cd552a7"
-EXPECTED_V4_CHECKER_FUNC_SHA = "51a9db2dc9d317c2e6de21fd2be1a351430cf696313be05ee3cdf00da072b289"
+EXPECTED_V4_CHECKER_FUNC_SHA = "40cb20340a86840691333344010e4c0b4fbe1560e2dea1ff6bc888f3d771a177"
 
 DOCSTRING_SENTINEL = "INFRA_065_SHA_LOCKS"
 
@@ -258,6 +258,54 @@ def v4_behavior() -> None:
             and r["claims_total"] == 0,
             f"got err={r['error']!r} total={r['claims_total']}",
         )
+
+    # V4.4b: baseline_ref 是纯非法字符串 (非 hex / 非 ref 名) → error 非空 + 包含原 ref
+    # phase-55 #3.55 (P294-R4 留尾): 锁住 'not_a_ref' / 含 .. / 含空格 路径
+    # 与 V4.4 区别: V4.4 覆盖 "形似合法 40-hex 但 commit 不存在"; V4.4b 覆盖
+    # "git rev-parse 直接拒绝的语法非法 ref 字符串"
+    for sub_tag, bad_ref in (
+        ("not_a_ref", "not_a_ref"),
+        ("range_dotdot", "foo..bar"),
+        ("contains_space", "foo bar"),
+    ):
+        with tempfile.TemporaryDirectory(prefix=f"vi065_c4b_{sub_tag}_") as td:
+            tmp = Path(td)
+            _make_mock_repo(tmp, {"verify_infra_999.py": _MOCK_PASS})
+            r = verify_baseline_fail_claims(
+                "verify_infra_999 FAIL on baseline",
+                bad_ref, tmp,
+                timeout_per_script=10,
+            )
+            _emit(
+                f"V4.4b_invalid_baseline_ref_string_{sub_tag}",
+                r["error"] is not None
+                and "baseline_ref invalid" in (r["error"] or "")
+                and repr(bad_ref) in (r["error"] or "")
+                and r["claims_total"] == 0,
+                f"bad_ref={bad_ref!r} got err={r['error']!r} total={r['claims_total']}",
+            )
+
+    # V4.4c: baseline_ref 是空字符串 / 仅空白 → error 非空, rev-parse 拒绝
+    # 锁 helper 不会对 empty ref 短路误判 (即 rev-parse 必须真跑并 fail)
+    for sub_tag, bad_ref in (
+        ("empty", ""),
+        ("whitespace", "   "),
+    ):
+        with tempfile.TemporaryDirectory(prefix=f"vi065_c4c_{sub_tag}_") as td:
+            tmp = Path(td)
+            _make_mock_repo(tmp, {"verify_infra_999.py": _MOCK_PASS})
+            r = verify_baseline_fail_claims(
+                "verify_infra_999 FAIL on baseline",
+                bad_ref, tmp,
+                timeout_per_script=10,
+            )
+            _emit(
+                f"V4.4c_invalid_baseline_ref_blank_{sub_tag}",
+                r["error"] is not None
+                and "baseline_ref invalid" in (r["error"] or "")
+                and r["claims_total"] == 0,
+                f"bad_ref={bad_ref!r} got err={r['error']!r} total={r['claims_total']}",
+            )
 
     # V4.5: 多 claim 混合 — 998 真 FAIL + 999 假 FAIL
     with tempfile.TemporaryDirectory(prefix="vi065_c5_") as td:
