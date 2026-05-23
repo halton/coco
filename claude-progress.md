@@ -7974,3 +7974,15 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
 - feature_list.json status: not_started → passing
 - 下一 candidate: infra-P290-backlog-dump-family-equality-check (#3.54)
+
+## Session 2026-05-23 (phase-54 #3.54 closeout)
+- feature: infra-P290-backlog-dump-family-equality-check passing
+- main HEAD: 3c22d1451741e137eeedc3e78ee1db05a8531826 (merge-commit; base 3fdebc9)
+- Engineer 新建: scripts/verify_infra_107_backlog_dump_family_equality.py (16 checks ALL PASS, V0~V5; V4 dump_v4_sha_graph file_sha=f9720b4b4f7f0474; V4b self main_func_sha=ef5f4042ea4fc589)
+- 设计点: 用 isinstance(frozenset) + 显式 elems 双信号防止 frozenset({...}) == set({...}) 同元素相等漏 mutation; V3 三族各拆 type_frozenset + elems 两 check
+- cascade=0 (新增 verify_infra_107 自身, 无下游 sha lock 受影响)
+- post-merge-rerun (P278 freshness_anchor): 107 PASS (16/16), smoke rc=0, 060 FAIL 1/14 (pre-existing baseline 3fdebc9, P285 unknown_count, 与 P290 无关), 062 PASS (30 emit-paths)
+- Reviewer fresh-context LGTM (sub-agent): mutation A 反证 (_DUMP_FAMILY 改 set({...}) → V3_dump_type_frozenset FAIL), mutation B 反证 (_DUMP_FAMILY 元素 typo → V3_dump_elems FAIL); 设计同 V102/V106 grace_period 模式; baseline 区分 060 pre-existing
+- closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
+- feature_list.json status: not_started → passing
+- 下一 candidate: infra-P294-backlog-verify-103-old-fstring-cleanup (#4.54)
