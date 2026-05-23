@@ -74,6 +74,7 @@ __all__ = [
     "assert_closeout_main_head_sha_format",
     "assert_closeout_verify_runs_freshness",
     "assert_v5_reviewer_gate_evidence_bind",
+    "scan_per_file_locks_from_docstrings",
 ]
 
 
@@ -4258,3 +4259,129 @@ def _discover_func_locks_in_verify(verify_path: str | Path) -> list[dict]:
             "lineno": node.lineno,
         })
     return results
+
+
+# ---------------------------------------------------------------------------
+# infra-P289-per-file-locks-auto-derive (phase-63 #3):
+# 从 verify 脚本 module docstring 的 ``## Lock: <CONST_NAME>`` 小节自动派生
+# (source_file, const_name) → lock_metadata 表, 替代硬编码 _PER_FILE_LOCKS.
+# 小节格式 (phase-62 #2 V11 模板, 见 verify_infra_110.py):
+#     ## Lock: EXPECTED_<CONST>
+#     - target_function: <name>
+#     - target_file: <path>
+#     - lock_kind: <ast_func_sha|file_sha|...>
+#     - bump_when: <trigger>
+#     - bump_protocol: <how>
+#     - rationale: <why>
+# audit-only 阶段: 不替换 dump_v4_sha_graph._PER_FILE_LOCKS 硬编码, 仅作为
+# 独立 audit 通道, 让 verify 能机械化校验 docstring 与硬编码表一致性。
+# ---------------------------------------------------------------------------
+_LOCK_FIELDS = (
+    "target_function",
+    "target_file",
+    "lock_kind",
+    "bump_when",
+    "bump_protocol",
+    "rationale",
+)
+_RE_LOCK_HEADER = re.compile(r'^##\s+Lock:\s+([A-Z_][A-Z0-9_]*)\s*$')
+_RE_LOCK_FIELD = re.compile(r'^-\s+([a-z_]+):\s*(.+?)\s*$')
+
+
+def _parse_lock_docstring(file_path: str | Path) -> dict | None:
+    """解析 file_path 模块顶部 docstring 中的 ``## Lock: <CONST>`` 小节。
+
+    返回 dict 形如::
+
+        {
+            "EXPECTED_FOO_FUNC_SHA": {
+                "target_function": "...",
+                "target_file": "...",
+                "lock_kind": "...",
+                "bump_when": "...",
+                "bump_protocol": "...",
+                "rationale": "...",
+            },
+            ...
+        }
+
+    若 docstring 缺失 / 无 Lock 小节, 返回 None。多个 Lock 小节累加为多个 key。
+    每个 key 只保留显式出现的字段 (不补默认值), 由调用方决定 partial 是否合规。
+
+    infra-P289-per-file-locks-auto-derive (phase-63 #3)。
+    """
+    p = Path(file_path)
+    try:
+        src = p.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return None
+    doc = ast.get_docstring(tree)
+    if not doc:
+        return None
+    result: dict[str, dict[str, str]] = {}
+    lines = doc.splitlines()
+    i = 0
+    n = len(lines)
+    found_any = False
+    while i < n:
+        m = _RE_LOCK_HEADER.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        found_any = True
+        const_name = m.group(1)
+        entry: dict[str, str] = {}
+        i += 1
+        # 后续连续的 ``- key: value`` 行 (允许空行内部分隔结束)
+        while i < n:
+            line = lines[i]
+            stripped = line.strip()
+            if not stripped:
+                # 空行视作小节结束
+                i += 1
+                break
+            fm = _RE_LOCK_FIELD.match(line)
+            if not fm:
+                # 非 field 行 (例如新的 header / 普通段落) 结束本 lock 小节
+                break
+            key = fm.group(1)
+            val = fm.group(2)
+            if key in _LOCK_FIELDS:
+                entry[key] = val
+            i += 1
+        result[const_name] = entry
+    if not found_any:
+        return None
+    return result
+
+
+def scan_per_file_locks_from_docstrings(scripts_dir: str | Path) -> dict[tuple[str, str], dict]:
+    """扫 scripts_dir 下 verify_*.py + dump_v4_sha_graph.py 的 docstring Lock 小节,
+    累积为 ``(source_file_basename, const_name) → lock_metadata`` 表。
+
+    返回 dict; 没找到任何 Lock 小节时返回空 dict (不抛)。该输出与
+    ``scripts.dump_v4_sha_graph._PER_FILE_LOCKS`` 形态对齐 (复合 key 含
+    source 文件名 + const 名), 但 value 是 lock_metadata dict 而非 target 字符串,
+    便于 audit 通道额外校验字段完备性。
+
+    infra-P289-per-file-locks-auto-derive (phase-63 #3)。
+    """
+    d = Path(scripts_dir)
+    if not d.is_dir():
+        return {}
+    result: dict[tuple[str, str], dict] = {}
+    candidates = sorted(list(d.glob("verify_*.py")))
+    dump_path = d / "dump_v4_sha_graph.py"
+    if dump_path.exists():
+        candidates.append(dump_path)
+    for fp in candidates:
+        parsed = _parse_lock_docstring(fp)
+        if not parsed:
+            continue
+        for const_name, meta in parsed.items():
+            result[(fp.name, const_name)] = meta
+    return result

@@ -10303,7 +10303,7 @@
     {
       "id": "infra-P289-per-file-locks-auto-derive",
       "priority": 207,
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 63,
       "area": "infra",
       "title": "_PER_FILE_LOCKS 从 verify 脚本 docstring 自动推导, 替代硬编码表",
