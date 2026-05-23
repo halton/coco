@@ -17049,12 +17049,100 @@
       "priority": 204,
       "area": "infra",
       "title": "v039 V4_output_anchors anchor 字面值改为 lower-bound 或动态读 v4_sha.json",
-      "status": "not_started",
+      "status": "passing",
       "phase": 61,
       "created_at": "2026-05-24",
       "source": "infra-P304-backlog-P290-v2-target-sha-resync closeout Reviewer P2",
       "description": "verify_infra_039.py V4_output_anchors 当前用字面 EXPECTED anchor 锁 .planning/intel/v4_sha.json 内容, 任何新 target 加入都需 resync. 提案: 改为 lower-bound 校验 (targets >= N) 或在 verify 内动态读 v4_sha.json 计算, 避免字面 anchor lock-step.",
-      "dependencies": []
+      "dependencies": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "0340507",
+          "baseline_head_echo": "549f227",
+          "merge_commit_sha": "0340507",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_035",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only matched=True\n[verify_infra_035] summary total=55 failed=0",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110][SUMMARY] ALL PASS (17 checks)",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "pre_existing_baseline_sha": "549f227",
+              "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "smoke_tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True\n[verify_infra_P301_full] summary: total=10 failed=0",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_P290",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc\n[verify_infra_P290] summary: total=9 failed=0",
+              "freshness_anchor": "0340507"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (22 checks)",
+              "freshness_anchor": "0340507"
+            }
+          ],
+          "mutation_test": {
+            "A": {
+              "desc": "bump EXPECTED_TARGETS_MIN to 99 (远超 actual 20)",
+              "expected": "V4_targets_count_in_bounds FAIL: actual<MIN 节点丢失保护触发",
+              "result": "FAIL (actual=20 < min=99 — 节点丢失保护正确触发)"
+            },
+            "B": {
+              "desc": "lower EXPECTED_TARGETS_MAX_SANITY to 10 (低于 actual 20)",
+              "expected": "V4_targets_count_in_bounds FAIL: actual>MAX 漂移 sanity 触发",
+              "result": "FAIL (actual=20 > max=10 — 漂移 sanity 正确触发)"
+            },
+            "C": {
+              "desc": "baseline (MIN=20 MAX=100, actual=20 in bounds)",
+              "expected": "V4_targets_count_in_bounds PASS — 范围内允许新增",
+              "result": "PASS (actual=20 in [20,100], 链路 ALL PASS 22 checks)"
+            },
+            "D": {
+              "desc": "破坏 anchor regex 让 search 找不到 'v4_sha.json (N targets)' 模式",
+              "expected": "V4_targets_count_in_bounds FAIL: pattern 不可见 (模拟节点丢失)",
+              "result": "FAIL (could not find pattern — lower-bound 真捕节点丢失)"
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context 评审 phase-61 #5 infra-039-backlog-v4-output-anchors-lower-bound: 实现把 V4_output_anchors 字面 EXPECTED anchor 改造为下界+上界 sanity (EXPECTED_TARGETS_MIN=20, EXPECTED_TARGETS_MAX_SANITY=100), 通过 subprocess 跑 dump_v4_sha_graph.py 提取 'v4_sha.json (N targets)' 中的 N 再比对范围. 4 mutation A/B/C/D 全部符合预期: MIN 提到 99 触发节点丢失保护 FAIL, MAX 降到 10 触发漂移 sanity FAIL, baseline 在 [20,100] 内 PASS, 破坏 anchor regex 让 pattern 不可见时 FAIL — lower-bound 真捕节点丢失场景. docstring 完整说明 MIN/MAX 含义与 bump 时机, 范围允许新增 target 不需要 resync. 无 P0/P1 阻塞 finding."
+          }
+        }
+      }
     },
     {
       "id": "infra-110-backlog-composite-key-src-stem-no-expected-substring",

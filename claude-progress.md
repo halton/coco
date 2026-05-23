@@ -8654,3 +8654,26 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - closeout commit sha: 见 git log
 - push: socket/网络失败忽略不重试
 - 下一候选: phase-61 #5 (priority=204) infra-039-backlog-v4-output-anchors-lower-bound
+
+## Session 2026-05-24 (phase-61 #5 closeout)
+- feature: infra-039-backlog-v4-output-anchors-lower-bound → passing
+- NEW_MAIN_SHA: 0340507 (merge --no-ff feat/infra-039-backlog-v4-output-anchors-lower-bound)
+- baseline_head_echo: 549f227 (phase-61 #4 closeout)
+- verify_runs (P278 trustworthy, P299 rc 直读模式):
+  - smoke rc=0 PASS (292 typo_count=0)
+  - verify_infra_035 rc=0 PASS (total=55 failed=0)
+  - verify_infra_110 rc=0 PASS (17 checks)
+  - verify_infra_062 rc=1 FAIL 6/30 (pre-existing; baseline 549f227 同样 FAIL 6/30, smoke 与 feature 无关 — 已记 baseline_tail_stdout)
+  - verify_infra_P301_full rc=0 PASS (total=10 failed=0)
+  - verify_infra_P290 rc=0 PASS (total=9 failed=0)
+  - verify_infra_039 rc=0 PASS (22 checks; V4_targets_count_in_bounds actual=20 in [20,100])
+- mutation_test (主 Closeout 实测复现 — 文件已还原):
+  - A: MIN=99 → V4_targets_count_in_bounds FAIL (节点丢失保护) ✓
+  - B: MAX=10 → V4_targets_count_in_bounds FAIL (漂移 sanity) ✓
+  - C: baseline (MIN=20 MAX=100) → ALL PASS 22 checks ✓
+  - D: 破坏 anchor regex → could not find pattern FAIL (真捕节点丢失) ✓
+- Reviewer: sub_agent_fresh_context LGTM (无 P0/P1)
+- 下一候选: phase-61 全 5/5 完成 → 进入 phase-62 planning
+- push: 单次尝试, 失败忽略
+- closeout commit sha: 见 git log
+- **phase-61 全 5/5 完成**: #1 infra-P307-fixtures, #2 infra-P305-backlog-v8-sentinel-pragma, #3 infra-046-backlog-bump-helper, #4 infra-110-composite-key-src-stem, #5 infra-039-v4-output-anchors-lower-bound
