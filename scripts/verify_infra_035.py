@@ -16,6 +16,9 @@ V3 mutant 反证: 临时把 v4_sha.json 中第一个 target 的 sha 末位翻转
 V4 sha256 锁 scripts/bump_infra_034_v4_sha.py 整体.
 V5 subprocess `python scripts/bump_infra_034_v4_sha.py --dry-run` rc==0 且
     stdout 含 "已一致".
+V6 v4_sha.json canonical 字节序锁 (infra-035-backlog #5.50): 文件内容 ==
+    json.dumps(loaded, ensure_ascii=False, indent=2, sort_keys=True) + "\n";
+    并断言 bump 助手源码包含 sort_keys=True 字面量 (防回退至 sort_keys=False).
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码.
 
@@ -58,7 +61,7 @@ VERIFY_034_EXPECTED_SHA = (
     "265f54b08d3099a1446d09a55e1239cef7657c3f68a2ea1c98fd1d5547232a30"
 )
 BUMP_034_EXPECTED_SHA = (
-    "fe26902eb371872eb8e8227a3d0985ef71df2fb63cbbf60c88a9ea4d23b1e744"
+    "724e391b89b2917def30d0d0229fff9e787b6d68474a58970e66c4bf60c86afc"
 )
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -213,6 +216,45 @@ def v5_bump_dryrun() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: v4_sha.json canonical 字节序锁 (infra-035-backlog #5.50)
+# ---------------------------------------------------------------------------
+def v6_canonical_bytes() -> None:
+    """锁 v4_sha.json bytewise == json.dumps(loaded, sort_keys=True) + "\\n".
+
+    防 v4_sha.json 键序在不同 Python 版本 / dict 实现 / 手工编辑下漂移,
+    干扰 diff 与 sha 锁链根节点稳定性. 同时锁 bump 助手源码含
+    ``sort_keys=True`` 字面量, 防回退至 ``sort_keys=False``.
+    """
+    if not V4_SHA_JSON.is_file():
+        _emit("V6_canonical_bytes", False, "v4_sha.json missing")
+        return
+    raw = V4_SHA_JSON.read_text(encoding="utf-8")
+    try:
+        data = json.loads(raw)
+    except Exception as e:
+        _emit("V6_canonical_bytes", False, f"json parse failed: {e}")
+        return
+    canonical = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    _emit(
+        "V6_canonical_bytes",
+        raw == canonical,
+        f"raw_len={len(raw)} canonical_len={len(canonical)} match={raw == canonical}",
+    )
+
+    if not BUMP_034.is_file():
+        _emit("V6_bump_sort_keys_true", False, "bump_infra_034_v4_sha.py missing")
+        return
+    bump_src = BUMP_034.read_text(encoding="utf-8")
+    has_sort_true = "sort_keys=True" in bump_src
+    has_sort_false = "sort_keys=False" in bump_src
+    _emit(
+        "V6_bump_sort_keys_true",
+        has_sort_true and not has_sort_false,
+        f"sort_keys=True_in_bump={has_sort_true} sort_keys=False_in_bump={has_sort_false}",
+    )
+
+
 def main() -> int:
     v0_schema()
     v1_targets_exist()
@@ -220,6 +262,7 @@ def main() -> int:
     v3_mutant()
     v4_lock_bump()
     v5_bump_dryrun()
+    v6_canonical_bytes()
 
     failed = [t for t, ok, _ in _results if not ok]
     total = len(_results)
