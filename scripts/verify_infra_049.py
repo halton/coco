@@ -26,9 +26,12 @@ INFRA_049_SHA_LOCKS
 - V3 in-memory mutant: 替换 render_text body 为 ``return "graph LR"``, sha 必漂移;
   且原 baseline sha == EXPECTED_RENDER_TEXT_FUNC_SHA
 - V4 行为验证: subprocess 分别跑 ``--json`` / ``--text``, 断言:
-  - JSON 输出可 parse 为 dict 且 schema == "reverse_sha_lock_index/v1"
+  - JSON 输出可 parse 为 dict 且 schema == "reverse_sha_lock_index/v2"
+    (infra-049-backlog-dump-index-expose-kind, phase-49 #4.49: v1→v2 升级)
   - stats.scanned_count >= 5 (现状 7; 留 buffer 防 mismatch)
-  - entries 每条含 6 个 key (file/lineno/const_name/sha_hex/sha_short/inferred_target)
+  - stats.kind_breakdown 各 key ∈ {verify_id, expected_pattern} 且总和 == scanned_count
+  - entries 每条含 7 个 key (file/lineno/const_name/sha_hex/sha_short/inferred_target/kind)
+  - entries kind 值集合 ⊆ {verify_id, expected_pattern}
   - text 输出含 verify_infra_034 / verify_infra_035 等关键 needle
   - ``--json --text`` 互斥 (argparse rc 非 0)
 - V5 Reviewer LGTM gate (print-only)
@@ -52,12 +55,12 @@ SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
 # infra-049 sha lock 常量 (V2) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_DUMP_INDEX_FILE_SHA = "f3d93d4f79e6580a1aabaa419281ed8ba2ee4aeaf9e899ff425531429c9bddc0"
-EXPECTED_RENDER_TEXT_FUNC_SHA = "e2f4e931895f2f50a1ab6621045561b6c7b0cc377a5d9279e4b232e26f3e16c1"
-EXPECTED_RENDER_JSON_FUNC_SHA = "5e1bf67b5c3d66d15b2e9f42b66c06e9bf16549361080b518221b8a2bc2d2798"
+EXPECTED_DUMP_INDEX_FILE_SHA = "256df4c6d17e32deb3aaf067fea638dbaa5e548a23a08f107278155568135e20"
+EXPECTED_RENDER_TEXT_FUNC_SHA = "238e4d140baf6c01d0cdfc88c26bc9e458b54f5c4ce6f41fa716b61bc25e3689"
+EXPECTED_RENDER_JSON_FUNC_SHA = "ec31d571f053a0c7830303282ef50996b4c5675c3a3c78596898072c2088ef1f"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "bdcd934165a47169a2b133d40b25d66443da3664007e808ee7f1d043e8ad3c2c"
+EXPECTED_V4_CHECKER_FUNC_SHA = "e14bcb199f572f1d0ca38552b8bb0fa97de2e5ce2e9ec012965beb0d714abb6a"
 
 DOCSTRING_SENTINEL = "INFRA_049_SHA_LOCKS"
 
@@ -249,7 +252,7 @@ def v4_behavior() -> None:
     if parsed is not None:
         _emit(
             "V4_json_schema",
-            isinstance(parsed, dict) and parsed.get("schema") == "reverse_sha_lock_index/v1",
+            isinstance(parsed, dict) and parsed.get("schema") == "reverse_sha_lock_index/v2",
             f"schema={parsed.get('schema')!r}",
         )
         stats = parsed.get("stats") or {}
@@ -259,17 +262,31 @@ def v4_behavior() -> None:
             isinstance(scanned, int) and scanned >= 5,
             f"scanned_count={scanned} (require >= 5)",
         )
+        # infra-049-backlog-dump-index-expose-kind (phase-49 #4.49): kind 暴露契约
+        kb = stats.get("kind_breakdown") or {}
+        _emit(
+            "V4_json_kind_breakdown",
+            isinstance(kb, dict) and set(kb.keys()).issubset({"verify_id", "expected_pattern", "unknown"}) and sum(kb.values()) == scanned,
+            f"kind_breakdown={kb} sum_eq_scanned={sum(kb.values()) == scanned}",
+        )
         entries = parsed.get("entries") or []
-        required_keys = {"file", "lineno", "const_name", "sha_hex", "sha_short", "inferred_target"}
+        required_keys = {"file", "lineno", "const_name", "sha_hex", "sha_short", "inferred_target", "kind"}
         if entries:
             missing = [k for k in required_keys if k not in entries[0]]
+            kinds_seen = {e.get("kind") for e in entries}
             _emit(
                 "V4_json_entry_keys",
                 not missing,
                 f"missing={missing}" if missing else f"all {len(required_keys)} keys present (n={len(entries)})",
             )
+            _emit(
+                "V4_json_entry_kind_values",
+                kinds_seen.issubset({"verify_id", "expected_pattern"}) and len(kinds_seen) >= 1,
+                f"kinds_seen={sorted(kinds_seen)}",
+            )
         else:
             _emit("V4_json_entry_keys", False, "entries empty")
+            _emit("V4_json_entry_kind_values", False, "entries empty")
 
     # --- --text ---
     try:

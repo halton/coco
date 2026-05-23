@@ -54,9 +54,9 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
-# cascade-locked with verify_infra_049 (P268/P269)
-EXPECTED_DUMP_INDEX_FILE_SHA = "f3d93d4f79e6580a1aabaa419281ed8ba2ee4aeaf9e899ff425531429c9bddc0"
-EXPECTED_RENDER_JSON_FUNC_SHA = "5e1bf67b5c3d66d15b2e9f42b66c06e9bf16549361080b518221b8a2bc2d2798"
+# cascade-locked with verify_infra_049 (P268/P269; phase-49 #4.49 kind expose bump)
+EXPECTED_DUMP_INDEX_FILE_SHA = "256df4c6d17e32deb3aaf067fea638dbaa5e548a23a08f107278155568135e20"
+EXPECTED_RENDER_JSON_FUNC_SHA = "ec31d571f053a0c7830303282ef50996b4c5675c3a3c78596898072c2088ef1f"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
 EXPECTED_V4_CHECKER_FUNC_SHA = "c24db73e5b331b261c91bc378ff87c527c5165f6425c75d114dd026656bbb69f"

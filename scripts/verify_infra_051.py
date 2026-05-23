@@ -53,8 +53,8 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 DUMP_INDEX_PY = SCRIPTS / "dump_reverse_sha_lock_index.py"
 
-# infra-051 sha lock 常量 (V2) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_DUMP_INDEX_FILE_SHA = "f3d93d4f79e6580a1aabaa419281ed8ba2ee4aeaf9e899ff425531429c9bddc0"
+# infra-051 sha lock 常量 (V2) — phase-49 #4.49 kind expose cascade bump
+EXPECTED_DUMP_INDEX_FILE_SHA = "256df4c6d17e32deb3aaf067fea638dbaa5e548a23a08f107278155568135e20"
 EXPECTED_RENDER_CHECK_JSON_FUNC_SHA = "310d1b6bda8ecebf01abed9064d895de33d351f9bac7405310f5ae75795b2011"
 EXPECTED_CMD_CHECK_FUNC_SHA = "5cc2173fe5eb11920f1fe92d5660bc8a02eb102cb03da3ddcfcd69c2d5d0b285"
 EXPECTED_BUILD_ARG_PARSER_FUNC_SHA = "9fd746f61a1705f69107a072736fe1272fca3260ed0c5567b7d59ef33d58092f"
