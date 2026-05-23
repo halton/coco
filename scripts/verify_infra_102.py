@@ -16,10 +16,12 @@ INFRA_102_SHA_LOCKS
 
 校验层级 (V0-V5):
 
-- V0 scaffolding: dump_v4_sha_graph.py 存在 + _classify_node / _HUB_FAMILY /
-  _LIB_FAMILY / _DUMP_FAMILY 四个顶层符号存在
-- V1 docstring sentinel ``INFRA_102_SHA_LOCKS`` 自锁
-- V2 双 file sha 锁 (dump + lib)
+- V0 scaffolding:
+  - V0_dump_exists / V0_classify_node_present
+  - V0__HUB_FAMILY_present / V0__LIB_FAMILY_present / V0__DUMP_FAMILY_present
+- V1_docstring_sentinel ``INFRA_102_SHA_LOCKS`` 自锁
+- V2 双 file sha 锁:
+  - V2_dump_file_sha / V2_verify_lib_file_sha
 - V3 family sets shape + contents:
   - V3_hub_is_frozenset / V3_lib_is_frozenset / V3_dump_is_frozenset
   - V3_dump_family_contents == frozenset({dump_v4_sha_graph, dump_reverse_sha_lock_index})
@@ -33,8 +35,10 @@ INFRA_102_SHA_LOCKS
   - V4_classify_unknown_prefix → "unknown"
   - V4_classify_default_module → "module"
   - V4_no_or_chain: 函数源码不含 ``node_id == "dump_v4_sha_graph" or``
-  - V4_uses_in_keyword: 函数源码含 ``node_id in _DUMP_FAMILY``
-- V5 Reviewer LGTM gate (grace_period 兜底)
+  - V4_uses_in_dump_family / V4_uses_in_hub_family / V4_uses_in_lib_family:
+    函数源码分别含 ``node_id in _DUMP_FAMILY`` / ``in _HUB_FAMILY`` / ``in _LIB_FAMILY``
+  - V4b_self_main_func_sha: 自身 ``main`` func sha 锁
+- V5_reviewer_lgtm_gate (grace_period 兜底)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
@@ -113,9 +117,13 @@ def v0_scaffolding() -> None:
                     top_assigns.add(tgt.id)
         elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name):
             top_assigns.add(n.target.id)
-    for sym in ("_HUB_FAMILY", "_LIB_FAMILY", "_DUMP_FAMILY"):
+    for sym, tag in (
+        ("_HUB_FAMILY", "V0__HUB_FAMILY_present"),
+        ("_LIB_FAMILY", "V0__LIB_FAMILY_present"),
+        ("_DUMP_FAMILY", "V0__DUMP_FAMILY_present"),
+    ):
         _emit(
-            f"V0_{sym}_present",
+            tag,
             sym in top_assigns,
             f"expect top-level constant {sym}",
         )
