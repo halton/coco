@@ -7357,3 +7357,19 @@ phase-46 5 候选 promoted to not_started：
 - verify_infra_062: ALL PASS 30/30
 - ./init.sh smoke: PASS
 - pre-existing FAIL 残留: 074 自身 V2_verify_059_file_sha + V4_4_real_run_059_rc0 (与本 feature 无关, 074 sha-lock stale, 留作 074 自己的 backlog)
+
+---
+
+## Session 2026-05-23 phase-46 #5.46 infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline Closeout
+
+- merge_commit_sha=2e0dac3, baseline_main_head=ff53251, main_head (post-closeout)=2e0dac3
+- post-merge fresh 验证 (venv python 3.13.12):
+  - verify_infra_079: ALL PASS 14/14
+  - verify_infra_062: ALL PASS 30/30
+  - ./init.sh smoke: PASS
+- Reviewer 初判 P0 sha-lock 漂移 (V1/V2/V3 func_sha + file_sha 全报 expect vs got 不一致) → 4-way python 版本仲裁 (venv+pyc clean / venv+脏 / sys+pyc clean / sys+脏): venv py3.13 真 14/14+30/30, sys py3.9 ghost FAIL — inspect.getsource 在 py3.9 vs 3.13 行为差异 (typing/dataclass 改写) 致 sha 漂移. 仲裁结论: venv 是基线权威, 本 feature 可 closeout. P0 推翻.
+- Reviewer 最终 verdict=LGTM (sub_agent_fresh_context), 2 个 P2 finding:
+  - 新 backlog infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity 跟进 inspect.getsource 在 py3.9 vs 3.13 sha 漂移
+  - 074 自身 V1/V2/V3/V4_4 sha-lock + real-run-059 pre-existing FAIL 与本 feature 无关, 074 自己 backlog cover
+- feature_list.json: infra-V6-backlog-079-v4-4-real-run-074-rc0-baseline status not_started → passing, 含完整 closeout_verify (3 verify_runs + smoke_tail_stdout + pre_existing_baseline + baseline_tail) + reviewer (sub_agent_fresh_context, LGTM, 2 P2). 新增 backlog: infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity (priority=999, status=backlog).
+- verify_infra_062 P278 6 信号自检: ALL PASS 30/30 (含 main_head_sha_format / merge_commit_sha_format / baseline_head_echo_format / verify_runs_shape / reviewer_block_shape / closeout_verify_runs_freshness)
