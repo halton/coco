@@ -5564,8 +5564,9 @@
       "title": "drift 历史趋势可视化 / 单调上行回归告警",
       "area": "interact",
       "priority": "57-5",
-      "status": "not_started",
+      "status": "in_progress",
       "phase": 57,
+      "started_at": "2026-05-23",
       "description": "读取 evidence/_history/interact_024_drift_history.jsonl，若最近 N 条 drift 单调上行（或趋势斜率超阈值）则 stdout dump 警告；独立 verify_*.py 脚本跑 trend regression，不阻 merge，仅作早期预警。",
       "source": "interact-036 closeout follow-up"
     },
