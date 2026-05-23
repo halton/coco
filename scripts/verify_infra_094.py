@@ -68,12 +68,13 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
     assert_closeout_baseline_head_echo_format,
     assert_reviewer_lgtm,
+    assert_v5_reviewer_gate_evidence_bind,
     func_sha_by_name,
     verify_summary_exit,
 )
 
 EXPECTED_SELF_MAIN_FUNC_SHA = "9225c4caaf1058aadcfc5b54169f7de3328bada51ae155f1ead1f53f2fcc3c26"
-EXPECTED_VERIFY_LIB_FILE_SHA = "4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd"
+EXPECTED_VERIFY_LIB_FILE_SHA = "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"
 EXPECTED_BASELINE_HELPER_FUNC_SHA = "99b207a6b0dd305e47695f90b7e556cc1c0283ade0ae314fa6e5463b5f88a668"
 
 DOCSTRING_SENTINEL = "INFRA_094_SHA_LOCKS"
@@ -390,6 +391,8 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate (真门: ok is True)
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    # phase-46 #4.46: V5 switched to assert_v5_reviewer_gate_evidence_bind
+    # (verdict in {LGTM,conditional} + sub_agent_fresh_context + summary>=20).
     if not REAL_FEATURE_LIST.is_file():
         _emit(
             "V5_reviewer_lgtm_gate",
@@ -397,11 +400,15 @@ def v5_reviewer_gate() -> None:
             f"feature_list.json not found at {REAL_FEATURE_LIST}",
         )
         return
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        ok is True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

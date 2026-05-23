@@ -78,6 +78,7 @@ from _verify_lib import (  # noqa: E402
     assert_closeout_verify_runs_shape,
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
+    assert_v5_reviewer_gate_evidence_bind,
     assert_reviewer_summary_nonempty,
     assert_verify_lib_helpers_in_v3_sha_table,
     assert_verify_lib_public_helper_naming,
@@ -85,7 +86,7 @@ from _verify_lib import (  # noqa: E402
     verify_closeout_evidence_trustworthy,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd"
+EXPECTED_VERIFY_LIB_FILE_SHA = "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"
 EXPECTED_CLOSEOUT_FUNC_SHA = "d190174c24b264946d16ff31f37d2b4ed607b3bee24a82c3a5588d8679fe0917"
 EXPECTED_V4_CHECKER_FUNC_SHA = "66a2cdb26e7ef571e9b3753002db0fc535797b1e9a7e6d5896c73c51b042b228"
 
@@ -110,6 +111,7 @@ V3_HELPER_FUNC_NAMES = (
     "assert_reviewer_summary_nonempty",
     "assert_unique_needle",
     "assert_v5_gate_emit_uses_helper_return",
+    "assert_v5_reviewer_gate_evidence_bind",
     "assert_verify_lib_helpers_in_v3_sha_table",
     "assert_verify_lib_public_helper_naming",
     "assert_verify_passed",
@@ -913,16 +915,23 @@ def _enforce_closeout_verify_runs_shape() -> None:
 def v5_reviewer_gate() -> None:
     """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
 
-    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
-    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
-    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
-    的 V4 mini-repo 测试保证。
+    phase-46 #4.46: 切换为 assert_v5_reviewer_gate_evidence_bind (verdict ∈
+    {LGTM,conditional} + reviewer_kind == sub_agent_fresh_context + summary>=20).
+    062 自指 V5_GATE_FEATURE_ID=infra-P278-closeout-verify-trustworthy 的
+    evidence.reviewer 为 legacy 缺字段; 通过 grace_period 兜底, emit=True 软放过,
+    真硬行为锁由 verify_infra_098 自身锁 (本 feature 自指 verify).
     """
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID,
+        REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
         True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"reason={result['reason']!r}",
     )
 
 
