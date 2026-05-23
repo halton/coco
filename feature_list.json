@@ -5486,11 +5486,25 @@
       "title": "interact_024_drift_history.jsonl rotation / retention",
       "area": "interact",
       "priority": "56-5",
-      "status": "not_started",
+      "status": "closed_as_already_done",
       "phase": 56,
       "description": "evidence/_history/interact_024_drift_history.jsonl 当前为 append-only，跨 commit 无界增长。补 size cap / N-行 rotation 或纳入 evidence/_history 整体 retention 策略，避免长期堆积。低优先级，不阻 merge。",
       "source": "interact-036 closeout follow-up",
-      "updated_at": "2026-05-23T19:02:59"
+      "updated_at": "2026-05-23T19:02:59",
+      "evidence": "closed_as_already_done by interact-037 (drift JSONL rotation / size cap, status=passing). scripts/verify_interact_024.py 行 84-129 已实现 _DRIFT_HISTORY_PATH + _MAX_BYTES=256KB size-cap rotation 到 .jsonl.1 (覆盖式, 仅保留 2 代); _append_drift_history 在 append 前若 > _MAX_BYTES 触发 rotate, 全 try/except 包裹 fail-soft. interact-037 V0-V5 验收 PASS + subprocess fixture 触发 rotate 产出 .archive/ + Reviewer (sub-agent) LGTM (merge main HEAD 71c0154). 本 backlog (scope=size cap / N-行 rotation 或 retention 策略) 已被 interact-037 完整覆盖, 无独立增量价值. 后续 N 代 retention / filelock 等增强已拆为 interact-037a / 037b / 037c backlog 追踪.",
+      "closeout_verify": {
+        "kind": "stale_already_done",
+        "covered_by": "interact-037",
+        "covered_by_status": "passing",
+        "covered_by_merge_head": "71c0154",
+        "rotation_implementation_locus": "scripts/verify_interact_024.py:_append_drift_history (lines ~84-129)",
+        "rotation_policy": "size cap 256KB single-gen rotate to .jsonl.1",
+        "followup_backlog": [
+          "interact-037a",
+          "interact-037b",
+          "interact-037c"
+        ]
+      }
     },
     {
       "id": "interact-036b-backlog-drift-trend-regression-alert",
