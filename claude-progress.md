@@ -8985,3 +8985,33 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - scripts/verify_infra_062.py: SUMMARY ALL PASS (30/30) — feature_list.json 改动合法
 
 **下一步**: phase-65 #1 Engineer (infra-P316-v039-V8-not-found-reduce)
+
+---
+
+## Session 2026-05-24 (phase-65 #1 closeout — infra-P316-v039-V8-not-found-reduce)
+
+**结果**: phase-65 #1 完成 passing 入库。
+- NEW_MAIN_SHA = b9d00f4 (merge_commit_sha = b9d00f4)
+- baseline_head_echo = da6553a
+- V8 not_found 137 → 0; coverage 97.5% (accepted 154/158)
+- via 分布: docstring=13 + self_convention=69 + dump_table=60 + explicit=13 + acceptlist=3 = 158 精确匹配
+- 57 文件 _verify_lib.py cascade bump
+- P316 主线达成 (V8 hard gate V8_no_unaccepted_not_found 通过, 三例 mutation 反证 FAIL)
+
+**verify_runs (8/8 PASS, P278 trustworthy)**:
+- smoke PASS
+- verify_infra_033 PASS
+- verify_infra_039 PASS (27 checks, V8 not_found=0 coverage=97.5%)
+- verify_infra_062 PASS (30/30)
+- verify_infra_037 PASS (15 checks)
+- verify_infra_110 PASS (19 checks)
+- verify_infra_P306 PASS (10/10)
+- verify_infra_P314_lib_sha_cascade PASS (8/8, mut_count=1 stale=1)
+
+**Reviewer (sub-agent fresh context)**: LGTM (13 checks_run); P0=0 P1=0 P2=3 (P2-1/P2-3 入 backlog → P319/P320; P2-2 数字小偏差不入).
+
+**backlog 入账**:
+- infra-P319-V8-explicit-target-strong-mismatch (priority=999, status=backlog) — P2-1
+- infra-P320-V8-acceptlist-041-baseline-fix (priority=999, status=backlog) — P2-3 衍生
+
+**下一步**: phase-65 #2 infra-P318-V13-v4-checker-docstring-rollout

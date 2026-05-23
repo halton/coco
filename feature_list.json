@@ -18613,13 +18613,98 @@
     },
     {
       "area": "infra",
+      "closeout_verify": {
+        "baseline_head_echo": "da6553a",
+        "main_head_sha": "b9d00f4",
+        "merge_commit_sha": "b9d00f4",
+        "reviewer": {
+          "checks_run": [
+            "via_distribution_158_match",
+            "coverage_97.5pct",
+            "not_found_137_to_0",
+            "mutation_A_FAIL",
+            "mutation_B_FAIL",
+            "mutation_C_FAIL",
+            "smoke",
+            "verify_infra_033",
+            "verify_infra_039_27_PASS",
+            "verify_infra_062_30_PASS",
+            "verify_infra_037",
+            "verify_infra_110",
+            "verify_infra_P314_8_PASS"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {
+                "id": "P2-1",
+                "note": "explicit target_function 拼错走 not_found 而非 strong_mismatch (语义清晰建议) — 入 backlog infra-P319-V8-explicit-target-strong-mismatch"
+              },
+              {
+                "id": "P2-2",
+                "note": "摘要 56 vs 实际 57 cascade holder 数字小偏差 — 仅数字偏差不入 backlog"
+              },
+              {
+                "id": "P2-3",
+                "note": "_V8_ACCEPTLIST 3 条 reason 'tracked separately' 但 backlog 跟踪项需在 closeout 时确认 — 入 backlog infra-P320-V8-acceptlist-041-baseline-fix"
+              }
+            ]
+          },
+          "kind": "sub_agent_fresh_context",
+          "summary": "P316 V8 多源 resolve 重写质量扎实，coverage 97.5%，not_found 从 137 减到 0，三例 mutation 反证全部 FAIL 验证 hard gate (V8_no_unaccepted_not_found) 不被 acceptlist 静默掩盖；smoke + 7 个 P299 关键 verify 全 PASS；4 个 pre-existing baseline FAIL (041/042/066/072/083 的 helper sha drift) 在 main 上同样 FAIL，不归本 P316。via 分布 13+69+60+13+3=158 精确匹配。设计有一处实现细节偏差 (mutation C 显示 explicit target 改错走 not_found 而非 strong_mismatch 道) 但 hard gate 等价覆盖，非阻塞。建议 LGTM 入库。",
+          "verdict": "LGTM"
+        },
+        "verify_runs": [
+          {
+            "name": "smoke",
+            "status": "PASS",
+            "tail_stdout": "  ok: total=310 well_formed=310 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          },
+          {
+            "name": "verify_infra_033",
+            "status": "PASS",
+            "tail_stdout": "[V5_subprocess_invoke_verify_024] PASS\n\nwrote /Users/halton/work/coco/evidence/infra-033/verify_summary.json"
+          },
+          {
+            "name": "verify_infra_039",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=154/158 via={'docstring': 13, 'self_convention': 69, 'explicit': 13, 'acceptlist': 3, 'dump_table': 60}\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)"
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "name": "verify_infra_037",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)"
+          },
+          {
+            "name": "verify_infra_110",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)"
+          },
+          {
+            "name": "verify_infra_P306",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]\n[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks"
+          },
+          {
+            "name": "verify_infra_P314_lib_sha_cascade",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)"
+          }
+        ]
+      },
       "created_at": "2026-05-24",
       "id": "infra-P316-v039-V8-not-found-reduce",
       "phase": 65,
       "priority": 1,
       "scope": "verify_infra_039 V8 INFO not_found=137 ambiguous=3 — V8 数据扫描已知 backlog 项, 不影响 SUMMARY ALL PASS. 调研 V8_auto_discovery 命名映射缺口, 降到 <50 或显式 acceptlist; ambiguous=3 (verify_infra_046/049/P275 main/render_text 重名 4-2 个 defs) 需 lineno 锚定.",
       "source": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring Reviewer P2 #3",
-      "status": "not_started",
+      "status": "passing",
       "title": "verify_infra_039 V8 V8_auto_discovery not_found=137 / ambiguous=3 降低"
     },
     {
@@ -18643,6 +18728,28 @@
       "source": "phase-64 #5 infra-V12-AST-based-infer-target-hardening Reviewer P2-5",
       "status": "not_started",
       "title": "V13 V4_CHECKER / UNKNOWN_IDS_SHA docstring lock 推广进一步降 unknown"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-P319-V8-explicit-target-strong-mismatch",
+      "phase": null,
+      "priority": 999,
+      "rationale": "Reviewer P2-1 (来自 infra-P316-v039-V8-not-found-reduce closeout): V8 多源 resolve 中, docstring 里 explicit target_function 拼错时当前走 not_found 道, 语义上应走 strong_mismatch (因为意图明确, 拼错是明显错误而非未知). hard gate V8_no_unaccepted_not_found 等价覆盖, 非阻塞; 仅语义清晰建议. 建议: 当 explicit target_function 提供但 resolve 失败时, classify 为 strong_mismatch 而非 not_found, 便于诊断与差异化告警.",
+      "source": "phase-65 #1 infra-P316-v039-V8-not-found-reduce Reviewer P2-1",
+      "status": "backlog",
+      "title": "V8 explicit target_function 拼错应走 strong_mismatch 而非 not_found"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-P320-V8-acceptlist-041-baseline-fix",
+      "phase": null,
+      "priority": 999,
+      "rationale": "Reviewer P2-3 (来自 infra-P316-v039-V8-not-found-reduce closeout) 衍生项: _V8_ACCEPTLIST 当前含 3 条 reason='tracked separately' 的条目 (含 verify_infra_041 V6_TARGET_ID 引用已删函数的 baseline FAIL). 这些条目本质是 backlog 跟踪占位; 应单独修复 verify_infra_041 的 V6_TARGET_ID baseline FAIL (引用已删函数) 并同步移除 _V8_ACCEPTLIST 中对应 3 条, 把 acceptlist via 计数从 3 降到 0, 提高 V8 hard gate 的纯度.",
+      "source": "phase-65 #1 infra-P316-v039-V8-not-found-reduce Reviewer P2-3",
+      "status": "backlog",
+      "title": "verify_infra_041 V6_TARGET_ID 已删函数 baseline FAIL 修复 + 移除 _V8_ACCEPTLIST 3 条"
     },
     {
       "area": "infra",
