@@ -24,6 +24,15 @@ V4 行为验证: 调用 read_constant 读 verify_robot_034 中 ``_SENTINEL_SRC_N
    不存在的 path 抛 FileNotFoundError; 非 literal value (如 Path 表达式) 抛 ValueError。
 V5 Reviewer-LGTM gate (print-only, 提示后续 closeout 阶段必须有
    sub-agent fresh-context Reviewer LGTM 记录在 evidence 中)。
+V6 robot-037-backlog import-time fail fallback meta-lock:
+   - V6a verify_robot_034.py 顶层包含 try/except 字面 + sentinel fallback 常量
+     ``_SENTINEL_FALLBACK``;
+   - V6b verify_robot_034.py 文件级 sha 锁 (EXPECTED_VERIFY_034_FILE_SHA);
+   - V6c verify_robot_034.py ``main`` 函数体 sha 自锁
+     (EXPECTED_VERIFY_034_MAIN_FUNC_SHA, 保证 main 入口形态稳定);
+   - V6d 行为: 在子进程中 monkeypatch ``_verify_lib.read_constant`` 抛
+     RuntimeError, import verify_robot_034 模块 → 必须**不抛** ImportError,
+     且 ``SENTINEL_LINE`` 等于 fallback 常量 (证明降级生效)。
 
 ROBOT_037_SHA_LOCKS
 -------------------
@@ -59,6 +68,13 @@ EXPECTED_READ_CONSTANT_FUNC_SHA = "a06af8a80fe201ecb03acc7d8b04551e1875031447dd1
 
 # 本脚本关键 checker (v2_sha_locks) 函数 sha (V1 自锁, 占位, 末尾自计算)
 EXPECTED_V2_CHECKER_FUNC_SHA = "3f6c7a303b4f0a434699b2e88ef8fcef9e36e3ffaf93ca09a98a321e64d6dae4"
+
+# robot-037-backlog (V6): verify_robot_034.py 文件级 + main 函数体 sha 锁
+EXPECTED_VERIFY_034_FILE_SHA = "2c7b49c23ed22feb52c40b9a72582d4bda3e8154f24c943c3646fc64b4a78983"
+EXPECTED_VERIFY_034_MAIN_FUNC_SHA = "f995f51c1578e5568dccbcea6b7df4b3797789db85db542da7a14843eac02476"
+# V6a 字面检查: try/except 包裹 read_constant 顶层调用 + sentinel fallback 命名
+V6_TRY_EXCEPT_NEEDLE = "SENTINEL_LINE = read_constant(VERIFY_032, _SENTINEL_SRC_NAME)"
+V6_FALLBACK_CONST_NEEDLE = "_SENTINEL_FALLBACK"
 
 # docstring sentinel (V1)
 DOCSTRING_SENTINEL = "ROBOT_037_SHA_LOCKS"
@@ -280,6 +296,97 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6: robot-037-backlog import-time fail fallback meta-lock
+# ---------------------------------------------------------------------------
+def v6_import_time_fail_fallback() -> None:
+    if not VERIFY_034.is_file():
+        _emit("V6_verify_034_exists", False, f"missing {VERIFY_034}")
+        return
+    src34 = VERIFY_034.read_text(encoding="utf-8")
+    # V6a 字面 grep: try/except 顶层包裹 + sentinel fallback 常量名
+    _emit(
+        "V6a_try_except_wraps_read_constant",
+        V6_TRY_EXCEPT_NEEDLE in src34
+        and "try:" in src34
+        and "except Exception" in src34,
+        f"needle={V6_TRY_EXCEPT_NEEDLE!r}",
+    )
+    _emit(
+        "V6a_sentinel_fallback_const",
+        V6_FALLBACK_CONST_NEEDLE in src34,
+        f"needle={V6_FALLBACK_CONST_NEEDLE}",
+    )
+    # V6b file sha 锁
+    got_file = _file_sha(VERIFY_034)
+    _emit(
+        "V6b_verify_034_file_sha",
+        got_file == EXPECTED_VERIFY_034_FILE_SHA,
+        f"got={got_file[:16]} expect={EXPECTED_VERIFY_034_FILE_SHA[:16]}",
+    )
+    # V6c main 函数 sha 自锁
+    try:
+        got_main = _func_sha_via_unparse(VERIFY_034, "main")
+    except Exception as e:
+        _emit("V6c_verify_034_main_func_sha", False, f"compute err: {e!r}")
+        return
+    _emit(
+        "V6c_verify_034_main_func_sha",
+        got_main == EXPECTED_VERIFY_034_MAIN_FUNC_SHA,
+        f"got={got_main[:16]} expect={EXPECTED_VERIFY_034_MAIN_FUNC_SHA[:16]}",
+    )
+    # V6d 行为: 子进程 monkeypatch read_constant 抛异常, import verify_robot_034
+    # 不应该 ImportError, SENTINEL_LINE 应为 fallback
+    import subprocess as _sp
+
+    child_code = r"""
+import sys, importlib
+from pathlib import Path
+SCRIPTS = Path(__file__).resolve().parent if False else Path(r"{scripts}")
+sys.path.insert(0, str(SCRIPTS))
+import _verify_lib
+
+def _boom(*a, **kw):
+    raise RuntimeError("ROBOT_037_BACKLOG_INJECTED_FAIL")
+
+_verify_lib.read_constant = _boom
+
+# 强制重载 verify_robot_034 (若已加载先 pop)
+sys.modules.pop("verify_robot_034", None)
+import importlib.util
+spec = importlib.util.spec_from_file_location("verify_robot_034_under_test", r"{v034}")
+mod = importlib.util.module_from_spec(spec)
+try:
+    spec.loader.exec_module(mod)
+except ImportError as e:
+    print("FAIL_IMPORT_ERROR:" + repr(e))
+    sys.exit(2)
+except Exception as e:
+    print("FAIL_OTHER_EXC:" + repr(e))
+    sys.exit(3)
+sentinel = getattr(mod, "SENTINEL_LINE", None)
+fb = getattr(mod, "_SENTINEL_FALLBACK", None)
+if sentinel == fb and fb is not None:
+    print("OK_FALLBACK:" + repr(sentinel))
+    sys.exit(0)
+print("FAIL_NO_FALLBACK: sentinel=" + repr(sentinel) + " fb=" + repr(fb))
+sys.exit(4)
+""".format(scripts=str(SCRIPTS), v034=str(VERIFY_034))
+
+    proc = _sp.run(
+        [sys.executable, "-c", child_code],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    ok = proc.returncode == 0 and "OK_FALLBACK" in proc.stdout
+    _emit(
+        "V6d_import_time_fallback_behavior",
+        ok,
+        f"rc={proc.returncode} stdout={proc.stdout.strip()[:120]!r}",
+    )
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_lock()
@@ -287,6 +394,7 @@ def main() -> int:
     v3_mutant()
     v4_behavior()
     v5_reviewer_gate()
+    v6_import_time_fail_fallback()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
         print(f"[verify_robot_037][SUMMARY] FAILED tags: {failed}", flush=True)

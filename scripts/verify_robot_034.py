@@ -73,7 +73,22 @@ LIB_HELPER_NAME = "parse_headings_from_doc"  # _verify_lib 中的公开 helper
 # 形成通用入口; 此处仅保留常量名 + 一次调用。
 _SENTINEL_SRC_NAME = "_HEADINGS_SECTION_SENTINEL"
 
-SENTINEL_LINE = read_constant(VERIFY_032, _SENTINEL_SRC_NAME)
+# robot-037-backlog-import-time-fail-fallback:
+# 之前的实现在 import-time 直接调 ``read_constant(VERIFY_032, _SENTINEL_SRC_NAME)``,
+# 若 _verify_lib 异常 / verify_robot_032 文件缺失 / 常量名漂移, 顶层 import 会
+# 抛 ImportError, 让整个 verify_robot_034 在加载阶段就崩, V0-V5 全失语 (连
+# FAIL 报告都没机会 print)。包 try/except 后降级为 sentinel fallback 字面,
+# v0_presence 会因 ``SENTINEL_LINE not in DOC`` 报 V0 FAIL, 但 V1-V5 仍可继续。
+_SENTINEL_FALLBACK = "__SENTINEL_READ_CONSTANT_FAILED_AT_IMPORT__"
+try:
+    SENTINEL_LINE = read_constant(VERIFY_032, _SENTINEL_SRC_NAME)
+except Exception as _e:  # noqa: BLE001 — 任何异常都不应让 verify 模块崩
+    print(
+        f"[verify_robot_034][WARN] import-time read_constant failed: {_e!r}; "
+        f"using fallback sentinel; V0_sentinel_in_doc will FAIL but V1-V5 still run",
+        flush=True,
+    )
+    SENTINEL_LINE = _SENTINEL_FALLBACK
 
 # V2: hardcoded sha256 of _verify_lib.parse_headings_from_doc function body (ast source segment)
 # robot-035: 改锁共享 lib helper (helper 函数体新增 sentinel 形参 + 文档与原版有差异,
