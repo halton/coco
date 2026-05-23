@@ -483,11 +483,94 @@ def _scan_file(path: Path) -> List[Dict[str, str]]:
     return out
 
 
+def _infer_target_via_ast(const: str, source_file: str) -> Optional[str]:
+    """infra-V12-AST-based-infer-target-hardening (phase-64 #5).
+
+    用 AST + _verify_lib helper 推断 target, 不依赖正则字符串拼接。优先级:
+
+      (a) 若 source_file 在 module docstring 中有 ``## Lock: <const>`` 小节,
+          (经 _verify_lib._parse_lock_docstring 解析), 直接返回
+          ``"<target_file>:<target_function> (<lock_kind>)"``。这是 truth source。
+
+      (b) 对形如 ``EXPECTED_<NAME>_FUNC_SHA[256]`` 的常量, 取 ``name = NAME.lower()``
+          (e.g. ``EXPECTED_PARSE_AREA_FUNC_SHA`` → ``parse_area``), 在 source_file 自身
+          先后尝试 ``name`` / ``_<name>`` (private convention), 用 AST FunctionDef
+          的 ``ast.unparse`` 与 _verify_lib.func_sha_by_name 计算 sha; 若与该常量绑定
+          的 sha 字面值完全一致, 返回 ``"<source_file>:<func_name> (ast func-sha)"``。
+
+    任一步未命中或 helper import 失败均返回 None, 让旧逻辑兜底。本函数纯只读,
+    无副作用; 失败时静默 fallback。
+    """
+    if not source_file:
+        return None
+    # 仅对 verify_*.py / dump_v4_sha_graph.py / _verify_lib.py 启用 AST 推断
+    src_base = source_file.rsplit("/", 1)[-1]
+    if not (src_base.startswith("verify_") or src_base in ("dump_v4_sha_graph.py", "_verify_lib.py")):
+        return None
+    try:
+        # lazy import 避免 import 阶段循环
+        sys.path.insert(0, str(SCRIPTS))
+        import _verify_lib as _L  # type: ignore
+    except Exception:
+        return None
+    # (a) docstring lock 优先
+    try:
+        doc_locks = _L._parse_lock_docstring(REPO / source_file)
+    except Exception:
+        doc_locks = None
+    if doc_locks and const in doc_locks:
+        meta = doc_locks[const]
+        tf = meta.get("target_function") or ""
+        tfile = meta.get("target_file") or ""
+        kind = meta.get("lock_kind") or "ast_func_sha"
+        if tfile and tf:
+            return f"{tfile}:{tf} ({kind})"
+        if tfile:
+            return f"{tfile} ({kind})"
+        if tf:
+            return f"{source_file}:{tf} ({kind})"
+    # (b) AST 同文件 FUNC_SHA 推断
+    m = re.match(r'^EXPECTED_(.+?)_FUNC_SHA(?:256)?$', const)
+    if not m:
+        return None
+    guess = m.group(1).lower()
+    if not guess:
+        return None
+    candidates = [guess, f"_{guess}"]
+    src_path = REPO / source_file
+    if not src_path.is_file():
+        return None
+    # 取该 const 在源文件中的 sha 字面值 (与 _scan_file 同语义)
+    try:
+        text = src_path.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    bound_sha: Optional[str] = None
+    for entry in _scan_file(src_path):
+        if entry["const"] == const:
+            bound_sha = entry["sha"]
+            break
+    if not bound_sha:
+        return None
+    for cand in candidates:
+        try:
+            got = _L.func_sha_by_name(src_path, cand)
+        except Exception:
+            got = ""
+        if got and got == bound_sha:
+            return f"{source_file}:{cand} (ast func-sha)"
+    return None
+
+
 def _infer_target(const: str, source_file: str) -> str:
     """从常量名推断锁定 target. 无把握时返回 '<unknown>'.
 
     infra-039-backlog: 先查 _KNOWN_NON_NUMERIC_TARGETS, 再走 _RE_VERIFY_HINT,
     再尝试 V<NNN>_ / BUMP_<NNN>_ 数字提取, 最后是 lib / self / unknown 兜底。
+
+    infra-V12-AST-based-infer-target-hardening (phase-64 #5): 在 step 0.7 注入
+    _infer_target_via_ast, 用 docstring lock + AST 同文件 FUNC_SHA 推断替代
+    字符串模式拼接, 把 not_found 数从 22 降到 <20 (acceptance 阈值)。
     """
     # 0) source-file-aware 查表 (infra-039-backlog)
     # 同一 const 名在不同 verify 脚本中锁不同 target 的歧义场景, 必须结合 source_file 锁定
@@ -497,6 +580,10 @@ def _infer_target(const: str, source_file: str) -> str:
     # 0.5) source-file self-lock (target = source_file 自身)
     if src_base and const in _PER_FILE_SELF_LOCKS:
         return f"{source_file} (self file-sha)"
+    # 0.7) AST + docstring lock 推断 (infra-V12, phase-64 #5)
+    ast_target = _infer_target_via_ast(const, source_file)
+    if ast_target is not None:
+        return ast_target
     # 1) 非数字常量名查表 (fingerprint / bump-only / dump 自锁)
     if const in _KNOWN_NON_NUMERIC_TARGETS:
         return _KNOWN_NON_NUMERIC_TARGETS[const]

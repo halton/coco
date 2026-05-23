@@ -66,7 +66,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-047-backlog sha lock 常量 (V2 / V3)
 EXPECTED_DUMP_FILE_SHA = (
-    "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
+    "ae7a5b72ef631cf8679b8519c5558984ca5d136dbdb8b2c25c75ebc76f7c4450"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "f789e0d870c9e6c3764b893a6bcbcca356bfc464520d9c49f3d4b17045ecd243"
