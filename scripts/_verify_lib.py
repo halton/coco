@@ -758,8 +758,14 @@ _RE_EXPECTED_WELL_FORMED_SHA = re.compile(r"_(SHA|SHA256|SHA512)$")
 _RE_EXPECTED_TYPO_SUFFIX = re.compile(
     r"_(SHAH|HSA|HASH|HASHSUM|SHASUM|SH|SAH|SAH256|SHAA|SHAS|SAHA)$"
 )
-# 进一步: 名字中部包含 sha-ish 拼写但末尾不是规范的也算 typo
-# 例: EXPECTED_LIB_SHAH_FILE, EXPECTED_FUNC_HSA_SHA (后者最终落到 _SHA 不算 typo)
+# 进一步: 名字中任意位置 (namepart) 出现 sha-ish typo 拼写都算 typo,
+# **即便后缀是规范 _SHA / _SHA256 / _SHA512**。例:
+#   EXPECTED_LIB_SHAH_FILE  -> namepart SHAH 命中, 判 typo
+#   EXPECTED_FUNC_HSA_SHA   -> namepart HSA 命中, 判 typo (后缀虽规范, 但中部仍是 typo)
+# impl 在这里有意比"只看尾后缀"更严格 — 任何 sha-ish namepart 都视为信号。
+# 这是 P293 (infra-P293-typo-guard-docstring-vs-impl-mismatch) 对齐 docstring 与 impl
+# 时确认的设计决策: 保留更严格的 impl, docstring/注释从 P281 时期的"后缀 _SHA 不算 typo"
+# 改为"namepart 命中即 typo, 不被规范后缀豁免"。
 _RE_EXPECTED_NAMEPART_TYPO = re.compile(
     r"(SHAH|HSA|HASHSUM|SHASUM|SAH256|SHAA|SHAS|SAHA)(?![A-Z0-9])"
 )
@@ -773,12 +779,17 @@ def verify_expected_prefix_typo_guard(
     规则
     ----
     - 收集每个 verify_*.py 顶层 ``Assign`` / ``AnnAssign`` 目标且名字 ``startswith("EXPECTED_")``。
-    - **well-formed sha lock**: 名字末尾匹配 ``_(SHA|SHA256|SHA512)$``。
+    - **well-formed sha lock**: 名字末尾匹配 ``_(SHA|SHA256|SHA512)$`` **且**
+      不含 sha-ish namepart typo (见下)。
     - **non-sha legitimate**: 名字不含任何 sha-ish 后缀/中部 (e.g. ``EXPECTED_PALETTE``,
       ``EXPECTED_LINES``, ``EXPECTED_FINGERPRINT``) — 不视为 typo。
-    - **typo**: 名字命中 ``_RE_EXPECTED_TYPO_SUFFIX`` (末尾 typo 变体) 或
-      ``_RE_EXPECTED_NAMEPART_TYPO`` (中部 typo 拼写)。
+    - **typo (suffix)**: 名字末尾命中 ``_RE_EXPECTED_TYPO_SUFFIX``。
       典型: ``EXPECTED_LIB_FILE_SHAH``, ``EXPECTED_FUNC_HSA``, ``EXPECTED_FILE_SH``。
+    - **typo (namepart)**: 名字任意位置命中 ``_RE_EXPECTED_NAMEPART_TYPO``,
+      **即便后缀是规范 _SHA / _SHA256 / _SHA512 也算 typo**。
+      典型: ``EXPECTED_FUNC_HSA_SHA`` (namepart HSA 命中, 即便尾后缀 _SHA 规范也判 typo),
+      ``EXPECTED_LIB_SHAH_FILE`` (namepart SHAH 命中)。
+      设计意图: namepart 中出现 sha-ish typo 拼写本身就是强信号, 不应被规范后缀豁免。
 
     返回 schema::
 
