@@ -7624,3 +7624,13 @@ phase-46 5 候选 promoted to not_started：
   4. #4.50 infra-050-backlog-sort-order-label-docstring — dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射；纯文档，零风险
   5. #5.50 infra-035-backlog-v4-sha-canonical-order — v4_sha.json bump 输出强制 sort_keys 规范序；与 V6 反向 sha 锁生态强相关
 - 主题延续 phase-49（V6 / 反向 sha 锁 / dump 工具 / regex unique needle 体系）；全部 sim-only，无 audio/robot/vision 真机依赖
+
+## Session 2026-05-23 phase-50 #1.50 closeout — infra-039-backlog-dump-show-full-sha
+
+- merge feat/infra-039-backlog-dump-show-full-sha → main, merge HEAD=90f0669 (before=e17846f)
+- verify_infra_039.py: ALL PASS (16 checks) — V0/V1/V2(file_sha=b14982e3f9f13cbe)/V3/V4/V6(6 checks 锁 default+full+json)/V5 grace
+- verify_infra_062.py P278 gate: ALL PASS (30 checks)
+- ./init.sh smoke: PASS
+- Reviewer (sub_agent_fresh_context): LGTM — render_text 新增 show_full_sha 形参 + _fmt 闭包 default False 零侵入；V6 6-check 锁 default 省略号、full 模式 245 个 64-hex 命中 trunc=0、--json+--show-full-sha JSON 结构稳定；mutation probe 全可被抓住；_verify_lib.py 未触碰；无 placeholder 残留
+- feature_list.json: infra-039-backlog-dump-show-full-sha status not_started → passing，evidence (verifier/verify_runs.tail/closeout_verify.main_head_sha=90f0669/reviewer block) 全部入账
+- 下一候选：#2.50 infra-039-backlog-dump-filter-pattern (dump_v4_sha_graph 加 --filter 选项)

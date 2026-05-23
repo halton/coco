@@ -6953,15 +6953,34 @@
       "area": "infra",
       "phase": 50,
       "title": "dump_v4_sha_graph 加 --show-full-sha 选项",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
       "source": "infra-039 closeout Reviewer 建议",
       "scope": "dump_v4_sha_graph.py 当前默认截断 sha；加 --show-full-sha 选项输出完整 sha256，便于在调试/审计场景下直接比对。",
       "dependencies": [
         "infra-039"
       ],
-      "verification": [],
-      "notes": "promoted to phase-50 #1.50"
+      "verification": [
+        "Reviewer (sub-agent fresh-context): LGTM. infra-039-backlog-dump-show-full-sha LGTM:render_text 新增 show_full_sha 形参 + _fmt 闭包,default False 零侵入;V6 6-check 全 PASS 锁住 default 含省略号、full 模式 245 个 64-hex 命中且无截断、--json+--show-full-sha JSON 结构稳定;V2 file sha 已回填至 b14982e3f9f13cbe;mutation probe 全可被抓住;_verify_lib.py 未触碰;无 placeholder 残留;16/16 checks PASS。"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_039.py",
+        "verify_runs": [
+          {
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V0_dump_symbols found 7/7\n[verify_infra_039][PASS] V1_docstring_sentinel sentinel=INFRA_039_SHA_LOCKS\n[verify_infra_039][PASS] V1_self_checker_func_sha got=7ae405196b8a92f2 expect=7ae405196b8a92f2\n[verify_infra_039][PASS] V2_dump_file_sha got=b14982e3f9f13cbe expect=b14982e3f9f13cbe\n[verify_infra_039][PASS] V3_mutant_detected baseline=230 mutant=20\n[verify_infra_039][PASS] V4_subprocess_run rc=0\n[verify_infra_039][PASS] V4_output_anchors all 6 anchors found\n[verify_infra_039][PASS] V4_json_mode rc=0 locks=230\n[verify_infra_039][PASS] V6_default_run rc=0\n[verify_infra_039][PASS] V6_default_has_ellipsis len_stdout=33838\n[verify_infra_039][PASS] V6_full_run rc=0\n[verify_infra_039][PASS] V6_full_emits_64hex hits=245 sample=7a89b35b6db711cb1b35fb78687fd5f818d8d6ac9e29d03abedabefc67d9e9ac\n[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0\n[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=230\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (16 checks)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "90f0669"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-039-backlog-dump-show-full-sha LGTM:render_text 新增 show_full_sha 形参 + _fmt 闭包,default False 零侵入;V6 6-check 全 PASS 锁住 default 含省略号、full 模式 245 个 64-hex 命中且无截断、--json+--show-full-sha JSON 结构稳定;V2 file sha 已回填至 b14982e3f9f13cbe;mutation probe 全可被抓住;_verify_lib.py 未触碰;无 placeholder 残留;16/16 checks PASS。"
+        }
+      },
+      "notes": "promoted to phase-50 #1.50; closed out at main HEAD 90f0669"
     },
     {
       "id": "infra-039-backlog-dump-mermaid-output",
