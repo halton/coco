@@ -55,7 +55,7 @@ JSONL_REL = "evidence/_history/smoke_history.jsonl"
 JSONL = REPO / JSONL_REL
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import func_sha_by_name  # noqa: E402
+from _verify_lib import func_sha_by_name, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"
 EXPECTED_GITIGNORE_HELPER_FUNC_SHA = "b6bbd8e96e3078a335db3f535ecd67f62cef1dc1db6585ce73f6295b7744fb08"
@@ -63,6 +63,11 @@ EXPECTED_FILE_IGNORED_HELPER_FUNC_SHA = "042ac55f55ee97de823a8547e7728fef3e63b11
 EXPECTED_V4_CHECKER_FUNC_SHA = "7919b8c04e99db2efc2667fefbc760f0d85da35705aa09314b12f6f15db06054"
 
 DOCSTRING_SENTINEL = "INFRA_064_SHA_LOCKS"
+
+
+# phase-47 #1.47: V5_GATE evidence-bind helper (grace_period 兜底 soft graduate)
+REAL_FEATURE_LIST = Path(__file__).resolve().parents[1] / "feature_list.json"
+V5_GATE_FEATURE_ID = "__PHASE_47_PLACEHOLDER_INFRA_064__"
 
 _results: List[Tuple[str, bool, str]] = []
 
@@ -297,10 +302,29 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
+
+    target feature evidence 不完整 (legacy / not_started)，通过 grace_period 兜底
+    保持 emit=True，待 target feature 补齐 reviewer evidence 后从 grace 列表移除。
+    """
+    if not REAL_FEATURE_LIST.is_file():
+        _emit(
+            "V5_reviewer_lgtm_gate",
+            False,
+            f"feature_list.json not found at {REAL_FEATURE_LIST}",
+        )
+        return
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        "closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

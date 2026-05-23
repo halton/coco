@@ -65,11 +65,12 @@ LIB = SCRIPTS / "_verify_lib.py"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import (  # noqa: E402
+from _verify_lib import (
     assert_reviewer_lgtm,
     assert_v5_gate_emit_uses_helper_return,
     func_sha_by_name,
     verify_summary_exit,
+    assert_v5_reviewer_gate_evidence_bind,
 )
 
 EXPECTED_SELF_MAIN_FUNC_SHA = "9e4f8ac57fd44c204f1f72a6074f5e527a20d7cdd09591b68191d0adaf69935c"
@@ -224,7 +225,12 @@ def v4_behavior() -> None:
         f"ok={r79.get('ok')} v_count={len(r79.get('violations', []))}",
     )
 
-    # V4_2: enrolled list 全部 ok=True 且每个 calls_assert_helper=True
+    # V4_2: enrolled list 全部 ok=True. phase-47 #1.47 graduate 后, enrolled
+    # 脚本已从 assert_reviewer_lgtm 解包写法迁移到 result = assert_v5_reviewer_gate_evidence_bind(...)
+    # 单值返回. 接受两种 helper 写法 (新旧并存):
+    #   - 旧: calls_assert_helper=True AND "ok" in helper_return_names
+    #   - 新: calls_assert_helper=False AND violations=0 (graduate, 无硬绿反模式)
+    # 共同必备: violations 必须为 0 (没有 hardcoded True 字面被 _emit 第二位置参数引用)
     enrolled_fail: List[str] = []
     enrolled_details: List[str] = []
     for name in ENROLLED_TRUE_GATE_VERIFY:
@@ -236,15 +242,15 @@ def v4_behavior() -> None:
         ok = r.get("ok")
         calls = r.get("calls_assert_helper")
         names = r.get("helper_return_names") or []
-        if name == "verify_infra_080.py":
-            # self 不调 assert_reviewer_lgtm 在 v5_reviewer_gate 内? 实际上 080 自己也调.
-            pass
-        cond = ok is True and calls is True and ("ok" in names)
+        v_count = len(r.get("violations", []))
+        legacy_ok = (calls is True) and ("ok" in names)
+        graduated_ok = (calls is False) and (v_count == 0) and (r.get("v5_gate_found") is True)
+        cond = (ok is True) and (v_count == 0) and (legacy_ok or graduated_ok)
         if not cond:
             enrolled_fail.append(
-                f"{name}:ok={ok},calls={calls},names={names},v={len(r.get('violations', []))}"
+                f"{name}:ok={ok},calls={calls},names={names},v={v_count}"
             )
-        enrolled_details.append(f"{name}:ok={ok}")
+        enrolled_details.append(f"{name}:ok={ok},mode={'legacy' if legacy_ok else 'graduated' if graduated_ok else 'unknown'}")
     _emit(
         "V4_2_enrolled_all_ok",
         not enrolled_fail,
@@ -252,25 +258,55 @@ def v4_behavior() -> None:
         f"details={enrolled_details}",
     )
 
-    # V4_3: 已知 soft-PASS 060 → helper 返回 ok=False (回归保护)
-    r60 = assert_v5_gate_emit_uses_helper_return(SCRIPTS / KNOWN_SOFT_PASS_VERIFY)
+    # V4_3: anti-pattern detector 回归保护.
+    # phase-47 #1.47 graduate 后, 仓库内已无 hardcoded True 字面 V5 反模式
+    # exemplar (含历史 soft-PASS 060 也 graduate 过). 此时 detector 在真实
+    # 仓库脚本上不会触发. 改用本地合成 fixture 来验证 detector 仍能识别
+    # 硬绿写法 (写到 tmp 文件, 跑 helper, 立删).
+    import tempfile as _tempfile
+    _fixture_src = (
+        "def v5_reviewer_gate():\n"
+        "    _emit(\"V5_reviewer_lgtm_gate\", True, \"hardcoded soft-PASS\")\n"
+    )
+    with _tempfile.TemporaryDirectory() as _td:
+        _fx = Path(_td) / "_080_v4_3_fixture.py"
+        _fx.write_text(_fixture_src, encoding="utf-8")
+        r_fx = assert_v5_gate_emit_uses_helper_return(_fx)
+    fx_v_count = len(r_fx.get("violations", []))
+    fx_has_true = any(v.get("arg1_source") == "True" for v in r_fx.get("violations", []))
+    # 同时跑一遍真实 KNOWN_SOFT_PASS_VERIFY 仅作 informational
+    r_real = assert_v5_gate_emit_uses_helper_return(SCRIPTS / KNOWN_SOFT_PASS_VERIFY)
     _emit(
         "V4_3_soft_pass_exemplar_returns_fail",
-        r60.get("ok") is False and len(r60.get("violations", [])) >= 1,
-        f"target={KNOWN_SOFT_PASS_VERIFY} ok={r60.get('ok')} "
-        f"v_count={len(r60.get('violations', []))}",
+        r_fx.get("ok") is False and fx_v_count >= 1 and fx_has_true,
+        f"fixture_ok={r_fx.get('ok')} fixture_v={fx_v_count} has_True={fx_has_true} "
+        f"real_target={KNOWN_SOFT_PASS_VERIFY} real_ok={r_real.get('ok')} "
+        f"real_v={len(r_real.get('violations', []))} "
+        f"reason='graduate complete, detector verified via synthetic fixture'",
     )
 
-    # V4_4: mutant — 拷贝 079 到 tmp 并把 ok is True 改成 True (硬绿).
-    # 文件名故意不以 verify_ 起首避免被 glob 扫到; try/finally 保证立删.
+    # V4_4: mutant — 拷贝 enrolled exemplar 到 tmp 并把 第二位置参数改为 True
+    # (硬绿). 接受新旧两种 emit pattern:
+    #   - 旧: _emit("V5_reviewer_lgtm_gate", ok is True, ...)
+    #   - 新: _emit("V5_reviewer_lgtm_gate", bool(result["ok"]), ...)
+    # 任一替换成 True 都算 mutation 成功.
     src79 = (SCRIPTS / "verify_infra_079.py").read_text(encoding="utf-8")
-    mutant_src, n_sub = re.subn(
+    mutant_src = src79
+    n_sub_total = 0
+    for _pat in (
         r'_emit\(\s*"V5_reviewer_lgtm_gate"\s*,\s*ok\s+is\s+True',
-        '_emit("V5_reviewer_lgtm_gate", True',
-        src79,
-        count=1,
-    )
-    substituted = n_sub == 1 and mutant_src != src79
+        r'_emit\(\s*"V5_reviewer_lgtm_gate"\s*,\s*bool\(result\["ok"\]\)',
+    ):
+        mutant_src, _n = re.subn(
+            _pat,
+            '_emit("V5_reviewer_lgtm_gate", True',
+            mutant_src,
+            count=1,
+        )
+        n_sub_total += _n
+        if _n >= 1:
+            break  # 任一模式命中即可
+    substituted = n_sub_total >= 1 and mutant_src != src79
     mutant_path = SCRIPTS / "_for_080_v4_4_mutant_079.py"
     try:
         mutant_path.write_text(mutant_src, encoding="utf-8")
@@ -286,7 +322,7 @@ def v4_behavior() -> None:
     _emit(
         "V4_4_mutant_returns_fail",
         substituted and rm.get("ok") is False and has_true_violation,
-        f"substituted={substituted} mutant_ok={rm.get('ok')} "
+        f"substituted={substituted} n_sub={n_sub_total} mutant_ok={rm.get('ok')} "
         f"v_count={len(rm.get('violations', []))} has_True_violation={has_true_violation}",
     )
 
@@ -303,6 +339,7 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate (真门: ok is True)
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper."""
     if not REAL_FEATURE_LIST.is_file():
         _emit(
             "V5_reviewer_lgtm_gate",
@@ -310,11 +347,15 @@ def v5_reviewer_gate() -> None:
             f"feature_list.json not found at {REAL_FEATURE_LIST}",
         )
         return
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        ok is True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

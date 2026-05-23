@@ -7404,3 +7404,21 @@ phase-46 5 候选 promoted to not_started：
 - 选择原则: (a) 优先 P278/V4/V5 域已半成的延续项 (b) 优先历史 sha-lock graduate (c) 避开真机 UAT 类 (d) area 全部 infra 集中收割 V6 backlog
 - 起点候选: #1.47 priority=1.47 (V5 historical graduate 与 phase-46 收尾最紧衔接)
 - post-promote 统计: backlog=112 passing=243 phase47_total=5
+
+## Session 2026-05-23 phase-47 #1.47 Engineer
+
+- feature: infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate (priority=1.47)
+- 切换 53 个历史 verify_infra_*.py 的 V5_reviewer_lgtm_gate 接入 assert_v5_reviewer_gate_evidence_bind
+  - HARD 切换 (target evidence 完整, helper 真闸门): 19 个 - 067/068/070/077/078/079/080/081/082/083/084/085/086/087/089/090/091 + 066/071 (评审后纳入 HARD)
+  - SOFT 切换 (target evidence 缺失, grace_period 兜底 emit=True): 34 个 - 037-061/063-065/069/072-076/088 等
+  - V5_GATE_FEATURE_ID 缺失的 Pattern A (037/039-059/061/064/069 共 25 个) 用占位符 `__PHASE_47_PLACEHOLDER_INFRA_NNN__` + grace_period 自包含
+- _verify_lib.py 未改, LIB file_sha 不 bump
+- 金标: 062 ALL PASS (30/30); 097 ALL PASS (14/14); 098 仅 V1_self_main_func_sha pre-existing drift FAIL
+- 53 verify V5_reviewer_lgtm_gate tag 全部 PASS (52 grace_skipped soft + 19 真闸门 hard 部分有交集)
+- 已知 regression (本 feature 范围外, 留 backlog 续 feature):
+  - verify_infra_076 V4_1_static_scan_migrated_use_helper: 期望 13 verify 用旧 assert_reviewer_lgtm; migration 后期望 0/13 — 需扩 076 接受新 helper (baseline 已 fail 1/13 phase-46 遗留)
+  - verify_infra_080 V4_2/V4_3/V4_4: 期望 enrolled verify 用旧 helper return value participate emit; migration 后 6/6 fail — 需扩 080
+  - 041 import verify_infra_034 attr 缺失 — pre-existing baseline 与本 feature 无关
+- smoke ALL PASS
+- 不切 passing (Engineer 不切)
+
