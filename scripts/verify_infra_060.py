@@ -104,7 +104,10 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   主锁同名 const 已在 unknown 集合中, 但 verify_infra_110 的此 const 是新 source),
 #   build_graph 视为 unknown target 新增一条 (verify_infra_110, EXPECTED_CLASSIFY_NODE_FUNC_SHA)
 #   节点, 总 unknown 节点数 14 → 15。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 15
+# - phase-62 #5 (infra-P287-unknown-ids-set-lock) 后: 16
+#   verify_infra_059 新增 EXPECTED_UNKNOWN_IDS_SHA 常量, dump_v4 视为新 unknown
+#   target 节点 (verify_infra_059, EXPECTED_UNKNOWN_IDS_SHA), 总数 15 → 16。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 16
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
