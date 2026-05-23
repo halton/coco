@@ -8019,3 +8019,25 @@ phase-54 ("verify_infra_061 P282 docstring/comment 对齐 + Reviewer R2/R3 backl
 5. #5.54 infra-P293-typo-guard-hash-suffix-policy — passing ← 本次
 
 phase-54 5/5 complete。下一步: phase-55 planning。
+
+
+## Session 2026-05-23 phase-55 plan (main HEAD 637e032)
+
+phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生), 全 area=infra, 文件互不相撞, 每项 cascade≤1 不需头位独占:
+
+| # | feature id | 目标文件 | cascade_est | 选取理由 |
+|---|---|---|---|---|
+| 55-1 | infra-P293-typo-guard-ci-integration | init.sh (or _verify_lib.py lazy import 路径) | 0-1 | typo-guard 触发频率提升 (smoke 集成); 优先 init.sh 路径保 cascade=0 |
+| 55-2 | infra-P277-bootstrap-helper-json-schema-version | scripts/bootstrap_verify_self_checker.py + scripts/verify_infra_056.py | 0-1 | bootstrap --json schema_version 锚点, V4 锁定 |
+| 55-3 | infra-P299-baseline-cross-check-v4-invalid-ref-coverage | scripts/verify_infra_062.py | 0 | P278 gate V4.4b/V4.4c invalid ref 边界覆盖 |
+| 55-4 | infra-P283-palette-distinct-helper-edge-case-locks | scripts/verify_infra_058.py | 0-1 | palette 边界静默契约显式锁 (空 dict / 缺 fill / 非 dict entry) |
+| 55-5 | infra-P294-followup-070-mini-repo-env-isolation | scripts/verify_infra_070.py | 0 | _make_mini_repo subprocess.run 显式清空 GIT_* env |
+
+选取原则:
+- 全 area=infra, sim-first 友好, 文件互不撞 (init.sh / bootstrap_verify_self_checker.py / verify_infra_062.py / verify_infra_058.py / verify_infra_070.py 五个独立 file_sha lock 域)
+- 5 项 cascade_est 均 ≤1 → **head_position_constraint: 5 candidates 均 cascade≤1 可任意顺序**, 不需头位独占
+- 跳过 `closed_as_already_done` / STALE 项 (例如 infra-P294-followup-070-self-func-sha-bump / infra-V6-backlog-080-v4-4-mutant-assert-substituted-true)
+- 跳过涉 _verify_lib.py 大 cascade 项 (例如 infra-P275-assert-verify-passed-min-checks cascade≈51) 留待后续 phase 头位独占
+- 避开 uat-* 真机异步项 (sim-first)
+
+下一步: 主会话依持续开发模式立即派 sub-agent 拉 feat/infra-P293-typo-guard-ci-integration 分支启动 #1.55 实现 (Engineer dispatch)。

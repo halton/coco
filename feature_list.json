@@ -7237,11 +7237,11 @@
     },
     {
       "id": "infra-P293-typo-guard-ci-integration",
-      "priority": 999,
+      "priority": "55-1",
       "area": "infra",
-      "phase": null,
+      "phase": 55,
       "title": "typo-guard helper 只被 verify_infra_061 主动调用, 考虑 smoke / lib import 时 lazy 自检",
-      "status": "backlog",
+      "status": "not_started",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R4",
       "scope": "scan_expected_prefix_typos helper 当前只在 verify_infra_061 主动调用, 若开发者只跑 smoke 不会触发 typo 扫描. 建议: 1) 把 typo 扫加进 init.sh smoke (秒级), 或 2) _verify_lib import 时 lazy 自检 main scope (cost 低). 提升触发频率即提升护栏价值. P3 可选.",
@@ -7250,7 +7250,10 @@
       ],
       "verification": [],
       "branch": "",
-      "evidence": {}
+      "evidence": {},
+      "spec": "把 scan_expected_prefix_typos / typo-guard 自检挂到 ./init.sh smoke (秒级) 或 _verify_lib import 时 lazy 自检 main scope, 提升触发频率即提升护栏价值. 优先选 init.sh smoke 集成路径以保持 cascade=0; 若选 _verify_lib import 路径需评估 51 文件 cascade 影响.",
+      "rationale": "phase-55 plan: phase-55 候选: typo-guard 当前只被 verify_infra_061 主动调用, 开发者只跑 smoke 不会触发. 集成路径选定后 cascade 应可控 (init.sh 路径 cascade=0).",
+      "cascade_est": "0-1 (init.sh smoke 路径)"
     },
     {
       "id": "infra-P282-infra-046-grep-to-lib-sha-migration",
@@ -8339,9 +8342,9 @@
     },
     {
       "id": "infra-P283-palette-distinct-helper-edge-case-locks",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "55-4",
+      "status": "not_started",
+      "phase": 55,
       "area": "infra",
       "title": "verify_palette_fills_distinct 边界静默契约显式锁入 V4",
       "created_at": "2026-05-22",
@@ -8349,7 +8352,10 @@
       "scope": "verify_infra_058.py V4 追加 3 条断言: (a) 空 dict 输入 → distinct_fill_count=0/duplicates=[]/all_distinct=True; (b) entry 缺 fill 字段 (如 {a:{color:'#aaa'}}) → 静默跳过, distinct_fill_count 不计入; (c) entry 非 dict (如 {a:'#aaa'}) → 静默跳过, 不抛 TypeError。同步 bump verify_infra_058 自 sha 并触发 V6 反向锁链。",
       "dependencies": [],
       "verification": [],
-      "evidence": []
+      "evidence": [],
+      "spec": "scripts/verify_infra_058.py V4 追加 3 条断言锁 helper 边界静默契约: (a) 空 dict 输入 → distinct_fill_count=0/duplicates=[]/all_distinct=True; (b) entry 缺 fill 字段 → 静默跳过, distinct_fill_count 不计入; (c) entry 非 dict → 静默跳过, 不抛 TypeError. 同步 bump verify_infra_058 自 sha 并触发 V6 反向锁链.",
+      "rationale": "phase-55 plan: P277 infra-053-backlog-classdef-fills-distinct-check closeout 遗留, 防 helper 实现改动导致边界静默漂移.",
+      "cascade_est": "0-1 (verify_infra_058 自 sha bump + V6 反向锁链可能 0-1 处)"
     },
     {
       "id": "infra-P284-smoke-history-jsonl-policy",
@@ -8523,12 +8529,14 @@
     },
     {
       "id": "infra-P277-bootstrap-helper-json-schema-version",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "55-2",
+      "status": "not_started",
+      "phase": 55,
       "area": "infra",
       "title": "bootstrap helper JSON schema_version",
-      "rationale": "scripts/bootstrap_verify_self_checker.py --json 输出 5 字段无 schema_version. 未来加字段或重命名时无法做兼容判定. 建议加 'schema_version': 1, 并让 verify_infra_056 V4 锁该字段。"
+      "rationale": "scripts/bootstrap_verify_self_checker.py --json 输出 5 字段无 schema_version. 未来加字段或重命名时无法做兼容判定. 建议加 'schema_version': 1, 并让 verify_infra_056 V4 锁该字段。 || phase-55 plan: P277 schema_version 决策固化, 为后续 bootstrap helper JSON schema 演进提供版本号锚点.",
+      "spec": "scripts/bootstrap_verify_self_checker.py --json 输出加 'schema_version': 1 字段; scripts/verify_infra_056.py V4 增加 schema_version 字段锁 (V4_bootstrap_json_schema_version_eq_1). 未来加字段或重命名时可做兼容判定.",
+      "cascade_est": "0-1 (bootstrap_verify_self_checker 改动可能触发 verify_infra_056 自 sha bump)"
     },
     {
       "id": "infra-P278-closeout-verify-trustworthy",
@@ -9655,12 +9663,14 @@
     },
     {
       "id": "infra-P299-baseline-cross-check-v4-invalid-ref-coverage",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "55-3",
+      "status": "not_started",
+      "phase": 55,
       "area": "infra",
       "title": "V4.4 invalid baseline ref 用例补纯非法字符串覆盖",
-      "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。"
+      "rationale": "P294-R4 Reviewer finding: 当前 V4.4 用 40-hex 'deadbeef…' 触发 git rev-parse fail, 覆盖了 '形似合法但不存在的 sha' 路径; 缺纯非法字符串如 'not_a_ref' / 含空格 / 含 .. 的覆盖。建议补 V4.4b/V4.4c 用例, 锁住 rev-parse 错误捕获边界。 || phase-55 plan: P294-R4 Reviewer finding 留尾, 加固 P278 closeout-verify-trustworthy gate 的 invalid ref 错误捕获覆盖.",
+      "spec": "scripts/verify_infra_062.py V4.4 当前用 40-hex 'deadbeef…' 触发 git rev-parse fail; 补 V4.4b (纯非法字符串 'not_a_ref') / V4.4c (含空格 / 含 '..' 的 ref) 用例, 锁住 rev-parse 错误捕获边界. 同步 verify_infra_062 自 sha bump.",
+      "cascade_est": "0 (verify_infra_062 自闭, 不涉 _verify_lib helper)"
     },
     {
       "id": "infra-P299-followup-engineer-stale-verify-evidence",
@@ -10024,12 +10034,14 @@
     },
     {
       "id": "infra-P294-followup-070-mini-repo-env-isolation",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": "55-5",
+      "status": "not_started",
+      "phase": 55,
       "area": "infra",
       "title": "verify_infra_070 _make_mini_repo 加 GIT_DIR/GIT_WORK_TREE 显式清空",
-      "rationale": "P294 Reviewer P2 info finding: verify_infra_070.py _make_mini_repo 起 git worktree 时未显式清空父进程的 GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE 等 env var, 极端 CI 嵌套场景可能串台. 建议 subprocess.run env={**os.environ, 'GIT_DIR': '', 'GIT_WORK_TREE': ''} 显式隔离."
+      "rationale": "P294 Reviewer P2 info finding: verify_infra_070.py _make_mini_repo 起 git worktree 时未显式清空父进程的 GIT_DIR / GIT_WORK_TREE / GIT_INDEX_FILE 等 env var, 极端 CI 嵌套场景可能串台. 建议 subprocess.run env={**os.environ, 'GIT_DIR': '', 'GIT_WORK_TREE': ''} 显式隔离. || phase-55 plan: P294 Reviewer P2 info finding, 极端 CI 嵌套场景防 git worktree env 串台.",
+      "spec": "scripts/verify_infra_070.py _make_mini_repo 在 subprocess.run 显式清空 GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE 等 env var (env={**os.environ, 'GIT_DIR': '', 'GIT_WORK_TREE': '', 'GIT_INDEX_FILE': ''}); 同步 verify_infra_070 自 sha bump 与 V1 self func sha.",
+      "cascade_est": "0 (verify_infra_070 自闭)"
     },
     {
       "id": "infra-P294-followup-helper-tail-chars-vs-bytes-doc",
