@@ -8515,3 +8515,13 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - #5 prio=204 infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma — sentinel pragma 收紧
 - 选择启发式：P304 优先（pre-existing FAIL 还本）→ verify-trust 收紧 → cascade-strict 巩固 → sentinel 加固
 - 主会话将立刻派 phase-60 #1 Engineer
+
+## Session 2026-05-24 — phase-60 #1 closeout (infra-P304-backlog-P290-v2-target-sha-resync)
+
+- merge: feat/infra-P304-backlog-P290-v2-target-sha-resync (d9af334) → main, NEW_MAIN_SHA=c56c393
+- Reviewer (sub-agent fresh-context): LGTM — P290 V2_target_file_sha 与 v039 V4_output_anchors 双 SHA/anchor resync 真实修复, baseline b87501e 双 FAIL → feat HEAD d9af334 PASS, mutation A/B 双向正向
+- closeout verify: verify_infra_P290 PASS + verify_infra_039 PASS + verify_infra_110 PASS + verify_infra_060 PASS + verify_infra_104 PASS + smoke PASS; verify_infra_062 FAIL 6/30 pre-existing 同 baseline (b87501e) — 与本 feature 无关 (V4_closeout_* shape 历史 evidence 触发, phase-59 同步路径)
+- backlog 入账 ×2:
+  - infra-P290-backlog-v2-target-sha-func-level-lock (priority=999) — P290 整文件 sha → func_sha_by_name 减少 churn
+  - infra-039-backlog-v4-output-anchors-lower-bound (priority=999) — v039 anchor 字面 → lower-bound 或动态读 v4_sha.json
+- 下一 candidate: phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all
