@@ -539,6 +539,20 @@ def func_sha_by_name(path: str | Path, func_name: str) -> str:
     Raises:
         FileNotFoundError: path 不存在。
         ValueError: func_name 未在文件顶层找到。
+
+    Examples:
+        >>> from pathlib import Path
+        >>> _self = Path(__file__)
+        >>> sha = func_sha_by_name(_self, "func_sha_by_name")
+        >>> isinstance(sha, str) and len(sha) == 64
+        True
+        >>> all(c in "0123456789abcdef" for c in sha)
+        True
+        >>> try:
+        ...     func_sha_by_name(_self, "this_function_definitely_does_not_exist_xyz")
+        ... except ValueError:
+        ...     print("ValueError raised")
+        ValueError raised
     """
     p = Path(path)
     if not p.exists():
