@@ -8303,3 +8303,18 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - assert_verify_passed func_sha = 7754106551f77aa43caaaa27593a3b40d0532ec791a90b22f77d7c5098beb084
 - 备注: infra-104-backlog evidence 已经在 0410e1e fixup commit 修补 (verify_runs name+freshness_anchor schema 补齐), 062 post-merge 30/30 PASS 验证修复有效
 - phase_57 进度: 3/5 complete; next = phase-57 #4 (robot-037-backlog-import-time-fail-fallback)
+
+## Session 2026-05-23 phase-57 #4 closeout (fresh sub-agent)
+- feature: robot-037-backlog-import-time-fail-fallback status not_started→passing closed_at=2026-05-23
+- baseline main HEAD pre-merge = 6049b21
+- merge_commit_sha = 2c952a0b51d3bace7a496da4aa6e01543573fdc4 (no-ff merge feat/robot-037-backlog-import-time-fail-fallback)
+- 顺带 fixup: infra-P275 closeout verify_runs[2].status 'FAIL_pre_existing' → 'FAIL' (allowed_statuses=['PASS','FAIL','SKIP']); commit f30bb5c on feat branch 一并 merge
+- baseline 062 on 6049b21: FAIL 1/30 V4_closeout_verify_runs_shape (infra-P275 status enum); post-merge 062 30/30 PASS
+- post-merge smoke PASS (typo_count=0, total=276)
+- verify_robot_037.py post-merge: 23/23 PASS (V0/V1/V2/V3/V4/V5 + V6a sentinel literal + V6b file_sha + V6c main func_sha + V6d behavioral monkeypatch fallback)
+- verify_robot_034.py post-merge: 11/11 PASS (cascade bump 一致)
+- verify_robot_036.py post-merge: 11/11 PASS (cascade bump 一致)
+- verify_infra_062.py post-merge: 30/30 emit-paths PASS (enforced 48 含新 robot-037 entry)
+- 4 层锁: file_sha=2c7b49c23ed22feb, main func_sha=f995f51c1578e556, V6a try/except literal sentinel, V6d behavioral monkeypatch inject ROBOT_037_BACKLOG_INJECTED_FAIL
+- Reviewer fresh-context sub-agent LGTM: 12 checks_run, mutation_test_done=true, P0=[] P1=[] P2=2 项 (infra-059 baseline + 已修 062)
+- phase_57 进度: 4/5 complete; next = phase-57 #5

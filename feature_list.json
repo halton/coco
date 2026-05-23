@@ -8480,14 +8480,95 @@
       "area": "robot",
       "phase": 57,
       "title": "verify_robot_034 顶层 read_constant 调用包 try/except 降级 V0 FAIL",
-      "status": "not_started",
+      "status": "passing",
+      "closed_at": "2026-05-23",
+      "branch": "feat/robot-037-backlog-import-time-fail-fallback",
       "created_at": "2026-05-20",
       "source": "robot-037 closeout Reviewer 建议",
       "scope": "verify_robot_034 当前在模块 import-time 调用 read_constant；若 _verify_lib 异常或目标常量缺失，整个 verify 直接 ImportError 崩溃。包 try/except 降级为 V0 FAIL 单测项，让其他 V 阶段仍可继续报告。",
       "dependencies": [
         "robot-037"
       ],
-      "verification": []
+      "verification": [
+        "verify_robot_037: V0/V1/V2/V3/V4/V5/V6a/V6b/V6c/V6d 共 23 checks PASS",
+        "verify_robot_034 cascade bump 后 11/11 PASS",
+        "verify_robot_036 cascade bump 后 11/11 PASS",
+        "verify_infra_062 post-merge 30/30 PASS (含 infra-P275 status enum fixup)"
+      ],
+      "evidence": {
+        "merge_commit_sha": "2c952a0b51d3bace7a496da4aa6e01543573fdc4",
+        "baseline_head_echo": "6049b21",
+        "smoke_tail_stdout": "  ok: total=276 well_formed=276 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "closeout_verify": {
+          "main_head_sha": "2c952a0b51d3bace7a496da4aa6e01543573fdc4",
+          "merge_commit_sha": "2c952a0b51d3bace7a496da4aa6e01543573fdc4",
+          "baseline_head_echo": "6049b21",
+          "pre_existing_baseline_sha": "6049b21",
+          "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 1/30 emit-paths: ['V4_closeout_verify_runs_shape'] (pre-existing baseline on 6049b21: infra-P275 closeout verify_runs[2].status='FAIL_pre_existing' not in allowed_statuses; 本 PR fixup 改为 status='FAIL' + retain pre_existing_baseline_sha=0410e1e, post-merge 30/30 PASS)",
+          "smoke_tail_stdout": "  ok: total=276 well_formed=276 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "freshness": "post-merge-rerun",
+          "verify_runs": [
+            {
+              "name": "verify_robot_037",
+              "verifier": "scripts/verify_robot_037.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_037][PASS] V6a_sentinel_fallback_const needle=_SENTINEL_FALLBACK\n[verify_robot_037][PASS] V6b_verify_034_file_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_037][PASS] V6c_verify_034_main_func_sha got=f995f51c1578e556 expect=f995f51c1578e556\n[verify_robot_037][PASS] V6d_import_time_fallback_behavior rc=0 stdout=\"[verify_robot_034][WARN] import-time read_constant failed: RuntimeError('ROBOT_037_BACKLOG_INJECTED_FAIL'); using fallba\"\n[verify_robot_037][SUMMARY] ALL PASS (23 checks)"
+            },
+            {
+              "name": "verify_robot_034",
+              "verifier": "scripts/verify_robot_034.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_034][PASS] V4_doc_sha_print sha=33f4484cc7108a3a match=True\n[verify_robot_034][PASS] V5_self_subprocess rc=0 stdout_lines=13\n[verify_robot_034] summary total=11 failed=0"
+            },
+            {
+              "name": "verify_robot_036",
+              "verifier": "scripts/verify_robot_036.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_robot_036][PASS] V4_verify_034_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_036][PASS] V5_self_subprocess rc=0 stdout_lines=11\n[verify_robot_036] summary total=11 failed=0"
+            },
+            {
+              "name": "verify_infra_062",
+              "verifier": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Fresh-context Reviewer 评审 robot-037-backlog: 4 层锁(file_sha=2c7b49c23ed22feb, main func_sha=f995f51c1578e556, V6a try/except literal, V6d behavioral monkeypatch)实现正确, V6d monkeypatch inject ROBOT_037_BACKLOG_INJECTED_FAIL 后 read_constant 走 fallback 路径并产出 [WARN] 行, verify_robot_034 仍能继续报告 V1-V5. 23/23 PASS + cascade bump 一致 + verify_robot_036 11/11 PASS.",
+            "checks_run": [
+              "V0 helper/sentinel 存在 (_SENTINEL_FALLBACK + try/except)",
+              "V1 docstring sentinel 锁",
+              "V2 lib file_sha=7df5af6b9d48687e",
+              "V3 helper func_sha 对齐",
+              "V4 file_sha=2c7b49c23ed22feb (target verify_robot_034)",
+              "V5 main func_sha=f995f51c1578e556",
+              "V6a try/except literal 锁 (sentinel needle in source)",
+              "V6d behavioral monkeypatch inject RuntimeError → fallback path produces [WARN] line",
+              "verify_robot_034 11/11 PASS post-cascade",
+              "verify_robot_036 11/11 PASS post-cascade",
+              "./init.sh smoke PASS",
+              "infra-P275 status enum fixup verified by verify_infra_062 post-merge 30/30 PASS"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "verify_infra_059 baseline 状态在 main 6049b21 上保留为 pre-existing (classifier 与 lib func sha 演化, 计划由 infra-P285 消化, 本 PR 不影响)",
+                "本 closeout 已修复 verify_infra_062 baseline FAIL: infra-P275 closeout verify_runs[2].status 'FAIL_pre_existing' → 'FAIL' (allowed_statuses 收敛), post-merge 062 30/30 PASS"
+              ]
+            }
+          }
+        },
+        "real_machine_uat": "pending (sim-first; import-time fallback 无真机依赖)"
+      }
     },
     {
       "id": "robot-037-backlog-helper-docstring-module-only",
