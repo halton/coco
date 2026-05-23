@@ -8177,3 +8177,17 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 0 业务源码改动 (仅 feature_list.json status 收敛 + closed_as_already_done=true)
 - phase_56_status: 3/5 complete
 - 下一步: 派 sub-agent 执行 phase-56 #4
+
+## Session 2026-05-23T phase-56 #4 closeout: robot-032-backlog-doc-verify-single-source (stale_already_done)
+- main HEAD before: 9b40e51 → merge --no-ff feat/robot-032-backlog-doc-verify-single-source → 4f5e7f7
+- 模式: stale_already_done (Engineer + Reviewer 已确认 phase-30 robot-034/robot-035 完整覆盖此 backlog scope)
+- robot-034: verify_robot_032.py 已用 _parse_headings_from_doc 运行时解析 docs sentinel section，消除 hardcode 双侧同步
+- robot-035: _parse_headings_from_doc helper 抽到 scripts/_verify_lib.py 共享给 verify_robot_032 / verify_robot_034
+- verify_robot_032.py rc=0 (V0+V1b+V1+V2+V3+V4 all PASS; parsed 12 headings from doc sentinel)
+- verify_infra_062.py rc=0 (30/30 PASS; closeout trustworthy 通过)
+- verify_infra_060.py V4_real_unknown_count_eq_one FAIL unknown_count=9 (pre-existing baseline @ 9b40e51；本 stale closeout 不引入新 unknown)
+- smoke 全 PASS
+- Reviewer: sub_agent_fresh_context LGTM (verdict_original=LGTM_stale_already_done, summary 前缀 [stale_already_done], 6 checks_run, mutation_test_done=false)
+- 0 业务源码改动 (仅 feature_list.json status=passing + closed_as_already_done=true + closed_at=2026-05-23 + 完整 closeout_verify schema)
+- phase_56_status: 4/5 complete
+- 下一步: 派 sub-agent 执行 phase-56 #5 (interact-036a-backlog-drift-jsonl-rotation)

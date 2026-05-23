@@ -5408,13 +5408,63 @@
         "robot-034",
         "robot-035"
       ],
+      "closed_at": "2026-05-23",
       "evidence": {
         "finding": "robot-032-backlog scope (doc 章节标题作为 verify_robot_032 单一事实源) 已被 phase-30 robot-034 + phase-30 robot-035 完整覆盖",
         "robot_034": "verify_robot_032.py L61 EXPECTED_HEADINGS = _parse_headings_from_doc(DOC, _HEADINGS_SECTION_SENTINEL) 运行时从 docs/proactive_scheduler_block_policy.md sentinel section \"## 章节标题列表（供 verify_robot_032 用）\" 解析章节标题列表，已消除 hardcode 双侧手工同步",
         "robot_035": "_parse_headings_from_doc helper 抽到 scripts/_verify_lib.py 共享 lib，verify_robot_032 / verify_robot_034 复用",
         "verify_robot_032_rerun": "rc=0 (V0+V1b+V1+V2+V3+V4 all PASS; parsed 12 headings from doc sentinel; 12 phrases present; mutant probe rc=1; sha256=33f4484cc7108a3aba68e3ecef9d8419a2fca02ddb3665f754e8dc7667aa5f5a)",
         "smoke": "PASS (本 stale closeout 不动业务)",
-        "reviewer_sub_agent": "pending phase-56 #4 Reviewer fresh-context"
+        "closeout_verify": {
+          "main_head_sha": "4f5e7f7ea275276aee7e9fc094fc9e5b33384ea0",
+          "merge_commit_sha": "4f5e7f7ea275276aee7e9fc094fc9e5b33384ea0",
+          "baseline_head_echo": "9b40e51",
+          "pre_existing_baseline_sha": "9b40e51778035bca4ad661970994fe4368543e94",
+          "baseline_tail_stdout": "[verify_infra_060][PASS] V0_dump_exists\n[verify_infra_060][PASS] V0_per_file_locks_present\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=29250\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=9 (pre-existing baseline; 9 EXPECTED_* unknown 已存在于 main HEAD 9b40e51，本 stale closeout 不引入新 unknown)\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V4_lib_classification_present\n[verify_infra_060][PASS] V4_dump_includes_reverse_index\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+          "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s)\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s)\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard\n  ok: total=267 well_formed=267 typo_count=0\n==> Smoke 通过。",
+          "verify_runs": [
+            {
+              "verify_script": "scripts/verify_robot_032.py",
+              "status": "PASS",
+              "tail_stdout": "[V0] PASS: docs/proactive_scheduler_block_policy.md exists\n[V1b] PASS: parsed 12 headings from doc sentinel\n[V1] PASS: 12 headings present\n[V2] PASS: 12 phrases present\n[V3] PASS: mutant probe rc=1 (detected missing heading)\n[V4] doc sha256=33f4484cc7108a3aba68e3ecef9d8419a2fca02ddb3665f754e8dc7667aa5f5a\nALL PASS",
+              "run_context": "post-merge-rerun"
+            },
+            {
+              "verify_script": "scripts/verify_infra_060.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_060][PASS] V0_dump_exists\n[verify_infra_060][PASS] V1_docstring_sentinel sentinel=INFRA_060_SHA_LOCKS\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=29250\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=9 (pre-existing baseline @ 9b40e51)\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14",
+              "run_context": "post-merge-rerun",
+              "pre_existing_baseline_sha": "9b40e51778035bca4ad661970994fe4368543e94",
+              "baseline_tail_stdout": "main@9b40e51 V4_real_unknown_count_eq_one unknown_count=9; 本 stale closeout 不引入新 unknown，与 baseline 完全一致"
+            },
+            {
+              "verify_script": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V0_helper_def_present\n[verify_infra_062][PASS] V0_helper_in_all 33 names\n[verify_infra_062][PASS] V4_byte_match_enforce scanned=341 enforced=175 violations=0 fired_features=39\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=77 enforced=8 violations=0\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=77 enforced=42 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=77 enforced=58 violations=0 min_count=3\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=77 enforced=51 violations=0\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=77 enforced=45 violations=0\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "run_context": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "verdict_original": "LGTM_stale_already_done",
+            "summary": "[stale_already_done] robot-032-backlog scope (verify_robot_032 以文档章节作为单一事实源消除手工同步) 已被 phase-30 robot-034 (sentinel section + _parse_headings_from_doc 运行时解析) + phase-30 robot-035 (helper 抽到 _verify_lib.py 共享) 完整覆盖；当前 verify_robot_032.py 不再 hardcode EXPECTED_HEADINGS，V1b 已展示 parsed 12 headings from doc sentinel；本 backlog 项作为 already-done 收敛，无新增源码改动",
+            "checks_run": [
+              "对照 robot-032-backlog 描述与 robot-034/robot-035 evidence 比对覆盖范围",
+              "确认 scripts/verify_robot_032.py 当前实现确实使用 _parse_headings_from_doc 运行时解析",
+              "确认 scripts/_verify_lib.py 中 _parse_headings_from_doc helper 被 verify_robot_032/verify_robot_034 共享复用",
+              "重跑 scripts/verify_robot_032.py 确认 rc=0 + V1b parsed 12 headings + ALL PASS",
+              "确认 docs/proactive_scheduler_block_policy.md sentinel section 存在且章节顺序与 V1 12 headings 一致",
+              "确认本 stale closeout 不引入新源码改动 (feature_list.json + claude-progress.md 之外 0 diff)"
+            ],
+            "mutation_test_done": false,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          }
+        }
       }
     },
     {
