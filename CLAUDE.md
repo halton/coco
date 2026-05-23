@@ -140,6 +140,8 @@
 
 **Closeout-verify-trustworthy 硬规则 (P278)**: Closeout sub-agent 提交的 verify 报告必须含 `closeout_verify.main_head_sha` (7+ hex) + `verify_runs` (含 tail_stdout + status) + 任一 FAIL 需 `pre_existing_baseline_sha` + `baseline_tail_stdout` + `smoke_tail_stdout` + `reviewer.reviewer_kind == sub_agent_fresh_context`。机械化校验由 `scripts/verify_infra_062.py` 实施。详见 AGENTS.md「Closeout-verify-trustworthy 硬规则」段。
 
+**Shell verify rc 读取硬规则 (P299, phase-49 #5.49)**: 在 shell 中跑 `python scripts/verify_xxx.py` 必须用以下三种形态之一读 rc: (a) `python verify_xxx.py; rc=$?` (不 pipe), 或 (b) `set -o pipefail` 后才 pipe to tail, 或 (c) `python verify_xxx.py > /tmp/v.log 2>&1; rc=$?; tail /tmp/v.log`。**显式禁用** `python verify_xxx.py | tail; echo $?` —— rc 来自 tail 不来自 verify, 把真 FAIL 当 PASS 即 evidence 不可信。机械化锁: `scripts/verify_infra_100.py`。详见 AGENTS.md「Shell verify rc 读取硬规则 (P299)」段。
+
 ## 结束前
 
 1. 更新进度日志（追加 Session 条目）
