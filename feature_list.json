@@ -8862,12 +8862,22 @@
     },
     {
       "id": "infra-P294-followup-070-self-func-sha-bump",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_070 V1 self func sha 占位 __BUMP_ME__ 锁定为实算值",
+      "rationale": "P294 Reviewer P1 finding: verify_infra_070.py V1 self-func sha 占位 '__BUMP_ME__' 待下次 070 改动时锁定为实算 sha256 (与其他 verify 自检模式对齐, 防止后续 070 改动无人察觉).",
+      "note": "closed_as_already_done by cascade fix 2411302; superseded by infra-P294-followup-070-verify-lib-file-sha-bump"
+    },
+    {
+      "id": "infra-P294-followup-070-verify-lib-file-sha-bump",
       "priority": "3.46",
       "status": "not_started",
       "phase": 46,
       "area": "infra",
-      "title": "verify_infra_070 V1 self func sha 占位 __BUMP_ME__ 锁定为实算值",
-      "rationale": "P294 Reviewer P1 finding: verify_infra_070.py V1 self-func sha 占位 '__BUMP_ME__' 待下次 070 改动时锁定为实算 sha256 (与其他 verify 自检模式对齐, 防止后续 070 改动无人察觉)."
+      "title": "cascade bump EXPECTED_VERIFY_LIB_FILE_SHA across stale verify_infra_*.py",
+      "rationale": "P294 phase-46 cascade: scripts/_verify_lib.py 当前 sha=4f168152, 但 24 个 verify_infra_*.py (037/061/063-068/070-073/075-082/084-087) EXPECTED_VERIFY_LIB_FILE_SHA 仍锁旧值 (a80af008 或 2c412eec). 批量 bump 到 4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd 以解除 V2_verify_lib_file_sha cascade FAIL."
     },
     {
       "id": "infra-P294-followup-v5-reviewer-gate-evidence-bind",
