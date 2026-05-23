@@ -1,5 +1,17 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-51 规划 (5 candidates promoted from backlog)
+
+- backlog 池规模: 110 项 (V6 backlog 主要由 infra/V6/sha 锁体系延续 + 部分 robot/interact 残项)。
+- 选取 5 个候选 phase-51 (标准: infra/V6/反向 sha 锁/V5 gate/dump 工具/V6 unique-needle/可机器化校验; 避免触 _verify_lib 函数体; 避免 >5min Bash; 避免真机依赖; 优先延续 phase-49/50 主题且容易 STALE-audit 出来的快速清池项):
+  1. 51-1: `infra-039-backlog-bump-regex-normalize` — _RE_V_NUM_HINT / _RE_BUMP_HINT 位数策略统一 + docstring 标语义; 位于 dump/bump helper 体系, 不触 _verify_lib 函数体, 纯 regex pattern + docstring 调整。
+  2. 51-2: `infra-053-backlog-doc-hub-color-update` — 文档色块更新, 极小, 适合做 phase 起跳 audit-likely-STALE 项。
+  3. 51-3: `infra-040-backlog-tmpl-reason-comment-style` — PR 模板 `理由: ___________` 改 HTML 注释风格, 纯文本。
+  4. 51-4: `infra-040-backlog-default-tmpl-minimal-mode` — pull_request_template.md 瘦身到 5-6 行, 纯文本。
+  5. 51-5: `infra-P293-typo-guard-docstring-vs-impl-mismatch` — typo-guard helper docstring 与 impl 对齐 (纯 docstring 调整, 不动函数体)。
+- 主题: 延续 phase-49/50 的 dump/bump helper + PR 模板 + typo-guard 周边收口; 池子大, 主线明确扫剩余 backlog 池快速清。
+- 真机 UAT: 无 (本批全 sim-first)。
+
 ## Session 2026-05-23 — phase-49 #4.49 infra-049-backlog-dump-index-expose-kind (Closeout)
 
 - merge: feat/infra-049-backlog-dump-index-expose-kind (28e87a0) → main, merge sha=56e8dea, base=cbb970c
