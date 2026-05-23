@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """verify_infra_110: render_mermaid unknown target 复合 key 防 collision (verify-only).
 
+## Lock: EXPECTED_CLASSIFY_NODE_FUNC_SHA
+- target_function: classify_node
+- target_file: scripts/dump_v4_sha_graph.py
+- lock_kind: ast_func_sha
+- bump_when: classify_node implementation changes
+- bump_protocol: recompute func_sha_by_name("classify_node", target_file) then update EXPECTED_CLASSIFY_NODE_FUNC_SHA
+- rationale: lock 防止 unknown collision 处理 (V3b/V6b/V6c) 被悄改
+
 infra-039-backlog-mermaid-unknown-target-id-collision (phase-59 #4):
 ``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 此前对 unknown target
 (``_infer_target`` 返回 ``<unknown target>``, 即 target 字段中无 ``.py`` token 的
@@ -46,6 +54,7 @@ INFRA_110_SHA_LOCKS
 - V6 reverse_sha meta-lock: render_mermaid func sha (同 V3, 第二份独立持有)
 - V6b reverse_sha meta-lock: _classify_node func sha (同 V3b, 第二份独立持有)
 - V6c read_constant 自校 EXPECTED_CLASSIFY_NODE_FUNC_SHA 文字常量化
+- V7 classify_node lock doc present (本 docstring 顶部 Lock 元信息小节自锁)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
 """
@@ -87,7 +96,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "cec748f99b6bad9ffbaadbd924af41790ccaaabcffbae51bda875bbef1c9b661"
+EXPECTED_SELF_MAIN_FUNC_SHA = "93c12ac3eb031ebe0da0837c63eca9c8b5d3dc0d2e385efbe9782aa051e86ab1"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -104,6 +113,29 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
 
 def _file_sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def _check_v7_classify_node_lock_doc_present() -> tuple[bool, str]:
+    """V7: SELF 文件顶部 docstring (前 50 行) 必须含 classify_node lock 元信息字段.
+
+    本检查是 sha-lock 的文档姊妹: 防止未来重构改了锁形态而 docstring 不同步,
+    或反过来——把锁删了 docstring 还残留. 字段名匹配大小写敏感, 必须以 `- `
+    前缀 (markdown 列表风格) 出现.
+    """
+    required_fields = [
+        "- target_function:",
+        "- target_file:",
+        "- lock_kind:",
+        "- bump_when:",
+        "- bump_protocol:",
+        "- rationale:",
+    ]
+    self_lines = Path(__file__).read_text(encoding="utf-8").splitlines()[:50]
+    head = "\n".join(self_lines)
+    missing = [f for f in required_fields if f not in head]
+    if missing:
+        return False, f"missing fields in top-50-line docstring: {missing}"
+    return True, f"all {len(required_fields)} fields present in top-50-line docstring"
 
 
 def main() -> None:
@@ -317,6 +349,10 @@ def main() -> None:
         )
     except Exception as e:
         _emit("V6c_classify_node_func_sha_constant_literal", False, f"read_constant err: {e!r}")
+
+    # V7 classify_node lock doc present (docstring 元信息姊妹锁)
+    v7_ok, v7_detail = _check_v7_classify_node_lock_doc_present()
+    _emit("V7_classify_node_lock_doc_present", v7_ok, v7_detail)
 
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
