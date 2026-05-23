@@ -7541,3 +7541,16 @@ phase-46 5 候选 promoted to not_started：
   - verify_infra_076 14/14 PASS、verify_infra_062 30/30 PASS、verify_infra_080 14/14 PASS、smoke PASS（post-merge-rerun，venv py3.13）
   - Reviewer sub_agent_fresh_context LGTM，P0=P1=[]，P2 一项关于 notes "~37" 与 062 enforced=36 微差（非阻断，step2 时对齐）
   - step2 backlog 已入账：infra-V6-backlog-076-helper-tuple-step2-hoist-to-verify-lib
+
+## Session 2026-05-23 phase-49 planning
+
+- phase-48 closeout 完成 (3 passing + 2 STALE)；进入 phase-49 规划
+- 审计 backlog 池：112 个 V6 backlog (status=backlog/phase=null/pri=999/非 STALE)，跨 phase 残留 3 个 (uat-phase4 不计软件)
+- phase-49 candidates 5 个入账 (priority 1.49 → 5.49)：
+  - 1.49 infra-V6-backlog-verify-037-061-064-lib-file-sha-historical-floor-bump (跨 phase 残留 phase=47→49, lib-file-sha floor bump)
+  - 2.49 infra-P291-followup-baseline-v0-v1-v3-placeholder-cleanup (跨 phase 残留 phase=0→49, placeholder 清理)
+  - 3.49 infra-V6-backlog-regex-unique-needle-discipline (regex 唯一性纪律, 价值高/风险低)
+  - 4.49 infra-049-backlog-dump-index-expose-kind (dump 索引增强 kind 字段)
+  - 5.49 infra-P299-shell-verify-rc-usage-doc (shell verify rc 用法文档)
+- 062 30/30 PASS、smoke PASS（venv py3.13）
+- 主会话编排，sub-agent 执行 audit/edit/verify/commit
