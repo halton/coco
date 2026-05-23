@@ -8536,3 +8536,13 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
   - infra-P301-backlog-v0-marker-extended-naming — V0 canonical marker 命名约定补 docstring + 异类命名扫描
   - infra-P301-backlog-runtime-echo-evidence — V0_SELF_SHA_LOCK_VERSION/BUMPED_AT 进 closeout evidence runtime echo
 - 下一 candidate: phase-60 #3 infra-110-backlog-classify-node-unknown-lock
+
+## Session 2026-05-24 — phase-60 #3 infra-110-backlog-classify-node-unknown-lock closeout
+
+- Merge feat/infra-110-backlog-classify-node-unknown-lock → main, NEW_MAIN_SHA=02f074d
+- Closeout verify (P278+P299):
+  - smoke PASS, v110 PASS (15 checks), v039 PASS (21), v060 PASS (14), v104 PASS (22), v301_full PASS (10), v062 FAIL 6/30 (pre-existing on main baseline 21b4230 — same 6 emit-paths, unrelated to infra-110)
+- feature_list.json: infra-110-backlog-classify-node-unknown-lock status=passing with P278 nested evidence (main_head_sha + 7 verify_runs + smoke_tail_stdout + reviewer{sub_agent_fresh_context, LGTM} + mutation_test{A1,A2,B})
+- 1 backlog 入账 (priority=999):
+  - infra-110-backlog-classify-lock-cross-check-doc — verify_infra_110/060 docstring 注明 EXPECTED_CLASSIFY_*_FUNC_SHA 同值 cross-check 故意保留
+- 下一 candidate: phase-60 #4 infra-110-backlog-composite-key-strict-ordering

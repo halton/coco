@@ -16641,10 +16641,98 @@
       "area": "infra",
       "phase": 60,
       "title": "_classify_node unknown 分支加 func sha 锁",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-23",
       "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
       "scope": "_classify_node 中 unknown 分支当前无独立 func sha 锁；若被改动可能影响 render_mermaid 复合 key 路径而本 feature 的检查察觉不到。建议加一个 V*_classify_node_unknown_func_sha 锁。",
+      "dependencies": [],
+      "verification": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "02f074d",
+          "merge_commit_sha": "02f074d",
+          "baseline_head_echo": "21b4230",
+          "feat_branch_head_sha": "cf00d97",
+          "smoke_tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate ... grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (21 checks)"
+            },
+            {
+              "name": "verify_infra_060",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate ... grace_skipped=True\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_104",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "[verify_infra_104][PASS] V6d_dict_literal_seg_extracted seg_len=85\n[verify_infra_104][PASS] V6d_dict_literal_clean polluters_in_dict_value=[]\n[verify_infra_104][SUMMARY] ALL PASS (22 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "FAIL",
+              "rc": 1,
+              "freshness_anchor": "02f074d",
+              "pre_existing_baseline_sha": "21b4230",
+              "baseline_tail_stdout": "[verify_infra_062][FAIL] V4_closeout_verify_runs_min_count violations=1 first={'feature_id': 'infra-V6-backlog-080-v4-4-mutant-assert-substituted-true', 'reason': 'closeout_verify.verify_runs len=2 < min_count=3'}\n[verify_infra_062][FAIL] V4_closeout_verify_runs_shape violations=2\n[verify_infra_062][FAIL] V4_closeout_reviewer_block_shape violations=2\n[verify_infra_062][FAIL] V4_closeout_baseline_head_echo_format violations=1\n[verify_infra_062][FAIL] V4_closeout_merge_commit_sha_format violations=1\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness violations=2\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] FAIL 6/30 emit-paths: ['V4_closeout_verify_runs_min_count', 'V4_closeout_verify_runs_shape', 'V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_merge_commit_sha_format', 'V4_closeout_verify_runs_freshness']",
+              "note": "Same 6/30 FAIL emit-paths on main baseline 21b4230 — pre-existing, unrelated to infra-110 (which only adds V3b/V6b/V6c classify_node sha locks)."
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate ... grace_skipped\n[verify_infra_P301_full] summary: total=10 failed=0"
+            },
+            {
+              "name": "init_smoke",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "02f074d",
+              "tail_stdout": "ok: total=290 well_formed=290 typo_count=0\n==> Smoke 通过"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-110 给 _classify_node 加 V3b/V6b/V6c 三重锁; mutation 实证 startswith(\"unknown_\") typo 在 V3b+V6b 双独立 FAIL; V6c 实证 const 非字面量化时 FAIL (read_constant raise ValueError); 全 verify suite PASS; v062 FAIL 6/30 为 main baseline pre-existing 无关本 feature.",
+            "checks_run": ["V3b_classify_node_func_sha", "V6b_classify_node_func_sha_meta", "V6c_classify_node_func_sha_constant_literal", "mutation_A1_unknown_typo", "mutation_A2_const_non_literal", "B_restore_all_pass"],
+            "findings": {"P0": [], "P1": [], "P2": ["concern1: V3b/V6b/V6c 同 EXPECTED sha 为 cross-check 设计 (建议 docstring 注明)"]}
+          },
+          "mutation_test": {
+            "A1": "改 startswith(\"unknown_\") typo → V3b + V6b + V2 三处独立 FAIL",
+            "A2": "EXPECTED_CLASSIFY_NODE_FUNC_SHA 非字面量化 → V6c read_constant raise ValueError 转 FAIL",
+            "B": "restore 后 ALL PASS 15 checks"
+          }
+        }
+      }
+    },
+    {
+      "id": "infra-110-backlog-classify-lock-cross-check-doc",
+      "priority": 999,
+      "area": "infra",
+      "phase": null,
+      "title": "verify_infra_110 与 verify_infra_060 docstring 注明 EXPECTED_CLASSIFY_*_FUNC_SHA 同值 cross-check 故意保留",
+      "status": "backlog",
+      "created_at": "2026-05-24",
+      "source": "phase-60 #3 infra-110-backlog-classify-node-unknown-lock Reviewer 非阻塞 finding (concern1)",
+      "scope": "infra-110 引入 V3b/V6b/V6c 三个 classify_node 锁的 EXPECTED sha 为同值, 这是跨脚本 cross-check 设计 (verify_infra_110 与 verify_infra_060 互证); 但当前 docstring 未声明意图, 后来者可能误以为是重复冗余而合并。建议在两脚本 docstring 注明意图。",
       "dependencies": [],
       "verification": []
     },
