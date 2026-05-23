@@ -70,7 +70,13 @@ def build_entries() -> List[Dict[str, Any]]:
     """扫 scripts/ 下反向 sha lock, 富化 target 推断.
 
     返回 list[dict]: 每条 {file, lineno, const_name, sha_hex, sha_short,
-    inferred_target}.
+    inferred_target, kind}.
+
+    infra-049-backlog-dump-index-expose-kind (phase-49 #4.49): 透传
+    ``scan_reverse_sha_locks`` 已带的 ``kind`` 字段 (``verify_id`` /
+    ``expected_pattern``), 便于消费者 (audit / CI) 区分两类反向锁;
+    缺省 ``kind`` 项 fallback 为 ``"unknown"`` (防御性, 当前 helper
+    保证 100% 命中两类之一).
     """
     scanned = scan_reverse_sha_locks(SCRIPTS)
     out: List[Dict[str, Any]] = []
@@ -88,6 +94,7 @@ def build_entries() -> List[Dict[str, Any]]:
             "sha_hex": item["sha_hex"],
             "sha_short": item["sha_hex"][:8],
             "inferred_target": target,
+            "kind": item.get("kind", "unknown"),
         })
     return out
 
@@ -105,7 +112,11 @@ def group_entries_by_file(entries: List[Dict[str, Any]]) -> "OrderedDict[str, Li
 # Rendering
 # ---------------------------------------------------------------------------
 def render_text(entries: List[Dict[str, Any]], live_count: int) -> str:
-    """人读分组表格. 每行: ``  <const_name>=<sha8>  ->  <inferred_target>``.
+    """人读分组表格. 每行: ``  <const_name>=<sha8> [<kind>] -> <inferred_target>``.
+
+    infra-049-backlog-dump-index-expose-kind (phase-49 #4.49): 行内增加
+    ``[<kind>]`` 标签 (verify_id / expected_pattern), 与 JSON 输出的 kind
+    字段对齐, 便于人读时区分两类反向锁。
     """
     grouped = group_entries_by_file(entries)
     lines: List[str] = []
@@ -118,7 +129,7 @@ def render_text(entries: List[Dict[str, Any]], live_count: int) -> str:
         lines.append(f"{file}:  ({len(items)} lock{'s' if len(items) != 1 else ''})")
         for it in items:
             lines.append(
-                f"  L{it['lineno']:>4}  {it['const_name']}={it['sha_short']}  ->  {it['inferred_target']}"
+                f"  L{it['lineno']:>4}  {it['const_name']}={it['sha_short']}  [{it.get('kind', 'unknown')}]  ->  {it['inferred_target']}"
             )
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
@@ -130,19 +141,30 @@ def render_json(entries: List[Dict[str, Any]], live_count: int, consistency: Dic
     infra-049-backlog-render-json-sort-stability (P269): entries 显式按
     ``(file, lineno, const_name)`` 升序排序, 锁定 byte-wise 稳定性; stats 块
     新增 ``sort_order`` 字段显式标注该排序契约, 防止后续无意改动悄悄改掉.
+
+    infra-049-backlog-dump-index-expose-kind (phase-49 #4.49): schema 升
+    ``reverse_sha_lock_index/v2``, entries 每条新增 ``kind`` 字段
+    (``verify_id`` / ``expected_pattern``, 缺省 ``unknown``), stats 新增
+    ``kind_breakdown`` 子 dict 统计两类锁数量。schema v1 → v2 是 additive
+    破坏性变更 (新增 key, 旧字段不动), 消费者按 schema 字段路由解析即可。
     """
     sorted_entries = sorted(
         entries,
         key=lambda e: (e["file"], e["lineno"], e["const_name"]),
     )
+    kind_breakdown: Dict[str, int] = {}
+    for e in sorted_entries:
+        k = e.get("kind", "unknown")
+        kind_breakdown[k] = kind_breakdown.get(k, 0) + 1
     payload: Dict[str, Any] = {
-        "schema": "reverse_sha_lock_index/v1",
+        "schema": "reverse_sha_lock_index/v2",
         "stats": {
             "scanned_count": len(sorted_entries),
             "live_verify_files": live_count,
             "orphan_count": len(consistency.get("orphans", [])),
             "all_match": bool(consistency.get("all_match", False)),
             "sort_order": "verify_file,lineno,lock_name",
+            "kind_breakdown": dict(sorted(kind_breakdown.items())),
         },
         "entries": sorted_entries,
         "orphans": consistency.get("orphans", []),
