@@ -11,6 +11,7 @@ verify_<id> 交叉锁 / _verify_lib file 锁 / v4_sha.json 表), 以文本或 JS
     python scripts/dump_v4_sha_graph.py --json     # JSON dump
     python scripts/dump_v4_sha_graph.py --mermaid  # mermaid graph LR 语法
     python scripts/dump_v4_sha_graph.py --out F    # 写入文件 F
+    python scripts/dump_v4_sha_graph.py --show-full-sha  # 文本模式展示完整 64 hex sha
 
 本脚本是 *只读* 工具, 不修改任何文件, 不依赖 reachy-mini SDK。
 """
@@ -542,7 +543,15 @@ def build_graph() -> Dict:
     return graph
 
 
-def render_text(graph: Dict) -> str:
+def render_text(graph: Dict, show_full_sha: bool = False) -> str:
+    """渲染文本 graph。
+
+    infra-039-backlog-dump-show-full-sha: ``show_full_sha=True`` 时输出完整 64 hex
+    sha (不带省略号), 默认行为 ``[:16]...`` 保持兼容。
+    """
+    def _fmt(sha: str) -> str:
+        return sha if show_full_sha else f"{sha[:16]}..."
+
     out: List[str] = []
     out.append("=== V4 SHA-LOCK GRAPH ===")
     out.append("")
@@ -550,7 +559,7 @@ def render_text(graph: Dict) -> str:
     if v4:
         out.append(f"{v4['path']} ({v4['count']} targets):")
         for tgt, sha in sorted(v4["targets"].items()):
-            out.append(f"  ├─ {tgt:<40s} @ {sha[:16]}...")
+            out.append(f"  ├─ {tgt:<40s} @ {_fmt(sha)}")
         out.append("")
         out.append("scripts/verify_infra_034.py V4")
         out.append(f"  └─→ reads {v4['path']} (sort_keys canonical)")
@@ -565,7 +574,7 @@ def render_text(graph: Dict) -> str:
         items = by_src[src]
         out.append(f"{src}")
         for it in items:
-            out.append(f"  └─→ {it['const']} = {it['sha'][:16]}...  (L{it['line']})")
+            out.append(f"  └─→ {it['const']} = {_fmt(it['sha'])}  (L{it['line']})")
             out.append(f"      └─→ locks {it['target']}")
         out.append("")
     out.append(f"=== SUMMARY: {len(locks)} sha-lock constants across {len(by_src)} files ===")
@@ -667,6 +676,11 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="emit JSON instead of text")
     ap.add_argument("--mermaid", action="store_true", help="emit mermaid graph LR syntax")
     ap.add_argument("--out", type=str, default=None, help="write output to file")
+    ap.add_argument(
+        "--show-full-sha",
+        action="store_true",
+        help="text mode emits full 64 hex sha (no truncation); JSON/mermaid unaffected (infra-039-backlog-dump-show-full-sha)",
+    )
     args = ap.parse_args()
     if args.json and args.mermaid:
         print("[dump_v4_sha_graph] --json and --mermaid are mutually exclusive", file=sys.stderr)
@@ -677,7 +691,7 @@ def main() -> int:
     elif args.mermaid:
         output = render_mermaid(graph)
     else:
-        output = render_text(graph)
+        output = render_text(graph, show_full_sha=args.show_full_sha)
     if args.out:
         Path(args.out).write_text(output + ("\n" if not output.endswith("\n") else ""), encoding="utf-8")
         print(f"[dump_v4_sha_graph] wrote {args.out} ({len(output)} bytes)", flush=True)
