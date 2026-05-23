@@ -708,6 +708,14 @@ def render_mermaid(graph: Dict) -> str:
             out.append(f"    {hub} -->|file-sha| {nid}")
 
     # 反向 sha lock 边: source --|const|--> target
+    #
+    # infra-039-backlog-mermaid-tuple-fanout (phase-57 #1):
+    # target 字段可能是 "scripts/verify_a.py, scripts/verify_b.py (file-sha)" 形态
+    # (来自 _RE_VERIFY_HINT / _RE_V_NUM_HINT / _RE_BUMP_HINT 分支对多 candidate 的 join),
+    # 表示**一个 source 反向锁同时绑定 N 个 target file-sha**。早期实现 ``re.search``
+    # 只取第一个 .py stem, 把 1→N 耦合压缩成 1→1 single edge, 视觉上丢失 fanout 拓扑。
+    # 这里改成: 用 ``re.findall`` 抓出所有 ``<stem>.py`` token, sorted 去重后逐个 emit
+    # 独立 ``src --|const| tgt`` 边, 保持 deterministic (sorted by stem)。
     for lock in graph.get("locks", []):
         src_stem = Path(lock["source"]).stem
         src_id = _node_id(src_stem)
@@ -715,15 +723,21 @@ def render_mermaid(graph: Dict) -> str:
             out.append(f'    {src_id}["{src_stem}"]')
             nodes.add(src_id)
         target = lock["target"]
-        # target 可能含多文件 (逗号分隔) 或描述; 取第一个 .py stem
-        m = re.search(r"([A-Za-z0-9_]+)\.py", target)
-        if m:
-            tgt_stem = m.group(1)
-            tgt_id = _node_id(tgt_stem)
-            if tgt_id not in nodes:
-                out.append(f'    {tgt_id}["{tgt_stem}"]')
-                nodes.add(tgt_id)
-            out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
+        stems = re.findall(r"([A-Za-z0-9_]+)\.py", target)
+        if stems:
+            # deterministic fanout: sorted 去重 (保留原序去重亦可, sorted 更稳)
+            seen: set = set()
+            ordered_stems: List[str] = []
+            for s in sorted(stems):
+                if s not in seen:
+                    seen.add(s)
+                    ordered_stems.append(s)
+            for tgt_stem in ordered_stems:
+                tgt_id = _node_id(tgt_stem)
+                if tgt_id not in nodes:
+                    out.append(f'    {tgt_id}["{tgt_stem}"]')
+                    nodes.add(tgt_id)
+                out.append(f"    {src_id} -->|{lock['const']}| {tgt_id}")
         else:
             # unknown target — 用占位节点
             tgt_id = _node_id("unknown_" + lock["const"])
