@@ -8666,12 +8666,13 @@
     },
     {
       "id": "infra-039-backlog-mermaid-unknown-target-id-collision",
-      "priority": 999,
+      "priority": "59-4",
       "area": "infra",
       "phase": 59,
       "title": "render_mermaid unknown target id 用复合 key 避免跨 source 同 const 名合并",
-      "status": "backlog",
+      "status": "in_progress",
       "created_at": "2026-05-20",
+      "started_at": "2026-05-23",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
       "scope": "render_mermaid 中 unknown target 的 node id 当前以 const 名命名，跨 source 同名 const 会被合并；改为 unknown_<src>_<const> 复合 key，保证唯一性。",
       "dependencies": [
