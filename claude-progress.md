@@ -7910,3 +7910,15 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - Reviewer fresh-context LGTM (sub-agent): mutation A/B 验证 verifier 有约束力, cascade 8+1 处 EXPECTED_DUMP_FILE_SHA bump 到 910cce71 无遗漏
 - 新增 2 个 backlog: `infra-P290-backlog-verifier-tag-naming-doc` (P2 文档口径)、`infra-P290-backlog-dump-family-equality-check` (P2 设计点记录)
 - feature_list backlog 计数: 99 → 101
+
+
+## Session 2026-05-23 — #4.53 closeout: infra-P294 R6 sample count doc
+
+- merge: feat/infra-P294-R6-sample-count-doc → main via merge commit `ce2d539`, baseline `69394f4`
+- 改动: verify_infra_062 SUMMARY 行 "N checks" → "N emit-paths / M unique check tags" 用语精准化, 新增 verify_infra_103 锁 V0-V5 六层独立验证
+- verify_infra_103 post-merge: ALL PASS (6/6 emit-paths, 6 unique check tags)
+- verify_infra_062 P278 gate: ALL PASS (30/30 emit-paths / 30 unique check tags)
+- baseline @69394f4: verify_infra_062 rc=0 旧 "30 checks" 格式确认 (用于证明改动纯 wording)
+- smoke: `./init.sh` PASS (TTS / vision / face-tracker / VAD / wake / power-state / config / publish 全绿)
+- Reviewer fresh-context LGTM (sub-agent): Mutation A (SUMMARY 回退) V1+V3+V4 catch, Mutation B (删 R6 关键词) V2 catch, cascade=0
+- 新增 1 backlog: `infra-P294-backlog-verify-103-old-fstring-cleanup` (P2 dead-code / 运算符优先级)
