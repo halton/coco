@@ -14,11 +14,11 @@
 
 ### 锁类型选择 (单选, 必选一项)
 - [ ] **file-level sha** — 锁整个 verify-script 文件 sha
-  - 理由: ___________
+  - <!-- 理由: -->
 - [ ] **func-level sha** — 锁某个 function 的 canonical source sha
-  - 理由: ___________
+  - <!-- 理由: -->
 - [ ] **混合** — 既有 file-sha 又有 func-sha
-  - 理由: ___________
+  - <!-- 理由: -->
 
 ### 决策依据 (勾选适用项, 可多选)
 - [ ] 目标 verify-script 长期稳定, 内部 helper 难抽离 → file-sha
