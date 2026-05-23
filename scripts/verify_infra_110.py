@@ -49,6 +49,14 @@ INFRA_110_SHA_LOCKS
     必须唯一, 且 ``tgt_id`` 形如 ``unknown_<src_stem>_<CONST>``
   - V4_composite_key_well_formed: 每个 unknown_* node id 必须能解析出 src_stem
     与 const 两段, 验证复合 key 设计而非单 key 退化
+  - V4c_composite_key_src_stem_no_expected_substring: 每个 unknown_<src>_<const>
+    的 src 段不得含 ``EXPECTED`` 或 ``expected`` 子串。理论上 verify 脚本 stem
+    不会含 EXPECTED, 此检查作为**预防性硬锁** — 未来若有人引入诡异命名的
+    verify 脚本（如 ``verify_EXPECTED_xxx.py``）, 非贪婪 anchor regex
+    ``^unknown_(?P<src>...?)_(?P<const>EXPECTED_...)$`` 会切到 src 段内的第一个
+    ``_EXPECTED_``, 把真正的 const 段错切到 src; V4 仍 PASS 但语义错位.
+    本 check 单独把 src 段拎出来断言无 EXPECTED 子串, 显式 catch 这种 vacuous.
+    (infra-110-backlog-composite-key-src-stem-no-expected-substring, phase-61 #4)
 - V4b self main func sha
 - V5 Reviewer LGTM gate (grace_period 兜底)
 - V6 reverse_sha meta-lock: render_mermaid func sha (同 V3, 第二份独立持有)
@@ -96,7 +104,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "93c12ac3eb031ebe0da0837c63eca9c8b5d3dc0d2e385efbe9782aa051e86ab1"
+EXPECTED_SELF_MAIN_FUNC_SHA = "d9067a35851c773171dc5c100868c3f39aa95b6240cabcaa12f046d873ae042b"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -113,6 +121,39 @@ def _emit(tag: str, ok: bool, detail: str = "") -> None:
 
 def _file_sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def _check_v4c_composite_key_src_stem_no_expected_substring(
+    unknown_edges: List[Tuple[str, str, str]],
+) -> tuple[bool, str]:
+    """V4c: 复合 key ``unknown_<src>_<const>`` 中 src 段不得含 ``EXPECTED`` / ``expected``.
+
+    理论上 verify 脚本文件 stem 不会含 EXPECTED, 所以本 check 通常 vacuously PASS.
+    预防性硬锁: 非贪婪 anchor regex ``^unknown_(?P<src>...?)_(?P<const>EXPECTED_...)$``
+    在 src_stem 含 EXPECTED 时会切到第一个 ``_EXPECTED_`` 处, 把真 const 错切到 src,
+    V4_composite_key_well_formed 仍 PASS 但语义错位; 此 check 显式 catch.
+
+    实现: 从已 anchor-parse 出 ``unknown_<src>_<EXPECTED_*>`` 的 tgt_id 提取 src 段
+    (用与 V4_composite_key_well_formed 相同的 anchor regex 重新 parse), 断言
+    每个 src 段大小写均不含 EXPECTED 子串.
+    """
+    composite_key_pattern = re.compile(
+        r"^unknown_(?P<src>[a-zA-Z0-9_]+?)_(?P<const>EXPECTED_[A-Z0-9_]+)$"
+    )
+    violations: List[str] = []
+    checked = 0
+    for _src_edge, _const_edge, tgt in unknown_edges:
+        m = composite_key_pattern.match(tgt)
+        if not m:
+            # anchor regex 不匹配的 tgt 由 V4_composite_key_well_formed 负责, 本 check 跳过
+            continue
+        src_seg = m.group("src")
+        checked += 1
+        if "EXPECTED" in src_seg or "expected" in src_seg:
+            violations.append(f"{tgt} (src_seg={src_seg!r} contains EXPECTED/expected)")
+    if violations:
+        return False, f"violations={violations[:3]}"
+    return True, f"all {checked} composite key src segments free of EXPECTED/expected substring"
 
 
 def _check_v7_classify_node_lock_doc_present() -> tuple[bool, str]:
@@ -282,6 +323,11 @@ def main() -> None:
         len(malformed) == 0,
         f"malformed={malformed[:3]}" if malformed else f"all {len(unknown_edges)} edges have strict-ordered composite key",
     )
+
+    # V4c_composite_key_src_stem_no_expected_substring: 预防性硬锁
+    # (infra-110-backlog-composite-key-src-stem-no-expected-substring, phase-61 #4)
+    v4c_ok, v4c_detail = _check_v4c_composite_key_src_stem_no_expected_substring(unknown_edges)
+    _emit("V4c_composite_key_src_stem_no_expected_substring", v4c_ok, v4c_detail)
 
     # V4b self main func sha
     try:
