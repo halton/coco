@@ -6886,16 +6886,29 @@
       "area": "infra",
       "phase": 51,
       "title": "typo-guard helper docstring 与 impl 关于 HSA 判定不一致",
-      "status": "not_started",
+      "status": "in_progress",
       "created_at": "2026-05-22",
       "source": "infra-P281 Reviewer fresh-context finding B-P281-R1",
       "scope": "helper docstring 称 EXPECTED_FUNC_HSA_SHA 不算 typo (因后缀含 _SHA), 但实测被 namepart 'HSA' 判 typo. 需对齐 docstring 与 impl: 要么实现改为只看尾后缀, 要么 docstring 改为 '任何 namepart 与 SHA 编辑距离=1 都算 typo'. 现状 impl 更严格 (更安全), 建议保留 impl, 改 docstring + 加单测说明该 case.",
       "dependencies": [
         "infra-P281-expected-prefix-typo-guard"
       ],
-      "verification": [],
-      "branch": "",
-      "evidence": {}
+      "verification": [
+        ".venv/bin/python scripts/verify_infra_P293.py"
+      ],
+      "branch": "feat/infra-P293-typo-guard-docstring-vs-impl-mismatch",
+      "evidence": {
+        "scripts": [
+          "scripts/_verify_lib.py (docstring + module comment 对齐: namepart 命中即 typo, 即便后缀规范)",
+          "scripts/verify_infra_P293.py (新增 V0-V5)",
+          "scripts/verify_infra_061.py (cascade bump EXPECTED_VERIFY_LIB_FILE_SHA + EXPECTED_TYPO_GUARD_FUNC_SHA)",
+          "scripts/verify_infra_037/042/045/052/055-099 + verify_robot_035 (cascade bump _verify_lib.py file sha b3005a→933e5e)"
+        ],
+        "verify_tail": "[verify_infra_P293][SUMMARY] ALL PASS (6 checks)",
+        "smoke": "PASS (./init.sh rc=0)",
+        "closeout_verify": {},
+        "reviewer": {}
+      }
     },
     {
       "id": "infra-P293-typo-guard-hash-suffix-policy",
