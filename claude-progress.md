@@ -8057,3 +8057,19 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - Reviewer (sub-agent fresh-context): LGTM, NIT V1 literal substring 非阻塞
 - backlog 入账: infra-P293-backlog-typo-guard-ci-v1-ast-hardening (priority=999, phase=null, status=backlog)
 - 下一候选: infra-P277-bootstrap-helper-json-schema-version (#2.55)
+
+## Session 2026-05-23 (phase-55 #2.55 closeout)
+
+- feature: infra-P277-bootstrap-helper-json-schema-version → passing
+- merge_commit_sha: b51bbafa6757516dd7ef42e08519698d02a7dbb3 (no-ff from feat/infra-P277-bootstrap-helper-json-schema-version @ 5250a20, base main=eb38a65)
+- main_head_sha post-merge: b51bbaf
+- cascade: 3 (056 func_sha bump 0269c13abf4c3c3c + 063/069 file_sha 双 cascade)
+- mutation_test: A+B (A: schema_version=2 触发 V4_helper_schema_version_eq_1 FAIL; B: helper 输出删除 schema_version key 触发 V4_helper_json_parse + V4_helper_schema_version_eq_1 FAIL; 均还原 PASS, guard 有效)
+- post-merge verify (freshness=post-merge-rerun):
+  - verify_infra_056.py: PASS (22 checks; 含 V4_helper_schema_version_eq_1=1, V4_helper_json_parse keys 含 'schema_version')
+  - ./init.sh smoke: PASS (含 typo-guard typo_count=0)
+  - verify_infra_060.py: FAIL 1/14 V4_real_unknown_count_eq_one (pre-existing baseline @ eb38a65, 与本 PR 无关)
+  - verify_infra_062.py: ALL PASS (30/30)
+- Reviewer (sub-agent fresh-context): LGTM, P0/P1/P2 均空
+- backlog 入账: 无
+- 下一候选: infra-P299-baseline-cross-check-v4-invalid-ref-coverage (#3.55)

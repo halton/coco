@@ -8596,13 +8596,72 @@
     {
       "id": "infra-P277-bootstrap-helper-json-schema-version",
       "priority": "55-2",
-      "status": "not_started",
+      "status": "passing",
       "phase": 55,
       "area": "infra",
       "title": "bootstrap helper JSON schema_version",
       "rationale": "scripts/bootstrap_verify_self_checker.py --json 输出 5 字段无 schema_version. 未来加字段或重命名时无法做兼容判定. 建议加 'schema_version': 1, 并让 verify_infra_056 V4 锁该字段。 || phase-55 plan: P277 schema_version 决策固化, 为后续 bootstrap helper JSON schema 演进提供版本号锚点.",
       "spec": "scripts/bootstrap_verify_self_checker.py --json 输出加 'schema_version': 1 字段; scripts/verify_infra_056.py V4 增加 schema_version 字段锁 (V4_bootstrap_json_schema_version_eq_1). 未来加字段或重命名时可做兼容判定.",
-      "cascade_est": "0-1 (bootstrap_verify_self_checker 改动可能触发 verify_infra_056 自 sha bump)"
+      "cascade_est": "0-1 (bootstrap_verify_self_checker 改动可能触发 verify_infra_056 自 sha bump)",
+      "branch": "feat/infra-P277-bootstrap-helper-json-schema-version",
+      "verification": [
+        "scripts/verify_infra_056.py 全 PASS (22 checks), 含 V4_helper_json_parse keys 包含 'schema_version' + V4_helper_schema_version_eq_1 schema_version=1",
+        "./init.sh smoke PASS",
+        "verify_infra_062 evidence self-check PASS (30 emit-paths)",
+        "verify_infra_060 V4_real_unknown_count_eq_one FAIL 为 pre-existing baseline (eb38a65)"
+      ],
+      "evidence": {
+        "verifier": "scripts/verify_infra_056.py",
+        "merge_commit_sha": "b51bbafa6757516dd7ef42e08519698d02a7dbb3",
+        "baseline_head_echo": "eb38a65",
+        "pre_existing_baseline_sha": "eb38a65",
+        "cascade": 3,
+        "cascade_files": [
+          "scripts/bootstrap_verify_self_checker.py (helper schema_version 字段)",
+          "scripts/verify_infra_056.py (V4 sub-check + EXPECTED_BOOTSTRAP_SELF_CHECKER_FUNC_SHA bump 到 0269c13abf4c3c3c)",
+          "scripts/verify_infra_063.py + scripts/verify_infra_069.py (file_sha cascade bump)"
+        ],
+        "closeout_verify": {
+          "main_head_sha": "b51bbafa6757516dd7ef42e08519698d02a7dbb3",
+          "freshness": "post-merge-rerun"
+        },
+        "verify_runs": [
+          {
+            "verifier": "scripts/verify_infra_056.py",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_056][PASS] V4_import_lib imported func_sha_by_name\n[verify_infra_056][PASS] V4_direct_func_sha sha=5d611a08c7d9a7df\n[verify_infra_056][PASS] V4_subprocess_helper rc=0 stderr=''\n[verify_infra_056][PASS] V4_helper_json_parse keys=['actual_func_sha', 'paste_line', 'schema_version', 'suggested_const', 'v4_func_name', 'verify_script']\n[verify_infra_056][PASS] V4_helper_sha_matches_direct helper=5d611a08c7d9a7df direct=5d611a08c7d9a7df\n[verify_infra_056][PASS] V4_helper_paste_line_format paste_line='EXPECTED_V4_CHECKER_FUNC_SHA = \"5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249\"'\n[verify_infra_056][PASS] V4_helper_schema_version_eq_1 schema_version=1 expect=1\n[verify_infra_056][PASS] V4_helper_missing_func_rc rc=1 stderr=\"[bootstrap_verify_self_checker] ERROR: top-level function 'does_not_exist_xyz' not found in /var/folders/dy/kqc9mn_97s7c\"\n[verify_infra_056][PASS] V4_helper_missing_path_rc rc=1\n[verify_infra_056][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_056__ helper_ok=True grace_skipped=True\n[verify_infra_056][SUMMARY] ALL PASS (22 checks)"
+          },
+          {
+            "verifier": "scripts/verify_infra_060.py",
+            "status": "FAIL",
+            "freshness": "post-merge-rerun",
+            "note": "pre-existing baseline; V4_real_unknown_count_eq_one unknown_count=7 期望=1; 与 P277 本 PR 无关 (baseline eb38a65 同 FAIL)",
+            "tail_stdout": "[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=28669\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+          },
+          {
+            "verifier": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "freshness": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=70 enforced=45 soft_skipped=25 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=70 enforced=39 soft_skipped=31 grace_skipped=0 violations=0\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=70 enforced=39 soft_skipped=31 grace_skipped=22 violations=0\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=70 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=70 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=70 enforced=39 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=70 enforced=39 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=7 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA', 'unknown_EXPECTED_SMOKE_PY_FILE_SHA', 'unknown_EXPECTED_VERIFY_INFRA_061_FILE_SHA']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+        "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=264 well_formed=264 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "P277 把 bootstrap helper --json 输出加上 'schema_version': 1 字段, scripts/verify_infra_056.py V4 增加 V4_helper_schema_version_eq_1 锁 + V4_helper_json_parse keys 包含 schema_version; cascade=3 (056 EXPECTED_BOOTSTRAP_SELF_CHECKER_FUNC_SHA=0269c13abf4c3c3c bump + 063/069 file_sha 双 cascade); Mutation A 反证: schema_version=2 触发 V4_helper_schema_version_eq_1 FAIL 还原 PASS; Mutation B 反证: helper 输出删除 schema_version key 触发 V4_helper_json_parse + V4_helper_schema_version_eq_1 FAIL 还原 PASS; baseline 060 V4_real_unknown_count_eq_one FAIL 为 pre-existing (eb38a65 同 FAIL); unstaged 残留=[]; smoke 全 PASS (typo_count=0); 无私有数据 / 无 secret",
+          "checks_run": {
+            "mutation_test_done": "A+B"
+          },
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        }
+      }
     },
     {
       "id": "infra-P278-closeout-verify-trustworthy",
