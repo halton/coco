@@ -471,13 +471,30 @@ def assert_unique_needle(text: str, needle: str) -> None:
     导致反证假阳性 PASS。所有 V3 mutant 在 replace 前应先 call 本 helper 显式
     断言 needle 唯一性。
 
+    边界行为 (infra-040-backlog-bis):
+      - **空 needle 显式 reject**: ``needle == ""`` 时 ``str.count("")`` 返回
+        ``len(text) + 1`` (Python 语义), 永远 != 1 但语义上是"无意义匹配",
+        本 helper 显式 raise ValueError("empty needle") 而不是依赖 count
+        分支隐式 reject; 让调用方 traceback 清晰锁定根因 (而非 "needle 不唯一:
+        count=N+1")。
+      - **重叠 substring 计数语义锁定**: ``str.count`` 是 *非重叠* 计数。例如
+        ``"aaa".count("aa") == 1`` 而不是 2 (重叠的 ``aa`` 不计)。本 helper
+        显式沿用 ``str.count`` 语义——即"非重叠出现次数为 1 即唯一"——不切换
+        到任何重叠计数语义。这意味着对 needle="aa"、text="aaa" 的情况, helper
+        判定为"唯一", replace(needle, x, 1) 也只替一处 ("aaa" -> "xa"), 行为
+        自洽。docstring 锁住该语义, 防 mutant 替换 ``text.count`` 为重叠计数
+        实现导致 V3 mutant 反证行为漂移。
+
     Args:
         text: 待 mutant 的内容。
-        needle: 要替换的子串。
+        needle: 要替换的子串。**不可为空字符串**。
 
     Raises:
-        ValueError: needle 在 text 中出现次数不为 1。
+        ValueError: needle 为空 / needle 在 text 中非重叠出现次数不为 1。
     """
+    if needle == "":
+        raise ValueError("empty needle: assert_unique_needle 不接受空字符串")
+    # str.count 是非重叠计数; 显式锁定该语义 (见 docstring 边界行为段)。
     count = text.count(needle)
     if count != 1:
         raise ValueError(f"needle 不唯一: count={count}, needle={needle!r}")

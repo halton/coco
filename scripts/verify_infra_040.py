@@ -24,12 +24,25 @@ V4 行为验证 — 解析 verify-script.md, 检查关键 section heading 全在
    ("决策矩阵", "反向引用扫描", "锁类型选择", "验证证据", "file-level sha",
     "func-level sha", "docs/verify_sha_lock_strategy.md").
 V5 Reviewer-LGTM gate (print-only).
+V6 (infra-040-backlog-bis) bis helper edge case meta-lock —
+   assert_unique_needle 空 needle reject + 重叠 substring (str.count 非重叠
+   计数) 双行为锁:
+   - V6a: _verify_lib.py file sha 锁 (锁住 helper 实现整体不漂移)
+   - V6b: assert_unique_needle func sha 锁 (锁住 helper 函数体)
+   - V6c: docstring literal grep 锁 ("empty needle"/"非重叠" 字面)
+   - V6d: 行为验证 — 空 needle 抛 ValueError 且 msg 含 "empty needle"
+   - V6e: 行为验证 — text="aaa", needle="aa" (重叠) 应判 unique (count=1)
+   - V6f: 行为验证 — text="aaaa", needle="aa" 应判非唯一 (count=2)
 
 INFRA_040_SHA_LOCKS
 -------------------
 - ``.github/PULL_REQUEST_TEMPLATE/verify-script.md`` file sha: EXPECTED_VERIFY_TMPL_SHA
 - ``.github/pull_request_template.md`` file sha: EXPECTED_DEFAULT_TMPL_SHA (V2b, #2.52)
 - 本脚本 v4_behavior 自 checker func sha: EXPECTED_V4_CHECKER_FUNC_SHA
+- (V6, infra-040-backlog-bis) ``scripts/_verify_lib.py`` file sha:
+  EXPECTED_VERIFY_LIB_FILE_SHA
+- (V6, infra-040-backlog-bis) ``assert_unique_needle`` func sha:
+  EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA
 
 退出码 0=ALL PASS / 1=任一 FAIL.
 
@@ -59,6 +72,13 @@ EXPECTED_DEFAULT_TMPL_SHA = "11f006469bbf9a1e61f8f38f750e2f81efc69a0e45d02b9f4d7
 
 # infra-040 自身 v4_behavior 函数 sha (V1 自锁; 末尾自计算后回填)
 EXPECTED_V4_CHECKER_FUNC_SHA = "29a26bae07566dda05cd857fa8015af3010fc12f31f125344b2c75f0b04d137c"
+
+# infra-040-backlog-bis (V6): _verify_lib.py 整体 file sha + assert_unique_needle func sha
+# 锁 helper 当前实现 (含空 needle reject + str.count 非重叠语义 docstring), 防 mutant 静默回退。
+EXPECTED_VERIFY_LIB_FILE_SHA = "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
+EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA = "3b92e4f2a058b1bd7a26091d3adc6d7fa5efa06b0d187fad738ddd1217ed58f4"
+
+VERIFY_LIB_PATH = Path(__file__).resolve().parent / "_verify_lib.py"
 
 DOCSTRING_SENTINEL = "INFRA_040_SHA_LOCKS"
 
@@ -284,6 +304,73 @@ def v5_reviewer_gate() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V6 (infra-040-backlog-bis): assert_unique_needle 边界行为 meta-lock
+# 空 needle reject + 重叠 substring (str.count 非重叠) 双行为锁。
+# ---------------------------------------------------------------------------
+def v6_bis_helper_meta_lock() -> None:
+    # V6a: _verify_lib.py 整体 file sha
+    if not VERIFY_LIB_PATH.is_file():
+        _emit("V6a_verify_lib_file_sha", False, f"missing {VERIFY_LIB_PATH}")
+        return
+    got_file = _file_sha(VERIFY_LIB_PATH)
+    _emit(
+        "V6a_verify_lib_file_sha",
+        got_file == EXPECTED_VERIFY_LIB_FILE_SHA,
+        f"got={got_file[:16]} expect={EXPECTED_VERIFY_LIB_FILE_SHA[:16]}",
+    )
+    # V6b: assert_unique_needle func sha
+    try:
+        got_func = _func_sha_via_unparse(VERIFY_LIB_PATH, "assert_unique_needle")
+    except Exception as e:
+        _emit("V6b_assert_unique_needle_func_sha", False, f"compute err: {e!r}")
+        return
+    _emit(
+        "V6b_assert_unique_needle_func_sha",
+        got_func == EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA,
+        f"got={got_func[:16]} expect={EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA[:16]}",
+    )
+    # V6c: source literal grep 双锁 (docstring 关键字面)
+    src = VERIFY_LIB_PATH.read_text(encoding="utf-8")
+    for literal in ("empty needle", "非重叠"):
+        _emit(
+            f"V6c_source_literal[{literal}]",
+            literal in src,
+            f"literal={literal!r} present={literal in src}",
+        )
+    # V6d: 行为 — 空 needle 抛 ValueError 且 msg 含 "empty needle"
+    from _verify_lib import assert_unique_needle  # late import (sys.path 已注入)
+    try:
+        assert_unique_needle("hello", "")
+        _emit("V6d_empty_needle_rejects", False, "did not raise")
+    except ValueError as e:
+        ok = "empty needle" in str(e)
+        _emit(
+            "V6d_empty_needle_rejects",
+            ok,
+            f"raised={e!r} msg_match={ok}",
+        )
+    except Exception as e:
+        _emit("V6d_empty_needle_rejects", False, f"wrong exc: {e!r}")
+    # V6e: 行为 — text='aaa', needle='aa' 应判 unique (str.count 非重叠 = 1)
+    try:
+        assert_unique_needle("aaa", "aa")
+        _emit("V6e_overlap_aaa_aa_unique", True, "count=1 (non-overlap) treated as unique")
+    except ValueError as e:
+        _emit("V6e_overlap_aaa_aa_unique", False, f"unexpectedly raised: {e!r}")
+    # V6f: 行为 — text='aaaa', needle='aa' 应判非唯一 (非重叠 count=2)
+    try:
+        assert_unique_needle("aaaa", "aa")
+        _emit("V6f_aaaa_aa_non_unique", False, "did not raise (expected count=2)")
+    except ValueError as e:
+        ok = "count=2" in str(e)
+        _emit(
+            "V6f_aaaa_aa_non_unique",
+            ok,
+            f"raised={e!r} count_in_msg={ok}",
+        )
+
+
 def main() -> int:
     v0_scaffolding()
     v1_self_lock()
@@ -292,6 +379,7 @@ def main() -> int:
     v3_mutant()
     v4_behavior()
     v5_reviewer_gate()
+    v6_bis_helper_meta_lock()
     failed = [t for t, ok, _ in _results if not ok]
     if failed:
         print(f"[verify_infra_040][SUMMARY] FAILED tags: {failed}", flush=True)
