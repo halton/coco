@@ -2,11 +2,11 @@
 """verify_infra_110: render_mermaid unknown target 复合 key 防 collision (verify-only).
 
 ## Lock: EXPECTED_CLASSIFY_NODE_FUNC_SHA
-- target_function: classify_node
+- target_function: _classify_node
 - target_file: scripts/dump_v4_sha_graph.py
 - lock_kind: ast_func_sha
-- bump_when: classify_node implementation changes
-- bump_protocol: recompute func_sha_by_name("classify_node", target_file) then update EXPECTED_CLASSIFY_NODE_FUNC_SHA
+- bump_when: _classify_node implementation changes
+- bump_protocol: recompute func_sha_by_name("_classify_node", target_file) then update EXPECTED_CLASSIFY_NODE_FUNC_SHA
 - rationale: lock 防止 unknown collision 处理 (V3b/V6b/V6c) 被悄改
 
 infra-039-backlog-mermaid-unknown-target-id-collision (phase-59 #4):
@@ -191,12 +191,12 @@ def _check_v11_classify_node_lock_doc_values() -> tuple[bool, str]:
     前 3 字段精确等值; 后 3 字段宽松 startswith 期望前缀 (允许末尾扩写).
     """
     expected_exact = {
-        "- target_function:": "classify_node",
+        "- target_function:": "_classify_node",
         "- target_file:": "scripts/dump_v4_sha_graph.py",
         "- lock_kind:": "ast_func_sha",
     }
     expected_prefix = {
-        "- bump_when:": "classify_node implementation changes",
+        "- bump_when:": "_classify_node implementation changes",
         "- bump_protocol:": "recompute func_sha_by_name",
         "- rationale:": "lock 防止 unknown collision",
     }
