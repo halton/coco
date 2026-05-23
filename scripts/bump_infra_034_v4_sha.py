@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict
@@ -82,10 +83,23 @@ def bump(dry_run: bool) -> int:
         "comment": data.get("comment", ""),
         "targets": new_table,
     }
-    V4_SHA_JSON.write_text(
-        json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    # 原子写 (infra-035-backlog-bump-atomic-write #1.53):
+    # 先写 sibling tmp 文件再 os.replace, 保证 v4_sha.json 任意时刻都是完整
+    # 可解析状态. 防 SIGKILL / 磁盘满 / 解释器崩溃留半截 JSON 破坏 sha 锁链
+    # 根节点的"读得到但不一致"边界. 失败时清理 tmp 不污染目录.
+    payload = json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    tmp_path = V4_SHA_JSON.with_suffix(V4_SHA_JSON.suffix + ".tmp")
+    try:
+        tmp_path.write_text(payload, encoding="utf-8")
+        os.replace(tmp_path, V4_SHA_JSON)
+    except Exception:
+        # 失败回滚: 清理 tmp (若存在), 原 V4_SHA_JSON 未被触碰
+        try:
+            if tmp_path.exists():
+                tmp_path.unlink()
+        except Exception:
+            pass
+        raise
     # 写回再校验
     after = json.loads(V4_SHA_JSON.read_text(encoding="utf-8"))
     if after.get("targets") != new_table:

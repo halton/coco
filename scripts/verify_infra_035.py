@@ -19,6 +19,9 @@ V5 subprocess `python scripts/bump_infra_034_v4_sha.py --dry-run` rc==0 且
 V6 v4_sha.json canonical 字节序锁 (infra-035-backlog #5.50): 文件内容 ==
     json.dumps(loaded, ensure_ascii=False, indent=2, sort_keys=True) + "\n";
     并断言 bump 助手源码包含 sort_keys=True 字面量 (防回退至 sort_keys=False).
+V7 bump 助手原子写锁 (infra-035-backlog-bump-atomic-write #1.53): bump 助手
+    源码必须含 `os.replace(` + `.tmp` 字面量 + `import os`, 锁住 tmp+rename
+    原子写模式 (防回退至 write_text 直写半文件).
 
 默认 OFF 严守: 本 verify 不引入新 env hook, 不依赖网络, 不修改业务源码.
 
@@ -61,7 +64,7 @@ VERIFY_034_EXPECTED_SHA = (
     "265f54b08d3099a1446d09a55e1239cef7657c3f68a2ea1c98fd1d5547232a30"
 )
 BUMP_034_EXPECTED_SHA = (
-    "724e391b89b2917def30d0d0229fff9e787b6d68474a58970e66c4bf60c86afc"
+    "431881e31551aadffc9c7b4ad15ae5855d2f9ccab53931a7fc1eecc598f0c4e9"
 )
 
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -255,6 +258,34 @@ def v6_canonical_bytes() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# V7: bump 助手原子写模式锁 (infra-035-backlog-bump-atomic-write #1.53)
+# ---------------------------------------------------------------------------
+def v7_bump_atomic_write() -> None:
+    """锁 bump 助手原子写 (tmp + os.replace) 模式.
+
+    防回退至 ``V4_SHA_JSON.write_text(...)`` 直写, 后者在 SIGKILL / 磁盘满 /
+    解释器崩溃时会留半截 JSON, 破坏 v4_sha.json 作为 sha 锁链根节点的
+    可解析不变量. 锁住三个 sentinel:
+      - ``import os`` (引入 os.replace 的命名空间)
+      - ``os.replace(`` (原子 rename 调用)
+      - ``.tmp`` 字面量 (sibling tmp 文件后缀)
+    """
+    if not BUMP_034.is_file():
+        _emit("V7_bump_atomic_write", False, "bump_infra_034_v4_sha.py missing")
+        return
+    bump_src = BUMP_034.read_text(encoding="utf-8")
+    has_import_os = re.search(r"^import os(\s|$)", bump_src, re.MULTILINE) is not None
+    has_replace = "os.replace(" in bump_src
+    has_tmp_suffix = ".tmp" in bump_src
+    ok = has_import_os and has_replace and has_tmp_suffix
+    _emit(
+        "V7_bump_atomic_write",
+        ok,
+        f"import_os={has_import_os} os.replace={has_replace} .tmp={has_tmp_suffix}",
+    )
+
+
 def main() -> int:
     v0_schema()
     v1_targets_exist()
@@ -263,6 +294,7 @@ def main() -> int:
     v4_lock_bump()
     v5_bump_dryrun()
     v6_canonical_bytes()
+    v7_bump_atomic_write()
 
     failed = [t for t, ok, _ in _results if not ok]
     total = len(_results)
