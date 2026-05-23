@@ -82,7 +82,7 @@
     },
     "V5_subprocess_invoke_verify_024": {
       "detail": {
-        "interpreter": "/Users/halton/work/coco/.venv/bin/python3",
+        "interpreter": "/Users/halton/work/coco/.venv/bin/python",
         "rc": 0,
         "stderr_len": 0,
         "stdout_len": 220

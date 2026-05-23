@@ -8959,3 +8959,14 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
 - 算法等价: V7 helper sha = verify_infra_035._self_sha_skip_sentinel (a5901bb7…), V8 = verify_infra_033._self_file_sha_excluding_pragma_line (792eace9…); V10 helper_sha_lock actual=expect=707225403911bff7
 - closeout verify 9 PASS: smoke / P306 (10/10) / 033 / 035 / 110 / 062 (30/30 维持) / 037 / 039 / P314_lib_sha_cascade (8/8)
 - 下一 candidate: phase-64 #5 infra-V12-AST-based-infer-target-hardening
+
+## Session phase-64 #5 closeout (2026-05-24)
+
+- feature: `infra-V12-AST-based-infer-target-hardening` → `passing`
+- baseline main HEAD = 33be8d8, NEW main HEAD = 4ba188b (merge --no-ff feat/infra-V12-AST-based-infer-target-hardening)
+- 交付物: `_infer_target` step 0.7 AST + docstring lock target_path/target_func 反查 (lazy import + sha 精确匹配 false-lock 防护), 13+2 holder cascade
+- unknown 21 → 15 (实测), V8 not_found=137 留作 P316 backlog (V12 scope 外)
+- Reviewer sub-agent fresh-context LGTM (checks_run=19, P0/P1=[], P2=5 informational; P2-1/P2-5 入 backlog P317/P318)
+- closeout verify 10 PASS: smoke / 033 / 110 / 062 (30/30 维持) / 037 / 039 (25) / 044 / 047 / P306 (10/10) / P314_lib_sha_cascade (8/8)
+- 2 backlog 入账: P317-V12-syspath-restore, P318-V13-v4-checker-docstring-rollout
+- phase-64 5/5 完整收官 (#1 / #2 / #3 / #4 / #5 全 passing)
