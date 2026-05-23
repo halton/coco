@@ -1,5 +1,20 @@
 # 进度日志
 
+## Session 2026-05-23 — phase-56 #2 closeout (infra-049 stale closed_as_already_done)
+
+- feature: `infra-049-backlog-dump-index-kind-stats` (priority 56-2, area=infra)
+- 性质: stale closed_as_already_done — scope (dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解) 已被 phase-49 #4.49 (`infra-049-backlog-dump-index-expose-kind`) 完整覆盖并由 verify_infra_049 V4_json_kind_breakdown 持续锁定 (kind_breakdown={'expected_pattern': 216, 'verify_id': 13}, sum_eq_scanned=True)
+- Engineer (sub-agent): 0 业务源码改动, 仅 status=passing + closed_as_already_done=true on feat 分支 (7731e5b)
+- Reviewer (sub-agent fresh-context): LGTM_stale_already_done, mutation_test_done=false (无新代码无须 mutation)
+- Closeout (本 sub-agent): main HEAD pre-merge=96ad045 → merge --no-ff feat/infra-049-backlog-dump-index-kind-stats → main HEAD=9df57ed
+- post-merge verify_infra_049: ALL PASS 19/19 (freshness_anchor=post-merge-rerun)
+- post-merge verify_infra_060: FAIL 1/14 unknown_count=9 (pre-existing baseline f9720b4b, 与本 feature 解耦)
+- post-merge verify_infra_062: FAIL 1/30 V4_closeout_reviewer_block_shape (pre-existing 锁 infra-040-bis findings 缺失, 与本 feature 解耦)
+- ./init.sh smoke: 10/10 PASS
+- evidence schema: closeout_verify 嵌套, reviewer.reviewer_kind=sub_agent_fresh_context, reviewer.findings={P0:[],P1:[],P2:[]} 满足 V4_closeout_reviewer_block_shape, mutation_test_done=false (stale closed_as_already_done 特例)
+- phase-56 进度: 2/5 complete (#1 infra-040-bis + #2 infra-049 stale)
+- next: phase-56 #3 execution
+
 ## Session 2026-05-23 — phase-54 plan
 
 - pre-state: main HEAD=`c802ce0` (phase-53 5/5 收官)
