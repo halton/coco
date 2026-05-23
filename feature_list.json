@@ -10303,11 +10303,113 @@
     {
       "id": "infra-P289-per-file-locks-auto-derive",
       "priority": 207,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 63,
       "area": "infra",
       "title": "_PER_FILE_LOCKS 从 verify 脚本 docstring 自动推导, 替代硬编码表",
-      "rationale": "P285 round-2 _PER_FILE_LOCKS 新增 14 项 (verify_infra_049/050/051/052/055/057/058/059/060 对应 _verify_lib helper / dump_reverse_sha_lock_index helper), 全部手工硬编码 (source_file, const) → target 映射. 真实 target 信息已在各 verify 脚本顶部 docstring 的 \"sha 锁清单\" 字段中. 建议: 在 dump_v4_sha_graph build 阶段 AST 解析每个 verify 脚本 docstring, 抽取 sha 锁清单, 自动 populate _PER_FILE_LOCKS, 把硬编码表压缩为仅余兜底特例 (如 _PER_FILE_SELF_LOCKS). 中等价值: 减少 P285 类 round-1/round-2 fragility, 消除 docstring 与 lock 表手动同步漂移源."
+      "rationale": "P285 round-2 _PER_FILE_LOCKS 新增 14 项 (verify_infra_049/050/051/052/055/057/058/059/060 对应 _verify_lib helper / dump_reverse_sha_lock_index helper), 全部手工硬编码 (source_file, const) → target 映射. 真实 target 信息已在各 verify 脚本顶部 docstring 的 \"sha 锁清单\" 字段中. 建议: 在 dump_v4_sha_graph build 阶段 AST 解析每个 verify 脚本 docstring, 抽取 sha 锁清单, 自动 populate _PER_FILE_LOCKS, 把硬编码表压缩为仅余兜底特例 (如 _PER_FILE_SELF_LOCKS). 中等价值: 减少 P285 类 round-1/round-2 fragility, 消除 docstring 与 lock 表手动同步漂移源.",
+      "closeout_verify": {
+        "main_head_sha": "1963c4fa768945c0badcf26ddc4e7a139411d6ad",
+        "baseline_head_echo": "f159bda",
+        "merge_commit_sha": "1963c4fa768945c0badcf26ddc4e7a139411d6ad",
+        "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=297 well_formed=297 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+        "verify_runs": [
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_P289_per_file_locks_auto_derive.py",
+            "script": "scripts/verify_infra_P289_per_file_locks_auto_derive.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_P289][PASS] V1_self_main_func_sha got=8280ccaf1f3edaa7 expect=8280ccaf1f3edaa7\n[verify_infra_P289][PASS] V2_auto_derive_returns_dict type=dict n_entries=3\n[verify_infra_P289][PASS] V3_at_least_one_lock_block_present n_entries=3 sources=['verify_infra_110.py', 'verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P289][PASS] V4_parsed_fields_complete n_complete=3/3 examples=['verify_infra_110.py::EXPECTED_CLASSIFY_NODE_FUNC_SHA', 'verify_infra_P289_per_file_locks_auto_derive.py::EXPECTED_PARSE_LOCK_DOCSTRING_FUNC_SHA'] expected_fields=['bump_protocol', 'bump_when', 'lock_kind', 'rationale', 'target_file', 'target_function']\n[verify_infra_P289][PASS] V5_parse_lock_docstring_func_sha got=ec07222ded11d273 expect=ec07222ded11d273\n[verify_infra_P289][PASS] V5_auto_derive_func_sha got=eac29f82dc6d2e78 expect=eac29f82dc6d2e78\n[verify_infra_P289][PASS] V6_mutant_partial_5fields partial_fields_n=5\n[verify_infra_P289][PASS] V6_mutant_full_6fields full_fields=['bump_protocol', 'bump_when', 'lock_kind', 'rationale', 'target_file', 'target_function']\n[verify_infra_P289][SUMMARY] ALL PASS (8 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+            "script": "scripts/verify_infra_062.py",
+            "name": "post_merge_cascade_fixed",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "L', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=105 enforced=70 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=36 v3_table=36 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_035.py",
+            "script": "scripts/verify_infra_035.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "bot_028.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_029.py_exists /Users/halton/work/coco/scripts/verify_robot_029.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_032.py_exists /Users/halton/work/coco/scripts/verify_robot_032.py\n[verify_infra_035][PASS] V1_scripts/verify_robot_033.py_exists /Users/halton/work/coco/scripts/verify_robot_033.py\n[verify_infra_035][PASS] V2_lock_verify_034 got=0058fbead1d15b99 expect=0058fbead1d15b99\n[verify_infra_035][PASS] V3_mutant_v4_fails verify_infra_034 rc=1 (expect !=0 under mutant)\n[verify_infra_035][PASS] V3_mutant_restore v4_sha.json restored byte-equal\n[verify_infra_035][PASS] V4_lock_bump got=431881e31551aadf expect=431881e31551aadf\n[verify_infra_035][PASS] V5_bump_dryrun rc=0 已一致_in_stdout=True\n[verify_infra_035][PASS] V6_canonical_bytes raw_len=2512 canonical_len=2512 match=True\n[verify_infra_035][PASS] V6_bump_sort_keys_true sort_keys=True_in_bump=True sort_keys=False_in_bump=False\n[verify_infra_035][PASS] V7_bump_atomic_write import_os=True os.replace=True .tmp=True\n[verify_infra_035][PASS] V8_self_file_sha_lock actual=a5901bb7a3ae9b8a expect=a5901bb7a3ae9b8a lock_schema_version=4 bumped_at=2026-05-24\n[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_110.py",
+            "script": "scripts/verify_infra_110.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "nfra_110] PASS V3b_classify_node_func_sha: got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V4_unknown_edges_exist: unknown_edge_count=18\n[verify_infra_110] PASS V4_no_unknown_id_collision: all 18 unknown_* tgt_ids unique per (src,const)\n[verify_infra_110] PASS V4_composite_key_well_formed: all 18 edges have strict-ordered composite key\n[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 18 composite key src segments free of 'expected' substring (case-insensitive)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=3cdb3a8021917013 expect=3cdb3a8021917013\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_P290.py",
+            "script": "scripts/verify_infra_P290.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "[verify_infra_P290][PASS] V0_self_main_func_sha got=02e54a1fb197287f expect=02e54a1fb197287f\n[verify_infra_P290][PASS] V1_docstring_sentinel sentinel='INFRA_P290_DOC_SHA_LOCKS'\n[verify_infra_P290][PASS] V2_target_func_sha got=072652ad44846671 expect=072652ad44846671\n[verify_infra_P290][PASS] V3_docstring_tags_nonempty count=27 sample=['V0__DUMP_FAMILY_present', 'V0__HUB_FAMILY_present', 'V0__LIB_FAMILY_present', 'V0_classify_node_present', 'V0_dump_exists']\n[verify_infra_P290][PASS] V3_emit_tags_nonempty count=27 sample=['V0__DUMP_FAMILY_present', 'V0__HUB_FAMILY_present', 'V0__LIB_FAMILY_present', 'V0_classify_node_present', 'V0_dump_exists']\n[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_039.py",
+            "script": "scripts/verify_infra_039.py",
+            "name": "post_merge",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b\n[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0\n[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=279\n[verify_infra_039][PASS] V7_baseline_json baseline_locks=279\n[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=3 baseline=279\n[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=155 matched=18 not_found=134 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][INFO] V8 not_found=134 ambiguous=3 (nf_sample=[('verify_infra_037.py', 'EXPECTED_V2_CHECKER_FUNC_SHA', 'v2_checker'), ('verify_infra_039.py', 'EXPECTED_V4_CHECKER_FUNC_SHA', 'v4_checker'), ('verify_infra_040.py', 'EXPECTED_V4_CHECKER_FUNC_SHA', 'v4_checker')] amb_sample=[('verify_infra_046.py', 'EXPECTED_MAIN_FUNC_SHA', 'main', 4), ('verify_infra_049.py', 'EXPECTED_RENDER_TEXT_FUNC_SHA', 'render_text', 2), ('verify_infra_P275.py', 'EXPECTED_MAIN_FUNC_SHA', 'main', 4)])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)"
+          },
+          {
+            "cmd": "./init.sh",
+            "script": "./init.sh",
+            "name": "smoke",
+            "status": "PASS",
+            "freshness_anchor": "post-merge-rerun",
+            "tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=297 well_formed=297 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+          }
+        ],
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-P289-per-file-locks-auto-derive 引入 _parse_lock_docstring + scan_per_file_locks_from_docstrings 两个 audit-only helper, 用 ast.get_docstring 拿 module toplevel docstring, 然后行解析 '## Lock: CONST' header + '- key: value' 字段块; 8-check verify_infra_P289 V1-V6 全 PASS, 三个 mutation 反证 (A 改 _parse_lock_docstring body → V5_parse FAIL; B 删 verify_infra_110 一个字段 → n_complete 3/3→2/3; C 删 verify_infra_110 整个 Lock 小节 → n_entries 3→2) 行为符合 spec; smoke ALL PASS; v062 FAIL 2/30 (V2_lib_file_sha + V3_helper_func_sha_drift_detector) 与 baseline f159bda 30/30 对照解释一致, 属新 helper 自然带入的 drift, 由 closeout cascade 处理。Audit-only 阶段未替换 dump_v4 _PER_FILE_LOCKS 硬编码, 与 phase plan 一致。",
+          "checks_run": [
+            "git_diff_review",
+            "_parse_lock_docstring_ast_audit",
+            "scan_per_file_locks_design",
+            "V1_V6_independent_run",
+            "mutation_A_helper_body",
+            "mutation_B_drop_field",
+            "mutation_C_drop_lock_header",
+            "baseline_compare_f159bda",
+            "smoke",
+            "v062",
+            "artifact_restore_check"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {
+                "title": "V4 阈值 n_complete>=1, 缺字段不 FAIL",
+                "detail": "未来若需任一不完整即 FAIL, 改阈值 n_complete==len(derived); 现 audit-only 可接受"
+              },
+              {
+                "title": "_RE_LOCK_FIELD 小写+下划线敏感, typo 静默丢",
+                "detail": "可加 typo-guard 检测大小写/相邻字段名 fuzzy"
+              },
+              {
+                "title": "空行视作小节结束未在 docstring spec 显式说明",
+                "detail": "helper docstring 加说明"
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-P290-classify-node-family-sets",
@@ -18257,6 +18359,33 @@
         "infra-039-backlog-infer-target-auto-discovery"
       ],
       "verification": []
+    },
+    {
+      "id": "infra-P309-per-file-locks-V4-strict-mode",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "verify_infra_P289 V4 严格模式: n_complete==len(derived) opt-in",
+      "rationale": "Reviewer P2 #1 (来自 infra-P289-per-file-locks-auto-derive closeout): 当前 V4 阈值 n_complete>=1, 任一字段缺失不 FAIL (audit-only 可接受). 后续若 _PER_FILE_LOCKS 真正切换到 docstring-driven, 应提供 strict 模式 n_complete==len(derived); 缺任何 lock_kind/target_file/target_function/bump_when/bump_protocol/rationale 字段即 FAIL. opt-in (env 或常量切换) 避免一次性破 grace."
+    },
+    {
+      "id": "infra-P310-lock-doc-field-typo-guard",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "_parse_lock_docstring 字段 typo guard",
+      "rationale": "Reviewer P2 #2 (来自 infra-P289-per-file-locks-auto-derive closeout): _RE_LOCK_FIELD 对小写+下划线敏感, 任何 typo (e.g. 'Target_File:' 大写, 'targetfile:' 缺下划线, 'targetfilee:' 拼错) 静默丢字段不报警. 建议: 加 typo-guard 扫描 '- xxx:' 形式行, fuzzy 匹配规范字段名 (Levenshtein ≤2 或前缀子串), 命中候选但非规范名时 warn (audit) 或 FAIL (strict). 防止 docstring 维护者打字错导致锁配置静默漂移."
+    },
+    {
+      "id": "infra-P311-parse-lock-docstring-spec-doc",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "_parse_lock_docstring docstring spec 补完: 空行结束小节 + Lock 小节规约",
+      "rationale": "Reviewer P2 #3 (来自 infra-P289-per-file-locks-auto-derive closeout): _parse_lock_docstring 当前行为是 '空行视作 Lock 小节结束', 但 helper docstring 未显式写出此规约. 建议: 在 _parse_lock_docstring docstring 显式说明 (a) Lock 小节起始 = '## Lock: CONST' header (b) 小节内只允许 '- key: value' 形式 (c) 第一个非匹配行 / 空行 / 下一个 '##' header 视作小节结束. 配套 verify_infra_P289 docstring 同步 cross-link."
     }
   ],
   "_meta": {

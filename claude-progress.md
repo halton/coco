@@ -8848,3 +8848,13 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
   - infra-P308-is-self-lock-hint-tighten (P2)
 
 下一 candidate: priority=3 infra-P289-per-file-locks-auto-derive (phase-63 #3).
+
+## Session 2026-05-24 (phase-63 #3 infra-P289 closeout)
+
+- Reviewer (sub_agent fresh context) → LGTM (P0=[], P1=[], P2×3: V4 strict 阈值 / typo-guard / docstring spec).
+- Closeout cascade: bump EXPECTED_VERIFY_LIB_FILE_SHA → d666c8df (v062 + v110), 注册 scan_per_file_locks_from_docstrings 到 v062 V3_HELPER_FUNC_NAMES.
+- v062 30/30 PASS, v110 18/18 PASS (post-cascade).
+- merge: feat/infra-P289-per-file-locks-auto-derive → main = 1963c4fa.
+- P278 trustworthy verify: smoke PASS + verify_infra_P289(8) + 062(30) + 035(55) + 110(18) + P290(9) + 039(25) 全 PASS, 0 FAIL.
+- 3 backlog 入账: infra-P309-per-file-locks-V4-strict-mode / infra-P310-lock-doc-field-typo-guard / infra-P311-parse-lock-docstring-spec-doc (priority=999, status=backlog, phase=null).
+- 下一 candidate: priority=4 infra-V6-backlog-strict-area-match-mode.
