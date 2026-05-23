@@ -13177,12 +13177,74 @@
     {
       "id": "infra-V6-backlog-076-helper-tuple-extract-to-lib-constant",
       "priority": 2.48,
-      "status": "not_started",
+      "status": "passing",
       "phase": 48,
       "area": "infra",
       "title": "076 helper tuple 硬编码两 helper —— 抽 _verify_lib 常量",
       "rationale": "phase-47 #1.47 Reviewer P2: 076 V4 scan 当前直接硬编码 (assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind) tuple；未来 graduate 新 helper 需手改 076。建议把白名单移到 _verify_lib 作为模块常量统一维护。",
-      "acceptance": "076 V4_1/V4_2 引用 _verify_lib.V5_REVIEWER_GATE_HELPERS 常量；新增 helper 仅需改 _verify_lib"
+      "acceptance": "076 V4_1/V4_2 引用 _verify_lib.V5_REVIEWER_GATE_HELPERS 常量；新增 helper 仅需改 _verify_lib",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "1adc25b4bb29",
+          "main_head_sha_full": "1adc25b4bb29d39d7a224ab536781b103420abc3",
+          "verify_runs": [
+            {
+              "name": "verify_infra_076",
+              "cmd": ".venv/bin/python scripts/verify_infra_076.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_076][PASS] V3_helper_func_sha got=e12b6675e4e6b0b50345e6385b999279f80a023d003c62c3c22912b1bfeb295b expected=e12b6675e4e6b0b50345e6385b999279f80a023d003c62c3c22912b1bfeb295b\n[verify_infra_076][PASS] V4_1_static_scan_migrated_use_helper hits=13/13 misses=[]\n[verify_infra_076][PASS] V4_2_legacy_excluded_from_migrated legacy_excluded=['verify_infra_037.py', 'verify_infra_055.py', 'verify_infra_064.py'] all_outside_migrated=True\n[verify_infra_076][PASS] V4_3_mini_fake_helper_true ok=True reason=\"feature 'feat-x': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"\n[verify_infra_076][PASS] V4_4_mini_fake_helper_false_bad_verdict ok=False reason=\"feature 'feat-x' reviewer.verdict='FOO', expected 'LGTM'\"\n[verify_infra_076][PASS] V4_5_missing_feature_helper_false ok=False reason=\"feature id='does-not-exist-xyz-12345' not found in feature_list.json\"\n[verify_infra_076][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup-extend-helper-to-other-v5 helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P291-followup-extend-helper-to-other-v5' in grace_period (skipped)\"\n[verify_infra_076][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_062",
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=44 enforced=36 soft_skipped=8 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=44 enforced=36 soft_skipped=8 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=44 enforced=36 soft_skipped=8 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=44 enforced=36 soft_skipped=8 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=44 enforced=36 soft_skipped=8 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_080",
+              "cmd": ".venv/bin/python scripts/verify_infra_080.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_080][PASS] V3_helper_func_sha got=eb093670ad42fa6b expect=eb093670ad42fa6b\n[verify_infra_080][PASS] V4_1_helper_on_079_returns_ok ok=True v_count=0\n[verify_infra_080][PASS] V4_2_enrolled_all_ok enrolled_count=6 failures=[] details=['verify_infra_071.py:ok=True,mode=graduated', 'verify_infra_072.py:ok=True,mode=graduated', 'verify_infra_073.py:ok=True,mode=graduated', 'verify_infra_074.py:ok=True,mode=graduated', 'verify_infra_079.py:ok=True,mode=graduated', 'verify_infra_080.py:ok=True,mode=graduated']\n[verify_infra_080][PASS] V4_3_soft_pass_exemplar_returns_fail fixture_ok=False fixture_v=1 has_True=True real_target=verify_infra_060.py real_ok=True real_v=0 reason='graduate complete, detector verified via synthetic fixture'\n[verify_infra_080][PASS] V4_4_mutant_returns_fail substituted=True n_sub=1 mutant_ok=False v_count=1 has_True_violation=True\n[verify_infra_080][PASS] V4_5_helper_schema_complete missing_keys=[] expected=('ok', 'checked', 'v5_gate_found', 'calls_assert_helper', 'helper_return_names', 'emit_calls', 'violations', 'error')\n[verify_infra_080][PASS] V5_reviewer_lgtm_gate target=infra-P291-followup2-helper-return-value-must-participate-in-emit helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=485 reason=\"feature 'infra-P291-followup2-helper-return-value-must-participate-in-emit': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=485 OK\"\n[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "cmd": ".venv/bin/python scripts/smoke.py",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "方案 A 抽常量改动最小化, sha 未漂移, 076/062/080/smoke 全 PASS, step2 backlog 已入账闭环",
+          "checks_run": [
+            "diff_scope",
+            "const_usage",
+            "naming_convention",
+            "sha_lock_intact",
+            "verify_076",
+            "verify_062",
+            "verify_080_no_break",
+            "smoke",
+            "backlog_step2_registered"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "notes 中 \"~37\" 与 062 V4 enforced=36 微差, step2 时以 V2_verify_lib_file_sha 真实持有列表为准"
+            ]
+          }
+        },
+        "freshness_anchor": "post-merge-rerun",
+        "closeout_notes": "方案 A 仅文件内抽常量 (无 LIB sha cascade). P2: notes 中 ~37 与 062 V4 enforced=36 微差, step2 时以 V2_verify_lib_file_sha 真实持有列表为准. step2 backlog 已入账 infra-V6-backlog-076-helper-tuple-step2-hoist-to-verify-lib."
+      }
     },
     {
       "id": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true",

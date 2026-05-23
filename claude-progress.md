@@ -7515,3 +7515,12 @@ phase-46 5 候选 promoted to not_started：
   - merge: a3185d9f5b6b (main); base bc5d12d; branch feat/infra-V6-backlog-verify-robot-035-lib-file-sha-rebump
   - verify_robot_035 8/8 PASS、verify_infra_062 30/30 PASS、smoke PASS（post-merge-rerun，venv py3.13）
   - Reviewer sub_agent_fresh_context LGTM，P0=P1=P2=[]
+
+## Session 2026-05-23 phase-48 #2.48 closeout
+
+- **#2.48** infra-V6-backlog-076-helper-tuple-extract-to-lib-constant — 076 helper tuple step1 抽常量 PASSING
+  - merge: 1adc25b4bb29 (main); branch feat/infra-V6-backlog-076-helper-tuple-extract-to-lib-constant; commit c04048f
+  - 方案 A 仅文件内抽 `_MIGRATED_VERIFY_FILENAMES` 模块常量 (无 LIB sha cascade)
+  - verify_infra_076 14/14 PASS、verify_infra_062 30/30 PASS、verify_infra_080 14/14 PASS、smoke PASS（post-merge-rerun，venv py3.13）
+  - Reviewer sub_agent_fresh_context LGTM，P0=P1=[]，P2 一项关于 notes "~37" 与 062 enforced=36 微差（非阻断，step2 时对齐）
+  - step2 backlog 已入账：infra-V6-backlog-076-helper-tuple-step2-hoist-to-verify-lib
