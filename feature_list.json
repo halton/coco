@@ -6583,7 +6583,12 @@
               "mutation B: 改 str.count 为 in/find -> V6e/V6f drift",
               "53 cascade EXPECTED_VERIFY_LIB_FILE_SHA 同步 eb8b778efa96"
             ],
-            "mutation_test_done": true
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
           }
         }
       },
@@ -7489,8 +7494,8 @@
           ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
-            "verdict": "LGTM_stale_already_done",
-            "summary": "infra-049-backlog-dump-index-kind-stats 是 stale closed_as_already_done feature: scope (dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解) 已被 phase-49 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整覆盖并锁定。当前实现 stats.kind_breakdown={'expected_pattern': 216, 'verify_id': 13} sum_eq_scanned=True 由 verify_infra_049 V4_json_kind_breakdown 持续锁住，0 业务源码新增（本 feature 仅 status 收敛 + closed_as_already_done=true 标记，因此 mutation_test_done=false）。post-merge verify_infra_049 ALL PASS 19/19 (含 V4_json_kind_breakdown 锁 per-kind 计数), ./init.sh smoke 10/10 PASS。verify_infra_060 FAIL 1/14 (unknown_count=9) 为 pre-existing baseline @ f9720b4b, verify_infra_062 FAIL 1/30 (infra-040-bis reviewer.findings) 同样 pre-existing, 均与 infra-049 stale 收敛范围解耦。Reviewer fresh-context LGTM_stale_already_done。",
+            "verdict": "LGTM",
+            "summary": "[stale_already_done] infra-049-backlog-dump-index-kind-stats 是 stale closed_as_already_done feature: scope (dump_reverse_sha_lock_index stats 加 verify_id_count / expected_pattern_count 拆解) 已被 phase-49 #4.49 (infra-049-backlog-dump-index-expose-kind) 完整覆盖并锁定。当前实现 stats.kind_breakdown={'expected_pattern': 216, 'verify_id': 13} sum_eq_scanned=True 由 verify_infra_049 V4_json_kind_breakdown 持续锁住，0 业务源码新增（本 feature 仅 status 收敛 + closed_as_already_done=true 标记，因此 mutation_test_done=false）。post-merge verify_infra_049 ALL PASS 19/19 (含 V4_json_kind_breakdown 锁 per-kind 计数), ./init.sh smoke 10/10 PASS。verify_infra_060 FAIL 1/14 (unknown_count=9) 为 pre-existing baseline @ f9720b4b, verify_infra_062 FAIL 1/30 (infra-040-bis reviewer.findings) 同样 pre-existing, 均与 infra-049 stale 收敛范围解耦。Reviewer fresh-context LGTM_stale_already_done。",
             "checks_run": [
               "V1 确认 phase-49 #4.49 (infra-049-backlog-dump-index-expose-kind) 已 passing 且 scope 完整覆盖 stats kind 拆解",
               "V2 verify_infra_049 V4_json_kind_breakdown 锁 kind_breakdown={'expected_pattern': 216, 'verify_id': 13} sum_eq_scanned=True",
@@ -7506,7 +7511,8 @@
               "P0": [],
               "P1": [],
               "P2": []
-            }
+            },
+            "verdict_original": "LGTM_stale_already_done"
           }
         }
       }
