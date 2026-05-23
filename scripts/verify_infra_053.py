@@ -42,7 +42,7 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-053 sha lock 常量 (V2)
-EXPECTED_DUMP_FILE_SHA = "286daf7f061dca0e046e75ad6ff47556a7756e9a41b30b468846dd3a38f36a83"
+EXPECTED_DUMP_FILE_SHA = "ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b"
 EXPECTED_RENDER_MERMAID_FUNC_SHA = "bbce6da594baf74f16f70fdf4f46080e6da47cf24677ee58c29d42a530c60a80"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑用 __BUMP_ME__ 占位, 再回填

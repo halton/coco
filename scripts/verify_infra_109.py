@@ -59,7 +59,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-039-backlog-mermaid-tuple-fanout sha lock 常量 (V2 + V3)
 EXPECTED_DUMP_FILE_SHA = (
-    "286daf7f061dca0e046e75ad6ff47556a7756e9a41b30b468846dd3a38f36a83"
+    "ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "eb8b778efa96cf7269aac516698c5e52a140f7d70ac03b42cc7ec480b9c5d671"
