@@ -7962,3 +7962,15 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - smoke `./init.sh` rc=0 通过
 - feature_list.json status: not_started → passing
 - 下一 candidate: infra-P293-typo-guard-check-count-doc-reconcile (#2.54)
+
+## Session 2026-05-23 (phase-54 #2.54 closeout)
+- feature: infra-P293-typo-guard-check-count-doc-reconcile passing
+- main HEAD: 5aeb053b720873645ee58b62d8a8877e889a5095 (merge-commit; base ad46a6c)
+- Engineer 改: scripts/verify_infra_061.py SUMMARY '18 checks' → '18 emit-paths / 18 unique check tags' + docstring R3 锚点
+- 新建: scripts/verify_infra_106.py (13/13 PASS, V0~V5; V3 锁 verify_061 file_sha=82c8f9c927a8e78d; V4b self main_func_sha=11a767c780326f4b)
+- cascade=0 (verify_061 仅文档/SUMMARY 改, 无下游 sha lock 受 _verify_lib helper 影响)
+- post-merge-rerun: 106 PASS (13/13), 061 PASS (18/18), smoke rc=0, 060 FAIL 1/14 (pre-existing baseline ad46a6c, 与 P293 无关), 062 PASS (30/30)
+- Reviewer fresh-context LGTM (sub-agent): mutation A 反证 (SUMMARY 恢复 'ALL PASS (18 checks)' → V1/V4 FAIL 触发 guard 有效), cascade=0 求证, baseline 区分 060 pre-existing
+- closeout self-check verify_infra_062: ALL PASS (30 emit-paths / 30 unique check tags)
+- feature_list.json status: not_started → passing
+- 下一 candidate: infra-P290-backlog-dump-family-equality-check (#3.54)
