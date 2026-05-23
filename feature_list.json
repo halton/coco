@@ -17342,10 +17342,103 @@
       "area": "infra",
       "phase": 62,
       "title": "收口 verify_infra_062 历史 6/30 closeout meta lint FAIL",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-24",
       "source": "phase-60 #4 infra-110 Reviewer NB-2",
-      "scope": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true 等历史 feature 缺 closeout meta 字段。回填 meta 或加 allowlist。"
+      "scope": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true 等历史 feature 缺 closeout meta 字段。回填 meta 或加 allowlist。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "3ab198828cfde986318a22cbd2096071cfa3f30b",
+          "merge_commit_sha": "3ab198828cfde986318a22cbd2096071cfa3f30b",
+          "baseline_head_echo": "0340507",
+          "baseline_head_sha": "0340507",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "verifier": "./init.sh",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "v035",
+              "verifier": "scripts/verify_infra_035.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=55 failed=0"
+            },
+            {
+              "name": "v110",
+              "verifier": "scripts/verify_infra_110.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "name": "v062",
+              "verifier": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "note": "首次清零 0/30 FAIL"
+            },
+            {
+              "name": "vP301_full",
+              "verifier": "scripts/verify_infra_P301_full.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=0"
+            },
+            {
+              "name": "vP290",
+              "verifier": "scripts/verify_infra_P290.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True reason=feature_id='infra-P290-backlog-verifier-tag-naming-doc' in grace_period (skipped)\n[verify_infra_P290] summary: total=9 failed=0"
+            },
+            {
+              "name": "v039",
+              "verifier": "scripts/verify_infra_039.py",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (22 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "ok: total=292 well_formed=292 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "mutation_test": {
+            "A": {
+              "desc": "移除某 feature (idx=239 interact-036b-backlog-drift-trend-regression-alert) closeout_verify.verify_runs[0].freshness_anchor",
+              "expected": "v062 FAIL",
+              "observed": "v062 rc=1 FAIL V4_closeout_verify_runs_freshness violation freshness_anchor missing",
+              "restored": true
+            },
+            "B": {
+              "desc": "设某 feature (idx=239) closeout_verify.baseline_head_echo == main_head_sha[:7] (85099e1)",
+              "expected": "v062 FAIL",
+              "observed": "v062 rc=1 FAIL V4_closeout_baseline_head_echo_format violations=1 first_violation: baseline equals main_head_sha[:7]",
+              "restored": true
+            }
+          },
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-62 #1 evidence-repair: 修复 v062 emit-paths 6/30 FAIL → 0/30，认证 mutation A (freshness_anchor 移除) 与 B (baseline_echo == main) 均能触发 FAIL；evidence schema 字段 (main_head_sha, baseline_head_echo, verify_runs[*].freshness_anchor, reviewer.reviewer_kind) 全部真实未抹除。无 cascade。",
+            "baseline_head_echo": "0340507",
+            "checks_run": [
+              "evidence-schema",
+              "field-truthfulness",
+              "mutation-A",
+              "mutation-B",
+              "v062-recompute"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-P305-backlog-pragma-cardinality-mechanical-assert",

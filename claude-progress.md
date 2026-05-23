@@ -8699,3 +8699,25 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - push: 单次尝试, 失败忽略
 - closeout commit sha: 见 git log
 - **phase-61 全 5/5 完成**: #1 infra-P307-fixtures, #2 infra-P305-backlog-v8-sentinel-pragma, #3 infra-046-backlog-bump-helper, #4 infra-110-composite-key-src-stem, #5 infra-039-v4-output-anchors-lower-bound
+
+## Session 2026-05-24 (phase-62 #1 closeout): infra-P278-backlog-meta-lint-cleanup → passing — **v062 首次清零 0/30 FAIL**
+
+- Feature: `infra-P278-backlog-meta-lint-cleanup` (priority=200, phase=62, area=infra, evidence-repair)
+- 路径：evidence-repair（修复历史 6 条 V4_byte_match_enforce / V4_closeout_*_format / freshness emit-paths 违规）
+- NEW_MAIN_SHA: `3ab1988` (merge --no-ff feat/infra-P278-backlog-meta-lint-cleanup)
+- baseline_head_sha: `0340507` (phase-61 #5 closeout)
+- verify_runs (P278 trustworthy, P299 rc 直读模式):
+  - smoke rc=0 PASS (292 typo_count=0)
+  - verify_infra_035 rc=0 PASS (total=55 failed=0)
+  - verify_infra_110 rc=0 PASS (17 checks)
+  - **verify_infra_062 rc=0 PASS 0/30** —— **首次清零！phase-62 #1 evidence-repair 路径成果**
+  - verify_infra_P301_full rc=0 PASS (total=10 failed=0)
+  - verify_infra_P290 rc=0 PASS (total=9 failed=0)
+  - verify_infra_039 rc=0 PASS (22 checks)
+- mutation_test (主 Closeout 在 main HEAD 上实测复现 — 文件已还原):
+  - A: 移 `interact-036b-backlog-drift-trend-regression-alert` (idx=239) verify_runs[0].freshness_anchor → v062 rc=1 FAIL V4_closeout_verify_runs_freshness violations=1 ✓
+  - B: 设同 feature closeout_verify.baseline_head_echo = main_head_sha[:7] (85099e1) → v062 rc=1 FAIL V4_closeout_baseline_head_echo_format violations=1 ✓
+- Reviewer: sub_agent_fresh_context LGTM (无 cascade，无 P0/P1/P2 findings)
+- closeout commit sha: 见 git log（chore commit + merge commit 3ab1988）
+- push: 单次尝试，失败忽略
+- 下一候选: phase-62 #2 (priority=201) `infra-110-backlog-classify-lock-doc-value-assert`
