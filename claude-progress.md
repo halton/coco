@@ -8275,3 +8275,16 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 **phase-57 状态**: 1/5 complete
 
 **Next**: phase-57 #2 execution (infra-104-backlog-v1-window-hardening, 小, verify_infra_104.py local)
+
+## Session 2026-05-23 phase-57 #2 closeout infra-104-backlog-v1-window-hardening
+
+- feature: infra-104-backlog-v1-window-hardening status not_started→passing closed_at=2026-05-23
+- baseline main HEAD pre-merge = f7974db
+- merge_commit_sha = 2b4384e (no-ff merge feat/infra-104-backlog-v1-window-hardening)
+- post-merge smoke PASS (10/10 smoke 子步, typo_count=0)
+- verify_infra_104.py post-merge: ALL PASS (22 checks) — V0/V1/V2/V3/V4b/V5/V6a-d
+- verify_infra_062.py post-merge: 30/30 emit-paths PASS (hard gate)
+- verify_infra_060.py post-merge: FAIL 1/14 (V4_real_unknown_count_eq_one=9, pre-existing baseline P2, baseline_head=f7974db, 非 regression)
+- Reviewer fresh-context sub-agent LGTM: A1 (V6b AST assign 移除) + A2 (V6c keyword 删除) mutation 双假阳性捕获, cascade 12 EXPECTED_DUMP_FILE_SHA bump 完毕
+- dump_v4_sha_graph.py file_sha = ea7e205d6714b452a8875b3b7330055afc0a10a4dcf59e0bd0169b2357d1697b
+- phase_57 进度: 2/5 complete; next = phase-57 #3 (infra-P275-assert-verify-passed-min-checks)

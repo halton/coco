@@ -8046,14 +8046,76 @@
       "area": "infra",
       "phase": 57,
       "title": "verify_infra_104 V1 window [-12,0) 边界加固防止 dict 末尾行误捞",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-23",
       "source": "infra-047-backlog-per-file-self-locks-comment closeout Reviewer P2 finding (#5.53)",
       "scope": "verify_infra_104.py V1 检查使用 [target_idx-12, target_idx) 窗口扫 comment 关键词；若后续 _PER_FILE_LOCKS dict 体量增长到 13+ 行末尾，会把 dict 末行误纳入 V1 窗口造成假阳。需改为基于 AST / sentinel marker 的 robust window 而非固定行偏移，或在窗口扩张前自检关键词不能出现在 dict literal 内。",
       "dependencies": [
         "infra-047-backlog-per-file-self-locks-comment"
       ],
-      "verification": []
+      "verification": [],
+      "closed_at": "2026-05-23",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "2b4384e",
+          "merge_commit_sha": "2b4384e",
+          "baseline_head_echo": "f7974db",
+          "pre_existing_baseline_sha": "f7974db",
+          "baseline_tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+          "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=271 well_formed=271 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "script": "scripts/verify_infra_104.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_104][PASS] V6d_dict_literal_seg_extracted seg_len=85\n[verify_infra_104][PASS] V6d_dict_literal_clean polluters_in_dict_value=[]\n[verify_infra_104][SUMMARY] ALL PASS (22 checks)",
+              "context": "post-merge-rerun",
+              "checks": 22
+            },
+            {
+              "script": "scripts/verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "context": "post-merge-rerun",
+              "checks": "30/30"
+            },
+            {
+              "script": "scripts/verify_infra_060.py",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "context": "post-merge-rerun (pre-existing baseline, P2 not regression)",
+              "pre_existing_baseline_sha": "f7974db"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Fresh-context Reviewer 实测 verify_infra_104 22 checks PASS (V0/V1/V2/V3/V4b/V5/V6a-d 全部), 完成 A1 (V6b AST 假阳性) + A2 (V6c keyword 假阳性) 两次 mutation, 双假阳性均被捕获, cascade 12 EXPECTED_DUMP_FILE_SHA 已 bump, verify_infra_062 30/30 PASS, 仅 P2 baseline (059/060 pre-existing unknown_count) 已知不阻塞.",
+            "checks_run": [
+              "V0_dump_exists + _PER_FILE_LOCKS/_PER_FILE_SELF_LOCKS top-level constants",
+              "V1_self_locks_ast_anchor (AST 锚定 lineno=455)",
+              "V1_sentinel_begin/end_found (sentinel 标记)",
+              "V4b_self_main_func_sha (704e17edd1d890f2)",
+              "V6a_sentinel_begin/end_literal count=1",
+              "V6b_ast_assign_found _PER_FILE_SELF_LOCKS",
+              "V6c_window_keywords_all_present (missing=[])",
+              "V6d_dict_literal_seg + polluters check",
+              "mutation A1: 移除 AST assign 触发 V6b FAIL",
+              "mutation A2: 删除 window keyword 触发 V6c FAIL",
+              "verify_infra_062 hard gate 30/30 emit-paths"
+            ],
+            "mutation_test_done": true,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "verify_infra_059 pre-existing baseline (unknown_count baseline, not regression)",
+                "verify_infra_060 pre-existing baseline (unknown_count=9, baseline_head=f7974db pre-merge)"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "infra-039-backlog-infer-target-auto-discovery",
