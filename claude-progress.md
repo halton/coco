@@ -8479,3 +8479,12 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - 2 backlog 入账: infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma (sentinel 改 pragma 锚), infra-P306-backlog-bump-infra-035-self-sha-helper-script (独立 bump 助手)
 - feature status: in_progress → passing, closed_at=2026-05-23
 - push: 待 closeout commit 后单次尝试 origin main + feat 分支, 失败忽略
+
+## Session 2026-05-23 — phase-59 #3 robot-036-backlog-read-sentinel-graceful-fallback closeout (stale_already_done)
+- feature: robot-036-backlog-read-sentinel-graceful-fallback (phase-59 #3)
+- 路线: stale_already_done — 被 robot-037-backlog-import-time-fail-fallback @ phase-57 #4 覆盖
+- 发现: verify_robot_034.py L76-91 已实现 import-time try/except + _SENTINEL_FALLBACK，明确标注 # robot-037-backlog-import-time-fail-fallback；verify_robot_036.py 顶层无 read_constant 调用不需保护
+- audit-only verify reruns (main HEAD=783e173, post-merge-rerun anchor): smoke PASS + verify_robot_034 11/11 PASS + verify_robot_036 11/11 PASS + verify_robot_037 23 checks ALL PASS + verify_infra_062 30/30 PASS
+- Reviewer: sub_agent_fresh_context verdict=LGTM (verdict_original=LGTM_stale_already_done), summary 以 "[stale_already_done]" 开头, checks_run=5, mutation_test_done=false (audit-only 路线), P0/P1=0, P2=1 (robot-036/037 重复议题保留两个 backlog id + superseded_by 指引)
+- feature status: backlog → passing, closed_as_already_done=true, covered_by=robot-037-backlog-import-time-fail-fallback @ phase-57 #4, closed_at=2026-05-23
+- main 单 commit (不走 feat 分支), push origin main 一次失败忽略

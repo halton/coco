@@ -6006,13 +6006,85 @@
       "area": "robot",
       "phase": 59,
       "title": "verify_robot_034 _read_sentinel_from_verify_032 顶层加载加 try/except 宽容",
-      "status": "backlog",
+      "status": "passing",
       "source": "robot-036-reviewer",
       "scope": "verify_robot_034 顶层执行 _read_sentinel_from_verify_032 读取 verify_robot_032.SENTINEL_LINE；若该 source 暂时 broken（如 verify_032 改名/移动），verify_034 顶层 import 即 fail，影响其它流程。加 try/except 让顶层加载更宽容，把错误延迟到 main() 执行期再抛出，保留诊断信息。",
       "dependencies": [
         "robot-036"
       ],
-      "verification": []
+      "superseded_by": "robot-037-backlog-import-time-fail-fallback",
+      "verification": [
+        "audit-only closeout (stale_already_done); robot-037-backlog @ phase-57 #4 已实现 import-time try/except + _SENTINEL_FALLBACK 于 verify_robot_034.py line 76-91；verify_robot_036.py 顶层无 read_constant 调用不需保护"
+      ],
+      "evidence": {
+        "closed_as_already_done": true,
+        "covered_by": "robot-037-backlog-import-time-fail-fallback @ phase-57 #4",
+        "closed_at": "2026-05-23",
+        "closeout_verify": {
+          "main_head_sha": "783e173f78a2dc44b0ee422c2788e989c89aa3d7",
+          "merge_commit_sha": "783e173f78a2dc44b0ee422c2788e989c89aa3d7",
+          "baseline_head_echo": "88500af",
+          "pre_existing_baseline_sha": "88500af1c22669d370b2b8d43bf94881de0ef1c1",
+          "baseline_tail_stdout": "audit_only_no_code_delta_baseline_pre_existing_skipped (baseline=88500af, post-merge=783e173, audit-only verify reruns all PASS no code delta)",
+          "smoke_tail_stdout": "  ok: total=283 well_formed=283 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "audit_verify_robot_034",
+              "script": "scripts/verify_robot_034.py",
+              "freshness_anchor": "post-merge-rerun",
+              "audit_only_rerun": true,
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_034][PASS] V4_doc_sha_print sha=33f4484cc7108a3a match=True\n[verify_robot_034][PASS] V5_self_subprocess rc=0 stdout_lines=13\n[verify_robot_034] summary total=11 failed=0"
+            },
+            {
+              "name": "audit_verify_robot_036",
+              "script": "scripts/verify_robot_036.py",
+              "freshness_anchor": "post-merge-rerun",
+              "audit_only_rerun": true,
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_036][PASS] V4_verify_034_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_036][PASS] V5_self_subprocess rc=0 stdout_lines=11\n[verify_robot_036] summary total=11 failed=0"
+            },
+            {
+              "name": "audit_verify_robot_037",
+              "script": "scripts/verify_robot_037.py",
+              "freshness_anchor": "post-merge-rerun",
+              "audit_only_rerun": true,
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_037][PASS] V6c_verify_034_main_func_sha got=f995f51c1578e556 expect=f995f51c1578e556\n[verify_robot_037][PASS] V6d_import_time_fallback_behavior rc=0 stdout=\"[verify_robot_034][WARN] import-time read_constant failed: RuntimeError('ROBOT_037_BACKLOG_INJECTED_FAIL'); using fallba\"\n[verify_robot_037][SUMMARY] ALL PASS (23 checks)"
+            },
+            {
+              "name": "audit_verify_infra_062",
+              "script": "scripts/verify_infra_062.py",
+              "freshness_anchor": "post-merge-rerun",
+              "audit_only_rerun": true,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "verdict_original": "LGTM_stale_already_done",
+            "summary": "[stale_already_done] robot-036-backlog 与 robot-037-backlog 同主题；verify_robot_034 line 76-91 已有 try/except + _SENTINEL_FALLBACK 实现并明确标注 # robot-037-backlog-import-time-fail-fallback；verify_robot_036 顶层无 read_constant 调用不需保护",
+            "checks_run": [
+              "./init.sh smoke",
+              "scripts/verify_robot_034.py",
+              "scripts/verify_robot_036.py",
+              "scripts/verify_robot_037.py",
+              "scripts/verify_infra_062.py"
+            ],
+            "mutation_test_done": false,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "robot-036 与 robot-037 被两位 reviewer 重复提议；保留两个 backlog id 不删，superseded_by 字段做指引"
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "id": "robot-036-backlog-extract-read-constant-helper",
