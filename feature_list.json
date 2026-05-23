@@ -8200,14 +8200,78 @@
       "area": "infra",
       "phase": 57,
       "title": "元组形式反向锁在 mermaid 中 fanout 渲染（多边到多 target）",
-      "status": "not_started",
+      "status": "passing",
       "created_at": "2026-05-20",
+      "closed_at": "2026-05-23",
       "source": "infra-039-backlog-dump-mermaid-output closeout Reviewer 建议",
       "scope": "build_graph 已展开 tuple-form 反向锁；render_mermaid 应将一个 source 节点 fanout 出多条边到各 target，呈现真正的 1→N 耦合而非单边。",
       "dependencies": [
         "infra-039-backlog-dump-mermaid-output"
       ],
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_109.py ALL PASS (12 checks): V0/V1/V2/V3/V4/V4b/V5/V6 fanout edges=41, mermaid_arrows=301, dump_file_sha=286daf7f061dca0e, render_mermaid_func_sha=bbce6da594baf74f, verify_lib_file_sha=eb8b778efa96cf72",
+        "verify_infra_062 30/30 PASS (post-merge-rerun, closeout-verify-trustworthy schema 全检)",
+        "Cascade 11 verify EXPECTED_DUMP_FILE_SHA bump + 4 EXPECTED_RENDER_MERMAID_FUNC_SHA bump 全 PASS",
+        "./init.sh smoke ALL PASS (post-merge)"
+      ],
+      "evidence": [
+        {
+          "verification": "phase-57 #1 closeout — render_mermaid 元组形式反向锁 fanout 多边渲染（1 source → N target），multi-target locks=12，总 fanout edges=41",
+          "result": "pass",
+          "closeout_verify": {
+            "main_head_sha": "83c6083d80d253275805d06042b1425c9f9b3a00",
+            "merge_commit_sha": "83c6083d80d253275805d06042b1425c9f9b3a00",
+            "baseline_head_echo": "e5178f5",
+            "pre_existing_baseline_sha": "e5178f5eb909bf86fadebdc6c4ad7a9bf63c1d7a",
+            "baseline_tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one'] (pre-existing baseline: unknown_count=9, 与 phase-57 #1 fanout 工作无关，为 P285 classifier 未覆盖的 lib func locks 残留)",
+            "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=271 well_formed=271 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+            "verify_runs": [
+              {
+                "name": "verify_infra_109",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_109] PASS V4_no_single_edge_for_multi: at_least_one_fanout=True\n[verify_infra_109] PASS V6_fanout_edge_literal_count: mermaid_arrows=301 expected_min_fanout=41\n[verify_infra_109] PASS V4b_self_main_func_sha: got=63fc082201fccd77 expect=63fc082201fccd77\n[verify_infra_109] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-tuple-fanout helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-tuple-fanout' in grace_period (skipped)\"\n[verify_infra_109][SUMMARY] ALL PASS (12 checks)"
+              },
+              {
+                "name": "verify_infra_062",
+                "status": "PASS",
+                "kind": "post-merge-rerun",
+                "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=34 v3_table=34 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+              }
+            ],
+            "reviewer": {
+              "reviewer_kind": "sub_agent_fresh_context",
+              "verdict": "LGTM",
+              "summary": "phase-57 #1 fresh-context Reviewer 评审：render_mermaid tuple fanout 实现正确，multi-target reverse-sha-lock 在 mermaid 中渲染为 1→N 多条边（fanout edges=41，multi-target locks=12），无单边 fallback；mutation A 删除 fanout 逻辑触发 V4_no_single_edge_for_multi FAIL，mutation B 改 fanout count 触发 V6_fanout_edge_literal_count FAIL，双向变异确认 verify 真锁；cascade 11 EXPECTED_DUMP_FILE_SHA + 4 EXPECTED_RENDER_MERMAID_FUNC_SHA bump 全 PASS；P0/P1=0，P2 两项（baseline 060 pre-existing unknown_count=9 与本 feature 无关 + impl note 关于 fanout 边 label 复用 source const 名）",
+              "checks_run": [
+                "V0_dump_exists + V0_render_mermaid_symbol",
+                "V1_docstring_sentinel (INFRA_109_SHA_LOCKS)",
+                "V2_dump_file_sha + V2_verify_lib_file_sha 双锁",
+                "V3_render_mermaid_func_sha (bbce6da594baf74f)",
+                "V4_multi_target_locks_exist + V4_fanout_edges_match_targets + V4_no_single_edge_for_multi 三联检 (12 multi-target locks, 41 fanout edges)",
+                "V6_fanout_edge_literal_count (mermaid_arrows=301, min_fanout=41)",
+                "V4b_self_main_func_sha 自锁",
+                "V5_reviewer_lgtm_gate grace-period skip",
+                "Cascade verify_infra_039/043/044/047/048/053/054/060/102/104/107 全 PASS",
+                "verify_infra_062 30/30 PASS",
+                "./init.sh smoke ALL PASS"
+              ],
+              "mutation_test_done": true,
+              "findings": {
+                "P0": [],
+                "P1": [],
+                "P2": [
+                  "baseline verify_infra_060 pre-existing FAIL V4_real_unknown_count_eq_one (unknown_count=9, 与本 feature 无关，归属 P285 classifier 未覆盖的 lib func locks 残留)",
+                  "impl note: render_mermaid 中 fanout 边目前不区分 source-target 对的边 label，多边共享 source const 名；后续若需边级 metadata 再优化"
+                ]
+              }
+            }
+          },
+          "session": "phase-57 #1"
+        }
+      ],
+      "reviewer_lgtm": true,
+      "reviewer_subagent": true
     },
     {
       "id": "infra-039-backlog-mermaid-classDef-styling",

@@ -8246,3 +8246,32 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 
 **Next**: phase-57 #1 (mermaid tuple fanout) 执行。
 
+
+---
+
+## Session 2026-05-23: phase-57 #1 closeout (infra-039-backlog-mermaid-tuple-fanout)
+
+**关键信号**:
+- feature: infra-039-backlog-mermaid-tuple-fanout (fresh implementation, render_mermaid 元组 fanout 多边渲染)
+- feat branch HEAD: 58dacbd → merge --no-ff to main → merge_commit_sha=83c6083d
+- baseline main HEAD: e5178f5
+- Reviewer (sub-agent fresh-context): LGTM, mutation A/B done, P0/P1=0, P2×2 (baseline 060 pre-existing + impl note)
+- dump_v4_sha_graph.py file_sha=286daf7f061dca0e, render_mermaid func_sha=bbce6da594baf74f, verify_lib file_sha=eb8b778efa96cf72
+- multi-target locks=12, fanout edges=41, mermaid_arrows=301 (V6 literal count)
+
+**Cascade**:
+- 11 verify EXPECTED_DUMP_FILE_SHA bump (infra_039/043/044/047/048/053/054/060/102/104/107) 全 PASS
+- 4 EXPECTED_RENDER_MERMAID_FUNC_SHA bump 全 PASS
+- 新 verify_infra_109.py (V0-V6 12 checks 全 PASS)
+
+**Post-merge verify**:
+- ./init.sh smoke ALL PASS
+- verify_infra_109 ALL PASS (12 checks, post-merge-rerun)
+- verify_infra_062 30/30 PASS (closeout-verify-trustworthy schema 全检, post-merge-rerun)
+- verify_infra_060 baseline pre-existing FAIL V4_real_unknown_count_eq_one (unknown_count=9, 与本 feature 无关，P285 classifier 未覆盖 lib func locks 残留)
+
+**Status**: infra-039-backlog-mermaid-tuple-fanout status=passing, closed_at=2026-05-23
+
+**phase-57 状态**: 1/5 complete
+
+**Next**: phase-57 #2 execution (infra-104-backlog-v1-window-hardening, 小, verify_infra_104.py local)
