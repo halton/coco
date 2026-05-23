@@ -62,6 +62,7 @@ __all__ = [
     "assert_closeout_merge_commit_sha_format",
     "assert_closeout_main_head_sha_format",
     "assert_closeout_verify_runs_freshness",
+    "assert_v5_reviewer_gate_evidence_bind",
 ]
 
 
@@ -3867,4 +3868,140 @@ def assert_closeout_verify_runs_freshness(
         else:
             out["violations"].extend(feature_violations)
     out["ok"] = len(out["violations"]) == 0
+    return out
+
+
+# ---------------------------------------------------------------------------
+# infra-P294-followup-v5-reviewer-gate-evidence-bind (phase-46 #4.46):
+# V5_reviewer_lgtm_gate evidence-bound helper.
+#
+# 与 assert_reviewer_lgtm 区别:
+#   - assert_reviewer_lgtm 只校 reviewer_kind + verdict == 'LGTM'
+#   - 本 helper 增强: verdict 大小写不敏感 in allowed_verdicts (默认 LGTM/conditional),
+#     reviewer_kind == 'sub_agent_fresh_context',
+#     summary 字段长度 >= min_summary_chars (默认 20)
+#
+# grace_period_feature_ids: feature_id 命中则 ok=True + grace_skipped=True.
+# 单 sentinel 占位 "__V5_GRADUATE_SENTINEL_NEVER_MATCHES__" 表示"未豁免",
+# 不与任何真实 feature_id 匹配.
+# ---------------------------------------------------------------------------
+def assert_v5_reviewer_gate_evidence_bind(
+    feature_id: str,
+    feature_list_path,
+    min_summary_chars: int = 20,
+    allowed_verdicts: tuple = ("LGTM", "conditional"),
+    required_reviewer_kind: str = "sub_agent_fresh_context",
+    grace_period_feature_ids: tuple = (
+        "__V5_GRADUATE_SENTINEL_NEVER_MATCHES__",
+    ),
+) -> dict:
+    """V5_reviewer_lgtm_gate evidence-bound 真闸门 (phase-46 #4.46).
+
+    实读 feature_list.json 中目标 feature 的 evidence.reviewer (或
+    evidence.closeout_verify.reviewer) 字段, 校验:
+      - reviewer_kind == required_reviewer_kind (默认 'sub_agent_fresh_context')
+      - verdict ∈ allowed_verdicts (大小写不敏感, 默认 ('LGTM','conditional'))
+      - summary 为 str 且长度 >= min_summary_chars (默认 20)
+
+    若 feature_id 命中 grace_period_feature_ids, 直接 ok=True + grace_skipped=True.
+
+    Returns:
+        dict: ok, feature_id, reviewer_kind, verdict, summary_len,
+              grace_skipped, reason, error.
+    """
+    import json as _json
+    out = {
+        "ok": False,
+        "feature_id": feature_id,
+        "reviewer_kind": None,
+        "verdict": None,
+        "summary_len": 0,
+        "grace_skipped": False,
+        "reason": "",
+        "error": None,
+    }
+    grace_set = set(grace_period_feature_ids or ())
+    if feature_id in grace_set:
+        out["ok"] = True
+        out["grace_skipped"] = True
+        out["reason"] = f"feature_id={feature_id!r} in grace_period (skipped)"
+        return out
+    path = Path(feature_list_path)
+    if not path.is_file():
+        out["error"] = f"feature_list.json not found: {path}"
+        out["reason"] = out["error"]
+        return out
+    try:
+        data = _json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        out["error"] = f"feature_list.json parse error: {e!r}"
+        out["reason"] = out["error"]
+        return out
+    features = data.get("features") if isinstance(data, dict) else None
+    if not isinstance(features, list):
+        out["error"] = "feature_list.json missing top-level 'features' list"
+        out["reason"] = out["error"]
+        return out
+    target = None
+    for f in features:
+        if isinstance(f, dict) and f.get("id") == feature_id:
+            target = f
+            break
+    if target is None:
+        out["reason"] = (
+            f"feature id={feature_id!r} not found in feature_list.json"
+        )
+        return out
+    evidence = target.get("evidence")
+    if not isinstance(evidence, dict):
+        out["reason"] = (
+            f"feature {feature_id!r} has no 'evidence' dict "
+            f"(got type={type(evidence).__name__})"
+        )
+        return out
+    reviewer = None
+    cv = evidence.get("closeout_verify")
+    if isinstance(cv, dict) and isinstance(cv.get("reviewer"), dict):
+        reviewer = cv["reviewer"]
+    elif isinstance(evidence.get("reviewer"), dict):
+        reviewer = evidence["reviewer"]
+    if not isinstance(reviewer, dict):
+        out["reason"] = (
+            f"feature {feature_id!r} evidence.reviewer (or "
+            f"evidence.closeout_verify.reviewer) missing or not a dict"
+        )
+        return out
+    kind = reviewer.get("reviewer_kind")
+    verdict = reviewer.get("verdict")
+    summary = reviewer.get("summary")
+    out["reviewer_kind"] = kind if isinstance(kind, str) else None
+    out["verdict"] = verdict if isinstance(verdict, str) else None
+    out["summary_len"] = len(summary) if isinstance(summary, str) else 0
+    if kind != required_reviewer_kind:
+        out["reason"] = (
+            f"feature {feature_id!r} reviewer_kind={kind!r}, "
+            f"expected {required_reviewer_kind!r}"
+        )
+        return out
+    allowed_upper = {v.strip().upper() for v in allowed_verdicts}
+    if (
+        not isinstance(verdict, str)
+        or verdict.strip().upper() not in allowed_upper
+    ):
+        out["reason"] = (
+            f"feature {feature_id!r} reviewer.verdict={verdict!r}, "
+            f"expected one of {sorted(allowed_upper)}"
+        )
+        return out
+    if not isinstance(summary, str) or len(summary) < min_summary_chars:
+        out["reason"] = (
+            f"feature {feature_id!r} reviewer.summary len="
+            f"{out['summary_len']}, expected >= {min_summary_chars}"
+        )
+        return out
+    out["ok"] = True
+    out["reason"] = (
+        f"feature {feature_id!r}: kind={kind!r} verdict={verdict!r} "
+        f"summary_len={out['summary_len']} OK"
+    )
     return out

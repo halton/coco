@@ -12809,6 +12809,15 @@
       "rationale": "phase-45 #2.45 Reviewer P2 指出 037/061/064 verify_infra 涉及 _verify_lib 历史 floor 锁，随 lib 持续演进需周期性 bump；本 backlog 跟踪。",
       "description": "verify_infra_037 / 061 / 064 中针对 _verify_lib.py 的 file_sha 历史 floor 锁随 _verify_lib 多次扩展（新增 grace_period 参数等）已漂移；需 bump floor sha 或加 grace_set。",
       "acceptance": "037/061/064 V3/V4 helper_func_sha 与当前 _verify_lib 一致或显式 grace"
+    },
+    {
+      "id": "infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "V5_reviewer_lgtm_gate 实读 helper graduation: 剩余历史 verify_infra_*.py 切换",
+      "rationale": "phase-46 #4.46 引入 assert_v5_reviewer_gate_evidence_bind helper, 但只把 062/092-097 共 7 个 verify_infra_*.py 的 V5 切换为 helper 调用 (062 因 V5 target 缺 reviewer evidence 走 grace_period soft-PASS, 092-097 hard-PASS). 仍有 037/061/063-091 等 27+ 历史 verify_infra_*.py 的 V5 保持 assert_reviewer_lgtm placeholder. 本 backlog 跟进逐项 graduate (引入 grace_period_feature_ids tuple, 把 historic feature 一次性 grandfather, 新 verify 强制走新 helper hard-PASS)."
     }
   ],
   "_meta": {

@@ -7312,3 +7312,18 @@ phase-46 5 候选 promoted to not_started：
 - Reviewer P2: (1) commit msg 070=13/15 vs 实测 15/15 偏保守 (2) stale feature demote note 表述可微调
 - cascade bump 24 verify_*.py 的 EXPECTED_VERIFY_LIB_FILE_SHA → 4f168152cb1c4def，全 V2 PASS
 - B 段 (bump 其他 verify 的 main_head_sha 锁) 留下一个 sub-agent
+
+## phase-46 #4.46 Engineer (infra-P294-followup-v5-reviewer-gate-evidence-bind)
+
+- branch: feat/infra-P294-followup-v5-reviewer-gate-evidence-bind, base main HEAD=bc6bab4
+- 新 helper: assert_v5_reviewer_gate_evidence_bind(feature_id, feature_list_path, min_summary_chars=20, allowed_verdicts=("LGTM","conditional"), required_reviewer_kind="sub_agent_fresh_context", grace_period_feature_ids=("__V5_GRADUATE_SENTINEL_NEVER_MATCHES__",)) -> dict
+- LIB_FILE_SHA: 4f168152cb1c4def4a6b5559bfea8699633df0b79fc6cac9805460d34408a6bd → 48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa
+- cascade bump 35 verify_infra_*.py (037, 061-097 范围), 全 V2 PASS
+- V5 switch to new helper (7 files): 062 (grace_period soft-PASS, target 缺 reviewer), 092/093/094/095/096/097 (hard-PASS, evidence 完整)
+- V3_HELPER_FUNC_NAMES (062) 增 "assert_v5_reviewer_gate_evidence_bind", drift detector PASS
+- verify_infra_098.py 新增 (本 feature 自指 verify): 14 checks, 13/14 PASS, V5 FAIL pre-existing (feature evidence 待 closeout 写入)
+- verify_infra_062.py: ALL PASS (30 checks); verify_infra_097.py: ALL PASS (14 checks)
+- 092-096 ALL PASS (14 checks each)
+- ./init.sh smoke tail: 'Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json'
+- feature_list.json: 本 feature 保持 not_started (Engineer 不切 passing); 新增 backlog infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate (priority=999, 跟进剩余 27+ verify graduate)
+- pre-existing FAIL: verify_infra_098 V5 (feature not closed out yet) — 不阻 merge, 走标准 closeout 流程后写入 reviewer evidence 即 PASS
