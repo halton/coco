@@ -8899,3 +8899,19 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
   4. infra-P306-bump-helper-script-rollout — bump 助手风格统一
   5. infra-V12-AST-based-infer-target-hardening — _infer_target 用 AST + symbol table 替换硬编码模式
 
+
+## Session 2026-05-24 — phase-64 #1 infra-P314-v037-lib-file-sha-cascade-fix-exec closeout passing
+
+- **Merge**: feat/infra-P314-v037-lib-file-sha-cascade-fix-exec → main, NEW_MAIN_SHA=7d3fc39 (merge no-ff), baseline=5eeeb99
+- **Cascade scope**: 一次性 bump 53 个 verify_*.py 的 EXPECTED_VERIFY_LIB_FILE_SHA (c923b8de60e1930b → f789e0d870c9e6c3) + 新增 verify_infra_P314_lib_sha_cascade.py (8 checks). diff 总计 55 文件
+- **Closeout verify_runs (P278 trustworthy, P299 rc-safe pattern, 8 runs)**:
+  - smoke: PASS (total=309 well_formed=309 typo_count=0)
+  - verify_infra_035: PASS (V8 actual=expect=a5901bb7a3ae9b8a, total=55 failed=0)
+  - verify_infra_110: PASS (V11_classify_node_lock_doc_values 6 field exact+prefix, 18 checks)
+  - verify_infra_062: PASS (30/30 emit-paths / 30 unique check tags 维持)
+  - verify_infra_P290: PASS (total=9 failed=0)
+  - verify_infra_039: PASS (V8 discovered=158 matched=18 not_found=137 ambiguous=3 mismatches=0, 25 checks)
+  - verify_infra_037: PASS (V2 post-bump 已稳, 15 checks)
+  - verify_infra_P314_lib_sha_cascade: PASS (V4 self_lib_sha=f789e0d870c9e6c3, V2 stale=0 found=46, V3 found=46 min=30, V_mutant 检测 1 victim=037)
+- **Reviewer (sub-agent fresh-context)**: LGTM verbatim — diff 55 文件 = 53 bump + 1 新 P314 + _verify_lib.py 未动; 抽样 6 个 (037/040/075/P275/robot_035/robot_037) diff 仅 sha 行; 062/110 baseline 已是 f789e0d8 未被误 bump; Mutation A/B/C 三反证全过; V_mutant tempdir 隔离; P314 docstring 含 ## Lock 段. P0=[], P1=[], P2×1 informational (found=46 vs 54 差异 = AST unique holders vs bumped lines)
+- **下一 candidate**: phase-64 #2 infra-V11-doc-value-lock-rollout (V11 doc-value 锁推广到 037/039/049/062/P290)

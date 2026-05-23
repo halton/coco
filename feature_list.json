@@ -18638,13 +18638,39 @@
       "id": "infra-P314-v037-lib-file-sha-cascade-fix-exec",
       "title": "执行 P314: bump verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA + 审 110/062 同类锁",
       "area": "infra",
-      "status": "in_progress",
+      "status": "passing",
       "phase": "phase-64",
       "priority": 1,
       "source": "phase-64 planning (phase-63 #5 carry-over)",
       "scope": "机械化 cascade fix: bump verify_infra_037 EXPECTED_VERIFY_LIB_FILE_SHA c923b8de60e1930b -> f789e0d870c9e6c3; grep verify_*.py 找所有持有 EXPECTED_VERIFY_LIB_FILE_SHA 的脚本, 对比 baseline 找漏 bump 项, 一并 cascade. 给 _verify_lib.py 加 closeout cascade hook 或在 v062 V3 表里把 _verify_lib 文件 sha 锁登记进自动 drift 检测.",
       "verification": "verify_infra_037 V2_lib_file_sha PASS rc=0; v062 30/30 PASS; smoke PASS; Reviewer fresh-context LGTM",
-      "created_at": "2026-05-24"
+      "created_at": "2026-05-24",
+      "closeout_verify": {
+        "main_head_sha": "7d3fc39",
+        "baseline_head_echo": "5eeeb99",
+        "merge_commit_sha": "7d3fc39",
+        "verify_runs": [
+          {"name": "smoke", "status": "PASS", "tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=309 well_formed=309 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_035", "status": "PASS", "tail_stdout": "[verify_infra_035][PASS] V8_self_file_sha_lock actual=a5901bb7a3ae9b8a expect=a5901bb7a3ae9b8a\n[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only matched=True\n[verify_infra_035] summary total=55 failed=0", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_110", "status": "PASS", "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (18 checks)", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_062", "status": "PASS", "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_P290", "status": "PASS", "tail_stdout": "[verify_infra_P290][PASS] V4_doc_subset_of_emit missing_in_emit=[]\n[verify_infra_P290][PASS] V4_emit_subset_of_doc missing_in_doc=[]\n[verify_infra_P290][PASS] V4_no_stale_aliases stale_hit=[]\n[verify_infra_P290][PASS] V5_reviewer_lgtm_gate target=infra-P290-backlog-verifier-tag-naming-doc helper_ok=True\n[verify_infra_P290] summary: total=9 failed=0", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_039", "status": "PASS", "tail_stdout": "[verify_infra_039][PASS] V8_discovered_count discovered=158 matched=18 not_found=137 ambiguous=3 mismatches=0\n[verify_infra_039][PASS] V8_no_mismatches 0\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True\n[verify_infra_039][SUMMARY] ALL PASS (25 checks)", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_037", "status": "PASS", "tail_stdout": "[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True\n[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)", "freshness_anchor": "7d3fc39"},
+          {"name": "verify_infra_P314_lib_sha_cascade", "status": "PASS", "tail_stdout": "[verify_infra_P314] PASS V4_self_lib_sha: got=f789e0d870c9e6c3 expect=f789e0d870c9e6c3\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=f789e0d870c9e6c3\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)", "freshness_anchor": "7d3fc39"}
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "cascade 安全无 over-bump: diff 55 文件 = 53 个 verify_*.py 持锁 bump (仅改 EXPECTED sha 字面值) + 1 新 verify_infra_P314 + _verify_lib.py 自身未动. 抽样 6 个 bumped (037/040/075/P275/robot_035/robot_037) git diff 仅有 sha 行变更, 无业务逻辑/注释/其他常量改动. 062/110 baseline 已是 f789e0d8 未被误 bump (验证两个文件不在 diff). 实测 _verify_lib.py sha = f789e0d870c9e6c3... 与所有 bump 后值一致. P314 8/8 PASS + Mutation A (v037 改末字节 → V2 FAIL stale=1 victim=037, 恢复后 rc=0) + B (HOLDERS_MIN=999 → V3 FAIL found=46<999) + C (lib 加字节 → V4 + V2 stale=46 全 FAIL) 三反证全过. V_mutant 实现用 tempdir 隔离不污染源码. P314 docstring 含 '## Lock: EXPECTED_VERIFY_LIB_FILE_SHA cascade audit' 段.",
+          "checks_run": ["diff_55_files", "sample_6_bumped", "062_110_excluded", "_verify_lib_sha_measured", "mutation_A_v037_byte", "mutation_B_HOLDERS_MIN_999", "mutation_C_lib_append_byte", "P314_8_PASS", "v037_15_PASS", "v062_30_PASS", "smoke", "Lock_docstring_section"],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [{"title": "found=46 vs 54 stale 差异 (AST unique holders vs total bumped lines), HOLDERS_MIN=30 远低于 46 安全缓冲, 无需修改, 仅记录"}]
+          }
+        }
+      }
     },
     {
       "id": "infra-V11-doc-value-lock-rollout",
@@ -18696,6 +18722,6 @@
     }
   ],
   "_meta": {
-    "last_updated": "2026-05-24T12:00:00Z"
+    "last_updated": "2026-05-24T18:00:00Z"
   }
 }
