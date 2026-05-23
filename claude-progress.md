@@ -7422,3 +7422,22 @@ phase-46 5 候选 promoted to not_started：
 - smoke ALL PASS
 - 不切 passing (Engineer 不切)
 
+
+## Session 2026-05-23 phase-47 #1.47 closeout — infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate
+
+- Reviewer 初评 REJECT → Engineer fix v2 → Re-Reviewer LGTM (sub_agent_fresh_context, 2 mutation 验真闸门)
+- 53 个 V5 verify graduate (19 hard real-binding + 34 grace_period soft-PASS)
+- 076 V4_1 scan tuple 扩 + 080 V4_2/V4_3/V4_4 redesign 接受新旧两种 helper 模式 + 合成 fixture 解耦
+- merge --no-ff feat/infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate → merge_commit_sha=0e34385 main_head=0e34385 baseline=c9954e0
+- post-merge verify (venv py3.13):
+  - verify_infra_076: 14/14 PASS
+  - verify_infra_080: 14/14 PASS
+  - verify_infra_098: 14/14 PASS
+  - verify_infra_062: 30/30 PASS (P278 trustworthy 自检)
+  - verify_infra_097: 14/14 PASS
+  - smoke: ALL PASS
+- feature status: not_started → passing with full closeout_verify evidence + Reviewer.sub_agent_fresh_context LGTM
+- 3 backlog 入账 (P2 follow-up):
+  - infra-V6-backlog-076-helper-tuple-extract-to-lib-constant
+  - infra-V6-backlog-080-v4-4-mutant-assert-substituted-true
+  - infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list

@@ -12910,11 +12910,81 @@
     {
       "id": "infra-V6-backlog-v5-reviewer-gate-evidence-bind-historical-graduate",
       "priority": 1.47,
-      "status": "not_started",
+      "status": "passing",
       "phase": 47,
       "area": "infra",
       "title": "V5_reviewer_lgtm_gate 实读 helper graduation: 剩余历史 verify_infra_*.py 切换",
-      "rationale": "phase-46 #4.46 引入 assert_v5_reviewer_gate_evidence_bind helper, 但只把 062/092-097 共 7 个 verify_infra_*.py 的 V5 切换为 helper 调用 (062 因 V5 target 缺 reviewer evidence 走 grace_period soft-PASS, 092-097 hard-PASS). 仍有 037/061/063-091 等 27+ 历史 verify_infra_*.py 的 V5 保持 assert_reviewer_lgtm placeholder. 本 backlog 跟进逐项 graduate (引入 grace_period_feature_ids tuple, 把 historic feature 一次性 grandfather, 新 verify 强制走新 helper hard-PASS)."
+      "rationale": "phase-46 #4.46 引入 assert_v5_reviewer_gate_evidence_bind helper, 但只把 062/092-097 共 7 个 verify_infra_*.py 的 V5 切换为 helper 调用 (062 因 V5 target 缺 reviewer evidence 走 grace_period soft-PASS, 092-097 hard-PASS). 仍有 037/061/063-091 等 27+ 历史 verify_infra_*.py 的 V5 保持 assert_reviewer_lgtm placeholder. 本 backlog 跟进逐项 graduate (引入 grace_period_feature_ids tuple, 把 historic feature 一次性 grandfather, 新 verify 强制走新 helper hard-PASS).",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "0e34385",
+          "baseline_head_echo": "c9954e0",
+          "merge_commit_sha": "0e34385",
+          "verify_runs": [
+            {
+              "name": "verify_infra_076",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_076][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_080",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_080][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_098",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_098][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "verify_infra_097",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_097][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke 通过",
+          "pre_existing_baseline_sha": "c9954e0",
+          "baseline_tail_stdout": "graduate 53 个 V5 verify (19 hard + 34 grace_period soft); fix-iteration v2 redesign 076/080 V4 scan 接受新旧 helper 模式 + 合成 fixture; Re-Reviewer 2 mutation 验真",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "V5 evidence-bind helper graduate 53 个历史 verify_infra_*.py (19 hard real-binding + 34 soft grace_period); 076 V4_1 scan tuple 扩 + 080 V4_2/V4_3/V4_4 redesign 接受新旧两种 helper 模式与合成 fixture; Re-Reviewer 双 mutation 验真闸门 (drop substituted assert / drop synthetic fixture violation) 均回退 FAIL, 证明 detector 真实生效",
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "076 tuple 硬编码两 helper future graduate 需手改 (建议抽 _verify_lib 常量)",
+                "080 V4_4 mutant 未来 emit 形变化可能静默跳过 (建议显式断言 substituted=True)",
+                "080 V4_3 改合成 fixture 与历史硬绿解耦 docstring 待写明 V4_2 enrolled list 后续手扩"
+              ]
+            },
+            "checks_run": [
+              "verify_infra_076",
+              "verify_infra_080",
+              "verify_infra_098",
+              "verify_infra_062",
+              "verify_infra_097",
+              "smoke"
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-V6-backlog-verify-infra-sha-lock-python-version-sensitivity",
@@ -12926,6 +12996,36 @@
       "rationale": "phase-46 #5.46 closeout 期间 Reviewer 用系统 python 3.9 跑 079/062 出 ghost FAIL（V1/V2/V3 func_sha + file_sha 全漂移）；用 venv python 3.13 跑 14/14+30/30 ALL PASS。根因：inspect.getsource 在 py3.9 vs 3.13 行为差异（typing/dataclass 等改写）→ func_sha 漂移。4-way 仲裁（venv+pyc clean / venv+脏 / sys+pyc clean / sys+脏）确认 venv 是基线权威。",
       "description": "在 _verify_lib.py 加 python 版本守门（启动断言 sys.version_info >= (3,13) 或在 expect_sha 表附 python 版本标记），避免 Reviewer/CI/用户用系统 python 跑出 ghost FAIL。",
       "acceptance": "_verify_lib 启动时若 python 版本不匹配则显式 FAIL 并提示切 venv；或 expect_sha 按版本分桶"
+    },
+    {
+      "id": "infra-V6-backlog-076-helper-tuple-extract-to-lib-constant",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "076 helper tuple 硬编码两 helper —— 抽 _verify_lib 常量",
+      "rationale": "phase-47 #1.47 Reviewer P2: 076 V4 scan 当前直接硬编码 (assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind) tuple；未来 graduate 新 helper 需手改 076。建议把白名单移到 _verify_lib 作为模块常量统一维护。",
+      "acceptance": "076 V4_1/V4_2 引用 _verify_lib.V5_REVIEWER_GATE_HELPERS 常量；新增 helper 仅需改 _verify_lib"
+    },
+    {
+      "id": "infra-V6-backlog-080-v4-4-mutant-assert-substituted-true",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "080 V4_4 mutant regex 显式断言 substituted=True",
+      "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_4 mutant 替换当前生效 (n_sub=1)，但 regex 写死；未来 emit 形变化 (例如不同间距/换行) 可能 substituted=0 时静默走过 (mutant 未触发但 v_count 仍偶然合规)。建议显式断言 substituted_count >= 1 否则 FAIL。",
+      "acceptance": "080 V4_4 在 substituted=0 时 raise/FAIL；mutant detector 不再静默漂"
+    },
+    {
+      "id": "infra-V6-backlog-080-v4-3-fixture-docstring-enrolled-list",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "080 V4_3 合成 fixture docstring 写明 V4_2 enrolled list 维护",
+      "rationale": "phase-47 #1.47 Reviewer P2: 080 V4_3 已改为合成 fixture，与原 079 历史硬绿样本解耦；但 docstring 未说明 V4_2 enrolled (grace_period helper graduate list) 后续若新增 helper 需手扩。",
+      "acceptance": "080 V4_3 docstring/comment 明确指引：新增 helper 入 enrolled list 时同步更新 V4_2 expect 集"
     }
   ],
   "_meta": {
