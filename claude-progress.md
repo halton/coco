@@ -7899,3 +7899,14 @@ phase-53 candidates 选自 V6 backlog (priority=999 status=backlog), 5 个分布
 - main HEAD = 64fab16
 
 
+
+## Session 2026-05-23 — #3.53 closeout: infra-P290 classify-node family sets
+
+- merge: feat/infra-P290-classify-node-family-sets → main via merge commit `76a5a09`, baseline `f5768de`
+- verify_infra_102 post-merge: ALL PASS (27/27); _classify_node 改写为 `_HUB_FAMILY` / `_LIB_FAMILY` / `_DUMP_FAMILY` frozenset 成员判断
+- verify_infra_062 (P278 gate): ALL PASS (30/30)
+- verify_infra_060 baseline FAIL: `V4_real_unknown_count_eq_one` (5 vs 1) 在 f5768de 同 tag 复现, pre-existing 与本 feature 无关
+- smoke: `./init.sh` PASS
+- Reviewer fresh-context LGTM (sub-agent): mutation A/B 验证 verifier 有约束力, cascade 8+1 处 EXPECTED_DUMP_FILE_SHA bump 到 910cce71 无遗漏
+- 新增 2 个 backlog: `infra-P290-backlog-verifier-tag-naming-doc` (P2 文档口径)、`infra-P290-backlog-dump-family-equality-check` (P2 设计点记录)
+- feature_list backlog 计数: 99 → 101

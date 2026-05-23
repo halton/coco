@@ -8406,11 +8406,83 @@
     {
       "id": "infra-P290-classify-node-family-sets",
       "priority": "53-3",
-      "status": "in_progress",
+      "status": "passing",
       "phase": 53,
       "area": "infra",
       "title": "_classify_node 用 frozenset 替代 OR 表达式",
-      "rationale": "P285 _classify_node 当前用 \"if node_id == 'dump_v4_sha_graph' or node_id == 'dump_reverse_sha_lock_index'\" 形式 OR 链识别 dump 家族, 后续每新增一个 dump 工具都要加 or 分支. 建议: 定义 _DUMP_FAMILY = frozenset({\"dump_v4_sha_graph\", \"dump_reverse_sha_lock_index\"}) 与对应 _LIB_FAMILY / _HUB_FAMILY, 改用 \"if node_id in _DUMP_FAMILY\" 集合成员判断. 低优先级 (功能等价 + 风格优化), 但能让 dump-tool 家族扩展边界显式化, 配合 V4 行为锁更稳."
+      "rationale": "P285 _classify_node 当前用 \"if node_id == 'dump_v4_sha_graph' or node_id == 'dump_reverse_sha_lock_index'\" 形式 OR 链识别 dump 家族, 后续每新增一个 dump 工具都要加 or 分支. 建议: 定义 _DUMP_FAMILY = frozenset({\"dump_v4_sha_graph\", \"dump_reverse_sha_lock_index\"}) 与对应 _LIB_FAMILY / _HUB_FAMILY, 改用 \"if node_id in _DUMP_FAMILY\" 集合成员判断. 低优先级 (功能等价 + 风格优化), 但能让 dump-tool 家族扩展边界显式化, 配合 V4 行为锁更稳.",
+      "evidence": {
+        "scripts": [
+          "scripts/dump_v4_sha_graph.py (_classify_node OR 链 → frozenset in _DUMP_FAMILY/_HUB_FAMILY/_LIB_FAMILY)",
+          "scripts/verify_infra_102.py (新增 V1-V5 27 checks)",
+          "scripts/verify_infra_{039,043,044,047,048,053,054,060}.py (cascade EXPECTED_DUMP_FILE_SHA bump → 910cce71)"
+        ],
+        "verifier": "scripts/verify_infra_102.py",
+        "verify_tail": "[verify_infra_102][SUMMARY] ALL PASS (27 checks)",
+        "smoke": "PASS (./init.sh rc=0)",
+        "closeout_verify": {
+          "main_head_sha": "76a5a09",
+          "merge_commit_sha": "76a5a09",
+          "baseline_head_sha": "f5768de",
+          "baseline_head_echo": "f5768de",
+          "pre_existing_baseline_sha": "f5768de",
+          "baseline_tail_stdout": "[verify_infra_060][PASS] V2_dump_file_sha got=213f3a54af907212 expect=213f3a54af907212\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=26300\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=5 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+          "smoke_tail_stdout": "  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_102.py",
+              "script": "scripts/verify_infra_102.py",
+              "name": "post_merge",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_102][PASS] V4_uses_in_hub_family expect 'node_id in _HUB_FAMILY' in _classify_node body\n[verify_infra_102][PASS] V4_uses_in_lib_family expect 'node_id in _LIB_FAMILY' in _classify_node body\n[verify_infra_102][PASS] V4b_self_main_func_sha got=072652ad44846671 expect=072652ad44846671\n[verify_infra_102][PASS] V5_reviewer_lgtm_gate target=infra-P290-classify-node-family-sets helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P290-classify-node-family-sets' in grace_period (skipped)\"\n[verify_infra_102][SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_060.py",
+              "script": "scripts/verify_infra_060.py",
+              "name": "baseline_preexisting_fail",
+              "status": "FAIL",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_060][PASS] V2_dump_file_sha got=213f3a54af907212 expect=213f3a54af907212\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=26300\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=5 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "pre_existing_baseline_sha": "f5768de",
+              "baseline_tail_stdout": "[verify_infra_060][PASS] V2_dump_file_sha got=213f3a54af907212 expect=213f3a54af907212\n[verify_infra_060][PASS] V3_classify_func_sha got=03f5ccb1de76db54 expect=03f5ccb1de76db54\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=26300\n[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=5 expect=1 ids=['unknown_EXPECTED_AGENTS_MD_FILE_SHA', 'unknown_EXPECTED_BUMP_FILE_SHA', 'unknown_EXPECTED_CLAUDE_MD_FILE_SHA', 'unknown_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']"
+            },
+            {
+              "cmd": "./init.sh",
+              "script": "./init.sh",
+              "name": "smoke",
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ]
+        },
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "lgtm": true,
+          "summary": "infra-P290 把 `_classify_node` 的 hub/lib/dump 三类成员判断从 OR 链/单值 `==` 改写为模块级 frozenset (`_HUB_FAMILY` / `_LIB_FAMILY` / `_DUMP_FAMILY`), 家族扩展边界显式化。verify_infra_102.py 27 checks 全 PASS, 行为映射 + AST 改写痕迹 (`in _XXX_FAMILY` 出现 / OR 链消失) + frozenset shape + 双 file sha 锁齐全。Mutation A (改回 OR 链) catch 3 FAIL, Mutation B (frozenset→set) catch 2 FAIL, verifier 实际有约束力非走过场。verify_infra_060 的 1 个 FAIL (`V4_real_unknown_count_eq_one`) 已在 main HEAD=f5768de baseline 上复现, 为 pre-existing FAIL 与本 feature 无关。Cascade dump file sha bump `910cce71...` 全仓 8+1 处统一无遗漏。",
+          "checks_run": [
+            "git diff main..HEAD --stat / -- scripts/dump_v4_sha_graph.py",
+            "通读 scripts/verify_infra_102.py",
+            "verify_infra_102 27/27 PASS",
+            "verify_infra_060 pre-existing FAIL 复现 baseline",
+            "抽样 verify_infra_039/048/053 ALL PASS",
+            "Mutation A OR 链回退 catch 3 FAIL",
+            "Mutation B frozenset→set catch 2 FAIL",
+            "Cascade EXPECTED_DUMP_FILE_SHA 全仓 grep 无 stale"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "brief 中 verifier tag 命名 (V4_uses_in_keyword/V1_family_sets_are_frozenset/V_classify_func_sha) 与实际 tag (V4_uses_in_dump/hub/lib_family, V3_dump_is_frozenset) 不一致 — 仅文档口径差, 已开 backlog infra-P290-backlog-verifier-tag-naming-doc",
+              "V3_dump_family_contents 用 `==` 比较 frozenset 与 set 同 elems 为 True, 已有 V3_dump_is_frozenset isinstance 兜底 — 已开 backlog infra-P290-backlog-dump-family-equality-check"
+            ]
+          }
+        }
+      }
     },
     {
       "id": "infra-P291-reviewer-gate-real-or-remove",
@@ -14133,6 +14205,24 @@
           }
         }
       }
+    },
+    {
+      "id": "infra-P290-backlog-verifier-tag-naming-doc",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "对齐 verify_infra_102 verifier tag 命名与 brief 文档口径",
+      "rationale": "来源: #3.53 Reviewer P2 finding. brief 文档使用 V4_uses_in_keyword / V1_family_sets_are_frozenset / V_classify_func_sha 等 tag 名, 实际 verify_infra_102.py 使用 V4_uses_in_{dump,hub,lib}_family / V3_{hub,lib,dump}_is_frozenset / V4b_self_main_func_sha. 仅口径不一致非功能问题, 后续在 brief/docstring 中统一命名以减少新人理解成本。"
+    },
+    {
+      "id": "infra-P290-backlog-dump-family-equality-check",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra",
+      "title": "V3_dump_family_contents 用 `==` 比 frozenset 与 set 同 elems 设计点记录",
+      "rationale": "来源: #3.53 Reviewer P2 finding. Python frozenset({...}) == set({...}) 同元素时为 True, 因此 V3_dump_family_contents 单看相等不能区分 frozenset 与 set。已有 V3_dump_is_frozenset / V3_hub_is_frozenset / V3_lib_is_frozenset 用 isinstance 做兜底, 整体不会漏 mutation。本 backlog 仅记录设计点, 不需立即改, 必要时把 contents 检查改为同时校验 type+elements 双信号。"
     }
   ],
   "_meta": {
