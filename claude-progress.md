@@ -8949,3 +8949,13 @@ infra-039-backlog-infer-target-auto-discovery closeout 完成 (sub-agent fresh c
   - verify_infra_P290: PASS (9)
 - **Reviewer (sub-agent fresh-context)**: LGTM — V4d 加固 22 unknown_* tgt PASS, 4 mutation 反证 + 4 regex 边界探测全部如设计触发, V4c/V4d 互补语义清晰无重复 FAIL; P0=[], P1=[], P2×2 (informational, 不衍生 fu chain)
 - **下一 candidate**: phase-64 #4 infra-P306-bump-helper-script-rollout (P306 bump-helper-script 模式推广)
+
+## Session 2026-05-24 (phase-64 #4 closeout)
+
+- phase-64 #4 `infra-P306-bump-helper-script-rollout` 完成入账 passing
+- NEW_MAIN_SHA=bce22519c2443b3e9b177b13a1f8c5d91d31f33a (merge_commit_sha 同)
+- Reviewer sub-agent fresh-context LGTM (checks_run=17, P0/P1=[], P2=3 informational)
+- 交付物: `scripts/bump_self_file_sha.py` (231 行通用 CLI helper) + `scripts/verify_infra_P306.py` (10 checks)
+- 算法等价: V7 helper sha = verify_infra_035._self_sha_skip_sentinel (a5901bb7…), V8 = verify_infra_033._self_file_sha_excluding_pragma_line (792eace9…); V10 helper_sha_lock actual=expect=707225403911bff7
+- closeout verify 9 PASS: smoke / P306 (10/10) / 033 / 035 / 110 / 062 (30/30 维持) / 037 / 039 / P314_lib_sha_cascade (8/8)
+- 下一 candidate: phase-64 #5 infra-V12-AST-based-infer-target-hardening
