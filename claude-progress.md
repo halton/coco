@@ -7653,3 +7653,14 @@ phase-46 5 候选 promoted to not_started：
 - notes 追加 `STALE @ phase-50 #3.50 ... closed_as_already_done.`
 - closeout_baseline_main_head=a035199
 
+
+## Session 2026-05-23 — closeout #4.50 (infra-050-backlog-sort-order-label-docstring)
+
+- feat 分支 HEAD=1ca18dd merged --no-ff 入 main，merge commit c2c5064
+- baseline 上 main HEAD=5f707fb 跑 verify_infra_051 复现 4/19 FAIL (V4_check_rc_and_text / V4_check_json_rc / V4_check_json_all_match / V4_check_text_equiv) — pre-existing (verify_infra_083 反向锁 orphan 触发), 与本 PR 无关
+- closeout 跑 verify_infra_050 ALL PASS 19/19 (V0 docstring sentinel + 4 mapping needles + V2 sha lock + V3 mutant drift + V4 JSON 排序稳定性 + V5 reviewer gate)
+- verify_infra_062 (P278 closeout-verify-trustworthy gate) ALL PASS 30/30
+- ./init.sh smoke 通过
+- Reviewer (sub_agent_fresh_context): LGTM (docstring sentinel + mapping needles 唯一性 / 两次 mutation probe 验证 / sha cascade 049/050/051 三处同步无遗漏)
+- feature_list.json: status=passing, evidence 全字段写入 (verifier/verify_runs/closeout_verify.main_head_sha=c2c5064/reviewer/pre_existing_baseline_sha=5f707fb/baseline_tail_stdout/smoke_tail_stdout)
+- closeout_main_head=c2c5064

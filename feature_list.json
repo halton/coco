@@ -6858,7 +6858,7 @@
       "area": "infra",
       "phase": 50,
       "title": "dump_reverse_sha_lock_index docstring 补 sort_order 外部标签 vs JSON 内部字段映射说明",
-      "status": "in_progress",
+      "status": "passing",
       "created_at": "2026-05-22",
       "source": "infra-049-backlog-render-json-sort-stability (P269) Reviewer 建议",
       "scope": "scripts/dump_reverse_sha_lock_index.py 顶部 docstring 显式补充：sort_order=target_asc 是外部稳定排序契约标签，对应 JSON 内部 indexed_by=target_sha + 字典按 target_sha 升序遍历的实际行为；避免未来读者误以为 sort_order 是动态计算字段。",
@@ -6868,7 +6868,27 @@
       "verification": [
         "scripts/verify_infra_050.py ALL PASS (19 checks)"
       ],
-      "notes": "promoted to phase-50 #4.50 | P278: dump 工具 docstring 加 INFRA_050_SORT_ORDER_CONTRACT sentinel + 4 条外部标签 ↔ JSON 内部字段映射 needle (assert_unique_needle 锁唯一性), verify_infra_050 扩 V0_dump_docstring_sentinel + V0_dump_docstring_mapping_needles, cascade bump 049/050/051 EXPECTED_DUMP_INDEX_FILE_SHA"
+      "notes": "promoted to phase-50 #4.50 | P278: dump 工具 docstring 加 INFRA_050_SORT_ORDER_CONTRACT sentinel + 4 条外部标签 ↔ JSON 内部字段映射 needle (assert_unique_needle 锁唯一性), verify_infra_050 扩 V0_dump_docstring_sentinel + V0_dump_docstring_mapping_needles, cascade bump 049/050/051 EXPECTED_DUMP_INDEX_FILE_SHA",
+      "evidence": {
+        "verifier": "scripts/verify_infra_050.py",
+        "verify_runs": [
+          {
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_050][PASS] V2_dump_index_file_sha got=30dc7633b69e3bb4 expect=30dc7633b69e3bb4\n[verify_infra_050][PASS] V2_render_json_func_sha got=ec31d571f053a0c7 expect=ec31d571f053a0c7\n[verify_infra_050][PASS] V3_mutant_sha_drift baseline=ec31d571f053a0c7 mutant=d40bfc80a029666d replaced=True\n[verify_infra_050][PASS] V3_baseline_matches_expected baseline=ec31d571f053a0c7 expect=ec31d571f053a0c7\n[verify_infra_050][PASS] V4_json_run0 len=74677\n[verify_infra_050][PASS] V4_json_run1 len=74677\n[verify_infra_050][PASS] V4_json_run2 len=74677\n[verify_infra_050][PASS] V4_bytewise_stable len0=74677 len1=74677 len2=74677 eq=True\n[verify_infra_050][PASS] V4_json_parse type=dict\n[verify_infra_050][PASS] V4_sort_order_field sort_order='verify_file,lineno,lock_name' expect='verify_file,lineno,lock_name'\n[verify_infra_050][PASS] V4_entries_nonempty n=207\n[verify_infra_050][PASS] V4_entries_sorted violations=0\n[verify_infra_050][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_050__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_050__' in grace_period (skipped)\"\n[verify_infra_050][SUMMARY] ALL PASS (19 checks)"
+          }
+        ],
+        "closeout_verify": {
+          "main_head_sha": "c2c5064"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-050 docstring contract 落地干净——sentinel INFRA_050_SORT_ORDER_CONTRACT 唯一，4 条 mapping needle 覆盖 sort key (file/lineno/const_name) 全部三个内部字段映射 + 一条语义锚 \"外部稳定排序契约\"，assert_unique_needle V6 dogfood 使用正确（try/except 聚合 failures）。两次 mutation probe（整段删除 / needle 重复）均被 V0_dump_docstring_sentinel + mapping_needles 抓住。sha cascade 049/050/051 三处 256df4c6 → 30dc7633 同步无遗漏。docstring 明确写出 \"sort_order 是静态外部标签而非动态计算字段\" + 消费者契约 + 维护者改契约时 V0+V4 双重漂移防呆。未触碰 _verify_lib.py 函数体。19/19 checks PASS，051 4 FAIL 已在 main HEAD=5f707fb 复现确认 pre-existing 与本 feature 无关。"
+        },
+        "pre_existing_baseline_sha": "5f707fb",
+        "baseline_tail_stdout": "[verify_infra_051][FAIL] V4_check_rc_and_text rc=1 stdout_head='[dump_reverse_sha_lock_index][--check] scanned=207 live=234 orphans=1 all_match=False'\n[verify_infra_051][FAIL] V4_check_json_rc rc=1\n[verify_infra_051][PASS] V4_check_json_schema schema='reverse_sha_lock_consistency/v1'\n[verify_infra_051][FAIL] V4_check_json_all_match all_match=False\n[verify_infra_051][PASS] V4_check_json_counts scanned_count=207 live_count=234\n[verify_infra_051][PASS] V4_check_json_orphans_list orphans_type=list\n[verify_infra_051][FAIL] V4_check_text_equiv rc=1 equiv=True\n[verify_infra_051][PASS] V4_mutex_rejected rc=2 stderr_tail='dump_reverse_sha_lock_index: error: argument --json: not allowed with argument --text'\n[verify_infra_051][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_051__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_051__' in grace_period (skipped)\"\n[verify_infra_051][SUMMARY] FAIL 4/19: ['V4_check_rc_and_text', 'V4_check_json_rc', 'V4_check_json_all_match', 'V4_check_text_equiv']",
+        "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+      }
     },
     {
       "id": "infra-050-backlog-v3-mutant-ast-node-based",
