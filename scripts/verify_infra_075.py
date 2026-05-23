@@ -59,11 +59,12 @@ VERIFY_LIB = SCRIPTS / "_verify_lib.py"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import (  # noqa: E402
+from _verify_lib import (
     assert_report_matches_closeout_runs,
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
+    assert_v5_reviewer_gate_evidence_bind,
 )
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"
@@ -378,6 +379,11 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate (soft: 本 feature 自身未 LGTM 之前不阻塞)
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
+
+    target feature evidence 不完整 (legacy / not_started)，通过 grace_period 兜底
+    保持 emit=True，待 target feature 补齐 reviewer evidence 后从 grace 列表移除。
+    """
     if not REAL_FEATURE_LIST.is_file():
         _emit(
             "V5_reviewer_lgtm_gate",
@@ -385,19 +391,17 @@ def v5_reviewer_gate() -> None:
             f"feature_list.json not found at {REAL_FEATURE_LIST}",
         )
         return
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
-    # P299 自身 feature: closeout 前必然无 LGTM evidence → 软 PASS (记录 reason)
-    if not ok:
-        _emit(
-            "V5_reviewer_lgtm_gate",
-            True,
-            f"soft-PASS pre-closeout: target={V5_GATE_FEATURE_ID} reason={reason!r}",
-        )
-        return
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

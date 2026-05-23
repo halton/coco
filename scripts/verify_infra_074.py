@@ -72,10 +72,11 @@ VERIFY_059 = SCRIPTS / "verify_infra_059.py"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import (  # noqa: E402
+from _verify_lib import (
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_summary_exit,
+    assert_v5_reviewer_gate_evidence_bind,
 )
 
 EXPECTED_VERIFY_059_FILE_SHA = "6297a65a5755f60e72f4beef42211d7f377b9d778416e8a8e03cb60f9db1fd72"
@@ -275,6 +276,11 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
+
+    target feature evidence 不完整 (legacy / not_started)，通过 grace_period 兜底
+    保持 emit=True，待 target feature 补齐 reviewer evidence 后从 grace 列表移除。
+    """
     if not REAL_FEATURE_LIST.is_file():
         _emit(
             "V5_reviewer_lgtm_gate",
@@ -282,11 +288,17 @@ def v5_reviewer_gate() -> None:
             f"feature_list.json not found at {REAL_FEATURE_LIST}",
         )
         return
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        ok is True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

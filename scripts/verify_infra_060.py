@@ -63,7 +63,7 @@ V5_GATE_FEATURE_ID = "infra-P285-classifier-recognize-lib-func-locks"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import func_sha_by_name, assert_reviewer_lgtm  # noqa: E402
+from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
 EXPECTED_DUMP_FILE_SHA = "ddfc2d331cd1fef7ae30d35a52737e623f3302bc92ca9e242f8fafe0fbf7ac43"
@@ -303,18 +303,29 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
-    """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
 
-    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
-    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
-    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
-    的 V4 mini-repo 测试保证。
+    target feature evidence 不完整 (legacy / not_started)，通过 grace_period 兜底
+    保持 emit=True，待 target feature 补齐 reviewer evidence 后从 grace 列表移除。
     """
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    if not REAL_FEATURE_LIST.is_file():
+        _emit(
+            "V5_reviewer_lgtm_gate",
+            False,
+            f"feature_list.json not found at {REAL_FEATURE_LIST}",
+        )
+        return
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

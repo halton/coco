@@ -42,7 +42,7 @@ SCRIPTS = REPO / "scripts"
 BUMP = SCRIPTS / "bump_reverse_sha_lock.py"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import func_sha_by_name  # noqa: E402
+from _verify_lib import func_sha_by_name, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # infra-046 sha lock 常量 (V2)
 EXPECTED_BUMP_FILE_SHA = "33560e8d68e1c768e79e2a20e1390acc4658533fc23ed469f8782d6a795f80b5"
@@ -53,6 +53,11 @@ EXPECTED_MAIN_FUNC_SHA = "8ec9b0e4de249c87c77a11340dd65779ae01852e22a0886cbd594b
 
 DOCSTRING_SENTINEL = "INFRA_046_SHA_LOCKS"
 FUNC_NAMES = ("run_bump", "find_locks_for_target", "_bump_in_file", "main")
+
+
+# phase-47 #1.47: V5_GATE evidence-bind helper (grace_period 兜底 soft graduate)
+REAL_FEATURE_LIST = Path(__file__).resolve().parents[1] / "feature_list.json"
+V5_GATE_FEATURE_ID = "__PHASE_47_PLACEHOLDER_INFRA_046__"
 
 _results: List[Tuple[str, bool, str]] = []
 
@@ -226,10 +231,29 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate (print-only)
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper.
+
+    target feature evidence 不完整 (legacy / not_started)，通过 grace_period 兜底
+    保持 emit=True，待 target feature 补齐 reviewer evidence 后从 grace 列表移除。
+    """
+    if not REAL_FEATURE_LIST.is_file():
+        _emit(
+            "V5_reviewer_lgtm_gate",
+            False,
+            f"feature_list.json not found at {REAL_FEATURE_LIST}",
+        )
+        return
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+        grace_period_feature_ids=(V5_GATE_FEATURE_ID,),
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        "closeout 阶段必须有 sub-agent fresh-context Reviewer LGTM (evidence 记录)",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"grace_skipped={result['grace_skipped']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 

@@ -52,11 +52,12 @@ V5_GATE_FEATURE_ID = "infra-P294-closeout-stdout-sha-verification"
 LIB = SCRIPTS / "_verify_lib.py"
 
 sys.path.insert(0, str(SCRIPTS))
-from _verify_lib import (  # noqa: E402
+from _verify_lib import (
     assert_reviewer_lgtm,
     func_sha_by_name,
     verify_evidence_tail_stdout_sha,
     verify_summary_exit,
+    assert_v5_reviewer_gate_evidence_bind,
 )
 
 EXPECTED_VERIFY_LIB_FILE_SHA = "48a283fba25bb498b0dbf2b00423d80d2f8df647453822179e2ffb29f973abfa"
@@ -295,18 +296,23 @@ def v4_behavior() -> None:
 # V5: Reviewer LGTM gate (placeholder)
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
-    """V5 Reviewer LGTM gate — P291 helper 真读 evidence.
-
-    Soft-PASS 形式: 真调 assert_reviewer_lgtm 并把 ok/reason 写进 detail,
-    但 emit=True 以避免阻断 legacy 不合规 feature 的 V5; 真行为锁由 P291
-    helper 单独 verify (verify_infra_071) + 本 feature verify_infra_076
-    的 V4 mini-repo 测试保证。
-    """
-    ok, reason = assert_reviewer_lgtm(V5_GATE_FEATURE_ID, REAL_FEATURE_LIST)
+    """V5 Reviewer LGTM gate — phase-47 #1.47 graduate to evidence-bind helper."""
+    if not REAL_FEATURE_LIST.is_file():
+        _emit(
+            "V5_reviewer_lgtm_gate",
+            False,
+            f"feature_list.json not found at {REAL_FEATURE_LIST}",
+        )
+        return
+    result = assert_v5_reviewer_gate_evidence_bind(
+        V5_GATE_FEATURE_ID, REAL_FEATURE_LIST,
+    )
     _emit(
         "V5_reviewer_lgtm_gate",
-        True,
-        f"target={V5_GATE_FEATURE_ID} helper_ok={ok} reason={reason!r}",
+        bool(result["ok"]),
+        f"target={V5_GATE_FEATURE_ID} helper_ok={result['ok']} "
+        f"verdict={result['verdict']!r} kind={result['reviewer_kind']!r} "
+        f"summary_len={result['summary_len']} reason={result['reason']!r}",
     )
 
 
