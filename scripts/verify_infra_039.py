@@ -17,7 +17,10 @@ V2 dump_v4_sha_graph.py 整体 file-sha 锁 (避免无脑改 dump).
 V3 mutant 反证 — 临时把 dump 的 ``_RE_SINGLELINE`` 改成永不匹配的 regex,
    subprocess 运行 dump, 输出 locks 计数应比 baseline 显著减少, finally 还原.
 V4 行为验证 — subprocess 调 dump, grep 输出含若干已知锁
-   ("v4_sha.json", "20 targets", "verify_infra_034.py", "verify_infra_037.py").
+   ("v4_sha.json", "verify_infra_034.py", "verify_infra_037.py"), 并对 v4_sha.json
+   targets 计数做下界 + 上界 sanity 断言 (EXPECTED_TARGETS_MIN <= N <=
+   EXPECTED_TARGETS_MAX_SANITY); 防止节点意外丢失 (低于 MIN FAIL) 与离谱漂移
+   (高于 MAX FAIL, 需人工 bump MIN)。新增节点 (MIN <= N <= MAX) 不会 FAIL。
 V5 Reviewer-LGTM gate (print-only).
 
 INFRA_039_SHA_LOCKS
@@ -46,7 +49,13 @@ DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 EXPECTED_DUMP_FILE_SHA = "b1fbe28b70bf3048a5b919877c07d15f966fe8da5769a03b2dfb6ffbc4bb6682"
 
 # infra-039 自身 v4_behavior 函数 sha (V1 自锁, 占位; 末尾自计算后回填)
-EXPECTED_V4_CHECKER_FUNC_SHA = "22573b730b65f87c3c54e42612169aab93d04c0e6c3277b6cb5c8b74fde0a4c1"
+EXPECTED_V4_CHECKER_FUNC_SHA = "514c9635b5c5d5f07f3418853ca00f837e77c51adaca7993c10f9f6e05f30408"
+
+# infra-039-backlog-v4-output-anchors-lower-bound (phase-61 #5):
+# v4_sha.json targets 计数下界 + 上界 sanity。MIN = 当前实际 (20), 防止节点意外丢
+# 失; MAX_SANITY = 100, 防离谱漂移。允许 MIN <= N <= MAX 之间任意新增 (无需 bump)。
+EXPECTED_TARGETS_MIN = 20
+EXPECTED_TARGETS_MAX_SANITY = 100
 
 DOCSTRING_SENTINEL = "INFRA_039_SHA_LOCKS"
 
@@ -219,7 +228,6 @@ def v4_behavior() -> None:
     text = out.stdout
     anchors = [
         "v4_sha.json",
-        "20 targets",
         "verify_infra_034.py",
         "verify_infra_037.py",
         "=== V4 SHA-LOCK GRAPH ===",
@@ -231,6 +239,36 @@ def v4_behavior() -> None:
         not missing,
         f"missing={missing}" if missing else f"all {len(anchors)} anchors found",
     )
+    # infra-039-backlog-v4-output-anchors-lower-bound (phase-61 #5):
+    # 提取 v4_sha.json "(N targets)" 中的 N, 断言 MIN <= N <= MAX_SANITY。
+    import re as _re_targets
+    m = _re_targets.search(r"v4_sha\.json\s*\((\d+)\s+targets\)", text)
+    if not m:
+        _emit(
+            "V4_targets_count_in_bounds",
+            False,
+            f"could not find 'v4_sha.json (N targets)' pattern in output "
+            f"(len={len(text)})",
+        )
+    else:
+        actual = int(m.group(1))
+        in_bounds = EXPECTED_TARGETS_MIN <= actual <= EXPECTED_TARGETS_MAX_SANITY
+        if actual < EXPECTED_TARGETS_MIN:
+            detail = (
+                f"actual={actual} < min={EXPECTED_TARGETS_MIN} "
+                f"(节点丢失保护; 若刻意减少 target, bump EXPECTED_TARGETS_MIN)"
+            )
+        elif actual > EXPECTED_TARGETS_MAX_SANITY:
+            detail = (
+                f"actual={actual} > max={EXPECTED_TARGETS_MAX_SANITY} "
+                f"(漂移过大 sanity; 人工 bump EXPECTED_TARGETS_MAX_SANITY 并审视)"
+            )
+        else:
+            detail = (
+                f"actual={actual} in [{EXPECTED_TARGETS_MIN}, "
+                f"{EXPECTED_TARGETS_MAX_SANITY}]"
+            )
+        _emit("V4_targets_count_in_bounds", in_bounds, detail)
     # JSON 模式也应跑通
     try:
         out_j = subprocess.run(
