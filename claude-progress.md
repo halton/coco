@@ -8504,3 +8504,14 @@ phase-55 候选 5 项来自 backlog pool (V6 backlog + P-编号 Reviewer 衍生)
 - verify_runs: smoke PASS (287 typo=0) + verify_infra_080 PASS (14 checks ALL PASS, V4_4 substituted=True n_sub=1 mutant_ok=False has_True_violation=True)
 - Reviewer fresh-context: LGTM (verdict_original=LGTM_stale_already_done)
 - 下一个 candidate: phase-60 规划
+
+## Session 2026-05-24 — phase-60 规划 DONE
+
+- 选定 5 候选 (prio 200-204, status=not_started, phase=60):
+  - #1 prio=200 infra-P304-backlog-P290-v2-target-sha-resync — 当前 main HEAD pre-existing FAIL，修后多个 closeout verify 不再带 FAIL 行
+  - #2 prio=201 infra-P301-extend-allowed-missing-allowlist-scan-all — verify-trust 类，扩 allowlist 收紧 missing scan
+  - #3 prio=202 infra-110-backlog-classify-node-unknown-lock — cascade-strict，分类 unknown lock 节点
+  - #4 prio=203 infra-110-backlog-composite-key-strict-ordering — cascade-strict，复合键严格排序
+  - #5 prio=204 infra-P305-backlog-v8-self-sha-stricter-sentinel-pragma — sentinel pragma 收紧
+- 选择启发式：P304 优先（pre-existing FAIL 还本）→ verify-trust 收紧 → cascade-strict 巩固 → sentinel 加固
+- 主会话将立刻派 phase-60 #1 Engineer
