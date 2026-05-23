@@ -6264,7 +6264,7 @@
       "area": "infra",
       "phase": 58,
       "title": "infra-034 V4 docstring 覆盖第 3 波（再 +5 target）",
-      "status": "backlog",
+      "status": "in_progress",
       "source": "infra-036-reviewer",
       "scope": "infra-036 完成第 2 波 5 target 后，仍剩 12+ 历史 verify 未纳入 V4 sha 锁。下一波再挑 ≤5 高价值候选扩入 v4_sha.json + verify_infra_034 期望表。docstring + 期望表 only，0 verify 业务逻辑改。",
       "dependencies": [
@@ -6277,7 +6277,10 @@
         "V1: v4_sha.json 新增 ≤5 条期望（AST byte-equal）",
         "V2: verify_infra_034 V4 PASS",
         "V3: smoke + 新增目标 regression PASS"
-      ]
+      ],
+      "started_at": "2026-05-23",
+      "notes": "phase-58 #2: TARGETS 15→20 续推 (verify_robot_028/029 + verify_interact_026/027 + verify_infra_017) + v4_sha.json 5 新条目",
+      "acceptance": "verify_infra_034 V0-V5 全 PASS (TARGETS 15→20); 5 新目标 docstring 含 5 关键短语; evidence/infra-034/v4_sha.json 同步 5 新条目"
     },
     {
       "id": "infra-036-backlog-sha-lock-graph-dump",

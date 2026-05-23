@@ -12,8 +12,8 @@
         {
           "path": "scripts/verify_interact_021.py",
           "exists": true,
-          "size": 11149,
-          "sha256": "85ec53d00bc0"
+          "size": 16790,
+          "sha256": "c3e147b39a77"
         },
         {
           "path": "research/proactive_trace_contract.md",
@@ -24,8 +24,8 @@
         {
           "path": "coco/proactive.py",
           "exists": true,
-          "size": 76996,
-          "sha256": "b35d47f503c5"
+          "size": 78711,
+          "sha256": "929694d0fd56"
         }
       ]
     },

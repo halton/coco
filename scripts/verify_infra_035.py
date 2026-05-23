@@ -60,8 +60,9 @@ BUMP_034 = ROOT / "scripts" / "bump_infra_034_v4_sha.py"
 
 # V2/V4 整体 sha 锁 (本 infra-035 闭锚)
 # infra-V6-backlog bump (P264): V6 helper 抽到 _verify_lib 后 verify_infra_034 sha 变更
+# infra-036-batch-3 bump (phase-58 #2): TARGETS 15→20 + 注释续推, verify_infra_034 sha 再变更
 VERIFY_034_EXPECTED_SHA = (
-    "265f54b08d3099a1446d09a55e1239cef7657c3f68a2ea1c98fd1d5547232a30"
+    "0058fbead1d15b993d1882933f9abe4a94b2990906c449a60eaab8588ee20eea"
 )
 BUMP_034_EXPECTED_SHA = (
     "431881e31551aadffc9c7b4ad15ae5855d2f9ccab53931a7fc1eecc598f0c4e9"

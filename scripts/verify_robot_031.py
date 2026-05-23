@@ -152,8 +152,9 @@ finally:
 # =====================================================================
 print("[V4] sha256 锁 (working tree)")
 # 这两个常量在 robot-031 commit 落盘后稳定, 由后续 feature 维护.
+# infra-036-batch-3 bump (phase-58 #2): verify_robot_028 docstring 续推 → file sha 变更
 VERIFY_028_EXPECTED_SHA = (
-    "c116a3d6e0338456369dab92ba828cbda89341ded4cbd7d70518bcf25af5679f"
+    "c3c25fe070013617f9d5879521e938c80e7a4e52735b8f7c50a5c932993d5413"
 )
 BUMP_028_EXPECTED_SHA = (
     "25e31634925d2a2ec22202728fc8938db9a35b097ba85e07e08fe20cac5837eb"

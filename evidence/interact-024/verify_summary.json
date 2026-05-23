@@ -27,7 +27,7 @@
     {
       "name": "V4_on_three_stages_latency",
       "ok": true,
-      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.012 reject(normal/no_face)=0.012 cooldown_hit=0.007"
+      "detail": "三 stage latency_ms 全部 numeric>=0: admit=0.013 reject(normal/no_face)=0.011 cooldown_hit=0.007"
     },
     {
       "name": "V5_regression",
@@ -37,7 +37,7 @@
     {
       "name": "V6_smoke",
       "ok": true,
-      "detail": "init.sh rc=0 (stdout tail len=1680)"
+      "detail": "init.sh rc=0 (stdout tail len=1767)"
     }
   ],
   "files_changed": [
@@ -73,5 +73,5 @@
       "within_tolerance": true
     }
   },
-  "sha": "175cbc5fc6fde9300729d04b87259a9d4ea510b0"
+  "sha": "8bbca72d0231ace2199ec2c477f88072efbb5a1d"
 }

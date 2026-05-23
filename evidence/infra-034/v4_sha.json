@@ -1,12 +1,15 @@
 {
-  "comment": "infra-035/036/038: externalized V4 sha256 lock table for scripts/verify_infra_034.py. Maintained by scripts/bump_infra_034_v4_sha.py. Update via that helper when any listed verify is intentionally modified; verify_infra_035.py asserts schema + mutant FAIL.",
+  "comment": "infra-035/036/038: externalized V4 sha256 lock table for scripts/verify_infra_034.py. Maintained by scripts/bump_infra_034_v4_sha.py. Update via that helper when any listed verify is intentionally modified; verify_infra_035.py asserts schema + mutant FAIL. phase-58 #2 infra-036-batch-3: appended 5 targets (verify_robot_028/029, verify_interact_026/027, verify_infra_017).",
   "targets": {
+    "scripts/verify_infra_017.py": "4246fe98e314c0c8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b",
     "scripts/verify_infra_018.py": "7a89b35b6db711cb1b35fb78687fd5f818d8d6ac9e29d03abedabefc67d9e9ac",
     "scripts/verify_infra_033.py": "ceeb65419ff9fa3f2cf030405bbc2f5d4145482f85df77bd9cb581084136ad6a",
     "scripts/verify_interact_022.py": "d2e3e7348bb6269ad8db5e7d0e58b783bfd82a43337414a578367bf235b0eeeb",
     "scripts/verify_interact_023.py": "733e894ec064a635d35a76df46bdd87ad1db25c164a10bcca960ef638638086a",
     "scripts/verify_interact_024.py": "9e5af28633783184a3b27a71e1218948e7c32aa232d1dd5551aeff2d9cb19e37",
     "scripts/verify_interact_025.py": "28b1842cb448c7a88a1babd83a858bad409b9b885b2a6cf625d56ce3b9670d08",
+    "scripts/verify_interact_026.py": "4e889f059be739b2d3b49d239fe9be0fe257664d6943d4cbb930759e6b3fd888",
+    "scripts/verify_interact_027.py": "0829a54f197c204cfa9d1ca1fb3eba31c339a96f08aa61e76fee6d0b02377fa5",
     "scripts/verify_interact_036.py": "230b07110ab2897edb9118b1c4e466f859c1fde51a4cad16925f76ea28ec5b64",
     "scripts/verify_interact_037.py": "e07db83b106f86f65b963ba45c5a5848723e9491c15aaaa992b16edb87bb9330",
     "scripts/verify_robot_023.py": "b73417f68d3f88ca1b69b18b6a5b3822f3170b5ff0d30e46242ddf7d637765df",
@@ -14,6 +17,8 @@
     "scripts/verify_robot_025.py": "28ae86d1388d8f5584a89d65ec2f90ce190934f49a355d41cbf839195c897d10",
     "scripts/verify_robot_026.py": "c231186ec1b6983e7ec8db4e27507a52ce00a49083c8a6874f4a704e5dfa523d",
     "scripts/verify_robot_027.py": "b9aec9a6c34c2ef033ff37fca560b232a2489ae404dab20b4f818ed5925a2825",
+    "scripts/verify_robot_028.py": "c3c25fe070013617f9d5879521e938c80e7a4e52735b8f7c50a5c932993d5413",
+    "scripts/verify_robot_029.py": "5721eba3cfba4658772b9d1a74faab84ceb18762ec89f82e0440ce1022632647",
     "scripts/verify_robot_032.py": "2a4fcb7f065d53d9ed5398e9b2c2416167907be90b4f20aa784d7062b1c02069",
     "scripts/verify_robot_033.py": "72893cd29605a78ba3166d7328e9335440c87db285b9d94c3bfe37f95df09acb"
   },
