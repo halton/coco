@@ -9807,3 +9807,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Merge: feat/infra-P301-followup-v3-scope-count-tighten → main, merge_commit_sha=bc44a4ae2bbe7e2f037da3a12c13f65d96722427 (no-ff).
 - _verify_lib.py diff vs baseline: 0 行.
 - Status: in_progress → passing.
+
+## Session 2026-05-24 phase-67 #23 (infra-037-backlog-v3-mutant-atomic-rename) closeout
+
+- Feature: infra-037-backlog-v3-mutant-atomic-rename (verify_infra_037 V3 mutant 由 try/finally 直接 write 改为 tempfile.NamedTemporaryFile + os.replace 原子替换, 避免 Ctrl-C/OOM 中断留下污染)
+- 实现: scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py 新增 346 行, 10 checks (含 V3_mutant_reverse_detects_loss_of_os_replace 反向 mutation lock + V_last_reviewer_lgtm_gate). verify_infra_037 同步更新到 atomic rename 实现 (V3 系列 15 checks ALL PASS).
+- Reviewer (sub-agent fresh-context): LGTM, 10/10 (new verify) + 15/15 (verify_infra_037) + cascade 15 locks OK, P0/P1/P2 全空.
+- Post-merge verify (main HEAD=c962eab8): atomic_rename 10/10 PASS, verify_infra_037 15/15 PASS, verify_infra_062 ALL PASS (P278 schema), verify_infra_100 ALL PASS (P299 lock), verify_infra_060 ALL PASS, verify_infra_039 27/27 PASS, smoke ./init.sh PASS.
+- Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline adfb6b2 同样 FAIL, 范围无关; 登记 known_pre_existing_baseline_fails 含 baseline_sha + baseline_tail_stdout + smoke_tail_stdout).
+- Merge: feat/infra-037-backlog-v3-mutant-atomic-rename → main, merge_commit_sha=c962eab8d4d8d5638c54c966230f35eda4b75a62 (no-ff).
+- _verify_lib.py diff vs baseline: 0 行.
+- Status: in_progress → passing.

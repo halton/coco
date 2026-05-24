@@ -7940,12 +7940,91 @@
       "dependencies": [
         "infra-037"
       ],
+      "evidence": {
+        "baseline_head_echo": "adfb6b2",
+        "closeout_verify": {
+          "known_pre_existing_baseline_fails": [
+            {
+              "baseline_sha": "adfb6b2",
+              "baseline_tail_stdout": "[verify_infra_110] FAIL V2_dump_file_sha: got=bf558d1eafe94994 expect=5fbd46d4e1db3bda [verify_infra_110] FAIL V4d_unknown_tgt_raw_no_expected_substring: violations=[\"unknown_verify_infra_034_backlog_typo_guard_expected_target_shas_fix_CONSTHASHdf058599 (src_candidate='verify_infra_034_backlog_typo_guard_expected_target_shas_fix_CONSTHASHdf058599' contains 'expected' case-insensitively; anchor-independent check)\"] [verify_infra_110][SUMMARY] FAIL 2/19: ['V2_dump_file_sha', 'V4d_unknown_tgt_raw_no_expected_substring']",
+              "check": "V4d_unknown_tgt_raw_no_expected_substring",
+              "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging) ok: summary keys 完整 ==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描) ok: total=369 well_formed=369 typo_count=0 ==> Smoke 通过。",
+              "verify": "verify_infra_110.py"
+            }
+          ],
+          "main_head_sha": "c962eab8d4d8d5638c54c966230f35eda4b75a62"
+        },
+        "merge_commit_sha": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+        "reviewer": {
+          "checks_run": [
+            "v3_mutant_atomic_rename_implementation",
+            "verify_037_backlog_atomic_rename_all_pass",
+            "verify_infra_037_all_pass",
+            "cascade_15_locks_verified",
+            "p0_p1_p2_findings_empty"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          },
+          "reviewer_kind": "sub_agent_fresh_context",
+          "summary": "Fresh-context Reviewer 审 infra-037-backlog-v3-mutant-atomic-rename: V3 mutant 已切到 tempfile + os.replace 原子替换；新 verify (10 checks ALL PASS) + verify_infra_037 (15 checks ALL PASS) + 全套 cascade 15 locks OK。P0/P1/P2 findings 全空。LGTM。",
+          "verdict": "LGTM"
+        },
+        "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging) ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe ==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp ==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描) ok: total=369 well_formed=369 typo_count=0 ==> Smoke 通过。",
+        "verifier": "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py",
+        "verify_runs": [
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_037_backlog_v3_mutant_atomic_rename",
+            "script": "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_037_backlog_v3_mutant_atomic_rename][PASS] V3_mutant_reverse_detects_loss_of_os_replace after mutation os_replace=False (expect False) [verify_infra_037_backlog_v3_mutant_atomic_rename][PASS] V_last_reviewer_lgtm_gate target=__PHASE_67_PLACEHOLDER_INFRA_037_V3_MUTANT_ATOMIC_RENAME__ helper_ok=True grace_skipped=True [verify_infra_037_backlog_v3_mutant_atomic_rename][SUMMARY] ALL PASS (10 checks)"
+          },
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_037",
+            "script": "scripts/verify_infra_037.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True [verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64 [verify_infra_037][SUMMARY] ALL PASS (15 checks)"
+          },
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_062",
+            "script": "scripts/verify_infra_062.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[] [verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True [verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_100",
+            "script": "scripts/verify_infra_100.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected [verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' [verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_060",
+            "script": "scripts/verify_infra_060.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph'] [verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True [verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+          },
+          {
+            "freshness_anchor": "c962eab8d4d8d5638c54c966230f35eda4b75a62",
+            "name": "verify_infra_039",
+            "script": "scripts/verify_infra_039.py",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 [verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True [verify_infra_039][SUMMARY] ALL PASS (27 checks)"
+          }
+        ]
+      },
       "id": "infra-037-backlog-v3-mutant-atomic-rename",
       "phase": 67,
       "priority": 233,
       "scope": "verify_infra_037 V3 mutant 当前直接 write + try/finally 还原；改为 tempfile.NamedTemporaryFile + os.replace 原子替换，避免 try 过程中断（如 Ctrl-C / OOM）留下污染。",
       "source": "infra-037 closeout Reviewer 建议",
-      "status": "in_progress",
+      "status": "passing",
       "title": "V3 mutant 用 tempfile + rename 原子替换",
       "verification": [
         "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py"
