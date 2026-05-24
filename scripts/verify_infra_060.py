@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
+EXPECTED_DUMP_FILE_SHA = "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -124,7 +124,11 @@ EXPECTED_NEW_LOCKS: tuple = (
 #     verify_robot_034           EXPECTED_DOC_SHA            (docs/.md)
 #     verify_infra_100           EXPECTED_CLAUDE_MD_FILE_SHA (CLAUDE.md)
 #   全部均为非 .py target, 与原 EXPECTED_DOC_SHA 设计意图一致, 不试图归入 lib/dump。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 7
+# - phase-67 #13 (infra-040-backlog-tmpl-edge) 后: 7 → 8
+#   verify_infra_040 新增 EXPECTED_VERIFY_TMPL_SHA (verify_infra_040 自身.py 文件 sha
+#   作为模板存在性 edge lock); dump_v4 stem-resolve 视为 unknown const, 性质同 PR
+#   template/.md docs unknown (target 即本 verify 自身, 不归 lib/dump)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 8
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({

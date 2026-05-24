@@ -103,7 +103,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-039-backlog-mermaid-unknown-target-id-collision sha lock 常量
 EXPECTED_DUMP_FILE_SHA = (
-    "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
+    "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955285578f50"

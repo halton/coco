@@ -38,7 +38,7 @@ SCRIPTS = REPO / "scripts"
 DUMP_PY = SCRIPTS / "dump_v4_sha_graph.py"
 
 # infra-044 sha lock 常量 (V2)
-EXPECTED_DUMP_FILE_SHA = "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
+EXPECTED_DUMP_FILE_SHA = "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
 EXPECTED_INFER_TARGET_FUNC_SHA = "da57374393266d012d9f15293036cf25f66054a6519da5dcec3b336d94b11daf"
 
 # 本脚本 v4_behavior 自锁 (V1)
