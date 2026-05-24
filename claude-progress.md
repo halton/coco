@@ -9151,3 +9151,18 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - P1: 无 (mutation 反证三种 contains 形态都验过)
   - P2: bump_reverse_sha_lock.py 对 bump_strict_unknown_sha.py target 返回 NOOP reason=no_holders (该 helper 无 file_sha 反向 holder, V1 只在 P312 文件内, 已手工 bump)
 - **下一**: Reviewer fresh-context 评审
+
+## Session 2026-05-24 phase-66 #6 — infra-V19-strict-unknown-bump-regex-anchor (Closeout)
+
+- **Status**: passing
+- **Merge**: ddbb5dae9962d2c3dfe92b6125da93c9a673da9d (no-ff feat/infra-V19-strict-unknown-regex-anchor, FEAT_HEAD d3e2b80, base 1d96e48)
+- **Scope**: bump_strict_unknown_sha.py 的 `_RE_SHA_TUPLE` 加 `^` 行首锚点; `_RE_COUNT` 加 `^...\s*$` + `re.MULTILINE` flag; 把模块级主行与 contains-noise 显式分离。verify_infra_P312 V1 file_sha 同步 bump bceb8927 → af11874d。
+- **Reviewer**: LGTM (sub_agent_fresh_context, 9 checks_run, P0=0 P1=0 P2=2)
+- **Reviewer P2 (非阻)**:
+  1. vP317 Engineer brief 漏列 (实际 V19 范围外, errata only)
+  2. V6 strict-area 加 V0 锁机械化检 `_RE_*` 必含 `re.MULTILINE` flag → backlog 化 infra-V26
+- **Verify runs (13, P299 合规)**: smoke + v062 双轮 (round1 anchor=d3e2b80 30/30, round2 anchor=ddbb5da 30/30) + vP312 (8/8) + vV6_strict_area (6/6) + v033 + v046 (21/21) + v100 (14/14) + vP306 (10/10) + vP314_lib_sha_cascade (8/8) + vP317_syspath_restore (7/7) + v110 (19/19) + **vP301_full FAIL (pre-existing baseline 1d96e48 同 FAIL violators=[verify_infra_P289_per_file_locks_auto_derive.py]; baseline_tail 已落 evidence)**
+- **v062 双轮 (P299)**: round1 anchor=d3e2b80 PASS 30/30 rc=0; round2 anchor=ddbb5dae9962 PASS 30/30 rc=0
+- **Backlog 入账 (priority=999 phase=null, 1 条)**:
+  - infra-V26-strict-unknown-regex-multiline-meta-lock (P2-b: verify_infra_V6_strict_area 加 V0 元锁断言 _RE_* re.compile 含 re.MULTILINE flag)
+- **下一 candidate**: phase-66 #7 — 主会话决定 (建议 infra-V23-reverse-helper-stdout-format-lock 或 infra-V24-cascade-result-sentinel-docs)

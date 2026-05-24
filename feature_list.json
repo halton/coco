@@ -20094,13 +20094,66 @@
       "title": "bump_strict_unknown_sha helper regex 锚点严格化 (行首/行尾)",
       "area": "infra",
       "priority": 670,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 66,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
       "source": "phase-66 #3 Reviewer P2-a",
       "scope": "bump_strict_unknown_sha.py 的 regex 当前不带 ^/$ 或 \\b, 仅靠 subn n_cnt==1 fail-safe; 加锚点 (line-start / line-end 或 word boundary) 让命中点更明确, 提高未来在 noise 行存在时的可读性与防御。",
-      "verification": []
+      "verification": [
+        "./init.sh",
+        "python scripts/verify_infra_062.py --freshness-anchor <pre-merge>",
+        "python scripts/verify_infra_062.py --freshness-anchor <merge-sha>",
+        "python scripts/verify_infra_P312.py",
+        "python scripts/verify_infra_V6_strict_area.py"
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "ddbb5da",
+          "baseline_head_echo": "1d96e48",
+          "merge_commit_sha": "ddbb5dae9962d2c3dfe92b6125da93c9a673da9d",
+          "verify_runs": [
+            {"name": "smoke_init_sh", "status": "PASS", "tail_stdout": "ok: total=318 well_formed=318 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_062_round1", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "d3e2b80"},
+            {"name": "verify_infra_062_round2", "status": "PASS", "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_P312", "status": "PASS", "tail_stdout": "[verify_infra_P312][PASS] V8_cascade_warn_noop_semantics file_sha=True main_sha=True actual_main=135feb8153abe681 rc=0 noop_msg=True result_noop=True no_old_ambiguous=True\n[verify_infra_P312][SUMMARY] ALL PASS (8 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_V6_strict_area", "status": "PASS", "tail_stdout": "[verify_infra_V6_strict_area][PASS] V6_helper_func_sha_lock parse_area_from_verify_path=PASS; scan_unknown_area_nnns=PASS; scan_reverse_sha_lock_consistency_strict=PASS\n[verify_infra_V6_strict_area][SUMMARY] ALL PASS (6 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_033_lock_doc_rollout", "status": "PASS", "tail_stdout": "wrote /Users/halton/work/coco/evidence/infra-033/verify_summary.json", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_046", "status": "PASS", "tail_stdout": "[verify_infra_046][SUMMARY] ALL PASS (21 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_100", "status": "PASS", "tail_stdout": "[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_P306", "status": "PASS", "tail_stdout": "[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_P314_lib_sha_cascade", "status": "PASS", "tail_stdout": "[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_P317_syspath_restore", "status": "PASS", "tail_stdout": "[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=cf7e23cb3273c42a expect=cf7e23cb3273c42a\n[verify_infra_P317] OVERALL PASS: 7/7 checks", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_110", "status": "PASS", "tail_stdout": "[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)", "freshness_anchor": "ddbb5da"},
+            {"name": "verify_infra_P301_full", "status": "FAIL", "tail_stdout": "[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P301_full] summary: total=10 failed=1", "freshness_anchor": "ddbb5da", "pre_existing_baseline_sha": "1d96e48", "baseline_tail_stdout": "[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P301_full] summary: total=10 failed=1", "smoke_tail_stdout": "ok: total=318 well_formed=318 typo_count=0\n==> Smoke 通过。"}
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "V19 regex 加 ^/$ 锚点 + re.MULTILINE flag dogfood 干净: 三组 contains-noise mutation (trailing comment / pound prefix / indented) 旧 regex n=2 触发 fail-safe rc=4, 新 regex 都 n=1 rc=0 正确分流; 主行删除场景 n=0 rc=4 fail-safe 仍兜底; v062 双轮 30/30 + vP312 V1 file_sha 同步 bump af11874d. P0=[] P1=[] P2=2 (非阻).",
+            "checks_run": [
+              "regex_anchor_correctness_main_line",
+              "regex_anchor_rejects_contains_noise_three_mutants",
+              "fail_safe_fallback_when_main_removed",
+              "vP312_V1_helper_file_sha_resync",
+              "v062_round1_pre_merge_pass",
+              "v062_round2_post_merge_pass",
+              "vV6_strict_area_consistency",
+              "smoke_after_merge",
+              "no_old_ambiguous_regex_residue"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "vP317 Engineer brief 漏列 (非阻, 实际 V19 范围外)",
+                "V6 strict-area 加 V0 锁机械化检 _RE_* 必含 re.MULTILINE flag (backlog 化 → infra-V26)"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": ["verify_infra_P289_per_file_locks_auto_derive.py"]
+        }
+      }
     },
     {
       "id": "infra-V20-strict-unknown-bump-cascade",
@@ -20461,6 +20514,19 @@
       "updated_at": "2026-05-24",
       "source": "phase-66 #5 Reviewer P2",
       "scope": "phase-66 #5 verify_infra_P312 V7/V8 锁了 NOOP all_uptodate 当前快照; 未来 V6 表新增 holder 时 cascade 会走 APPLIED holders=N 路径, V7/V8 需重生 (否则会 spurious FAIL)。需在 bump_reverse_sha_lock.py 与 verify_infra_P312 中加注释提示该 future-proofing 行为, AGENTS.md cascade 章节注明 cascade feature 完成后 NOOP→APPLIED 切换时需 bump V7/V8 expect 串。",
+      "verification": []
+    },
+    {
+      "id": "infra-V26-strict-unknown-regex-multiline-meta-lock",
+      "title": "verify_infra_V6_strict_area 加 V0 锁机械化检 bump_strict_unknown_sha _RE_* 必含 re.MULTILINE flag",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #6 Reviewer P2-b",
+      "scope": "phase-66 #6 infra-V19 给 bump_strict_unknown_sha.py 的 _RE_SHA_TUPLE / _RE_COUNT 加了 ^/$ 锚点 + re.MULTILINE, 但锚点+flag 配对是一次性人写, 未来若有人 refactor regex 误删 re.MULTILINE 会让 ^/$ 退化为单串首尾 (n=0), 全靠 fail-safe rc=4 兜底但语义会反转。需在 verify_infra_V6_strict_area.py 加一道 V0 元锁: AST 扫 bump_strict_unknown_sha.py 中所有 _RE_* 模块级常量, 断言其 re.compile 调用第二个参数包含 re.MULTILINE flag (或 inline (?m))。",
       "verification": []
     }
   ],
