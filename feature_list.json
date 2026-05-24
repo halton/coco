@@ -18490,12 +18490,13 @@
       "area": "infra",
       "created_at": "2026-05-24",
       "id": "infra-110-backlog-composite-key-const-case-extension",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "scope": "当前 anchor regex 仅匹配大写 EXPECTED_*；若未来引入小写 const，需扩展 case 分支或统一命名约定。",
       "source": "phase-60 #4 infra-110 Reviewer non-blocking finding concern_3",
-      "status": "backlog",
-      "title": "composite key anchor regex 支持小写 const"
+      "status": "in_progress",
+      "title": "composite key anchor regex 支持小写 const",
+      "notes": "phase-67 #9 Engineer: V12 case_uniform_lock 显式扫 scripts/verify_*.py + _verify_lib.py 顶层 EXPECTED_*_(FILE|FUNC)_SHA case-insensitive, 强制全大写约定; +V12b vacuous_guard. 新增 verify_infra_110_const_case.py (V0+V1 self_sha + V2 lib_sha + V12 + V12b). V12 当前扫到 270 strict_upper 命中 0 violations."
     },
     {
       "area": "infra",
