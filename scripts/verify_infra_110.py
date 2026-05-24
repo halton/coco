@@ -103,13 +103,13 @@ from _verify_lib import (  # noqa: E402
 
 # infra-039-backlog-mermaid-unknown-target-id-collision sha lock 常量
 EXPECTED_DUMP_FILE_SHA = (
-    "cf7e23cb3273c42a0e56ed352c9f5d7755bd2ca3a213cfce505ed3836423b89f"
+    "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955285578f50"
 )
 EXPECTED_RENDER_MERMAID_FUNC_SHA = (
-    "7c7a3ff794c99af00d24b42346f4e73ce879ab0a9cde462b3966d778be236685"
+    "30c39582ca99e4f513c85a6261996dedc10e152210d45b7e16cd4d09aa7e17d6"
 )
 # infra-110-backlog-classify-node-unknown-lock: _classify_node func sha 锁
 # (verify_infra_060.EXPECTED_CLASSIFY_FUNC_SHA 是主锁; 本处独立持有第二份避免
@@ -118,7 +118,7 @@ EXPECTED_CLASSIFY_NODE_FUNC_SHA = (
     "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
-EXPECTED_SELF_MAIN_FUNC_SHA = "4cc7d516805927ea2501f438f80c781b6e19c93e0133fa2e2d19c6dc409e0f48"
+EXPECTED_SELF_MAIN_FUNC_SHA = "36665d438b1aaa10cfb463899d0d7ecd5d73e90aff0d3132b79a6d1207695ebf"
 
 DOCSTRING_SENTINEL = "INFRA_110_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
@@ -415,8 +415,16 @@ def main() -> None:
     # 严格 ordering 锁: 不允许 unknown_{const}_{src} (B 颠倒) 或 unknown_xxx_{src}_{const} (C 中插)
     # 等任何顺序变体。正则要求 src 段必须由小写字母/数字/下划线组成且整体以 EXPECTED_ 开头。
     # phase-60 #4 infra-110-backlog-composite-key-strict-ordering
+    #
+    # infra-110-backlog-mermaid-node-id-readability (phase-67 #8):
+    # 当复合 key 超过 dump_v4_sha_graph._UNKNOWN_NODE_ID_LEN_THRESHOLD (50) 时,
+    # const 段被截短为 ``CONSTHASH<hex8>`` 形态. anchor 正则扩展为
+    # ``EXPECTED_<UPPER>$`` 或 ``CONSTHASH<hex8>$`` 二选一; (src, const) 一一对应
+    # 由 sha256(src_stem+const)[:8] 隐式保证 (不同 const → 不同 hash, 不同 src →
+    # 不同 hash, 因 src_stem 参与 hashing input). V4_no_unknown_id_collision 仍能
+    # catch 任何退化.
     composite_key_pattern = re.compile(
-        r"^unknown_(?P<src>[a-zA-Z0-9_]+?)_(?P<const>EXPECTED_[A-Z0-9_]+)$"
+        r"^unknown_(?P<src>[a-zA-Z0-9_]+?)_(?P<const>EXPECTED_[A-Z0-9_]+|CONSTHASH[0-9a-f]{8})$"
     )
     malformed: List[str] = []
     for src, const, tgt in unknown_edges:
@@ -432,6 +440,17 @@ def main() -> None:
             malformed.append(
                 f"{tgt} (src segment={got_src!r} expect={src_sanitized!r})"
             )
+        elif got_const.startswith("CONSTHASH"):
+            # infra-110-backlog-mermaid-node-id-readability (phase-67 #8):
+            # hash 形态: 重算 sha256(src+const)[:8] 校验一致, 防止任意 hex8 被插入
+            expect_digest = hashlib.sha256(
+                f"{src_sanitized}::{const.strip()}".encode("utf-8")
+            ).hexdigest()[:8]
+            expect_hash_const = f"CONSTHASH{expect_digest}"
+            if got_const != expect_hash_const:
+                malformed.append(
+                    f"{tgt} (const hash segment={got_const!r} expect={expect_hash_const!r})"
+                )
         elif got_const != const_sanitized:
             malformed.append(
                 f"{tgt} (const segment={got_const!r} expect={const_sanitized!r})"

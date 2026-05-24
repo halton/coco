@@ -59,13 +59,13 @@ from _verify_lib import (  # noqa: E402
 
 # infra-039-backlog-mermaid-tuple-fanout sha lock 常量 (V2 + V3)
 EXPECTED_DUMP_FILE_SHA = (
-    "cf7e23cb3273c42a0e56ed352c9f5d7755bd2ca3a213cfce505ed3836423b89f"
+    "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955285578f50"
 )
 EXPECTED_RENDER_MERMAID_FUNC_SHA = (
-    "7c7a3ff794c99af00d24b42346f4e73ce879ab0a9cde462b3966d778be236685"
+    "30c39582ca99e4f513c85a6261996dedc10e152210d45b7e16cd4d09aa7e17d6"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
 EXPECTED_SELF_MAIN_FUNC_SHA = (
