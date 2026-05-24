@@ -20902,7 +20902,7 @@
       "title": "让 scripts/verify_infra_033.py 在 tail 打印 [verify_infra_033] self-name anchor",
       "area": "infra",
       "priority": 248,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 66,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
@@ -20911,6 +20911,231 @@
       "verification": [
         "python scripts/verify_infra_033.py 真实输出 tail 含 '[verify_infra_033]'",
         "python scripts/verify_infra_062.py 通过 byte_match"
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "cfa8da7",
+          "merge_commit_sha": "cfa8da7",
+          "base_main_sha": "516be0d",
+          "feat_head_sha": "a98e0ab",
+          "baseline_head_echo": "516be0d",
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "./init.sh smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_062.py round1",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 3/30 emit-paths: ['V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_verify_runs_freshness']",
+              "freshness_anchor": "a98e0ab",
+              "pre_existing_baseline_sha": "516be0d",
+              "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 3/30 emit-paths: ['V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_verify_runs_freshness']",
+              "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "known_pre_existing_baseline_fail": true,
+              "baseline_violators": [
+                "V4_closeout_reviewer_block_shape",
+                "V4_closeout_baseline_head_echo_format",
+                "V4_closeout_verify_runs_freshness"
+              ],
+              "baseline_root_cause": "infra-V27 closeout evidence schema gap: reviewer.checks_run=5 (int 非 list), baseline_head_echo=None, verify_runs[1].freshness_anchor='e78ad40' 非 main_head_sha='55cf04a' 前缀; V29 未触, 待 infra-V31 修"
+            },
+            {
+              "name": "verify_infra_062.py round2",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_062][SUMMARY] FAIL 3/30 emit-paths: ['V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_verify_runs_freshness']",
+              "freshness_anchor": "cfa8da7",
+              "pre_existing_baseline_sha": "516be0d",
+              "baseline_tail_stdout": "[verify_infra_062][SUMMARY] FAIL 3/30 emit-paths: ['V4_closeout_reviewer_block_shape', 'V4_closeout_baseline_head_echo_format', 'V4_closeout_verify_runs_freshness']",
+              "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "known_pre_existing_baseline_fail": true,
+              "baseline_violators": [
+                "V4_closeout_reviewer_block_shape",
+                "V4_closeout_baseline_head_echo_format",
+                "V4_closeout_verify_runs_freshness"
+              ]
+            },
+            {
+              "name": "verify_infra_033.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_033][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_033_lock_doc_rollout.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_033] PASS V9_docstring_v_list_matches_impl: impl_ns=[1, 2, 3, 4, 5, 6, 7, 8, 9] doc_ns=[1, 2, 3, 4, 5, 6, 7, 8, 9] missing_in_doc=[] extra_in_doc=[]",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_V23_reverse_helper_stdout.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_V23][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_P312.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P312][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_V6_strict_area.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_V6_strict_area][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_046.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_046][SUMMARY] ALL PASS (21 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_100.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_P306.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P306] OVERALL PASS: 10/10 checks",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_P317_syspath_restore.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_infra_P317] OVERALL PASS: 7/7 checks",
+              "freshness_anchor": "cfa8da7"
+            },
+            {
+              "name": "verify_infra_P301_full.py",
+              "status": "FAIL",
+              "rc": 2,
+              "tail_stdout": "[verify_infra_P301_full] summary: total=10 failed=1",
+              "freshness_anchor": "cfa8da7",
+              "pre_existing_baseline_sha": "516be0d",
+              "baseline_tail_stdout": "[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']",
+              "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "known_pre_existing_baseline_fail": true,
+              "baseline_violators": [
+                "verify_infra_P289_per_file_locks_auto_derive.py"
+              ]
+            },
+            {
+              "name": "verify_infra_034.py",
+              "status": "FAIL",
+              "rc": 1,
+              "tail_stdout": "[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+              "freshness_anchor": "cfa8da7",
+              "pre_existing_baseline_sha": "516be0d",
+              "baseline_tail_stdout": "[verify_infra_034] failed tags: ['V5_self_subprocess', 'V6_orphan_reverse_locks']",
+              "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "known_pre_existing_baseline_fail": true,
+              "baseline_violators": [
+                "V5_self_subprocess",
+                "V6_orphan_reverse_locks"
+              ]
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "checks_run": [
+              "diff_minimal_self_name_anchor_only",
+              "verify_infra_033_tail_contains_self_name",
+              "v4_sha_json_cascade_bump_byte_match",
+              "baseline_516be0d_v062_3_violators_reproduce",
+              "baseline_516be0d_v034_V5_V6_reproduce",
+              "mutation_remove_anchor_tail_no_self_name",
+              "v062_violators_attribute_to_V27_not_V29",
+              "v034_violators_pre_existing_unrelated_V29",
+              "lock_doc_rollout_pass",
+              "no_prefix_injection_in_evidence",
+              "P278_schema_6_signals_present"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": 1,
+              "P2": 1
+            },
+            "summary": "V29 给 verify_infra_033.py 加 [verify_infra_033] self-name anchor 实施正确, cascade v4_sha.json bump 到 29d6fde51099cc91 与实际文件 SHA byte-match. 独立 baseline 复现确认: v062 双轮 3 violators + v034 V5/V6 均为 main=516be0d pre-existing FAIL (phase-66 #8 closeout infra-V27 自身留下), 与 Engineer 声称完全一致, V29 未引入新 violation. Mutation 反证: 去掉 anchor 前缀后 tail 确实不再含 [verify_infra_033], 锚点生效."
+          },
+          "known_pre_existing_baseline_fails": [
+            "verify_infra_062.py:V4_closeout_reviewer_block_shape",
+            "verify_infra_062.py:V4_closeout_baseline_head_echo_format",
+            "verify_infra_062.py:V4_closeout_verify_runs_freshness",
+            "verify_infra_034.py:V5_self_subprocess",
+            "verify_infra_034.py:V6_orphan_reverse_locks",
+            "verify_infra_P289_per_file_locks_auto_derive.py"
+          ]
+        },
+        "real_machine_uat": "n/a (sim-first infra)",
+        "v062_round1_anchor": "a98e0ab",
+        "v062_round1_result": "FAIL 3/30 pre_existing_baseline=516be0d",
+        "v062_round2_anchor": "cfa8da7",
+        "v062_round2_result": "FAIL 3/30 pre_existing_baseline=516be0d",
+        "prefix_injection_status": "本 closeout evidence 未注入 prefix; verify_infra_033 tail 真实来自 V29 实现 (新加的 self-name anchor print)"
+      }
+    },
+    {
+      "id": "infra-V31-fix-V27-closeout-evidence-schema-gap",
+      "title": "修 V27 closeout evidence 三个 v062 violator (reviewer.checks_run str→list, baseline_head_echo None→真值, verify_runs[1].freshness_anchor → V27 merge_sha 前缀)",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #9 Closeout Reviewer P1 (V29) — V27 evidence 留下的 v062 baseline FAIL 3 项 (优先级最高)",
+      "scope": "phase-66 #8 (infra-V27 closeout) 在 main=516be0d 留下 v062 baseline FAIL 3 项, 后续每个 closeout 都被迫登记 pre_existing_baseline_sha=516be0d + 3 violators 污点。三个具体 violator (来自 v062 实跑 tail): (1) V4_closeout_reviewer_block_shape: feature_list.json infra-V27 evidence.closeout_verify.reviewer.checks_run=5 (int 非 list, v062 要求 list); (2) V4_closeout_baseline_head_echo_format: infra-V27 evidence 缺 baseline_head_echo (=None), v062 要求 >=7 hex 字符串, 应填 'acaa3b7' (V27 base_main_sha); (3) V4_closeout_verify_runs_freshness: verify_runs[1].freshness_anchor='e78ad40' (中间 feat sha) 不是 main_head_sha='55cf04a' 前缀, 应改为 '55cf04a'。修法 (路径 A 修 evidence): 不动 _verify_lib.py / v062 helper, 仅改 feature_list.json infra-V27 evidence 三处字段。修完跑 v062 应 PASS 30/30 (单轮 + 双轮)。",
+      "verification": [
+        "feature_list.json infra-V27 reviewer.checks_run 改为 list (len>=1)",
+        "feature_list.json infra-V27 baseline_head_echo='acaa3b7'",
+        "feature_list.json infra-V27 verify_runs[1].freshness_anchor='55cf04a' (V27 main_head_sha 前缀)",
+        "python scripts/verify_infra_062.py PASS 30/30",
+        "python scripts/verify_infra_062.py 双轮 anchor PASS 30/30"
+      ]
+    },
+    {
+      "id": "infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks",
+      "title": "修 v034 baseline FAIL 2 项 (V5_self_subprocess + V6_orphan_reverse_locks)",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #9 Closeout Reviewer P1 (V29) — main=516be0d pre-existing FAIL, V29 加 anchor 后衍生?",
+      "scope": "phase-66 #9 closeout 在 base 516be0d 与 main cfa8da7 上跑 v034 均报 FAIL 2 项: (a) V5_self_subprocess rc=1 stdout_lines=71; (b) V6_orphan_reverse_locks count=6, 含 scripts/verify_infra_074.py EXPECTED_VERIFY_059_FILE_SHA stale + 081/082/083 EXPECTED_VERIFY_062_FILE_SHA stale + 083 EXPECTED_VERIFY_062_CLASSIFIER_FUNC_SHA stale. Reviewer 标 pre-existing 但需进一步调查 root cause: 这两项 baseline FAIL 是 V29 cascade v4_sha.json bump 后衍生 (V6 反向锁与 v4_sha.json 反向同步漂移), 还是 phase-66 早期某 V27/前置 closeout 引入的更早漂移。修法: 先复现 + 二分定位 commit, 再决定路径 A (用 bump_reverse_sha_lock.py 把 6 个反向锁同步到当前 live sha) 或路径 B (修 V5 self_subprocess root cause)。",
+      "verification": [
+        "git bisect 定位 V5/V6 FAIL 首次出现的 commit",
+        "scripts/bump_reverse_sha_lock.py 同步 6 个 orphan reverse locks (路径 A)",
+        "python scripts/verify_infra_034.py PASS total=68 failed=0",
+        "python scripts/verify_infra_062.py 不退化"
       ]
     },
     {

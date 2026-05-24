@@ -9292,3 +9292,30 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - vV6_strict_area: rc=0 (6/6)
 - **不 merge** (P261): feat 分支 push 留给 Closeout
 - **下一**: Reviewer fresh-context 评审 infra-V29 (重点: self-name anchor 治本性 + v4_sha cascade 正确性 + v062 baseline 与 main 同)
+
+## Session 2026-05-24 phase-66 #9 closeout infra-V29-verify-infra-033-print-self-name-anchor
+
+- **MERGE_COMMIT_SHA**: cfa8da7 (main=cfa8da7, base=516be0d, feat=a98e0ab)
+- **smoke**: PASS
+- **verify_runs (15)**:
+  - smoke PASS
+  - v062 round1 (anchor=a98e0ab) FAIL pre_existing_baseline=516be0d (V27 evidence 3 violators)
+  - v062 round2 (anchor=cfa8da7) FAIL pre_existing_baseline=516be0d (V27 evidence 3 violators)
+  - verify_infra_033 PASS (tail 真实含 `[verify_infra_033][SUMMARY] ALL PASS (6 checks)`)
+  - verify_infra_033_lock_doc_rollout PASS
+  - verify_infra_V23 PASS 6/6
+  - verify_infra_P312 PASS 8/8
+  - verify_infra_V6_strict_area PASS 6/6
+  - verify_infra_046 PASS 21/21
+  - verify_infra_100 PASS 14/14
+  - verify_infra_P306 PASS 10/10
+  - verify_infra_P314 PASS 8/8
+  - verify_infra_P317 PASS 7/7
+  - verify_infra_P301_full FAIL pre_existing_baseline=516be0d (verify_infra_P289_per_file_locks_auto_derive.py)
+  - verify_infra_034 FAIL pre_existing_baseline=516be0d (V5_self_subprocess + V6_orphan_reverse_locks)
+- **reviewer**: sub_agent_fresh_context LGTM (checks_run=11 list, P0=[] P1=1 P2=1)
+- **status**: infra-V29 → passing (P278 schema 完整 + 6 信号 + known_pre_existing_baseline_fails 6 项登记)
+- **backlog 入账**:
+  - infra-V31-fix-V27-closeout-evidence-schema-gap (P0 优先级 — 修完 v062 baseline 恢复 PASS, 解除后续 closeout 污点链)
+  - infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks
+- **下一 candidate**: infra-V31 (强烈优先, 让 v062 baseline PASS)
