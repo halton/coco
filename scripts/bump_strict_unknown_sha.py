@@ -23,12 +23,21 @@ canonical sha256 + 集合 size。每次新增 ``verify_<area>_<NNN>.py`` (NNN �
   - ``EXPECTED_STRICT_UNKNOWN_COUNT = <N>`` 数字行
 - ``--verify`` bump 完跑 ``scripts/verify_infra_V6_strict_area.py`` 自检 V3 PASS。
 
+--cascade 选项 (phase-66 #4, infra-V20-strict-unknown-bump-cascade)
+------------------------------------------------------------------
+``--cascade`` 隐含 ``--apply``: bump V6 EXPECTED_STRICT_UNKNOWN_SHA256 / COUNT
+落盘后, 自动 subprocess 调
+``python scripts/bump_reverse_sha_lock.py --target scripts/verify_infra_V6_strict_area.py --apply``
+让 V6 自身 sha 漂移触发的反向锁 holders (V1 self_file_sha) 同步更新。子命令
+失败 (rc!=0) 则父进程返回 rc!=0 并透传 stderr。
+
 退出码
 ------
-0  无需更新 / 成功 dry-run / 成功 apply / 成功 verify
+0  无需更新 / 成功 dry-run / 成功 apply / 成功 verify / 成功 cascade
 2  verify_infra_V6_strict_area.py 不存在
 4  字面替换失败 (regex 未命中)
 5  --verify 模式下 verify_infra_V6_strict_area.py 非 0 退出
+6  --cascade 模式下 bump_reverse_sha_lock.py 子命令非 0 退出
 """
 from __future__ import annotations
 
@@ -135,16 +144,48 @@ def run_verify() -> int:
     return proc.returncode
 
 
+def run_cascade() -> tuple[int, str, str]:
+    """串接调用 bump_reverse_sha_lock.py --target V6_FILE --apply.
+
+    返回 (rc, stdout, stderr)。--cascade 隐含 --apply 之后调本函数, 让 V6 自身
+    sha 漂移触发的反向锁 holders 同步更新。
+    """
+    cascade_helper = SCRIPTS / "bump_reverse_sha_lock.py"
+    proc = subprocess.run(
+        [sys.executable, str(cascade_helper), "--target", str(V6_FILE), "--apply"],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else "")
     ap.add_argument("--apply", action="store_true", help="实际写盘 (默认 dry-run)")
     ap.add_argument("--verify", action="store_true", help="bump 后跑 verify_infra_V6_strict_area.py")
+    ap.add_argument(
+        "--cascade",
+        action="store_true",
+        help="隐含 --apply: bump 完后 subprocess 调 bump_reverse_sha_lock.py --target V6 --apply",
+    )
     args = ap.parse_args(argv)
-    rc, report = run_bump(dry_run=not args.apply)
+    apply_mode = args.apply or args.cascade
+    rc, report = run_bump(dry_run=not apply_mode)
     for line in report:
         print(line, flush=True)
     if rc != 0:
         return rc
+    if args.cascade:
+        c_rc, c_out, c_err = run_cascade()
+        print(c_out, end="", flush=True)
+        if c_err:
+            print(c_err, end="", file=sys.stderr, flush=True)
+        if c_rc != 0:
+            print(f"FAIL: bump_reverse_sha_lock.py cascade rc={c_rc}", flush=True)
+            return 6
+        print("OK: cascade bump_reverse_sha_lock.py PASS", flush=True)
     if args.verify:
         vrc = run_verify()
         if vrc != 0:
