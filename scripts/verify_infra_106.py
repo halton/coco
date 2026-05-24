@@ -29,6 +29,14 @@ INFRA_106_SHA_LOCKS
 退出码 0=ALL PASS / 2=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_VERIFY_INFRA_061_FILE_SHA
+- target_function: N/A
+- target_file: scripts/verify_infra_061.py
+- lock_kind: file_sha
+- bump_when: scripts/verify_infra_061.py 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/verify_infra_061.py 并更新常量
+- rationale: 锁 verify_infra_061 整体, 任何改动均触发 cascade bump, 防 SUMMARY emit-paths/unique tags 用语漂移
 """
 from __future__ import annotations
 
@@ -53,7 +61,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-P293 sha lock 常量 (V3)
 EXPECTED_VERIFY_INFRA_061_FILE_SHA = (
-    "82c8f9c927a8e78d7ec48df653bce8d76041ef2f5f2717a4bd432e78ecab1c01"
+    "cd47627cc40488515ff87297383234ee57bcfdb255ed3c9afabb5305c9536f25"
 )
 # 自身 main func sha (首跑用 __BUMP_ME__ 占位, 再回填)
 EXPECTED_SELF_MAIN_FUNC_SHA = (

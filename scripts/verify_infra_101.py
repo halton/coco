@@ -34,6 +34,14 @@ INFRA_101_SHA_LOCKS
 - V5 Reviewer LGTM gate (grace_period 兜底)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
+
+## Lock: EXPECTED_BUMP_FILE_SHA
+- target_function: N/A
+- target_file: scripts/bump_reverse_sha_lock.py
+- lock_kind: file_sha
+- bump_when: scripts/bump_reverse_sha_lock.py 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/bump_reverse_sha_lock.py 并更新常量
+- rationale: 锁 helper 整体, 防 _candidates_for NNN-agnostic 分支被悄改导致 lib target 反向锁断链
 """
 from __future__ import annotations
 

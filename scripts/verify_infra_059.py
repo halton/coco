@@ -48,6 +48,14 @@ INFRA_059_SHA_LOCKS
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_UNKNOWN_IDS_SHA
+- target_function: N/A
+- target_file: scripts/dump_v4_sha_graph.py
+- lock_kind: content_sha256
+- bump_when: dump_v4_sha_graph.py 输出 mermaid 节点中 kind=unknown 的 id frozenset 变化 (新增或移除 unknown 节点)
+- bump_protocol: 重跑 dump_v4_sha_graph --mermaid, 收集 kind=unknown 的 id, sha256(json.dumps(sorted(ids), separators=(",",":"))), 更新常量
+- rationale: V6 锁完整 unknown_ids frozenset 内容, 防 count 不变但成员一进一出的替换 (count lock 抓不到)
 """
 from __future__ import annotations
 
@@ -89,7 +97,7 @@ EXPECTED_V4_CHECKER_FUNC_SHA = "eb87f84607599b54b5e234b7e54f4bbb00c93e312299e0db
 # (source, const) → target 映射, 现可被 render_mermaid 解析到正确 .py stem
 # 并按 _classify_node 归 lib / dump。仅剩 EXPECTED_DOC_SHA (verify_robot_034)
 # 因 target 是 docs/ 非 .py 文件, 继续保留 unknown 占位。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 1
+EXPECTED_CURRENT_UNKNOWN_COUNT = 4
 
 # infra-P286-total-nodes-lock (phase-39 #5.39): V4 sha graph 节点总数锁。
 # 当前 ratio 锁只锁 V4/total 比例下界, 不锁绝对节点数; 若大量 sha lock 被
@@ -101,7 +109,7 @@ EXPECTED_CURRENT_UNKNOWN_COUNT = 1
 # truth 到 86 并扩 tolerance 到 ±10 留 headroom, 下次新增 verify 累计到 96 才再爆)。
 # 未来新增 verify_infra_* / lib helper 引起 total_nodes 漂移 > ±10 应有意识地
 # bump 该常量 (并复审是否新 lock 真的有效)。
-EXPECTED_CURRENT_TOTAL_NODES: int = 86
+EXPECTED_CURRENT_TOTAL_NODES: int = 143
 TOTAL_NODES_TOLERANCE: int = 10
 
 # infra-P287-unknown-ids-set-lock (phase-62 #5): 锁完整 unknown_ids frozenset。
@@ -111,7 +119,7 @@ TOTAL_NODES_TOLERANCE: int = 10
 # sha 来源: hashlib.sha256(json.dumps(sorted(unknown_ids), separators=(",",":")).encode()).hexdigest()
 # 当前实测 (15 个 unknown ids, 详见 dump_v4_sha_graph --mermaid)。
 # 未来若新增/移除 unknown 节点应有意识地 bump (同时 bump EXPECTED_CURRENT_UNKNOWN_COUNT)。
-EXPECTED_UNKNOWN_IDS_SHA = "e39251d2fa8e606c1797c52bb34a2d99b50fd67f2bef630131c8b56dae43cc0f"
+EXPECTED_UNKNOWN_IDS_SHA = "11361ff9c910639f3a0354e12649140063fbf72b769f16364636c2bf2589697e"
 
 DOCSTRING_SENTINEL = "INFRA_059_SHA_LOCKS"
 

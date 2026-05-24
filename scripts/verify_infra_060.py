@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "ae7a5b72ef631cf8679b8519c5558984ca5d136dbdb8b2c25c75ebc76f7c4450"
+EXPECTED_DUMP_FILE_SHA = "7971bdb7c36a813c3c701cf6a72243358a8c224843eb1b88c9bd0ea6c5507fc7"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -107,7 +107,11 @@ EXPECTED_NEW_LOCKS: tuple = (
 # - phase-62 #5 (infra-P287-unknown-ids-set-lock) 后: 16
 #   verify_infra_059 新增 EXPECTED_UNKNOWN_IDS_SHA 常量, dump_v4 视为新 unknown
 #   target 节点 (verify_infra_059, EXPECTED_UNKNOWN_IDS_SHA), 总数 15 → 16。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 16
+#   infra-P318-V13 (phase-65 #2): 给 11 个 verify 脚本补 docstring lock,
+#   text dump unknown 15→1; mermaid 路径 unknown 16→4 (剩余 4 项 target 是
+#   非 .py 文件: AGENTS.md / CLAUDE.md / pull_request_template.md /
+#   docs/sha_lock_strategy.md, mermaid stem-resolve 失败仍归 unknown)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 4
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({

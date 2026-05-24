@@ -36,6 +36,38 @@ INFRA_V6_STRICT_AREA_SHA_LOCKS
 - V6 helper func sha 锁 (三个 helper, 任一漂移 → FAIL)
 
 退出码: 0=ALL PASS, 2=任一 FAIL.
+
+## Lock: EXPECTED_STRICT_UNKNOWN_SHA256
+- target_function: N/A
+- target_file: scripts/_verify_lib.py
+- lock_kind: content_sha256
+- bump_when: 当前 repo strict 模式 unknown NNN 集合变化 (新增 verify_<area>_<NNN>.py 未登记 / 已登记 area NNN 增删)
+- bump_protocol: 重跑 scan_unknown_area_nnns(scripts, known_area_nnns=None), 算 sha256 of canonical JSON 并更新常量
+- rationale: V3 锁当前 repo strict 模式 unknown NNN 集合, 任一新增/删除未登记 area NNN 都应触发显式 bump
+
+## Lock: EXPECTED_PARSE_AREA_FUNC_SHA
+- target_function: parse_area_from_verify_path
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: parse_area_from_verify_path 实现变化
+- bump_protocol: recompute func_sha_by_name("parse_area_from_verify_path", scripts/_verify_lib.py) then update constant
+- rationale: V6 锁 area 推断 helper, 防 area 解析正则被悄改导致 strict 模式失效
+
+## Lock: EXPECTED_SCAN_UNKNOWN_FUNC_SHA
+- target_function: scan_unknown_area_nnns
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: scan_unknown_area_nnns 实现变化
+- bump_protocol: recompute func_sha_by_name("scan_unknown_area_nnns", scripts/_verify_lib.py) then update constant
+- rationale: V6 锁 strict 模式 unknown 扫描 helper, 防 known 表过滤逻辑被悄改
+
+## Lock: EXPECTED_SCAN_STRICT_FUNC_SHA
+- target_function: scan_reverse_sha_lock_consistency_strict
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: scan_reverse_sha_lock_consistency_strict 实现变化
+- bump_protocol: recompute func_sha_by_name("scan_reverse_sha_lock_consistency_strict", scripts/_verify_lib.py) then update constant
+- rationale: V6 锁 strict_area_match 主入口 helper 函数体, 防跨 area 候选过滤逻辑被悄改
 """
 from __future__ import annotations
 
@@ -59,7 +91,7 @@ from _verify_lib import (  # noqa: E402
 
 # V1: self file sha (V8 pragma 兼容; 静态读取 + 抹去本字段)
 EXPECTED_SELF_FILE_SHA = (
-    "9b0898bfbefba171cf357455621de57d2562311f88f6ac38ce600cdc57299465"
+    "a6e854aaeb1af75cc68e8b03286d210d6b37b074b682195ac538db7431cb174b"
 )
 # V3: strict 当前 repo unknown 集合 sha (空 known 表)
 # 由 hashlib.sha256(",".join(sorted_unknown_nnns).encode()).hexdigest() 得到

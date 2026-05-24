@@ -523,6 +523,12 @@ def _infer_target_via_ast(const: str, source_file: str) -> Optional[str]:
         tf = meta.get("target_function") or ""
         tfile = meta.get("target_file") or ""
         kind = meta.get("lock_kind") or "ast_func_sha"
+        # infra-P318-V13 (phase-65 #2): "N/A" 视作占位符, 让 file_sha / content_sha256
+        # 等无 target_function 的锁渲染为 "<file> (<kind>)" 而非 "<file>:N/A (<kind>)"
+        if tf.strip().upper() in {"N/A", "NA", "NONE"}:
+            tf = ""
+        if tfile.strip().upper() in {"N/A", "NA", "NONE"}:
+            tfile = ""
         if tfile and tf:
             return f"{tfile}:{tf} ({kind})"
         if tfile:
