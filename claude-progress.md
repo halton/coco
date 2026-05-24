@@ -9841,3 +9841,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - final verify: v_V26 12/12 PASS + smoke 11/11 PASS + v_062 仍 FAIL 2/30 pre-existing baseline (与 ed06ed2 同款)
 - main HEAD: 6acc54e
 - push: 单次尝试，失败忽略
+
+## Session 2026-05-24 phase-67 #26 (infra-P322-pr-template-decision-matrix-lock)
+
+- supersedes: interact-038-backlog-pr-template-decision-matrix-checkbox (superseded_by 链已建立)
+- Engineer (169be0c): 新建 scripts/verify_infra_P322_pr_template_decision_matrix_lock.py (10 checks V0-V3 + V_last), 锁 .github/PULL_REQUEST_TEMPLATE/verify-script.md 6 sentinel checkbox + file-sha; +1 dump_v4 _PER_FILE_LOCKS 入项 + 15 处 EXPECTED_DUMP_FILE_SHA cascade (72a72a98→83c8258a); v_060 EXPECTED_CURRENT_UNKNOWN_COUNT 12→13
+- Reviewer round 1 (fresh-context, sub-agent): LGTM — 干净 base 916dda3 checkout 独立核实 v_062 + v_110 V4d 双双真 pre-existing baseline；Mutation 反证 V3 file-sha + V1/V2 sentinel drop 都 trip 成功；cascade 15/15 match；P0=[] P1=[] P2=[2 项]
+- 衍生 backlog: infra-superseded-by-chain-no-orphan-check (priority=999 status=backlog phase=null)
+- merge_sha: 959c4566137edcbe6ed16325e4f800ba588b0660
+- main HEAD: 2e39fbf (Step-B backfill)
+- verify: v_P322_final 10/10 ALL PASS; v_062 FAIL 2/30 pre-existing baseline; v_100/060/039 ALL PASS; v_110 V4d pre-existing; smoke PASS
+- push: 单次尝试，失败忽略
