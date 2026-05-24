@@ -9449,3 +9449,19 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+
+## Session 2026-05-24 — phase-67 #1 infra-P301-backlog-allowlist-reason-typed-enum closeout
+
+- feature: infra-P301-backlog-allowlist-reason-typed-enum
+- merge_sha: d22eb3b (no-ff merge of feat/infra-P301-backlog-allowlist-reason-typed-enum into main; base f4fdf95)
+- Engineer 改动: 新建 scripts/verify_infra_P301_followup_typed_enum.py (V0-V5 共 8 checks: V0 self-main-func-sha + V1 docstring sentinel + V2 P301_full file_sha 锁 + V3 allowlist 非空 + reason 字段 typed-prefix 枚举 + V4 enum 非空 + V5 backloaded reviewer-LGTM-gate)。feature_list.json 加 evidence 与 status 切换。_verify_lib.py 未动 (scope 干净)。
+- Reviewer: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=1 (cosmetic docstring 示例 reason 值建议)；16 项 checks_run。V5 backloaded reviewer-gate 评为项目通用模式 ACCEPT。
+- verify_runs:
+  - verify_infra_P301_followup_typed_enum.py PASS (8/8: V0 e291af05 + V1 sentinel + V2 3fc72a0f + V3 size=44 + V3 typed prefixes 0 unknown + V4 enum size=2 + V5 LGTM helper_ok)
+  - verify_infra_P314_lib_sha_cascade.py PASS (8 checks, stale=0, live_sha=1990a9b61d3b14c9)
+  - verify_infra_062.py --anchor 3b6f50d round1 PASS (30 emit-paths)
+  - verify_infra_062.py --anchor d22eb3b round2 PASS (30 emit-paths)
+- 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
