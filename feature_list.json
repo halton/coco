@@ -23195,7 +23195,7 @@
       "title": "verify_infra_P297 锁 _MUTANTS list keys/checkcount, 防 mutation C 漏检",
       "phase": 67,
       "priority": 804,
-      "status": "in_progress",
+      "status": "passing",
       "rationale": "phase-67 #19 Reviewer P2 #1: verify_infra_P297.py 当前 V_check_count (总 checks 17) 不锁 _MUTANTS list 长度或 keys 集合. Mutation C (删除任一 mutant 注册条目) 仍可 PASS 17 checks — 因为 _MUTANTS 短到 若被截短, V2_mutant_sentinel_* 与 V4_canary_* 数量同步下降但 V_check_count 本身不锁 mutant 总数. 修复方案二选一: (a) 新增 EXPECTED_MUTANT_KEYS = ('return_empty','return_none','raise','weak_hash') frozenset 自锁, or (b) 把 _MUTANTS 移入 v4_behavior_parametrized 函数体 (一并被 EXPECTED_V4_FUNC_SHA 锁住).",
       "scope": "scripts/verify_infra_P297.py (1 处 — EXPECTED_MUTANT_KEYS 常量 + V0_mutant_keys_lock check). 不动 _verify_lib.py, 不动 bootstrap_verify_self_checker.py.",
       "source": "phase-67 #19 Reviewer P2 #1 finding (Mutation C 漏检)",
@@ -23203,7 +23203,73 @@
       "dependencies": [
         "infra-P297-canary-mutant-parametrize"
       ],
-      "evidence": {}
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e",
+          "baseline_head_echo": "022cd64",
+          "merge_commit_sha": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e",
+          "verify_runs": [
+            {
+              "name": "verify_infra_P297.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P297][PASS] V4_mutant_weak_hash_rc2 rc=2 (expect 2)\n[verify_infra_P297][PASS] V4_mutant_weak_hash_detected expected=5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249 actual=8b801b281ce0b0f987d2af04560df4f2\n[verify_infra_P297][PASS] V4b_mutant_keys_reverse_proof shrunk_keys=['raise', 'return_none', 'weak_hash'] len=3 (expect len=4); reverse_proof_should_FAIL_check=False\n[verify_infra_P297][PASS] V5_reviewer_lgtm_gate target=infra-P297-canary-mutant-parametrize helper_ok=True grace_skipped=True\n[verify_infra_P297][SUMMARY] ALL PASS (19 checks)",
+              "freshness_anchor": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=136 enforced=95 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=136 enforced=95 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e"
+            },
+            {
+              "name": "verify_infra_100.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e"
+            },
+            {
+              "name": "verify_infra_039.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.7% accepted=167/171 via={'docstring': 23, 'self_convention': 74, 'acceptlist': 3, 'explicit': 9, 'dump_table': 61, 'naming_guess': 1}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)",
+              "freshness_anchor": "4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-67 #20 Reviewer fresh-context 评审 LGTM: EXPECTED_MUTANT_KEYS frozenset 锁 _MUTANTS list keys, V0_mutant_keys_lock + V4b_mutant_keys_reverse_proof 双向证明; verify_infra_P297.py 19/19 PASS, mutation A/B trip V0, 0 cascade, helper 集中度保持; scope 1 文件 (verify_infra_P297.py), 不动 _verify_lib.py.",
+            "checks_run": [
+              "scope_audit (1 文件 verify_infra_P297.py)",
+              "verify_infra_P297.py 19/19 PASS",
+              "mutation_A (改 EXPECTED_MUTANT_KEYS) trip V0_mutant_keys_lock",
+              "mutation_B (删 _MUTANTS 注册条目) trip V0_mutant_keys_lock",
+              "V4b_mutant_keys_reverse_proof: shrunk_keys len=3 触发 reverse FAIL",
+              "0 cascade (helper func_sha drift=0)",
+              "verify_infra_062.py P278 schema check (post-merge)"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            }
+          },
+          "known_pre_existing_baseline_fails": [
+            {
+              "verify": "verify_infra_110.py",
+              "check": "V4d_unknown_tgt_raw_no_expected_substring",
+              "baseline_sha": "022cd64",
+              "baseline_tail_stdout": "[verify_infra_110] FAIL V4d_unknown_tgt_raw_no_expected_substring: violations=[\"unknown_verify_infra_034_backlog_typo_guard_expected_target_shas_fix_CONSTHASHdf058599 (src_candidate='verify_infra_034_backlog_typo_guard_expected_target_shas_fix_CONSTHASHdf058599' contains 'expected' case-insensitively; anchor-independent check)\"]\n[verify_infra_110][SUMMARY] FAIL 1/19: ['V4d_unknown_tgt_raw_no_expected_substring']",
+              "smoke_tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=358 well_formed=358 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ]
+        }
+      }
     }
   ],
   "last_updated": "2026-05-24T19:30:00.000000Z",

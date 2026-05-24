@@ -9770,3 +9770,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 87bab68 同样 FAIL, 范围无关).
 - Merge: feat/infra-P297-canary-mutant-parametrize → main, merge_commit_sha=8a3ed2680dcab38ba38e362859da1c45dce4e625.
 - Status: in_progress → passing.
+
+## Session 2026-05-24 phase-67 #20 — infra-P297-followup-mutant-keys-checkcount-lock PASSING
+
+- Engineer: 在 scripts/verify_infra_P297.py 中新增 EXPECTED_MUTANT_KEYS = frozenset({'return_empty','return_none','raise','weak_hash'}) 常量; 新增 V0_mutant_keys_lock check (对 _MUTANTS list keys 与 EXPECTED_MUTANT_KEYS 做集合等价); 新增 V4b_mutant_keys_reverse_proof (反向证明: shrunk_keys len=3 触发 reverse FAIL, 防 V0 单向 false-PASS). _MUTANTS list 仍保留 module-level. Scope 1 文件 (verify_infra_P297.py).
+- Reviewer (sub-agent fresh-context): LGTM, reviewer_kind=sub_agent_fresh_context. P0=[]/P1=[]/P2=[].
+  - checks_run: scope_audit / verify_infra_P297.py 19/19 PASS / mutation A (改 EXPECTED_MUTANT_KEYS) trip V0 / mutation B (删 _MUTANTS 注册条目) trip V0 / V4b reverse_proof shrunk_keys len=3 / 0 cascade (helper func_sha drift=0) / verify_infra_062 P278 schema check post-merge.
+- 验证套件 (all PASS post-merge): verify_infra_P297.py 19/19 / verify_infra_062.py 30/30 / verify_infra_100.py 14/14 / verify_infra_060.py 14/14 / verify_infra_039.py 27/27 + ./init.sh smoke rc=0.
+- _verify_lib.py: 0 diff (硬规则保持).
+- Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 022cd64 同样 FAIL, 范围无关; 登记 known_pre_existing_baseline_fails 含 baseline_sha + baseline_tail_stdout + smoke_tail_stdout).
+- Merge: feat/infra-P297-followup-mutant-keys-checkcount-lock → main, merge_commit_sha=4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e (no-ff).
+- Status: in_progress → passing.
