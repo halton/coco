@@ -17106,10 +17106,10 @@
       ],
       "description": "verify_infra_P301_full.py 的 ALLOWED_MISSING 白名单当前 reason 字段是自由文本 (44 条 historical-batch-pending + 1 条 P301-self). 条目变多时难分类与统计. 提案: reason 改 typed enum (如 historical_batch_pending / canonical_marker_renamed / self_exempt 等), verifier 校验 reason 必须在枚举内. 不阻 merge.",
       "id": "infra-P301-backlog-allowlist-reason-typed-enum",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "source": "phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-1",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "ALLOWED_MISSING reason 字段改 typed enum / 分类"
     },
     {
