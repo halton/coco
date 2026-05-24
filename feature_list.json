@@ -18782,10 +18782,10 @@
       "dependencies": [],
       "description": "verify_infra_110.py L16 docstring 历史叙事陈旧 — 描述仍按 P290 V2_target_file_sha 整文件 sha 锁口径写; phase-62 #4 已将 V2 改为 func_sha_by_name(verify_infra_102.py, 'main') 的 func-level lock, docstring 需相应更新, 反映 file_sha → func_sha 演进, 避免新读者按旧叙事理解 P290 行为。仅文档改动, 不动实现。",
       "id": "infra-110-backlog-docstring-narrative-update-post-p290-func-lock",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "source": "phase-62 #4 infra-P290-backlog-v2-target-sha-func-level-lock closeout Reviewer P2",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "verify_infra_110.py L16 docstring 历史叙事更新（P290 file_sha → func_sha）"
     },
     {

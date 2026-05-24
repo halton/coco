@@ -13,9 +13,16 @@ infra-039-backlog-mermaid-unknown-target-id-collision (phase-59 #4):
 ``scripts/dump_v4_sha_graph.py`` 的 ``render_mermaid`` 此前对 unknown target
 (``_infer_target`` 返回 ``<unknown target>``, 即 target 字段中无 ``.py`` token 的
 反向锁) 用 ``unknown_<CONST>`` 作为占位 node id; 跨 source 同名 const (例如
-``EXPECTED_TARGET_FILE_SHA`` 同时出现在 verify_infra_P290 与 verify_infra_P301)
+``EXPECTED_SELF_MAIN_FUNC_SHA`` 同时出现在多个 verify 脚本作为 self func sha 自锁)
 会被合并到同一个 ``unknown_<CONST>`` 节点, 视觉上把多个互不相干的 unknown target
 错误地呈现为一个节点接收多条入边。本 verify 锁住复合 key 改写后的行为:
+
+历史叙事注: 早期 (P290 V2) 曾用 ``EXPECTED_TARGET_FILE_SHA`` (整文件 sha 锁) 作
+跨 source 同 const 例子; phase-62 #4 ``infra-P290-backlog-v2-target-sha-func-level-lock``
+已把 P290 V2 从 file_sha 演进为 ``func_sha_by_name(verify_infra_102.py, 'main')``
+的 func-level lock, 现存 const 名为 ``EXPECTED_TARGET_FUNC_SHA``。collision 示例
+故改用现仍真实跨多源出现的 ``EXPECTED_SELF_MAIN_FUNC_SHA``, 避免新读者按
+file_sha 旧口径理解。
 
 - render_mermaid func sha 锁 (改写痕迹)
 - behavior: build_graph 中若存在跨 source 同 const → unknown 的场景, mermaid 输出
