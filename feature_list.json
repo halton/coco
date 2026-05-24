@@ -18608,8 +18608,109 @@
       "priority": 4,
       "scope": "scripts/verify_infra_033_lock_doc_rollout.py 顶部 docstring 写的 'V1-V5' 与实际实现 V1-V6 mismatch (V6_mutant_drop_lock_block). 下次 docstring 修订时统一为 V1-V6.",
       "source": "phase-63 #5 infra-033-backlog-multi-verify-venv-docstring Reviewer P2 #2",
-      "status": "not_started",
-      "title": "verify_infra_033_lock_doc_rollout.py docstring V1-V5 → V1-V6 修订"
+      "status": "passing",
+      "title": "verify_infra_033_lock_doc_rollout.py docstring V1-V5 → V1-V6 修订",
+      "closeout_verify": {
+        "main_head_sha": "848b86163582",
+        "baseline_head_echo": "818e9f1",
+        "merge_commit_sha": "848b8616358243f7618140dab0c8ab8221f8e8c2",
+        "verify_runs": [
+          {
+            "name": "smoke",
+            "status": "PASS",
+            "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=311 well_formed=311 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+            "freshness_anchor": "Smoke 通过 total=311 well_formed=311 typo_count=0"
+          },
+          {
+            "name": "verify_infra_033_lock_doc_rollout",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_033] PASS V1_self_sha: got=52558e0ba8c0ed77 expect=52558e0ba8c0ed77\n[verify_infra_033] PASS V2_min_entries: entries=32 >= EXPECTED_MIN_ENTRIES=30\n[verify_infra_033] PASS V3_required_files_have_lock_block: required=6 seen_subset=6 missing=[]\n[verify_infra_033] PASS V4_field_completeness: checked=32 incomplete=0 samples=[]\n[verify_infra_033] PASS V5_target_files_resolvable: checked=32 unresolved=0 samples=[]\n[verify_infra_033] PASS V6_mutant_drop_lock_block: after mutating 039 header, scan no longer reports it (V3 would fail)\n[verify_infra_033] PASS V7_doc_value_consistency: checked=30 violations=0 samples=[]\n[verify_infra_033] PASS V8_mutant_break_func_name: mutant 成功让 V7 FAIL: violations>=1",
+            "freshness_anchor": "V1_self_sha 52558e0ba8c0ed77; V6_mutant_drop_lock_block PASS; V8_mutant_break_func_name PASS"
+          },
+          {
+            "name": "verify_infra_039",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=158 ok=151 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0\n[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=154/158 via={'docstring': 18, 'self_convention': 69, 'acceptlist': 3, 'explicit': 8, 'dump_table': 60}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_042.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=e3223584fbdb5f1b firsts=explicit@scripts/_verify_lib.py:assert_unique_needle=3b92e4f2a058'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)",
+            "freshness_anchor": "SUMMARY ALL PASS (27 checks) coverage=97.5%"
+          },
+          {
+            "name": "verify_infra_062",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=107 enforced=74 soft_skipped=33 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=107 enforced=72 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=107 enforced=72 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=107 enforced=72 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=107 enforced=72 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=107 enforced=72 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=107 enforced=72 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+            "freshness_anchor": "ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "name": "verify_infra_037",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_037__' in grace_period (skipped)\"\n[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True msg=\"top-level function 'dup_target' ambiguous in /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/verify_infra_037_lzgmazjq_v6_dup.py: found 2 definitions at lineno=[1, 7]\"\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)",
+            "freshness_anchor": "SUMMARY ALL PASS (15 checks); V6 dup detection"
+          },
+          {
+            "name": "verify_infra_110",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_110] PASS V4b_self_main_func_sha: got=4cc7d516805927ea expect=4cc7d516805927ea\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)",
+            "freshness_anchor": "SUMMARY ALL PASS (19 checks); V6_render_mermaid_func_sha_meta 7c7a3ff794c99af0"
+          },
+          {
+            "name": "verify_infra_P306",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P306] PASS V4_dryrun_safe: has_FAIL=False has_APPLIED=False\n[verify_infra_P306] PASS V5_target_missing: rc=2\n[verify_infra_P306] PASS V6_target_no_pragma: rc=2\n[verify_infra_P306] PASS V7_algo_equiv_035: helper=a5901bb7a3ae9b8a ref=a5901bb7a3ae9b8a\n[verify_infra_P306] PASS V8_algo_equiv_033: helper=52558e0ba8c0ed77 ref=52558e0ba8c0ed77\n[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]\n[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks",
+            "freshness_anchor": "OVERALL PASS: 10/10 checks; V8_algo_equiv_033 helper=52558e0ba8c0ed77"
+          },
+          {
+            "name": "verify_infra_P314_lib_sha_cascade",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P314] PASS V0_scripts_dir: /Users/halton/work/coco/scripts\n[verify_infra_P314] PASS V1_docstring_sentinel: sentinel=INFRA_P314_SHA_LOCKS\n[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)\n[verify_infra_P314] PASS V4_self_lib_sha: got=43d352534301242f expect=43d352534301242f\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=43d352534301242f\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+            "freshness_anchor": "SUMMARY ALL PASS (8 checks); V4_self_lib_sha 43d352534301242f"
+          },
+          {
+            "name": "verify_infra_P317_syspath_restore",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P317] PASS V0_scaffolding: func_found=True\n[verify_infra_P317] PASS V1_try_finally_pop_present: call=sys.path.pop\n[verify_infra_P317] PASS V2_no_bare_sys_path_insert: bare_inserts=[] try_ranges=[(515, 533)]\n[verify_infra_P317] PASS V3_no_sys_path_side_effect: before_len=6 after_len=6 equal=True\n[verify_infra_P317] PASS V4_repeated_calls_no_growth: delta=0\n[verify_infra_P317] PASS V5_pre_inserted_scripts_preserved: before_count=1 after_count=1\n[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=cf7e23cb3273c42a expect=cf7e23cb3273c42a\n[verify_infra_P317] OVERALL PASS: 7/7 checks",
+            "freshness_anchor": "OVERALL PASS: 7/7 checks; V6_dump_file_sha_lock cf7e23cb3273c42a"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "docstring V1-V8 清单与实际函数 v1..v8 一一对齐, EXPECTED_SELF_FILE_SHA 实跑 V1 PASS (52558e0b...), V7 域仅覆盖 ## Lock: 小节字段值, Engineer 关于自由文本由 V1 self-sha 兜底的论断成立, 设计正确分工。10/10 verify_runs 全 PASS, 独立 3 条 raw run (033/062/039) rc=0。无 P0 阻断。",
+          "checks_run": [
+            "docstring_V1_to_V8_listing_matches_def_v1_to_v8",
+            "EXPECTED_SELF_FILE_SHA_matches_actual_52558e0b",
+            "V7_doc_value_consistency_scope_limited_to_Lock_section",
+            "V8_mutant_break_func_name_PASS",
+            "smoke",
+            "verify_infra_033_PASS",
+            "verify_infra_039_27_PASS",
+            "verify_infra_062_30_PASS",
+            "verify_infra_037_15_PASS",
+            "verify_infra_110_19_PASS",
+            "verify_infra_P306_10_PASS"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              {
+                "id": "P2-1",
+                "note": "docstring 列了 V1-V8 但 free-text 区域 (非 ## Lock 字段值) 无 self-sha 之外的二次锁 — Engineer 已论证 V1 self-sha 兜底, AGREE_ACCEPT; 入 backlog infra-V14-v033-doc-freetext-lock"
+              },
+              {
+                "id": "P2-2",
+                "note": "V1-V8 docstring rollout helper 可抽取以避免每个 verify 各自手写 — AGREE_DEFER; 入 backlog infra-V15-docstring-rollout-helper"
+              },
+              {
+                "id": "P2-3",
+                "note": "P2 第三项 (Reviewer 给的第三个非阻塞建议) — 仅记录, 不入 backlog"
+              }
+            ]
+          }
+        }
+      },
+      "evidence": {
+        "summary": "docstring V1-V8 清单与 def v1..v8 实现对齐, EXPECTED_SELF_FILE_SHA bump 至 52558e0b, V1 self-sha PASS, V7 域定为 ## Lock 字段, 10/10 verify_runs 全 PASS + Reviewer (sub-agent) LGTM",
+        "reviewer_kind": "sub_agent_fresh_context"
+      }
     },
     {
       "area": "infra",
@@ -19589,6 +19690,28 @@
       "source": "phase-65 #3 infra-P317-V12-syspath-restore Reviewer P1-1",
       "status": "backlog",
       "title": "vP317 V7_pop_branch_executed 强制 _inserted=True 路径覆盖 pop->noop mutation"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-V14-v033-doc-freetext-lock",
+      "phase": null,
+      "priority": 999,
+      "scope": "在 verify_infra_033_lock_doc_rollout 中新增 V9_docstring_v_list_matches_impl: AST 提取 module docstring 中 V<N>_ tokens, 与 def v<N>_* 函数集合做差集对比, mismatch 即 FAIL; 防止 docstring 列 V1-V6 实际 V1-V8 这类静默漂移",
+      "source": "phase-65 #4 infra-P315-v033-docstring-v1v6-fix Reviewer P2-1 (AGREE_ACCEPT)",
+      "status": "backlog",
+      "title": "verify_infra_033 V9 docstring V<N> tokens vs def v<N>_* AST 一致性 (free-text lock)"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-V15-docstring-rollout-helper",
+      "phase": null,
+      "priority": 999,
+      "scope": "抽取 helper (例如 scripts/_verify_lib.py:check_docstring_v_listing) 让任意 verify_infra_<N> 都能一行调用, 避免每个 verify 各自手写 docstring V<N> 清单与函数集合的对比逻辑",
+      "source": "phase-65 #4 infra-P315-v033-docstring-v1v6-fix Reviewer P2-2 (AGREE_DEFER)",
+      "status": "backlog",
+      "title": "抽取 docstring V<N> rollout 通用 helper 供多 verify 复用"
     }
   ],
   "last_updated": "2026-05-24",

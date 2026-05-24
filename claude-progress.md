@@ -9037,3 +9037,13 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Reviewer (sub_agent_fresh_context): LGTM, 25 checks_run, P0=[] P1=1 (mutation-B pop->noop V3/V4/V5 在 dedup 分支被 mask) P2=3 (informational: dump_file_sha 锁可与 P314 合并 / sys.path entry diff 未记录 / mutation matrix 建议).
 - 1 backlog 入账: infra-P323-V12-syspath-V7-pop-branch-coverage (priority=999 status=backlog phase=null).
 - next candidate: phase-65 #4 infra-P315-v033-docstring-v1v6-fix
+
+## Session phase-65 #4 closeout — infra-P315-v033-docstring-v1v6-fix (2026-05-24)
+
+- MERGE_SHA=848b861 (merge --no-ff feat/infra-P315-v033-docstring-v1v6-fix, a2ac7f8 onto baseline 818e9f1); NEW_MAIN_SHA=848b861.
+- 修订 verify_infra_033_lock_doc_rollout.py 顶部 docstring 从 'V1-V5' 同步到 'V1-V8' 清单, 与实际 def v1..v8 函数一一对齐. EXPECTED_SELF_FILE_SHA 实跑 V1 PASS=52558e0ba8c0ed77, V7 域仅覆盖 `## Lock:` 字段值 (自由文本由 V1 self-sha 兜底).
+- 9 verify_runs (P278 trustworthy + P299 rc-safe) 全 PASS, 含 freshness_anchor: smoke (total=311 typo=0) + v033 (V6/V8 mutant PASS) + v039 (27 checks coverage=97.5%) + v062 (30/30) + v037 (15) + v110 (19) + P306 (10/10) + P314_lib_sha (8/8 found=46 stale=0) + P317_syspath (7/7).
+- v062 双轮确认 30/30 PASS rc=0: closeout evidence 写入前 (c1) + 写入后 (c2 全 30 emit-paths).
+- Reviewer (sub_agent_fresh_context): LGTM, 11 checks_run, P0=[] P1=[] P2=3 (P2-1 docstring free-text 二次锁 AGREE_ACCEPT / P2-2 rollout helper 可抽取 AGREE_DEFER / P2-3 仅记录).
+- 2 backlog 入账: infra-V14-v033-doc-freetext-lock (P2-1 AGREE_ACCEPT, V9 AST docstring V<N> vs def v<N>_*); infra-V15-docstring-rollout-helper (P2-2 AGREE_DEFER, _verify_lib.check_docstring_v_listing).
+- next candidate: phase-65 #5 (扫描 feature_list.json phase=65 status=not_started 中 priority 最低数字).
