@@ -46,6 +46,26 @@
         "os_decl_count": 8
       },
       "status": "PASS"
+    },
+    "V5_runs_on_matrix_os": {
+      "detail": {
+        "hardcoded_runs_on_jobs": [
+          "lint",
+          "changes"
+        ],
+        "matrix_os_jobs": [
+          "smoke",
+          "verify-vision",
+          "verify-interact",
+          "verify-companion",
+          "verify-audio",
+          "verify-robot",
+          "verify-infra",
+          "verify-publish"
+        ],
+        "violations": []
+      },
+      "status": "PASS"
     }
   },
   "status": "PASS"

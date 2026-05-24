@@ -15,6 +15,9 @@ V3 FAIL/UNKNOWN 边界回归：纯 PASS 文本返回 "PASS"；空字符串返回
 V4 verify-matrix.yml 解析后所有 upload-artifact step 的 name 字段包含
    ``${{ matrix.os }}`` 占位；matrix 块声明了 ``os`` 维度（即使当前只有
    ubuntu-latest，模板已就位）。
+V5 verify-matrix.yml 中所有 strategy.matrix 含 ``os`` 维度的 job, 其 ``runs-on``
+   必须为 ``${{ matrix.os }}`` 而非硬编码 ``ubuntu-latest`` (infra-019-backlog
+   prep, 让未来扩 matrix 到 macos/windows 时无需再改 runs-on)。
 
 Sim-first：纯静态/纯 Python 验证，无真机依赖。
 """
@@ -125,6 +128,63 @@ def v4_artifact_os_axis() -> dict:
     }
 
 
+def v5_runs_on_matrix_os() -> dict:
+    """infra-019-backlog: matrix-aware runs-on lock.
+
+    需求: workflow 中所有 strategy.matrix 含 ``os`` 维度的 job, runs-on 必须为
+    ``${{ matrix.os }}``; 反之亦然 (硬编码 runs-on: ubuntu-latest 的 job 不可
+    含 matrix.os, 否则 matrix 扩 OS 时 runs-on 不会同步)。
+
+    实现: 用 PyYAML 安全解析整个 yml; 遍历 jobs.* dict, 每个 job 看 strategy.matrix.os
+    是否存在 → 判定 runs-on 期望值。
+    """
+    import yaml
+
+    src = WORKFLOW_PATH.read_text(encoding="utf-8")
+    doc = yaml.safe_load(src)
+    jobs = doc.get("jobs", {})
+    _ok(isinstance(jobs, dict) and jobs,
+        f"V5 expected jobs dict non-empty, got {type(jobs).__name__}")
+
+    matrix_os_jobs: list[str] = []
+    hardcoded_jobs: list[str] = []
+    violations: list[str] = []
+
+    for jname, jdef in jobs.items():
+        if not isinstance(jdef, dict):
+            continue
+        runs_on = jdef.get("runs-on")
+        strategy = jdef.get("strategy") or {}
+        matrix = (strategy.get("matrix") if isinstance(strategy, dict) else None) or {}
+        has_os_axis = isinstance(matrix, dict) and "os" in matrix
+        if has_os_axis:
+            matrix_os_jobs.append(jname)
+            # 期望 runs-on == "${{ matrix.os }}"
+            if runs_on != "${{ matrix.os }}":
+                violations.append(
+                    f"job '{jname}' has matrix.os but runs-on={runs_on!r} "
+                    f"(expected '${{{{ matrix.os }}}}')"
+                )
+        else:
+            hardcoded_jobs.append(jname)
+            # 没有 matrix.os 的 job, runs-on 可以是硬编码字符串; 也允许是表达式
+            # 但不应该是 ${{ matrix.os }} (否则未定义)
+            if isinstance(runs_on, str) and "matrix.os" in runs_on:
+                violations.append(
+                    f"job '{jname}' uses ${{{{ matrix.os }}}} but has no matrix.os axis"
+                )
+
+    _ok(not violations, "V5 runs-on/matrix.os 不一致: " + "; ".join(violations))
+    _ok(len(matrix_os_jobs) >= 6,
+        f"V5 expected ≥6 jobs with matrix.os axis, found {len(matrix_os_jobs)}: {matrix_os_jobs}")
+
+    return {
+        "matrix_os_jobs": matrix_os_jobs,
+        "hardcoded_runs_on_jobs": hardcoded_jobs,
+        "violations": violations,
+    }
+
+
 def main() -> int:
     smoke = _load_smoke()
     classify = smoke._classify_stdout
@@ -136,6 +196,7 @@ def main() -> int:
         ("V2_warn_no_false_skip", lambda: v2_warn_no_false_skip(classify)),
         ("V3_regression", lambda: v3_regression(classify)),
         ("V4_artifact_os_axis", v4_artifact_os_axis),
+        ("V5_runs_on_matrix_os", v5_runs_on_matrix_os),
     ]:
         try:
             results[vname] = {"status": "PASS", "detail": fn()}
