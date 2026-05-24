@@ -5962,7 +5962,7 @@
       "priority": 800,
       "scope": "verify_interact_036 V4 锚定的 EXPECTED_VERIFY_024_SHA256 与 main bb5dcfc 下 verify_interact_024.py 实际 sha256 不一致，pre-existing 漂移，与 infra-034 推广无关。需要一次性同步常量并补 regression。",
       "source": "infra-034 Reviewer LGTM 建议",
-      "status": "in_progress",
+      "status": "passing",
       "title": "同步 verify_interact_036 V4 中 EXPECTED_VERIFY_024_SHA256 至 working tree 实际值",
       "verification": [
         "V0: docstring + sha256",
@@ -6011,6 +6011,93 @@
               "typo_guard": "0/350"
             }
           ]
+        },
+        "closeout_verify": {
+          "main_head_sha": "0000000000000000000000000000000000000000",
+          "baseline_head_echo": "f5c9e4e",
+          "merge_commit_sha": "1d7fd2e76637fec6e419dff42386863e52fc6c71",
+          "verify_runs": [
+            {
+              "name": "verify_infra_034_backlog_verify_036_v4_sha_stale_sync",
+              "status": "PASS",
+              "tail_stdout": [
+                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V1_verify_024_file_sha file=9e5af28633783184 expect=9e5af28633783184 embedded_in_036=9e5af28633783184 cross_ok=True",
+                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V2_verify_036_file_sha got=4f5e70b8e937c869 expect=4f5e70b8e937c869",
+                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V3_docstring_procedure_anchors anchors_required=4 missing=[]",
+                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V4_mutant_proof mutated_sha=cc3b8aef1811bb00 expect_lock=4f5e70b8e937c869 differs=True",
+                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync] summary total=5 failed=0"
+              ],
+              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+            },
+            {
+              "name": "verify_interact_036",
+              "status": "PASS",
+              "tail_stdout": [
+                "[verify_interact_036] PASS V3_mutant_proof: mutant in-memory 演练: 删 try/except 包裹后函数体 wrap sanity FAIL (body_has_wrap_after_mutate=True unmasked_try=False)",
+                "[verify_interact_036] PASS V4_sha256_lock: verify_024 sha256=9e5af28633783184.. 锁面一致",
+                "[verify_interact_036] PASS V5_end_to_end_append: append +1 行, 字段齐全",
+                "[verify_interact_036] SUMMARY all_pass=True (6/6)"
+              ],
+              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": [
+                "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=132 enforced=91 violations=0",
+                "[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=132 enforced=91 violations=0",
+                "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40",
+                "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy grace_skipped=True",
+                "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+              ],
+              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+            },
+            {
+              "name": "verify_infra_100",
+              "status": "PASS",
+              "tail_stdout": [
+                "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed",
+                "[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True",
+                "[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected",
+                "[verify_infra_100][PASS] V5_reviewer_lgtm_gate verdict=LGTM kind=sub_agent_fresh_context summary_len=342",
+                "[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+              ],
+              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+            },
+            {
+              "name": "verify_infra_060",
+              "status": "PASS",
+              "tail_stdout": [
+                "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]",
+                "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=[_verify_lib]",
+                "[verify_infra_060][PASS] V4_dump_includes_reverse_index",
+                "[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True",
+                "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+              ],
+              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-67 #16 V4 sha stale sync verify 设计双层防御 (V1 直读 working tree + V2 锁 verify_036 自身 sha + V3 docstring 4 anchors + V4 mutant 篡改 sha 必 FAIL), mutation A/B/C 全 trip, _verify_lib 0 diff, P261 OK, 与 infra-034 主线无耦合",
+            "checks_run": [
+              "V1_verify_024_file_sha",
+              "V2_verify_036_file_sha",
+              "V3_docstring_procedure_anchors",
+              "V4_mutant_proof",
+              "P261_no_lib_diff_no_merge_no_passing",
+              "reviewer_fresh_context"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "设计双层防御: V1 锁 working tree 真实 sha 与 verify_036 embed 常量一致, V4 通过 in-memory mutation 覆盖 sha 必须 trip, 形成双向 guard"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": []
         }
       }
     },

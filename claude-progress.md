@@ -1,3 +1,19 @@
+## Session 2026-05-24 — phase-67 #16 infra-034-backlog-verify-036-v4-sha-stale-sync (Closeout)
+
+- base main HEAD=f5c9e4e; feat/infra-034-backlog-verify-036-v4-sha-stale-sync HEAD=eabf6ba; merge_sha=1d7fd2e (no-ff merge to main)
+- 新增 scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py：锁 V4 锚定的 EXPECTED_VERIFY_024_SHA256 与 working tree 真实 sha 一致 + 锁 verify_interact_036.py 自身 sha (双向 guard)
+- 同步 verify_interact_036 V4 docstring，加 4 处 anchors（更新规程 / 来源 / 触发条件 / 失败处理）
+- Mutation A/B/C 全 trip, _verify_lib 0 diff, P261 OK (Researcher + Reviewer 已 LGTM)
+- verify runs (P299 compliant rc capture，freshness_anchor=1d7fd2e merge_sha)：
+  - scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py: PASS (5/5, rc=0)
+  - scripts/verify_interact_036.py: PASS (6/6, rc=0)
+  - scripts/verify_infra_062.py: PASS (30 emit-paths, rc=0; main_head_sha=1d7fd2e... 40-hex full OK)
+  - scripts/verify_infra_100.py: PASS (14 checks, rc=0)
+  - scripts/verify_infra_060.py: PASS (14 checks, rc=0)
+- feature_list.json: infra-034-backlog-verify-036-v4-sha-stale-sync → passing, closeout_verify P278 nested schema (main_head_sha 40-hex + verify_runs[5] + reviewer.sub_agent_fresh_context + LGTM)
+- 两步 commit：第一次 placeholder, backfill main_head_sha 后第二次 v_062 复跑 PASS
+- Reviewer (sub-agent, fresh context): LGTM — 设计双层防御 (V1 working tree 真实 sha 锁 + V2 verify_036 自身 sha 锁 + V3 docstring anchors + V4 mutant trip), 与 infra-034 主线 0 耦合
+
 ## Session 2026-05-24 — phase-67 #11 infra-100-backlog-agents-md-sha-cascade-fix (Closeout)
 
 - base main HEAD=5b4c5f4; feat/infra-100-backlog-agents-md-sha-cascade-fix HEAD=7346c98; merge_sha=581606a (no-ff merge to main)
