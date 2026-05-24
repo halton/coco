@@ -9495,3 +9495,19 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Reviewer sub-agent fresh-context: LGTM, P0/P1/P2 全空
 - Engineer 摘要: V1 由 literal substring 升级到 AST 解析 STEPS list, 精确识别 (Constant("typo_guard"), Name("smoke_typo_guard")) tuple; quote/空白格式变化不再误报; rename key 触发 V1 FAIL; _verify_lib.py 未修改 (scope 干净)
 - status: in_progress → passing
+
+## Session 2026-05-24 phase-67 #4 closeout — infra-019-backlog-runs-on-matrix-os
+
+- feat 分支: feat/infra-019-backlog-runs-on-matrix-os (HEAD=36a8b92)
+- base main: 14239c9
+- merge --no-ff → main HEAD=cab81c9
+- verify_runs (P299 模式, rc 直读非 pipe):
+  - verify_infra_019.py: PASS (V1-V5 5/5, 新增 V5 PyYAML 双向 lock)
+  - verify_infra_P314_lib_sha_cascade.py: PASS (8/8, stale=0, live_sha=1990a9b61d3b14c9)
+  - verify_infra_062.py --anchor 36a8b92 (round1): PASS (30/30)
+  - verify_infra_062.py --anchor cab81c9 (round2): PASS (30/30)
+- Reviewer sub-agent fresh-context: LGTM, P0/P1/P2 全空
+- Engineer 摘要: verify-matrix.yml 8 处 runs-on 从硬编码 ubuntu-latest 改为 ${{ matrix.os }} (smoke + verify-vision/interact/companion/audio/robot/infra/publish); lint/changes 两个无 matrix 的 job 保持不变; verify_infra_019.py V5 用 PyYAML 安全解析整 yml, 双向断言 (matrix.os 必须用 ${{ matrix.os }}, 无 matrix.os 不可用); _verify_lib.py 未修改 (scope 干净)
+- status: in_progress → passing
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
