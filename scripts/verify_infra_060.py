@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "72a72a986f513f1483b3c49238ab85c185be6108b3616613eee0a613fc1caeb3"
+EXPECTED_DUMP_FILE_SHA = "83c8258ab830b590aeff02b98ec040f91afb9688a3d56f842d8f0b2af9579eda"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -141,7 +141,13 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   (target=AGENTS.md, _PER_FILE_LOCKS 已映射, 但 mermaid renderer 只 stem-resolve
 #   .py target, 非 .py 文件 (AGENTS.md/CLAUDE.md/docs/.md/PR template) 一律
 #   留 unknown 桶 — 性质同 #15/#18/#19, 是已建立的合理 unknown 模式)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 12
+# - phase-67 #26 (infra-P322-pr-template-decision-matrix-lock) 后: 12 → 13
+#   verify_infra_P322_pr_template_decision_matrix_lock 新增
+#   EXPECTED_PR_TEMPLATE_FILE_SHA (target=.github/PULL_REQUEST_TEMPLATE/verify-script.md,
+#   _PER_FILE_LOCKS 已映射, 但 mermaid renderer 只 stem-resolve .py target,
+#   非 .py 文件一律留 unknown 桶 — 性质同 #15/#18/#19/#24, 是已建立的合理
+#   unknown 模式)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 13
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({

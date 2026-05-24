@@ -123,6 +123,9 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # 所有 _RE_* 含 re.MULTILINE flag + 该文件 file-sha
     ("verify_infra_V26_strict_unknown_regex_multiline.py", "EXPECTED_BUMP_STRICT_UNKNOWN_FILE_SHA"):
         "scripts/bump_strict_unknown_sha.py (file-sha)",
+    # verify_infra_P322_pr_template_decision_matrix_lock — 锁 PR 模板决策矩阵 checkbox + file-sha
+    ("verify_infra_P322_pr_template_decision_matrix_lock.py", "EXPECTED_PR_TEMPLATE_FILE_SHA"):
+        ".github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)",
     # verify_interact_037 — 锁 verify_interact_024.py 的 func / file sha
     ("verify_interact_037.py", "EXPECTED_FUNC_SHA"):
         "scripts/verify_interact_024.py:_append_drift_history (func-sha)",

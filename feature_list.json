@@ -7087,7 +7087,10 @@
       "source": "interact-038 closeout Reviewer 第 3 条建议",
       "status": "backlog",
       "title": "verify-script PR 模板加 '请填决策矩阵那一行' check-box",
-      "verification": []
+      "verification": [],
+      "superseded_by": "infra-P322-pr-template-decision-matrix-lock",
+      "superseded_at": "2026-05-24T12:50:57Z",
+      "notes": "superseded by infra-P322-pr-template-decision-matrix-lock (phase-67 #26): file-sha + sentinel checkbox 机械化锁已落地; 决策矩阵 checkbox 实质内容由 infra-040 (Engineer/template) + infra-P322 (verify) 共同覆盖."
     },
     {
       "area": "infra",
@@ -23763,6 +23766,28 @@
       "source": "phase-67 #25 Reviewer derived",
       "scope": "phase-67 #25 Reviewer 衍生。phase-67 #15 起 v_110 V4d 持续 FAIL；建议优先级提升、单独立 backlog 排期解决。",
       "verification": []
+    },
+    {
+      "id": "infra-P322-pr-template-decision-matrix-lock",
+      "title": "verify_infra_P322: PR 模板决策矩阵 checkbox + file sha 机械化锁",
+      "area": "infra",
+      "priority": 999,
+      "status": "in_progress",
+      "phase": 67,
+      "created_at": "2026-05-24T12:50:57Z",
+      "updated_at": "2026-05-24T12:50:57Z",
+      "source": "interact-038-backlog-pr-template-decision-matrix-checkbox supersede (phase-67 #26)",
+      "scope": "新建 scripts/verify_infra_P322_pr_template_decision_matrix_lock.py 锁 .github/PULL_REQUEST_TEMPLATE/verify-script.md (V0 self-sha + V1 6 个 sentinel checkbox 字符串存在 + V2 mutant + V3 file-sha + V_last reviewer_lgtm_gate). 同步 dump_v4_sha_graph.py _PER_FILE_LOCKS 映射并 bump 15 处 EXPECTED_DUMP_FILE_SHA cascade, verify_infra_060 EXPECTED_CURRENT_UNKNOWN_COUNT 12→13 + 注释段补充. 在 feature_list.json 把原 interact-038-backlog-pr-template-decision-matrix-checkbox 标 superseded_by 注解.",
+      "verification": [
+        "scripts/verify_infra_P322_pr_template_decision_matrix_lock.py 自身 ALL PASS (closeout 后 V_last reviewer_lgtm_gate 也 PASS)",
+        "scripts/verify_infra_060.py rc=0 (unknown_count 12→13 新基线)",
+        "scripts/verify_infra_062.py rc 维持 main 916dda3 baseline (V4_runs_shape + V4_runs_freshness 2 pre-existing FAIL)",
+        "scripts/verify_infra_100.py rc=0",
+        "scripts/verify_infra_039.py rc=0",
+        "scripts/verify_infra_110.py rc 维持 V4d pre-existing baseline",
+        "./init.sh smoke 11/11"
+      ],
+      "evidence": []
     }
   ],
   "last_updated": "2026-05-24T20:00:00.000000Z",
