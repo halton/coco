@@ -78,7 +78,7 @@ EXPECTED_BUMP_REVERSE_FILE_SHA = (
     "db81f0c5e7afd4bb75cd03ecc2f96c28916e972e0046e2e551718fe4358fca9c"
 )
 EXPECTED_AGENTS_FILE_SHA = (
-    "31c305491b73dbeec16efb99cba306c7c261c0fd373c659fd8e63d68a8e631dd"
+    "e8251b9a98f9fb7849e232b7cec632a9e1689bf53bf7f2543787d7eacc45d36f"
 )
 
 _results: List[Tuple[str, bool, str]] = []

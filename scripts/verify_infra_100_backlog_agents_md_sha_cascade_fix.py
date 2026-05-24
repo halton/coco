@@ -47,7 +47,7 @@ from _verify_lib import (  # noqa: E402
 
 # 期望值: AGENTS.md 当前实际 sha (与 verify_infra_100.py 应一致)
 EXPECTED_AGENTS_MD_FILE_SHA = (
-    "31c305491b73dbeec16efb99cba306c7c261c0fd373c659fd8e63d68a8e631dd"
+    "e8251b9a98f9fb7849e232b7cec632a9e1689bf53bf7f2543787d7eacc45d36f"
 )
 # _verify_lib.py 不许改 (硬规则)
 EXPECTED_VERIFY_LIB_FILE_SHA = (
