@@ -22440,6 +22440,28 @@
         }
       },
       "updated_at": "2026-05-24T16:00:00.000000Z"
+    },
+    {
+      "area": "infra",
+      "id": "infra-060-backlog-real-unknown-count-fix",
+      "name": "verify_infra_060.py V4_real_unknown_count_eq_one bump expect 4 → 7 (phase-67 累积 .md/template target unknown 同步)",
+      "description": "verify_infra_060.py V4_real_unknown_count_eq_one 长期 baseline FAIL (unknown_count=7 expect=4)。phase-67 累积新增 3 个 .md/template target 锁 (verify_infra_040 EXPECTED_DEFAULT_TMPL_SHA / verify_infra_100 EXPECTED_AGENTS_MD_FILE_SHA + EXPECTED_CLAUDE_MD_FILE_SHA / verify_infra_100_backlog_agents_md_sha_cascade_fix EXPECTED_AGENTS_MD_FILE_SHA / verify_infra_P288 EXPECTED_AGENTS_MD_FILE_SHA / verify_infra_P301_followup_typed_enum EXPECTED_P301_FULL_FILE_SHA / verify_robot_034 EXPECTED_DOC_SHA), 全部为非 .py target, mermaid stem-resolve 失败留 unknown, 与原 EXPECTED_DOC_SHA 设计意图一致 (合理 unknown)。本 feature bump EXPECTED_CURRENT_UNKNOWN_COUNT 4 → 7, 扩展模块注释列出 7 项, 让 verify_infra_060 重新 ALL PASS, 消除最后一个 pre-existing baseline FAIL。Sim-only, 单文件常量替换 + 新增自验脚本。",
+      "phase": 67,
+      "priority": 800,
+      "status": "in_progress",
+      "origin_backlog": [
+        "pre-existing baseline FAIL: verify_infra_060.py V4_real_unknown_count_eq_one (unknown_count=7 expect=4)",
+        "phase-67 #12 brief: 高 ROI 一举消除最后一个已知 pre-existing baseline FAIL"
+      ],
+      "verification": [
+        "V1: scripts/verify_infra_060.py 中 EXPECTED_CURRENT_UNKNOWN_COUNT 字面值 == 7 (regex 抓常量, 防回退).",
+        "V2: scripts/verify_infra_060.py 整脚本子进程 rc=0 (含 V4_real_unknown_count_eq_one 恢复 PASS).",
+        "V3: scripts/verify_infra_060_backlog_real_unknown_count_fix.py main func sha 自锁.",
+        "V4: scripts/_verify_lib.py file sha 未变 (硬规则: 不动 _verify_lib.py).",
+        "V5: verify_<feature_id>.py 自验 rc=0."
+      ],
+      "evidence": {},
+      "updated_at": "2026-05-24"
     }
   ],
   "last_updated": "2026-05-24T16:00:00.000000Z",

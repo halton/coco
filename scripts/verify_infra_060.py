@@ -111,7 +111,20 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   text dump unknown 15→1; mermaid 路径 unknown 16→4 (剩余 4 项 target 是
 #   非 .py 文件: AGENTS.md / CLAUDE.md / pull_request_template.md /
 #   docs/sha_lock_strategy.md, mermaid stem-resolve 失败仍归 unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 4
+# - phase-67 #12 (infra-060-backlog-real-unknown-count-fix) 后: 7
+#   phase-67 累积新增 3 个 .md / template target 锁 → 也是 mermaid stem-resolve
+#   失败留 unknown 的合理情形 (与已有 4 项同性质, 均为 docs/.md/template 非 .py):
+#     verify_infra_040           EXPECTED_DEFAULT_TMPL_SHA   (PR template)
+#     verify_infra_100           EXPECTED_AGENTS_MD_FILE_SHA (AGENTS.md)
+#     verify_infra_100_backlog_agents_md_sha_cascade_fix
+#                                EXPECTED_AGENTS_MD_FILE_SHA (AGENTS.md)
+#     verify_infra_P288          EXPECTED_AGENTS_MD_FILE_SHA (AGENTS.md)
+#     verify_infra_P301_followup_typed_enum
+#                                EXPECTED_P301_FULL_FILE_SHA (P301 .md doc)
+#     verify_robot_034           EXPECTED_DOC_SHA            (docs/.md)
+#     verify_infra_100           EXPECTED_CLAUDE_MD_FILE_SHA (CLAUDE.md)
+#   全部均为非 .py target, 与原 EXPECTED_DOC_SHA 设计意图一致, 不试图归入 lib/dump。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 7
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
