@@ -3218,10 +3218,16 @@
       "origin_backlog": [
         "infra-019 Reviewer caveat"
       ],
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
-      "verification": null
+      "phase": 67,
+      "priority": 800,
+      "status": "in_progress",
+      "verification": [
+        "V5: verify_infra_019.py 新增 V5 — 所有 strategy.matrix 含 os 维度的 job, runs-on 必须为 ${{ matrix.os }}; 反向 (无 matrix.os 的 job 不可用 ${{ matrix.os }})。基于 PyYAML 安全解析整个 yml, 遍历 jobs 字典。",
+        "Workflow 改动: verify-matrix.yml 中 8 个有 matrix.os 维度的 job (smoke + verify-vision/interact/companion/audio/robot/infra/publish) 的 runs-on 从硬编码 'ubuntu-latest' 改为 '${{ matrix.os }}'; lint / changes 两个无 matrix 的 job 保持 ubuntu-latest 不变。",
+        "Sim-first 注: 当前 matrix.os 仍只含 ubuntu-latest, 本 feature 仅完成 prep, 让未来扩 macos/windows 时无需再改 runs-on。各 OS rc=0 evidence 留作真实扩 matrix 时再补 (异步 uat-* 或后续 feature)。",
+        "V1-V4: 既有 4 个 V 全 PASS, 无 regress。",
+        "verify_runs (HEAD=feat/infra-019-backlog-runs-on-matrix-os): V1-V5 5/5 PASS; verify_infra_062 PASS (anchor=feat HEAD); verify_infra_P314 PASS."
+      ]
     },
     {
       "area": "infra",
