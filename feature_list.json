@@ -18726,8 +18726,112 @@
       "priority": 2,
       "scope": "phase-64 #5 V12 后 unknown 余项 15 主要来自 V4_CHECKER / UNKNOWN_IDS_SHA 内容锁; 在被持有的 helper / lib 上补 V12 docstring (target_path/target_func) 把 unknown 进一步降到 <10. V13 范畴.",
       "source": "phase-64 #5 infra-V12-AST-based-infer-target-hardening Reviewer P2-5",
-      "status": "not_started",
-      "title": "V13 V4_CHECKER / UNKNOWN_IDS_SHA docstring lock 推广进一步降 unknown"
+      "status": "passing",
+      "title": "V13 V4_CHECKER / UNKNOWN_IDS_SHA docstring lock 推广进一步降 unknown",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "99eaf1a4",
+          "baseline_head_echo": "0970bc2",
+          "merge_commit_sha": "99eaf1a4",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=310 well_formed=310 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n"
+            },
+            {
+              "name": "verify_infra_033",
+              "status": "PASS",
+              "tail_stdout": "[V0_sys_path_and_target] PASS\n[V1_literal_sentinels] PASS\n[V2_lock_params] PASS\n[V3_mutant_reject] PASS\n[V4_sha256_full_file] PASS\n[V5_subprocess_invoke_verify_024] PASS\n\nwrote /Users/halton/work/coco/evidence/infra-033/verify_summary.json\n"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034\n[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=158 ok=151 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0\n[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=154/158 via={'docstring': 18, 'self_convention': 69, 'acceptlist': 3, 'explicit': 8, 'dump_table': 60}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_042.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=e3223584fbdb5f1b firsts=explicit@scripts/_verify_lib.py:assert_unique_needle=3b92e4f2a058'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)\n"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=105 enforced=74 soft_skipped=31 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=105 enforced=70 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=105 enforced=70 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=105 enforced=70 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=39 v3_table=39 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)\n"
+            },
+            {
+              "name": "verify_infra_037",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=781650973120bca1 expect=781650973120bca1\n[verify_infra_037][PASS] V3_mutant_detected mut=67cfe308cce98983 baseline=9f8b37464dd25d15\n[verify_infra_037][PASS] V4_helper_load _verify_lib loaded\n[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64\n[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_037__' in grace_period (skipped)\"\n[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True msg=\"top-level function 'dup_target' ambiguous in /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/verify_infra_037_vbqjj2ei_v6_dup.py: found 2 definitions at lineno=[1, 7]\"\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)\n"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 4 composite key src segments free of 'expected' substring (case-insensitive)\n[verify_infra_110] PASS V4d_unknown_tgt_raw_no_expected_substring: all 4 unknown_* tgt raw src segments free of 'expected' substring (case-insensitive, anchor-independent)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=4cc7d516805927ea expect=4cc7d516805927ea\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)\n"
+            },
+            {
+              "name": "verify_infra_P306",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P306] PASS V2_helper_has_pragma_and_algo: pragma_const=True algo_fn=True\n[verify_infra_P306] PASS V3_dryrun_all: rc=0 candidates=2\n[verify_infra_P306] PASS V4_dryrun_safe: has_FAIL=False has_APPLIED=False\n[verify_infra_P306] PASS V5_target_missing: rc=2\n[verify_infra_P306] PASS V6_target_no_pragma: rc=2\n[verify_infra_P306] PASS V7_algo_equiv_035: helper=a5901bb7a3ae9b8a ref=a5901bb7a3ae9b8a\n[verify_infra_P306] PASS V8_algo_equiv_033: helper=615a3af9ddf86bea ref=615a3af9ddf86bea\n[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]\n[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks\n"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V0_verify_lib_exists: /Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_P314] PASS V0_scripts_dir: /Users/halton/work/coco/scripts\n[verify_infra_P314] PASS V1_docstring_sentinel: sentinel=INFRA_P314_SHA_LOCKS\n[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)\n[verify_infra_P314] PASS V4_self_lib_sha: got=43d352534301242f expect=43d352534301242f\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=43d352534301242f\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)\n"
+            },
+            {
+              "name": "verify_infra_040",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_040][PASS] V4_checkbox_count checkbox_count=14 (>=10 expected)\n[verify_infra_040][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_040__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_040__' in grace_period (skipped)\"\n[verify_infra_040][PASS] V6a_verify_lib_file_sha got=43d352534301242f expect=43d352534301242f\n[verify_infra_040][PASS] V6b_assert_unique_needle_func_sha got=3b92e4f2a058b1bd expect=3b92e4f2a058b1bd\n[verify_infra_040][PASS] V6c_source_literal[empty needle] literal='empty needle' present=True\n[verify_infra_040][PASS] V6c_source_literal[非重叠] literal='非重叠' present=True\n[verify_infra_040][PASS] V6d_empty_needle_rejects raised=ValueError('empty needle: assert_unique_needle 不接受空字符串') msg_match=True\n[verify_infra_040][PASS] V6e_overlap_aaa_aa_unique count=1 (non-overlap) treated as unique\n[verify_infra_040][PASS] V6f_aaaa_aa_non_unique raised=ValueError(\"needle 不唯一: count=2, needle='aa'\") count_in_msg=True\n[verify_infra_040][SUMMARY] ALL PASS (18 checks)\n"
+            },
+            {
+              "name": "verify_infra_059",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_059][PASS] V4_real_count_eq_current unknown_count=4 expect=4\n[verify_infra_059][PASS] V4_real_total_nodes_ge_unknown total_nodes=143 unknown_count=4\n[verify_infra_059][PASS] V4_real_total_nodes_within_tolerance total_nodes=143 expect=143 tolerance=±10\n[verify_infra_059][PASS] V4_tmp_positive_all_classified within_bound=True unknown_count=0 unknown_ids=[]\n[verify_infra_059][PASS] V4_tmp_boundary_eq_max within_bound=True unknown_count=1 unknown_ids=['x']\n[verify_infra_059][PASS] V4_tmp_mutant_excess_detected within_bound=False unknown_count=2 unknown_ids=['x', 'y']\n[verify_infra_059][PASS] V4_tmp_mutant_zero_max within_bound=False unknown_count=1 max_allowed=0\n[verify_infra_059][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_059__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_059__' in grace_period (skipped)\"\n[verify_infra_059][PASS] V6_unknown_ids_frozenset_sha got=11361ff9c910639f expect=11361ff9c910639f n=4\n[verify_infra_059][SUMMARY] ALL PASS (19 checks)\n"
+            },
+            {
+              "name": "verify_infra_100",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_100][PASS] V1_self_main_func_sha got=8c2d2684657a54da expect=8c2d2684657a54da\n[verify_infra_100][PASS] V2_agents_md_file_sha got=68cb7a3282f8172c expect=68cb7a3282f8172c\n[verify_infra_100][PASS] V3_claude_md_file_sha got=ef8341404bebd438 expect=ef8341404bebd438\n[verify_infra_100][PASS] V4_1_agents_md_sentinel_unique sentinel unique in AGENTS.md count=1\n[verify_infra_100][PASS] V4_2_agents_md_has_three_good_forms missing=[]\n[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg=\"needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\"\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason=\"feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK\"\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)\n"
+            },
+            {
+              "name": "verify_infra_101",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_101][PASS] V2_verify_lib_file_sha got=43d352534301242f expect=43d352534301242f\n[verify_infra_101][PASS] V3_locks_nonempty locks_count=57 (expect >= 5)\n[verify_infra_101][PASS] V3_const_name_whitelist bad=[] (allowed=['EXPECTED_LIB_FILE_SHA', 'EXPECTED_VERIFY_LIB_FILE_SHA'])\n[verify_infra_101][PASS] V3_dry_run_no_disk_change bump_changed=False lib_changed=False\n[verify_infra_101][PASS] V3_dry_run_rc_ok rc=0 (0=ok/no-op, 3=no locks)\n[verify_infra_101][PASS] V4_nnn_target_exists target=scripts/verify_robot_025.py\n[verify_infra_101][PASS] V4_nnn_lock_found locks_count=1\n[verify_infra_101][PASS] V4_nnn_lock_has_verify_025 const_names=['VERIFY_025_EXPECTED_SHA']\n[verify_infra_101][PASS] V5_reviewer_lgtm_gate target=infra-V6-bump-helper-lib-target helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-V6-bump-helper-lib-target' in grace_period (skipped)\"\n[verify_infra_101][SUMMARY] ALL PASS (14 checks)\n"
+            },
+            {
+              "name": "verify_infra_106",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_106][PASS] V1_summary_token_len_t_for_t_____in__results_ expect token in src: 'len({t for t, _, _ in _results})'\n[verify_infra_106][PASS] V2_doc_has_emit_paths docstring anchor='emit-paths'\n[verify_infra_106][PASS] V2_doc_has_unique_check_tags docstring anchor='unique check tags'\n[verify_infra_106][PASS] V2_doc_has_infra_P293_typo_guard_check_count_doc_reconcile docstring anchor='infra-P293-typo-guard-check-count-doc-reconcile'\n[verify_infra_106][PASS] V3_verify_infra_061_file_sha got=cd47627cc4048851 expect=cd47627cc4048851\n[verify_infra_106][PASS] V4_runtime_summary_match rc=0 last_line='[verify_infra_061][SUMMARY] ALL PASS (18 emit-paths / 18 unique check tags)'\n[verify_infra_106][PASS] V4_runtime_emit_eq_unique emit-paths=18 unique=18 (happy-path 1:1)\n[verify_infra_106][PASS] V4b_self_main_func_sha got=11a767c780326f4b expect=11a767c780326f4b\n[verify_infra_106][PASS] V5_reviewer_lgtm_gate target=infra-P293-typo-guard-check-count-doc-reconcile helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P293-typo-guard-check-count-doc-reconcile' in grace_period (skipped)\"\n[verify_infra_106][SUMMARY] ALL PASS (13 emit-paths / 13 unique check tags)\n"
+            }
+          ],
+          "reviewer": {
+            "kind": "sub_agent_fresh_context",
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "P318-V13-v4-checker-docstring-rollout 14 个新 docstring lock 6 字段完整正确，target 真实存在，lock_kind 与 const 后缀一致；12+ cascade bump 同步完整 (dump_v4 EXPECTED_DUMP_FILE_SHA 全 holder 已 bump 至 7971bdb7，059→074→079 total_nodes 86→143 unknown_count 16→4 一致)；v033 EXPECTED_MIN_ENTRIES 18→30 实测 entries=32 留 2 headroom 合理；dump_v4 _infer_target_via_ast N/A 归零化逻辑正确缩小 unknown 集 (text 15→1, mermaid 16→4)；3 例 mutation 反证全通过；v078/vP301_full 已确认 main 上同样 FAIL 即 pre-existing baseline 与本 feature 无关。",
+            "checks_run": 18,
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                {
+                  "id": "P2-1",
+                  "desc": "EXPECTED_DEFAULT_TMPL_SHA 因 _TMPL_SHA 后缀不符 V7 strict naming, 建议下一 sprint 改名或扩 V7 规则"
+                },
+                {
+                  "id": "P2-2",
+                  "desc": "mermaid 余 4 unknown 是非 .py target (md/docs), 建议加非 .py 兜底分支"
+                },
+                {
+                  "id": "P2-3",
+                  "desc": "mutation C 数字 22 vs Engineer 摘要 15-16 微差, 仅记录"
+                }
+              ]
+            }
+          }
+        },
+        "reviewer": {
+          "kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "P318-V13-v4-checker-docstring-rollout 14 个新 docstring lock 6 字段完整正确，target 真实存在，lock_kind 与 const 后缀一致；12+ cascade bump 同步完整 (dump_v4 EXPECTED_DUMP_FILE_SHA 全 holder 已 bump 至 7971bdb7，059→074→079 total_nodes 86→143 unknown_count 16→4 一致)；v033 EXPECTED_MIN_ENTRIES 18→30 实测 entries=32 留 2 headroom 合理；dump_v4 _infer_target_via_ast N/A 归零化逻辑正确缩小 unknown 集 (text 15→1, mermaid 16→4)；3 例 mutation 反证全通过；v078/vP301_full 已确认 main 上同样 FAIL 即 pre-existing baseline 与本 feature 无关。"
+        }
+      }
     },
     {
       "area": "infra",
@@ -19298,6 +19402,30 @@
       "status": "passing",
       "title": "_infer_target 真消除硬编码: 用 AST + symbol table 替代字符串模式拼接",
       "verification": "V8 not_found < 20; smoke PASS; v062 PASS; Reviewer LGTM"
+    },
+    {
+      "id": "infra-P321-V13-tmpl-sha-rename-or-V7-relax",
+      "title": "EXPECTED_DEFAULT_TMPL_SHA 后缀 _TMPL_SHA 不符 V7 strict naming, 改名或扩 V7 规则",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "origin": {
+        "from": "infra-P318-V13-v4-checker-docstring-rollout Reviewer P2-1",
+        "main_head_sha": "99eaf1a4"
+      }
+    },
+    {
+      "id": "infra-P322-V13-mermaid-non-py-target-fallback",
+      "title": "mermaid 余 4 unknown 是非 .py target (md/docs), 加非 .py 兜底分支",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "origin": {
+        "from": "infra-P318-V13-v4-checker-docstring-rollout Reviewer P2-2",
+        "main_head_sha": "99eaf1a4"
+      }
     }
   ],
   "last_updated": "2026-05-24",

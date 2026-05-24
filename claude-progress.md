@@ -9015,3 +9015,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - infra-P320-V8-acceptlist-041-baseline-fix (priority=999, status=backlog) — P2-3 衍生
 
 **下一步**: phase-65 #2 infra-P318-V13-v4-checker-docstring-rollout
+
+## Session phase-65 #2 closeout — infra-P318-V13-v4-checker-docstring-rollout (2026-05-24)
+
+- NEW_MAIN_SHA=99eaf1a4 (merge --no-ff feat/infra-P318-V13-v4-checker-docstring-rollout, e1e9082)
+- 14 个新 docstring lock 落地, 6 字段完整 (target/lock_kind/const/expected/ref/note 等)
+- v033 EXPECTED_MIN_ENTRIES 18→30 (实测 entries=32, 留 2 headroom)
+- dump_v4 _infer_target_via_ast N/A 归零化: text unknown 15→1, mermaid 16→4
+- verify_runs (P278 trustworthy + P299 rc-safe) 全 PASS: smoke + 033 (V4 PASS V5 PASS) + 039 (27 checks, V8 coverage=97.5%) + 062 (30/30 emit-paths) + 037 (15 checks) + 110 (19 checks V7 docstring V11 lock values) + P306 (10/10) + P314_lib_sha_cascade (8/8 found=46 stale=0) + 040 (18) + 059 (19 V6 frozenset_sha=11361ff9c910639f n=4) + 100 (14) + 101 (14) + 106 (13)
+- Reviewer (sub_agent_fresh_context): LGTM, 18 checks, P0=[] P1=[] P2=3 (tmpl-sha rename / mermaid non-py fallback / mutation 数字微差)
+- 2 backlog 入账: infra-P321-V13-tmpl-sha-rename-or-V7-relax, infra-P322-V13-mermaid-non-py-target-fallback (priority=999 status=backlog phase=null)
+- next candidate: phase-65 #3 infra-P317-V12-syspath-restore
