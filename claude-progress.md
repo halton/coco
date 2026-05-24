@@ -9530,3 +9530,22 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - status: in_progress → passing
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+## Session 2026-05-24: phase-67 #6 infra-110-backlog-docstring-narrative-update-post-p290-func-lock closeout passing
+- feature: infra-110-backlog-docstring-narrative-update-post-p290-func-lock
+- engineer commit: 07289cb (feat/infra-110-backlog-docstring-narrative-update-post-p290-func-lock)
+- base main: a5fd01e
+- merge_commit: a9d7983 (no-ff merge into main)
+- main HEAD final: a9d7983
+- verify_runs (P299 模式, > /tmp/x.log; rc=$?):
+  - scripts/verify_infra_110.py: PASS 19/19 (V0-V11 含 V4b/V6/V6b/V6c/V7/V11 锁覆盖)
+  - scripts/verify_infra_P314_lib_sha_cascade.py: PASS 8/8 (lib sha 未漂移)
+  - scripts/verify_infra_062.py round1 anchor=07289cb: PASS 30/30 emit-paths
+  - scripts/verify_infra_062.py round2 anchor=a9d7983: PASS 30/30 emit-paths
+- Reviewer sub-agent fresh-context: LGTM, P0=[] P1=[1 newline closeout 已修复] P2=[1 narrative-lock 设计说明]
+- Engineer 摘要: scripts/verify_infra_110.py docstring L13-18 narrative 更新 +9/-2, 反映 P290 V2 file_sha→func_sha 演进 (phase-62 #4) + EXPECTED_SELF_MAIN_FUNC_SHA 跨 7+ verify 脚本真实存在
+- Reviewer summary: 纯 docstring narrative 更新, 历史叙事真实反映 P290 V2 file_sha→func_sha 演进, scope 仅 docstring L13-25 narrative 段, 不在 V4b/V7/V11 锁覆盖范围内 (设计上的自由叙事区)
+- closeout P1 修复: feature_list.json 末尾补 trailing newline (printf '\n' >>)
+- status: in_progress → passing
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告

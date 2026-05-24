@@ -18785,8 +18785,83 @@
       "phase": 67,
       "priority": 800,
       "source": "phase-62 #4 infra-P290-backlog-v2-target-sha-func-level-lock closeout Reviewer P2",
-      "status": "in_progress",
-      "title": "verify_infra_110.py L16 docstring 历史叙事更新（P290 file_sha → func_sha）"
+      "status": "passing",
+      "title": "verify_infra_110.py L16 docstring 历史叙事更新（P290 file_sha → func_sha）",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "a9d7983",
+          "baseline_head_echo": "a5fd01e",
+          "merge_commit_sha": "a9d7983",
+          "verify_runs": [
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110][SUMMARY] ALL PASS (19 checks)",
+              "freshness_anchor": "a9d7983"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "a9d7983"
+            },
+            {
+              "name": "verify_infra_062 round1",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "07289cb"
+            },
+            {
+              "name": "verify_infra_062 round2",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "a9d7983"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "纯 docstring narrative 更新, 历史叙事真实反映 P290 V2 file_sha→func_sha 演进 (phase-62 #4), 新引用 EXPECTED_SELF_MAIN_FUNC_SHA 跨 7+ verify 脚本真实存在; verify_infra_110/062/P314 全 PASS; _verify_lib.py 未改; scope 仅 docstring L13-25 narrative 段, 不在 V4b/V7/V11 锁覆盖范围内, 属设计上的\"自由叙事区\", 不需补 lock。",
+            "checks_run": [
+              "L13-25 narrative 内容真实性 (P290 V2 file_sha→func_sha 演进 phase-62 #4)",
+              "EXPECTED_SELF_MAIN_FUNC_SHA 跨 verify 脚本存在性 (7+ scripts)",
+              "verify_infra_110.py 19 checks 全 PASS",
+              "verify_infra_P314 全 PASS",
+              "verify_infra_062 round1 anchor=07289cb 全 PASS",
+              "verify_infra_062 round2 anchor=merge_sha 全 PASS",
+              "_verify_lib.py 未改 (scope 仅 verify_infra_110.py docstring)",
+              "V4b/V7/V11 lock 字段未受影响",
+              "narrative 段不在 lock 覆盖范围 (设计上的自由叙事区)",
+              "docstring sentinel INFRA_110_SHA_LOCKS 仍存在",
+              "行数 diff +9/-2 (仅 narrative)",
+              "P0 issues: 无",
+              "P1 issues: feature_list.json 末尾缺 newline (closeout 已修复)",
+              "P2 issues: narrative 段不加 lock 是设计取舍",
+              "feat 分支 HEAD=07289cb",
+              "merge --no-ff 干净",
+              "feat 分支基于 a5fd01e (base main)"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [
+                {
+                  "issue": "feature_list.json 末尾缺 trailing newline",
+                  "status": "fixed_in_closeout",
+                  "fix": "printf \"\\n\" >> feature_list.json"
+                }
+              ],
+              "P2": [
+                {
+                  "issue": "docstring L13-25 narrative 段不在 V4b/V7/V11 lock 覆盖",
+                  "status": "by_design",
+                  "note": "narrative 段属设计上的自由叙事区, 不需补 lock"
+                }
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": []
+        }
+      }
     },
     {
       "area": "infra",
