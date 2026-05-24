@@ -9,14 +9,20 @@ phase-63 #3 引入 ``_parse_lock_docstring`` / ``scan_per_file_locks_from_docstr
 bump_when / bump_protocol / rationale), 让机械化 audit 可以从一处统一抽取所有
 sha-lock 的元信息. 本 verify 锁住这一推广的最低基线.
 
-校验层级 (V1-V7):
-- V1_self_sha (V8 pragma 模式, 自身 file sha 自锁)
+校验层级 (V1-V8):
+- V1_self_sha (V8 pragma 模式, 自身 file sha 自锁; pragma 行排除在 sha 计算外)
 - V2_min_entries: scan_per_file_locks_from_docstrings 总 entries >= EXPECTED_MIN_ENTRIES
+  (phase-63 #5 推广后 17, phase-64 #2 拔至 18, phase-65 #2 拔至 30 实测 32)
 - V3_required_files_have_lock_block: 必须含 Lock 小节的 verify 文件清单都被 scan 命中
-- V4_field_completeness: 所有 entries 都 6/6 字段完备
+  (REQUIRED_LOCK_FILES: 037 / 039 / 049 / 062 / 110 / P290)
+- V4_field_completeness: 所有 entries 都 6/6 字段完备 (target_function / target_file /
+  lock_kind / bump_when / bump_protocol / rationale)
 - V5_target_files_resolvable: Lock 小节 target_file 字段指的文件应存在
+- V6_mutant_drop_lock_block (negative control): 临时把 verify_infra_039.py 顶部
+  docstring 的 ``## Lock:`` 小节 header 抹掉 → 跑 scan 期 039 不再被发现 → 反证 V3
+  不是永真; finally 块还原。
 - V7_doc_value_consistency (infra-V11-doc-value-lock-rollout, phase-64 #2):
-  把 verify_infra_110 的 V11 (6-field 值精确匹配) 模式机械化推广到全量 18+ entries.
+  把 verify_infra_110 的 V11 (6-field 值精确匹配) 模式机械化推广到全量 entries.
   对每个 (file, const) Lock entry 校验:
     (a) const_name 命名一致: lock_kind=file_sha → const_name endswith _FILE_SHA;
         lock_kind=ast_func_sha → const_name endswith _FUNC_SHA
@@ -25,12 +31,9 @@ sha-lock 的元信息. 本 verify 锁住这一推广的最低基线.
         function 集合中找到 (调 func_sha_by_name 不抛异常即可, 返回 hex sha 表示
         AST 顶层定义存在)
   任一字段值偏离即 FAIL, 锁住 docstring lock 元信息的语义正确性, 不仅锁存在性.
-
-V6 mutant: 临时把 scripts/verify_infra_039.py 顶部 docstring 的 Lock 小节抹掉 →
-   subprocess 跑 V3 应判定 039 缺失 → finally 还原.
-
-V8 mutant (V11 rollout): 在内存中构造一个 fake entry, 把 target_function 改成不存在
-   的函数名, 走 V7 期 FAIL; 反证 V7 不是永真.
+- V8_mutant_break_func_name (negative control for V7, phase-64 #2): 在内存中构造一个
+  fake entry, 把 target_function 改成不存在的函数名 → 子调用 V7 期 FAIL → 反证 V7
+  不是永真; 子调用 stdout 重定向, 不污染主 _results。
 
 ## Lock: EXPECTED_SELF_FILE_SHA
 - target_function: N/A
@@ -63,7 +66,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 # V1: 自身 file sha 自锁 (V8 pragma 模式, 计算时剔除带 pragma 的那一行)
-EXPECTED_SELF_FILE_SHA = "615a3af9ddf86bea5dfa01bd4ca3a82dbe2752045c066d51f2361a7d95798bc7"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "52558e0ba8c0ed77a78b29d089cf57b6d05eba5a9c8cefe2a6fd62cfa6be3760"  # V8-SELF-SHA-SKIP
 
 # V2: scan 输出 entries 数下界 (phase-63 #5 推广后 17 个, 留少量余量;
 #     phase-64 #2 V11-doc-value-lock-rollout 把基线上拔至实测 18.
