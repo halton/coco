@@ -116,6 +116,9 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/bump_reverse_sha_lock.py (file-sha)",
     ("verify_infra_V24.py", "EXPECTED_AGENTS_FILE_SHA"):
         "AGENTS.md (file-sha)",
+    # verify_infra_P299_engineer_task_size_guideline — 锁 AGENTS.md "Engineer 任务尺寸指导" 段 (file-sha)
+    ("verify_infra_P299_engineer_task_size_guideline.py", "EXPECTED_AGENTS_FILE_SHA"):
+        "AGENTS.md (file-sha)",
     # verify_interact_037 — 锁 verify_interact_024.py 的 func / file sha
     ("verify_interact_037.py", "EXPECTED_FUNC_SHA"):
         "scripts/verify_interact_024.py:_append_drift_history (func-sha)",

@@ -46,7 +46,7 @@ AGENTS_MD = REPO / "AGENTS.md"
 SELF_PATH = Path(__file__).resolve()
 
 # V5c: AGENTS.md 整体 file sha — 首跑 placeholder, 跑出实测再回填
-EXPECTED_AGENTS_MD_FILE_SHA = "31c305491b73dbeec16efb99cba306c7c261c0fd373c659fd8e63d68a8e631dd"
+EXPECTED_AGENTS_MD_FILE_SHA = "e8251b9a98f9fb7849e232b7cec632a9e1689bf53bf7f2543787d7eacc45d36f"
 
 # V1: 本脚本 main() 自锁 — 首跑 placeholder, 跑出实测再回填
 EXPECTED_MAIN_FUNC_SHA = "3858f81a86392437a7342662e874b38006a059ca0976d7905137878cd7abc64e"

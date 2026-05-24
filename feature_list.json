@@ -12286,11 +12286,23 @@
     {
       "area": "infra",
       "id": "infra-P299-engineer-task-size-guideline",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 805,
       "rationale": "P294-Ry Engineer 因任务含 cascade bump 16+ verify 文件 + 新建 verify_infra_068 + commit + push, 单次 sub-agent 调度 2 次 socket 断, 拆 (A) 新建+本地 verify PASS / (B) cascade+commit+push 后才完成. 建议在 AGENTS.md / CLAUDE.md 写明: 当 Engineer 任务同时含 (1) 新建 verify + (2) cascade bump 10+ 文件 + (3) commit/push 时, 应预先拆为两步 sub-agent 派发, 降低 socket 断概率.",
-      "status": "backlog",
-      "title": "Engineer 任务尺寸指导: cascade+新建+commit+push 须拆 A+B"
+      "status": "in_progress",
+      "title": "Engineer 任务尺寸指导: cascade+新建+commit+push 须拆 A+B",
+      "verification": [
+        "python scripts/verify_infra_P299_engineer_task_size_guideline.py (V0-V5 ALL PASS, V5 待 Reviewer LGTM)",
+        "python scripts/verify_infra_V24.py (cascade: AGENTS.md sha bump)",
+        "python scripts/verify_infra_100.py",
+        "python scripts/verify_infra_100_backlog_agents_md_sha_cascade_fix.py",
+        "python scripts/verify_infra_P288.py",
+        "python scripts/verify_infra_062.py",
+        "python scripts/verify_infra_100.py",
+        "python scripts/verify_infra_060.py",
+        "python scripts/verify_infra_039.py",
+        "./init.sh smoke"
+      ]
     },
     {
       "area": "infra",

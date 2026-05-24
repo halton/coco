@@ -264,6 +264,25 @@ P294-Rx round-1 Engineer 把真 FAIL 误判为 PASS, 根因不是 verify 脚本 
 
 机械化锁: `scripts/verify_infra_V24.py` V1 在 `scripts/bump_reverse_sha_lock.py` 模块 docstring 与本节同时 grep sentinel 词 (`INFRA_V24_CASCADE_RESULT_SENTINEL_CONVENTIONS`, `SENTINEL_CASE_SENSITIVE`, `ARGPARSE_FAILURE_SKIPS_RESULT`); V3 mutant 任删一词 V1 应 FAIL。
 
+## Engineer 任务尺寸指导 (infra-P299-engineer-task-size-guideline)
+
+P294-Ry phase 中, 单次 Engineer sub-agent 被派去同时做 "新建一个 verify_*.py + cascade bump 16+ 个反向 sha 锁文件 + commit + push", socket 在中段断了两次, 任务被迫拆成 (A) "新建+本地 V0-V4 全 PASS" 和 (B) "cascade bump + commit + push" 两次 sub-agent 调度才完成。教训: 单次 sub-agent 任务越大, 网络/socket 断的累计概率越高, 一旦中段断电恢复方需要重读上下文非常昂贵。
+
+**`P299_ENGINEER_TASK_SIZE_SPLIT_AB`** 硬指南: 当 Engineer 任务**同时**包含以下三类动作时, 主会话**应预先拆为 A + B 两个 sub-agent 派发**, 不要单次完成:
+
+1. **新建 verify** (新文件 + V0-V5 全 PASS 本地跑通)
+2. **cascade bump >= 10 个反向 sha 锁文件** (例: `_PER_FILE_LOCKS` 牵动多个下游 verify 的 EXPECTED_*_FILE_SHA 同步更新)
+3. **commit + push** (网络阶段, socket 断概率显著)
+
+拆分协议:
+
+- **A (Engineer-build)**: 实施 + 本地 verify P299 rc 模式跑全套 PASS + 写入 feat 分支但**不 commit / 不 push**; 返回结构化 brief 含 `engineer_build_done=true` + 改动文件列表 + 本地 verify_runs。
+- **B (Engineer-cascade-and-ship)**: 接 A 的产物, 跑 cascade bump (`bump_strict_unknown_sha.py` / `bump_reverse_sha_lock.py`) → 跑所有受影响 verify → commit (sub-agent 直接执行, 不再问用户) → push 一次 (失败忽略继续) → 返回 commit sha + push 状态。
+
+判定阈值: 三条**全部**满足才拆 A+B。任意一条不满足 (如纯新建 verify 零 cascade、或纯文档 typo 无 verify、或仅 commit 无新建) 不必拆, 走单次 Engineer + 单次 Reviewer 即可。
+
+机械化锁: `scripts/verify_infra_P299_engineer_task_size_guideline.py` V1 grep 本节 sentinel 词 (`P299_ENGINEER_TASK_SIZE_SPLIT_AB`, `Engineer-build`, `Engineer-cascade-and-ship`); V3 mutant 任删一词 V1 应 FAIL; V4 锁 AGENTS.md 全文件 sha。
+
 ## 收尾
 
 结束会话前：
