@@ -18562,13 +18562,16 @@
         "infra-V6-backlog-strict-area-match-mode"
       ],
       "id": "infra-P312-strict-unknown-sha-auto-bump",
-      "phase": null,
-      "priority": 3106,
+      "phase": 66,
+      "priority": 660,
       "scope": "scan_unknown_area_nnns 加 closeout cascade hook 或 helper; 新增 verify_<area>_<NNN> 时自动 bump V3 EXPECTED_STRICT_UNKNOWN_SHA, 消除 EXPECTED_STRICT_UNKNOWN_SHA256 与 repo verify 脚本集合的强耦合带来的每次新增脚本就漂移的运维负担。",
       "source": "phase-63 #4 Reviewer P2",
-      "status": "not_started",
+      "status": "in_progress",
       "title": "scan_unknown_area_nnns 加 closeout cascade hook 自动 bump EXPECTED_STRICT_UNKNOWN_SHA",
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_P312.py"
+      ],
+      "updated_at": "2026-05-24"
     },
     {
       "area": "infra",
