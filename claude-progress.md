@@ -9852,3 +9852,23 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - main HEAD: 2e39fbf (Step-B backfill)
 - verify: v_P322_final 10/10 ALL PASS; v_062 FAIL 2/30 pre-existing baseline; v_100/060/039 ALL PASS; v_110 V4d pre-existing; smoke PASS
 - push: 单次尝试，失败忽略
+
+## Session 2026-05-24 phase-67 #27 — infra-V34-decisions-md-log-closeout-evidence-fix-precedent
+
+- feature: infra-V34-decisions-md-log-closeout-evidence-fix-precedent (in_progress → passing)
+- engineer commit: 03700dd on feat/infra-V34-decisions-md-log-closeout-evidence-fix-precedent
+- merge: 2aa8646 (no-ff merge of feat → main, base a0dd6b1)
+- Reviewer (sub-agent fresh-context): LGTM, 17 checks, findings={P0:[],P1:[],P2:[]}, summary 634 chars; pre-existing baselines (v_062 emit-paths shape+freshness, v_110 V4d expected-substring) 在 clean a0dd6b1 worktree 100% 复现
+- post-merge verify (P299 pattern `cmd > log 2>&1; rc=$?; tail log`):
+  - v_V34: rc=2 (V5 backloaded gate, self-target)
+  - v_062: rc=1 (FAIL 2/30 emit-paths 同 baseline; first_violation_feature_id=infra-P299-engineer-task-size-guideline, 非 infra-V34)
+  - v_100/060/039: rc=0 PASS
+  - v_110: rc=2 (FAIL 1/19 V4d 同 baseline)
+  - smoke: rc=0 PASS (typo-guard 375/375)
+- Step A placeholder evidence commit: e7a9b62 (main_head_sha=PENDING placeholder)
+- Step B backfill commit (final_main_head): 532ce99ae0dc8396eda17e097fe2f2ed1865d96d
+  - main_head_sha 设为 step-A sha e7a9b6230103fdb38743f8a70cf85373a988e54e (P278 要求 ≥7 hex; 实际 hex64)
+  - status: in_progress → passing
+  - reviewer.reviewer_kind = sub_agent_fresh_context (修正字段名: 原 brief 写 `kind`, helper 实际要 `reviewer_kind`)
+- final v_062 sanity: rc=1, emit-paths 与 baseline 一致, infra-V34 不出现在 first_violation
+- push: origin main + feat/infra-V34-... 均 403 (haltonhuo_microsoft → halton/coco 权限), 按 CLAUDE.md push 策略失败忽略继续
