@@ -119,6 +119,10 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # verify_infra_P299_engineer_task_size_guideline — 锁 AGENTS.md "Engineer 任务尺寸指导" 段 (file-sha)
     ("verify_infra_P299_engineer_task_size_guideline.py", "EXPECTED_AGENTS_FILE_SHA"):
         "AGENTS.md (file-sha)",
+    # verify_infra_V26_strict_unknown_regex_multiline — 锁 bump_strict_unknown_sha.py
+    # 所有 _RE_* 含 re.MULTILINE flag + 该文件 file-sha
+    ("verify_infra_V26_strict_unknown_regex_multiline.py", "EXPECTED_BUMP_STRICT_UNKNOWN_FILE_SHA"):
+        "scripts/bump_strict_unknown_sha.py (file-sha)",
     # verify_interact_037 — 锁 verify_interact_024.py 的 func / file sha
     ("verify_interact_037.py", "EXPECTED_FUNC_SHA"):
         "scripts/verify_interact_024.py:_append_drift_history (func-sha)",
