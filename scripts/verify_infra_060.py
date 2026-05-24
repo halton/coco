@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "cf7e23cb3273c42a0e56ed352c9f5d7755bd2ca3a213cfce505ed3836423b89f"
+EXPECTED_DUMP_FILE_SHA = "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填

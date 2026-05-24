@@ -19,6 +19,7 @@ verify_<id> 交叉锁 / _verify_lib file 锁 / v4_sha.json 表), 以文本或 JS
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -40,6 +41,13 @@ _MERMAID_PALETTE: Dict[str, Dict[str, str]] = {
     "module":  {"fill": "#c9f", "stroke": "#609", "color": "#000"},
     "unknown": {"fill": "#f99", "stroke": "#900", "color": "#000"},
 }
+
+# infra-110-backlog-mermaid-node-id-readability (phase-67 #8):
+# unknown 节点复合 key ``unknown_<src_stem>_<CONST>`` 总长阈值。超过时 const 段
+# 改用 ``CONSTHASH<hex8>`` 决定性短哈希, label 仍保留 ``?<CONST>`` 全名。
+# 50 字符: 当前 6 个 unknown 节点中 4 个超过 50 (最长 73), 阈值兼顾保留短名
+# 可读性 + 截短真正冗长者. verify_infra_110 anchor regex 同步扩展。
+_UNKNOWN_NODE_ID_LEN_THRESHOLD = 50
 
 # 形如  CONST = "abc...64..."  或  CONST = (\n    "abc...64..."\n)
 _RE_SINGLELINE = re.compile(
@@ -861,7 +869,26 @@ def render_mermaid(graph: Dict) -> str:
             # 错误地呈现为一个 unknown 节点接收多条入边, 实际上它们是两个互不相干的
             # 未识别 target。改为 (source_stem, const) 复合 key, 保证每个 source 的
             # 未知 target 独立成节点, label 仍是 ``?<CONST>`` 保持可读性。
-            tgt_id = _node_id(f"unknown_{src_stem}_{lock['const']}")
+            #
+            # infra-110-backlog-mermaid-node-id-readability (phase-67 #8):
+            # 当 const 名极长 (例如 ``EXPECTED_RENDER_MERMAID_FUNC_SHA``,
+            # ``EXPECTED_P301_FULL_FILE_SHA``) 时复合 key 总长可达 100+ 字符,
+            # mermaid 节点 id 视觉冗长。改进: 当复合 key 长度超过
+            # ``_UNKNOWN_NODE_ID_LEN_THRESHOLD`` 时, 将 const 段替换为
+            # ``CONSTHASH<hex8>`` (sha256(src_stem+const)[:8] 决定性短哈希),
+            # label 仍保留 ``?<CONST>`` 全名以保证可读性. (src, const) 唯一性
+            # 通过 sha 哈希 (含 src_stem) 隐式保留, 不会引起 V4_no_unknown_id_collision
+            # 退化. anchor regex ``unknown_<src>_<EXPECTED_*|CONSTHASH<hex8>>$``
+            # 被 verify_infra_110 同步扩展。
+            full_id = _node_id(f"unknown_{src_stem}_{lock['const']}")
+            if len(full_id) > _UNKNOWN_NODE_ID_LEN_THRESHOLD:
+                # 决定性短哈希 (src_stem + const), 8 hex 字符够 4B 命名空间
+                digest = hashlib.sha256(
+                    f"{src_stem}::{lock['const']}".encode("utf-8")
+                ).hexdigest()[:8]
+                tgt_id = _node_id(f"unknown_{src_stem}_CONSTHASH{digest}")
+            else:
+                tgt_id = full_id
             if tgt_id not in nodes:
                 out.append(f'    {tgt_id}["?{lock["const"]}"]')
                 nodes.add(tgt_id)
