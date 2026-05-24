@@ -9688,3 +9688,32 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 **Reviewer**: sub_agent_fresh_context LGTM, P0=[] P1=[] P2=[], 12 checks_run (见 evidence)。
 
 **Status**: in_progress → passing。
+
+---
+
+## Session 2026-05-24 phase-67 #15 (infra-034-backlog-typo-guard-expected-target-shas-fix) closeout
+
+**Feature**: infra-034-backlog-typo-guard-expected-target-shas-fix
+**Phase**: 67 #15
+**Status**: in_progress → passing
+**Branch**: feat/infra-034-backlog-typo-guard-expected-target-shas-fix
+**Merge commit**: d2af7f2 (no-ff)
+**Pre-merge main**: 64add10
+**Post-merge main HEAD**: d2af7f2f4b815106c1d2debc2285d04dc6750a76
+
+**修复目标**: P281 typo-guard 误报 — `EXPECTED_TARGET_SHAS` (verify_infra_034_backlog_expand_docstring_coverage.py:81) 被 `_RE_EXPECTED_TYPO_SUFFIX` 命中 `_SHAS$` 误判 typo, 在 smoke baseline 单点 FAIL, phase-66/67 多个 closeout evidence 已登记为 known_pre_existing_baseline_fail 等待 backlog 修复。
+
+**修复手段**: rename only — `EXPECTED_TARGET_SHAS` → `EXPECTED_TARGET_SHA_LIST` (line 81 定义 + line 175 使用), 与 `EXPECTED_LINES`/`EXPECTED_PALETTE`/`EXPECTED_FINGERPRINT` 同类合法非 sha 命名。语义/数据零变更。
+
+**新增锁**: scripts/verify_infra_034_backlog_typo_guard_expected_target_shas_fix.py (6 checks: V0 self_sha + V1 target_file_sha + V2 typo_guard clean + V3 OLD absent + V4 NEW present + V5 target still PASS)。v060 V0 unknown_count 8→9 (新 EXPECTED_TARGET_FILE_SHA 注册)。
+
+**Verify runs (post-merge anchor d2af7f2)**:
+- verify_infra_034_backlog_typo_guard_expected_target_shas_fix.py: 6/6 PASS
+- verify_infra_034_backlog_expand_docstring_coverage.py: 16/16 PASS (rename 后)
+- verify_infra_062.py: 30/30 PASS
+- verify_infra_100.py: 14/14 PASS
+- verify_infra_060.py: 14/14 PASS
+
+**Reviewer**: sub_agent_fresh_context LGTM, verdict=LGTM, summary_len 342, P0=[] P1=[] P2=[1 项 minor 命名一致性建议], _verify_lib.py 0 diff (P261 OK), mutation A/B/C 全 trip。
+
+**Known pre-existing baseline fails**: [] (本次修复正是消除 smoke typo_guard baseline 单点 FAIL)。

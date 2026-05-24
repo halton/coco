@@ -22341,7 +22341,7 @@
       "title": "Fix P281 typo-guard 误报 EXPECTED_TARGET_SHAS (verify_infra_034_backlog_expand_docstring_coverage.py:81) — rename 到 well-formed _LIST 后缀",
       "area": "infra",
       "priority": 800,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 67,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
@@ -22353,7 +22353,70 @@
         "verify_expected_prefix_typo_guard() 跑全 scripts/ typo_count==0 / all_well_formed==True",
         "verify_infra_062 ALL PASS (30 checks)",
         "verify_infra_100 P299 抽样 ALL PASS (14 checks)"
-      ]
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "d2af7f2",
+          "baseline_head_echo": "64add10",
+          "merge_commit_sha": "d2af7f2f4b815106c1d2debc2285d04dc6750a76",
+          "verify_runs": [
+            {
+              "name": "verify_infra_034_backlog_typo_guard_expected_target_shas_fix.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034_backlog_typo_guard_fix][PASS] V2_typo_guard_clean total=347 well_formed=347 typo_count=0\n[verify_infra_034_backlog_typo_guard_fix][PASS] V3_old_name_absent OLD='EXPECTED_TARGET_SHAS' present=False\n[verify_infra_034_backlog_typo_guard_fix][PASS] V4_new_name_present NEW='EXPECTED_TARGET_SHA_LIST' found=True tuple_of_tuples=True\n[verify_infra_034_backlog_typo_guard_fix][PASS] V5_target_still_passes rc=0 last='[verify_infra_034_backlog_expand] summary total=16 failed=0'\n[verify_infra_034_backlog_typo_guard_fix] summary total=6 failed=0",
+              "freshness_anchor": "d2af7f2f4b815106c1d2debc2285d04dc6750a76"
+            },
+            {
+              "name": "verify_infra_034_backlog_expand_docstring_coverage.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034_backlog_expand][PASS] V2_evidence/infra-034/v4_sha.json_sha got=48bb4792665ed692 expect=48bb4792665ed692\n[verify_infra_034_backlog_expand][PASS] V3_mutant after deletion missing=['运行环境约定'] (expect '运行环境约定' in missing)\n[verify_infra_034_backlog_expand][PASS] V4_verify_infra_034_TARGETS_registered len(TARGETS)=25; all 5 new targets registered\n[verify_infra_034_backlog_expand][PASS] V5_v4_sha_json all 5 new entries present + sha-coherent\n[verify_infra_034_backlog_expand] summary total=16 failed=0",
+              "freshness_anchor": "d2af7f2f4b815106c1d2debc2285d04dc6750a76"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=131 enforced=90 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=131 enforced=90 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "d2af7f2f4b815106c1d2debc2285d04dc6750a76"
+            },
+            {
+              "name": "verify_infra_100.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg=\"needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\"\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason=\"feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK\"\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "d2af7f2f4b815106c1d2debc2285d04dc6750a76"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "d2af7f2f4b815106c1d2debc2285d04dc6750a76"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-67 #15 Reviewer fresh-context 评审: rename EXPECTED_TARGET_SHAS → EXPECTED_TARGET_SHA_LIST 完成 typo-guard 误报消除; 7 verify + smoke 全 PASS, _verify_lib.py 0 diff (P261 OK), mutation A/B/C 三组 trip 反证锁强度足够, 语义零变更只改名, 符合 P281/P278/P299 全部硬规则.",
+            "checks_run": [
+              "V0 self_sha lock 锁住 verify 自身",
+              "V1 target_file_sha 锁住改后 expand.py",
+              "V2 typo_guard clean 全 scripts/ 347 well-formed",
+              "V3 OLD name 'EXPECTED_TARGET_SHAS' 完全消失",
+              "V4 NEW name 'EXPECTED_TARGET_SHA_LIST' 存在且 tuple_of_tuples",
+              "V5 target verify 仍 PASS (语义零变更)",
+              "_verify_lib.py 0 diff (P261)",
+              "mutation A/B/C 全 trip",
+              "smoke + 4 v062/v100/v060 全 PASS"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "rename only / 数据语义无改, 风险极低; 后续如新增 EXPECTED_*_SHAS 同类常量需统一用 _LIST 后缀 (已纳入 typo-guard 字典)"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": []
+        }
+      }
     },
     {
       "id": "infra-V35-cascade-bump-stale-v059-v062-reverse-locks",
