@@ -13,6 +13,24 @@ class 始终可构造（always-on）；main wire 仅在 COCO_ROBOT_SEQ=1 时启�
 default-OFF bytewise 与基线等价。
 
 followed_from: robot-005
+
+## ROBOT_009_OVERFLOW_POLICY_DOC (robot-007/009)
+
+RobotSequencer.enqueue 有界 queue + 三策略 (overflow_policy):
+
+- ``drop_oldest`` (默认): 队满时出队最旧 event, 入队新 event;
+  emit ``robot.sequence_drop{reason='drop_oldest'}``.
+- ``drop_new``: 队满时直接丢新 event, 不动队尾;
+  emit ``robot.sequence_drop{reason='drop_new'}``.
+- ``block``: 阻塞最多 ~1s 等 worker 消费, 超时退化为 drop_oldest;
+  非"无限阻塞", 用于回压敏感链路 (ProactiveScheduler 默认仍 drop_oldest).
+
+设计意图: callback 内 ``sequencer.enqueue(...)`` 默认非阻塞 (drop_oldest);
+显式选 ``block`` 才会让 caller 短暂等待, 且有 ~1s 超时保护避免业务线被卡死.
+
+bump_when: 三策略名 / 上限阻塞秒数 / 默认 policy 任何变更.
+
+followed_from: robot-007, reviewer caveat robot-009
 """
 
 from __future__ import annotations
