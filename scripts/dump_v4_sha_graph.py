@@ -462,6 +462,11 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         ".github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)",
     ("verify_infra_040.py", "EXPECTED_DEFAULT_TMPL_SHA"):
         ".github/pull_request_template.md (file-sha)",
+    # verify_infra_P297 (phase-67 #19 canary-mutant-parametrize) —
+    # 锁本脚本 v4_behavior_parametrized 函数 sha (V1_self_v4_func_sha)。
+    # 修复 v_039 V8 unaccepted not_found = ('verify_infra_P297.py', 'EXPECTED_V4_FUNC_SHA').
+    ("verify_infra_P297.py", "EXPECTED_V4_FUNC_SHA"):
+        "scripts/verify_infra_P297.py:v4_behavior_parametrized (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)

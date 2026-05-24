@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "6392d9b8eab1403176d32065b664040394e5d26cb1ebded1133ab18d87e25467"
+EXPECTED_DUMP_FILE_SHA = "5fbd46d4e1db3bdaf40d55f7ddbd3a8b408e9dd68a81e6c3f063e759adead47d"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -136,11 +136,7 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_P294_followup_070_self_func_sha_bump 新增 EXPECTED_TARGET_FILE_SHA
 #   (target=scripts/verify_infra_070.py, dump_v4 stem-resolve 失败, 归 unknown 桶),
 #   性质同 #15 (verify 自身 .py target unknown)。
-# - phase-67 #19 (infra-P297-canary-mutant-parametrize) 后: 11 → 12
-#   verify_infra_P297 新增 EXPECTED_V4_FUNC_SHA 常量 (self v4_behavior_parametrized
-#   func sha 自锁, target 推不出 → unknown 桶), 性质同 #18 (verify 自身 .py target
-#   unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 12
+EXPECTED_CURRENT_UNKNOWN_COUNT = 11
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
