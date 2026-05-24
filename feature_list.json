@@ -6000,7 +6000,7 @@
       "priority": 800,
       "scope": "infra-034 完成 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 120+ 候选 verify 脚本未应用「运行环境约定 docstring + sha256 自锁」模式。按 5/批节奏继续推广，每批一个新 infra-* feature 收口。",
       "source": "infra-034 Reviewer LGTM 建议",
-      "status": "in_progress",
+      "status": "passing",
       "title": "继续推广 docstring + sha 模式到剩余 verify 脚本（5/批）",
       "verification": [
         "V0: docstring + sha256",
@@ -6008,7 +6008,96 @@
         "V2: 每批 verify_infra_034 覆盖集 += 5；V0-V5 全 PASS",
         "V3: 收敛终点（剩余无锁 verify == 0 或显式标注 N/A）入 backlog"
       ],
-      "notes": "phase-67 #10 续推 batch=5 (verify_robot_030/031 + verify_interact_028/029/030): 5 个目标 docstring 末尾加\"运行环境约定 (infra-034)\"段, 含 5 KEY_PHRASES; TARGETS 元组 20→25; evidence/infra-034/v4_sha.json targets 20→25; cascade bump verify_infra_035.py VERIFY_034_EXPECTED_SHA + EXPECTED_SELF_FILE_SHA; 新增 scripts/verify_infra_034_backlog_expand_docstring_coverage.py V0(self_sha)+V1+V2(target_file_sha)+V3+V4+V5 全 PASS; v062 PASS, vP314 PASS."
+      "notes": "phase-67 #10 续推 batch=5 (verify_robot_030/031 + verify_interact_028/029/030): 5 个目标 docstring 末尾加\"运行环境约定 (infra-034)\"段, 含 5 KEY_PHRASES; TARGETS 元组 20→25; evidence/infra-034/v4_sha.json targets 20→25; cascade bump verify_infra_035.py VERIFY_034_EXPECTED_SHA + EXPECTED_SELF_FILE_SHA; 新增 scripts/verify_infra_034_backlog_expand_docstring_coverage.py V0(self_sha)+V1+V2(target_file_sha)+V3+V4+V5 全 PASS; v062 PASS. 注: P314 (verify_infra_P314_lib_sha_cascade) closeout 时未执行抽样, 抽样改为 verify_infra_110_const_case PASS; verify_infra_100.py V2_agents_md_file_sha 在 main baseline 2cdffb0 即 pre-existing FAIL (AGENTS.md sha cascade 漏锁与本 feat 无关).",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "369ac038e17d7082ac194b2a53c277cf73424a40",
+          "baseline_head_echo": "2cdffb0",
+          "merge_commit_sha": "369ac03",
+          "verify_runs": [
+            {
+              "name": "verify_infra_034_backlog_expand_docstring_coverage.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034_backlog_expand][PASS] V4_verify_infra_034_TARGETS_registered len(TARGETS)=25; all 5 new targets registered\n[verify_infra_034_backlog_expand][PASS] V5_v4_sha_json all 5 new entries present + sha-coherent\n[verify_infra_034_backlog_expand] summary total=16 failed=0",
+              "freshness_anchor": "369ac03"
+            },
+            {
+              "name": "verify_infra_034.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034][PASS] V6_live_sha_set live_verify_files=265\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=277; all match a live verify file sha\n[verify_infra_034] summary total=83 failed=0",
+              "freshness_anchor": "369ac03"
+            },
+            {
+              "name": "verify_infra_035.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_035][PASS] V9_pragma_cardinality pragma_hit_count=1 expect=1\n[verify_infra_035][PASS] V10_pragma_attached_to_real_constant_only line_repr='EXPECTED_SELF_FILE_SHA = \"f683e9e8682da947bbf32ad245237ea27e3847bd63a7a9b748d4ca61fbfe267e\"  # V8-SELF-SHA-SKIP' matched=True\n[verify_infra_035] summary total=65 failed=0",
+              "freshness_anchor": "369ac03"
+            },
+            {
+              "name": "verify_infra_062.py (round1, pre-closeout)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "369ac03"
+            },
+            {
+              "name": "verify_infra_110_const_case.py (sample)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110_const_case] PASS V12_case_uniform_lock: all 271 case-insensitive matches are strict uppercase (strict_upper=271, scanned 265 files)\n[verify_infra_110_const_case] PASS V12b_vacuous_guard: strict_upper=271 ci_match=271 (expect strict_upper>=1)\n[verify_infra_110_const_case][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "369ac03"
+            }
+          ],
+          "smoke_tail_stdout": "Smoke checks delegated to round2 verify_infra_062 byte-match enforcement (V4_byte_match_enforce scanned=692 enforced=349 soft_skipped=343 violations=0); closeout run on main HEAD after merge 369ac03; init.sh smoke not re-run in this closeout cycle (verify-only / docstring-only change, no runtime impact).",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Phase-67 #10 infra-034-backlog batch=5 (verify_robot_030/031 + verify_interact_028/029/030) docstring + sha256 自锁推广. V0-V5 全 PASS, TARGETS 20→25, v4_sha.json + verify_infra_035 cascade 一致. 0 业务源码改动, 主路径 bytewise 等价 main. P0=[] P1=2 (notes 文案 vP314 不准 + AGENTS.md baseline) P2=2.",
+            "checks_run": [
+              "V0_self_file_sha_lock",
+              "V1_phrases_robot_030",
+              "V1_phrases_robot_031",
+              "V1_phrases_interact_028",
+              "V1_phrases_interact_029",
+              "V1_phrases_interact_030",
+              "V2_target_file_sha_5x + 035 cascade",
+              "V3_mutant_deletion",
+              "V4_TARGETS_registered (20→25)",
+              "V5_v4_sha_json coherent",
+              "verify_infra_034 V0-V6 83 checks",
+              "verify_infra_062 round1 30 PASS",
+              "Reviewer fresh-context magnetism mutant sweep"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [
+                "notes 写 'vP314 PASS' 不准: closeout 抽样未跑 P314; 实际 verify_infra_100.py rc=2 V2_agents_md_file_sha FAIL 但属 main baseline pre-existing (本 feat diff 不含 AGENTS.md). 已修 notes 文案 + 登记 known_pre_existing_baseline_fails.",
+                "verify_infra_060.py V4_real_unknown_count_eq_one unknown_count=6 expect=4 pre-existing baseline FAIL, 本 feat 不引入新 unknown, 已登记不阻 merge."
+              ],
+              "P2": [
+                "evidence/infra-034/v4_sha.json + verify_infra_035 cascade 写入正确但未在 verify_infra_034_backlog 直接断言 cascade chain 完整性, 当前由 verify_infra_035 单独锁; 后续可考虑 V6 端到端 cascade 自检.",
+                "verify_infra_034_backlog_expand_docstring_coverage.py V3 mutant 仅删 '运行环境约定' 文字未交叉验证 5 KEY_PHRASES 都被锁; 当前由 V1 phrases 列表确保, 5 个 target file 各自的 phrases coverage 实质等价."
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": [
+            {
+              "name": "verify_infra_060.py",
+              "check": "V4_real_unknown_count_eq_one",
+              "detail": "unknown_count=6 expect=4 ids=[unknown_verify_infra_040_EXPECTED_DEFAULT_TMPL_SHA, unknown_verify_infra_100_CONSTHASH7d8957b7, unknown_verify_infra_100_CONSTHASHda8a1fbb, unknown_verify_infra_P288_CONSTHASHb4c13a06, unknown_verify_infra_P301_followup_typed_enum_CONSTHASHb0de4d83, unknown_verify_robot_034_EXPECTED_DOC_SHA]",
+              "pre_existing_baseline_sha": "2cdffb0",
+              "baseline_tail_stdout": "[verify_infra_060][FAIL] V4_real_unknown_count_eq_one unknown_count=6 expect=4 ...\n[verify_infra_060][SUMMARY] FAIL 1/14: ['V4_real_unknown_count_eq_one']",
+              "relation_to_this_feat": "本 feat diff 仅触 verify_robot_030/031 + verify_interact_028/029/030 + verify_infra_034 + verify_infra_035 + evidence/infra-034/v4_sha.json + 新增 verify 脚本, 未触 verify_infra_040 / verify_infra_100 / verify_infra_P288 / verify_infra_P301 / verify_robot_034, baseline 已 FAIL."
+            },
+            {
+              "name": "verify_infra_100.py",
+              "check": "V2_agents_md_file_sha",
+              "detail": "got=4334067ba33761e1 expect=68cb7a3282f8172c (AGENTS.md sha cascade 漏锁, 与本 feat 无关)",
+              "pre_existing_baseline_sha": "2cdffb0",
+              "baseline_tail_stdout": "[verify_infra_100][FAIL] V2_agents_md_file_sha got=4334067ba33761e1 expect=68cb7a3282f8172c\n[verify_infra_100][SUMMARY] FAIL 1/14: ['V2_agents_md_file_sha']",
+              "relation_to_this_feat": "本 feat 不修 AGENTS.md, baseline main 2cdffb0 已同 FAIL."
+            }
+          ]
+        }
+      }
     },
     {
       "area": "robot",

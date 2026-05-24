@@ -9593,3 +9593,25 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - verify 全 PASS (P299 模式 rc 显式读): `verify_infra_110_const_case.py` rc=0, `verify_infra_062.py` round1 rc=0, round2 rc=0, `verify_infra_P314_lib_sha_cascade.py` rc=0, `verify_infra_P301_followup_typed_enum.py` (抽样) rc=0
 - Reviewer (sub-agent fresh-context): LGTM；P0/P1 空，3 个非阻塞 P2 (file newline 已在 closeout 顺手补、ci_match 命名、V12 description 细节)
 - known pre-existing baseline FAIL: `verify_infra_060.py:V4_real_unknown_count_eq_one` (unknown_count=6 expect=4, base 995b164 同 FAIL, 与本 feat 无关)
+
+## phase-67 #10 closeout (2026-05-24)
+
+- feat: `infra-034-backlog-expand-docstring-coverage`
+- 路线: 续推 docstring + sha256 自锁模式 batch=5 — `verify_robot_030/031` + `verify_interact_028/029/030` 五脚本 docstring 末尾追加「运行环境约定 (infra-034)」段含 5 KEY_PHRASES；`verify_infra_034.py` TARGETS 元组 20→25；`evidence/infra-034/v4_sha.json` targets 20→25；cascade bump `verify_infra_035.py` (VERIFY_034_EXPECTED_SHA + EXPECTED_SELF_FILE_SHA)；新增 `scripts/verify_infra_034_backlog_expand_docstring_coverage.py` V0(self_sha)+V1(phrases x5)+V2(target_file_sha x5+035 cascade)+V3(mutant deletion)+V4(TARGETS_registered)+V5(v4_sha.json coherent)。
+- baseline main HEAD: `2cdffb0`
+- feat HEAD: `984bfce`
+- merge_sha: `369ac03` (merge --no-ff)
+- verify 全 PASS (P299 模式 `python ... > log 2>&1; rc=$?`):
+  - `verify_infra_034_backlog_expand_docstring_coverage.py` rc=0 (16/16)
+  - `verify_infra_034.py` rc=0 (83/83)
+  - `verify_infra_035.py` rc=0 (65/65)
+  - `verify_infra_062.py` round1 rc=0 (30/30 emit-paths)
+  - 抽样 `verify_infra_110_const_case.py` rc=0 (6/6)
+- Reviewer (sub-agent fresh-context): LGTM; P0=[] P1=2 P2=2
+  - P1 #1: notes 写 "vP314 PASS" 不准（closeout 抽样未跑 P314；实际 `verify_infra_100.py` rc=2 V2_agents_md_file_sha FAIL，属 main baseline pre-existing 与本 feat 无关）→ 本 closeout 同时订正 notes 文案
+  - P1 #2: `verify_infra_060.py` V4_real_unknown_count_eq_one unknown_count=6 expect=4 baseline pre-existing FAIL，2 条 known_pre_existing_baseline_fails 入 evidence
+- known pre-existing baseline FAILs (2 项均与本 feat 无关，登记不阻 merge):
+  - `verify_infra_060.py:V4_real_unknown_count_eq_one` (unknown_count=6 vs expect=4，本 feat 不引入新 unknown)
+  - `verify_infra_100.py:V2_agents_md_file_sha` (got=4334067b vs expect=68cb7a32，AGENTS.md sha cascade 漏锁，本 feat 不修 AGENTS.md)
+- status: in_progress → passing
+- push main / push feat: 见 closeout 报告（单次尝试，失败忽略）
