@@ -22216,7 +22216,7 @@
       "verification": [],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "__PLACEHOLDER_MAIN_HEAD__",
+          "main_head_sha": "09e8786601016924c675d26204e40a2086003ec3",
           "baseline_head_echo": "ed06ed2",
           "merge_commit_sha": "053f6e627d605eb28cf8b0b0140ace0450b30f42",
           "verify_runs": [
