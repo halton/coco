@@ -16,6 +16,21 @@ V3 行为锁 — 连续 N=3 次 enqueue 异常 → WARNING==1 + DEBUG==2 (per-in
 V4 mutant 反证 — 若把 _fallback_warned 检查回退到无 dedup (mutant)，N=3 触发 WARNING==3
    (用 monkeypatch _fallback_warned property 模拟回退, 验证当前实现拒绝该 mutant)
 V5 summary + evidence dump
+
+运行环境约定 (infra-034)
+------------------------
+本脚本及其子进程**必须**在已激活的 .venv 下运行 (Python 解释器入口
+``.venv/bin/python``); 不要用系统 ``python3`` 直接调用本脚本, 否则
+``importlib`` 加载业务模块时依赖 (numpy / soundfile / onnxruntime 等) 可能
+解析到系统站点而非 venv 站点, 导致与 ``./init.sh`` smoke 路径不一致。
+
+约定细则:
+  - **Reviewer / CI / 手动复跑入口**: 一律 ``.venv/bin/python`` 启动 (或先
+    ``source .venv/bin/activate`` 再 ``python scripts/verify_robot_030.py``)。
+  - **子进程 invoke**: 任何 ``subprocess.run`` 第一参数固定使用 ``sys.executable``
+    (即本脚本所属解释器); 不写死 ``"python"`` / ``"python3"`` 字面量。
+  - **环境变量继承**: 子进程从 ``os.environ`` 拷贝 PATH / PYTHONPATH 等,
+    PATH 中 venv 的 ``bin`` 目录位置不可被人为打乱。
 """
 from __future__ import annotations
 

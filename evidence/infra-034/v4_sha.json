@@ -1,5 +1,5 @@
 {
-  "comment": "infra-035/036/038: externalized V4 sha256 lock table for scripts/verify_infra_034.py. Maintained by scripts/bump_infra_034_v4_sha.py. Update via that helper when any listed verify is intentionally modified; verify_infra_035.py asserts schema + mutant FAIL. phase-58 #2 infra-036-batch-3: appended 5 targets (verify_robot_028/029, verify_interact_026/027, verify_infra_017).",
+  "comment": "infra-035/036/038: externalized V4 sha256 lock table for scripts/verify_infra_034.py. Maintained by scripts/bump_infra_034_v4_sha.py. Update via that helper when any listed verify is intentionally modified; verify_infra_035.py asserts schema + mutant FAIL. phase-58 #2 infra-036-batch-3: appended 5 targets (verify_robot_028/029, verify_interact_026/027, verify_infra_017). phase-67 #10 infra-034-backlog-expand-docstring-coverage: appended 5 targets (verify_robot_030/031, verify_interact_028/029/030).",
   "targets": {
     "scripts/verify_infra_017.py": "4246fe98e314c0c8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b",
     "scripts/verify_infra_018.py": "7a89b35b6db711cb1b35fb78687fd5f818d8d6ac9e29d03abedabefc67d9e9ac",
@@ -10,6 +10,9 @@
     "scripts/verify_interact_025.py": "28b1842cb448c7a88a1babd83a858bad409b9b885b2a6cf625d56ce3b9670d08",
     "scripts/verify_interact_026.py": "4e889f059be739b2d3b49d239fe9be0fe257664d6943d4cbb930759e6b3fd888",
     "scripts/verify_interact_027.py": "0829a54f197c204cfa9d1ca1fb3eba31c339a96f08aa61e76fee6d0b02377fa5",
+    "scripts/verify_interact_028.py": "68463a126084dac94ecb45bb6247ea3d82980f09b8cd1a2a7fe35274036f8bd1",
+    "scripts/verify_interact_029.py": "931c67a421eb0a193a826af177e204d7b5dbdba6a4076b63ab28bf4b3dece7c5",
+    "scripts/verify_interact_030.py": "e02f1582051b919992bcd8eb9888c7b1533aec3f99e0fe1ae81f304271a4e09d",
     "scripts/verify_interact_036.py": "230b07110ab2897edb9118b1c4e466f859c1fde51a4cad16925f76ea28ec5b64",
     "scripts/verify_interact_037.py": "e07db83b106f86f65b963ba45c5a5848723e9491c15aaaa992b16edb87bb9330",
     "scripts/verify_robot_023.py": "b73417f68d3f88ca1b69b18b6a5b3822f3170b5ff0d30e46242ddf7d637765df",
@@ -19,6 +22,8 @@
     "scripts/verify_robot_027.py": "b9aec9a6c34c2ef033ff37fca560b232a2489ae404dab20b4f818ed5925a2825",
     "scripts/verify_robot_028.py": "c3c25fe070013617f9d5879521e938c80e7a4e52735b8f7c50a5c932993d5413",
     "scripts/verify_robot_029.py": "5721eba3cfba4658772b9d1a74faab84ceb18762ec89f82e0440ce1022632647",
+    "scripts/verify_robot_030.py": "3b9a16b6297d3044cfb178a7f9630bc547d357e1eaa6e00fca01b71902dddf80",
+    "scripts/verify_robot_031.py": "3663d8dd06a2b05a347d9069f624468397db0bb1a10007d9f762f009f54e658e",
     "scripts/verify_robot_032.py": "2a4fcb7f065d53d9ed5398e9b2c2416167907be90b4f20aa784d7062b1c02069",
     "scripts/verify_robot_033.py": "72893cd29605a78ba3166d7328e9335440c87db285b9d94c3bfe37f95df09acb"
   },

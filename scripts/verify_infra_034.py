@@ -58,7 +58,8 @@ from typing import Dict, List, Tuple
 ROOT = Path(__file__).resolve().parent.parent
 
 # 推广目标 (P240 infra-034 首批 5 + P252 infra-036 续推 5 + P255 infra-038 续推 5
-#  + phase-58#2 infra-036-batch-3 续推 5 = 20)
+#  + phase-58#2 infra-036-batch-3 续推 5 + phase-67 #10 infra-034-backlog
+#  -expand-docstring-coverage 续推 5 = 25)
 TARGETS: Tuple[str, ...] = (
     "scripts/verify_robot_032.py",
     "scripts/verify_robot_033.py",
@@ -83,6 +84,13 @@ TARGETS: Tuple[str, ...] = (
     "scripts/verify_interact_026.py",
     "scripts/verify_interact_027.py",
     "scripts/verify_infra_017.py",
+    # phase-67 #10 infra-034-backlog-expand-docstring-coverage 续推
+    # (verify-only meta-lock 系列末段, 历史稳定)
+    "scripts/verify_robot_030.py",
+    "scripts/verify_robot_031.py",
+    "scripts/verify_interact_028.py",
+    "scripts/verify_interact_029.py",
+    "scripts/verify_interact_030.py",
 )
 
 # P240 baseline (不动它, 仅作 V2 regression guard)

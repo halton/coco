@@ -5996,18 +5996,19 @@
         "infra-034"
       ],
       "id": "infra-034-backlog-expand-docstring-coverage",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "scope": "infra-034 完成 5 目标（infra-033/robot-032/robot-033/interact-036/interact-037）；仍有 120+ 候选 verify 脚本未应用「运行环境约定 docstring + sha256 自锁」模式。按 5/批节奏继续推广，每批一个新 infra-* feature 收口。",
       "source": "infra-034 Reviewer LGTM 建议",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "继续推广 docstring + sha 模式到剩余 verify 脚本（5/批）",
       "verification": [
         "V0: docstring + sha256",
         "V1: 选定下一批 5 个候选；优先级 by 调用频次或漂移风险",
         "V2: 每批 verify_infra_034 覆盖集 += 5；V0-V5 全 PASS",
         "V3: 收敛终点（剩余无锁 verify == 0 或显式标注 N/A）入 backlog"
-      ]
+      ],
+      "notes": "phase-67 #10 续推 batch=5 (verify_robot_030/031 + verify_interact_028/029/030): 5 个目标 docstring 末尾加\"运行环境约定 (infra-034)\"段, 含 5 KEY_PHRASES; TARGETS 元组 20→25; evidence/infra-034/v4_sha.json targets 20→25; cascade bump verify_infra_035.py VERIFY_034_EXPECTED_SHA + EXPECTED_SELF_FILE_SHA; 新增 scripts/verify_infra_034_backlog_expand_docstring_coverage.py V0(self_sha)+V1+V2(target_file_sha)+V3+V4+V5 全 PASS; v062 PASS, vP314 PASS."
     },
     {
       "area": "robot",
