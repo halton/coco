@@ -4582,6 +4582,10 @@ _V8_EXPLICIT_TARGETS: dict[tuple[str, str], tuple[str, str]] = {
         ("scripts/_verify_lib.py", "scan_unknown_area_nnns"),
     ("verify_infra_V6_strict_area.py", "EXPECTED_SCAN_STRICT_FUNC_SHA"):
         ("scripts/_verify_lib.py", "scan_reverse_sha_lock_consistency_strict"),
+    # verify_infra_P312 — V8 cascade-warn-noop-semantics:
+    # reverse helper main func sha (infra-V22-cascade-warn-noop-semantics)
+    ("verify_infra_P312.py", "EXPECTED_REVERSE_HELPER_MAIN_FUNC_SHA"):
+        ("scripts/bump_reverse_sha_lock.py", "main"),
 }
 
 # acceptlist: 显式声明无法 auto-resolve 但已确认非 bug 的 const, 不计入 not_found 失败。

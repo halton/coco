@@ -38,6 +38,8 @@ canonical sha256 + 集合 size。每次新增 ``verify_<area>_<NNN>.py`` (NNN �
 4  字面替换失败 (regex 未命中)
 5  --verify 模式下 verify_infra_V6_strict_area.py 非 0 退出
 6  --cascade 模式下 bump_reverse_sha_lock.py 子命令非 0 退出
+7  --cascade 模式下 bump_reverse_sha_lock.py stdout 缺失 RESULT sentinel
+   (infra-V22-cascade-warn-noop-semantics: 父进程无法判断 APPLIED vs NOOP)
 """
 from __future__ import annotations
 
@@ -185,7 +187,44 @@ def main(argv: list[str] | None = None) -> int:
         if c_rc != 0:
             print(f"FAIL: bump_reverse_sha_lock.py cascade rc={c_rc}", flush=True)
             return 6
-        print("OK: cascade bump_reverse_sha_lock.py PASS", flush=True)
+        # 解析 reverse helper stdout 末尾的 RESULT sentinel
+        # (infra-V22-cascade-warn-noop-semantics)
+        result_line = None
+        for line in reversed(c_out.splitlines()):
+            line = line.strip()
+            if line.startswith("RESULT:"):
+                result_line = line
+                break
+        if result_line is None:
+            print(
+                "FAIL: bump_reverse_sha_lock.py stdout 缺失 RESULT sentinel "
+                "(infra-V22 期望 RESULT: APPLIED|NOOP 行)",
+                flush=True,
+            )
+            return 7
+        if "APPLIED" in result_line:
+            # 提取 holders=N
+            m = re.search(r"holders=(\d+)", result_line)
+            n = m.group(1) if m else "?"
+            print(
+                f"OK: cascade bump_reverse_sha_lock.py APPLIED "
+                f"({n} reverse-lock holder(s) bumped)",
+                flush=True,
+            )
+        elif "NOOP" in result_line:
+            m = re.search(r"reason=(\S+)", result_line)
+            reason = m.group(1) if m else "unknown"
+            print(
+                f"OK: cascade bump_reverse_sha_lock.py NOOP "
+                f"(no actual bump; reason={reason})",
+                flush=True,
+            )
+        else:
+            print(
+                f"FAIL: bump_reverse_sha_lock.py RESULT 行格式异常: {result_line!r}",
+                flush=True,
+            )
+            return 7
     if args.verify:
         vrc = run_verify()
         if vrc != 0:

@@ -31,6 +31,18 @@ docstring 锚定等), 反向锁常量需要同步刷新, 否则 V6 pre-flight �
 3  无反向锁指向 target (空操作不算错, 但 print 警告)
 4  字面替换失败 (regex 未命中, 表示源码格式偏离单行 / 元组规范)
 5  --verify 模式下 verify_infra_034.py 非 0 退出
+
+机器可解析 RESULT sentinel (infra-V22-cascade-warn-noop-semantics)
+-----------------------------------------------------------------
+main() 在退出前 (rc 落定后) 输出一行以 ``RESULT:`` 开头的 sentinel, 供 cascade
+父进程区分 "实际写盘 bump" vs "空操作 (无反向锁 holder / 已最新)":
+
+- ``RESULT: APPLIED holders=<N>`` — 实际有 N (>=1) 个反向锁常量被 bump (或在
+  dry-run 下报告 "would replace")
+- ``RESULT: NOOP reason=<text>`` — 没干活: 反向锁不存在 (``no_holders``) 或
+  全部已最新 (``all_uptodate``)
+
+WARN 文本保持人类可读不变, RESULT 行作为机器解析锚点。
 """
 from __future__ import annotations
 
@@ -161,6 +173,10 @@ def run_bump(target: Path, dry_run: bool) -> Tuple[int, List[str]]:
     """主流程: 找指向 target 的反向锁 + bump 各常量到 target 新 sha。
 
     Returns (exit_code, report_lines)。
+
+    (infra-V22-cascade-warn-noop-semantics) 不改本函数签名 (向后兼容已锁此签名
+    的 verify_infra_046 等), 改由 ``compute_sentinel(rc, report)`` 在 main 中
+    单独算出 APPLIED/NOOP 语义, 再由 main 输出 ``RESULT:`` sentinel 行。
     """
     report: List[str] = []
     if not target.is_file():
@@ -176,6 +192,7 @@ def run_bump(target: Path, dry_run: bool) -> Tuple[int, List[str]]:
     report.append(f"locks_found={len(locks)}")
     any_change = False
     fail_count = 0
+    applied_count = 0
     for item in locks:
         file_path = REPO / item["file"] if not Path(item["file"]).is_absolute() else Path(item["file"])
         old_sha = item["sha_hex"]
@@ -188,6 +205,7 @@ def run_bump(target: Path, dry_run: bool) -> Tuple[int, List[str]]:
         changed, detail = _bump_in_file(file_path, item["lineno"], old_sha, new_sha, dry_run)
         if changed:
             any_change = True
+            applied_count += 1
             prefix = "DRY-RUN" if dry_run else "APPLIED"
             report.append(
                 f"  - {prefix} {item['file']}:{item['lineno']} {item['const_name']}: "
@@ -202,7 +220,34 @@ def run_bump(target: Path, dry_run: bool) -> Tuple[int, List[str]]:
         return 4, report
     if not any_change:
         report.append("OK: 所有常量已是最新, 无需 bump")
+    # 附加机器可解析 marker (不破坏向后兼容: 调用方仍可 unpack 2-tuple)
+    report.append(f"__APPLIED_COUNT__={applied_count}")
     return 0, report
+
+
+def compute_sentinel(rc: int, report: List[str]) -> dict:
+    """从 (rc, report) 算 RESULT sentinel.
+
+    (infra-V22-cascade-warn-noop-semantics)
+    """
+    if rc == 2:
+        return {"kind": "FAIL", "holders": 0, "reason": "target_missing"}
+    if rc == 4:
+        return {"kind": "FAIL", "holders": 0, "reason": "regex_miss"}
+    if rc == 3:
+        return {"kind": "NOOP", "holders": 0, "reason": "no_holders"}
+    # rc == 0: 看 report 找 __APPLIED_COUNT__
+    applied_count = 0
+    for line in report:
+        if line.startswith("__APPLIED_COUNT__="):
+            try:
+                applied_count = int(line.split("=", 1)[1])
+            except ValueError:
+                applied_count = 0
+            break
+    if applied_count > 0:
+        return {"kind": "APPLIED", "holders": applied_count, "reason": "bumped"}
+    return {"kind": "NOOP", "holders": 0, "reason": "all_uptodate"}
 
 
 def run_verify() -> int:
@@ -236,16 +281,35 @@ def main(argv: list[str] | None = None) -> int:
         target = (REPO / target).resolve()
     dry_run = not args.apply
     rc, report = run_bump(target, dry_run=dry_run)
+    sentinel = compute_sentinel(rc, report)
     for line in report:
+        # 不把内部 marker 打到 stdout
+        if line.startswith("__APPLIED_COUNT__="):
+            continue
         print(line, flush=True)
     if rc not in (0, 3):  # 3 = 无反向锁指向, 不算 hard fail
+        # 失败路径也打 RESULT 便于父进程区分
+        print(
+            f"RESULT: {sentinel['kind']} reason={sentinel['reason']}",
+            flush=True,
+        )
         return rc
     if args.verify:
         vrc = run_verify()
         if vrc != 0:
             print(f"FAIL: verify_infra_034.py rc={vrc}", flush=True)
+            print(
+                f"RESULT: {sentinel['kind']} reason={sentinel['reason']}",
+                flush=True,
+            )
             return 5
         print("OK: verify_infra_034.py PASS", flush=True)
+    # 输出机器可解析 sentinel (infra-V22-cascade-warn-noop-semantics)
+    if sentinel["kind"] == "APPLIED":
+        print(f"RESULT: APPLIED holders={sentinel['holders']}", flush=True)
+    else:
+        # NOOP: no_holders / all_uptodate
+        print(f"RESULT: NOOP reason={sentinel['reason']}", flush=True)
     return 0 if rc != 4 else 4
 
 

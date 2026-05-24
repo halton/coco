@@ -54,7 +54,7 @@ from _verify_lib import (  # noqa: E402
 
 # Cascade audit constant — must equal live sha256(_verify_lib.py)
 EXPECTED_VERIFY_LIB_FILE_SHA = (
-    "0461b1817b5d8a2c37f8ec39ac7c561eb20d9021110a237af2abec6e0ce90366"
+    "507d441cd9181e885e5a23739bf259680262d5c42c83d7b006aa72ada7c56cf7"
 )
 
 # Self main func sha (sentinel pragma V8-SELF-SHA-SKIP above 跳过自检)
