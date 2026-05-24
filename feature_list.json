@@ -22636,6 +22636,30 @@
         }
       },
       "updated_at": "2026-05-24T17:00:00.000000Z"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "dependencies": [
+        "infra-039",
+        "infra-039-backlog-dump-filter-pattern"
+      ],
+      "description": "verify_infra_039.py:V7_filter_text_mode 当前用 substring pattern 'verify_infra_060' 跑 dump_v4_sha_graph --filter, 但该 pattern 是 re.search 命中, 同时命中 scripts/verify_infra_060.py 与 scripts/verify_infra_060_backlog_real_unknown_count_fix.py (across 2 files), 导致 'across 1 files ===' 不成立, baseline FAIL (phase-67 #13 closeout 已登记 pre-existing baseline)。本 feat 把 pattern 改为 regex 锚尾 r'verify_infra_060\\.py$' 精确命中单文件, V7_filter_text_mode 恢复 PASS; 同时新增 verify_infra_039_backlog_v7_filter_substring_fix.py 锁定 (1) pattern literal 形态 (2) 严格 regex → across 1 files (3) 反证旧 substring → across 2 files (4) 端到端 verify_infra_039 v7 子 check PASS。",
+      "id": "infra-039-backlog-v7-filter-substring-fix",
+      "phase": 67,
+      "priority": 800,
+      "scope": "scripts/verify_infra_039.py (1 处 --filter pattern 改为 raw regex 锚尾) + scripts/verify_infra_039_backlog_v7_filter_substring_fix.py (新 verify, 9 checks: V0×3/V1/V2/V3/V4/V5/V6)。不动 dump_v4_sha_graph.py (filter_locks 本来就是 re.search 通用 regex, 行为正确; 修复落在测试侧 pattern 严格度)。不动 _verify_lib.py。",
+      "source": "phase-67 #13 closeout 登记的 pre-existing baseline (V7_filter_text_mode rc=0 len=2710), 主会话直选高 ROI scope 小 sim-only 项",
+      "status": "in_progress",
+      "title": "verify_infra_039 V7_filter_text_mode substring 双命中修复 (regex 锚尾)",
+      "updated_at": "2026-05-24T17:30:00.000000Z",
+      "verification": [
+        "verify_infra_039_backlog_v7_filter_substring_fix.py 9/9 PASS (V0_*×3 + V1 pattern literal + V2 strict→1 file + V3 substring→2 files 反证 + V4 端到端 v039 v7 PASS + V5 self func sha + V6 _verify_lib untouched)",
+        "verify_infra_039.py 27/27 PASS (含 V7_filter_text_mode rc=0 len=2374, baseline FAIL 已消除)",
+        "verify_infra_062.py 30/30 PASS (closeout-verify-trustworthy)",
+        "verify_infra_100.py 14/14 PASS",
+        "Reviewer (sub-agent fresh-context): pending"
+      ]
     }
   ],
   "last_updated": "2026-05-24T16:00:00.000000Z",
