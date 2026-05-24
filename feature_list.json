@@ -18704,9 +18704,73 @@
       "priority": 3107,
       "scope": "当前 parse_area_from_verify_path regex 限制 area 全字母 (无数字); 若未来引入 l10n / i18n 风格带数字的 area, 需明确策略：要么放宽 regex, 要么显式拒绝并文档化。立项跟踪。",
       "source": "phase-63 #4 Reviewer P2",
-      "status": "in_progress",
+      "status": "passing",
       "title": "parse_area_from_verify_path regex 策略——是否允许数字 area",
-      "verification": []
+      "verification": [],
+      "closeout_verify": {
+        "main_head_sha": "a0df5c1",
+        "baseline_head_echo": "7fb53cb",
+        "merge_commit_sha": "a0df5c104761a3467690bdfbffd3c9e47bc6915a",
+        "known_pre_existing_baseline_fails": [],
+        "verify_runs": [
+          {
+            "name": "verify_infra_P313",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P313][PASS] V1_regex_pattern_literal expected='^verify_([a-z][a-z]*)_(\\d{3})(?:[._].*)?$' actual='^verify_([a-z][a-z]*)_(\\d{3})(?:[._].*)?$'\n[verify_infra_P313][PASS] V2_parse_area_func_sha expected=1d9cc4ec9fbc8aa0 actual=1d9cc4ec9fbc8aa0\n[verify_infra_P313][PASS] V3_behavior_matrix checked=16 mismatches=0\n[verify_infra_P313][PASS] V4_docstring_policy_marker has_marker=True\n[verify_infra_P313][SUMMARY] ALL PASS (4 checks)",
+            "freshness_anchor": "a0df5c104761a3467690bdfbffd3c9e47bc6915a"
+          },
+          {
+            "name": "verify_infra_P314_lib_sha_cascade",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P314] PASS V0_verify_lib_exists: /Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_P314] PASS V0_scripts_dir: /Users/halton/work/coco/scripts\n[verify_infra_P314] PASS V1_docstring_sentinel: sentinel=INFRA_P314_SHA_LOCKS\n[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)\n[verify_infra_P314] PASS V4_self_lib_sha: got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=1990a9b61d3b14c9\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+            "freshness_anchor": "a0df5c104761a3467690bdfbffd3c9e47bc6915a"
+          },
+          {
+            "name": "verify_infra_062_round1",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=119 enforced=81 soft_skipped=38 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=119 enforced=81 soft_skipped=38 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+            "freshness_anchor": "5e1155c"
+          },
+          {
+            "name": "verify_infra_062_round2",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=119 enforced=81 soft_skipped=38 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=119 enforced=81 soft_skipped=38 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+            "freshness_anchor": "a0df5c104761a3467690bdfbffd3c9e47bc6915a"
+          }
+        ],
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "infra-P313 通过 V1 regex literal + V2 func sha + V3 16-sample 行为矩阵 + V4 docstring marker 四档锁固化 REJECT-DIGIT-AREA 策略, 三档 verify (P313/v062/vP314) 全 PASS, 两轮 mutation (放宽 regex / 篡改 EXPECTED_FUNC_SHA) 均按预期 FAIL, _verify_lib.py 实现未动, scope 干净。",
+          "checks_run": [
+            "1. feat 分支 HEAD = 5e1155c 与 brief 一致",
+            "2. base main = 7fb53cb 与 brief 一致",
+            "3. scripts/verify_infra_P313.py 新增, _verify_lib.py 未改动 (scope 干净)",
+            "4. V1_regex_pattern_literal 锁定 r'^verify_([a-z][a-z]*)_(\\d{3})(?:[._].*)?$'",
+            "5. V2_parse_area_func_sha = 1d9cc4ec9fbc8aa0 双向锁",
+            "6. V3 16-sample 行为矩阵覆盖 accept/reject 边界 (含 digit-area reject)",
+            "7. V4_docstring_policy_marker 锁 REJECT-DIGIT-AREA 政策声明",
+            "8. mutation #1: 放宽 regex 接受 digit area → V1/V2/V3 三档同时 FAIL (锁齐备)",
+            "9. mutation #2: 篡改 EXPECTED_PARSE_AREA_FUNC_SHA → V2 FAIL",
+            "10. verify_infra_P313 本身可独立 PASS (干净 baseline)",
+            "11. 与 verify_infra_062 V3 表无冲突 (helper_func_sha_drift_detector 干净)",
+            "12. 与 verify_infra_P314 lib sha cascade 无冲突",
+            "13. docstring 含 INFRA_P313_REJECT_DIGIT_AREA marker 可被未来 grep",
+            "14. V3 行为矩阵覆盖 16 sample, mismatches=0",
+            "15. parse_area_from_verify_path 调用面 / call sites 未改, 不影响下游",
+            "16. feature_list.json 既存 dependencies 字段 (infra-V6-backlog-strict-area-match-mode) 一致",
+            "17. P0=[] P1=[] P2=[defense-in-depth, V4 marker bump_protocol 设计意图]"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "defense-in-depth: V1 regex literal lock 与 V2 func sha lock 在功能上有重叠 (改 regex 必然 bump func sha), 但保留 V1 可在 mutation 时给出更直观的失败原因 (mismatched literal vs 隐式 hash 漂移), 属于设计意图而非冗余",
+              "V4 docstring marker bump_protocol: 未来若要重新评估 REJECT-DIGIT-AREA 政策, 需同时 bump marker 与 EXPECTED_PARSE_AREA_FUNC_SHA, 设计意图建议在 feature evidence 或后续 backlog 中明记"
+            ]
+          }
+        }
+      }
     },
     {
       "area": "infra",

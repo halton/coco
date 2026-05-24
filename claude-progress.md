@@ -9432,3 +9432,20 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 状态: in_progress→passing。known_pre_existing_baseline_fails=[] (本 feat 即修复对象)
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+
+## Session 2026-05-24 — phase-66 #13 infra-P313 closeout
+
+- feature: infra-P313-parse-area-regex-policy
+- merge_sha: a0df5c1 (no-ff merge of feat/infra-P313-parse-area-regex-policy into main; base 7fb53cb)
+- Engineer 改动: 新增 scripts/verify_infra_P313.py (V1 regex literal + V2 parse_area func sha + V3 16-sample 行为矩阵 + V4 docstring REJECT-DIGIT-AREA marker)。_verify_lib.py 未动 (scope 干净)。
+- Reviewer: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=2 (defense-in-depth V1/V2 重叠属设计意图 + V4 marker bump_protocol 意图建议记录)；17 项 checks_run。
+- verify_runs:
+  - verify_infra_P313.py PASS (V1 regex literal + V2 func_sha=1d9cc4ec9fbc8aa0 + V3 16-sample mismatches=0 + V4 marker PASS)
+  - verify_infra_P314_lib_sha_cascade.py PASS (8 checks, stale=0, live_sha=1990a9b61d3b14c9)
+  - verify_infra_062.py --anchor 5e1155c round1 PASS (30 emit-paths)
+  - verify_infra_062.py --anchor a0df5c1 round2 PASS (30 emit-paths)
+- mutation 实验: 放宽 regex → V1/V2/V3 三档同 FAIL; 篡改 EXPECTED_FUNC_SHA → V2 FAIL（锁齐备）
+- 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
