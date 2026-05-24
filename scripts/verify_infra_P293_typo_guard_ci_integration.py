@@ -17,7 +17,9 @@ INFRA_P293_CI_SHA_LOCKS
 
 - V0 scaffolding: scripts/smoke.py 存在 + ``def smoke_typo_guard(`` 存在
 - V1 smoke 循环列表必须含 ``("typo_guard", smoke_typo_guard)`` 元组
-  (静态扫描源码, 防止注册被移除)
+  (AST 扫描源码: 解析 smoke.py, 遍历所有 ast.Tuple, 校验存在二元组
+  ``(Constant("typo_guard"), Name("smoke_typo_guard"))``,
+  对 quote / 空白 / 缩进格式变化不敏感; 防止注册被移除)
 - V2 smoke.py 必须 import ``verify_expected_prefix_typo_guard``
   (helper 链接锚点, 防止函数体被改成空 stub)
 - V3 scripts/smoke.py file sha 锁 (任何改动均触发 cascade bump)
@@ -72,8 +74,12 @@ DOCSTRING_SENTINEL = "INFRA_P293_CI_SHA_LOCKS"
 REAL_FEATURE_LIST = REPO / "feature_list.json"
 V5_GATE_FEATURE_ID = "infra-P293-typo-guard-ci-integration"
 
-# V1 smoke 循环列表中必须出现的元组字面量 (静态扫描)
-V1_LOOP_ENTRY_TOKEN = '("typo_guard", smoke_typo_guard)'
+# V1 smoke 循环列表中必须出现的元组 (AST 扫描)
+# 升级历史: 早期版本用 literal substring `("typo_guard", smoke_typo_guard)` 检测,
+# 对 quote / 空白 / 缩进格式变化敏感; 现升级到 AST: 解析 smoke.py, 遍历所有
+# ast.Tuple, 校验存在二元组 (Constant("typo_guard"), Name("smoke_typo_guard")).
+V1_TUPLE_NAME_LITERAL = "typo_guard"
+V1_TUPLE_FUNC_NAME = "smoke_typo_guard"
 
 # V2 helper import 必须出现在 smoke.py
 V2_IMPORT_TOKEN = "verify_expected_prefix_typo_guard"
@@ -110,14 +116,39 @@ def v0_scaffolding() -> None:
 
 
 # ---------------------------------------------------------------------------
-# V1 smoke loop list 注册
+# V1 smoke loop list 注册 (AST-based)
 # ---------------------------------------------------------------------------
+def _ast_has_loop_tuple(src: str, name_literal: str, func_name: str) -> bool:
+    """遍历 src AST, 查找形如 (Constant(name_literal), Name(func_name)) 的二元 tuple."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Tuple):
+            continue
+        if len(node.elts) != 2:
+            continue
+        first, second = node.elts
+        if (
+            isinstance(first, ast.Constant)
+            and isinstance(first.value, str)
+            and first.value == name_literal
+            and isinstance(second, ast.Name)
+            and second.id == func_name
+        ):
+            return True
+    return False
+
+
 def v1_smoke_loop_registered() -> None:
     src = SMOKE_PY.read_text(encoding="utf-8")
+    found = _ast_has_loop_tuple(src, V1_TUPLE_NAME_LITERAL, V1_TUPLE_FUNC_NAME)
     _emit(
-        "V1_loop_entry_present",
-        V1_LOOP_ENTRY_TOKEN in src,
-        f"expect literal {V1_LOOP_ENTRY_TOKEN!r} in smoke.py",
+        "V1_loop_entry_ast",
+        found,
+        f"expect AST tuple (Constant({V1_TUPLE_NAME_LITERAL!r}), "
+        f"Name({V1_TUPLE_FUNC_NAME!r})) in smoke.py",
     )
 
 

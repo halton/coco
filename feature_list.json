@@ -8165,11 +8165,11 @@
         "infra-P293-typo-guard-ci-integration"
       ],
       "id": "infra-P293-backlog-typo-guard-ci-v1-ast-hardening",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "scope": "verify_infra_P293_typo_guard_ci_integration.py V1 用 literal substring '(\"typo_guard\", smoke_typo_guard)' 检测 loop entry, 对 quote / 空白格式变化敏感. 建议升级到 AST: 解析 smoke.py, 找 STEPS / loop list, 校验存在 tuple-literal (Str('typo_guard'), Name('smoke_typo_guard')). 提升 guard 鲁棒性. P3 可选, 非阻塞 merge.",
       "source": "infra-P293-typo-guard-ci-integration Reviewer NIT (sub_agent_fresh_context, phase-55 #1.55)",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "P293 V1 literal substring 检查升级到 AST-based loop entry 校验",
       "verification": []
     },
