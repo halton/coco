@@ -17963,12 +17963,112 @@
       "area": "infra",
       "created_at": "2026-05-23",
       "dependencies": [],
+      "evidence": {
+        "closeout_at": "2026-05-24",
+        "closeout_verify": {
+          "baseline_head_echo": "995b164",
+          "main_head_sha": "ee0170fb2f2a3b6aaadc3f812badef7ea90eb4aa",
+          "merge_commit_sha": "ee0170fb2f2a3b6aaadc3f812badef7ea90eb4aa",
+          "known_pre_existing_baseline_fails": [
+            "verify_infra_060.py:V4_real_unknown_count_eq_one (unknown_count=6 expect=4, base 995b164 同 FAIL)"
+          ],
+          "reviewer": {
+            "checks_run": [
+              "fresh_context_review",
+              "render_mermaid_long_composite_key_short_hash_logic",
+              "sha256_src_plus_const_truncate_8_correctness",
+              "label_full_const_preserved",
+              "anchor_regex_CONSTHASH_form_accept",
+              "anchor_regex_hash_recompute_validation",
+              "mutation_A_degrade_to_long_form_FAIL",
+              "mutation_B_change_truncate_length_FAIL",
+              "cascade_13_targets_mechanical_bump",
+              "verify_infra_039_pass",
+              "verify_infra_043_pass",
+              "verify_infra_044_pass",
+              "verify_infra_047_048_053_054_pass",
+              "verify_infra_060_pre_existing_baseline_confirmed",
+              "verify_infra_102_104_107_109_pass",
+              "verify_infra_P317_pass",
+              "verify_lib_py_unchanged",
+              "v062_no_regression",
+              "deterministic_hash_collision_risk_estimate_1e-9"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "reviewer_kind": "sub_agent_fresh_context",
+            "summary": "render_mermaid 长 composite key (>50) 采用 sha256(src+const)[:8] 决定性短哈希, label 保留 ?<CONST> 全名, anchor regex (CONSTHASH[0-9a-f]{8}) + hash 重算校验阻断退化, 13 cascade 全机械 bump, mutation A/B 双双 FAIL, base 反证 v060 V4_real_unknown_count_eq_one pre-existing FAIL 确认, _verify_lib.py 未改, deterministic 短哈希 collision 风险 ~10^-9 可忽略。",
+            "verdict": "LGTM"
+          },
+          "verify_runs": [
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "smoke",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "  ok: total=329 well_formed=329 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_110",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_062_round1_anchor_330df57",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_062_round2_anchor_merge_sha",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_039",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_102",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_102][PASS] V5_reviewer_lgtm_gate target=infra-P290-classify-node-family-sets helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P290-classify-node-family-sets' in grace_period (skipped)\"\n[verify_infra_102][SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "freshness_anchor": "ee0170f",
+              "name": "verify_infra_P317_syspath_restore",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=e7f815c6bdd30786 expect=e7f815c6bdd30786\n[verify_infra_P317] OVERALL PASS: 7/7 checks"
+            }
+          ]
+        }
+      },
       "id": "infra-110-backlog-mermaid-node-id-readability",
       "phase": 67,
       "priority": 800,
       "scope": "复合 key `unknown_<src_stem>_<CONST>` 当 CONST 很长时（例如 EXPECTED_REVERSE_SHA_LOCK_FUNC_SHA）mermaid 节点 id 视觉冗长。可选改进：超过阈值用 `unknown_<src_stem>_<hash8>` 截短，并在 label 保留全名。",
       "source": "phase-59 #4 infra-039-backlog-mermaid-unknown-target-id-collision Reviewer 非阻塞 finding",
-      "status": "in_progress",
+      "status": "passing",
       "title": "长 const node id 用 hash-suffix 截短提升 mermaid 可读性 (可选)",
       "verification": []
     },

@@ -1,3 +1,21 @@
+## Session 2026-05-24 — phase-67 #8 infra-110-backlog-mermaid-node-id-readability (Closeout)
+
+- base main HEAD=995b164; feat/infra-110-backlog-mermaid-node-id-readability HEAD=330df57; merge_sha=ee0170fb2f2a3b6aaadc3f812badef7ea90eb4aa (no-ff merge to main)
+- 范围: scripts/dump_v4_sha_graph.py render_mermaid 长 composite key (>50) 用 sha256(src+const)[:8] 决定性短哈希; verify_infra_110.py anchor regex 扩展接受 CONSTHASH 形态; 13 cascade lock bump (039/043/044/047/048/053/054/060/102/104/107_backlog_dump_family/109/P317)
+- Reviewer (sub-agent fresh-context): LGTM, P0/P1/P2 全空; 关键校验: render_mermaid 长 composite key (>50) sha256(src+const)[:8] 决定性短哈希, label 保留 ?<CONST> 全名, anchor regex (CONSTHASH[0-9a-f]{8}) + hash 重算阻断退化, 13 cascade 全机械 bump, mutation A/B 双双 FAIL, base 反证 v060 V4_real_unknown_count_eq_one pre-existing FAIL 确认, _verify_lib.py 未改, deterministic 短哈希 collision 风险 ~10^-9 可忽略
+- verify_runs (anchor=ee0170f):
+  - ./init.sh smoke: PASS rc=0 (total=329 well_formed=329 typo_count=0)
+  - verify_infra_110.py: PASS rc=0 ALL PASS 19/19
+  - verify_infra_P314_lib_sha_cascade.py: PASS rc=0 ALL PASS 8/8
+  - verify_infra_062.py round1 (--anchor 330df57): PASS rc=0 ALL PASS 30/30
+  - verify_infra_062.py round2 (--anchor ee0170f): PASS rc=0 ALL PASS 30/30
+  - verify_infra_039.py (cascade 抽样): PASS rc=0 ALL PASS 27 checks
+  - verify_infra_102.py (cascade 抽样): PASS rc=0 ALL PASS 27 checks
+  - verify_infra_P317_syspath_restore.py (cascade 抽样): PASS rc=0 7/7
+- known pre-existing baseline FAIL: verify_infra_060.py:V4_real_unknown_count_eq_one (unknown_count=6 expect=4, base 995b164 同 FAIL, 与本 feat 无关)
+- status: in_progress → passing; feature_list.json evidence schema 全 P278 完备
+- next: phase-67 #9 候选派下一个
+
 ## Session 2026-05-24 — phase-66 #10 infra-V31-fix-V27-closeout-evidence-schema-gap (Engineer)
 
 - base main HEAD=83a6f9e (phase-66 #9 V29 closeout); feat/infra-V31-fix-V27-closeout-evidence-schema-gap HEAD=84448b7
