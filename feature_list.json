@@ -21479,7 +21479,7 @@
       "title": "Cascade-bump stale v059/v062 reverse locks (v042 V2_helper_func_sha + v052 V2_func_sha_scan_reverse_sha_locks pre-existing 漂移)",
       "area": "infra",
       "priority": 700,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 66,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
@@ -21491,7 +21491,81 @@
         "python scripts/verify_infra_042.py PASS",
         "python scripts/verify_infra_052.py PASS",
         "v062 不退化"
-      ]
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "8ff48ac",
+          "baseline_head_echo": "b08e529",
+          "merge_commit_sha": "8ff48ac",
+          "verify_runs": [
+            {
+              "name": "verify_infra_042.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_042][PASS] V4_count=1_returns raised=False expect_raise=False\n[verify_infra_042][PASS] V4_count=2_raises raised=True expect_raise=True\n[verify_infra_042][PASS] V4_count=3_raises raised=True expect_raise=True\n[verify_infra_042][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_042__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_042__' in grace_period (skipped)\"\n[verify_infra_042][SUMMARY] ALL PASS (13 checks)",
+              "freshness_anchor": "8ff48acff4d741b54f049fdb7c7d2f163242013c"
+            },
+            {
+              "name": "verify_infra_052.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_052][PASS] V4_dump_index_json_rc rc=0 stderr=''\n[verify_infra_052][PASS] V4_dump_index_json_scanned_ge_15 stats.scanned_count=269\n[verify_infra_052][PASS] V4_verify_infra_034_rc rc=0 (V6 一致性仍 PASS)\n[verify_infra_052][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_052__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_052__' in grace_period (skipped)\"\n[verify_infra_052][SUMMARY] ALL PASS (23 checks)",
+              "freshness_anchor": "8ff48acff4d741b54f049fdb7c7d2f163242013c"
+            },
+            {
+              "name": "verify_infra_040.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_040][PASS] V6c_source_literal[非重叠] literal='非重叠' present=True\n[verify_infra_040][PASS] V6d_empty_needle_rejects raised=ValueError('empty needle: assert_unique_needle 不接受空字符串') msg_match=True\n[verify_infra_040][PASS] V6e_overlap_aaa_aa_unique count=1 (non-overlap) treated as unique\n[verify_infra_040][PASS] V6f_aaaa_aa_non_unique raised=ValueError(\"needle 不唯一: count=2, needle='aa'\") count_in_msg=True\n[verify_infra_040][SUMMARY] ALL PASS (18 checks)",
+              "freshness_anchor": "8ff48acff4d741b54f049fdb7c7d2f163242013c"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V4_self_lib_sha: got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=1990a9b61d3b14c9\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "8ff48acff4d741b54f049fdb7c7d2f163242013c"
+            },
+            {
+              "name": "verify_infra_062.py --freshness-anchor d29ab0d (round1)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=118 enforced=81 soft_skipped=37 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=118 enforced=81 soft_skipped=37 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "d29ab0d"
+            },
+            {
+              "name": "verify_infra_062.py --freshness-anchor 8ff48acff4d741b54f049fdb7c7d2f163242013c (round2)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=118 enforced=81 soft_skipped=37 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=118 enforced=81 soft_skipped=37 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "8ff48acff4d741b54f049fdb7c7d2f163242013c"
+            }
+          ],
+          "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=323 well_formed=323 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Engineer cascade-bump v042/v052 中两个 stale helper sha 至 _verify_lib.py 真实值 (assert_unique_needle=3b92e4f2, scan_reverse_sha_locks=bcb5a603), scope 精确, base 反证与 mutation 均符合预期, v040 已有正确 sha 无需再动, P314/v062 cascade gates 全 PASS, 无 cascade 缺漏。",
+          "checks_run": [
+            "diff scope: 仅 v042/v052 EXPECTED_*_FUNC_SHA + feature_list",
+            "v042 EXPECTED_HELPER_FUNC_SHA bump 至 3b92e4f2a058b1bd (assert_unique_needle)",
+            "v052 EXPECTED_SCAN_FUNC_SHA bump 至 bcb5a6030ce06d14 (scan_reverse_sha_locks)",
+            "_verify_lib.py 未动",
+            "v040 已有正确 sha 无需 cascade",
+            "verify_infra_042.py PASS (13 checks)",
+            "verify_infra_052.py PASS (23 checks)",
+            "verify_infra_040.py PASS (18 checks)",
+            "verify_infra_P314_lib_sha_cascade.py PASS (8 checks, stale=0)",
+            "verify_infra_062.py freshness=d29ab0d PASS (30 tags)",
+            "base 反证 (HEAD~1) v042 V2_helper_func_sha mismatch 重现",
+            "base 反证 (HEAD~1) v052 V2_func_sha_scan_reverse_sha_locks mismatch 重现",
+            "mutant 反证: 改 v042 EXPECTED 即 FAIL",
+            "mutant 反证: 改 v052 EXPECTED 即 FAIL",
+            "feature_list infra-V35 entry shape 完整 (id/title/area/priority/status/phase/scope/verification)"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          }
+        },
+        "known_pre_existing_baseline_fails": []
+      }
     }
   ],
   "last_updated": "2026-05-24",

@@ -9413,3 +9413,22 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - backlog 入账: infra-V35-cascade-bump-stale-v059-v062-reverse-locks (priority=999 status=backlog phase=null)
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+
+## Session 2026-05-24 — phase-66 #12 infra-V35 closeout
+
+- feature: infra-V35-cascade-bump-stale-v059-v062-reverse-locks
+- merge_sha: 8ff48ac (no-ff merge of feat/infra-V35-cascade-bump-stale-v059-v062-reverse-locks into main; base b08e529)
+- Engineer 改动: scripts/verify_infra_042.py EXPECTED_HELPER_FUNC_SHA e3223584fbdb5f1b→3b92e4f2a058b1bd (assert_unique_needle live sha); scripts/verify_infra_052.py EXPECTED_SCAN_FUNC_SHA 772a2d916fc11366→bcb5a6030ce06d14 (scan_reverse_sha_locks live sha)。_verify_lib.py 未动。
+- Reviewer: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=[]; 15 项 checks_run。
+- verify_runs:
+  - verify_infra_042.py PASS (13 checks)
+  - verify_infra_052.py PASS (23 checks)
+  - verify_infra_040.py PASS (18 checks, 关联 helper)
+  - verify_infra_P314_lib_sha_cascade.py PASS (8 checks, stale=0)
+  - verify_infra_062.py --anchor d29ab0d round1 PASS (30 emit-paths)
+  - verify_infra_062.py --anchor 8ff48ac round2 PASS (30 emit-paths)
+- smoke PASS (含 publish/typo-guard)
+- 状态: in_progress→passing。known_pre_existing_baseline_fails=[] (本 feat 即修复对象)
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
