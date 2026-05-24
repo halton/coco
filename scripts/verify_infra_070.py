@@ -143,17 +143,18 @@ def v0_scaffolding() -> None:
 # V1: self main() func sha lock
 # ---------------------------------------------------------------------------
 def v1_self_func_sha() -> None:
+    # P294-followup (phase-67 #18): __BUMP_ME__ placeholder removed — V1 now strictly
+    # enforces the locked hex64 sha; constant must equal the implementation value.
     try:
         got = func_sha_by_name(Path(__file__), "main")
     except Exception as e:
         _emit("V1_self_main_func_sha", False, f"compute err: {e!r}")
         return
-    if EXPECTED_SELF_MAIN_FUNC_SHA == "__BUMP_ME__":
-        # placeholder OK during initial bring-up; emit PASS with bump hint
+    if not _is_hex64(EXPECTED_SELF_MAIN_FUNC_SHA):
         _emit(
             "V1_self_main_func_sha",
-            True,
-            f"placeholder OK; bump EXPECTED_SELF_MAIN_FUNC_SHA={got}",
+            False,
+            f"EXPECTED_SELF_MAIN_FUNC_SHA must be hex64; got placeholder/invalid={EXPECTED_SELF_MAIN_FUNC_SHA!r}",
         )
         return
     _emit(
@@ -363,11 +364,13 @@ def v6_make_mini_repo_env_isolation() -> None:
     except Exception as e:
         _emit("V6_make_mini_repo_func_sha", False, f"compute err: {e!r}")
         return
-    if EXPECTED_MAKE_MINI_REPO_FUNC_SHA == "__BUMP_ME__":
+    if not _is_hex64(EXPECTED_MAKE_MINI_REPO_FUNC_SHA):
+        # P294-followup (phase-67 #18): __BUMP_ME__ placeholder removed — V6 strictly
+        # enforces the locked hex64 sha; constant must equal the implementation value.
         _emit(
             "V6_make_mini_repo_func_sha",
-            True,
-            f"placeholder OK; bump EXPECTED_MAKE_MINI_REPO_FUNC_SHA={got}",
+            False,
+            f"EXPECTED_MAKE_MINI_REPO_FUNC_SHA must be hex64; got placeholder/invalid={EXPECTED_MAKE_MINI_REPO_FUNC_SHA!r}",
         )
     else:
         _emit(

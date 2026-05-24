@@ -132,7 +132,11 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_034_backlog_typo_guard_expected_target_shas_fix 新增
 #   EXPECTED_TARGET_FILE_SHA 常量 (target 推断不出, dump_v4 stem-resolve 失败, 归
 #   unknown 桶), 性质同上 (verify 自身/.md/template unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 10
+# - phase-67 #18 (infra-P294-followup-070-self-func-sha-bump) 后: 10 → 11
+#   verify_infra_P294_followup_070_self_func_sha_bump 新增 EXPECTED_TARGET_FILE_SHA
+#   (target=scripts/verify_infra_070.py, dump_v4 stem-resolve 失败, 归 unknown 桶),
+#   性质同 #15 (verify 自身 .py target unknown)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 11
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
