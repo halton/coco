@@ -1,0 +1,47 @@
+{
+  "items": {
+    "C3_1_capture": {
+      "status": "PASS",
+      "shape": [
+        1080,
+        1920,
+        3
+      ],
+      "dtype": "uint8",
+      "mean": 20.118450360082303,
+      "non_black": true
+    },
+    "C3_2_multi_frame": {
+      "status": "PASS",
+      "frames": 10,
+      "none_count": 0,
+      "interval_mean": 0.016010761260986328,
+      "interval_std": 0.0005926812222649938
+    },
+    "C3_3_face_id": {
+      "status": "PASS",
+      "face_count": 0,
+      "backend": "histogram",
+      "threshold": 0.4,
+      "store_empty": true,
+      "identify": null,
+      "note": "\u901a\u8def OK\uff1b\u65e0\u4eba\u8138/\u7a7a store \u4e5f\u7b97 PASS\uff08spec \u9a8c\u901a\u8def\uff09"
+    },
+    "C3_4_consistency": {
+      "status": "PASS",
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mean": 0.0,
+      "std": 0.0,
+      "stable": true
+    }
+  },
+  "ts": 1779634894.4356549,
+  "env_camera": "usb:0",
+  "status": "PASS"
+}

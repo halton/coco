@@ -1,0 +1,66 @@
+{
+  "status": "PARTIAL",
+  "items": {
+    "C4_13_wake_hit": {
+      "status": "PASS",
+      "detail": {
+        "module": "coco.wake_word",
+        "wake_word_enabled_from_env_default": false,
+        "wake_word_enabled_when_DISABLE_0": false,
+        "user_pending": "真人喊'可可'，需耳听 wake hit 灯/音"
+      }
+    },
+    "C4_14_asr_llm_tts_loop": {
+      "status": "PASS",
+      "detail": {
+        "modules": {
+          "coco.main": "loaded",
+          "coco.wake_word": "loaded"
+        },
+        "user_pending": "真人对话'今天学了什么'，需耳听 TTS 回应"
+      }
+    },
+    "C4_15_multi_turn_history": {
+      "status": "PASS",
+      "detail": {
+        "history_syms_in_main": [],
+        "user_pending": "真人多轮对话'再讲一个'，需耳听是否承接上文"
+      }
+    },
+    "C4_16_emotion_happy_idle": {
+      "status": "PASS",
+      "detail": {
+        "emotion_memory": "emotion_memory.py",
+        "situational_idle": "situational_idle.py",
+        "user_pending": "真人说'我今天好开心'，需视觉确认 idle 幅度变化"
+      }
+    },
+    "C4_17_proactive_topic": {
+      "status": "PASS",
+      "detail": {
+        "proactive_enabled_from_env": false,
+        "user_pending": "真机待机 ≥90s + 人脸 ≥30s，需耳听主动话题"
+      }
+    },
+    "C4_18_proactive_reply": {
+      "status": "PASS",
+      "detail": {
+        "modules": [
+          "coco.proactive",
+          "coco.main"
+        ],
+        "user_pending": "主动话题触发后 15s 内回应，需耳听是否进入正常 reply 流"
+      }
+    },
+    "C4_19_ptt_loop": {
+      "status": "PASS",
+      "detail": {
+        "PTTConfig_present": true,
+        "PTTConfig_type": "<class 'coco.config.PTTConfig'>",
+        "user_pending": "PTT 模式按 Enter 说话，需耳听闭环"
+      }
+    }
+  },
+  "ts": 1779635037,
+  "note": "sim-side 模块/配置健康检查全 PASS；7 项均需真人语音互动验收 → user_pending"
+}

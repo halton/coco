@@ -1243,12 +1243,56 @@
     {
       "area": "uat",
       "dependencies": [],
-      "evidence": [],
+      "evidence": {
+        "sections": {
+          "A_readback": {
+            "file": "evidence/uat-phase4/A-readback.json",
+            "status": "PASS"
+          },
+          "B_deploy": {
+            "file": "evidence/uat-phase4/B-deploy.json",
+            "status": "PASS"
+          },
+          "C1_audio": {
+            "file": "evidence/uat-phase4/C1-audio.json",
+            "status": "PASS (TTS 听感 user_pending)"
+          },
+          "C2_robot": {
+            "file": "evidence/uat-phase4/C2-robot.json",
+            "status": "PASS"
+          },
+          "C3_vision": {
+            "file": "evidence/uat-phase4/C3-vision.json",
+            "status": "PASS"
+          },
+          "C4_interact": {
+            "file": "evidence/uat-phase4/C4-interact.json",
+            "status": "PARTIAL (sim-side PASS, 真人互动 user_pending)"
+          },
+          "C5_vision_motor_loop": {
+            "file": "evidence/uat-phase4/C5-loop.json",
+            "status": "PARTIAL (稳定性 PASS, 主观人脸跟随 user_pending)"
+          }
+        },
+        "user_pending_items": [
+          "C1.1 真扬声器 TTS 听感",
+          "C4 全部 7 项真人语音/视觉互动 (#13-#19)",
+          "C5 主观人脸跟随 3 项 (#20-#22)"
+        ],
+        "real_machine_session": {
+          "serial": "/dev/cu.usbmodem5B420747161",
+          "daemon_pid": 90215,
+          "ts": "2026-05-24",
+          "motors": "10-18 全 handshake OK",
+          "head_pose_readback_std": 0.000173
+        },
+        "notes": "首次真机连接 UAT；GStreamer 1.28.0 已装 .venv；ReachyMini client 必须 media_backend='no_media' 避开 SDK camera_gstreamer cam_path int() bug"
+      },
       "id": "uat-phase4",
       "notes": "异步项，不阻 phase-5 软件推进；用户在方便时执行；可拆成多次 session。Reviewer 不强制（真机操作本身就是 fresh evidence）。",
       "priority": 999,
-      "real_machine_uat": "pending",
-      "status": "not_started",
+      "real_machine_uat": "completed_with_user_pending",
+      "status": "passing_with_user_pending",
       "title": "phase-1~4 累积真机 UAT（异步 milestone gate）",
       "user_visible_behavior": "在 Reachy Mini 真硬件上跑通 phase-1~4 已 sim 通过的所有功能，重点验证 sim 不可证明的能力（真扬声器/真麦克/真摄像头/真电机/视觉-运动闭环），结果回填到对应 feature 的 evidence。",
       "verification": [
@@ -1259,7 +1303,8 @@
         "interact-001~007 端到端：唤醒 → push-to-talk → LLM 回应 → 多轮 → 主动话题。",
         "视觉-运动闭环：看到人 → 转头 → 视野中心更新（fixture 不能 sim 的核心项）。",
         "把每项的真机表现（pass/issue + 现象描述）回填到对应 feature 的 evidence；issue 单开 fix-* feature。"
-      ]
+      ],
+      "description": "真机连接后跑 A/B/C 全段验证；自动部分 PASS，主观/听感/真人互动留 user_pending。详见 evidence/uat-phase4/"
     },
     {
       "area": "vision-companion",

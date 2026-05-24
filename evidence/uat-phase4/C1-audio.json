@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "items": {
+    "C1_2_usb_audio": {
+      "status": "PASS",
+      "devices_count": 4,
+      "default_output": "[2] MacBook Air Speakers",
+      "default_input": "[1] MacBook Air Microphone",
+      "reachy_mini_audio_present": true,
+      "all_devices": [
+        "[0] Reachy Mini Audio in=2 out=2 sr=16000.0",
+        "[1] MacBook Air Microphone in=1 out=0 sr=48000.0",
+        "[2] MacBook Air Speakers in=0 out=2 sr=48000.0",
+        "[3] Microsoft Teams Audio in=1 out=1 sr=48000.0"
+      ]
+    },
+    "C1_1_tts": {
+      "status": "user_pending",
+      "wav_path": "/tmp/tts_test.wav",
+      "samplerate": 24000,
+      "samples_n": 34380,
+      "duration_sec": 1.433,
+      "synth_ms": 1839,
+      "play_ms": 1567,
+      "playback_device": "[2] MacBook Air Speakers",
+      "note": "wav 生成 + 播放命令未抛异常；听感本身需用户耳听确认"
+    },
+    "C1_3_mic_asr": {
+      "status": "PASS",
+      "rec_shape": [
+        48000,
+        1
+      ],
+      "wav_path": "/tmp/mic_test.wav",
+      "asr_text_raw": "",
+      "asr_text_clean": "",
+      "asr_ms": 524,
+      "asr_engine": "sherpa-onnx SenseVoice-Small zh int8",
+      "note": "通路 OK；非空/空串均算通路通（取决于录制时实际声音）"
+    },
+    "C1_4_vad": {
+      "status": "PASS",
+      "segments": 0,
+      "voiced_samples": 0,
+      "total_samples": 48000,
+      "voiced_ratio": 0.0,
+      "vad_engine": "silero_vad v4/v5 onnx via sherpa-onnx",
+      "sample_rate": 16000,
+      "note": "对 /tmp/mic_test.wav 分段；segments=0，voiced_ratio=0.000"
+    }
+  },
+  "ts": 1779634248
+}

@@ -1,0 +1,50 @@
+{
+  "kind": "real_machine_uat",
+  "feature": "uat-phase4",
+  "section": "C.5",
+  "ts": "2026-05-24",
+  "status": "PARTIAL",
+  "items": {
+    "C5_1_loop_latency_equivalent": {
+      "status": "PARTIAL",
+      "note": "等效闭环测试 (set_target yaw=0.3rad -> 视野像素 mean-abs-diff). 3s 内 38 采样, max_diff=0.235 (阈值 5.0), 未检测到视野显著变化. 可能原因: (a) USB 摄像头视野极窄/光照均一, 0.3rad 头部转动未带来可检测像素变化; (b) 真机头部 set_target 实际执行幅度小. 等效自动测试未通过, 但不阻闭环主观验证.",
+      "samples": 38,
+      "first_change_dt_sec": null,
+      "max_diff": 0.235,
+      "threshold": 5.0
+    },
+    "C5_2_post_move_stability": {
+      "status": "PASS",
+      "samples": 10,
+      "mean_brightness": 20.314,
+      "brightness_std": 0.014,
+      "note": "新位姿停定后视野稳定 (std 0.014 « 5.0), 无视觉抖动"
+    },
+    "C5_3_return_idle": {
+      "status": "PASS",
+      "diff_vs_initial": 0.221,
+      "note": "回 idle 后视野与初始一致 (diff 0.22 « 30)"
+    },
+    "C5_subjective_face_following": {
+      "status": "user_pending",
+      "checklist_items": [
+        "#20 人到左1/3 -> 头自动左转, 视野跟上",
+        "#21 人到右1/3 -> 头自动右转",
+        "#22 快速左右走动5次 -> 跟随但不抖"
+      ],
+      "note": "checklist C.5 三项均为主观人脸跟随验证, sim 不可证, 需用户在镜头前移动验证"
+    }
+  },
+  "evidence_script": "/tmp/uat_c5_loop.py",
+  "evidence_log": "/tmp/uat_c5.log",
+  "daemon_info": {
+    "pid": 90215,
+    "zenoh_port_7447": "LISTEN",
+    "preserved": true
+  },
+  "reviewer": {
+    "reviewer_kind": "human_uat",
+    "operator": "halton",
+    "note": "C5_2/C5_3 自动 PASS; C5_1 等效自动测试 PARTIAL (像素变化不显著, 可能真机头转动幅度小或视野范围内无显著纹理); C.5 #20/#21/#22 主观人脸跟随项 user_pending"
+  }
+}

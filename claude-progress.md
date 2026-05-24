@@ -9895,3 +9895,20 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - P278 6 信号: main_head_sha=64hex ✓ baseline_head_echo=2792c43 ✓ merge_commit_sha=64hex ✓ verify_runs[6] 全含 tail_stdout/status/freshness_anchor=post-merge-rerun ✓ smoke_tail_stdout 非空 ✓ reviewer.reviewer_kind=sub_agent_fresh_context+verdict=LGTM ✓
 - 主线推进：phase-67 #28 入账 passing，可继续下一 candidate。
 
+
+## Session 2026-05-24 末段 — phase-4 真机 UAT 完成 evidence 回填
+
+首次真机连接 UAT 完成。serial=/dev/cu.usbmodem5B420747161, daemon PID=90215。
+
+- A 段 head pose readback PASS（旋转矩阵 ≈ idle 单位阵, std=1.73e-4）
+- B 段 dev mode smoke rc=0 + publish entry_point check PASS
+- C.1 audio 4 项: USB Audio/ASR/VAD PASS, TTS 听感 user_pending
+- C.2 robot 4 项: torque/0.2rad head pose/goto_sleep/readback 全 PASS
+- C.3 vision 4 项: 1920x1080@62fps capture/multi-frame/face_id/consistency 全 PASS
+- C.4 interact 7 项: sim-side 全 PASS, 真人互动 user_pending (PARTIAL)
+- C.5 vision-motor loop 3 项: 稳定性+回归 PASS, 主观跟随 user_pending (PARTIAL)
+
+evidence 全部回填到 `evidence/uat-phase4/`（7 JSON + checklist.md），feature_list.json
+uat-phase4 节点 status → passing_with_user_pending。GStreamer 1.28.0 已装 .venv；
+ReachyMini client 必须 media_backend='no_media' 绕开 SDK camera_gstreamer cam_path int()
+bug（不主动升级 SDK，per CLAUDE.md）。

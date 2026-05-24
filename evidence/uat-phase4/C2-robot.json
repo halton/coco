@@ -1,0 +1,38 @@
+{
+  "items": {
+    "C2_1_torque": {
+      "status": "PASS",
+      "method": "enable_motors/disable_motors"
+    },
+    "C2_2_head_pose": {
+      "status": "PASS",
+      "pose_delta_norm": 0.20451253418091717,
+      "pose0_rot_diag": [
+        0.9987464155320475,
+        0.9998141867893127,
+        0.9986162236760802
+      ],
+      "pose1_rot_diag": [
+        0.9915901265160791,
+        0.9907031680348062,
+        0.999241517129491
+      ]
+    },
+    "C2_3_goto_sleep": {
+      "status": "PASS",
+      "sleep_pose_diag": [
+        0.8916471656362173,
+        0.9998251770109378,
+        0.891701284899582
+      ]
+    },
+    "C2_4_readback_stability": {
+      "status": "PASS",
+      "samples": 10,
+      "max_std_per_rot_elem": 0.00017332675128529302,
+      "mean_std": 5.465576895482574e-05
+    }
+  },
+  "ts": 1779634640.297388,
+  "status": "PASS"
+}

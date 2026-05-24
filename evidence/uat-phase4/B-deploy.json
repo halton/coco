@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "smoke_rc": 0,
+  "smoke_tail": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE\u2192DROWSY@70s\u2192SLEEP@200s\u2192ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys \u5b8c\u6574, jsonl line keys\u2287['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point \u6b63\u786e + Coco \u53ef\u52a0\u8f7d\u5e76\u7ee7\u627f ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* \u524d\u7f00\u62fc\u5199\u626b\u63cf)\n  ok: total=376 well_formed=376 typo_count=0\n\n==> Smoke \u901a\u8fc7\u3002\u7ee7\u7eed\u5de5\u4f5c\u524d\u8bf7\uff1a1) \u8bfb claude-progress.md 2) \u8bfb feature_list.json\n",
+  "dev_mode": {
+    "status": "PASS",
+    "method": "/Users/halton/work/coco/.venv/bin/python -m coco, 12s short-run, SIGINT graceful shutdown",
+    "init_log_tail": "[coco][preference_learner] disabled (COCO_PREFER_LEARN not set)\n[coco][emotion_memory] disabled (COCO_EMO_MEMORY not set)\n[coco][offline_fallback] disabled (COCO_OFFLINE_FALLBACK not set)\n[coco][gesture_dialog] disabled (COCO_GESTURE_DIALOG not set)\n[coco][metrics] disabled (cfg.metrics.enabled=False)\n[coco][self_heal] disabled (COCO_SELFHEAL not set)\n[coco][health] disabled (COCO_HEALTH not set)\n[coco][greet_wire] disabled (COCO_GREET_SECONDARY not set)\n[coco][vad] VAD trigger started (threshold=0.5 cooldown=1.5s min_speech=0.25s)\n2026-05-24 22:46:49,111 [INFO] coco.vad_trigger: [vad] mic loop started (sr=16000 block=1600)\n2026-05-24 22:46:54,711 [INFO] reachy_mini.app: Received signal 2, stopping gracefully\n2026-05-24 22:46:54,711 [INFO] coco.idle: IdleAnimator stopped stats=IdleStats(micro_count=1, glance_count=0, error_count=0, skipped_paused=0, micro_kinds={'head': 0, 'antenna': 0, 'breathe': 1}, vision_glance_count=0, vision_biased_glance_count=0, face_present_ticks=0, started_at=1779634008.975063, stopped_at=1779634014.711631)\nApp is stopping...\n[coco][idle] stopped stats=IdleStats(micro_count=1, glance_count=0, error_count=0, skipped_paused=0, micro_kinds={'head': 0, 'antenna': 0, 'breathe': 1}, vision_glance_count=0, vision_biased_glance_count=0, face_present_ticks=0, started_at=1779634008.975063, stopped_at=1779634014.711631)\n2026-05-24 22:46:55,274 [INFO] coco.vad_trigger: [vad] mic loop stopped\n",
+    "subsystems_initialized": ["ReachyMini (zenoh 7447 daemon)", "audio (sounddevice/asr fixture replay)", "perception/vision (camera disabled, fixture-mode)", "IdleAnimator", "VAD trigger mic loop"],
+    "errors": "none (1 known WARNING: reachy_mini.media Audio system is not initialized — expected, coco bypasses media subsystem per audio-decoupling design)"
+  },
+  "publish": {
+    "entry_point_registered": true,
+    "entry_point": "coco = coco.main:Coco",
+    "verified_via": "importlib.metadata.entry_points(group='reachy_mini_apps')",
+    "method": "python -m reachy_mini.apps.app check . (dry-run, non-destructive)",
+    "check_rc": 0,
+    "check_tail": "\u2705 README.md contains the required metadata.\n\nCreating a temporary virtual environment to test the app... (tmp dir: \n/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/tmpf9h80ztb)\nInstalling the app in the temporary virtual environment...\n\u283c Installation finished 0:00:53\nChecking that the app entrypoint is registered...\n\u2705 App entrypoint is registered correctly.\nUninstalling the app from the temporary virtual environment...\n\u2705 App installation and uninstallation tests passed.\n\n\u2705 App 'coco' passed all checks!\n",
+    "dry_run_only": true,
+    "publish_skipped_reason": "reachy_mini.apps.app publish pushes to HuggingFace Spaces (irreversible external publish); skipped per CLAUDE.md security policy. check subcommand validated package layout + entrypoint registration + temp venv install/uninstall round-trip — all PASS."
+  },
+  "daemon_pid_preserved": 90215,
+  "ts": 1779634112
+}
