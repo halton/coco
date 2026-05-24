@@ -255,6 +255,15 @@ P294-Rx round-1 Engineer 把真 FAIL 误判为 PASS, 根因不是 verify 脚本 
 
 **同步要求**: 派 sub-agent 跑 verify 时, brief 模板里须复述以上三选一形态之一; sub-agent 返回 verify tail 同时返回 `rc=<int>` 字段并显式声明用了 (a) / (b) / (c) 哪种形态。
 
+## Cascade RESULT sentinel 约定 (infra-V24, phase-67 #17)
+
+`scripts/bump_reverse_sha_lock.py` (反向 sha lock bump helper) 在 main() 末尾输出一行 `RESULT: APPLIED holders=<N>` 或 `RESULT: NOOP reason=<text>` 供父 cascade (例 `bump_strict_unknown_sha.py --cascade`) subprocess parse。两条容易踩坑、必须写死的约定:
+
+1. **`SENTINEL_CASE_SENSITIVE`**: kind token `APPLIED` / `NOOP` 必须大写。父 cascade 用子串 `"APPLIED" in result_line` / `"NOOP" in result_line` 匹配, 大小写敏感; 输出端 f-string 也用字面大写, 不允许 title-case 或小写改写。
+2. **`ARGPARSE_FAILURE_SKIPS_RESULT`**: argparse 自身或 pre-arg-parse 阶段失败 (例: 必须的 `--target` 缺失, 未识别 flag) 触发 `ap.error()` → `sys.exit(2)`, 此时 main() 体未执行到 print RESULT 行, **stdout 不会含 RESULT 行**。父 cascade 解析端必须在 "末尾找不到 RESULT 行" 时 fallback 到 "报告非 0 rc + 透传原 stdout/stderr", 不允许把 "RESULT 缺失" 当 NOOP 静默吞。参考实现: `bump_strict_unknown_sha.py` cascade 段 rc=7 显式表示 "RESULT sentinel 缺失"。
+
+机械化锁: `scripts/verify_infra_V24.py` V1 在 `scripts/bump_reverse_sha_lock.py` 模块 docstring 与本节同时 grep sentinel 词 (`INFRA_V24_CASCADE_RESULT_SENTINEL_CONVENTIONS`, `SENTINEL_CASE_SENSITIVE`, `ARGPARSE_FAILURE_SKIPS_RESULT`); V3 mutant 任删一词 V1 应 FAIL。
+
 ## 收尾
 
 结束会话前：

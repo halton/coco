@@ -54,7 +54,7 @@ from _verify_lib import verify_summary_exit  # noqa: E402
 
 # V5: 整体文件 sha 锁 (锁源码不被悄改)
 EXPECTED_REVERSE_HELPER_FILE_SHA = (
-    "629ab94af5ad6950bd9219ab29c91f501b9553f322a5204a28606ef03db27f31"
+    "db81f0c5e7afd4bb75cd03ecc2f96c28916e972e0046e2e551718fe4358fca9c"
 )
 
 # 允许的 sentinel 字面前缀 / reason 集合 (与 reverse helper compute_sentinel + main 一致)

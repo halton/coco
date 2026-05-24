@@ -103,7 +103,7 @@ EXPECTED_REVERSE_HELPER_MAIN_FUNC_SHA = (
 )
 # V8: reverse helper file sha (整体锁)
 EXPECTED_REVERSE_HELPER_FILE_SHA = (
-    "629ab94af5ad6950bd9219ab29c91f501b9553f322a5204a28606ef03db27f31"
+    "db81f0c5e7afd4bb75cd03ecc2f96c28916e972e0046e2e551718fe4358fca9c"
 )
 
 _results: List[Tuple[str, bool, str]] = []

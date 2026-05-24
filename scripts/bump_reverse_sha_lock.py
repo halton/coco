@@ -43,6 +43,34 @@ main() 在退出前 (rc 落定后) 输出一行以 ``RESULT:`` 开头的 sentine
   全部已最新 (``all_uptodate``)
 
 WARN 文本保持人类可读不变, RESULT 行作为机器解析锚点。
+
+INFRA_V24_CASCADE_RESULT_SENTINEL_CONVENTIONS
+---------------------------------------------
+(infra-V24-cascade-result-sentinel-docs, phase-67 #17)
+
+父 cascade (例: ``bump_strict_unknown_sha.py --cascade``) 把本 helper 当
+subprocess 调, 然后 parse 末尾的 ``RESULT:`` 行决定 APPLIED / NOOP / FAIL。
+两条容易踩坑的约定:
+
+1. ``SENTINEL_CASE_SENSITIVE``: RESULT 行的 kind token (``APPLIED`` / ``NOOP``)
+   **必须大写**。父 cascade 用 ``"APPLIED" in result_line`` / ``"NOOP" in
+   result_line`` 子串匹配 (见 ``bump_strict_unknown_sha.py:run_cascade`` 之后
+   main() 解析段), 大小写敏感。本 helper 输出端用 f-string ``RESULT: APPLIED
+   ...`` / ``RESULT: NOOP ...`` 字面量大写, 不要改成 title-case 或小写。
+
+2. ``ARGPARSE_FAILURE_SKIPS_RESULT``: argparse 本身或任何 pre-arg-parse 阶段
+   的失败 (例: ``--target`` 缺失, 未识别 flag, ``ap.parse_args(argv)`` 内部
+   ``ap.error()`` 调 ``sys.exit(2)``) **不会** emit RESULT 行 — main() 体根本
+   没机会执行到 print(f"RESULT: ...") 那几行。父 cascade 解析端 (例: 上面提到
+   的 ``bump_strict_unknown_sha.py`` cascade 段) 必须在 "stdout 末尾找不到
+   RESULT 行" 时 fallback 到 (a) 报告非 0 rc + (b) 透传原 stdout/stderr 给
+   人类排查, 而不是把 "RESULT 缺失" 当 NOOP 静默吞掉。当前 P312 cascade 段
+   显式 rc=7 表示 "RESULT sentinel 缺失", 这是参考实现。
+
+机械化锁: verify_infra_V24 V1 在本模块 docstring 内 grep
+``INFRA_V24_CASCADE_RESULT_SENTINEL_CONVENTIONS``,
+``SENTINEL_CASE_SENSITIVE``, ``ARGPARSE_FAILURE_SKIPS_RESULT`` 三个 sentinel
+词全在。删任一即 V1 FAIL, 反证 V3 mutant 同样依赖。
 """
 from __future__ import annotations
 

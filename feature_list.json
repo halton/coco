@@ -21668,14 +21668,21 @@
       "id": "infra-V24-cascade-result-sentinel-docs",
       "title": "cascade RESULT sentinel 大小写敏感与 argparse 失败路径文档化",
       "area": "infra",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 801,
+      "status": "in_progress",
+      "phase": 67,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
       "source": "phase-66 #5 Reviewer P1",
       "scope": "bump_reverse_sha_lock --cascade 在 main 末尾输出 RESULT: sentinel 大小写敏感 (APPLIED/NOOP 必须大写); argparse-error / pre-arg-parse 失败路径不会 emit RESULT: 行, 父 cascade 解析需 fallback 到原 stdout。需将这两条约定写入 scripts/bump_reverse_sha_lock.py 的 run_cascade docstring 与 README/AGENTS.md 对应章节, 防 closeout sub-agent 误判 cascade 失败。",
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_V24.py 全 PASS (V0-V5)",
+        "V1 lock bump_reverse_sha_lock.py docstring 含 3 个 sentinel 关键词",
+        "V2 lock AGENTS.md 含 V24 段 + 2 sentinel 关键词",
+        "V3 mutant 反证: 任删一 sentinel 即 V1 FAIL",
+        "V4 file sha lock: bump_reverse_sha_lock.py + AGENTS.md",
+        "V5 Reviewer LGTM gate (sub_agent_fresh_context)"
+      ]
     },
     {
       "id": "infra-V25-cascade-applied-path-future-proof",

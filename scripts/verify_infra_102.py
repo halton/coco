@@ -64,7 +64,7 @@ from _verify_lib import (  # noqa: E402
 
 # infra-P290 sha lock 常量 (V2)
 EXPECTED_DUMP_FILE_SHA = (
-    "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
+    "6392d9b8eab1403176d32065b664040394e5d26cb1ebded1133ab18d87e25467"
 )
 EXPECTED_VERIFY_LIB_FILE_SHA = (
     "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955285578f50"

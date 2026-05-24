@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
+EXPECTED_DUMP_FILE_SHA = "6392d9b8eab1403176d32065b664040394e5d26cb1ebded1133ab18d87e25467"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -132,7 +132,7 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_034_backlog_typo_guard_expected_target_shas_fix 新增
 #   EXPECTED_TARGET_FILE_SHA 常量 (target 推断不出, dump_v4 stem-resolve 失败, 归
 #   unknown 桶), 性质同上 (verify 自身/.md/template unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 9
+EXPECTED_CURRENT_UNKNOWN_COUNT = 10
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
