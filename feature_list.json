@@ -18494,9 +18494,78 @@
       "priority": 800,
       "scope": "当前 anchor regex 仅匹配大写 EXPECTED_*；若未来引入小写 const，需扩展 case 分支或统一命名约定。",
       "source": "phase-60 #4 infra-110 Reviewer non-blocking finding concern_3",
-      "status": "in_progress",
+      "status": "passing",
       "title": "composite key anchor regex 支持小写 const",
-      "notes": "phase-67 #9 Engineer: V12 case_uniform_lock 显式扫 scripts/verify_*.py + _verify_lib.py 顶层 EXPECTED_*_(FILE|FUNC)_SHA case-insensitive, 强制全大写约定; +V12b vacuous_guard. 新增 verify_infra_110_const_case.py (V0+V1 self_sha + V2 lib_sha + V12 + V12b). V12 当前扫到 270 strict_upper 命中 0 violations."
+      "notes": "phase-67 #9 Engineer: V12 case_uniform_lock 显式扫 scripts/verify_*.py + _verify_lib.py 顶层 EXPECTED_*_(FILE|FUNC)_SHA case-insensitive, 强制全大写约定; +V12b vacuous_guard. 新增 verify_infra_110_const_case.py (V0+V1 self_sha + V2 lib_sha + V12 + V12b). V12 当前扫到 270 strict_upper 命中 0 violations. | phase-67 #9 closeout merge_sha=c7133d6 main HEAD<= closeout-commit Reviewer LGTM (sub_agent_fresh_context).",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "c7133d6",
+          "baseline_head_echo": "713d640",
+          "merge_commit_sha": "c7133d6",
+          "verify_runs": [
+            {
+              "name": "verify_infra_110_const_case.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110_const_case] PASS V0_verify_lib_exists: scripts/_verify_lib.py\n[verify_infra_110_const_case] PASS V0_helper_symbol: scan_reverse_sha_locks_ast present\n[verify_infra_110_const_case] PASS V1_self_file_sha: got=2812506a3441509f expect=2812506a3441509f\n[verify_infra_110_const_case] PASS V2_verify_lib_file_sha: got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_110_const_case] PASS V12_case_uniform_lock: all 270 case-insensitive matches are strict uppercase (strict_upper=270, scanned 264 files)\n[verify_infra_110_const_case] PASS V12b_vacuous_guard: strict_upper=270 ci_match=270 (expect strict_upper>=1)\n[verify_infra_110_const_case][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "c7133d6"
+            },
+            {
+              "name": "verify_infra_062.py round1",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=125 enforced=81 soft_skipped=44 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=125 enforced=84 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=125 enforced=84 soft_skipped=41 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=125 enforced=84 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "c7133d6"
+            },
+            {
+              "name": "verify_infra_062.py round2",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=125 enforced=81 soft_skipped=44 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=125 enforced=84 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=125 enforced=84 soft_skipped=41 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=125 enforced=84 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=125 enforced=84 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "c7133d6"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V0_verify_lib_exists: /Users/halton/work/coco/scripts/_verify_lib.py\n[verify_infra_P314] PASS V0_scripts_dir: /Users/halton/work/coco/scripts\n[verify_infra_P314] PASS V1_docstring_sentinel: sentinel=INFRA_P314_SHA_LOCKS\n[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)\n[verify_infra_P314] PASS V4_self_lib_sha: got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=47 live_sha=1990a9b61d3b14c9\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=47 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "c7133d6"
+            },
+            {
+              "name": "verify_infra_P301_followup_typed_enum.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P301_followup_typed_enum][PASS] V0_self_main_func_sha got=e291af057e5dfc7e expect=e291af057e5dfc7e\n[verify_infra_P301_followup_typed_enum][PASS] V1_docstring_sentinel sentinel='INFRA_P301_FOLLOWUP_TYPED_ENUM_DOC_SHA_LOCKS'\n[verify_infra_P301_followup_typed_enum][PASS] V2_p301_full_file_sha got=3fc72a0fea0f46a5 expect=3fc72a0fea0f46a5\n[verify_infra_P301_followup_typed_enum][PASS] V3_allowlist_nonempty size=44\n[verify_infra_P301_followup_typed_enum][PASS] V3_allowlist_reason_format no_prefix_colon=[]\n[verify_infra_P301_followup_typed_enum][PASS] V3_allowlist_reason_typed unknown_prefixes=[] (showing<=5) total=0\n[verify_infra_P301_followup_typed_enum][PASS] V4_enum_nonempty enum_size=2 values=['historical-batch-pending', 'is-the-P301-lint-itself']\n[verify_infra_P301_followup_typed_enum][PASS] V5_reviewer_lgtm_gate target=infra-P301-backlog-allowlist-reason-typed-enum helper_ok=True verdict='LGTM' kind=None summary_len=231 reason=\"feature 'infra-P301-backlog-allowlist-reason-typed-enum': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=231 OK\"\n[verify_infra_P301_followup_typed_enum] summary: total=8 failed=0",
+              "freshness_anchor": "c7133d6"
+            }
+          ],
+          "smoke_tail_stdout": "Smoke check skipped at closeout per Sim-First; relying on per-feature verify scripts (verify_infra_110_const_case.py + v062 + vP314 + P301_followup) ALL PASS as gate. Smoke OK from base 713d640.",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "phase-67 #9 infra-110 backlog composite-key const-case extension Reviewer fresh-context 评审: V12 case_uniform_lock + V12b vacuous_guard 扫到 270 strict_upper 全部 case-uniform 0 violations, verify_infra_110_const_case.py 6 checks PASS, 小写 const 演进路径锁定; P0/P1 空, 3 非阻塞 P2 (file newline, ci_match 命名, V12 description 细节).",
+            "checks_run": [
+              "V0_verify_lib_exists",
+              "V0_helper_symbol",
+              "V1_self_file_sha",
+              "V2_verify_lib_file_sha",
+              "V12_case_uniform_lock",
+              "V12b_vacuous_guard",
+              "feature_list.json schema",
+              "scope-bounded edits",
+              "no test weakening",
+              "P278 evidence schema review"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "feature_list.json 末尾缺 newline (closeout 顺手补)",
+                "V12 ci_match 计数命名可考虑改为 ci_total 以更精确",
+                "V12 description 可加 EXPECTED_*_FUNC_SHA 显式覆盖说明"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": [
+            "verify_infra_060.py:V4_real_unknown_count_eq_one (unknown_count=6 expect=4, base 995b164 同 FAIL, 与本 feat 无关)"
+          ]
+        }
+      }
     },
     {
       "area": "infra",

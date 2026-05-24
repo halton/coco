@@ -9584,3 +9584,12 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - smoke ./init.sh rc=0 全 PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish/typo-guard)
 - Reviewer: sub_agent_fresh_context LGTM, P0=0 P1=0 P2=2 (vP314 文件名 informational + Path A 修正记录)
 - status: in_progress → passing
+
+## phase-67 #9 closeout (2026-05-24)
+
+- feat: `infra-110-backlog-composite-key-const-case-extension`
+- 路线: phase-60 #4 Reviewer non-blocking concern_3 入账。`verify_infra_110_const_case.py` 新增 V0+V1 self_sha + V2 _verify_lib sha + V12 case_uniform_lock + V12b vacuous_guard，扫 `scripts/verify_*.py` + `_verify_lib.py` 顶层 `EXPECTED_*_(FILE|FUNC)_SHA` case-insensitive 命中 270 全部 strict-upper 0 violations，锁定全大写约定，为未来小写 const 演进路径预留 case 分支扩展点。
+- merge_sha: `c7133d6` (base `713d640`)
+- verify 全 PASS (P299 模式 rc 显式读): `verify_infra_110_const_case.py` rc=0, `verify_infra_062.py` round1 rc=0, round2 rc=0, `verify_infra_P314_lib_sha_cascade.py` rc=0, `verify_infra_P301_followup_typed_enum.py` (抽样) rc=0
+- Reviewer (sub-agent fresh-context): LGTM；P0/P1 空，3 个非阻塞 P2 (file newline 已在 closeout 顺手补、ci_match 命名、V12 description 细节)
+- known pre-existing baseline FAIL: `verify_infra_060.py:V4_real_unknown_count_eq_one` (unknown_count=6 expect=4, base 995b164 同 FAIL, 与本 feat 无关)
