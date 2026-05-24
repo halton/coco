@@ -9263,3 +9263,32 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - `infra-V29-verify-infra-033-print-self-name-anchor` (priority=999, Reviewer P1 primary)
   - `infra-V30-v062-byte-match-allowlist-no-self-print-scripts` (priority=999, Reviewer P1 alt)
 - push 策略: commit 后单次 push main + feat, 失败忽略继续
+
+## Session 2026-05-24 — phase-66 #9 Engineer: infra-V29-verify-infra-033-print-self-name-anchor
+
+- 状态: backlog (priority=999, phase=null) → in_progress (priority=248, phase=66)
+- BASE_MAIN_SHA: 516be0d
+- FEAT_BRANCH: feat/infra-V29-verify-infra-033-print-self-name-anchor
+- FEAT_HEAD: 142786f
+- 变更:
+  - `scripts/verify_infra_033.py`: main() 内每个 case print 加 `[verify_infra_033][...]` 前缀; 新增 SUMMARY 行 `[verify_infra_033][SUMMARY] ALL PASS (6 checks)` (与 v046 等惯例对齐, 治本 phase-66 #8 Reviewer P1)
+  - `evidence/infra-034/v4_sha.json`: cascade bump `scripts/verify_infra_033.py` sha ceeb654→29d6fde (通过 `scripts/bump_infra_034_v4_sha.py` 一键)
+- v033 before tail: `wrote .../verify_summary.json` (无 self-name anchor)
+- v033 after tail: `[verify_infra_033][SUMMARY] ALL PASS (6 checks)` (含 anchor)
+- verify_runs (12 runs, 全部 P299 模式 rc 真值):
+  - smoke: rc=0
+  - v033: rc=0 tail 含 [verify_infra_033]
+  - v033_lock_doc_rollout: rc=0
+  - v062 round1 (anchor=142786f): rc=1 — **pre-existing baseline** (与 main=516be0d 同 3 项 FAIL: V4_closeout_reviewer_block_shape / V4_closeout_baseline_head_echo_format / V4_closeout_verify_runs_freshness, 全部指向 phase-66 #8 closeout `infra-V27-v062-baseline-fix-byte-match-and-freshness` 自身, 与本 feat 无关)
+  - v062 round2 (anchor=142786f): rc=1 — 同上 baseline
+  - v034: rc=1 (pre-existing baseline V5_self_subprocess + V6_orphan_reverse_locks, 与 main 同; V4 sha cascade 已 bump PASS)
+  - v046: rc=0 (21/21)
+  - v100: rc=0 (14/14)
+  - vP306: rc=0 (10/10)
+  - vP317: rc=0 (7/7)
+  - vP312: rc=0 (8/8)
+  - vP314_lib_sha_cascade: rc=0 (8/8)
+  - vV23: rc=0 (6/6)
+  - vV6_strict_area: rc=0 (6/6)
+- **不 merge** (P261): feat 分支 push 留给 Closeout
+- **下一**: Reviewer fresh-context 评审 infra-V29 (重点: self-name anchor 治本性 + v4_sha cascade 正确性 + v062 baseline 与 main 同)
