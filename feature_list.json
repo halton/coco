@@ -10141,7 +10141,74 @@
       "origin_backlog": "infra-048-backlog-hub-color-distinguish",
       "phase": 67,
       "priority": 800,
-      "status": "in_progress"
+      "status": "passing",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "2c3b5cc",
+          "baseline_head_echo": "e71fb60",
+          "merge_commit_sha": "2c3b5cc",
+          "smoke_tail_stdout": "  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=329 well_formed=329 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "verify_runs": [
+            {
+              "name": "verify_infra_053.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_053][PASS] V4_classdef_total_count got=6 expect=6\n[verify_infra_053][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_053__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_053__' in grace_period (skipped)\"\n[verify_infra_053][SUMMARY] ALL PASS (18 checks)",
+              "freshness_anchor": "2c3b5cc"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "2c3b5cc"
+            },
+            {
+              "name": "verify_infra_062.py round1 (anchor=f989ec3)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "2c3b5cc"
+            },
+            {
+              "name": "verify_infra_062.py round2 (anchor=merge_sha)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "2c3b5cc"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-053 phase-67 #7 入账 no-op closeout, scope 仅 feature_list.json 单 entry 字段切换 (priority 999→800, status backlog→in_progress, phase null→67, notes append phase-67 #7 audit 备注). 无代码改动, _verify_lib.py 未触.",
+            "checks_run": [
+              "V0_dump_exists",
+              "V0_hub_module_symbols",
+              "V1_docstring_sentinel",
+              "V1_self_checker_func_sha",
+              "V2_dump_file_sha",
+              "V2_render_mermaid_func_sha",
+              "V3_mutant_apply",
+              "V3_mutant_sha_drift",
+              "V3_baseline_matches_expected",
+              "V4_subprocess",
+              "V4_hub_classdef_present",
+              "V4_hub_fill_value",
+              "V4_module_classdef_present",
+              "V4_module_fill_value",
+              "V4_hub_module_fill_distinct",
+              "V4_no_old_hub_color_residue",
+              "V4_classdef_total_count"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "vP314 文件名为 verify_infra_P314_lib_sha_cascade.py (大写 P), Reviewer 在小写 p314 下未找到——informational",
+                "Path A 修正: closeout 时同时把 infra-110 evidence verify_runs[2].freshness_anchor 从 '07289cb' (feat HEAD) 改为 'a9d7983' (实际 merge_sha 前 7), 拨乱反正 v062 round1 pre-existing baseline FAIL"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": []
+        }
+      }
     },
     {
       "area": "infra",
@@ -18809,7 +18876,7 @@
               "name": "verify_infra_062 round1",
               "status": "PASS",
               "tail_stdout": "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
-              "freshness_anchor": "07289cb"
+              "freshness_anchor": "a9d7983"
             },
             {
               "name": "verify_infra_062 round2",

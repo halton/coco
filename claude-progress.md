@@ -9549,3 +9549,20 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - status: in_progress → passing
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+## Session phase-67 #7 — infra-053-backlog-doc-hub-color-update closeout (Path A 同时修 infra-110 freshness_anchor)
+
+- scope: feature_list.json 单 entry 字段切换 (priority 999→800, status backlog→in_progress→passing, phase null→67, notes 追加 phase-67 #7 audit 备注). 无代码改动, _verify_lib.py 未触.
+- baseline main HEAD: e71fb60
+- feat 分支: feat/infra-053-backlog-doc-hub-color-update HEAD=f989ec3
+- merge_sha: 2c3b5cc (merge --no-ff)
+- **Path A 拨乱反正**: closeout 时同时修正 infra-110 evidence closeout_verify.verify_runs[2].freshness_anchor: '07289cb' (旧 feat HEAD) → 'a9d7983' (实际 merge_sha 前 7), 共修 1 处. 修后 v062 round1 在 e71fb60 baseline 上自然 PASS, 无需登记 known_pre_existing_baseline_fails.
+- verify_runs (P299 模式: `python ... > log 2>&1; rc=$?`):
+  - verify_infra_053.py rc=0 ALL PASS (18 checks)
+  - verify_infra_P314_lib_sha_cascade.py rc=0 ALL PASS (8 checks)
+  - verify_infra_062.py round1 anchor=f989ec3 rc=0 ALL PASS (30/30)
+  - verify_infra_062.py round2 anchor=2c3b5cc rc=0 ALL PASS (30/30)
+  - 写入 evidence 后 self-check v062 anchor=2c3b5cc rc=0 ALL PASS (scanned=124, enforced=83)
+- smoke ./init.sh rc=0 全 PASS (audio/ASR/TTS/vision/companion-vision/face-tracker/VAD/wake-word/power-state/config/publish/typo-guard)
+- Reviewer: sub_agent_fresh_context LGTM, P0=0 P1=0 P2=2 (vP314 文件名 informational + Path A 修正记录)
+- status: in_progress → passing
