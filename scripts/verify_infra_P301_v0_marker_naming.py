@@ -45,7 +45,8 @@ INFRA_P301_V0_MARKER_NAMING_DOC_SHA_LOCKS
 - V1_docstring_sentinel     : ``INFRA_P301_V0_MARKER_NAMING_DOC_SHA_LOCKS`` 自锁
 - V2_verify_lib_file_sha    : scripts/_verify_lib.py file sha 锁
 - V3_v0_locked_scope_count  : V0-locked 脚本 (含 canonical V0_SELF_SHA_LOCK_VERSION)
-                              数量 >= baseline (>=1, 反向证 scope 不空)
+                              数量 >= 53 (硬 baseline, 收紧自 >=1; 见 infra-
+                              P301-followup-v3-scope-count-tighten)
 - V4_canonical_names_intact : self docstring 与 ALLOWED canonical 名称表对齐
 - V5_no_near_miss           : 全集中"含 near-miss 命名但非 canonical"脚本数=0
 - V6_mutation_near_miss     : canary mode 模拟一条 near-miss, scanner 应检出
@@ -292,11 +293,15 @@ def v2_verify_lib_file_sha() -> None:
 
 def v3_v0_locked_scope_count() -> List[Path]:
     v0_locked, _ = _scan_v0_locked_and_near_miss()
-    ok = len(v0_locked) >= 1
+    # baseline 53 锁 (phase-67 #21 close-out 时 v0_locked count == 53).
+    # 收紧自 >=1 -> >=53 防 silent regression (删 V0 marker 不再静默 PASS).
+    # bump_protocol: 若 V0 marker 在多脚本批量退役, 同时 bump 此处 + 文档.
+    V3_BASELINE = 53
+    ok = len(v0_locked) >= V3_BASELINE
     _emit(
         "V3_v0_locked_scope_count",
         ok,
-        f"v0_locked_count={len(v0_locked)} (expect >=1)",
+        f"v0_locked_count={len(v0_locked)} (expect >={V3_BASELINE})",
     )
     return v0_locked
 
