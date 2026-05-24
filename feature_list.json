@@ -7860,18 +7860,104 @@
     },
     {
       "area": "infra",
+      "branch": "feat/infra-P280-v4-mutant-coverage-expand",
       "created_at": "2026-05-22",
       "dependencies": [
         "infra-049-backlog-expected-pattern-consistency-check"
       ],
+      "evidence": {
+        "closeout_verify": {
+          "baseline_head_echo": "0773901",
+          "main_head_sha": "6bc79ef",
+          "merge_commit_sha": "6bc79ef",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_057.py",
+              "freshness_anchor": "6bc79ef",
+              "name": "verify_infra_057",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_057][PASS] V4_mutant_scan_returns_empty all_match=False orphans=[{'file': 'scripts/verify_demo_998.py', 'const_name': 'EXPECTED_MUTANT_FILE_SHA'}]\n[verify_infra_057][PASS] V4_mutant_missing_assignment all_match=False missing_assignment=[{'file': 'scripts/verify_demo_997.py', 'const_name': 'EXPECTED_PHANTOM_FILE_SHA'}]\n[verify_infra_057][PASS] V4_mutant_unresolved_badsha all_match=False unresolved=[{'file': 'scripts/verify_demo_996.py', 'const_name': 'EXPECTED_BADSHA_FILE_SHA', 'reason': \"bad sha_hex='ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'\"}]\n[verify_infra_057][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_057__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_057__' in grace_period (skipped)\"\n[verify_infra_057][SUMMARY] ALL PASS (15 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_P314_lib_sha_cascade.py",
+              "freshness_anchor": "6bc79ef",
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=1990a9b61d3b14c9\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py (round1 anchor=fc925d7)",
+              "freshness_anchor": "fc925d7",
+              "name": "verify_infra_062_round1",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "cmd": ".venv/bin/python scripts/verify_infra_062.py (round2 anchor=6bc79ef)",
+              "freshness_anchor": "6bc79ef",
+              "name": "verify_infra_062_round2",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=329 well_formed=329 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "known_pre_existing_baseline_fails": []
+        },
+        "engineer_commit": "fc925d7",
+        "merge_commit": "6bc79ef",
+        "real_machine_uat": "n/a (纯 infra mutant 反证扩展, 无硬件路径)",
+        "reviewer": {
+          "checks_run": [
+            "verify_infra_057 V4_mutant_scan_returns_empty 原有反证仍 PASS",
+            "verify_infra_057 V4_mutant_missing_assignment 新增反证 PASS",
+            "verify_infra_057 V4_mutant_unresolved_badsha 新增反证 PASS",
+            "verify_infra_057 全 15 checks ALL PASS",
+            "verify_demo_997.py phantom EXPECTED_PHANTOM_FILE_SHA (无 assignment) 触发 missing_assignment 分支",
+            "verify_demo_996.py EXPECTED_BADSHA_FILE_SHA=\"ZZ...\" 触发 unresolved 分支",
+            "verify_demo_998.py mutant 仍触发 orphan 分支 (原有反证)",
+            "EXPECTED_V4_CHECKER_FUNC_SHA bump 仅因 append-only 新增 60 行 V4 mutant 检测代码",
+            "scope 纯净 — 仅 verify_infra_057.py + feature_list.json (status), 无 _verify_lib.py drift",
+            "verify_infra_P314_lib_sha_cascade ALL PASS (lib sha 未变)",
+            "verify_infra_062 closeout-verify-trustworthy ALL PASS round1+round2",
+            "smoke PASS",
+            "反证 mutant 不可被静默删除/失效: 3 条独立分支各自挂掉对应 demo fixture",
+            "helper 全部判定路径 (orphans/missing_assignment/unresolved) 现已覆盖",
+            "V4_CHECKER_FUNC_SHA 锁与新 impl byte-match 一致"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "B-P280-R1 (informational): base sha 在 evidence 中以短 sha (0773901) 形式 echo; 与历史 closeout 一致, 无需 action."
+            ]
+          },
+          "kind": "sub_agent_fresh_context",
+          "lgtm": true,
+          "reviewer_kind": "sub_agent_fresh_context",
+          "summary": "V4 mutant 反证扩展真实覆盖 missing_assignment 与 unresolved 两条独立分支, 反证不可静默删除/失效, scope 纯净, V4_CHECKER_FUNC_SHA bump 仅因 append-only 新增",
+          "verdict": "LGTM"
+        },
+        "scripts": [
+          "scripts/verify_infra_057.py (+60 行: V4_mutant_missing_assignment + V4_mutant_unresolved_badsha + EXPECTED_V4_CHECKER_FUNC_SHA bump)"
+        ],
+        "smoke": "PASS (./init.sh rc=0)",
+        "verifier": "scripts/verify_infra_057.py",
+        "verify_tail": "[verify_infra_057][SUMMARY] ALL PASS (15 checks)"
+      },
       "id": "infra-P280-v4-mutant-coverage-expand",
       "phase": 67,
       "priority": 800,
       "scope": "verify_infra_057 V4 mutant 现仅 monkey-patch 一处返回值；建议补充 missing_assignment 分支与 unresolved 分支的反证 mutant，覆盖 helper 的全部判定路径。P2。",
       "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
-      "status": "in_progress",
+      "status": "passing",
       "title": "V4 mutant 覆盖扩展: missing_assignment + unresolved 分支反证",
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_057.py V0-V5 全 15/15 PASS (含 V4_mutant_scan_returns_empty + V4_mutant_missing_assignment + V4_mutant_unresolved_badsha 3 条独立反证)",
+        "scripts/verify_infra_P314_lib_sha_cascade.py 8/8 PASS (lib sha 未漂移)",
+        "scripts/verify_infra_062.py 30/30 PASS round1 (anchor=fc925d7) + round2 (anchor=6bc79ef)",
+        "smoke ./init.sh PASS",
+        "Reviewer (sub-agent fresh-context): LGTM, P0=[] P1=[] P2=[1 informational]"
+      ]
     },
     {
       "area": "infra",

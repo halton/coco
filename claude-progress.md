@@ -9511,3 +9511,22 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - status: in_progress → passing
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+## Session 2026-05-24: phase-67 #5 infra-P280-v4-mutant-coverage-expand closeout passing
+- feature: infra-P280-v4-mutant-coverage-expand
+- engineer commit: fc925d7 (feat/infra-P280-v4-mutant-coverage-expand)
+- base main: 0773901
+- merge_commit: 6bc79ef (no-ff merge into main)
+- main HEAD final: 6bc79ef
+- verify_runs (P299 模式, set rc=$? 单独读):
+  - scripts/verify_infra_057.py: PASS 15/15 (含 V4_mutant_scan_returns_empty + V4_mutant_missing_assignment + V4_mutant_unresolved_badsha 3 条独立反证分支)
+  - scripts/verify_infra_P314_lib_sha_cascade.py: PASS 8/8 (lib sha 未漂移)
+  - scripts/verify_infra_062.py round1 anchor=fc925d7: PASS 30/30 emit-paths
+  - scripts/verify_infra_062.py round2 anchor=6bc79ef: PASS 30/30 emit-paths
+- smoke ./init.sh: PASS (rc=0, entry-point + typo-guard 329/329 well_formed)
+- Reviewer sub-agent fresh-context: LGTM, P0=[] P1=[] P2=[1 informational (base sha short form note)]
+- Engineer 摘要: verify_infra_057.py +60 行新增 V4_mutant_missing_assignment (用 verify_demo_997.py phantom EXPECTED_PHANTOM_FILE_SHA 触发 missing_assignment 分支) + V4_mutant_unresolved_badsha (用 verify_demo_996.py EXPECTED_BADSHA_FILE_SHA=\"ZZ...\" 触发 unresolved 分支); EXPECTED_V4_CHECKER_FUNC_SHA bump 仅因 append-only 新增代码; scope 纯净 (仅 verify_infra_057.py + feature_list.json status)
+- Reviewer summary: V4 mutant 反证扩展真实覆盖 missing_assignment 与 unresolved 两条独立分支, 反证不可静默删除/失效, scope 纯净, V4_CHECKER_FUNC_SHA bump 仅因 append-only 新增
+- status: in_progress → passing
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
