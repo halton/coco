@@ -201,14 +201,61 @@ def v2_sha_locks() -> None:
 # ---------------------------------------------------------------------------
 # V3: mutant 反证 — 临时污染 _verify_lib.func_sha_by_name 内规范化策略
 # ---------------------------------------------------------------------------
+# infra-037-backlog-v3-mutant-atomic-rename (phase-67 #23):
+# 改用 tempfile + os.replace 原子替换 + 进程级 atexit 兜底, 避免 write 后
+# Ctrl-C/OOM 中断在 finally 之前留下被污染的 _verify_lib.py。
+# 原子保证: NamedTemporaryFile 写入同目录临时文件, os.replace 在同卷下是
+# POSIX/Windows 原子操作, 任何时刻读 _verify_lib.py 要么是 original 要么是
+# mutant, 不会出现部分写入; finally + atexit 双重 restore 保证最终回到 original。
 def v3_mutant() -> None:
-    original = VERIFY_LIB.read_text(encoding="utf-8")
+    import os
+    import tempfile
+    import atexit
+
+    original_bytes = VERIFY_LIB.read_bytes()
+    original = original_bytes.decode("utf-8")
     mutant = original.replace("canonical = ast.unparse(matches[0])", "canonical = str(matches[0])", 1)
     if mutant == original:
         _emit("V3_mutant_apply", False, "no replacement target found")
         return
+
+    def _atomic_write(target: Path, payload: bytes) -> None:
+        """原子写: tempfile 同目录 + os.replace。"""
+        tmp_fd, tmp_path = tempfile.mkstemp(
+            prefix=".verify_infra_037_v3_",
+            suffix=".tmp",
+            dir=str(target.parent),
+        )
+        try:
+            with os.fdopen(tmp_fd, "wb") as fh:
+                fh.write(payload)
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp_path, target)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    # 进程级 atexit 兜底: 即使 finally 因极端中断没跑到, atexit 仍尝试还原
+    _restore_done = {"done": False}
+
+    def _restore() -> None:
+        if _restore_done["done"]:
+            return
+        try:
+            _atomic_write(VERIFY_LIB, original_bytes)
+        except Exception:
+            # atexit 期间无法 _emit, 静默忽略
+            pass
+        finally:
+            _restore_done["done"] = True
+
+    atexit.register(_restore)
     try:
-        VERIFY_LIB.write_text(mutant, encoding="utf-8")
+        _atomic_write(VERIFY_LIB, mutant.encode("utf-8"))
         try:
             lib = _load_lib()
             # 用 mutated helper 对 parse_headings_from_doc 自身重新计算 sha
@@ -233,7 +280,8 @@ def v3_mutant() -> None:
             f"mut={mut_sha[:16]} baseline={original_sha[:16]}",
         )
     finally:
-        VERIFY_LIB.write_text(original, encoding="utf-8")
+        _atomic_write(VERIFY_LIB, original_bytes)
+        _restore_done["done"] = True
         # 清缓存避免污染后续 V4
         sys.path.insert(0, str(SCRIPTS))
         if "_verify_lib" in sys.modules:

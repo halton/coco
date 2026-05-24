@@ -7941,13 +7941,15 @@
         "infra-037"
       ],
       "id": "infra-037-backlog-v3-mutant-atomic-rename",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 233,
       "scope": "verify_infra_037 V3 mutant 当前直接 write + try/finally 还原；改为 tempfile.NamedTemporaryFile + os.replace 原子替换，避免 try 过程中断（如 Ctrl-C / OOM）留下污染。",
       "source": "infra-037 closeout Reviewer 建议",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "V3 mutant 用 tempfile + rename 原子替换",
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py"
+      ]
     },
     {
       "area": "infra",
