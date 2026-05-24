@@ -9047,3 +9047,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Reviewer (sub_agent_fresh_context): LGTM, 11 checks_run, P0=[] P1=[] P2=3 (P2-1 docstring free-text 二次锁 AGREE_ACCEPT / P2-2 rollout helper 可抽取 AGREE_DEFER / P2-3 仅记录).
 - 2 backlog 入账: infra-V14-v033-doc-freetext-lock (P2-1 AGREE_ACCEPT, V9 AST docstring V<N> vs def v<N>_*); infra-V15-docstring-rollout-helper (P2-2 AGREE_DEFER, _verify_lib.check_docstring_v_listing).
 - next candidate: phase-65 #5 (扫描 feature_list.json phase=65 status=not_started 中 priority 最低数字).
+
+## 2026-05-24 phase-66 #1 infra-V14-v033-doc-freetext-lock CLOSEOUT
+
+- Branch: feat/infra-V14-v033-doc-freetext-lock (FEAT_HEAD=e80c47e)
+- Base main: 9ec0907 → Merge commit: 5f5245b3 → New main: 5f5245b3
+- Scope: verify_infra_033_lock_doc_rollout 新增 V9_docstring_v_list_matches_impl 检查 (AST 抽 def v<N>_* 与 docstring 中 V<N> tokens 双向 diff)
+- 全部 verify PASS: smoke / v033 (9 checks incl V9) / v039 / v062 (双轮) / v037 / v110 / vP306 / vP314 / vP317 / vP301 / v100
+- Reviewer (sub-agent fresh context): LGTM; P0=[], P1=[], P2=4 条 caveat (regex 耦合 docstring 格式 / 仅检顶层 def / 错误信息可加行号 / 命名微小可读性) 全部 deferred 不阻 merge
+- Closeout-verify nested schema (P278) 已写入 evidence; 两轮 v062 (pre + post write) 全 PASS
+
+下一 candidate: phase-66 #2 infra-V15-docstring-rollout-helper
