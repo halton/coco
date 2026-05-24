@@ -6013,68 +6013,39 @@
           ]
         },
         "closeout_verify": {
-          "main_head_sha": "0000000000000000000000000000000000000000",
+          "main_head_sha": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2",
           "baseline_head_echo": "f5c9e4e",
           "merge_commit_sha": "1d7fd2e76637fec6e419dff42386863e52fc6c71",
           "verify_runs": [
             {
               "name": "verify_infra_034_backlog_verify_036_v4_sha_stale_sync",
               "status": "PASS",
-              "tail_stdout": [
-                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V1_verify_024_file_sha file=9e5af28633783184 expect=9e5af28633783184 embedded_in_036=9e5af28633783184 cross_ok=True",
-                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V2_verify_036_file_sha got=4f5e70b8e937c869 expect=4f5e70b8e937c869",
-                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V3_docstring_procedure_anchors anchors_required=4 missing=[]",
-                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V4_mutant_proof mutated_sha=cc3b8aef1811bb00 expect_lock=4f5e70b8e937c869 differs=True",
-                "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync] summary total=5 failed=0"
-              ],
-              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+              "tail_stdout": "[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V1_verify_024_file_sha file=9e5af28633783184 expect=9e5af28633783184 embedded_in_036=9e5af28633783184 cross_ok=True\n[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V2_verify_036_file_sha got=4f5e70b8e937c869 expect=4f5e70b8e937c869\n[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V3_docstring_procedure_anchors anchors_required=4 missing=[]\n[verify_infra_034_backlog_verify_036_v4_sha_stale_sync][PASS] V4_mutant_proof mutated_sha=cc3b8aef1811bb00 expect_lock=4f5e70b8e937c869 differs=True\n[verify_infra_034_backlog_verify_036_v4_sha_stale_sync] summary total=5 failed=0",
+              "freshness_anchor": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2"
             },
             {
               "name": "verify_interact_036",
               "status": "PASS",
-              "tail_stdout": [
-                "[verify_interact_036] PASS V3_mutant_proof: mutant in-memory 演练: 删 try/except 包裹后函数体 wrap sanity FAIL (body_has_wrap_after_mutate=True unmasked_try=False)",
-                "[verify_interact_036] PASS V4_sha256_lock: verify_024 sha256=9e5af28633783184.. 锁面一致",
-                "[verify_interact_036] PASS V5_end_to_end_append: append +1 行, 字段齐全",
-                "[verify_interact_036] SUMMARY all_pass=True (6/6)"
-              ],
-              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+              "tail_stdout": "[verify_interact_036] PASS V3_mutant_proof: mutant in-memory 演练: 删 try/except 包裹后函数体 wrap sanity FAIL (body_has_wrap_after_mutate=True unmasked_try=False)\n[verify_interact_036] PASS V4_sha256_lock: verify_024 sha256=9e5af28633783184.. 锁面一致\n[verify_interact_036] PASS V5_end_to_end_append: append +1 行, 字段齐全\n[verify_interact_036] SUMMARY all_pass=True (6/6)",
+              "freshness_anchor": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2"
             },
             {
               "name": "verify_infra_062",
               "status": "PASS",
-              "tail_stdout": [
-                "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=132 enforced=91 violations=0",
-                "[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=132 enforced=91 violations=0",
-                "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40",
-                "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy grace_skipped=True",
-                "[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
-              ],
-              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=132 enforced=91 violations=0\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=132 enforced=91 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2"
             },
             {
               "name": "verify_infra_100",
               "status": "PASS",
-              "tail_stdout": [
-                "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed",
-                "[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True",
-                "[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected",
-                "[verify_infra_100][PASS] V5_reviewer_lgtm_gate verdict=LGTM kind=sub_agent_fresh_context summary_len=342",
-                "[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
-              ],
-              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+              "tail_stdout": "[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate verdict=LGTM kind=sub_agent_fresh_context summary_len=342\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2"
             },
             {
               "name": "verify_infra_060",
               "status": "PASS",
-              "tail_stdout": [
-                "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]",
-                "[verify_infra_060][PASS] V4_lib_classification_present lib_ids=[_verify_lib]",
-                "[verify_infra_060][PASS] V4_dump_includes_reverse_index",
-                "[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True",
-                "[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
-              ],
-              "freshness_anchor": "1d7fd2e76637fec6e419dff42386863e52fc6c71"
+              "tail_stdout": "[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=[_verify_lib]\n[verify_infra_060][PASS] V4_dump_includes_reverse_index\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate grace_skipped=True\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "1c3005416a2bf76b343d99d4b7dc0f1cdd68aba2"
             }
           ],
           "reviewer": {
