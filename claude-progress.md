@@ -9872,3 +9872,26 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - reviewer.reviewer_kind = sub_agent_fresh_context (修正字段名: 原 brief 写 `kind`, helper 实际要 `reviewer_kind`)
 - final v_062 sanity: rc=1, emit-paths 与 baseline 一致, infra-V34 不出现在 first_violation
 - push: origin main + feat/infra-V34-... 均 403 (haltonhuo_microsoft → halton/coco 权限), 按 CLAUDE.md push 策略失败忽略继续
+
+## Session 2026-05-24 phase-67 #28 — robot-009-backlog-block-policy-doc closeout
+
+- feature: `robot-009-backlog-block-policy-doc` (overflow_policy='block' 1s 阻塞语义文档化)
+- baseline main HEAD: `2792c43`
+- merge_commit_sha: `50439e79d0bc162dd5464f4e26cc73d7ba14f3c0` (non-ff merge of feat/robot-009-backlog-block-policy-doc)
+- step_a_sha (placeholder evidence): `ce3a0edbfabc0c7f2e95762226badf06eda184a6`
+- final_main_head (Step B backfill + status passing): `67b80ee806c732b26069aa673e37494ca050a775`
+- status transition: backlog → in_progress (engineer) → passing (Step B)
+- Reviewer (sub_agent_fresh_context) verdict: LGTM, P0=[], P1=[], P2 含两条文档/锁的次要观察
+- post-merge verify_runs:
+  - verify_robot_009_backlog_block_policy_doc rc=0 ALL PASS (V0..V5)
+  - verify_infra_062 rc=1 FAIL 2/30 pre-existing (first_violation: infra-P299-engineer-task-size-guideline)
+  - verify_infra_100 rc=0 ALL PASS (14)
+  - verify_infra_060 rc=0 ALL PASS (14)
+  - verify_infra_039 第一次 rc=1 (V7_filter_partial_hit TimeoutExpired flake) → 立即重试 rc=0 ALL PASS (27)
+  - verify_infra_110 rc=2 FAIL 1/19 pre-existing (infra-034 typo 跨段 substring)
+- ./init.sh smoke rc=0
+- push origin main: 403 (haltonhuo_microsoft 无 halton/coco 写权限) — 按 commit-after push 一次失败忽略策略继续
+- push origin feat/robot-009-...: 403 同上 — 忽略
+- P278 6 信号: main_head_sha=64hex ✓ baseline_head_echo=2792c43 ✓ merge_commit_sha=64hex ✓ verify_runs[6] 全含 tail_stdout/status/freshness_anchor=post-merge-rerun ✓ smoke_tail_stdout 非空 ✓ reviewer.reviewer_kind=sub_agent_fresh_context+verdict=LGTM ✓
+- 主线推进：phase-67 #28 入账 passing，可继续下一 candidate。
+
