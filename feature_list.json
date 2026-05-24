@@ -10462,10 +10462,10 @@
     {
       "area": "infra",
       "id": "infra-P288-sub-agent-fact-vs-blame-checklist",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "rationale": "P285 round-1 sub-agent 报告把 V4 checker func sha FAIL 归因为 pre-existing (NEW_MAIN 上 robot_037 修复改变了上游 ast.unparse 结果), 实际是 round-1 自身回填错误 (中间编辑脏快照写入), 与 robot_037 无关. P278 闭环出过类似失误 (closeout 报 045/054 FAIL 但 main HEAD 实测全 PASS). 建议: 在 closeout / verify 报告模板中加硬性 checklist —— 任何 \"pre-existing FAIL\" 声明必须附 (a) 当前 main HEAD sha + (b) 在该 HEAD 上的 verify 实测 rc + 完整尾行 + (c) 涉及 EXPECTED_*_FUNC_SHA 时的 ast.unparse / file-sha 实测值快照, 三者齐备才接受归因. 否则视为 sub-agent 自身错误优先排查. 高价值: 切断 P275/P278/P285 三次复现的 fact-vs-blame 误报链路.",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "sub-agent 任何 pre-existing FAIL 声明必须附 main HEAD 实测 rc + 锁值快照"
     },
     {
