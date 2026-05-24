@@ -9026,3 +9026,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Reviewer (sub_agent_fresh_context): LGTM, 18 checks, P0=[] P1=[] P2=3 (tmpl-sha rename / mermaid non-py fallback / mutation 数字微差)
 - 2 backlog 入账: infra-P321-V13-tmpl-sha-rename-or-V7-relax, infra-P322-V13-mermaid-non-py-target-fallback (priority=999 status=backlog phase=null)
 - next candidate: phase-65 #3 infra-P317-V12-syspath-restore
+
+## Session phase-65 #3 closeout — infra-P317-V12-syspath-restore (2026-05-24)
+
+- 阶段 A hot-fix: phase-65 #2 closeout 写入的 closeout_verify 在 v062 enforcement 下触发 3 FAIL (reviewer.checks_run 写成 int 18 / 13 个 verify_runs 全缺 freshness_anchor / verify_runs[1] v033 tail 缺 verify_infra_033 anchor); 在 main 直接 commit hot-fix e5229eb 修齐三项, v062 30/30 ALL PASS rc=0.
+- 阶段 B P317: rebase feat/infra-P317-V12-syspath-restore onto e5229eb (无冲突), merge --no-ff 到 main NEW_MAIN_SHA=025b125, merge_commit_sha=025b125, baseline_head_echo=e5229eb.
+- vP317 7/7 PASS (V0 scaffolding / V1 try-finally-pop / V2 no_bare_sys_path_insert / V3 no_sys_path_side_effect before=after=6 / V4 repeated_calls_no_growth delta=0 / V5 pre_inserted_scripts_preserved / V6 dump_file_sha_lock cf7e23cb3273c42a).
+- 9 verify_runs (P278 trustworthy + P299 rc-safe) 全 PASS: smoke + vP317 + v033 + v039 (27 checks) + v062 (30/30) + v037 (15) + v110 (19) + P306 (10/10) + P314_lib_sha_cascade (8 found=46 stale=0).
+- v062 双轮确认 30/30 PASS: closeout 写入前 (hot-fix 后) + 写入后 (含本 feature P278 schema 完整).
+- Reviewer (sub_agent_fresh_context): LGTM, 25 checks_run, P0=[] P1=1 (mutation-B pop->noop V3/V4/V5 在 dedup 分支被 mask) P2=3 (informational: dump_file_sha 锁可与 P314 合并 / sys.path entry diff 未记录 / mutation matrix 建议).
+- 1 backlog 入账: infra-P323-V12-syspath-V7-pop-branch-coverage (priority=999 status=backlog phase=null).
+- next candidate: phase-65 #4 infra-P315-v033-docstring-v1v6-fix
