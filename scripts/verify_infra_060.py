@@ -136,7 +136,12 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_P294_followup_070_self_func_sha_bump 新增 EXPECTED_TARGET_FILE_SHA
 #   (target=scripts/verify_infra_070.py, dump_v4 stem-resolve 失败, 归 unknown 桶),
 #   性质同 #15 (verify 自身 .py target unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 11
+# - phase-67 #24 (infra-P299-engineer-task-size-guideline) 后: 11 → 12
+#   verify_infra_P299_engineer_task_size_guideline 新增 EXPECTED_AGENTS_FILE_SHA
+#   (target=AGENTS.md, _PER_FILE_LOCKS 已映射, 但 mermaid renderer 只 stem-resolve
+#   .py target, 非 .py 文件 (AGENTS.md/CLAUDE.md/docs/.md/PR template) 一律
+#   留 unknown 桶 — 性质同 #15/#18/#19, 是已建立的合理 unknown 模式)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 12
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
