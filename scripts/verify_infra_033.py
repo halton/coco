@@ -196,11 +196,11 @@ def main() -> int:
     for vname, fn in cases:
         try:
             results[vname] = {"status": "PASS", "detail": fn()}
-            print(f"[{vname}] PASS")
+            print(f"[verify_infra_033][{vname}] PASS", flush=True)
         except AssertionError as e:
             results[vname] = {"status": "FAIL", "error": str(e)}
             failures.append(f"{vname}: {e}")
-            print(f"[{vname}] FAIL: {e}")
+            print(f"[verify_infra_033][{vname}] FAIL: {e}", flush=True)
 
     summary = {
         "feature": "infra-033",
@@ -213,7 +213,12 @@ def main() -> int:
         json.dumps(summary, sort_keys=True, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    print(f"\nwrote {out_path}")
+    print(f"\nwrote {out_path}", flush=True)
+    total = len(cases)
+    if failures:
+        print(f"[verify_infra_033][SUMMARY] FAIL {len(failures)}/{total}", flush=True)
+    else:
+        print(f"[verify_infra_033][SUMMARY] ALL PASS ({total} checks)", flush=True)
     return 0 if not failures else 1
 
 
