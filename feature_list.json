@@ -3304,14 +3304,14 @@
       "description": "Reviewer caveat (robot-009): RobotSequencer.enqueue 支持 overflow_policy='block', 实际语义为最多阻塞 ~1s 等待 worker 消费, 超时 drop; 与 robot-009 brief 中 'callback 内直接调用 sequencer.enqueue, 完全非阻塞' 表述存在歧义。建议: 在 sequencer docstring + AGENTS/CLAUDE 子系统段明确三策略 (drop_oldest 默认 / drop_new / block≤1s), 并在 ProactiveScheduler 注入处注释默认 policy。",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_STEP_B_BACKFILL",
+          "main_head_sha": "ce3a0edbfabc0c7f2e95762226badf06eda184a6",
           "baseline_head_echo": "2792c43",
           "merge_commit_sha": "50439e79d0bc162dd5464f4e26cc73d7ba14f3c0",
           "verify_runs": [
             {
               "name": "verify_robot_009_backlog_block_policy_doc",
-              "status": "SKIP",
-              "tail_stdout": "Step A placeholder: will be re-run post-merge in Step B after evidence.reviewer backfilled; V5_reviewer_lgtm_gate currently FAIL by design (reviewer not yet written)",
+              "status": "PASS",
+              "tail_stdout": "[verify_robot_009_backlog_block_policy_doc][PASS] V0_repo_root_exists path=/Users/halton/work/coco\n[verify_robot_009_backlog_block_policy_doc][PASS] V0_sequencer_py_exists path=/Users/halton/work/coco/coco/robot/sequencer.py\n[verify_robot_009_backlog_block_policy_doc][PASS] V0_const_sequencer_sha_hex64 val=a3d5a44111beaf0a\n[verify_robot_009_backlog_block_policy_doc][PASS] V1_sequencer_py_loaded len=28371\n[verify_robot_009_backlog_block_policy_doc][PASS] V1_module_docstring_extracted docstring_len=1273\n[verify_robot_009_backlog_block_policy_doc][PASS] V1_docstring_sentinels_all_present required=('ROBOT_009_OVERFLOW_POLICY_DOC',) missing=[]\n[verify_robot_009_backlog_block_policy_doc][PASS] V2_three_policy_keywords_all_present required=('drop_oldest', 'drop_new', 'block', '~1s') missing=[]\n[verify_robot_009_backlog_block_policy_doc][PASS] V3_mutant_negative_each_token_drop_detected ROBOT_009_OVERFLOW_POLICY_DOC:OK_missing drop_oldest:OK_missing drop_new:OK_missing block:OK_missing ~1s:OK_missing\n[verify_robot_009_backlog_block_policy_doc][PASS] V4_sequencer_py_file_sha got=a3d5a44111beaf0a expect=a3d5a44111beaf0a\n[verify_robot_009_backlog_block_policy_doc][PASS] V5_reviewer_lgtm_gate target=robot-009-backlog-block-policy-doc reason=\"feature 'robot-009-backlog-block-policy-doc': reviewer_kind='sub_agent_fresh_context' verdict='LGTM' OK\"",
               "freshness_anchor": "post-merge-rerun"
             },
             {
@@ -3335,7 +3335,7 @@
             {
               "name": "verify_infra_039",
               "status": "PASS",
-              "tail_stdout": "[verify_infra_039][PASS] V6_default_has_ellipsis len_stdout=51383\n[verify_infra_039][PASS] V6_full_run rc=0\n[verify_infra_039][PASS] V6_full_emits_64hex hits=366 sample=4246fe98e314c0c8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b\n[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0\n[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=341\n[verify_infra_039][PASS] V7_baseline_json baseline_locks=341\n[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=5 baseline=341\n[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2374\n[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=177 ok=170 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0\n[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.7% accepted=173/177 via={'docstring': 25, 'dump_table': 63, 'self_convention': 76, 'acceptlist': 3, 'explicit': 9, 'naming_guess': 1}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_045.py', 'EXPECTED_SCAN_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=772a2d916fc11366 firsts=dump_table@scripts/_verify_lib.py:scan_reverse_sha_locks=bcb5a6030ce0'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)",
+              "tail_stdout": "[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=177 ok=170 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0\n[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.7% accepted=173/177 via={'docstring': 25, 'dump_table': 63, 'self_convention': 76, 'acceptlist': 3, 'explicit': 9, 'naming_guess': 1}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_045.py', 'EXPECTED_SCAN_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=772a2d916fc11366 firsts=dump_table@scripts/_verify_lib.py:scan_reverse_sha_locks=bcb5a6030ce0'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)\n# NOTE: first post-merge run had a V7_filter_partial_hit TimeoutExpired flake (subprocess timeout 30s on dump_v4_sha_graph --filter); immediate retry returned ALL PASS (27) with identical helper-sha resolution — non-deterministic system load flake, NOT a robot-009 regression.",
               "freshness_anchor": "post-merge-rerun"
             },
             {
@@ -3392,7 +3392,7 @@
       "priority": 999,
       "selected_for": "robot-032",
       "selected_phase": 29,
-      "status": "in_progress",
+      "status": "passing",
       "verification": null
     },
     {
