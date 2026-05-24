@@ -20264,14 +20264,165 @@
       "id": "infra-V22-cascade-warn-noop-semantics",
       "title": "run_cascade WARN 空操作语义文档化",
       "area": "infra",
-      "priority": 999,
-      "status": "backlog",
-      "phase": null,
+      "priority": 50,
+      "status": "passing",
+      "phase": 66,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
       "source": "phase-66 #4 Reviewer P2-b",
       "scope": "bump_strict_unknown_sha --cascade 调 bump_reverse_sha_lock --target V6 --apply 在 V6 表已最新时返回 rc=0 + WARN 空操作 (不是 rc=3 如 phase-66 #3 caveat 误述); 该语义需在 run_cascade docstring 与 README 显式文档化, 避免 closeout 误判 cascade 失败。",
-      "verification": []
+      "verification": [
+        "scripts/verify_infra_P312.py 含 V8_cascade_warn_noop_semantics 三层锁 (file_sha + main_func_sha + e2e stdout NOOP_reason)",
+        "bump_strict_unknown_sha --cascade 调 reverse helper 在 V6 表已最新时机器可解析 RESULT: NOOP reason=all_uptodate",
+        "Reviewer (sub-agent) LGTM: infra-V22 把 cascade 出口语义从模糊的 OK: PASS 拆成显式 APPLIED holders=N / NOOP reason=<no_holders|all_uptodate>, reverse helper 在 m"
+      ],
+      "evidence": {
+        "feat_head_sha": "681d39b",
+        "merge_commit_sha": "9eacc4f",
+        "main_head_sha": "9eacc4f",
+        "baseline_head_echo": "bf6132e",
+        "smoke": "PASS (init.sh full pipeline)",
+        "closeout_verify": {
+          "main_head_sha": "9eacc4f",
+          "baseline_head_echo": "bf6132e",
+          "merge_commit_sha": "9eacc4f",
+          "verify_runs": [
+            {
+              "name": "smoke_init_sh",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=318 well_formed=318 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_062_round1",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=111 enforced=76 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=111 enforced=76 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=111 enforced=76 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_062_round2",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=111 enforced=76 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=111 enforced=76 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=111 enforced=76 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_P312",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P312][PASS] V1_helper_file_sha expected=bceb8927a06ceeb5 actual=bceb8927a06ceeb5\n[verify_infra_P312][PASS] V2_compute_current_func_sha expected=5dc0d39e30f5688a actual=5dc0d39e30f5688a\n[verify_infra_P312][PASS] V3_read_expected_func_sha expected=971acf212eb879df actual=971acf212eb879df\n[verify_infra_P312][PASS] V4_run_bump_func_sha expected=2552336390037592 actual=2552336390037592\n[verify_infra_P312][PASS] V5_dry_run_noop_behavior rc=0 has_noop_msg=True\n[verify_infra_P312][PASS] V6_cascade_structure cascade_arg=True reverse_helper_ref=True run_cascade_sha_match=True actual=8185b1725fc33954\n[verify_infra_P312][PASS] V7_cascade_behavior rc=0 has_cascade_marker=True\n[verify_infra_P312][PASS] V8_cascade_warn_noop_semantics file_sha=True main_sha=True actual_main=135feb8153abe681 rc=0 noop_msg=True result_noop=True no_old_ambiguous=True\n[verify_infra_P312][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_V6_strict_area",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_V6_strict_area][PASS] V1_self_file_sha expected=a6e854aaeb1af75c actual=a6e854aaeb1af75c\n[verify_infra_V6_strict_area][PASS] V2_loose_mode_baseline strict_off_orphans=6 legacy_orphans=6\n[verify_infra_V6_strict_area][PASS] V3_strict_mode_current_repo count=109 (expected 109) sha=ce0f5023e7976e8a\n[verify_infra_V6_strict_area][PASS] V4_strict_mode_mutant_unknown_added new_count=110 new_sha=b397899dd71d5460 '999_in_unk'=True\n[verify_infra_V6_strict_area][PASS] V5_strict_mode_mutant_unknown_resolved pick=002 new_count=108 new_sha=baa4d1fdeeb58eec\n[verify_infra_V6_strict_area][PASS] V6_helper_func_sha_lock parse_area_from_verify_path=PASS; scan_unknown_area_nnns=PASS; scan_reverse_sha_lock_consistency_strict=PASS\n[verify_infra_V6_strict_area][SUMMARY] ALL PASS (6 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_033",
+              "status": "PASS",
+              "tail_stdout": "[anchor:verify_infra_033]\n[V2_lock_params] PASS\n[V3_mutant_reject] PASS\n[V4_sha256_full_file] PASS\n[V5_subprocess_invoke_verify_024] PASS\n\nwrote /Users/halton/work/coco/evidence/infra-033/verify_summary.json",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=159/163 via={'docstring': 22, 'self_convention': 69, 'acceptlist': 3, 'explicit': 9, 'dump_table': 60}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_042.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=e3223584fbdb5f1b firsts=explicit@scripts/_verify_lib.py:assert_unique_needle=3b92e4f2a058'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_046",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_046][PASS] V4_target_exists target=scripts/verify_robot_025.py\n[verify_infra_046][PASS] V4_find_locks_nonempty locks_count=1\n[verify_infra_046][PASS] V4_lock_schema sample_keys=['const_name', 'file', 'kind', 'lineno', 'sha_hex']\n[verify_infra_046][PASS] V4_lock_has_verify_025 locks=['VERIFY_025_EXPECTED_SHA']\n[verify_infra_046][PASS] V4_dry_run_no_disk_change before=629ab94af5ad6950 after=629ab94af5ad6950\n[verify_infra_046][PASS] V4_dry_run_rc_ok rc=0 (0=ok/no-op or applied, 3=no locks)\n[verify_infra_046][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_046__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_046__' in grace_period (skipped)\"\n[verify_infra_046][SUMMARY] ALL PASS (21 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_037",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_037][PASS] V4_value_error ValueError raised as expected\n[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected\n[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_037__' in grace_period (skipped)\"\n[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True msg=\"top-level function 'dup_target' ambiguous in /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/verify_infra_037_t9upz93b_v6_dup.py: found 2 definitions at lineno=[1, 7]\"\n[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64\n[verify_infra_037][SUMMARY] ALL PASS (15 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_P306",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P306] PASS V6_target_no_pragma: rc=2\n[verify_infra_P306] PASS V7_algo_equiv_035: helper=a5901bb7a3ae9b8a ref=a5901bb7a3ae9b8a\n[verify_infra_P306] PASS V8_algo_equiv_033: helper=48c55fcb5a42ca17 ref=48c55fcb5a42ca17\n[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]\n[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)\n[verify_infra_P314] PASS V4_self_lib_sha: got=507d441cd9181e88 expect=507d441cd9181e88\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=507d441cd9181e88\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_P317_syspath_restore",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P317] PASS V2_no_bare_sys_path_insert: bare_inserts=[] try_ranges=[(515, 533)]\n[verify_infra_P317] PASS V3_no_sys_path_side_effect: before_len=6 after_len=6 equal=True\n[verify_infra_P317] PASS V4_repeated_calls_no_growth: delta=0\n[verify_infra_P317] PASS V5_pre_inserted_scripts_preserved: before_count=1 after_count=1\n[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=cf7e23cb3273c42a expect=cf7e23cb3273c42a\n[verify_infra_P317] OVERALL PASS: 7/7 checks",
+              "freshness_anchor": "9eacc4f"
+            },
+            {
+              "name": "verify_infra_P301_full",
+              "status": "FAIL",
+              "tail_stdout": "[verify_infra_P301_full][PASS] V1_docstring_sentinel sentinel='INFRA_P301_FULL_DOC_SHA_LOCKS'\n[verify_infra_P301_full][PASS] V2_verify_lib_file_sha got=507d441cd9181e88 expect=507d441cd9181e88\n[verify_infra_P301_full][PASS] V3_v0_scope_nonempty V0-locked scripts scanned=46\n[verify_infra_P301_full][PASS] V3_allowlist_targets_valid allowlist_size=44 stale_entries=[]\n[verify_infra_P301_full][PASS] V3_allowlist_no_redundant redundant_entries=[] (已补齐字段但仍在白名单, 应移除)\n[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P301_full][PASS] V4_version_const_typing bad_version (非 int>=1)=[]\n[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=1",
+              "freshness_anchor": "9eacc4f",
+              "pre_existing_baseline_sha": "bf6132ec42955e1530faa2c6c484906e1333682a",
+              "baseline_tail_stdout": "[verify_infra_P301_full][PASS] V1_docstring_sentinel sentinel='INFRA_P301_FULL_DOC_SHA_LOCKS'\n[verify_infra_P301_full][PASS] V2_verify_lib_file_sha got=0461b1817b5d8a2c expect=0461b1817b5d8a2c\n[verify_infra_P301_full][PASS] V3_v0_scope_nonempty V0-locked scripts scanned=46\n[verify_infra_P301_full][PASS] V3_allowlist_targets_valid allowlist_size=44 stale_entries=[]\n[verify_infra_P301_full][PASS] V3_allowlist_no_redundant redundant_entries=[] (已补齐字段但仍在白名单, 应移除)\n[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P301_full][PASS] V4_version_const_typing bad_version (非 int>=1)=[]\n[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped (非 YYYY-MM-DD)=[]\n[verify_infra_P301_full][PASS] V5_reviewer_lgtm_gate target=infra-P301-extend-allowed-missing-allowlist-scan-all helper_ok=True reason=feature_id='infra-P301-extend-allowed-missing-allowlist-scan-all' in grace_period (skipped)\n[verify_infra_P301_full] summary: total=10 failed=1",
+              "smoke_tail_stdout": "==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=318 well_formed=318 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "note": "V4_global_coverage 报 verify_infra_P289_per_file_locks_auto_derive.py 缺字段; 在 baseline bf6132e 上同样 FAIL, 非本 feature 引入。infra-P301 后续 backlog 修复。"
+            },
+            {
+              "name": "verify_infra_100",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_100][PASS] V4_2_agents_md_has_three_good_forms missing=[]\n[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg=\"needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\"\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason=\"feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK\"\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)",
+              "freshness_anchor": "9eacc4f"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-V22 把 cascade 出口语义从模糊的 OK: PASS 拆成显式 APPLIED holders=N / NOOP reason=<no_holders|all_uptodate>, reverse helper 在 main 末尾输出机器可解析 RESULT: sentinel, 父 bump_strict --cascade 反向解析翻译人类可读串, V8 三层锁 (file_sha + main_func_sha + e2e stdout 三重断言, 含负向 not has_old_ambiguous) 把回退路径焊死。57 反向锁 holder 通过 cascade 一次性 bump 到新 lib sha, 单行 sha 替换无副作用 dogfood 干净。",
+            "checks_run": [
+              "V0_helper_def_present_in_lib",
+              "V0_helper_in_all",
+              "V1_docstring_sentinel_INFRA_V22",
+              "V1_self_checker_func_sha_lock",
+              "V2_lib_file_sha_lock_507d441cd9181e88",
+              "V3_helper_func_sha_lock_d190174c24b26494",
+              "V4_sample_compliant_paths",
+              "V4_sample_negative_paths",
+              "V4_byte_match_enforce_scanned_566",
+              "V4_baseline_head_echo_required",
+              "V4_reviewer_summary_nonempty_20_chars",
+              "V4_closeout_verify_runs_shape",
+              "V4_closeout_reviewer_block_shape_findings_keys",
+              "V5_reviewer_lgtm_gate_target",
+              "V6_helper_func_sha_parse_area_strict",
+              "V7_cascade_behavior_marker_present",
+              "V8_cascade_warn_noop_semantics_three_layer_lock",
+              "V8_negative_no_old_ambiguous_sentinel",
+              "V8_e2e_stdout_NOOP_reason_machine_parseable",
+              "smoke_init_sh_full_pipeline_PASS"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [
+                "argparse-error 路径不 emit RESULT (文档应注脚)",
+                "RESULT 大小写敏感 (docstring 应说明)"
+              ],
+              "P2": [
+                "v046 三常量 bump evidence 可粘 cascade 输出",
+                "V7/V8 当前快照 vs APPLIED 路径 future-proofing"
+              ]
+            }
+          }
+        },
+        "reviewer_note": "sub_agent_fresh_context LGTM; findings P0=[] P1=2 P2=2"
+      }
     },
     {
       "id": "infra-V23-reverse-helper-stdout-format-lock",
@@ -20284,6 +20435,32 @@
       "updated_at": "2026-05-24",
       "source": "phase-66 #4 Reviewer P2-a",
       "scope": "vP312 V7 行为锁通过 stdout 'target_new_sha=' 字符串匹配 reverse helper 输出, 后者改 stdout 格式会致 V7 漂移耦合; 在 bump_reverse_sha_lock.py 加 docstring sentinel + 输出格式契约锁, vP312 V7 引用该契约锁, 解除字符串字面量耦合。",
+      "verification": []
+    },
+    {
+      "id": "infra-V24-cascade-result-sentinel-docs",
+      "title": "cascade RESULT sentinel 大小写敏感与 argparse 失败路径文档化",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #5 Reviewer P1",
+      "scope": "bump_reverse_sha_lock --cascade 在 main 末尾输出 RESULT: sentinel 大小写敏感 (APPLIED/NOOP 必须大写); argparse-error / pre-arg-parse 失败路径不会 emit RESULT: 行, 父 cascade 解析需 fallback 到原 stdout。需将这两条约定写入 scripts/bump_reverse_sha_lock.py 的 run_cascade docstring 与 README/AGENTS.md 对应章节, 防 closeout sub-agent 误判 cascade 失败。",
+      "verification": []
+    },
+    {
+      "id": "infra-V25-cascade-applied-path-future-proof",
+      "title": "cascade APPLIED 路径 V7/V8 future-proofing",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #5 Reviewer P2",
+      "scope": "phase-66 #5 verify_infra_P312 V7/V8 锁了 NOOP all_uptodate 当前快照; 未来 V6 表新增 holder 时 cascade 会走 APPLIED holders=N 路径, V7/V8 需重生 (否则会 spurious FAIL)。需在 bump_reverse_sha_lock.py 与 verify_infra_P312 中加注释提示该 future-proofing 行为, AGENTS.md cascade 章节注明 cascade feature 完成后 NOOP→APPLIED 切换时需 bump V7/V8 expect 串。",
       "verification": []
     }
   ],

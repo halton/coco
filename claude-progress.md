@@ -9098,3 +9098,22 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - **Backlog 入账**: infra-V22-cascade-warn-noop-semantics (P2-b 文档化), infra-V23-reverse-helper-stdout-format-lock (P2-a stdout 契约锁)
 - **下一 candidate**: phase-66 #5 — backlog 抽 (infra-V14 / infra-V19 regex anchor / infra-P323 / infra-P313)
 
+
+## Session 2026-05-24 phase-66 #5 — infra-V22-cascade-warn-noop-semantics
+
+- **Status**: passing
+- **Merge**: 9eacc4f (no-ff feat/infra-V22-cascade-warn-noop-semantics, FEAT_HEAD 681d39b, base bf6132e)
+- **Scope**: 把 cascade 出口语义从模糊的 `OK: PASS` 拆成显式 APPLIED holders=N / NOOP reason=<no_holders|all_uptodate>; reverse helper 在 main 末尾输出机器可解析 `RESULT:` sentinel; 父 `bump_strict_unknown_sha --cascade` 反向解析翻译人类可读串; V8 三层锁 (file_sha + main_func_sha + e2e stdout 三重断言, 含负向 not has_old_ambiguous) 焊死回退路径。57 反向锁 holder 通过 cascade 一次性 bump 到新 lib sha, 单行 sha 替换无副作用 dogfood 干净。
+- **Reviewer**: LGTM (sub_agent_fresh_context, 20 checks, P0=0 P1=2 P2=2)
+- **Reviewer P1**:
+  1. argparse-error 路径不 emit `RESULT:` → infra-V24 文档注脚
+  2. `RESULT:` 大小写敏感 (APPLIED/NOOP 大写约定) → infra-V24 docstring
+- **Reviewer P2**:
+  1. v046 三常量 bump evidence 可粘 cascade 输出
+  2. V7/V8 锁的是 NOOP all_uptodate 快照; APPLIED 路径未来需重生 → infra-V25 future-proofing 注释
+- **Verify runs (15, P299 合规)**: smoke + v062 双轮 (round1+round2 30/30) + vP312 (8/8) + vV6_strict_area (6/6) + v033 + v039 (27/27) + v046 (21/21) + v037 (15/15) + v110 (19/19) + vP306 (10/10) + vP314_lib_sha_cascade (8/8) + **vP317_syspath_restore (7/7)** + vP301_full FAIL (pre-existing baseline bf6132e 同 FAIL, baseline_tail 已落 evidence; V4_global_coverage 报 P289 缺字段非本 feature 引入) + v100 (14/14)
+- **v062 双轮 (P299)**: c1 PASS 30/30; c2 修 freshness_anchor=9eacc4f (短 sha 前缀) + 修 verify_infra_033 tail anchor → PASS 30/30 rc=0
+- **Backlog 入账 (priority=999 phase=null, 2 条)**:
+  - infra-V24-cascade-result-sentinel-docs (P1: RESULT 大小写敏感 + argparse 失败路径文档化)
+  - infra-V25-cascade-applied-path-future-proof (P2: V7/V8 当前快照 vs APPLIED 路径未来重生提示)
+- **下一 candidate**: phase-66 #6 — 主会话决定 (建议 infra-V19-strict-unknown-regex-anchor 或 infra-V23-reverse-helper-stdout-format-lock)
