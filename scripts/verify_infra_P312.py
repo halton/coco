@@ -80,7 +80,7 @@ from _verify_lib import func_sha_by_name, verify_summary_exit  # noqa: E402
 
 # V1: helper file sha
 EXPECTED_BUMP_HELPER_FILE_SHA = (
-    "e5e6f14d5060f6c9db34e296211b5bc8af53bd2d76ff081438979c38a8e003f9"
+    "bceb8927a06ceeb52c97e1d3b28e274eb276975e859edea611906526acb0c0f8"
 )
 # V2-V4: helper 核心 func sha
 EXPECTED_COMPUTE_CURRENT_FUNC_SHA = (
@@ -95,6 +95,15 @@ EXPECTED_RUN_BUMP_FUNC_SHA = (
 # V6 cascade: run_cascade func sha
 EXPECTED_RUN_CASCADE_FUNC_SHA = (
     "8185b1725fc33954553378816d815489a451378e2de90d8ff86d9e94104881c4"
+)
+# V8 (infra-V22-cascade-warn-noop-semantics): reverse helper main func sha
+# 锁 RESULT sentinel 输出路径不被悄删
+EXPECTED_REVERSE_HELPER_MAIN_FUNC_SHA = (
+    "135feb8153abe681aec250b4c03e83511b7c927981c30d13319d5418242d7b45"
+)
+# V8: reverse helper file sha (整体锁)
+EXPECTED_REVERSE_HELPER_FILE_SHA = (
+    "629ab94af5ad6950bd9219ab29c91f501b9553f322a5204a28606ef03db27f31"
 )
 
 _results: List[Tuple[str, bool, str]] = []
@@ -199,8 +208,12 @@ def v7_cascade_dry_run_via_args() -> None:
     """行为锁: --cascade 在 no-drift 场景下 rc=0, 且 stdout 含 cascade 触发标记。
 
     no-drift 时 V6 sha 不变 → cascade 后 reverse helper 也是 no-op, 整体 rc=0。
-    我们检 stdout 必须含 reverse helper 的输出印记 (例如 'target_new_sha=' 或
-    'OK:' / 'no-op'), 防 cascade 选项被改成无 subprocess 调用的 no-op。
+    我们检 stdout 必须含 reverse helper 的输出印记 (例如 'target_new_sha=')。
+
+    (infra-V22-cascade-warn-noop-semantics): 此版父 helper 不再输出
+    "OK: cascade bump_reverse_sha_lock.py PASS", 而是显式输出 APPLIED 或 NOOP。
+    本 V7 只 sanity-check cascade 被触发 (cascade_marker), 由 V8 锁 APPLIED/NOOP
+    语义。
     """
     if not HELPER.is_file():
         _emit("V7_cascade_behavior", False, "helper missing")
@@ -215,12 +228,62 @@ def v7_cascade_dry_run_via_args() -> None:
     out = proc.stdout
     # cascade 触发标记: reverse helper 输出含 "target_new_sha=" (来自 run_bump report)
     has_cascade_marker = "target_new_sha=" in out
-    has_ok_msg = "OK: cascade bump_reverse_sha_lock.py PASS" in out
-    ok = proc.returncode == 0 and has_cascade_marker and has_ok_msg
+    ok = proc.returncode == 0 and has_cascade_marker
     _emit(
         "V7_cascade_behavior",
         ok,
-        f"rc={proc.returncode} has_cascade_marker={has_cascade_marker} has_ok_msg={has_ok_msg}",
+        f"rc={proc.returncode} has_cascade_marker={has_cascade_marker}",
+    )
+
+
+def v8_cascade_warn_noop_semantics() -> None:
+    """V8 (infra-V22): cascade stdout 必须显式说出 APPLIED 或 NOOP 语义。
+
+    锁三层:
+      1) reverse helper file sha (整体锁 RESULT sentinel 输出代码)
+      2) reverse helper main 函数 sha (函数级锁)
+      3) bump_strict_unknown_sha.py --cascade 实际 stdout 在 no-drift 场景下
+         必须含 "OK: cascade bump_reverse_sha_lock.py NOOP" 字串
+         (当前 repo 状态: V6 已最新 + V6 无反向锁 holder → NOOP no_holders)
+         且必须含 "RESULT: NOOP" 子串 (来自 reverse helper)
+         且**不应**含旧的 "OK: cascade bump_reverse_sha_lock.py PASS" 模糊文本
+    """
+    reverse_helper = SCRIPTS / "bump_reverse_sha_lock.py"
+    if not reverse_helper.is_file():
+        _emit("V8_cascade_warn_noop_semantics", False, "reverse_helper missing")
+        return
+    # 1) file sha
+    actual_file_sha = hashlib.sha256(reverse_helper.read_bytes()).hexdigest()
+    file_ok = actual_file_sha == EXPECTED_REVERSE_HELPER_FILE_SHA
+    # 2) main func sha
+    actual_main_sha = func_sha_by_name(reverse_helper, "main")
+    main_ok = actual_main_sha == EXPECTED_REVERSE_HELPER_MAIN_FUNC_SHA
+    # 3) e2e cascade stdout
+    proc = subprocess.run(
+        [sys.executable, str(HELPER), "--cascade"],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    out = proc.stdout
+    has_noop_msg = "OK: cascade bump_reverse_sha_lock.py NOOP" in out
+    has_result_noop = "RESULT: NOOP" in out
+    has_old_ambiguous = "OK: cascade bump_reverse_sha_lock.py PASS" in out
+    ok = (
+        file_ok
+        and main_ok
+        and proc.returncode == 0
+        and has_noop_msg
+        and has_result_noop
+        and not has_old_ambiguous
+    )
+    _emit(
+        "V8_cascade_warn_noop_semantics",
+        ok,
+        f"file_sha={file_ok} main_sha={main_ok} actual_main={actual_main_sha[:16]} "
+        f"rc={proc.returncode} noop_msg={has_noop_msg} result_noop={has_result_noop} "
+        f"no_old_ambiguous={not has_old_ambiguous}",
     )
 
 
@@ -232,6 +295,7 @@ def main() -> int:
     v5_dry_run_noop_behavior()
     v6_cascade_structure()
     v7_cascade_dry_run_via_args()
+    v8_cascade_warn_noop_semantics()
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
     print(

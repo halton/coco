@@ -65,7 +65,7 @@ from _verify_lib import (
     assert_v5_reviewer_gate_evidence_bind,
 )
 
-EXPECTED_VERIFY_LIB_FILE_SHA = "0461b1817b5d8a2c37f8ec39ac7c561eb20d9021110a237af2abec6e0ce90366"
+EXPECTED_VERIFY_LIB_FILE_SHA = "507d441cd9181e885e5a23739bf259680262d5c42c83d7b006aa72ada7c56cf7"
 EXPECTED_HELPER_FUNC_SHA = "9e69bab11675bc2c30055225614afc436362a5e6e4ea4671912ef564dfc00946"
 EXPECTED_SELF_MAIN_FUNC_SHA = "71eaf71197a68abf51135fba30ad602a93ec8b2e4d03a87b7cfab3565ab752ba"
 # phase-55 #5.55: lock _make_mini_repo func sha so env isolation lines can't silently drift.
