@@ -9796,3 +9796,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 衍生 backlog 入账: 3 项 P301-followup-* (priority=999, status=backlog, phase=null).
 - _verify_lib.py diff vs baseline: 0 行.
 - Status: in_progress → passing.
+
+## Session 2026-05-24 phase-67 #22 (infra-P301-followup-v3-scope-count-tighten) closeout
+
+- Feature: infra-P301-followup-v3-scope-count-tighten (V3_v0_locked_scope_count 阈值收紧: '>=1' → '>=53', 防 silent regression)
+- 实现: scripts/verify_infra_P301_followup_v3_scope_count_tighten.py 新增 315 行, 9 checks (V1 阈值字面量 + V2 baseline >=53 + V3 scope_count 真实 >=53 + V4 mutation_delete_to_one + V5 mutation_delete_to_52 + V6 docstring sentinel + V7 mutation_baseline_lower + V_last_reviewer_lgtm_gate + summary). 同步将 verify_infra_P301_v0_marker_naming.py V3 阈值从 '>=1' 改 '>=53'. 解决 phase-67 #21 Reviewer P1 #2 "V3 阈值过宽".
+- Reviewer (sub-agent fresh-context): LGTM, 9/9 PASS (followup) + 8/8 PASS (v0_marker_naming), P0/P1/P2 全空, 无回归.
+- Post-merge verify (main HEAD=bc44a4ae): followup 9/9 PASS, v0_marker_naming 8/8 PASS, verify_infra_062 ALL PASS (P278 schema), verify_infra_100 ALL PASS (P299 lock), verify_infra_060 ALL PASS, verify_infra_039 27/27 PASS, smoke ./init.sh PASS.
+- Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 1ca519f 同样 FAIL, 范围无关; 登记 known_pre_existing_baseline_fails 含 baseline_sha + baseline_tail_stdout + smoke_tail_stdout).
+- Merge: feat/infra-P301-followup-v3-scope-count-tighten → main, merge_commit_sha=bc44a4ae2bbe7e2f037da3a12c13f65d96722427 (no-ff).
+- _verify_lib.py diff vs baseline: 0 行.
+- Status: in_progress → passing.
