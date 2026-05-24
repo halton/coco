@@ -1,3 +1,18 @@
+## Session 2026-05-24 — phase-67 #11 infra-100-backlog-agents-md-sha-cascade-fix (Closeout)
+
+- base main HEAD=5b4c5f4; feat/infra-100-backlog-agents-md-sha-cascade-fix HEAD=7346c98; merge_sha=581606a (no-ff merge to main)
+- **消除一个 pre-existing baseline FAIL**: verify_infra_100.py V2_agents_md_file_sha (EXPECTED_AGENTS_MD_FILE_SHA 从陈旧 68cb7a3282f8172c bump 到当前 AGENTS.md 实际 sha 4334067ba33761e1)
+- verify runs (P299 compliant rc capture):
+  - scripts/verify_infra_100_backlog_agents_md_sha_cascade_fix.py: PASS (7 checks, rc=0)
+  - scripts/verify_infra_100.py: PASS (14 checks, rc=0, V2_agents_md_file_sha 由 FAIL 转 PASS)
+  - scripts/verify_infra_062.py round1: PASS (30 emit-paths, rc=0, freshness_anchor=merge_sha)
+  - scripts/verify_infra_062.py round2: PASS (rc=0, freshness_anchor=closeout_commit_sha) — 见下
+  - scripts/verify_infra_110_const_case.py: PASS (6 checks, rc=0) — 抽样
+  - scripts/verify_infra_034_backlog_expand_docstring_coverage.py: PASS (16/0, rc=0) — 抽样
+- Reviewer (sub-agent fresh context): LGTM — diff scope 干净, sim-only single-line constant bump + 自验脚本; P0=[] P1=[] P2=2 (dump_v4_sha_graph.py 上游残留勿 stage; feature_list.json trailing newline 顺手补 — 两项已处理)
+- 剩余 pre-existing baseline FAIL: verify_infra_060.py V4_real_unknown_count_eq_one (unknown_count=6 expect=4, 与本 feat 无关, 已登记)
+- closeout commit 仅 stage feature_list.json + claude-progress.md (scripts/dump_v4_sha_graph.py 不带入)
+
 ## Session 2026-05-24 — phase-67 #8 infra-110-backlog-mermaid-node-id-readability (Closeout)
 
 - base main HEAD=995b164; feat/infra-110-backlog-mermaid-node-id-readability HEAD=330df57; merge_sha=ee0170fb2f2a3b6aaadc3f812badef7ea90eb4aa (no-ff merge to main)
