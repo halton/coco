@@ -21309,7 +21309,7 @@
       "title": "修 v034 baseline FAIL 2 项 (V5_self_subprocess + V6_orphan_reverse_locks)",
       "area": "infra",
       "priority": 700,
-      "status": "in_progress",
+      "status": "passing",
       "phase": 66,
       "created_at": "2026-05-24",
       "updated_at": "2026-05-24",
@@ -21320,7 +21320,108 @@
         "scripts/bump_reverse_sha_lock.py 同步 6 个 orphan reverse locks (路径 A)",
         "python scripts/verify_infra_034.py PASS total=68 failed=0",
         "python scripts/verify_infra_062.py 不退化"
-      ]
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "528a6f2",
+          "baseline_head_echo": "9d34e63",
+          "merge_commit_sha": "528a6f2",
+          "verify_runs": [
+            {
+              "name": "scripts/verify_infra_034.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_034][INFO] V4 baseline scripts/verify_infra_024.py sha=eb61b07104dc68d5\n[verify_infra_034][PASS] V5_self_subprocess rc=0 stdout_lines=70\n[verify_infra_034][PASS] V6_live_sha_set live_verify_files=260\n[verify_infra_034][PASS] V6_orphan_reverse_locks scanned_reverse_locks=269; all match a live verify file sha\n[verify_infra_034] summary total=68 failed=0",
+              "freshness_anchor": "528a6f2"
+            },
+            {
+              "name": "scripts/verify_infra_P314_lib_sha_cascade.py",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_P314] PASS V4_self_lib_sha: got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=1990a9b61d3b14c9\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)",
+              "freshness_anchor": "528a6f2"
+            },
+            {
+              "name": "scripts/verify_infra_062.py --anchor be2411d (round1)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "be2411d"
+            },
+            {
+              "name": "scripts/verify_infra_062.py --anchor 528a6f2 (round2)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "528a6f2"
+            },
+            {
+              "name": "scripts/verify_infra_062.py --anchor 528a6f2 (final gate)",
+              "status": "PASS",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)",
+              "freshness_anchor": "528a6f2"
+            },
+            {
+              "name": "13 sampled cascade-bumped scripts (037/042/052/057/063/070/077/086/095/099/110/robot_035/robot_037)",
+              "status": "PASS",
+              "tail_stdout": "PASS: 037 057 063 070 077 086 095 099 110 robot_035 robot_037 (11/13); FAIL: verify_infra_042.py (V2_helper_func_sha + V3_baseline_matches_expected, pre-existing in main 9d34e63 baseline), verify_infra_052.py (V2_func_sha_scan_reverse_sha_locks + V3_baseline_matches_expected, pre-existing in main 9d34e63 baseline) — 已确认两者在 base 9d34e63 上跑同样 FAIL，与本 feat 修改无关",
+              "freshness_anchor": "528a6f2",
+              "pre_existing_baseline_sha": "9d34e63",
+              "baseline_tail_stdout": "verify_infra_042.py baseline FAIL: V2_helper_func_sha got=3b92e4f2a058b1bd expect=e3223584fbdb5f1b; V3_baseline_matches_expected baseline=3b92e4f2a058b1bd expect=e3223584fbdb5f1b. verify_infra_052.py baseline FAIL: V2_func_sha_scan_reverse_sha_locks got=bcb5a6030ce06d14 expect=772a2d916fc11366; V3_baseline_matches_expected baseline=bcb5a6030ce06d14 expect=772a2d916fc11366"
+            }
+          ],
+          "smoke_tail_stdout": "Smoke: ./init.sh on main HEAD=528a6f2 passed (cascade-bumped 57 verify scripts file_sha + _verify_lib classifier elif 顺序翻转 expected_pattern 先于 verify_id; v034/vP314/v062 all PASS; 11/13 sampled cascade scripts PASS, v042/v052 pre-existing baseline FAIL 已记录)",
+          "known_pre_existing_baseline_fails": [
+            "verify_infra_074.py:V2_verify_059_file_sha",
+            "verify_infra_081.py:V2_*",
+            "verify_infra_082.py:V2_*",
+            "verify_infra_083.py:V2_*",
+            "verify_infra_P289_per_file_locks_auto_derive.py",
+            "verify_infra_042.py:V2_helper_func_sha+V3_baseline_matches_expected",
+            "verify_infra_052.py:V2_func_sha_scan_reverse_sha_locks+V3_baseline_matches_expected"
+          ]
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Engineer 把 _verify_lib.py 中 classifier 的 elif 顺序翻转，使 expected_pattern 先于 verify_id 归类，修掉了 v034 V5_self_subprocess (file_sha 锁不再被自身归到 sentinel 桶导致 mismatch) 与 V6_orphan_reverse_locks (反向锁 expected_* 不再被错归 verify_id 桶)，并 cascade bump _verify_lib 自身 file_sha 507d441c→1990a9b61d3b14c9 + 57 个引用 verify 脚本的 expected lock。LGTM。",
+          "checks_run": [
+            "git diff main..feat HEAD 全量过",
+            "_verify_lib.py classifier elif 顺序翻转语义复核",
+            "file_sha 507d441c→1990a9b61d3b14c9 计算独立验证",
+            "57 cascade-bumped verify scripts 逐项 lock 数值核对",
+            "verify_infra_034.py V5_self_subprocess 复现 PASS",
+            "verify_infra_034.py V6_orphan_reverse_locks 复现 PASS",
+            "verify_infra_P314_lib_sha_cascade.py PASS 8 checks",
+            "verify_infra_062.py --anchor be2411d (round1) PASS 30 emit-paths",
+            "verify_infra_062.py --anchor merge_sha (round2) PASS",
+            "P278 schema 合规：closeout_verify.main_head_sha 7+ hex",
+            "P278 schema 合规：verify_runs[] 含 tail_stdout",
+            "P278 schema 合规：FAIL 项含 pre_existing_baseline_sha + baseline_tail_stdout",
+            "P278 schema 合规：reviewer.reviewer_kind=sub_agent_fresh_context",
+            "P299 shell verify rc 模式合规 (python ... > /tmp/v.log 2>&1; rc=$?)",
+            "no test removed / no verification weakened",
+            "no SDK upgrade",
+            "no main bypass: 通过 feat/infra-V32-... 分支 merge --no-ff",
+            "smoke ./init.sh 在 main HEAD=528a6f2 PASS",
+            "13 sampled cascade-bumped verify scripts: 11 PASS",
+            "v042/v052 baseline FAIL 复现在 9d34e63 同样 FAIL，非本 feat 引入",
+            "feature_id 命名与 phase-66 #11 priority=700 一致",
+            "conventional commit format & Co-Authored-By line 检查",
+            "P0=[] P1=[] confirmed",
+            "P2 责任转移观察：classifier 改 elif 顺序后由 expected_pattern 主导归类，新增锁如未匹配模式将落到 sentinel 桶；建议后续若新增 expected_* lock，须同步扩展 expected_pattern 列表",
+            "P2 标题应明示 V5 derivative：建议未来类似衍生修复在 title 中显式标注 'V5/V6 衍生于 P314 cascade'"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "责任转移观察：classifier 改 elif 顺序后由 expected_pattern 主导归类，新增 expected_* lock 若未匹配模式将落到 sentinel 桶；建议后续新增锁须同步扩展 expected_pattern 列表",
+              "标题应明示 V5 derivative：建议未来类似衍生修复在 title 中显式标注 'V5/V6 衍生于 P314 cascade'"
+            ]
+          }
+        },
+        "scripts": [
+          "scripts/_verify_lib.py (classifier elif 翻转: expected_pattern 优先于 verify_id; file_sha 507d441c→1990a9b61d3b14c9)",
+          "57 cascade-bumped verify scripts (expected _verify_lib file_sha lock 同步)"
+        ]
+      }
     },
     {
       "id": "infra-V30-v062-byte-match-allowlist-no-self-print-scripts",
@@ -21371,6 +21472,25 @@
         "DECISIONS.md 新增章节, 含三次先例摘要 + 通用规范",
         "通用规范覆盖: 何时允许重构 / 必须 reconstruction_note / 必须 Reviewer fresh-context 复核 / 不修改 v062/_verify_lib 等",
         "若有 lint, DECISIONS.md 格式不破坏"
+      ]
+    },
+    {
+      "id": "infra-V35-cascade-bump-stale-v059-v062-reverse-locks",
+      "title": "Cascade-bump stale v059/v062 reverse locks (v042 V2_helper_func_sha + v052 V2_func_sha_scan_reverse_sha_locks pre-existing 漂移)",
+      "area": "infra",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-66 #11 infra-V32 closeout 抽样 v042/v052 暴露 pre-existing baseline FAIL (helper_func_sha drift)",
+      "scope": "v042 V2_helper_func_sha 期望 e3223584fbdb5f1b 实际 3b92e4f2a058b1bd；v052 V2_func_sha_scan_reverse_sha_locks 期望 772a2d916fc11366 实际 bcb5a6030ce06d14。两者在 main 9d34e63 baseline 已 FAIL，与 infra-V32 cascade 无关，但仍需后续 bump_reverse_sha_lock 同步或 root-cause 调查",
+      "verification": [
+        "二分定位首次 FAIL commit",
+        "scripts/bump_reverse_sha_lock.py 同步 v042/v052 内嵌 helper_func_sha lock",
+        "python scripts/verify_infra_042.py PASS",
+        "python scripts/verify_infra_052.py PASS",
+        "v062 不退化"
       ]
     }
   ],

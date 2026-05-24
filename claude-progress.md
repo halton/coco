@@ -9395,3 +9395,21 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - v062 round2 (anchor=feat_head): PASS 30/30
 - 自检: smoke PASS; v033/v037/v040/v062/vV23/vV6_strict_area/v046/v100/vP306/vP312/vP314/vP317 PASS; vP301_full 仍 FAIL (pre-existing P289)
 - 不 merge, push 留 Closeout
+
+
+## Session 2026-05-24 — phase-66 #11 infra-V32 closeout
+
+- feature: infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks
+- merge_sha: 528a6f2 (no-ff merge of feat/infra-V32-... into main; base 9d34e63)
+- Engineer 改动: scripts/_verify_lib.py classifier elif 顺序翻转 (expected_pattern 优先于 verify_id); file_sha 507d441c→1990a9b61d3b14c9; cascade bump 57 verify scripts.
+- Reviewer: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=2 (责任转移观察 + 标题 V5 derivative 建议)
+- verify_runs:
+  - verify_infra_034.py PASS (V5_self_subprocess + V6_orphan_reverse_locks 修好)
+  - verify_infra_P314_lib_sha_cascade.py PASS (8 checks)
+  - verify_infra_062.py --anchor be2411d round1 PASS (30 emit-paths)
+  - verify_infra_062.py --anchor 528a6f2 round2 PASS
+  - verify_infra_062.py --anchor 528a6f2 final gate PASS
+  - 13 sampled cascade-bumped: 11 PASS; v042/v052 pre-existing baseline FAIL (V2_helper_func_sha + V3 helper drift), 已确认在 base 9d34e63 同样 FAIL → 入账 backlog infra-V35
+- backlog 入账: infra-V35-cascade-bump-stale-v059-v062-reverse-locks (priority=999 status=backlog phase=null)
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
