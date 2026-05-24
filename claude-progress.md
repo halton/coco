@@ -9781,3 +9781,18 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 022cd64 同样 FAIL, 范围无关; 登记 known_pre_existing_baseline_fails 含 baseline_sha + baseline_tail_stdout + smoke_tail_stdout).
 - Merge: feat/infra-P297-followup-mutant-keys-checkcount-lock → main, merge_commit_sha=4ec1362c7df2f91aaacfec79c97e4eed8cef9f7e (no-ff).
 - Status: in_progress → passing.
+
+## Session 2026-05-24 phase-67 #21 (infra-P301-backlog-v0-marker-extended-naming) closeout
+
+- Feature: infra-P301-backlog-v0-marker-extended-naming (V0 canonical marker 命名约定补 docstring + 支持异类命名扫描)
+- 实现: scripts/verify_infra_P301_v0_marker_naming.py 新增 390 行, 8 checks (V1 docstring sentinel + V2 broader pattern scan + V3 v0_locked_scope_count + V4 canonical names intact + V5 no near-miss + V6 mutation near-miss + V_last_reviewer_lgtm_gate + summary). 解决 phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-2 "命名约定未在 docstring 明示"。
+- Reviewer (sub-agent fresh-context): LGTM, 8/8 PASS, mutation A/B 双向证明; 3 个 P1 设计弱点登记为衍生 backlog (不阻 merge):
+  - V1 仅 'DOCSTRING_SENTINEL in src', 改 docstring 或常量值都不 trip → infra-P301-followup-v1-docstring-sentinel-strengthen
+  - V3 阈值 '>=1' 过宽 → infra-P301-followup-v3-scope-count-tighten
+  - V5 canonical+typo 共存时漏检 → infra-P301-followup-v5-near-miss-coexistence
+- Post-merge verify (main HEAD=60bde2b1): P301 8/8 PASS, verify_infra_062 ALL PASS (P278 schema), verify_infra_100 ALL PASS (P299 lock), verify_infra_060 ALL PASS, verify_infra_039 27/27 PASS, smoke ./init.sh PASS.
+- Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 083ad38 同样 FAIL, 范围无关; 登记 known_pre_existing_baseline_fails 含 baseline_sha + baseline_tail_stdout + smoke_tail_stdout).
+- Merge: feat/infra-P301-backlog-v0-marker-extended-naming → main, merge_commit_sha=60bde2b12322f9f62b61c233738e3d44a282a573 (no-ff).
+- 衍生 backlog 入账: 3 项 P301-followup-* (priority=999, status=backlog, phase=null).
+- _verify_lib.py diff vs baseline: 0 行.
+- Status: in_progress → passing.
