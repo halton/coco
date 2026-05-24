@@ -9733,3 +9733,14 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 **Reviewer**: sub_agent_fresh_context LGTM, verdict=LGTM, summary_len 342, P0=[] P1=[] P2=[1 项 minor 命名一致性建议], _verify_lib.py 0 diff (P261 OK), mutation A/B/C 全 trip。
 
 **Known pre-existing baseline fails**: [] (本次修复正是消除 smoke typo_guard baseline 单点 FAIL)。
+
+## Session 2026-05-24 phase-67 #17 (infra-V24-cascade-result-sentinel-docs)
+
+- Feature: `infra-V24-cascade-result-sentinel-docs` — cascade RESULT sentinel 大小写敏感与 argparse 失败路径文档化
+- 来源: phase-66 #5 Reviewer P1 backlog
+- 实现: bump_reverse_sha_lock.py run_cascade docstring + AGENTS.md cascade RESULT sentinel 约定段, 新增 verify_infra_V24.py V0-V5
+- Verification: V0-V5 13/13 PASS (含 V3 mutant negative 三 sentinel 各自删除均触发 V1 FAIL; V4 双文件 sha lock; V5 sub_agent_fresh_context LGTM gate)
+- Reviewer: sub_agent_fresh_context LGTM. findings P0=[] P1=[] P2=2 (V0 形式 vs V4 值分层 / v_107 backlog 文件不存在不阻 merge)
+- Pre-existing baseline FAIL: verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 610c595 同样 FAIL, 与本 feature 范围无关, 登记 known_pre_existing_baseline_fails)
+- Merge: feat/infra-V24-cascade-result-sentinel-docs → main, merge_commit_sha=81cdbd8d1cd2bdf8ed0ac4e1be23f0a986f98e00
+- Status: in_progress → passing
