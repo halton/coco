@@ -22356,7 +22356,7 @@
       ],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "d2af7f2",
+          "main_head_sha": "d2af7f2f4b815106c1d2debc2285d04dc6750a76",
           "baseline_head_echo": "64add10",
           "merge_commit_sha": "d2af7f2f4b815106c1d2debc2285d04dc6750a76",
           "verify_runs": [
