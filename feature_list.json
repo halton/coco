@@ -22337,6 +22337,25 @@
       ]
     },
     {
+      "id": "infra-034-backlog-typo-guard-expected-target-shas-fix",
+      "title": "Fix P281 typo-guard 误报 EXPECTED_TARGET_SHAS (verify_infra_034_backlog_expand_docstring_coverage.py:81) — rename 到 well-formed _LIST 后缀",
+      "area": "infra",
+      "priority": 800,
+      "status": "in_progress",
+      "phase": 67,
+      "created_at": "2026-05-24",
+      "updated_at": "2026-05-24",
+      "source": "phase-67 #15 新发现 baseline FAIL (closeout Reviewer 自报): smoke typo-guard 在 main HEAD=64add10 单点 FAIL — verify_expected_prefix_typo_guard 把 EXPECTED_TARGET_SHAS 误认成 sha 后缀 typo (_RE_EXPECTED_TYPO_SUFFIX 命中 _SHAS$); 已在 phase-66/67 多个 closeout evidence 里登记为 known_pre_existing_baseline_fail 等待 backlog typo-fix。",
+      "scope": "verify-only / rename-only。**不动 _verify_lib.py** (P261/硬规则)。改 scripts/verify_infra_034_backlog_expand_docstring_coverage.py 顶层常量名 EXPECTED_TARGET_SHAS → EXPECTED_TARGET_SHA_LIST (line 81 定义 + line 175 使用), 让 typo-guard 把它分类成 'legitimate non-sha' (与 EXPECTED_LINES/EXPECTED_PALETTE/EXPECTED_FINGERPRINT 同类)。rename 触发自体 EXPECTED_SELF_FILE_SHA (line 99 # V0-SELF-SHA-SKIP pragma 跳过) 重算: 9e29fcc8→eb8b4fb2。新增 scripts/verify_infra_034_backlog_typo_guard_expected_target_shas_fix.py 锁本次修复 (V0 self_sha + V1 target_file_sha + V2 typo_guard clean + V3 OLD name absent + V4 NEW name present + V5 target verify still PASS)。语义零变更, 数据零变更, 仅命名。",
+      "verification": [
+        "scripts/verify_infra_034_backlog_typo_guard_expected_target_shas_fix.py 6/6 PASS rc=0",
+        "scripts/verify_infra_034_backlog_expand_docstring_coverage.py rename 后仍 16/16 PASS rc=0",
+        "verify_expected_prefix_typo_guard() 跑全 scripts/ typo_count==0 / all_well_formed==True",
+        "verify_infra_062 ALL PASS (30 checks)",
+        "verify_infra_100 P299 抽样 ALL PASS (14 checks)"
+      ]
+    },
+    {
       "id": "infra-V35-cascade-bump-stale-v059-v062-reverse-locks",
       "title": "Cascade-bump stale v059/v062 reverse locks (v042 V2_helper_func_sha + v052 V2_func_sha_scan_reverse_sha_locks pre-existing 漂移)",
       "area": "infra",

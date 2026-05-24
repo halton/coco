@@ -78,7 +78,7 @@ KEY_PHRASES: Tuple[str, ...] = (
 )
 
 # V2 联动文件 sha 硬锁 (cascade)
-EXPECTED_TARGET_SHAS: Tuple[Tuple[str, str], ...] = (
+EXPECTED_TARGET_SHA_LIST: Tuple[Tuple[str, str], ...] = (
     ("scripts/verify_robot_030.py",
      "3b9a16b6297d3044cfb178a7f9630bc547d357e1eaa6e00fca01b71902dddf80"),
     ("scripts/verify_robot_031.py",
@@ -96,7 +96,7 @@ EXPECTED_TARGET_SHAS: Tuple[Tuple[str, str], ...] = (
 )
 
 # V0 自体 sha 锁 (pragma V0-SELF-SHA-SKIP 行计算时剔除; 仅本行打 pragma)
-EXPECTED_SELF_FILE_SHA = "9e29fcc8c379870d37b9853079723669c5dc8b77f8daa559f8e70dbb9643e0db"  # V0-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "eb8b4fb2038efe57210f395995b2a478c43045a233789befd6f03da1590d6daa"  # V0-SELF-SHA-SKIP
 
 
 _results: List[Tuple[str, bool, str]] = []
@@ -172,7 +172,7 @@ def v1_targets_phrases() -> None:
 # V2: target_file_sha (cascade)
 # ---------------------------------------------------------------------------
 def v2_target_file_sha() -> None:
-    for rel, expect in EXPECTED_TARGET_SHAS:
+    for rel, expect in EXPECTED_TARGET_SHA_LIST:
         p = ROOT / rel
         if not p.is_file():
             _emit(f"V2_{rel}_sha", False, "file missing")
