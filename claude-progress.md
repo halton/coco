@@ -9756,3 +9756,17 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Pre-existing baseline FAIL: verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline cf596c4 同样 FAIL, 范围无关, 登记 known_pre_existing_baseline_fails)
 - Merge: feat/infra-P294-followup-070-self-func-sha-bump → main, merge_commit_sha=a646926ef8ab9d0380daa8f392ff3c4d60cf9e11
 - Status: in_progress → passing
+
+## Session 2026-05-24 phase-67 #19 — infra-P297-canary-mutant-parametrize PASSING (closeout fixup) + 衍生 backlog
+
+- Engineer: 把 verify_infra_063 V4.2 canary mutant 从单 'return constant' 参数化为 4 种 (return_empty / return_none / raise / weak_hash md5); 新增 scripts/verify_infra_P297.py (17 checks) + scripts/bootstrap_verify_self_checker.py 改造支持 multi-mutant edit-flow.
+- Reviewer (sub-agent fresh-context): LGTM. P0=[]/P1=[]. P2 两项:
+  - P2 #1: V_check_count 不锁 _MUTANTS list 长度/keys, Mutation C 删 mutant 注册仍 PASS 17 checks → 衍生 backlog infra-P297-followup-mutant-keys-checkcount-lock (priority=999, status=backlog, phase=null).
+  - P2 #2: v_039 V8 EXPECTED_V4_FUNC_SHA c036c85 引入 not_found (非 pre-existing) → closeout fixup 在 feat 分支上修.
+- Closeout fixup (commit 2afda76): scripts/dump_v4_sha_graph.py._PER_FILE_LOCKS 显式映射 ("verify_infra_P297.py","EXPECTED_V4_FUNC_SHA") → "scripts/verify_infra_P297.py:v4_behavior_parametrized (func-sha)"; cascade bump 15 个 EXPECTED_DUMP_FILE_SHA holders (verify_infra_039/040_backlog_tmpl_edge/043/044/047/048/053/054/060/102/104/107_backlog_dump_family_equality/109/110/P317_syspath_restore) 从旧 6392d9b8... → 新 5fbd46d4... (64-char full sha 单次替换, 无 truncation).
+- Side-effect: v_060 V4_real_unknown_count_eq_one pre-existing baseline FAIL (expect=11 actual=12 @ 87bab68) 由本 fixup 自然解决 — P297 entry 把 actual unknown_count 从 12 降到 11 自动匹配 baseline expect=11. 不再属 known_pre_existing_baseline_fails.
+- 验证套件 (all PASS post-closeout): verify_infra_P297.py 17/17 / verify_infra_062.py 30/30 / verify_infra_100.py 14/14 / verify_infra_060.py 14/14 / verify_infra_039.py 27/27 + ./init.sh smoke rc=0.
+- _verify_lib.py: 0 diff (硬规则保持).
+- Pre-existing baseline FAIL (仍 1 项): verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 87bab68 同样 FAIL, 范围无关).
+- Merge: feat/infra-P297-canary-mutant-parametrize → main, merge_commit_sha=8a3ed2680dcab38ba38e362859da1c45dce4e625.
+- Status: in_progress → passing.

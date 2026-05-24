@@ -12089,8 +12089,100 @@
       "phase": 67,
       "priority": 803,
       "rationale": "P276 Reviewer finding: 当前 verify_infra_063 V4.2 仅覆盖一种 mutant 形式 (返回常量). 建议参数化补充 (a) return None, (b) raise RuntimeError, (c) 用错误哈希算法 (md5 vs sha256), 确保 canary 对常见绕过手段都能 rc=2 detect.",
-      "status": "in_progress",
-      "title": "verify_infra_063 V4.2 参数化多种 mutant 形式"
+      "status": "passing",
+      "title": "verify_infra_063 V4.2 参数化多种 mutant 形式",
+      "updated_at": "2026-05-24T19:30:00.000000Z",
+      "verification": [
+        "verify_infra_P297.py 17/17 PASS (V0/V1/V2/V3/V4×mutants/V5)",
+        "verify_infra_062.py 30/30 PASS (closeout-verify-trustworthy P278)",
+        "verify_infra_100.py 14/14 PASS (shell rc 用法 doc P299)",
+        "verify_infra_060.py 14/14 PASS (closeout fixup 顺手修 pre-existing FAIL)",
+        "verify_infra_039.py 27/27 PASS (V8 not_found 0 via dump_v4 _PER_FILE_LOCKS)",
+        "./init.sh smoke rc=0",
+        "Reviewer (sub-agent fresh-context): LGTM (P0=[] P1=[] P2=2 — #1 衍生 backlog, #2 closeout fixup 已修)"
+      ],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_BACKFILL_PENDING",
+          "baseline_head_echo": "87bab68",
+          "merge_commit_sha": "8a3ed2680dcab38ba38e362859da1c45dce4e625",
+          "closeout_fixup_commit_sha": "2afda76b86b9d4c604082876284fdaa2d58582c5",
+          "verify_runs": [
+            {
+              "name": "verify_infra_P297.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_P297][PASS] V4_mutant_weak_hash_detected stdout_tail='rue\\n[bootstrap_verify_self_checker][canary] expected=5d611a08c7d9a7df9e79b6da1e1a5aabfb88c9e5fc373917f612f69f3580d249\\n[bootstrap_verify_self_checker][canary] actual  =8b801b281ce0b0f987d2af04560df4f2\\n'\n[verify_infra_P297][PASS] V5_reviewer_lgtm_gate target=infra-P297-canary-mutant-parametrize helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P297-canary-mutant-parametrize' in grace_period (skipped)\"\n[verify_infra_P297][SUMMARY] ALL PASS (17 checks)"
+            },
+            {
+              "name": "verify_infra_062.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_infra_100.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg=\"needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\"\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason=\"feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK\"\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_039.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_045.py', 'EXPECTED_SCAN_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=772a2d916fc11366 firsts=dump_table@scripts/_verify_lib.py:scan_reverse_sha_locks=bcb5a6030ce0'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "  ok: total=357 well_formed=357 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "known_pre_existing_baseline_fails": [
+            {
+              "verify": "verify_infra_110.py",
+              "check": "V4d_unknown_tgt_raw_no_expected_substring",
+              "baseline_sha": "87bab68",
+              "baseline_tail_stdout": "[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] FAIL 2/19: ['V2_dump_file_sha', 'V4d_unknown_tgt_raw_no_expected_substring']",
+              "smoke_tail_stdout": "  ok: total=357 well_formed=357 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-P297-canary-mutant-parametrize: 把 verify_infra_063 V4.2 canary mutant 从单一 'return constant' 形式参数化为 4 种 (return_empty / return_none / raise / weak_hash md5), 新增 verify_infra_P297.py 17 checks 锁定各 mutant 形式 sentinel 与 bootstrap canary edit-flow rc=2 detect. Closeout fixup 把 EXPECTED_V4_FUNC_SHA 通过 dump_v4_sha_graph._PER_FILE_LOCKS 显式映射, v_039 V8 unaccepted not_found 0; cascade bump 15 dump file-sha downstream. Side-effect: v_060 pre-existing baseline FAIL 顺手修复. _verify_lib.py 0 diff.",
+            "checks_run": [
+              "Engineer diff scope = verify_infra_P297.py (新增) + bootstrap_verify_self_checker.py + dump_v4_sha_graph.py (_PER_FILE_LOCKS 新增 P297 entry) + 15 downstream verify_infra_*.py file-sha bump",
+              "verify_infra_P297.py 17/17 PASS (V0/V1/V2_mutant_sentinel_*×4/V3/V4_canary_*×4/V5 reviewer gate)",
+              "verify_infra_062.py 30/30 PASS (closeout-verify-trustworthy P278 schema)",
+              "verify_infra_100.py 14/14 PASS (shell verify rc 用法 doc lock P299)",
+              "verify_infra_060.py 14/14 PASS (V4_real_unknown_count_eq_one expect=11 actual=11 — 因 P297 entry 加入 _PER_FILE_LOCKS 顺手修复 baseline FAIL)",
+              "verify_infra_039.py 27/27 PASS (V8_no_unaccepted_not_found 0, EXPECTED_V4_FUNC_SHA 通过 dump_table 解析)",
+              "verify_infra_040_backlog_tmpl_edge.py 6/6 PASS (cascade-bumped downstream)",
+              "./init.sh smoke rc=0",
+              "_verify_lib.py 0 diff (硬规则保持)",
+              "P0=[] P1=[]",
+              "P2 #1 (V_check_count 未锁 _MUTANTS list keys, Mutation C 删 mutant 注册后仍 PASS 15 checks) → 衍生 backlog infra-P297-followup-mutant-keys-checkcount-lock",
+              "P2 #2 (v_039 V8 EXPECTED_V4_FUNC_SHA c036c85 新引入 not_found) → closeout fixup 已修 (dump_v4 _PER_FILE_LOCKS 映射 + cascade bump 15 downstream)"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "V_check_count 未锁 _MUTANTS list 长度/keys: Mutation C (删除任一 mutant 注册) 仍 PASS 17 checks. 衍生 backlog infra-P297-followup-mutant-keys-checkcount-lock 锁定 EXPECTED_MUTANT_KEYS frozenset.",
+                "v_039 V8 EXPECTED_V4_FUNC_SHA c036c85 引入 (非 pre-existing baseline). Closeout fixup 通过 dump_v4_sha_graph._PER_FILE_LOCKS 显式映射修复 + cascade bump 15 downstream file-sha holders."
+              ]
+            }
+          }
+        }
+      }
     },
     {
       "area": "infra",
@@ -23096,9 +23188,24 @@
           "baseline_eliminated": "verify_infra_039.py:V7_filter_text_mode (phase-67 #13 closeout 登记的 pre-existing baseline; substring 双命中 → strict regex 单命中)"
         }
       }
+    },
+    {
+      "id": "infra-P297-followup-mutant-keys-checkcount-lock",
+      "area": "infra",
+      "title": "verify_infra_P297 锁 _MUTANTS list keys/checkcount, 防 mutation C 漏检",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "rationale": "phase-67 #19 Reviewer P2 #1: verify_infra_P297.py 当前 V_check_count (总 checks 17) 不锁 _MUTANTS list 长度或 keys 集合. Mutation C (删除任一 mutant 注册条目) 仍可 PASS 17 checks — 因为 _MUTANTS 短到 若被截短, V2_mutant_sentinel_* 与 V4_canary_* 数量同步下降但 V_check_count 本身不锁 mutant 总数. 修复方案二选一: (a) 新增 EXPECTED_MUTANT_KEYS = ('return_empty','return_none','raise','weak_hash') frozenset 自锁, or (b) 把 _MUTANTS 移入 v4_behavior_parametrized 函数体 (一并被 EXPECTED_V4_FUNC_SHA 锁住).",
+      "scope": "scripts/verify_infra_P297.py (1 处 — EXPECTED_MUTANT_KEYS 常量 + V0_mutant_keys_lock check). 不动 _verify_lib.py, 不动 bootstrap_verify_self_checker.py.",
+      "source": "phase-67 #19 Reviewer P2 #1 finding (Mutation C 漏检)",
+      "created_at": "2026-05-24",
+      "dependencies": [
+        "infra-P297-canary-mutant-parametrize"
+      ]
     }
   ],
-  "last_updated": "2026-05-24T18:45:00.000000Z",
+  "last_updated": "2026-05-24T19:30:00.000000Z",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
