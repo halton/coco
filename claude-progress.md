@@ -9818,3 +9818,16 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Merge: feat/infra-037-backlog-v3-mutant-atomic-rename → main, merge_commit_sha=c962eab8d4d8d5638c54c966230f35eda4b75a62 (no-ff).
 - _verify_lib.py diff vs baseline: 0 行.
 - Status: in_progress → passing.
+
+
+## Session 2026-05-24 phase-67 #24 (infra-P299-engineer-task-size-guideline)
+
+- Engineer 首版 (81f956e): AGENTS.md 加 task size guideline 段 + 新 verify_infra_P299 (10 checks) + 4 处 AGENTS_MD_SHA cascade + 15 处 dump_v4 sha cascade
+- Reviewer round 1 (fresh-context, sub-agent): CONCERNS — v_060 V4_real_unknown_count_eq_one regression (unknown_count 11→12)，Engineer 报告"pre-existing baseline"经 base 8a43a68 干净 checkout 不成立
+- Engineer fixup (32c717d): 选项 B — bump verify_infra_060 EXPECTED_CURRENT_UNKNOWN_COUNT 11→12 + dump_v4 _PER_FILE_LOCKS 新增 3 行 P299→AGENTS.md (file-sha) 映射；论证 dump_v4 render_mermaid line ~882 re.findall(r"([A-Za-z0-9_]+)\.py", target) 强制 .py stem，非 .py target 落 unknown 是已建立设计（与 V24/100/P288 同模式）
+- Reviewer round 2 (fresh-context, sub-agent): LGTM — 4 项论断独立 grep + verify 核实成立，mutation B EXPECTED_AGENTS_FILE_SHA 一字反证有效，P0=[] P1=[] P2=[1 个 brief vs 实际 patch 微小偏差]
+- 衍生 backlog: infra-P299-followup-mermaid-non-py-target-id-stability (priority=999 status=backlog)
+- main HEAD: cbc2bd0 (closeout Step A) → 747fbf0 (Step B backfill main_head_sha)
+- merge_sha: 9ee9645f92c4e7e2c473f2613c9b0521d0cbf0c2
+- baseline (v_110 V4d): pre-existing 8a43a68 持续登记 (unknown_verify_infra_034_backlog_..._CONSTHASHdf058599 含 'expected' 子串)
+- push: 单次尝试，失败忽略（按规则）
