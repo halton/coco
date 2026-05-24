@@ -23193,16 +23193,17 @@
       "id": "infra-P297-followup-mutant-keys-checkcount-lock",
       "area": "infra",
       "title": "verify_infra_P297 锁 _MUTANTS list keys/checkcount, 防 mutation C 漏检",
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
+      "phase": 67,
+      "priority": 804,
+      "status": "in_progress",
       "rationale": "phase-67 #19 Reviewer P2 #1: verify_infra_P297.py 当前 V_check_count (总 checks 17) 不锁 _MUTANTS list 长度或 keys 集合. Mutation C (删除任一 mutant 注册条目) 仍可 PASS 17 checks — 因为 _MUTANTS 短到 若被截短, V2_mutant_sentinel_* 与 V4_canary_* 数量同步下降但 V_check_count 本身不锁 mutant 总数. 修复方案二选一: (a) 新增 EXPECTED_MUTANT_KEYS = ('return_empty','return_none','raise','weak_hash') frozenset 自锁, or (b) 把 _MUTANTS 移入 v4_behavior_parametrized 函数体 (一并被 EXPECTED_V4_FUNC_SHA 锁住).",
       "scope": "scripts/verify_infra_P297.py (1 处 — EXPECTED_MUTANT_KEYS 常量 + V0_mutant_keys_lock check). 不动 _verify_lib.py, 不动 bootstrap_verify_self_checker.py.",
       "source": "phase-67 #19 Reviewer P2 #1 finding (Mutation C 漏检)",
       "created_at": "2026-05-24",
       "dependencies": [
         "infra-P297-canary-mutant-parametrize"
-      ]
+      ],
+      "evidence": {}
     }
   ],
   "last_updated": "2026-05-24T19:30:00.000000Z",
