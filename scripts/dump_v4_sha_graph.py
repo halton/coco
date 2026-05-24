@@ -507,12 +507,30 @@ def _infer_target_via_ast(const: str, source_file: str) -> Optional[str]:
     src_base = source_file.rsplit("/", 1)[-1]
     if not (src_base.startswith("verify_") or src_base in ("dump_v4_sha_graph.py", "_verify_lib.py")):
         return None
+    # infra-P317-V12-syspath-restore (phase-65 #3): 用 try/finally 包住
+    # sys.path.insert + import, 保证短命 CLI 与 lib import 两种调用形态下都
+    # 不污染调用方 sys.path。pop 时按身份比对避免误删并发插入项。
+    _scripts_str = str(SCRIPTS)
+    _inserted = False
     try:
-        # lazy import 避免 import 阶段循环
-        sys.path.insert(0, str(SCRIPTS))
-        import _verify_lib as _L  # type: ignore
-    except Exception:
-        return None
+        if _scripts_str not in sys.path:
+            sys.path.insert(0, _scripts_str)
+            _inserted = True
+        try:
+            import _verify_lib as _L  # type: ignore
+        except Exception:
+            return None
+    finally:
+        if _inserted:
+            try:
+                # 仅当 path[0] 仍是我们插入的那一项时才 pop, 避免误删
+                if sys.path and sys.path[0] == _scripts_str:
+                    sys.path.pop(0)
+                else:
+                    # 其它位置: 移除第一个匹配项
+                    sys.path.remove(_scripts_str)
+            except ValueError:
+                pass
     # (a) docstring lock 优先
     try:
         doc_locks = _L._parse_lock_docstring(REPO / source_file)
