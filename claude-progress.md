@@ -9358,3 +9358,24 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - infra-V31-fix-V27-closeout-evidence-schema-gap (P0 优先级 — 修完 v062 baseline 恢复 PASS, 解除后续 closeout 污点链)
   - infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks
 - **下一 candidate**: infra-V31 (强烈优先, 让 v062 baseline PASS)
+
+## Session 2026-05-24 phase-66 #10 — infra-V31 closeout (passing)
+
+- **MERGE_COMMIT_SHA**: cad2c1edd8a4ff40498a0931b9135a15f94346a3 (short cad2c1e)
+- **NEW_MAIN_SHA**: cad2c1e
+- **BASE_MAIN_SHA**: 83a6f9e
+- **feat_head**: 0f6c72d
+- **v062 round1** (freshness_anchor=feat_head 0f6c72d): PASS 30/30
+- **v062 round2** (freshness_anchor=merge_sha cad2c1e): PASS 30/30
+- **v062 post-evidence-write**: PASS 30/30 (scanned=117 含 V31 新 evidence + 2 backlog)
+- **verify_runs**: 15 runs / 13 PASS / 2 known_baseline_FAIL (v034 + vP301_full)
+  - PASS: smoke, v062×2 (round1/round2), v033, v033_lock_doc_rollout, vV23 6/6, vP312 8/8, vV6_strict_area 6/6, v046 21/21, v100 14/14, vP306 10/10, vP314 8/8, vP317 7/7
+  - FAIL (pre-existing baseline=83a6f9e): v034 V5_self_subprocess + V6_orphan_reverse_locks; vP301_full V4_global_coverage (verify_infra_P289_per_file_locks_auto_derive.py)
+- **Reviewer (sub-agent fresh-context)**: LGTM. checks_run=25 项真 list. P0=[] / P1=1 (round2 anchor 必须用 feat_head 不用 progress 中段 sha — 本 closeout 已遵守) / P2=2 (DECISIONS.md 登记 closeout evidence 历史修复先例 + reconstructed_evidence 进 V4 schema)
+- **Reviewer 关键点**: 本 closeout 未复制 Engineer Report 的 84448b7 stale anchor; round1=0f6c72d feat_head, round2=cad2c1e merge_sha 严格遵守 P1 告警
+- **状态变化**: v062 baseline 已恢复 PASS (本 feat 的修复目标达成); 后续 closeout 不再修历史 evidence; 仅余 v034 + vP301_full 两项 baseline FAIL 待 V32 / P289-fix 处理
+- **status**: infra-V31 → passing (P278 schema 完整 + 6 信号 + reconstruction_note + known_pre_existing_baseline_fails 3 项登记)
+- **backlog 入账**:
+  - infra-V33-closeout-evidence-reconstructed-schema (Reviewer P2-b)
+  - infra-V34-decisions-md-log-closeout-evidence-fix-precedent (Reviewer P2-a)
+- **下一 candidate**: infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks (强烈优先, 修完 v034 + 顺带消化 vP301_full P289 violator, baseline 全 PASS)
