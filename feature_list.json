@@ -17950,11 +17950,14 @@
       ],
       "description": "verify_infra_P301_full.py 通过 V0_SELF_SHA_LOCK_VERSION / V0_SELF_SHA_LOCK_BUMPED_AT 字面标记识别 V0-locked 脚本, 命名约定未在 docstring 明示, 异类命名 (例如 SELF_SHA_LOCK_VERSION 缺 V0_ 前缀) 会被漏扫. 提案: 在脚本 docstring 显式记录命名约定, 同时扫 broader pattern + 报告 near-miss 候选. 不阻 merge.",
       "id": "infra-P301-backlog-v0-marker-extended-naming",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 21,
       "source": "phase-60 #2 infra-P301-extend-allowed-missing-allowlist-scan-all Reviewer P2-2",
-      "status": "backlog",
-      "title": "V0 canonical marker 命名约定补 docstring + 支持异类命名扫描"
+      "status": "in_progress",
+      "title": "V0 canonical marker 命名约定补 docstring + 支持异类命名扫描",
+      "verification": [
+        "python scripts/verify_infra_P301_v0_marker_naming.py  # 0=PASS, 2=FAIL"
+      ]
     },
     {
       "area": "infra",
