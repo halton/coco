@@ -10461,11 +10461,78 @@
     },
     {
       "area": "infra",
+      "closeout_verify": {
+        "baseline_head_echo": "18dbb4b",
+        "main_head_sha": "696480f",
+        "merge_commit_sha": "696480f",
+        "reviewer": {
+          "checks_run": [
+            "git_diff_review",
+            "AGENTS_md_section_present",
+            "AGENTS_md_section_content_audit",
+            "verify_infra_P288_self_audit",
+            "V0_existence_checks",
+            "V1_docstring_sentinel",
+            "V1_main_func_sha_lock",
+            "V5a_section_heading_present",
+            "V5b_literal_keywords_present",
+            "V5c_agents_md_file_sha_lock",
+            "mutation_A_main_body_change",
+            "mutation_B_AGENTS_md_section_delete",
+            "mutation_C_self_func_sha_drift",
+            "smoke_run",
+            "v062_run",
+            "vP314_run",
+            "cross_lock_independence_audit"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          },
+          "kind": "sub_agent_fresh_context",
+          "lgtm": true,
+          "reviewer_kind": "sub_agent_fresh_context",
+          "summary": "phase-67 #2 infra-P288 在 AGENTS.md \"硬规则\" 区追加 \"Sub-agent fact-vs-blame checklist\" 段, 把 sub-agent 报告 \"pre-existing FAIL\" 归因门槛抬高到必须同时附齐三项举证 (main HEAD sha / verify 实测 rc+stdout / ast.unparse 锁值快照), 否则只能写 attributed_to: sub_agent_self_error_suspected; 配套 verify_infra_P288.py 用 11 checks 机械化锁段落不可被偷删瘦; mutation A/B/C 全部如期 FAIL, 证明三层锁 (字面 / file_sha / self func_sha) 互相独立且全部生效, 任一被偷改都立即可见。",
+          "verdict": "LGTM"
+        },
+        "verify_runs": [
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_P288.py",
+            "freshness_anchor": "696480f",
+            "name": "verify_infra_P288",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P288][PASS] V5b_literal_attributed_to_sub_agent expect literal 'attributed_to: sub_agent_self_error_suspected' inside P288 section\n[verify_infra_P288][PASS] V5c_agents_md_file_sha got=4334067ba33761e1 expect=4334067ba33761e1\n[verify_infra_P288][SUMMARY] ALL PASS (11 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_P314_lib_sha_cascade.py",
+            "freshness_anchor": "696480f",
+            "name": "verify_infra_P314_lib_sha_cascade",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_062.py b697397",
+            "freshness_anchor": "b697397",
+            "name": "verify_infra_062_round1_feat_head",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          },
+          {
+            "cmd": ".venv/bin/python scripts/verify_infra_062.py 696480f",
+            "freshness_anchor": "696480f",
+            "name": "verify_infra_062_round2_merge",
+            "status": "PASS",
+            "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+          }
+        ],
+        "known_pre_existing_baseline_fails": []
+      },
       "id": "infra-P288-sub-agent-fact-vs-blame-checklist",
       "phase": 67,
       "priority": 800,
       "rationale": "P285 round-1 sub-agent 报告把 V4 checker func sha FAIL 归因为 pre-existing (NEW_MAIN 上 robot_037 修复改变了上游 ast.unparse 结果), 实际是 round-1 自身回填错误 (中间编辑脏快照写入), 与 robot_037 无关. P278 闭环出过类似失误 (closeout 报 045/054 FAIL 但 main HEAD 实测全 PASS). 建议: 在 closeout / verify 报告模板中加硬性 checklist —— 任何 \"pre-existing FAIL\" 声明必须附 (a) 当前 main HEAD sha + (b) 在该 HEAD 上的 verify 实测 rc + 完整尾行 + (c) 涉及 EXPECTED_*_FUNC_SHA 时的 ast.unparse / file-sha 实测值快照, 三者齐备才接受归因. 否则视为 sub-agent 自身错误优先排查. 高价值: 切断 P275/P278/P285 三次复现的 fact-vs-blame 误报链路.",
-      "status": "in_progress",
+      "status": "passing",
       "title": "sub-agent 任何 pre-existing FAIL 声明必须附 main HEAD 实测 rc + 锁值快照"
     },
     {

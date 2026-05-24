@@ -9465,3 +9465,19 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+
+## Session 2026-05-24 — phase-67 #2 infra-P288-sub-agent-fact-vs-blame-checklist closeout
+
+- feature: infra-P288-sub-agent-fact-vs-blame-checklist
+- merge_sha: 696480f (no-ff merge of feat/infra-P288-sub-agent-fact-vs-blame-checklist into main; base 18dbb4b)
+- Engineer 改动: AGENTS.md +14 行新增 "Sub-agent fact-vs-blame checklist (P288 防御，硬规则)" 段，把 sub-agent 报告 "pre-existing FAIL" 归因门槛抬高到必须同时附齐 (a) 当前 main HEAD sha + (b) 在该 HEAD 上的 verify 实测 rc + 完整尾行 + (c) 涉及 EXPECTED_*_FUNC_SHA 时的 ast.unparse / file-sha 实测值快照，否则只能写 attributed_to: sub_agent_self_error_suspected。新增 scripts/verify_infra_P288.py (11 checks: V0 existence + V1 docstring sentinel + V1 self main func sha 自锁 3858f81a86392437 + V5a section heading + V5b 5 项字面关键词锁 + V5c AGENTS.md file_sha 锁 4334067ba33761e1)。
+- Reviewer: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=[]；17 项 checks_run；mutation A/B/C 全部如期 FAIL 证明三层锁互相独立。
+- verify_runs:
+  - verify_infra_P288.py PASS (11/11 checks)
+  - verify_infra_P314_lib_sha_cascade.py PASS (8 checks, stale=0, live_sha=1990a9b61d3b14c9)
+  - verify_infra_062.py b697397 round1 PASS (30 emit-paths)
+  - verify_infra_062.py 696480f round2 PASS (30 emit-paths)
+- 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
+- push main: 见 closeout 报告
+- push feat: 见 closeout 报告
