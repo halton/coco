@@ -467,6 +467,17 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # 修复 v_039 V8 unaccepted not_found = ('verify_infra_P297.py', 'EXPECTED_V4_FUNC_SHA').
     ("verify_infra_P297.py", "EXPECTED_V4_FUNC_SHA"):
         "scripts/verify_infra_P297.py:v4_behavior_parametrized (func-sha)",
+    # verify_infra_037_backlog_v3_mutant_atomic_rename (phase-67 #23) —
+    # 锁住 verify_infra_037.v3_mutant 改用 tempfile + os.replace 原子替换 + atexit 兜底,
+    # 防止 Ctrl-C / OOM 中断在 finally 之前留下污染版 _verify_lib.py。
+    ("verify_infra_037_backlog_v3_mutant_atomic_rename.py", "EXPECTED_VERIFY_INFRA_037_FILE_SHA"):
+        "scripts/verify_infra_037.py (file-sha)",
+    ("verify_infra_037_backlog_v3_mutant_atomic_rename.py", "EXPECTED_V3_MUTANT_FUNC_SHA"):
+        "scripts/verify_infra_037.py:v3_mutant (func-sha)",
+    ("verify_infra_037_backlog_v3_mutant_atomic_rename.py", "EXPECTED_V2_CHECKER_FUNC_SHA"):
+        "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py:v2_ast_pattern (func-sha)",
+    ("verify_infra_037_backlog_v3_mutant_atomic_rename.py", "EXPECTED_V3_REVERSE_FUNC_SHA"):
+        "scripts/verify_infra_037_backlog_v3_mutant_atomic_rename.py:v3_mutant_reverse (func-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
