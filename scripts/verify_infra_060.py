@@ -136,7 +136,11 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_P294_followup_070_self_func_sha_bump 新增 EXPECTED_TARGET_FILE_SHA
 #   (target=scripts/verify_infra_070.py, dump_v4 stem-resolve 失败, 归 unknown 桶),
 #   性质同 #15 (verify 自身 .py target unknown)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 11
+# - phase-67 #19 (infra-P297-canary-mutant-parametrize) 后: 11 → 12
+#   verify_infra_P297 新增 EXPECTED_V4_FUNC_SHA 常量 (self v4_behavior_parametrized
+#   func sha 自锁, target 推不出 → unknown 桶), 性质同 #18 (verify 自身 .py target
+#   unknown)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 12
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({

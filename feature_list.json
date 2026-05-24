@@ -12086,10 +12086,10 @@
     {
       "area": "infra",
       "id": "infra-P297-canary-mutant-parametrize",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 803,
       "rationale": "P276 Reviewer finding: 当前 verify_infra_063 V4.2 仅覆盖一种 mutant 形式 (返回常量). 建议参数化补充 (a) return None, (b) raise RuntimeError, (c) 用错误哈希算法 (md5 vs sha256), 确保 canary 对常见绕过手段都能 rc=2 detect.",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "verify_infra_063 V4.2 参数化多种 mutant 形式"
     },
     {
