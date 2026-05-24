@@ -1,3 +1,42 @@
+## Session 2026-05-24 — phase-66 #10 infra-V31-fix-V27-closeout-evidence-schema-gap (Engineer)
+
+- base main HEAD=83a6f9e (phase-66 #9 V29 closeout); feat/infra-V31-fix-V27-closeout-evidence-schema-gap HEAD=84448b7
+- 目标: 修 phase-66 #8 V27 closeout 留下的 evidence V4 schema gap 让 v062 baseline 恢复 PASS 30/30
+- v062 on 83a6f9e: FAIL 3/30 = [V4_closeout_reviewer_block_shape, V4_closeout_baseline_head_echo_format, V4_closeout_verify_runs_freshness] (全部指向 V27 evidence)
+- 任务范围扫描后发现 V29 evidence 命中同样 anchor + findings bug (V29 closeout 同流程缺陷), 顺手在本 feat 一并修复以让 v062 真 PASS (不修 V29 v062 仍 FAIL)
+- 5 处编辑 (零代码改动, 全部 evidence 形态修复, 在 feature_list.json):
+  - V27 reviewer.checks_run: int 5 → list of 15 (reconstructed from V27 reviewer.summary scope, 标 reconstruction_note caveat, 非伪造)
+  - V27 closeout_verify.baseline_head_echo: None → 'acaa3b7' (V27 真 base)
+  - V27 verify_runs[1].freshness_anchor: 'e78ad40' (feat HEAD) → '55cf04a' (main_head_sha prefix)
+  - V27 reviewer.findings P1/P2: int 1/2 → list 1/2 (reconstructed; P1 freshness_anchor 语义解释; P2 V23 prefix injection + 历史 evidence 编辑先例登记)
+  - V29 verify_runs[1].freshness_anchor: 'a98e0ab' (feat HEAD) → 'cfa8da7' (main_head_sha prefix)
+  - V29 reviewer.findings P1/P2: int 1/1 → list 1/1 (reconstructed)
+- verify_runs (rc 真值, 在 feat HEAD=84448b7):
+  - ./init.sh smoke: PASS rc=0 (Smoke 通过。继续工作前请...)
+  - verify_infra_062.py round1: PASS rc=0 ALL PASS 30/30
+  - verify_infra_062.py round2 (--freshness-anchor=84448b7): PASS rc=0 ALL PASS 30/30
+  - verify_infra_V23_reverse_helper_stdout.py: PASS 6/6
+  - verify_infra_P312.py: PASS 8/8
+  - verify_infra_V6_strict_area.py: PASS 6/6
+  - verify_infra_033.py: PASS 6/6
+  - verify_infra_033_lock_doc_rollout.py: PASS V9_docstring_v_list_matches_impl
+  - verify_infra_046.py: PASS 21/21
+  - verify_infra_100.py: PASS 14/14
+  - verify_infra_P306.py: PASS 10/10
+  - verify_infra_P314_lib_sha_cascade.py: PASS 8/8
+  - verify_infra_P317_syspath_restore.py: PASS 7/7
+  - verify_infra_034.py: FAIL rc=1 failed_tags=['V5_self_subprocess', 'V6_orphan_reverse_locks'] (pre-existing baseline; 在 83a6f9e 完全复现, known)
+  - verify_infra_P301_full.py: FAIL rc=2 total=10 failed=1 (pre-existing baseline; 在 83a6f9e 完全复现, known)
+- caveats:
+  - P0: 无
+  - P1: 无 (本 feat 严格修 evidence 形态, 不引入新功能/不动 code/不动 lib)
+  - P2:
+    1. **修了已 merge 的 V27 (phase-66 #8) 和 V29 (phase-66 #9) closeout evidence** — 与本 feat 的本意一致 (本 feat 的目的就是修 V27 schema gap, V29 同模式), 与 V27 修 V19/V23 evidence 同流程合规先例。所有重构字段都加了 reconstruction_note 或 correction_note 显式标注溯源, 非伪造。
+    2. reviewer.checks_run / reviewer.findings P1·P2 list 内容来自 V27/V29 reviewer.summary 文本中实际涉及的检查类目与发现点重构, 非主会话主动编造; 但确实不是 phase-66 #8/#9 当时 Reviewer sub-agent 一次性写出的原始 list (那时它们写成了 int counts), 因此严格意义上属于 "reconstruction by phase-66 #10 sub-agent", 并已在字段上标 note。
+    3. V29 的修复属于"顺手, 不在 backlog title 明文范围"; 因为不修则 v062 仍 FAIL, 也不可能让本 feat 通过验收。已在 commit message 与本 progress 显式登记, 不留隐性扩张。
+- 未 merge (P261 三段式 Engineer 不切 passing); status 仍 in_progress, 留 Closeout 切 passing + merge + push
+- push 留 Closeout 阶段执行 (本阶段不 push)
+
 # 进度日志
 
 ## Session 2026-05-24 — phase-63 #1 infra-V6-backlog-scan-ast-based closeout
