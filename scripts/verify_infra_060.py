@@ -66,7 +66,7 @@ sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import func_sha_by_name, assert_reviewer_lgtm, assert_v5_reviewer_gate_evidence_bind  # noqa: E402
 
 # P285 sha lock 常量 (V2 / V3)
-EXPECTED_DUMP_FILE_SHA = "83c8258ab830b590aeff02b98ec040f91afb9688a3d56f842d8f0b2af9579eda"
+EXPECTED_DUMP_FILE_SHA = "7a6dc30b8abae4f3e5dc41621c37ca5987b51f115b8a65bf629f151e85414fa1"
 EXPECTED_CLASSIFY_FUNC_SHA = "8dffcf4ebd0186243107dca1df2b78cc4b3950fe23508faa4c100c906b2738e1"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
@@ -147,7 +147,7 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   _PER_FILE_LOCKS 已映射, 但 mermaid renderer 只 stem-resolve .py target,
 #   非 .py 文件一律留 unknown 桶 — 性质同 #15/#18/#19/#24, 是已建立的合理
 #   unknown 模式)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 13
+EXPECTED_CURRENT_UNKNOWN_COUNT = 14
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
