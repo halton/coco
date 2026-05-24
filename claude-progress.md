@@ -9071,3 +9071,16 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 3 backlog 入账: infra-V16-bump-helper-self-sha-mode / infra-V17-helper-naming-check-prefix-allowlist / infra-V18-other-verify-docstring-list-rollout
 
 下一 candidate: phase-66 #3 infra-P312-strict-unknown-sha-auto-bump 或 infra-P323-V12-syspath-V7-pop-branch-coverage
+
+## Session 2026-05-24 phase-66 #3 closeout — infra-P312-strict-unknown-sha-auto-bump
+- Branch feat/infra-P312-strict-unknown-sha-auto-bump (FEAT_HEAD da2c85a) merged --no-ff into main 9de21b2 → merge commit ddafaf4
+- New script: scripts/bump_strict_unknown_sha.py (3 modes: dry-run / apply / verify; regex subn n_cnt!=1 fail-safe gate)
+- New verify: scripts/verify_infra_P312.py (V1-V5: file_sha lock × 2 + 3 func_sha lock + dry-run no-op behavior)
+- Reviewer (sub_agent_fresh_context): LGTM, checks_run=16, P0=[] P1=[] P2=3
+  - P2-a regex 锚点 (^/$/\\b) 严格化 — infra-V19
+  - P2-b helper --apply 自动 cascade 调 reverse_sha_lock — infra-V20
+  - P2-c v039 V8 支持 docstring `## Lock: A / B / C` 多常量段 — infra-V21
+- 13 verify_runs (round 1 pre-commit) ALL PASS: smoke + vP312 + vV6_strict_area + v033 + v039 + v062 + v037 + v110 + vP306 + vP314_lib_sha_cascade + vP317_syspath_restore + vP301 + v100
+- v062 双轮 (P299): c1b 修 main_head_sha 占位 + freshness_anchor=post-merge-rerun; c1c 修 v033 tail anchor prefix → 30/30 PASS rc=0
+- 3 backlog 入账 (priority=999 phase=null): infra-V19 / infra-V20 / infra-V21
+- 持续开发模式: 继续 phase-66 #4 (next candidate: 主会话决定)
