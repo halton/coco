@@ -9379,3 +9379,19 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - infra-V33-closeout-evidence-reconstructed-schema (Reviewer P2-b)
   - infra-V34-decisions-md-log-closeout-evidence-fix-precedent (Reviewer P2-a)
 - **下一 candidate**: infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks (强烈优先, 修完 v034 + 顺带消化 vP301_full P289 violator, baseline 全 PASS)
+
+## Session 2026-05-24 phase-66 #11 Engineer infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks (in_progress)
+
+- feat_branch: feat/infra-V32-v034-baseline-fix-self-subprocess-and-orphan-reverse-locks
+- feat_head_sha: 05aa54e
+- base_main_sha: 9d34e63
+- 根因:
+  - V5_self_subprocess: V6 子进程 FAIL → 子进程 rc=1 → V5 主断言 rc==0 FAIL (cascade)
+  - V6_orphan_reverse_locks: 6 个 orphan, 关键 1 个是 EXPECTED_VERIFY_034_MAIN_FUNC_SHA — 同时匹配 verify_id (含 VERIFY_034) 与 expected_pattern, 但先匹配为 verify_id → 函数 sha 被当 file sha 比对 → orphan 误报。另 5 个为 v059/v062 真实 stale cascade。
+- 路径: B+ (改 _verify_lib classifier + cascade bump _verify_lib 反向锁)
+- 修改: scripts/_verify_lib.py (scan_reverse_sha_locks + scan_reverse_sha_locks_ast 改 expected_pattern 优先) + 57 holders cascade bump (EXPECTED_VERIFY_LIB_FILE_SHA)
+- v034 before: FAIL V5+V6; after: PASS 68/68
+- v062 round1: PASS 30/30
+- v062 round2 (anchor=feat_head): PASS 30/30
+- 自检: smoke PASS; v033/v037/v040/v062/vV23/vV6_strict_area/v046/v100/vP306/vP312/vP314/vP317 PASS; vP301_full 仍 FAIL (pre-existing P289)
+- 不 merge, push 留 Closeout
