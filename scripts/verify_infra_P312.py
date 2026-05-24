@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""verify_infra_P312 V1-V5: 锁 ``bump_strict_unknown_sha`` helper 行为与函数体.
+"""verify_infra_P312 V1-V7: 锁 ``bump_strict_unknown_sha`` helper 行为与函数体.
 
-infra-P312-strict-unknown-sha-auto-bump (phase-66 #3):
+infra-P312-strict-unknown-sha-auto-bump (phase-66 #3) +
+infra-V20-strict-unknown-bump-cascade (phase-66 #4):
 
 V6 strict-area-match V3 锁 (``EXPECTED_STRICT_UNKNOWN_SHA256`` + COUNT) 每次新增
 ``verify_<area>_<NNN>.py`` 都会漂移, 之前需手动 bump。``bump_strict_unknown_sha.py``
-把这步机械化 (dry-run / apply / --verify 三档)。本 verify 锁该 helper:
+把这步机械化 (dry-run / apply / --verify / --cascade 四档)。本 verify 锁该 helper:
 
 INFRA_P312_LOCKS
 ----------------
@@ -14,20 +15,19 @@ INFRA_P312_LOCKS
 - ``read_expected_from_v6`` func sha (V3): EXPECTED_READ_EXPECTED_FUNC_SHA
 - ``run_bump`` func sha (V4): EXPECTED_RUN_BUMP_FUNC_SHA
 - V5 behavior: 当前 repo 无漂移 → dry-run 返回 "OK: 已是最新, 无需 bump"
-
-校验层级 (V1-V5, 共 5 checks):
-- V1: helper 文件 sha 锁 (任何无声修改即 FAIL)
-- V2-V4: 三个核心 func sha 锁
-- V5: dry-run 在当前 repo 上的行为 (no-op + rc=0)
-
-退出码: 0=ALL PASS, 2=任一 FAIL.
+- V6 cascade structure: ``main`` 含 ``--cascade`` argparse + ``run_cascade``
+  函数包含 ``bump_reverse_sha_lock.py`` 字面量调用 (AST 锁)
+- V7 cascade behavior: ``--cascade`` 选项 no-op 路径 (当前 repo 无漂移) rc=0,
+  对 bump_reverse_sha_lock 的 subprocess.run 调用应被跳过 (因为 V6 sha 没变,
+  run_bump 早返 rc=0 之前不会触发 cascade) — 但更直接的锁是断言 ``main``
+  AST 中存在 ``args.cascade`` 节点 (静态检查)
 
 ## Lock: EXPECTED_BUMP_HELPER_FILE_SHA
 - target_function: N/A
 - target_file: scripts/bump_strict_unknown_sha.py
 - lock_kind: content_sha256
 - bump_when: bump_strict_unknown_sha.py 文件内容变化
-- bump_protocol: ``python scripts/bump_reverse_sha_lock.py --target scripts/bump_strict_unknown_sha.py --apply --verify`` (跨 verify 反向锁通用 helper)
+- bump_protocol: ``python scripts/bump_reverse_sha_lock.py --target scripts/bump_strict_unknown_sha.py --apply --verify``
 - rationale: 锁 helper 文件整体 sha, 防 helper 被悄改导致 cascade bump 行为漂移
 
 ## Lock: EXPECTED_COMPUTE_CURRENT_FUNC_SHA
@@ -53,9 +53,18 @@ INFRA_P312_LOCKS
 - bump_when: run_bump 实现变化
 - bump_protocol: recompute func_sha_by_name("run_bump", scripts/bump_strict_unknown_sha.py) then update constant
 - rationale: 锁主流程函数
+
+## Lock: EXPECTED_RUN_CASCADE_FUNC_SHA
+- target_function: run_cascade
+- target_file: scripts/bump_strict_unknown_sha.py
+- lock_kind: ast_func_sha
+- bump_when: run_cascade 实现变化
+- bump_protocol: recompute func_sha_by_name("run_cascade", scripts/bump_strict_unknown_sha.py) then update constant
+- rationale: 锁 cascade 子流程函数 (确保 subprocess 调 bump_reverse_sha_lock.py 不被静默删除)
 """
 from __future__ import annotations
 
+import ast
 import subprocess
 import sys
 import hashlib
@@ -71,7 +80,7 @@ from _verify_lib import func_sha_by_name, verify_summary_exit  # noqa: E402
 
 # V1: helper file sha
 EXPECTED_BUMP_HELPER_FILE_SHA = (
-    "dd6654be77b23cc9ae27238df8d06b4ea85680114cf6510f2a46a1bcc410d3af"
+    "e5e6f14d5060f6c9db34e296211b5bc8af53bd2d76ff081438979c38a8e003f9"
 )
 # V2-V4: helper 核心 func sha
 EXPECTED_COMPUTE_CURRENT_FUNC_SHA = (
@@ -82,6 +91,10 @@ EXPECTED_READ_EXPECTED_FUNC_SHA = (
 )
 EXPECTED_RUN_BUMP_FUNC_SHA = (
     "255233639003759225c37c044b36b1d1637c1e0a2f49abf8b01f99907f6ffd49"
+)
+# V6 cascade: run_cascade func sha
+EXPECTED_RUN_CASCADE_FUNC_SHA = (
+    "8185b1725fc33954553378816d815489a451378e2de90d8ff86d9e94104881c4"
 )
 
 _results: List[Tuple[str, bool, str]] = []
@@ -145,12 +158,80 @@ def v5_dry_run_noop_behavior() -> None:
     )
 
 
+def v6_cascade_structure() -> None:
+    """AST 静态锁: 验证 helper 含 --cascade argparse + run_cascade 函数体内含
+    'bump_reverse_sha_lock.py' 字面量 (subprocess.run 引用)。
+
+    防 cascade 选项被悄悄删除或 cascade 子命令调用被改成 print 等 no-op。
+    """
+    if not HELPER.is_file():
+        _emit("V6_cascade_structure", False, "helper missing")
+        return
+    src = HELPER.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    has_cascade_arg = False
+    has_subprocess_call_to_reverse_helper = False
+    for node in ast.walk(tree):
+        # argparse --cascade 检测: add_argument("--cascade", ...) 调用
+        if isinstance(node, ast.Call):
+            fn = node.func
+            if isinstance(fn, ast.Attribute) and fn.attr == "add_argument":
+                for a in node.args:
+                    if isinstance(a, ast.Constant) and a.value == "--cascade":
+                        has_cascade_arg = True
+        # bump_reverse_sha_lock.py 字面量出现在任何位置
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if "bump_reverse_sha_lock.py" in node.value:
+                has_subprocess_call_to_reverse_helper = True
+    # 额外: run_cascade 函数 sha 锁
+    actual_func_sha = func_sha_by_name(HELPER, "run_cascade")
+    sha_ok = actual_func_sha == EXPECTED_RUN_CASCADE_FUNC_SHA
+    ok = has_cascade_arg and has_subprocess_call_to_reverse_helper and sha_ok
+    _emit(
+        "V6_cascade_structure",
+        ok,
+        f"cascade_arg={has_cascade_arg} reverse_helper_ref={has_subprocess_call_to_reverse_helper} "
+        f"run_cascade_sha_match={sha_ok} actual={actual_func_sha[:16]}",
+    )
+
+
+def v7_cascade_dry_run_via_args() -> None:
+    """行为锁: --cascade 在 no-drift 场景下 rc=0, 且 stdout 含 cascade 触发标记。
+
+    no-drift 时 V6 sha 不变 → cascade 后 reverse helper 也是 no-op, 整体 rc=0。
+    我们检 stdout 必须含 reverse helper 的输出印记 (例如 'target_new_sha=' 或
+    'OK:' / 'no-op'), 防 cascade 选项被改成无 subprocess 调用的 no-op。
+    """
+    if not HELPER.is_file():
+        _emit("V7_cascade_behavior", False, "helper missing")
+        return
+    proc = subprocess.run(
+        [sys.executable, str(HELPER), "--cascade"],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    out = proc.stdout
+    # cascade 触发标记: reverse helper 输出含 "target_new_sha=" (来自 run_bump report)
+    has_cascade_marker = "target_new_sha=" in out
+    has_ok_msg = "OK: cascade bump_reverse_sha_lock.py PASS" in out
+    ok = proc.returncode == 0 and has_cascade_marker and has_ok_msg
+    _emit(
+        "V7_cascade_behavior",
+        ok,
+        f"rc={proc.returncode} has_cascade_marker={has_cascade_marker} has_ok_msg={has_ok_msg}",
+    )
+
+
 def main() -> int:
     v1_helper_file_sha()
     v2_compute_current_func_sha()
     v3_read_expected_func_sha()
     v4_run_bump_func_sha()
     v5_dry_run_noop_behavior()
+    v6_cascade_structure()
+    v7_cascade_dry_run_via_args()
     total = len(_results)
     failed = sum(1 for _, ok, _ in _results if not ok)
     print(
