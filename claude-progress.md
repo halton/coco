@@ -9744,3 +9744,15 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Pre-existing baseline FAIL: verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline 610c595 同样 FAIL, 与本 feature 范围无关, 登记 known_pre_existing_baseline_fails)
 - Merge: feat/infra-V24-cascade-result-sentinel-docs → main, merge_commit_sha=81cdbd8d1cd2bdf8ed0ac4e1be23f0a986f98e00
 - Status: in_progress → passing
+
+## Session 2026-05-24 phase-67 #18 — infra-P294-followup-070-self-func-sha-bump closeout passing
+
+- Feature: infra-P294-followup-070-self-func-sha-bump (priority=802, area=infra, phase=67)
+- 目标: 移除 verify_infra_070.py V1/V6 中 EXPECTED_SELF_MAIN_FUNC_SHA / EXPECTED_MAKE_MINI_REPO_FUNC_SHA 的 __BUMP_ME__ 占位早返回分支, 强制常量必须 hex64; 新增 verify_infra_P294_followup_070_self_func_sha_bump.py V0-V4 + V5_reviewer_lgtm_gate 17 项 check 机械化锁该不可逆迁移
+- Pre-evidence verify: 16/17 PASS (V5_reviewer_lgtm_gate 设计为 backloaded gate Engineer 阶段必然 FAIL)
+- Post-evidence verify: 17/17 PASS (Reviewer fresh-context LGTM 写入 evidence 后 V5 转 PASS)
+- Reviewer: sub_agent_fresh_context LGTM, P0/P1 空, P2 backloaded 设计说明
+- 验证套件 (all PASS): verify_infra_P294_followup_070_self_func_sha_bump / verify_infra_070 / verify_infra_062 / verify_infra_100 / verify_infra_060 + smoke
+- Pre-existing baseline FAIL: verify_infra_110.py V4d_unknown_tgt_raw_no_expected_substring (baseline cf596c4 同样 FAIL, 范围无关, 登记 known_pre_existing_baseline_fails)
+- Merge: feat/infra-P294-followup-070-self-func-sha-bump → main, merge_commit_sha=a646926ef8ab9d0380daa8f392ff3c4d60cf9e11
+- Status: in_progress → passing
