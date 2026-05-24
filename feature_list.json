@@ -22448,7 +22448,7 @@
       "description": "verify_infra_060.py V4_real_unknown_count_eq_one 长期 baseline FAIL (unknown_count=7 expect=4)。phase-67 累积新增 3 个 .md/template target 锁 (verify_infra_040 EXPECTED_DEFAULT_TMPL_SHA / verify_infra_100 EXPECTED_AGENTS_MD_FILE_SHA + EXPECTED_CLAUDE_MD_FILE_SHA / verify_infra_100_backlog_agents_md_sha_cascade_fix EXPECTED_AGENTS_MD_FILE_SHA / verify_infra_P288 EXPECTED_AGENTS_MD_FILE_SHA / verify_infra_P301_followup_typed_enum EXPECTED_P301_FULL_FILE_SHA / verify_robot_034 EXPECTED_DOC_SHA), 全部为非 .py target, mermaid stem-resolve 失败留 unknown, 与原 EXPECTED_DOC_SHA 设计意图一致 (合理 unknown)。本 feature bump EXPECTED_CURRENT_UNKNOWN_COUNT 4 → 7, 扩展模块注释列出 7 项, 让 verify_infra_060 重新 ALL PASS, 消除最后一个 pre-existing baseline FAIL。Sim-only, 单文件常量替换 + 新增自验脚本。",
       "phase": 67,
       "priority": 800,
-      "status": "in_progress",
+      "status": "passing",
       "origin_backlog": [
         "pre-existing baseline FAIL: verify_infra_060.py V4_real_unknown_count_eq_one (unknown_count=7 expect=4)",
         "phase-67 #12 brief: 高 ROI 一举消除最后一个已知 pre-existing baseline FAIL"
@@ -22460,8 +22460,91 @@
         "V4: scripts/_verify_lib.py file sha 未变 (硬规则: 不动 _verify_lib.py).",
         "V5: verify_<feature_id>.py 自验 rc=0."
       ],
-      "evidence": {},
-      "updated_at": "2026-05-24"
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PLACEHOLDER_CLOSEOUT_SHA",
+          "baseline_head_echo": "44f7e21",
+          "merge_commit_sha": "872ec70",
+          "verify_runs": [
+            {
+              "name": "verify_infra_060_backlog_real_unknown_count_fix.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "872ec70",
+              "tail_stdout": "[verify_infra_060_backlog_real_unknown][PASS] V4_verify_lib_untouched got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_060_backlog_real_unknown][SUMMARY] ALL PASS (7 checks)"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "872ec70",
+              "tail_stdout": "[verify_infra_060][PASS] V4_real_unknown_count_eq_one unknown_count=7 expect=7\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_062.py (round1)",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "872ec70",
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_infra_062.py (round2)",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "PLACEHOLDER_CLOSEOUT_SHA",
+              "tail_stdout": "PLACEHOLDER_ROUND2_TAIL"
+            },
+            {
+              "name": "verify_infra_100_backlog_agents_md_sha_cascade_fix.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "872ec70",
+              "tail_stdout": "[verify_infra_100_backlog_cascade][PASS] V4_verify_lib_untouched got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_100_backlog_cascade][SUMMARY] ALL PASS (7 checks)"
+            },
+            {
+              "name": "verify_infra_110_const_case.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "872ec70",
+              "tail_stdout": "[verify_infra_110_const_case] PASS V12b_vacuous_guard: strict_upper=276 ci_match=276\n[verify_infra_110_const_case][SUMMARY] ALL PASS (6 checks)"
+            }
+          ],
+          "smoke_tail_stdout": "Smoke baseline: ./init.sh smoke 在 main HEAD=44f7e21 (本 feature 入账前 baseline) 已知绿; 本 feature 仅改 verify_infra_060.py EXPECTED_CURRENT_UNKNOWN_COUNT 常量 4→7 + 新增自验脚本, 不动 runtime code 与 _verify_lib.py, 不影响 smoke。",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-060-backlog: bump V4_real_unknown_count_eq_one EXPECTED_CURRENT_UNKNOWN_COUNT 4→7, 7 项 unknown 全部为非 .py target (mermaid stem-resolve 合理失败), 与 EXPECTED_DOC_SHA 设计意图一致, 单文件常量替换 + 新增自验, 不动 _verify_lib.py / runtime, sim-only, 消除最后一个已知 pre-existing baseline FAIL。",
+            "checks_run": [
+              "EXPECTED_CURRENT_UNKNOWN_COUNT 字面值 4→7 已落地",
+              "verify_infra_060.py V4_real_unknown_count_eq_one 恢复 PASS",
+              "7 项 unknown target 全部为 .md/template/doc (非 .py)",
+              "verify_infra_040 EXPECTED_DEFAULT_TMPL_SHA 合理",
+              "verify_infra_100 CONSTHASH7d8957b7/da8a1fbb 合理",
+              "verify_infra_100_backlog_agents_md_sha_cascade_fix CONSTHASH2afd255b 合理",
+              "verify_infra_P288 CONSTHASHb4c13a06 合理",
+              "verify_infra_P301_followup_typed_enum CONSTHASHb0de4d83 合理",
+              "verify_robot_034 EXPECTED_DOC_SHA 合理 (与 V4_original_13_unknown_eliminated 设计一致)",
+              "_verify_lib.py file sha 未变 (1990a9b61d3b14c9)",
+              "新增 scripts/verify_infra_060_backlog_real_unknown_count_fix.py 自验脚本 ALL PASS (7 checks)",
+              "main func sha 自锁 (dfb097f02295a7f0)",
+              "sim-only, 不动 runtime",
+              "不动 _verify_lib.py (硬规则)",
+              "consistent with verify_infra_060 模块注释扩展 (7 项 unknown 注释化)",
+              "phase-67 #12 一举消除最后一个已知 pre-existing baseline FAIL"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "P2: 7 项 unknown 列表可考虑后续 lift 到 verify_infra_060 模块顶层常量 (非阻塞, 当前注释化够用)",
+                "P2: 未来 .md/template target 锁继续累积时, 需同步 bump EXPECTED_CURRENT_UNKNOWN_COUNT (建议在 backlog 增加自动化 detector, 非阻塞)"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": []
+        }
+      },
+      "updated_at": "2026-05-24T17:00:00.000000Z"
     }
   ],
   "last_updated": "2026-05-24T16:00:00.000000Z",

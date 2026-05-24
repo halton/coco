@@ -9630,3 +9630,21 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - `verify_infra_100.py:V2_agents_md_file_sha` (got=4334067b vs expect=68cb7a32，AGENTS.md sha cascade 漏锁，本 feat 不修 AGENTS.md)
 - status: in_progress → passing
 - push main / push feat: 见 closeout 报告（单次尝试，失败忽略）
+
+## Session 2026-05-24 phase-67 #12 closeout — infra-060-backlog-real-unknown-count-fix
+
+- feat 分支: feat/infra-060-backlog-real-unknown-count-fix → 入账 main
+- base main HEAD: 44f7e21
+- merge --no-ff sha: 872ec70
+- 改动: scripts/verify_infra_060.py EXPECTED_CURRENT_UNKNOWN_COUNT 4 → 7 + 注释扩展列出 7 项 unknown target + 新增 scripts/verify_infra_060_backlog_real_unknown_count_fix.py (7 checks 自验)
+- 5 项 verify (P299 form: `python verify_x.py > log 2>&1; rc=$?; tail log`) 全部 PASS rc=0:
+  - `scripts/verify_infra_060_backlog_real_unknown_count_fix.py` ALL PASS (7 checks)
+  - `scripts/verify_infra_060.py` ALL PASS (14 checks) — **V4_real_unknown_count_eq_one 恢复 PASS, baseline FAIL 已消除**
+  - `scripts/verify_infra_062.py` round1 ALL PASS (30 emit-paths / 30 check tags)
+  - `scripts/verify_infra_100_backlog_agents_md_sha_cascade_fix.py` ALL PASS (7 checks)
+  - `scripts/verify_infra_110_const_case.py` ALL PASS (6 checks)
+- Reviewer (sub_agent_fresh_context): LGTM, P0=[] P1=[] P2=2 (7 项 unknown 全部为非 .py target, mermaid stem-resolve 合理失败, 与 EXPECTED_DOC_SHA 设计意图一致)
+- **里程碑**: 此 feature 消除了 **最后一个已知 pre-existing baseline FAIL** (verify_infra_060.py:V4_real_unknown_count_eq_one)。`known_pre_existing_baseline_fails=[]` 首次实现，phase-67 高 ROI 完成
+- v062 round2 在 closeout commit 之后跑, freshness_anchor=closeout_commit_sha (见 evidence backfill)
+- status: in_progress → passing
+- push main / push feat: 见 closeout 报告（单次尝试，失败忽略）
