@@ -12103,7 +12103,7 @@
       ],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PLACEHOLDER_BACKFILL_PENDING",
+          "main_head_sha": "e886b1b31be865cfde52d41e7609aef9a6bca59d",
           "baseline_head_echo": "87bab68",
           "merge_commit_sha": "8a3ed2680dcab38ba38e362859da1c45dce4e625",
           "closeout_fixup_commit_sha": "2afda76b86b9d4c604082876284fdaa2d58582c5",
