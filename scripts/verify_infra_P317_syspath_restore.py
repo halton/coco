@@ -36,7 +36,7 @@ DUMP_FILE = SCRIPTS / "dump_v4_sha_graph.py"
 
 # V6: dump_v4_sha_graph.py 整体 sha256 锁 (drift 抓手); 任何 dump 改动需同 bump.
 EXPECTED_DUMP_FILE_SHA = (
-    "e7f815c6bdd30786f9fc1713f0e9e1c8a88740c2b1e8d3a1b1d50fefe686fc85"
+    "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
 )
 
 _results: List[Tuple[str, bool, str]] = []
