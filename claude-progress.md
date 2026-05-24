@@ -9664,3 +9664,27 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 **Baseline 登记**: v039 V7_filter_text_mode pre-existing baseline FAIL 在 efa7b7f 已采集 tail-25, 记入 evidence.closeout_verify.known_pre_existing_baseline_fails。
 
 **Status**: in_progress → passing。
+
+## Session 2026-05-24 phase-67 #14 — infra-039-backlog-v7-filter-substring-fix closeout
+
+**Feature**: `infra-039-backlog-v7-filter-substring-fix` (phase 67, priority 800)
+**Title**: verify_infra_039 V7_filter_text_mode substring 双命中修复 (regex 锚尾)
+**Branch**: feat/infra-039-backlog-v7-filter-substring-fix → main
+
+**核心动作**: 消除 phase-67 #13 closeout 登记的 pre-existing baseline FAIL (verify_infra_039 V7_filter_text_mode rc=0 len=2710, substring 'verify_infra_060' 同时命中 verify_infra_060.py + verify_infra_060_backlog_real_unknown_count_fix.py)。本 feat 把 V7 --filter pattern 改为 raw regex 锚尾 r'verify_infra_060\.py$', 精确命中单文件, V7 baseline FAIL 消除。新增 verify_infra_039_backlog_v7_filter_substring_fix.py (9 checks: V0×3/V1 pattern literal/V2 strict→1 file/V3 substring→2 files 反证/V4 端到端/V5 self func sha/V6 _verify_lib untouched)。
+
+**Merge**: feat → main, merge_commit_sha=1d8ef68 (--no-ff), base=66801df。
+
+**Verify (P299 三形态)**:
+- verify_infra_039_backlog_v7_filter_substring_fix.py: ALL PASS (9 checks)
+- verify_infra_039.py: ALL PASS (27 checks, 含 V7 PASS)
+- verify_infra_062.py (round1): ALL PASS (30 emit-paths / 30 unique check tags)
+- verify_infra_040_backlog_tmpl_edge.py (抽样): ALL PASS (6 checks)
+- verify_infra_060.py (抽样): ALL PASS (14 checks)
+- v062 round2: 在 closeout commit 之后跑 + backfill chore commit
+
+**Smoke**: ./init.sh smoke 已有 pre-existing typo-guard FAIL (EXPECTED_TARGET_SHAS in verify_infra_034_backlog_expand_docstring_coverage.py:81), 在 baseline 66801df 即存在, 与本 feat 无关, 已登记 known_pre_existing_baseline_fails。本 feat 不动 runtime / _verify_lib / smoke 其它子检查。
+
+**Reviewer**: sub_agent_fresh_context LGTM, P0=[] P1=[] P2=[], 12 checks_run (见 evidence)。
+
+**Status**: in_progress → passing。
