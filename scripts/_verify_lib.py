@@ -78,6 +78,7 @@ __all__ = [
     "parse_area_from_verify_path",
     "scan_unknown_area_nnns",
     "scan_reverse_sha_lock_consistency_strict",
+    "scan_docstring_v_list_matches_impl",
 ]
 
 
@@ -4828,4 +4829,83 @@ def _v8_resolve_target(
             f"dump_table/explicit/naming_guess; const={const_name}"
         ),
         "candidates": [],
+    }
+
+
+# ---------------------------------------------------------------------------
+# infra-V15-docstring-rollout-helper (phase-66 #2): 把 V9 模式抽成通用 helper
+# ---------------------------------------------------------------------------
+def scan_docstring_v_list_matches_impl(self_file: "Path") -> dict:
+    """检查 ``self_file`` 中 module docstring 的 ``- V<N>[_:]`` 清单与顶层
+    ``def v<N>_*`` 函数集合是否一致.
+
+    用法 (caller pattern)::
+
+        from _verify_lib import scan_docstring_v_list_matches_impl
+        result = scan_docstring_v_list_matches_impl(SELF)
+        _emit(
+            "V9_docstring_v_list_matches_impl",
+            result["ok"],
+            f"impl_ns={result['impl_ns']} doc_ns={result['doc_ns']} "
+            f"missing_in_doc={result['missing_in_doc']} "
+            f"extra_in_doc={result['extra_in_doc']}",
+        )
+
+    返回字典字段 (sorted lists):
+
+    - ``impl_ns``: AST 抽出的顶层 ``def v<N>_<name>`` 函数 N 集合 (sorted)
+    - ``doc_ns``: module docstring 中 ``^- V(\\d+)[_:]`` 行抽出的 N 集合 (sorted)
+    - ``missing_in_doc``: impl 有但 doc 缺 (sorted)
+    - ``extra_in_doc``: doc 有但 impl 缺 (sorted)
+    - ``ok``: bool, missing_in_doc + extra_in_doc 都为空时 True
+    - ``parse_error``: 若 AST parse 失败则为 str(SyntaxError), 否则 None.
+      parse 失败时 ok=False, impl_ns/doc_ns 均为空 list.
+
+    Caller 负责 emit, 这样函数本身不依赖具体 verify 脚本的 _emit / check_name.
+    """
+    impl_ns: set[int] = set()
+    doc_ns: set[int] = set()
+    parse_error: str | None = None
+    try:
+        src = self_file.read_text(encoding="utf-8")
+    except OSError as exc:
+        return {
+            "impl_ns": [],
+            "doc_ns": [],
+            "missing_in_doc": [],
+            "extra_in_doc": [],
+            "ok": False,
+            "parse_error": f"read failed: {exc}",
+        }
+    try:
+        mod = ast.parse(src)
+    except SyntaxError as exc:
+        return {
+            "impl_ns": [],
+            "doc_ns": [],
+            "missing_in_doc": [],
+            "extra_in_doc": [],
+            "ok": False,
+            "parse_error": str(exc),
+        }
+    for node in mod.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            m = re.match(r"^v(\d+)_", node.name)
+            if m:
+                impl_ns.add(int(m.group(1)))
+    docstring = ast.get_docstring(mod) or ""
+    for line in docstring.splitlines():
+        m = re.match(r"^- V(\d+)[_:]", line.strip())
+        if m:
+            doc_ns.add(int(m.group(1)))
+    missing_in_doc = sorted(impl_ns - doc_ns)
+    extra_in_doc = sorted(doc_ns - impl_ns)
+    ok = not missing_in_doc and not extra_in_doc
+    return {
+        "impl_ns": sorted(impl_ns),
+        "doc_ns": sorted(doc_ns),
+        "missing_in_doc": missing_in_doc,
+        "extra_in_doc": extra_in_doc,
+        "ok": ok,
+        "parse_error": parse_error,
     }
