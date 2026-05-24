@@ -63,12 +63,13 @@ from _verify_lib import (  # noqa: E402
 )
 
 # V1: 自身 file sha 自锁 (V8 pragma 模式, 计算时剔除带 pragma 的那一行)
-EXPECTED_SELF_FILE_SHA = "792eace9e1e448c248a1cdf5ed77779e035e803cf5a4238f30bf248d240e6f94"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "615a3af9ddf86bea5dfa01bd4ca3a82dbe2752045c066d51f2361a7d95798bc7"  # V8-SELF-SHA-SKIP
 
 # V2: scan 输出 entries 数下界 (phase-63 #5 推广后 17 个, 留少量余量;
 #     phase-64 #2 V11-doc-value-lock-rollout 把基线上拔至实测 18.
+#     phase-65 #2 V13-v4-checker-docstring-rollout 把基线上拔至实测 32 (留 2 项 headroom -> 30).
 #     未来若再推广更多文件可上调; 若有意删则需主动 bump 此常量)
-EXPECTED_MIN_ENTRIES = 18
+EXPECTED_MIN_ENTRIES = 30
 
 # V3: 这些 verify 文件必须含 ## Lock: 小节 (phase-63 #5 推广目标 + 已有的)
 REQUIRED_LOCK_FILES = [

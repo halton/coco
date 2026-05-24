@@ -26,6 +26,14 @@ interact-036b sim-first; verify-only; 不阻 merge gate.
   - Reviewer / CI 入口: ``.venv/bin/python`` 或先 ``source .venv/bin/activate``
   - subprocess.run 第一参数固定 ``sys.executable``
   - 环境变量继承 PATH / PYTHONPATH, venv bin 前置不可被打乱
+
+## Lock: EXPECTED_FILE_SHA
+- target_function: N/A
+- target_file: scripts/drift_trend_alert.py
+- lock_kind: file_sha
+- bump_when: scripts/drift_trend_alert.py 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/drift_trend_alert.py 并更新常量
+- rationale: V1 锁 drift_trend_alert.py 整体, 防业务实现 (analyze_drift_history / _ols_slope / _is_monotonic_up) 被悄改导致 V3 行为锁失效
 """
 
 from __future__ import annotations

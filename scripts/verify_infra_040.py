@@ -47,6 +47,14 @@ INFRA_040_SHA_LOCKS
 退出码 0=ALL PASS / 1=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_ASSERT_UNIQUE_NEEDLE_FUNC_SHA
+- target_function: assert_unique_needle
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: assert_unique_needle 实现变化
+- bump_protocol: recompute func_sha_by_name("assert_unique_needle", scripts/_verify_lib.py) then update constant
+- rationale: V6 锁 helper assert_unique_needle 函数体 (含空 needle reject + str.count 非重叠语义), 防 mutant 静默回退
 """
 from __future__ import annotations
 

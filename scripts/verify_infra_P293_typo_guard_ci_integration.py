@@ -29,6 +29,14 @@ INFRA_P293_CI_SHA_LOCKS
 退出码 0=ALL PASS / 2=任一 FAIL.
 
 运行环境约定 (infra-034): 必须在 .venv 下运行 (``.venv/bin/python``).
+
+## Lock: EXPECTED_SMOKE_PY_FILE_SHA
+- target_function: N/A
+- target_file: scripts/smoke.py
+- lock_kind: file_sha
+- bump_when: scripts/smoke.py 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/smoke.py 并更新常量
+- rationale: 锁 smoke.py 整体, 防 typo_guard 子检查注册被悄改/移除导致 helper 触发频率回落
 """
 from __future__ import annotations
 

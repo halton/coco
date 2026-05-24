@@ -41,6 +41,22 @@ INFRA_100_SHA_LOCKS
 - V5 reviewer_lgtm_gate (真门: V5 pending 期间预期 FAIL)
 
 退出码: 0=ALL PASS, 2=任一 FAIL (verify_summary_exit).
+
+## Lock: EXPECTED_AGENTS_MD_FILE_SHA
+- target_function: N/A
+- target_file: AGENTS.md
+- lock_kind: file_sha
+- bump_when: AGENTS.md 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of AGENTS.md 并更新常量
+- rationale: 锁 AGENTS.md 整体内容防 P299 shell rc 硬规则段被悄改/移除
+
+## Lock: EXPECTED_CLAUDE_MD_FILE_SHA
+- target_function: N/A
+- target_file: CLAUDE.md
+- lock_kind: file_sha
+- bump_when: CLAUDE.md 文件 sha256 变化 (任何字节改动)
+- bump_protocol: 重算 sha256 of CLAUDE.md 并更新常量
+- rationale: 锁 CLAUDE.md 整体内容防 P299 交叉引用段被悄改/移除
 """
 from __future__ import annotations
 

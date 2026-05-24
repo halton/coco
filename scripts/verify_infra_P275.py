@@ -25,6 +25,14 @@ V0-V6 meta-lock 防止 helper / 迁移点被悄悄回退:
 Run::
 
     python scripts/verify_infra_P275.py
+
+## Lock: EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA
+- target_function: assert_verify_passed
+- target_file: scripts/_verify_lib.py
+- lock_kind: ast_func_sha
+- bump_when: assert_verify_passed 实现变化 (含 min_checks 分支)
+- bump_protocol: recompute func_sha_by_name("assert_verify_passed", scripts/_verify_lib.py) then update constant
+- rationale: 锁 helper assert_verify_passed 函数体, 防 min_checks 行为被悄悄回退导致 total=0 误判 passed
 """
 
 from __future__ import annotations

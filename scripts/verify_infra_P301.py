@@ -39,6 +39,14 @@ INFRA_P301_DOC_SHA_LOCKS
 - V5_reviewer_lgtm_gate    : Reviewer fresh-context LGTM evidence bind (grace 兜底)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
+
+## Lock: EXPECTED_TARGET_FILE_SHA
+- target_function: N/A
+- target_file: scripts/verify_interact_036b.py
+- lock_kind: file_sha
+- bump_when: scripts/verify_interact_036b.py 文件 sha256 变化 (示范脚本任何字节改动)
+- bump_protocol: 重算 sha256 of scripts/verify_interact_036b.py 并更新常量
+- rationale: V2 锁示范 verify-script 整体, 防 V0 sha lock 版本号字段示范被悄改/回滚
 """
 from __future__ import annotations
 
@@ -61,7 +69,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 EXPECTED_TARGET_FILE_SHA = (
-    "d742cff76b6ef5d39149806d70ffecca3a75805f7d935ae2b9bb78bae5627d29"
+    "bc8f6f0b5cf9708620f1187c5a42fe2f1b440a15c0c2fe31c085aa039bf71f0b"
 )
 EXPECTED_SELF_MAIN_FUNC_SHA = (
     "4293685a1a4dedff62a016127cc428f916a56ade40d26a1db3457f9fe9bd6079"
