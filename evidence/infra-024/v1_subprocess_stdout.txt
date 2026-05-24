@@ -27,6 +27,6 @@
 ==> Smoke: publish (entry_points + Coco class import)
   ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp
 ==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)
-  ok: total=318 well_formed=318 typo_count=0
+  ok: total=323 well_formed=323 typo_count=0
 
 ==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json

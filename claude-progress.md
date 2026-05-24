@@ -9200,3 +9200,18 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - **不级联 bump**: V23 verify 自己锁自己 file 内 EXPECTED_REVERSE_HELPER_FILE_SHA, 不需 P314 cascade
 - **不 merge** (P261): feat 分支 push 留给 Closeout
 - **下一**: Reviewer fresh-context 评审 V23 verify 设计 + mutation 覆盖度
+
+## Session 2026-05-24 phase-66 #7 — infra-V23 Closeout
+
+- **MERGE**: feat/infra-V23-reverse-helper-stdout-format-lock → main; --no-ff merge commit 50aa7fd; base main was 40173f8
+- **NEW MAIN HEAD**: 50aa7fd (after closeout commit, post-merge)
+- **verify runs**: 13 entries — 10 PASS / 3 pre-existing baseline FAIL (v062 round1 + round2 + vP301_full)
+  - **v062 baseline FAIL 重要**: 在 base 40173f8 与 feat 347203f 与 merge 50aa7fd 上, v062 都 FAIL 2/30 violators=['V4_byte_match_enforce','V4_closeout_verify_runs_freshness']; 是 phase-66 #6 (infra-V19) closeout 引入的 pre-existing baseline FAIL, V23 无责
+  - **vP301_full**: pre-existing baseline FAIL violators=['verify_infra_P289_per_file_locks_auto_derive.py'], 一直在
+  - vV23 PASS 6/6, vP312 PASS 8/8, vV6_strict PASS 6/6, v033 PASS, v046 PASS 21/21, v100 PASS 14/14, vP306 PASS 10/10, vP314 PASS 8/8, vP317 PASS 7/7
+- **Reviewer**: sub_agent_fresh_context LGTM; P0=[] P1=[] P2=2 (V4 fail_reason 开放集合 → backlog V28; V6 e2e _verify_lib 依赖)
+- **backlog 入账 2 条**:
+  - infra-V27-v062-baseline-fix-byte-match-and-freshness (优先, 修 v062 baseline FAIL 防污染后续 closeout)
+  - infra-V28-reverse-helper-fail-reason-whitelist (V23 V4 fail_reason 闭合集合锁)
+- **next candidate 建议**: 强烈推荐先做 infra-V27 — v062 现在 baseline FAIL, 每次 closeout 都要登记 pre_existing_baseline_sha, evidence 信誉下降。备选 V24/V25/V26/V28
+- **continuous mode**: V23 DONE, main HEAD post-closeout-commit
