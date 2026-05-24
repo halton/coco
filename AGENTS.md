@@ -139,6 +139,20 @@ P273 暴露过一类失真模式：sub-agent 报告 "verify PASS" 但并未真�
 
 新建 verify 脚本时应在 V4 行为段为本 helper 做正/反例 round-trip（PASS stdout 进 → passed=True；FAIL stdout 进 → passed=False；缺 SUMMARY 进 → passed=False）。当前参考实现：`scripts/verify_infra_055.py`。
 
+### Sub-agent fact-vs-blame checklist (P288 防御，硬规则)
+
+P275 / P278 / P285 三次复现过同一类失真：sub-agent 把**自身回填错误 / 中间脏快照 / 占位未更新** 误归因为 "pre-existing FAIL"（典型句式："NEW_MAIN 上某 verify 本来就 FAIL，与本 feature 无关"）。本 checklist 把"fact"（main HEAD 实测）与 "blame"（pre-existing 归因）解耦，把后者门槛抬高到必须举证：
+
+**任何 sub-agent 在 closeout / verify 报告中作出"pre-existing FAIL"声明前，必须同时附齐以下三项；缺一即视为 sub-agent 自身错误优先排查，归因无效**：
+
+1. **当前 main HEAD sha**（7+ hex），并保证报告中的 main HEAD 与 `git -C <repo> rev-parse main` 实测一致；
+2. **在该 main HEAD 上的 verify 实测 rc + 完整 stdout 尾行**（`[verify_xxx][SUMMARY] FAIL k/N: [...]` 字面行 + 关键 FAIL emit 行）；不允许只贴 rc 数字、不贴 stdout；
+3. **涉及 `EXPECTED_*_FUNC_SHA` / 锁值类 FAIL 时**：附 main HEAD 上的 `ast.unparse` / file-sha 实测值快照（`actual_func_sha` 与 `expected` 双字段），证明 expected 与 actual 在 main HEAD 上确实不一致，而非 feat 分支中间编辑产生的脏快照。
+
+三项齐备才允许在归因栏写 `pre_existing_baseline_sha: <main HEAD>` + `pre_existing_baseline_evidence: <stdout 尾行>`；否则只能写 `attributed_to: sub_agent_self_error_suspected`，并优先在 feat 分支头部重跑、清理中间编辑产物后再判定。
+
+此规则与「Closeout-verify-trustworthy 硬规则 (P278)」并列：P278 锁的是"closeout 报告字段齐备性"（机械化由 `scripts/verify_infra_062.py`），本段锁的是"pre-existing 归因举证完整性"（机械化由 `scripts/verify_infra_P288.py`，正文检查 AGENTS.md 内本段 marker 与三项要求字面存在）。
+
 ### New verify-script self-checker bootstrap protocol (P275)
 
 P273 / P275 还暴露过另一类失真：**新建 `scripts/verify_infra_NNN.py`（含 V1 self-lock）时，作者把 `EXPECTED_V4_CHECKER_FUNC_SHA` 锁的是"自身 v4_behavior 实现写完之前"的 sha**，因为之后又改了 V4 实现，导致 self-check 首跑 FAIL；作者再错误归因到 pre-existing 而非自己锁错。本协议机械化掉这一步：
