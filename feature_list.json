@@ -22337,9 +22337,28 @@
         },
         "known_pre_existing_baseline_fails": []
       }
+    },
+    {
+      "area": "infra",
+      "id": "infra-100-backlog-agents-md-sha-cascade-fix",
+      "name": "verify_infra_100.py EXPECTED_AGENTS_MD_FILE_SHA 同步到 AGENTS.md 实际 sha (cascade 漏锁修复)",
+      "description": "verify_infra_100.py V2_agents_md_file_sha 锁的是 AGENTS.md 整文件 sha256 (EXPECTED_AGENTS_MD_FILE_SHA), 该常量自上次 AGENTS.md 修改后未同步, 导致 verify_infra_100 长期 baseline FAIL (got=4334067ba33761e1 expect=68cb7a3282f8172c)。本 feature 把 expected sha bump 到当前 main HEAD=5b4c5f4 下 AGENTS.md 的实际 sha256, 让 V2 恢复 PASS, 并新增 verify_<id>.py 自验。Sim-only, 单文件常量替换。",
+      "phase": 67,
+      "priority": 800,
+      "status": "in_progress",
+      "origin_backlog": [
+        "pre-existing baseline FAIL: verify_infra_100.py V2_agents_md_file_sha"
+      ],
+      "verification": [
+        "V1: 计算 AGENTS.md 当前 sha256, 与 verify_infra_100.py 中 EXPECTED_AGENTS_MD_FILE_SHA 一致.",
+        "V2: verify_infra_100.py 整脚本 rc=0 (全 14 PASS), 含 V2_agents_md_file_sha PASS.",
+        "V3: verify_<feature_id>.py 自验 rc=0.",
+        "V4: 不动 scripts/_verify_lib.py, 改动仅限 scripts/verify_infra_100.py 与 feature_list.json + 新 verify_<id>.py."
+      ],
+      "updated_at": "2026-05-24T07:22:43.572385Z"
     }
   ],
-  "last_updated": "2026-05-24",
+  "last_updated": "2026-05-24T07:22:43.572973Z",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
