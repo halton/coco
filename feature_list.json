@@ -18700,11 +18700,11 @@
         "infra-V6-backlog-strict-area-match-mode"
       ],
       "id": "infra-P313-parse-area-regex-policy",
-      "phase": null,
+      "phase": 66,
       "priority": 3107,
       "scope": "当前 parse_area_from_verify_path regex 限制 area 全字母 (无数字); 若未来引入 l10n / i18n 风格带数字的 area, 需明确策略：要么放宽 regex, 要么显式拒绝并文档化。立项跟踪。",
       "source": "phase-63 #4 Reviewer P2",
-      "status": "not_started",
+      "status": "in_progress",
       "title": "parse_area_from_verify_path regex 策略——是否允许数字 area",
       "verification": []
     },
