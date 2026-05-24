@@ -22652,7 +22652,7 @@
       "source": "phase-67 #13 closeout 登记的 pre-existing baseline (V7_filter_text_mode rc=0 len=2710), 主会话直选高 ROI scope 小 sim-only 项",
       "status": "passing",
       "title": "verify_infra_039 V7_filter_text_mode substring 双命中修复 (regex 锚尾)",
-      "updated_at": "2026-05-24T18:30:00.000000Z",
+      "updated_at": "2026-05-24T18:45:00.000000Z",
       "verification": [
         "verify_infra_039_backlog_v7_filter_substring_fix.py 9/9 PASS (V0_*×3 + V1 pattern literal + V2 strict→1 file + V3 substring→2 files 反证 + V4 端到端 v039 v7 PASS + V5 self func sha + V6 _verify_lib untouched)",
         "verify_infra_039.py 27/27 PASS (含 V7_filter_text_mode rc=0, baseline FAIL 已消除)",
@@ -22663,7 +22663,7 @@
       ],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_CLOSEOUT_COMMIT",
+          "main_head_sha": "2b4f7b0",
           "baseline_head_echo": "66801df",
           "merge_commit_sha": "1d8ef68",
           "verify_runs": [
@@ -22671,42 +22671,42 @@
               "name": "verify_infra_039_backlog_v7_filter_substring_fix.py",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "1d8ef68",
+              "freshness_anchor": "post-merge-rerun",
               "tail_stdout": "[verify_infra_039_backlog_v7_filter_substring_fix][PASS] V5_self_main_func_sha got=5cf6346a398fa7b5 expect=5cf6346a398fa7b5\n[verify_infra_039_backlog_v7_filter_substring_fix][PASS] V6_verify_lib_untouched got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_039_backlog_v7_filter_substring_fix][SUMMARY] ALL PASS (9 checks)"
             },
             {
               "name": "verify_infra_039.py",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "1d8ef68",
+              "freshness_anchor": "post-merge-rerun",
               "tail_stdout": "[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.6% accepted=165/169\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)"
             },
             {
               "name": "verify_infra_062.py (round1)",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "1d8ef68",
+              "freshness_anchor": "post-merge-rerun",
               "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
             },
             {
               "name": "verify_infra_062.py (round2)",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "PENDING_CLOSEOUT_COMMIT",
-              "tail_stdout": "PENDING: round2 tail will be backfilled in chore commit after closeout"
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
             },
             {
               "name": "verify_infra_040_backlog_tmpl_edge.py (sample)",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "1d8ef68",
+              "freshness_anchor": "post-merge-rerun",
               "tail_stdout": "[verify_infra_040_tmpl_edge][PASS] V_business_default_tmpl_in_graph target='.github/pull_request_template.md (file-sha)'\n[verify_infra_040_tmpl_edge][SUMMARY] ALL PASS (6 checks)"
             },
             {
               "name": "verify_infra_060.py (sample)",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "1d8ef68",
+              "freshness_anchor": "post-merge-rerun",
               "tail_stdout": "[verify_infra_060][PASS] V4_real_unknown_count_eq_one unknown_count=7 expect=7\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[]\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
             }
           ],
@@ -22743,7 +22743,7 @@
       }
     }
   ],
-  "last_updated": "2026-05-24T18:30:00.000000Z",
+  "last_updated": "2026-05-24T18:45:00.000000Z",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
