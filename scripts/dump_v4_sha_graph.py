@@ -123,6 +123,10 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
     # 所有 _RE_* 含 re.MULTILINE flag + 该文件 file-sha
     ("verify_infra_V26_strict_unknown_regex_multiline.py", "EXPECTED_BUMP_STRICT_UNKNOWN_FILE_SHA"):
         "scripts/bump_strict_unknown_sha.py (file-sha)",
+    # verify_infra_V34_decisions_md_log_closeout_evidence_fix_precedent — 锁
+    # DECISIONS.md 中 "closeout evidence 历史修复先例" 节 (V27/V29/V31 三次先例) file-sha
+    ("verify_infra_V34_decisions_md_log_closeout_evidence_fix_precedent.py", "EXPECTED_DECISIONS_FILE_SHA"):
+        "DECISIONS.md (file-sha)",
     # verify_infra_P322_pr_template_decision_matrix_lock — 锁 PR 模板决策矩阵 checkbox + file-sha
     ("verify_infra_P322_pr_template_decision_matrix_lock.py", "EXPECTED_PR_TEMPLATE_FILE_SHA"):
         ".github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)",
