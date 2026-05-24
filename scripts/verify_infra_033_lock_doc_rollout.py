@@ -68,13 +68,14 @@ SELF = Path(__file__).resolve()
 
 sys.path.insert(0, str(SCRIPTS))
 from _verify_lib import (  # noqa: E402
+    scan_docstring_v_list_matches_impl,
     func_sha_by_name,
     scan_per_file_locks_from_docstrings,
     verify_summary_exit,
 )
 
 # V1: 自身 file sha 自锁 (V8 pragma 模式, 计算时剔除带 pragma 的那一行)
-EXPECTED_SELF_FILE_SHA = "1813af34965deb1ac9f1d1c4fd82d4786ef7855f9c6b7f4db679597e04f9ecde"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "48c55fcb5a42ca17622531452c42140bcd634c28c760f44887b2937674a37e83"  # V8-SELF-SHA-SKIP
 
 # V2: scan 输出 entries 数下界 (phase-63 #5 推广后 17 个, 留少量余量;
 #     phase-64 #2 V11-doc-value-lock-rollout 把基线上拔至实测 18.
@@ -340,39 +341,25 @@ def v6_mutant_drop_lock_block_makes_v3_fail() -> None:
 
 
 def v9_docstring_v_list_matches_impl() -> None:
-    """V9 (infra-V14-v033-doc-freetext-lock, phase-66 #1): 机械化锁住自由文本
-    "校验层级 (V1-V<N>)" 清单与实际 ``def v<N>_*`` 函数集合的对应关系.
-
-    步骤:
-      1. AST parse self file → 抽所有顶层 ``def v<N>_<name>`` 函数的 N 集合
-      2. 从 ``ast.get_docstring(module)`` 用正则 ``^- V(\\d+)[_:]`` 抽 N 集合
-      3. 比对; 不一致 emit FAIL 含 missing_in_doc + extra_in_doc 双向 diff
+    """V9 (infra-V14-v033-doc-freetext-lock, phase-66 #1; phase-66 #2 抽 helper):
+    机械化锁住自由文本 "校验层级 (V1-V<N>)" 清单与实际 ``def v<N>_*`` 函数集合
+    的对应关系. 实现委托给 ``_verify_lib.scan_docstring_v_list_matches_impl``
+    (infra-V15-docstring-rollout-helper, phase-66 #2), 保持原 emit 字段完全一致.
     """
-    src = SELF.read_text(encoding="utf-8")
-    try:
-        mod = ast.parse(src)
-    except SyntaxError as exc:
-        _emit("V9_docstring_v_list_matches_impl", False, f"AST parse failed: {exc}")
+    result = scan_docstring_v_list_matches_impl(SELF)
+    if result.get("parse_error"):
+        _emit(
+            "V9_docstring_v_list_matches_impl",
+            False,
+            f"AST parse failed: {result['parse_error']}",
+        )
         return
-    impl_ns: set[int] = set()
-    for node in mod.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            m = re.match(r"^v(\d+)_", node.name)
-            if m:
-                impl_ns.add(int(m.group(1)))
-    docstring = ast.get_docstring(mod) or ""
-    doc_ns: set[int] = set()
-    for line in docstring.splitlines():
-        m = re.match(r"^- V(\d+)[_:]", line.strip())
-        if m:
-            doc_ns.add(int(m.group(1)))
-    missing_in_doc = sorted(impl_ns - doc_ns)
-    extra_in_doc = sorted(doc_ns - impl_ns)
-    ok = not missing_in_doc and not extra_in_doc
     _emit(
         "V9_docstring_v_list_matches_impl",
-        ok,
-        f"impl_ns={sorted(impl_ns)} doc_ns={sorted(doc_ns)} missing_in_doc={missing_in_doc} extra_in_doc={extra_in_doc}",
+        result["ok"],
+        f"impl_ns={result['impl_ns']} doc_ns={result['doc_ns']} "
+        f"missing_in_doc={result['missing_in_doc']} "
+        f"extra_in_doc={result['extra_in_doc']}",
     )
 
 
