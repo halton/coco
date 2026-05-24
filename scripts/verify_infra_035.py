@@ -80,8 +80,10 @@ BUMP_034 = ROOT / "scripts" / "bump_infra_034_v4_sha.py"
 # V2/V4 整体 sha 锁 (本 infra-035 闭锚)
 # infra-V6-backlog bump (P264): V6 helper 抽到 _verify_lib 后 verify_infra_034 sha 变更
 # infra-036-batch-3 bump (phase-58 #2): TARGETS 15→20 + 注释续推, verify_infra_034 sha 再变更
+# phase-67 #10 infra-034-backlog-expand-docstring-coverage bump: TARGETS 20→25 续推 +
+# v4_sha.json 加 5 entries, verify_infra_034 sha 再变更
 VERIFY_034_EXPECTED_SHA = (
-    "0058fbead1d15b993d1882933f9abe4a94b2990906c449a60eaab8588ee20eea"
+    "ec21a8f694bb7bc132960f8e0a07c1363fc50177baf3c552a9efae2bd4640fe7"
 )
 BUMP_034_EXPECTED_SHA = (
     "431881e31551aadffc9c7b4ad15ae5855d2f9ccab53931a7fc1eecc598f0c4e9"
@@ -95,7 +97,7 @@ BUMP_034_EXPECTED_SHA = (
 # 元信息字段语义参考 verify_interact_036b.py V0 schema metadata.
 V8_SELF_SHA_LOCK_VERSION = 4
 V8_SELF_SHA_LOCK_BUMPED_AT = "2026-05-24"
-EXPECTED_SELF_FILE_SHA = "a5901bb7a3ae9b8a373a79b58096f257c5d601fb7006254be9dcea1831814d73"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "f683e9e8682da947bbf32ad245237ea27e3847bd63a7a9b748d4ca61fbfe267e"  # V8-SELF-SHA-SKIP
 
 SELF = Path(__file__).resolve()
 
