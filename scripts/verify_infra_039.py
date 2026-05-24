@@ -446,9 +446,15 @@ def v7_filter_option() -> None:
     )
 
     # text 模式 --filter 同样过滤
+    # infra-039-backlog-v7-filter-substring-fix (phase-67 #14):
+    # 原 pattern "verify_infra_060" 是 substring/re.search 命中, 会同时命中
+    # verify_infra_060.py 与 verify_infra_060_backlog_real_unknown_count_fix.py
+    # (across 2 files), 导致 "across 1 files ===" 不成立 → V7 FAIL。改用 regex
+    # 锚尾 r"verify_infra_060\.py$" 精确命中单一文件, 保留 substring 模式语义
+    # (--filter 仍是 re.search, 只是测试侧 pattern 写得更严)。
     try:
         out_text = subprocess.run(
-            [sys.executable, str(DUMP_PY), "--filter", "verify_infra_060"],
+            [sys.executable, str(DUMP_PY), "--filter", r"verify_infra_060\.py$"],
             capture_output=True, text=True, timeout=30, check=False,
         )
         # SUMMARY 行体现 source-group 计数, --filter 命中后应仅剩 1 source file
