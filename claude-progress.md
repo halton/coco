@@ -9831,3 +9831,13 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - merge_sha: 9ee9645f92c4e7e2c473f2613c9b0521d0cbf0c2
 - baseline (v_110 V4d): pre-existing 8a43a68 持续登记 (unknown_verify_infra_034_backlog_..._CONSTHASHdf058599 含 'expected' 子串)
 - push: 单次尝试，失败忽略（按规则）
+
+## Session 2026-05-24 phase-67 #25 (infra-V26-strict-unknown-regex-multiline-meta-lock)
+
+- Engineer (444e2a5): 新建 scripts/verify_infra_V26_strict_unknown_regex_multiline.py (11 checks AST + mutant + file_sha 三重锁验 bump_strict_unknown_sha.py 两个模块级 _RE_* 必须含 re.MULTILINE flag); +1 dump_v4 _PER_FILE_LOCKS 入项 + 15 处 EXPECTED_DUMP_FILE_SHA cascade (a4cc770→72a72a98)
+- Reviewer round 1 (fresh-context, sub-agent): LGTM — 干净 base ed06ed2 checkout 独立核实 v_062 + v_110 V4d 双双真 pre-existing baseline (非 #25 引入)；Mutation B EXPECTED_SELF_FILE_SHA 一字反证 V0_self_sha trip 有效；cascade 15 holders match；P0=[] P1=[] P2=[3 项含 superseded 提示 + 2 个 baseline 评估]
+- Closeout: merge_sha=053f6e6, two-step P278 evidence: Step-A placeholder commit=09e8786, Step-B backfill commit=6acc54e (= main HEAD); freshness_anchor 全用 "post-merge-rerun" 字面量适配 v_062 V4_freshness; status ∈ {PASS,FAIL,SKIP} 适配 V4_shape
+- 衍生 backlog: infra-P299-evidence-shape-fixup-for-v062, infra-V034-typo-guard-expected-target-shas-fix-baseline-fix (都 priority=999 status=backlog phase=null)
+- final verify: v_V26 12/12 PASS + smoke 11/11 PASS + v_062 仍 FAIL 2/30 pre-existing baseline (与 ed06ed2 同款)
+- main HEAD: 6acc54e
+- push: 单次尝试，失败忽略
