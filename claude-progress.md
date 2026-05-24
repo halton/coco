@@ -9166,3 +9166,37 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - **Backlog 入账 (priority=999 phase=null, 1 条)**:
   - infra-V26-strict-unknown-regex-multiline-meta-lock (P2-b: verify_infra_V6_strict_area 加 V0 元锁断言 _RE_* re.compile 含 re.MULTILINE flag)
 - **下一 candidate**: phase-66 #7 — 主会话决定 (建议 infra-V23-reverse-helper-stdout-format-lock 或 infra-V24-cascade-result-sentinel-docs)
+
+## Session 2026-05-24 phase-66 #7 — infra-V23-reverse-helper-stdout-format-lock (Engineer)
+
+- **Status**: in_progress (Engineer 阶段完成, 待 Reviewer fresh-context)
+- **Branch**: feat/infra-V23-reverse-helper-stdout-format-lock (from main HEAD=40173f8)
+- **Scope**: 新建 scripts/verify_infra_V23_reverse_helper_stdout.py (路径 A 单文件聚焦), 给 bump_reverse_sha_lock.py 的 RESULT sentinel 三态 (APPLIED holders=N / NOOP reason={no_holders,all_uptodate} / FAIL reason=target_missing) 加细粒度格式锁; vP312 V7/V8 substring 锁太宽, V23 在 AST 字面量 + e2e 正则两层做严格契约锁。
+- **Implementation**:
+  - V1: AST 检 compute_sentinel + main 函数存在
+  - V2: 字面量集合含 "RESULT: APPLIED holders=" 前缀
+  - V3: 字面量含 "RESULT: NOOP reason=" + AST 扫 dict literal 提取 noop_reasons == {no_holders, all_uptodate}
+  - V4: AST 扫 JoinedStr (f-string) 含 "RESULT: " + " reason=" 双锚 + fail_reasons 含 target_missing (V3 复用扫描)
+  - V5: bump_reverse_sha_lock.py 整体 file_sha 锁 (EXPECTED_REVERSE_HELPER_FILE_SHA = 629ab94a...)
+  - V6: e2e dry-run helper --target scripts/_verify_lib.py, 解析最后一行 fullmatch SENTINEL_RE
+- **Mutation 反证 (3 个)**:
+  - M1 (RESULT: APPLIED 改小写 result: applied): verify rc=2 FAIL (V5 file_sha + V6 e2e 联合 FAIL)
+  - M3 (file 加噪声 '# noise'): V5_file_sha_lock FAIL, verify rc=2
+  - M4 (移除 APPLIED emit print 行): V5 FAIL, verify rc=2
+- **Verify runs (P299 合规, .venv/bin/python 直调)**:
+  - smoke ./init.sh rc=0
+  - vV23_self rc=0 PASS 6/6 (last_line='RESULT: NOOP reason=all_uptodate' regex_match=True)
+  - v062 rc=1 FAIL 2/30 (**pre-existing baseline at 40173f8 同 FAIL**, violators=['V4_byte_match_enforce','V4_closeout_verify_runs_freshness'] in infra-V19 freshness_anchor; 已 git stash 对比 base sha 验证)
+  - vP312 rc=0 PASS 8/8 (V7/V8 仍命中, V23 与之解耦补强)
+  - vV6_strict_area rc=0 PASS 6/6
+  - v046 rc=0 PASS 21/21
+  - v033 rc=0 PASS 9/9
+  - vP317_syspath_restore rc=0 PASS 7/7
+  - v100 rc=0 PASS 14/14
+  - vP314_lib_sha_cascade rc=0 PASS 8/8
+  - vP306 rc=0 PASS 10/10
+- **Dogfood cascade**: `bump_strict_unknown_sha.py --cascade` rc=0, stdout 末尾 "RESULT: NOOP reason=no_holders" 命中 V23 SENTINEL_RE ✓
+- **新文件**: scripts/verify_infra_V23_reverse_helper_stdout.py (新建, 不需 _V8_EXPLICIT_TARGETS 登记: 文件名 V23 非 NNN 数字, _RE_VERIFY_AREA 不匹配 → strict-unknown 不捕获)
+- **不级联 bump**: V23 verify 自己锁自己 file 内 EXPECTED_REVERSE_HELPER_FILE_SHA, 不需 P314 cascade
+- **不 merge** (P261): feat 分支 push 留给 Closeout
+- **下一**: Reviewer fresh-context 评审 V23 verify 设计 + mutation 覆盖度
