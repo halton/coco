@@ -23370,17 +23370,19 @@
       "title": "V3_v0_locked_scope_count 阈值收紧: >= 53 或动态 baseline",
       "description": "verify_infra_P301_v0_marker_naming.py V3_v0_locked_scope_count 阈值 '>=1' 过于宽松, 删到只剩 1 也会 PASS. 应改 '>= 53' (当前 baseline) 或读 dump_reverse_sha_lock_index 提供的动态 baseline 以防 silent regression.",
       "area": "infra",
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
+      "phase": 67,
+      "priority": 22,
+      "status": "in_progress",
       "source": "phase-67 #21 infra-P301-backlog-v0-marker-extended-naming Reviewer P1 #2",
       "created_at": "2026-05-24",
       "dependencies": [
         "infra-P301-backlog-v0-marker-extended-naming"
       ],
       "verification": [
-        "python scripts/verify_infra_P301_v0_marker_naming.py  # 阈值收紧后 mutation '删 V0-locked scripts' trip V3"
-      ]
+        "python scripts/verify_infra_P301_v0_marker_naming.py  # 阈值收紧后 mutation '删 V0-locked scripts' trip V3",
+        "python scripts/verify_infra_P301_followup_v3_scope_count_tighten.py  # V3 阈值收紧 meta-lock"
+      ],
+      "started_at": "2026-05-24"
     },
     {
       "id": "infra-P301-followup-v5-near-miss-coexistence",
