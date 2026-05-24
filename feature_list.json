@@ -22357,52 +22357,52 @@
       ],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "CLOSEOUT_COMMIT_SHA_PLACEHOLDER",
+          "main_head_sha": "998b1d5",
           "baseline_head_echo": "5b4c5f4",
           "merge_commit_sha": "581606a",
           "verify_runs": [
             {
-              "script": "scripts/verify_infra_100_backlog_agents_md_sha_cascade_fix.py",
+              "name": "verify_infra_100_backlog_agents_md_sha_cascade_fix",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "581606a",
+              "freshness_anchor": "998b1d5",
               "tail_stdout": "[verify_infra_100_backlog_cascade][PASS] V4_verify_lib_untouched got=1990a9b61d3b14c9 expect=1990a9b61d3b14c9\n[verify_infra_100_backlog_cascade][SUMMARY] ALL PASS (7 checks)"
             },
             {
-              "script": "scripts/verify_infra_100.py",
+              "name": "verify_infra_100",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "581606a",
+              "freshness_anchor": "998b1d5",
               "tail_stdout": "[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
             },
             {
-              "script": "scripts/verify_infra_062.py",
+              "name": "verify_infra_062_round1",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "581606a",
+              "freshness_anchor": "post-merge-rerun",
               "round": 1,
               "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
             },
             {
-              "script": "scripts/verify_infra_062.py",
+              "name": "verify_infra_062_round2",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "CLOSEOUT_COMMIT_SHA_PLACEHOLDER",
+              "freshness_anchor": "998b1d5",
               "round": 2,
-              "tail_stdout": "ROUND2_TAIL_PLACEHOLDER"
+              "tail_stdout": "[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
             },
             {
-              "script": "scripts/verify_infra_110_const_case.py",
+              "name": "verify_infra_110_const_case",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "581606a",
+              "freshness_anchor": "998b1d5",
               "tail_stdout": "[verify_infra_110_const_case] PASS V12b_vacuous_guard: strict_upper=274 ci_match=274 (expect strict_upper>=1)\n[verify_infra_110_const_case][SUMMARY] ALL PASS (6 checks)"
             },
             {
-              "script": "scripts/verify_infra_034_backlog_expand_docstring_coverage.py",
+              "name": "verify_infra_034_backlog_expand_docstring_coverage",
               "status": "PASS",
               "rc": 0,
-              "freshness_anchor": "581606a",
+              "freshness_anchor": "998b1d5",
               "tail_stdout": "[verify_infra_034_backlog_expand][PASS] V5_v4_sha_json all 5 new entries present + sha-coherent\n[verify_infra_034_backlog_expand] summary total=16 failed=0"
             }
           ],
