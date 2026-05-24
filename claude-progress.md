@@ -9481,3 +9481,17 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - 状态: in_progress→passing。known_pre_existing_baseline_fails=[]
 - push main: 见 closeout 报告
 - push feat: 见 closeout 报告
+
+## Session 2026-05-24 phase-67 #3 closeout — infra-P293-backlog-typo-guard-ci-v1-ast-hardening
+
+- feat 分支: feat/infra-P293-backlog-typo-guard-ci-v1-ast-hardening (HEAD=44dc397)
+- base main: 401e91b
+- merge --no-ff → main HEAD=bb1155e
+- verify_runs (P299 模式, rc 直读非 pipe):
+  - verify_infra_P293_typo_guard_ci_integration.py: PASS (10/10, V1 AST tuple matcher)
+  - verify_infra_P314_lib_sha_cascade.py: PASS (8/8)
+  - verify_infra_062.py --anchor 44dc397 (round1): PASS (30/30)
+  - verify_infra_062.py --anchor bb1155e (round2): PASS (30/30)
+- Reviewer sub-agent fresh-context: LGTM, P0/P1/P2 全空
+- Engineer 摘要: V1 由 literal substring 升级到 AST 解析 STEPS list, 精确识别 (Constant("typo_guard"), Name("smoke_typo_guard")) tuple; quote/空白格式变化不再误报; rename key 触发 V1 FAIL; _verify_lib.py 未修改 (scope 干净)
+- status: in_progress → passing
