@@ -9058,3 +9058,16 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - Closeout-verify nested schema (P278) 已写入 evidence; 两轮 v062 (pre + post write) 全 PASS
 
 下一 candidate: phase-66 #2 infra-V15-docstring-rollout-helper
+
+## 2026-05-24 phase-66 #2 infra-V15-docstring-rollout-helper CLOSEOUT
+
+- Branch: feat/infra-V15-docstring-rollout-helper (FEAT_HEAD=058840a)
+- Base main: 65f0cfc → Merge commit: 4986469a3dc8d649b7d38d9de78e288f91cd5897 → New main: 4986469
+- Scope: 抽取 _verify_lib.scan_docstring_v_list_matches_impl helper, v033 caller 改用 helper 后 V9 emit 字段名与值 100% 等价; cascade EXPECTED_VERIFY_LIB_FILE_SHA 全部 bump 到 0461b1817b5d8a2c
+- 全部 verify PASS (11 verify_runs): smoke / v033 / v039 / v062 / robot_037 / v110 / vP306 / vP314_lib_sha_cascade / vP317_syspath_restore / vP301 / v100
+- 已知 pre-existing baseline FAIL: verify_infra_P301_full (violators=['verify_infra_P289_per_file_locks_auto_derive.py'] 在 main 65f0cfc baseline 同样 FAIL, 与本 feature 无关), 单列 known_pre_existing_baseline_fails 不混在 verify_runs PASS 列
+- Reviewer (sub_agent_fresh_context): LGTM, 12 checks_run, P0=[] P1=[] P2=2 (P2-1 P301 短名/full 名混淆; P2-2 v033 caller docstring 双 tag)
+- Closeout-verify nested schema (P278) 已写入 evidence; 两轮 v062 (pre + post write, 含 freshness_anchor + tail anchor 修正) 最终 30/30 PASS rc=0
+- 3 backlog 入账: infra-V16-bump-helper-self-sha-mode / infra-V17-helper-naming-check-prefix-allowlist / infra-V18-other-verify-docstring-list-rollout
+
+下一 candidate: phase-66 #3 infra-P312-strict-unknown-sha-auto-bump 或 infra-P323-V12-syspath-V7-pop-branch-coverage

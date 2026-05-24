@@ -19812,12 +19812,159 @@
       "area": "infra",
       "created_at": "2026-05-24",
       "id": "infra-V15-docstring-rollout-helper",
+      "phase": 66,
+      "priority": 1,
+      "scope": "抽取 helper (scripts/_verify_lib.py:scan_docstring_v_list_matches_impl) 让任意 verify_infra_<N> 都能一行调用 docstring V<N> 清单与函数集合一致性扫描, v033 改用 helper 后 V9 emit 字段名与值 100% 等价",
+      "source": "phase-65 #4 infra-P315-v033-docstring-v1v6-fix Reviewer P2-2 (AGREE_DEFER)",
+      "status": "passing",
+      "title": "抽取 docstring V<N> rollout 通用 helper 供多 verify 复用",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "4986469",
+          "baseline_head_echo": "65f0cfc",
+          "merge_commit_sha": "4986469a3dc8d649b7d38d9de78e288f91cd5897",
+          "feat_branch": "feat/infra-V15-docstring-rollout-helper",
+          "feat_head_sha": "058840a",
+          "verify_runs": [
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[smoke] PASS\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=311 well_formed=311 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+            },
+            {
+              "name": "verify_infra_033",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_033] PASS\n[V1_helper_emit] PASS\n[V2_lock_params] PASS\n[V3_mutant_reject] PASS\n[V4_sha256_full_file] PASS\n[V5_subprocess_invoke_verify_024] PASS\n\nwrote /Users/halton/work/coco/evidence/infra-033/verify_summary.json"
+            },
+            {
+              "name": "verify_infra_039",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=154/158\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True\n[verify_infra_039][SUMMARY] ALL PASS (27 checks)"
+            },
+            {
+              "name": "verify_infra_062",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=108 enforced=73 violations=0\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_robot_037",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_robot_037][PASS] V6b_verify_034_file_sha got=2c7b49c23ed22feb expect=2c7b49c23ed22feb\n[verify_robot_037][PASS] V6c_verify_034_main_func_sha got=f995f51c1578e556 expect=f995f51c1578e556\n[verify_robot_037][PASS] V6d_import_time_fallback_behavior rc=0\n[verify_robot_037][SUMMARY] ALL PASS (23 checks)"
+            },
+            {
+              "name": "verify_infra_110",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)"
+            },
+            {
+              "name": "verify_infra_P306",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_P306] PASS V7_algo_equiv_035: helper=a5901bb7a3ae9b8a ref=a5901bb7a3ae9b8a\n[verify_infra_P306] PASS V8_algo_equiv_033: helper=48c55fcb5a42ca17 ref=48c55fcb5a42ca17\n[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]\n[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7\n[verify_infra_P306] OVERALL PASS: 10/10 checks"
+            },
+            {
+              "name": "verify_infra_P314_lib_sha_cascade",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_P314_lib_sha_cascade] PASS\n[verify_infra_P314] PASS V4_self_lib_sha: got=0461b1817b5d8a2c expect=0461b1817b5d8a2c\n[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=0461b1817b5d8a2c\n[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30\n[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py\n[verify_infra_P314][SUMMARY] ALL PASS (8 checks)"
+            },
+            {
+              "name": "verify_infra_P317_syspath_restore",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_P317_syspath_restore] PASS\n[verify_infra_P317] PASS V3_no_sys_path_side_effect: before_len=6 after_len=6 equal=True\n[verify_infra_P317] PASS V4_repeated_calls_no_growth: delta=0\n[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=cf7e23cb3273c42a expect=cf7e23cb3273c42a\n[verify_infra_P317] OVERALL PASS: 7/7 checks"
+            },
+            {
+              "name": "verify_infra_P301",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_P301][PASS] V4_v0_lock_emits_metadata has_version=True has_bumped_at=True\n[verify_infra_P301][PASS] V5_reviewer_lgtm_gate target=infra-P301-backlog-v0-sha-lock-version-field helper_ok=True\n[verify_infra_P301] summary: total=9 failed=0"
+            },
+            {
+              "name": "verify_infra_100",
+              "status": "PASS",
+              "freshness_anchor": "4986469",
+              "tail_stdout": "[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context'\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+            }
+          ],
+          "known_pre_existing_baseline_fails": [
+            {
+              "name": "verify_infra_P301_full",
+              "status": "FAIL_PRE_EXISTING_BASELINE_UNRELATED",
+              "pre_existing_baseline_sha": "65f0cfc",
+              "baseline_tail_stdout": "[verify_infra_P301_full][PASS] V3_v0_scope_nonempty V0-locked scripts scanned=46\n[verify_infra_P301_full][PASS] V3_allowlist_targets_valid allowlist_size=44 stale_entries=[]\n[verify_infra_P301_full][PASS] V3_allowlist_no_redundant redundant_entries=[]\n[verify_infra_P301_full][FAIL] V4_global_coverage violators (缺字段且无白名单)=['verify_infra_P289_per_file_locks_auto_derive.py']\n[verify_infra_P301_full][PASS] V4_version_const_typing bad_version=[]\n[verify_infra_P301_full][PASS] V4_bumped_at_format bad_bumped=[]\n[verify_infra_P301_full] summary: total=10 failed=2",
+              "note": "pre-existing baseline FAIL violator verify_infra_P289_per_file_locks_auto_derive.py 在 65f0cfc baseline 上同样 FAIL, 与 infra-V15 docstring rollout helper 抽取工作无关"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=311 well_formed=311 typo_count=0\n==> Smoke 通过。",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "infra-V15 把 v033 中重复的 V9 docstring-vs-impl 一致性扫描逻辑抽成 _verify_lib.scan_docstring_v_list_matches_impl 通用 helper, v033 caller 改用 helper 后 emit 字段名与值 100% 等价, V9 PASS 复现; helper 覆盖 OSError + SyntaxError parse_error 路径, dict shape 完整; v062 V3_HELPER_FUNC_NAMES 同步, V3 helper drift detector PASS 证明 cascade EXPECTED_VERIFY_LIB_FILE_SHA 全部 bump 到 0461b181 一致; mutation D 让 caller KeyError 证 dict shape 真锁; P301_full 在 main 与 feat 上同样 FAIL pre-existing 非本 feature 引入; 全部 verify 无 evidence 失真.",
+            "checks_run": [
+              "1. _verify_lib.scan_docstring_v_list_matches_impl helper 函数签名与 dict shape 完整性 (含 OSError + SyntaxError parse_error 路径)",
+              "2. v033 caller 改用 helper 后 V9 emit 字段名与值与抽取前 100% 等价",
+              "3. verify_infra_033 V9 PASS 复现 (helper-based rollout)",
+              "4. verify_infra_062 V3_HELPER_FUNC_NAMES 表同步含新 helper",
+              "5. verify_infra_062 V3 helper drift detector PASS (scanned=40 v3_table=40)",
+              "6. verify_infra_P314 cascade EXPECTED_VERIFY_LIB_FILE_SHA bump 到 0461b181 一致 (V2 stale=0 found=46)",
+              "7. mutation D: 让 caller 调用 helper 但拿掉某个 dict key 应 KeyError (dict shape lock)",
+              "8. mutation A/B/C 覆盖 docstring missing / impl extra / both diverge 路径",
+              "9. helper 自身 V8-SELF-SHA-SKIP / 自指 SHA 模式合规",
+              "10. P301_full 在 main 65f0cfc 与 feat 058840a 同样 FAIL pre-existing 非本 feature 引入",
+              "11. 全部 verify_runs 无 evidence 失真 (tail+rc 真实)",
+              "12. P301 短名 PASS + 命名混淆 (短名 PASS, full 名 FAIL) 列入 P2 提醒后续 rename"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "P2-1: verify_infra_P301 与 verify_infra_P301_full 命名混淆 (短名 PASS, full 名 baseline FAIL pre-existing); 建议后续 rename 或 alias 消除歧义",
+                "P2-2: v033 caller docstring 既保留旧的内联 V9 解释又 import helper, 形成双 tag 重叠注释; 建议精简 caller docstring"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-V16-bump-helper-self-sha-mode",
       "phase": null,
       "priority": 999,
-      "scope": "抽取 helper (例如 scripts/_verify_lib.py:check_docstring_v_listing) 让任意 verify_infra_<N> 都能一行调用, 避免每个 verify 各自手写 docstring V<N> 清单与函数集合的对比逻辑",
-      "source": "phase-65 #4 infra-P315-v033-docstring-v1v6-fix Reviewer P2-2 (AGREE_DEFER)",
+      "scope": "让 scripts/bump_reverse_sha_lock.py 识别 V8-SELF-SHA-SKIP pragma, 对 self-locking 文件 (例如 _verify_lib.py 自身) 也能自动 bump self-sha 占位符 (__BUMP_ME__) 到当前 sha, 避免手工维护",
+      "source": "phase-66 #2 infra-V15-docstring-rollout-helper Engineer follow-up",
       "status": "backlog",
-      "title": "抽取 docstring V<N> rollout 通用 helper 供多 verify 复用"
+      "title": "bump_reverse_sha_lock 识别 V8-SELF-SHA-SKIP 自动 bump self-locking 文件"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-V17-helper-naming-check-prefix-allowlist",
+      "phase": null,
+      "priority": 999,
+      "scope": "scripts/verify_infra_062.py V3_helper_func_sha_drift_detector 当前对 helper 函数命名做 scan_/verify_ 等前缀枚举, 应扩展 allowlist 支持 check_ 前缀避免新 helper 加入需要修 detector",
+      "source": "phase-66 #2 infra-V15-docstring-rollout-helper Engineer follow-up",
+      "status": "backlog",
+      "title": "verify_infra_062 helper 命名 detector 允许 check_ 前缀"
+    },
+    {
+      "area": "infra",
+      "created_at": "2026-05-24",
+      "id": "infra-V18-other-verify-docstring-list-rollout",
+      "phase": null,
+      "priority": 999,
+      "scope": "把 _verify_lib.scan_docstring_v_list_matches_impl helper 推广到所有有 V<N> docstring 清单的 verify 脚本 (例如 verify_infra_035 / verify_infra_062 自身 / verify_infra_110 / verify_robot_037 等), 避免每个 verify 各自手写 docstring V<N> 与函数集合一致性扫描",
+      "source": "phase-66 #2 infra-V15-docstring-rollout-helper Engineer follow-up",
+      "status": "backlog",
+      "title": "把 docstring V<N> rollout helper 推广到其它 verify 脚本"
     }
   ],
   "last_updated": "2026-05-24",
