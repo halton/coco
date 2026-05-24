@@ -37,7 +37,7 @@ from _verify_lib import verify_summary_exit  # noqa: E402
 
 # scripts/dump_v4_sha_graph.py file sha (V2 target_file_sha)
 EXPECTED_DUMP_FILE_SHA = (
-    "c2a63a68b7c38f80190d1ad2b6ed7cd5e61bb24c9e15ccb9be471b6f3e05bb79"
+    "6392d9b8eab1403176d32065b664040394e5d26cb1ebded1133ab18d87e25467"
 )
 # self file sha (V0). 首跑用 __BUMP_ME__ 占位, 再回填。
 # self file sha (V0). 自锁会陷入 fixed-point 问题 (改 const 字面值即改

@@ -111,6 +111,11 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/bump_reverse_sha_lock.py:_bump_in_file (func-sha)",
     ("verify_infra_046.py", "EXPECTED_MAIN_FUNC_SHA"):
         "scripts/bump_reverse_sha_lock.py:main (func-sha)",
+    # verify_infra_V24 — 锁 bump_reverse_sha_lock.py docstring + AGENTS.md V24 段 (file-sha 双锁)
+    ("verify_infra_V24.py", "EXPECTED_BUMP_REVERSE_FILE_SHA"):
+        "scripts/bump_reverse_sha_lock.py (file-sha)",
+    ("verify_infra_V24.py", "EXPECTED_AGENTS_FILE_SHA"):
+        "AGENTS.md (file-sha)",
     # verify_interact_037 — 锁 verify_interact_024.py 的 func / file sha
     ("verify_interact_037.py", "EXPECTED_FUNC_SHA"):
         "scripts/verify_interact_024.py:_append_drift_history (func-sha)",
