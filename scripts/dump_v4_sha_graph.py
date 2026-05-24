@@ -446,6 +446,17 @@ _PER_FILE_LOCKS: Dict[Tuple[str, str], str] = {
         "scripts/_verify_lib.py (file-sha)",
     ("verify_infra_104.py", "EXPECTED_SELF_MAIN_FUNC_SHA"):
         "scripts/verify_infra_104.py:main (func-sha)",
+    # infra-040-backlog-v4-sha-graph-tmpl-edge (phase-67 #13) —
+    # 把 .github/PULL_REQUEST_TEMPLATE/verify-script.md 与
+    # .github/pull_request_template.md 作为 sha lock graph 节点纳入,
+    # 与 verify_infra_040 V2 / V2b file-sha 锁一致。
+    # 旧 _KNOWN_NON_NUMERIC_TARGETS 中 EXPECTED_VERIFY_TMPL_SHA 误指
+    # scripts/_verify_template.py (该文件不存在), 这里通过 _PER_FILE_LOCKS
+    # 显式覆盖到真实 .github/ PR 模板路径。
+    ("verify_infra_040.py", "EXPECTED_VERIFY_TMPL_SHA"):
+        ".github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)",
+    ("verify_infra_040.py", "EXPECTED_DEFAULT_TMPL_SHA"):
+        ".github/pull_request_template.md (file-sha)",
 }
 
 # infra-039-backlog-source-file-aware: 真自锁 const 名 (target = source_file 自身)
