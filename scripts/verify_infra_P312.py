@@ -80,7 +80,7 @@ from _verify_lib import func_sha_by_name, verify_summary_exit  # noqa: E402
 
 # V1: helper file sha
 EXPECTED_BUMP_HELPER_FILE_SHA = (
-    "bceb8927a06ceeb52c97e1d3b28e274eb276975e859edea611906526acb0c0f8"
+    "af11874d2d35b99b546d02cf2c09910dad7a6ac3b8b6a32c9232515f1946f919"
 )
 # V2-V4: helper 核心 func sha
 EXPECTED_COMPUTE_CURRENT_FUNC_SHA = (

@@ -9117,3 +9117,37 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - infra-V24-cascade-result-sentinel-docs (P1: RESULT 大小写敏感 + argparse 失败路径文档化)
   - infra-V25-cascade-applied-path-future-proof (P2: V7/V8 当前快照 vs APPLIED 路径未来重生提示)
 - **下一 candidate**: phase-66 #6 — 主会话决定 (建议 infra-V19-strict-unknown-regex-anchor 或 infra-V23-reverse-helper-stdout-format-lock)
+
+
+## Session 2026-05-24 phase-66 #6 — infra-V19-strict-unknown-regex-anchor (Engineer)
+
+- **Status**: in_progress (Engineer 阶段完成, 待 Reviewer + Closeout)
+- **Branch**: feat/infra-V19-strict-unknown-regex-anchor
+- **feat_head**: d068f20120c0
+- **base_main**: 1d96e48
+- **Scope**: bump_strict_unknown_sha.py 的 `_RE_SHA_TUPLE` + `_RE_COUNT` regex 加 `^...$` 行首/行尾锚点 + `re.MULTILINE` flag, 把"模块级主行赋值"与"任意行 contains" 显式分离。先前依赖 `n_cnt != 1` fail-safe rc=4 兜底以防 contains 行误命中, 严格化后 regex 本身就只接受行首主行 (n=1), 兜底降级为真正的最后防线。
+- **Modified files**:
+  - scripts/bump_strict_unknown_sha.py: `_RE_SHA_TUPLE` 加 `^` 行首锚点; `_RE_COUNT` 加 `^...\s*$` 行首+行尾锚点 + `re.MULTILINE`
+  - scripts/verify_infra_P312.py: EXPECTED_BUMP_HELPER_FILE_SHA bceb8927a06ceeb5 → af11874d2d35b99b (V1 file_sha 锁追)
+- **Mutation 反证**:
+  - A_comment_trailing (主行旁 trailing `# fake EXPECTED_STRICT_UNKNOWN_COUNT = 999`): 新 regex n_cnt=1 rc=0 (旧 regex 会得 n=2 → rc=4 fail-safe)
+  - A2_pound_prefix (`#EXPECTED_STRICT_UNKNOWN_COUNT = 999`): 新 n=1 (旧 n=2)
+  - A3_indented (`    EXPECTED_STRICT_UNKNOWN_COUNT = 999`, 函数局部): 新 n=1 (旧 n=2)
+  - B_main_removed (sed 删主 COUNT 行): n=0 → rc=4 (fail-safe 仍工作)
+  - C_normal: n=1 rc=0
+  - SHA_A_comment (# 前缀注释块中插入完整元组): n_sha=1
+- **Verify runs (all rc=0, P299 shell rc 协议)**:
+  - smoke: rc=0
+  - v062 round1: rc=0 (30 emit-paths / 30 unique check tags)
+  - v062 round2 (--freshness-anchor d068f20120c0): rc=0
+  - vP312: rc=0 (8/8)
+  - vV6_strict_area: rc=0 (6/6)
+  - v046: rc=0 (21/21)
+  - v033_lock_doc_rollout: rc=0
+  - vP317_syspath_restore: rc=0 (7/7)
+  - v100: rc=0 (14/14)
+- **Caveats**:
+  - P0: 无
+  - P1: 无 (mutation 反证三种 contains 形态都验过)
+  - P2: bump_reverse_sha_lock.py 对 bump_strict_unknown_sha.py target 返回 NOOP reason=no_holders (该 helper 无 file_sha 反向 holder, V1 只在 P312 文件内, 已手工 bump)
+- **下一**: Reviewer fresh-context 评审

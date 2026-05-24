@@ -59,14 +59,24 @@ from _verify_lib import scan_unknown_area_nnns  # noqa: E402
 V6_FILE = SCRIPTS / "verify_infra_V6_strict_area.py"
 
 # 元组形式: EXPECTED_STRICT_UNKNOWN_SHA256 = (\n    "<hex>"\n)
+#
+# infra-V19-strict-unknown-regex-anchor (phase-66 #6):
+# 加 `^` 行首锚点 + re.MULTILINE, 把"模块级主行赋值"与"任意行中 contains"显式
+# 分离。先前依赖 n_sha != 1 fail-safe (rc=4) 兜底防止 contains 行 (例如注释/
+# docstring 中的同名字串) 误命中, 严格化后 regex 本身就只接受行首主行。
 _RE_SHA_TUPLE = re.compile(
-    r'(EXPECTED_STRICT_UNKNOWN_SHA256\s*=\s*\(\s*\n\s*")(?P<hex>[0-9a-f]{64})("\s*\n\s*\))',
+    r'^(EXPECTED_STRICT_UNKNOWN_SHA256\s*=\s*\(\s*\n\s*")(?P<hex>[0-9a-f]{64})("\s*\n\s*\))',
     re.MULTILINE,
 )
 # COUNT 单行: EXPECTED_STRICT_UNKNOWN_COUNT = <N>
 # 注意: 只匹配数字本身, 不吞行末空白/换行, 避免替换时丢失邻接空行触发 V1 self_file_sha 漂移
+#
+# infra-V19-strict-unknown-regex-anchor (phase-66 #6): 加 `^` 行首 + `$` 行尾
+# (允许 trailing whitespace/换行), re.MULTILINE, 显式排除 contains 形态
+# (例如 `actual == EXPECTED_STRICT_UNKNOWN_COUNT` 这类引用行不可能行首即此 token)。
 _RE_COUNT = re.compile(
-    r'(?P<lead>EXPECTED_STRICT_UNKNOWN_COUNT\s*=\s*)(?P<n>\d+)',
+    r'^(?P<lead>EXPECTED_STRICT_UNKNOWN_COUNT\s*=\s*)(?P<n>\d+)\s*$',
+    re.MULTILINE,
 )
 
 
