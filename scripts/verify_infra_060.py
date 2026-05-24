@@ -128,7 +128,11 @@ EXPECTED_NEW_LOCKS: tuple = (
 #   verify_infra_040 新增 EXPECTED_VERIFY_TMPL_SHA (verify_infra_040 自身.py 文件 sha
 #   作为模板存在性 edge lock); dump_v4 stem-resolve 视为 unknown const, 性质同 PR
 #   template/.md docs unknown (target 即本 verify 自身, 不归 lib/dump)。
-EXPECTED_CURRENT_UNKNOWN_COUNT = 8
+# - phase-67 #15 (infra-034-backlog-typo-guard-expected-target-shas-fix) 后: 8 → 9
+#   verify_infra_034_backlog_typo_guard_expected_target_shas_fix 新增
+#   EXPECTED_TARGET_FILE_SHA 常量 (target 推断不出, dump_v4 stem-resolve 失败, 归
+#   unknown 桶), 性质同上 (verify 自身/.md/template unknown)。
+EXPECTED_CURRENT_UNKNOWN_COUNT = 9
 
 # 13 个原 unknown 节点 ID (P285 前实测)
 ORIGINAL_UNKNOWN_IDS: frozenset = frozenset({
