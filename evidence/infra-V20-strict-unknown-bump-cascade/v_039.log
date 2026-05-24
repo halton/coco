@@ -1,0 +1,29 @@
+[verify_infra_039][PASS] V0_dump_exists /Users/halton/work/coco/scripts/dump_v4_sha_graph.py
+[verify_infra_039][PASS] V0_dump_symbols found 7/7: ['def build_graph', 'def render_text', 'def _scan_file', 'def _infer_target', 'def main', '_RE_SINGLELINE', '_RE_TUPLE_OPEN']
+[verify_infra_039][PASS] V1_docstring_sentinel sentinel=INFRA_039_SHA_LOCKS
+[verify_infra_039][PASS] V1_self_checker_func_sha got=514c9635b5c5d5f0 expect=514c9635b5c5d5f0
+[verify_infra_039][PASS] V2_dump_file_sha got=cf7e23cb3273c42a expect=cf7e23cb3273c42a
+[verify_infra_039][PASS] V3_mutant_detected baseline=293 mutant=67
+[verify_infra_039][PASS] V4_subprocess_run rc=0
+[verify_infra_039][PASS] V4_output_anchors all 5 anchors found
+[verify_infra_039][PASS] V4_targets_count_in_bounds actual=20 in [20, 100]
+[verify_infra_039][PASS] V4_json_mode rc=0 locks=293
+[verify_infra_039][PASS] V6_default_run rc=0
+[verify_infra_039][PASS] V6_default_has_ellipsis len_stdout=43282
+[verify_infra_039][PASS] V6_full_run rc=0
+[verify_infra_039][PASS] V6_full_emits_64hex hits=313 sample=4246fe98e314c0c8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b
+[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0
+[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=293
+[verify_infra_039][PASS] V7_baseline_json baseline_locks=293
+[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=3 baseline=293
+[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0
+[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True
+[verify_infra_039][PASS] V7_filter_text_mode rc=0 len=2034
+[verify_infra_039][PASS] V8_helper_importable 
+[verify_infra_039][PASS] V8_discovered_count discovered=162 ok=155 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0
+[verify_infra_039][PASS] V8_no_strong_mismatches 0
+[verify_infra_039][PASS] V8_no_unaccepted_not_found 0
+[verify_infra_039][PASS] V8_resolution_coverage coverage=97.5% accepted=158/162 via={'docstring': 22, 'self_convention': 69, 'acceptlist': 3, 'explicit': 8, 'dump_table': 60}
+[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_042.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=e3223584fbdb5f1b firsts=explicit@scripts/_verify_lib.py:assert_unique_needle=3b92e4f2a058'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])
+[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason="feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)"
+[verify_infra_039][SUMMARY] ALL PASS (27 checks)

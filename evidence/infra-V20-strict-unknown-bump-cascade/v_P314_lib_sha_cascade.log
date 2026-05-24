@@ -1,0 +1,9 @@
+[verify_infra_P314] PASS V0_verify_lib_exists: /Users/halton/work/coco/scripts/_verify_lib.py
+[verify_infra_P314] PASS V0_scripts_dir: /Users/halton/work/coco/scripts
+[verify_infra_P314] PASS V1_docstring_sentinel: sentinel=INFRA_P314_SHA_LOCKS
+[verify_infra_P314] PASS V1b_self_main_func_sha: skipped via V8-SELF-SHA-SKIP pragma (placeholder=__BUMP_ME__)
+[verify_infra_P314] PASS V4_self_lib_sha: got=0461b1817b5d8a2c expect=0461b1817b5d8a2c
+[verify_infra_P314] PASS V2_all_verify_lib_locks_consistent: stale=0 found=46 live_sha=0461b1817b5d8a2c
+[verify_infra_P314] PASS V3_count_lower_bound: found_count=46 min=30
+[verify_infra_P314] PASS V_mutant_detected: mut_count=1 mut_stale=1 victim=verify_infra_037.py
+[verify_infra_P314][SUMMARY] ALL PASS (8 checks)

@@ -9084,3 +9084,17 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - v062 双轮 (P299): c1b 修 main_head_sha 占位 + freshness_anchor=post-merge-rerun; c1c 修 v033 tail anchor prefix → 30/30 PASS rc=0
 - 3 backlog 入账 (priority=999 phase=null): infra-V19 / infra-V20 / infra-V21
 - 持续开发模式: 继续 phase-66 #4 (next candidate: 主会话决定)
+
+## Session 2026-05-24 phase-66 #4 — infra-V20-strict-unknown-bump-cascade
+
+- **Status**: passing
+- **Merge**: cd40b3a5 (no-ff feat/infra-V20-strict-unknown-bump-cascade, base ab40a00)
+- **Scope**: bump_strict_unknown_sha.py 加 --cascade flag (隐含 --apply), subprocess 调 bump_reverse_sha_lock.py --target V6 --apply; vP312 V1-V5 扩到 V1-V7 (V6 AST 锁 cascade 结构, V7 行为锁 stdout target_new_sha= 标记)
+- **Reviewer**: LGTM (sub_agent_fresh_context, 16 checks, P0=0 P1=2 P2=2)
+- **Reviewer P1 修正 (本次 closeout 已落)**:
+  1. Engineer 报告"P317 不存在"错; vP317_syspath_restore 文件存在且 PASS 7/7, evidence 已含
+  2. Engineer caveat "cascade 对 V6 rc=3" 描述错; 实测 cascade 跑 reverse_sha_lock --target V6 --apply 在 V6 表已最新时 rc=0 + WARN 空操作 (errata 落 evidence findings)
+- **Verify runs (14)**: smoke + P312(7/7) + V6_strict_area(6/6) + 033 + 039(27/27) + 062 双轮 c1/c2(30/30 each) + 037(15/15) + 110(19/19) + P306(10/10) + P314(8/8) + **P317(7/7)** + P301(9/9) + 100(14/14)
+- **Backlog 入账**: infra-V22-cascade-warn-noop-semantics (P2-b 文档化), infra-V23-reverse-helper-stdout-format-lock (P2-a stdout 契约锁)
+- **下一 candidate**: phase-66 #5 — backlog 抽 (infra-V14 / infra-V19 regex anchor / infra-P323 / infra-P313)
+

@@ -1,0 +1,20 @@
+[verify_infra_110] PASS V0_dump_exists: scripts/dump_v4_sha_graph.py
+[verify_infra_110] PASS V0_render_mermaid_symbol: render_mermaid present
+[verify_infra_110] PASS V1_docstring_sentinel: sentinel=INFRA_110_SHA_LOCKS
+[verify_infra_110] PASS V2_dump_file_sha: got=cf7e23cb3273c42a expect=cf7e23cb3273c42a
+[verify_infra_110] PASS V2_verify_lib_file_sha: got=0461b1817b5d8a2c expect=0461b1817b5d8a2c
+[verify_infra_110] PASS V3_render_mermaid_func_sha: got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0
+[verify_infra_110] PASS V3b_classify_node_func_sha: got=8dffcf4ebd018624 expect=8dffcf4ebd018624
+[verify_infra_110] PASS V4_unknown_edges_exist: unknown_edge_count=4
+[verify_infra_110] PASS V4_no_unknown_id_collision: all 4 unknown_* tgt_ids unique per (src,const)
+[verify_infra_110] PASS V4_composite_key_well_formed: all 4 edges have strict-ordered composite key
+[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 4 composite key src segments free of 'expected' substring (case-insensitive)
+[verify_infra_110] PASS V4d_unknown_tgt_raw_no_expected_substring: all 4 unknown_* tgt raw src segments free of 'expected' substring (case-insensitive, anchor-independent)
+[verify_infra_110] PASS V4b_self_main_func_sha: got=4cc7d516805927ea expect=4cc7d516805927ea
+[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason="feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)"
+[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=7c7a3ff794c99af0 expect=7c7a3ff794c99af0
+[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624
+[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624
+[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring
+[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)
+[verify_infra_110][SUMMARY] ALL PASS (19 checks)

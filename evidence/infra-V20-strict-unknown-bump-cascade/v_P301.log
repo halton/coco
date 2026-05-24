@@ -1,0 +1,10 @@
+[verify_infra_P301][PASS] V0_self_main_func_sha got=4293685a1a4dedff expect=4293685a1a4dedff
+[verify_infra_P301][PASS] V1_docstring_sentinel sentinel='INFRA_P301_DOC_SHA_LOCKS'
+[verify_infra_P301][PASS] V2_target_file_sha got=bc8f6f0b5cf97086 expect=bc8f6f0b5cf97086
+[verify_infra_P301][PASS] V3_version_const_present V0_SELF_SHA_LOCK_VERSION=1 is_int=True
+[verify_infra_P301][PASS] V4_version_range V0_SELF_SHA_LOCK_VERSION=1 >=1 ? True
+[verify_infra_P301][PASS] V3_bumped_at_const_present V0_SELF_SHA_LOCK_BUMPED_AT='2026-05-23' is_str=True
+[verify_infra_P301][PASS] V4_bumped_at_format V0_SELF_SHA_LOCK_BUMPED_AT='2026-05-23' matches YYYY-MM-DD ? True
+[verify_infra_P301][PASS] V4_v0_lock_emits_metadata has_version=True has_bumped_at=True
+[verify_infra_P301][PASS] V5_reviewer_lgtm_gate target=infra-P301-backlog-v0-sha-lock-version-field helper_ok=True reason=feature_id='infra-P301-backlog-v0-sha-lock-version-field' in grace_period (skipped)
+[verify_infra_P301] summary: total=9 failed=0

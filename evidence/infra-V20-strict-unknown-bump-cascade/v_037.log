@@ -1,0 +1,16 @@
+[verify_infra_037][PASS] V0_verify_lib_exists /Users/halton/work/coco/scripts/_verify_lib.py
+[verify_infra_037][PASS] V0_func_def_present def func_sha_by_name
+[verify_infra_037][PASS] V0_in_all_export __all__ contains func_sha_by_name
+[verify_infra_037][PASS] V1_docstring_sentinel sentinel=INFRA_037_SHA_LOCKS
+[verify_infra_037][PASS] V1_self_checker_func_sha got=d625d1aeaea5e842 expect=d625d1aeaea5e842
+[verify_infra_037][PASS] V2_lib_file_sha got=0461b1817b5d8a2c expect=0461b1817b5d8a2c
+[verify_infra_037][PASS] V2_func_sha_by_name_func_sha got=781650973120bca1 expect=781650973120bca1
+[verify_infra_037][PASS] V3_mutant_detected mut=9cc3df441290ca76 baseline=9f8b37464dd25d15
+[verify_infra_037][PASS] V4_helper_load _verify_lib loaded
+[verify_infra_037][PASS] V4_helper_call sha=9f8b37464dd25d15 len=64
+[verify_infra_037][PASS] V4_value_error ValueError raised as expected
+[verify_infra_037][PASS] V4_file_not_found FileNotFoundError raised as expected
+[verify_infra_037][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_037__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason="feature_id='__PHASE_47_PLACEHOLDER_INFRA_037__' in grace_period (skipped)"
+[verify_infra_037][PASS] V6_duplicate_raises_value_error raised=True found2=True lineno_in_msg=True msg="top-level function 'dup_target' ambiguous in /var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/verify_infra_037_jm3vleg2_v6_dup.py: found 2 definitions at lineno=[1, 7]"
+[verify_infra_037][PASS] V6_single_name_still_works sha=8a136614e7eec6f0 len=64
+[verify_infra_037][SUMMARY] ALL PASS (15 checks)

@@ -1,0 +1,8 @@
+[verify_infra_P317] PASS V0_scaffolding: func_found=True
+[verify_infra_P317] PASS V1_try_finally_pop_present: call=sys.path.pop
+[verify_infra_P317] PASS V2_no_bare_sys_path_insert: bare_inserts=[] try_ranges=[(515, 533)]
+[verify_infra_P317] PASS V3_no_sys_path_side_effect: before_len=6 after_len=6 equal=True
+[verify_infra_P317] PASS V4_repeated_calls_no_growth: delta=0
+[verify_infra_P317] PASS V5_pre_inserted_scripts_preserved: before_count=1 after_count=1
+[verify_infra_P317] PASS V6_dump_file_sha_lock: actual=cf7e23cb3273c42a expect=cf7e23cb3273c42a
+[verify_infra_P317] OVERALL PASS: 7/7 checks

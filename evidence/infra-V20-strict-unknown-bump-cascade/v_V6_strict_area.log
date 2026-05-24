@@ -1,0 +1,7 @@
+[verify_infra_V6_strict_area][PASS] V1_self_file_sha expected=a6e854aaeb1af75c actual=a6e854aaeb1af75c
+[verify_infra_V6_strict_area][PASS] V2_loose_mode_baseline strict_off_orphans=6 legacy_orphans=6
+[verify_infra_V6_strict_area][PASS] V3_strict_mode_current_repo count=109 (expected 109) sha=ce0f5023e7976e8a
+[verify_infra_V6_strict_area][PASS] V4_strict_mode_mutant_unknown_added new_count=110 new_sha=b397899dd71d5460 '999_in_unk'=True
+[verify_infra_V6_strict_area][PASS] V5_strict_mode_mutant_unknown_resolved pick=002 new_count=108 new_sha=baa4d1fdeeb58eec
+[verify_infra_V6_strict_area][PASS] V6_helper_func_sha_lock parse_area_from_verify_path=PASS; scan_unknown_area_nnns=PASS; scan_reverse_sha_lock_consistency_strict=PASS
+[verify_infra_V6_strict_area][SUMMARY] ALL PASS (6 checks)

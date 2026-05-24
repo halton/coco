@@ -1,0 +1,31 @@
+[verify_infra_062][PASS] V0_verify_lib_exists path=/Users/halton/work/coco/scripts/_verify_lib.py
+[verify_infra_062][PASS] V0_helper_def_present expect 'def verify_closeout_evidence_trustworthy(' in lib
+[verify_infra_062][PASS] V0_helper_in_all __all__ contains 39 names
+[verify_infra_062][PASS] V0_self_main_entry expect __main__ guard + def main()
+[verify_infra_062][PASS] V1_docstring_sentinel sentinel=INFRA_062_SHA_LOCKS
+[verify_infra_062][PASS] V1_self_checker_func_sha got=66a2cdb26e7ef571 expect=66a2cdb26e7ef571
+[verify_infra_062][PASS] V2_lib_file_sha got=0461b1817b5d8a2c expect=0461b1817b5d8a2c
+[verify_infra_062][PASS] V3_helper_func_sha got=d190174c24b26494 expect=d190174c24b26494
+[verify_infra_062][PASS] V4_sample_A_compliant_true r_a={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}
+[verify_infra_062][PASS] V4_sample_B_no_main_head_false failed_reasons=['closeout_verify.main_head_sha invalid (got None, expect >=7 hex chars)']
+[verify_infra_062][PASS] V4_sample_C_empty_runs_false failed_reasons=['closeout_verify.verify_runs missing or empty']
+[verify_infra_062][PASS] V4_sample_D_FAIL_no_baseline_false failed_reasons=['verify_runs[0] FAIL lacks pre_existing_baseline_sha (got None)', 'verify_runs[0] FAIL lacks baseline_tail_stdout']
+[verify_infra_062][PASS] V4_sample_E_reviewer_not_fresh_false failed_reasons=["reviewer not compliant: kind='main_context_self_review' lgtm=True (expect kind='sub_agent_fresh_context' and lgtm=True)"]
+[verify_infra_062][PASS] V4_sample_F_FAIL_with_baseline_true r_f={'total_checks': 5, 'passed_checks': 5, 'failed_checks': 0, 'failed_reasons': [], 'all_trustworthy': True, 'main_head_present': True, 'verify_runs_have_tail': True, 'reviewer_fresh_context': True}
+[verify_infra_062][PASS] V4_sample_G_main_head_short_false failed_reasons=["closeout_verify.main_head_sha invalid (got 'abc123', expect >=7 hex chars)"]
+[verify_infra_062][PASS] V4_sample_H_status_invalid_false failed_reasons=["verify_runs[0] status invalid: 'MAYBE' (expect PASS or FAIL)"]
+[verify_infra_062][PASS] V4_byte_match_enforce scanned=552 enforced=276 soft_skipped=276 violations=0 fire=True fired_features=67
+[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=110 enforced=10 soft_skipped=100 violations=0 first_violation=None
+[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=110 enforced=75 soft_skipped=35 violations=0 min_chars=20 first_violation=None
+[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=39 enforced=30 legacy_allowlisted=9 violations=0 first_violation=None
+[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=110 enforced=91 soft_skipped=19 violations=0 min_count=3 first_violation=None
+[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=110 enforced=75 soft_skipped=35 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None
+[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=110 enforced=75 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None
+[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=110 enforced=75 soft_skipped=35 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None
+[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=110 enforced=75 soft_skipped=35 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None
+[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=110 enforced=75 soft_skipped=35 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None
+[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=110 enforced=75 soft_skipped=35 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None
+[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=110 enforced=75 soft_skipped=35 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None
+[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]
+[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason="feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)"
+[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)

@@ -1,0 +1,11 @@
+[verify_infra_P306] PASS V1_helper_exists: scripts/bump_self_file_sha.py
+[verify_infra_P306] PASS V2_helper_has_pragma_and_algo: pragma_const=True algo_fn=True
+[verify_infra_P306] PASS V3_dryrun_all: rc=0 candidates=2
+[verify_infra_P306] PASS V4_dryrun_safe: has_FAIL=False has_APPLIED=False
+[verify_infra_P306] PASS V5_target_missing: rc=2
+[verify_infra_P306] PASS V6_target_no_pragma: rc=2
+[verify_infra_P306] PASS V7_algo_equiv_035: helper=a5901bb7a3ae9b8a ref=a5901bb7a3ae9b8a
+[verify_infra_P306] PASS V8_algo_equiv_033: helper=48c55fcb5a42ca17 ref=48c55fcb5a42ca17
+[verify_infra_P306] PASS V9_regex_compat: matches=1 at_lines=[97]
+[verify_infra_P306] PASS V10_helper_sha_lock: actual=707225403911bff7 expect=707225403911bff7
+[verify_infra_P306] OVERALL PASS: 10/10 checks

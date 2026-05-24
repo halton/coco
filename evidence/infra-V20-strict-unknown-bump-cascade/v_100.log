@@ -1,0 +1,15 @@
+[verify_infra_100][PASS] V0_agents_md_exists path=/Users/halton/work/coco/AGENTS.md
+[verify_infra_100][PASS] V0_claude_md_exists path=/Users/halton/work/coco/CLAUDE.md
+[verify_infra_100][PASS] V0_self_main_entry expect __main__ guard + def main()
+[verify_infra_100][PASS] V0_doc_sentinel_in_agents sentinel='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'
+[verify_infra_100][PASS] V0_claude_cross_ref_in_claude_md expect 'P299' marker in CLAUDE.md
+[verify_infra_100][PASS] V1_self_main_func_sha got=8c2d2684657a54da expect=8c2d2684657a54da
+[verify_infra_100][PASS] V2_agents_md_file_sha got=68cb7a3282f8172c expect=68cb7a3282f8172c
+[verify_infra_100][PASS] V3_claude_md_file_sha got=ef8341404bebd438 expect=ef8341404bebd438
+[verify_infra_100][PASS] V4_1_agents_md_sentinel_unique sentinel unique in AGENTS.md count=1
+[verify_infra_100][PASS] V4_2_agents_md_has_three_good_forms missing=[]
+[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo
+[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True
+[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg="needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'"
+[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason="feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK"
+[verify_infra_100][SUMMARY] ALL PASS (14 checks)
