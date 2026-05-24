@@ -9648,3 +9648,19 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
 - v062 round2 在 closeout commit 之后跑, freshness_anchor=closeout_commit_sha (见 evidence backfill)
 - status: in_progress → passing
 - push main / push feat: 见 closeout 报告（单次尝试，失败忽略）
+
+## Session 2026-05-24 phase-67 #13 closeout (infra-040-backlog-v4-sha-graph-tmpl-edge)
+
+**Feature**: infra-040-backlog-v4-sha-graph-tmpl-edge (phase-67 #13) — dump_v4_sha_graph.py 把 PR 模板纳入 sha lock graph node。
+
+**Engineer fixup** (45d93d1): Reviewer round-1 P0 反馈后 cascade bump `EXPECTED_DUMP_FILE_SHA` (c2a63a68b7c38f80) 同步 14 个 verify script（039/043/044/047/048/053/054/060/102/104/107/109/110/P317）+ verify_infra_060 unknown_count 7→8（多出两条 verify_infra_040 模板新 lock）。
+
+**Reviewer re-review** (sub_agent_fresh_context): LGTM, P0=[] P1=[] P2=2:
+- P2#1: cascade bump 涉及 14 verify script, 未来 dump_v4_sha_graph.py 改动需同步全部 EXPECTED_DUMP_FILE_SHA, 建议抽象 helper
+- P2#2: verify_infra_039.py V7_filter_text_mode 在 main efa7b7f 同样 FAIL (rc=0 len=2710), pre-existing baseline, 与本 feat 无关; 已登记 known_pre_existing_baseline_fails
+
+**Verify runs** (post-merge 90bfb69): verify_infra_040_backlog_tmpl_edge PASS / verify_infra_062 round1 PASS / verify_infra_060 PASS / verify_infra_110 PASS / verify_infra_100 PASS (5+ 条满足 P278)。
+
+**Baseline 登记**: v039 V7_filter_text_mode pre-existing baseline FAIL 在 efa7b7f 已采集 tail-25, 记入 evidence.closeout_verify.known_pre_existing_baseline_fails。
+
+**Status**: in_progress → passing。

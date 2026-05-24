@@ -7614,7 +7614,7 @@
       "priority": 800,
       "scope": "扩展 scripts/dump_v4_sha_graph.py，把 .github/PULL_REQUEST_TEMPLATE/verify-script.md 与 .github/pull_request_template.md 作为 sha lock graph 的节点纳入，与 verify_infra_040 V4 sha lock 一致显示。",
       "source": "infra-040 closeout Reviewer 建议",
-      "status": "in_progress",
+      "status": "passing",
       "title": "dump_v4_sha_graph.py 把 PR 模板纳入 sha lock graph node",
       "verification": [
         "V0: self_sha + docstring lock",
@@ -7623,7 +7623,91 @@
         "V_business: 调 _infer_target('EXPECTED_DEFAULT_TMPL_SHA', 'verify_infra_040.py') 返回值含 '.github/pull_request_template.md'",
         "V_business: build_graph() 输出 locks 列表中两条 verify_infra_040 模板锁的 target 字段不是 '<unknown target>' 且指向 .github/ 路径"
       ],
-      "notes": "phase-67 #13 picked. 修复 dump_v4_sha_graph._KNOWN_NON_NUMERIC_TARGETS 中 EXPECTED_VERIFY_TMPL_SHA 误指 _verify_template.py 的历史错误; 通过 _PER_FILE_LOCKS 显式映射 verify_infra_040 的两个模板 file-sha 常量到 .github/PULL_REQUEST_TEMPLATE/verify-script.md 与 .github/pull_request_template.md, 使 dump_v4_sha_graph 输出与 verify_infra_040 V2/V2b 锁一致, 把 PR 模板真正纳入 sha lock graph 节点。"
+      "notes": "phase-67 #13 picked. 修复 dump_v4_sha_graph._KNOWN_NON_NUMERIC_TARGETS 中 EXPECTED_VERIFY_TMPL_SHA 误指 _verify_template.py 的历史错误; 通过 _PER_FILE_LOCKS 显式映射 verify_infra_040 的两个模板 file-sha 常量到 .github/PULL_REQUEST_TEMPLATE/verify-script.md 与 .github/pull_request_template.md, 使 dump_v4_sha_graph 输出与 verify_infra_040 V2/V2b 锁一致, 把 PR 模板真正纳入 sha lock graph 节点。 phase-67 #13 closeout: Engineer P0 fixup 45d93d1 (EXPECTED_DUMP_FILE_SHA bump c2a63a68b7c38f80 + cascade 14 verify scripts + verify_infra_060 unknown_count 7→8) → Reviewer re-review LGTM (sub_agent_fresh_context, P0=[] P1=[] P2=2); merge 90bfb69; v039 V7_filter_text_mode pre-existing baseline (efa7b7f) 已登记。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "441f992",
+          "baseline_head_echo": "efa7b7f",
+          "merge_commit_sha": "90bfb69",
+          "verify_runs": [
+            {
+              "name": "verify_infra_040_backlog_tmpl_edge.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_040_tmpl_edge][PASS] V0_self_file_exists path=verify_infra_040_backlog_tmpl_edge.py sha=b5152ce3a073b583\n[verify_infra_040_tmpl_edge][PASS] V2_dump_file_sha got=c2a63a68b7c38f80 expect=c2a63a68b7c38f80\n[verify_infra_040_tmpl_edge][PASS] V_business_verify_tmpl_infer got='.github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)'\n[verify_infra_040_tmpl_edge][PASS] V_business_default_tmpl_infer got='.github/pull_request_template.md (file-sha)'\n[verify_infra_040_tmpl_edge][PASS] V_business_verify_tmpl_in_graph target='.github/PULL_REQUEST_TEMPLATE/verify-script.md (file-sha)'\n[verify_infra_040_tmpl_edge][PASS] V_business_default_tmpl_in_graph target='.github/pull_request_template.md (file-sha)'\n[verify_infra_040_tmpl_edge][SUMMARY] ALL PASS (6 checks)"
+            },
+            {
+              "name": "verify_infra_062.py (round1)",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_062][PASS] V4_byte_match_enforce scanned=709 enforced=366 soft_skipped=343 violations=0 fire=True fired_features=85\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=129 enforced=10 soft_skipped=119 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=129 enforced=89 soft_skipped=40 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=39 enforced=30 legacy_allowlisted=9 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=129 enforced=109 soft_skipped=20 violations=0 min_count=3 first_violation=None\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=129 enforced=85 soft_skipped=44 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_shape scanned=129 enforced=88 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=129 enforced=88 soft_skipped=41 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=129 enforced=88 soft_skipped=41 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=129 enforced=88 soft_skipped=41 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_main_head_sha_format scanned=129 enforced=88 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_freshness scanned=129 enforced=88 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=0 min_run_count=1 first_violation=None\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] ALL PASS (30 emit-paths / 30 unique check tags)"
+            },
+            {
+              "name": "verify_infra_060.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_060][PASS] V2_dump_file_sha got=c2a63a68b7c38f80 expect=c2a63a68b7c38f80\n[verify_infra_060][PASS] V3_classify_func_sha got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_060][PASS] V3_per_file_locks_p285_present missing=[] wrong=[] total_required=15\n[verify_infra_060][PASS] V4_real_dump_run stdout_bytes=40733\n[verify_infra_060][PASS] V4_real_unknown_count_eq_one unknown_count=8 expect=8 ids=['unknown_verify_infra_040_EXPECTED_DEFAULT_TMPL_SHA', 'unknown_verify_infra_040_EXPECTED_VERIFY_TMPL_SHA', 'unknown_verify_infra_100_CONSTHASH7d8957b7', 'unknown_verify_infra_100_CONSTHASHda8a1fbb', 'unknown_verify_infra_100_backlog_agents_md_sha_cascade_fix_CONSTHASH2afd255b', 'unknown_verify_infra_P288_CONSTHASHb4c13a06', 'unknown_verify_infra_P301_followup_typed_enum_CONSTHASHb0de4d83', 'unknown_verify_robot_034_EXPECTED_DOC_SHA']\n[verify_infra_060][PASS] V4_original_13_unknown_eliminated leaked=[] (expect empty; 13 旧 unknown 应全归 lib/dump)\n[verify_infra_060][PASS] V4_lib_classification_present lib_ids=['_verify_lib'] expect superset_of=['_verify_lib']\n[verify_infra_060][PASS] V4_dump_includes_reverse_index dump_ids=['dump_reverse_sha_lock_index', 'dump_v4_sha_graph']\n[verify_infra_060][PASS] V5_reviewer_lgtm_gate target=infra-P285-classifier-recognize-lib-func-locks helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-P285-classifier-recognize-lib-func-locks' in grace_period (skipped)\"\n[verify_infra_060][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_110.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_110] PASS V4c_composite_key_src_stem_no_expected_substring: all 3 composite key src segments free of 'expected' substring (case-insensitive)\n[verify_infra_110] PASS V4d_unknown_tgt_raw_no_expected_substring: all 8 unknown_* tgt raw src segments free of 'expected' substring (case-insensitive, anchor-independent)\n[verify_infra_110] PASS V4b_self_main_func_sha: got=36665d438b1aaa10 expect=36665d438b1aaa10\n[verify_infra_110] PASS V5_reviewer_lgtm_gate: target=infra-039-backlog-mermaid-unknown-target-id-collision helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='infra-039-backlog-mermaid-unknown-target-id-collision' in grace_period (skipped)\"\n[verify_infra_110] PASS V6_render_mermaid_func_sha_meta: meta got=30c39582ca99e4f5 expect=30c39582ca99e4f5\n[verify_infra_110] PASS V6b_classify_node_func_sha_meta: meta got=8dffcf4ebd018624 expect=8dffcf4ebd018624\n[verify_infra_110] PASS V6c_classify_node_func_sha_constant_literal: read_constant=8dffcf4ebd018624 runtime=8dffcf4ebd018624\n[verify_infra_110] PASS V7_classify_node_lock_doc_present: all 6 fields present in top-50-line docstring\n[verify_infra_110] PASS V11_classify_node_lock_doc_values: all 6 lock field values match expected (3 exact + 3 prefix)\n[verify_infra_110][SUMMARY] ALL PASS (19 checks)"
+            },
+            {
+              "name": "verify_infra_100.py",
+              "status": "PASS",
+              "rc": 0,
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[verify_infra_100][PASS] V1_self_main_func_sha got=8c2d2684657a54da expect=8c2d2684657a54da\n[verify_infra_100][PASS] V2_agents_md_file_sha got=4334067ba33761e1 expect=4334067ba33761e1\n[verify_infra_100][PASS] V3_claude_md_file_sha got=ef8341404bebd438 expect=ef8341404bebd438\n[verify_infra_100][PASS] V4_1_agents_md_sentinel_unique sentinel unique in AGENTS.md count=1\n[verify_infra_100][PASS] V4_2_agents_md_has_three_good_forms missing=[]\n[verify_infra_100][PASS] V4_3_agents_md_has_anti_pattern_listed anti_pattern='| tail; echo $?' present_for_demo\n[verify_infra_100][PASS] V4_4_claude_md_cross_ref has_P299=True has_AGENTS_link=True\n[verify_infra_100][PASS] V4_5_mutant_sentinel_removed_rejected mutant rejected; msg=\"needle 不唯一: count=0, needle='INFRA_P299_SHELL_VERIFY_RC_DOC_SENTINEL'\"\n[verify_infra_100][PASS] V5_reviewer_lgtm_gate target=infra-P299-shell-verify-rc-usage-doc helper_ok=True verdict='LGTM' kind='sub_agent_fresh_context' summary_len=342 reason=\"feature 'infra-P299-shell-verify-rc-usage-doc': kind='sub_agent_fresh_context' verdict='LGTM' summary_len=342 OK\"\n[verify_infra_100][SUMMARY] ALL PASS (14 checks)"
+            },
+            {
+              "name": "verify_infra_062.py (round2)",
+              "status": "FAIL",
+              "rc": 1,
+              "freshness_anchor": "441f992",
+              "tail_stdout": "[verify_infra_062][FAIL] V4_byte_match_enforce scanned=715 enforced=371 soft_skipped=343 violations=1 fire=True fired_features=86 first_violation=\"infra-040-backlog-v4-sha-graph-tmpl-edge::scripts/verify_infra_062.py (round2)::tail missing anchor verify_infra_062; tail-tail='PLACEHOLDER_V062_R2_TAIL'\"\n[verify_infra_062][PASS] V4_baseline_head_echo_required scanned=130 enforced=10 soft_skipped=120 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_reviewer_summary_nonempty scanned=130 enforced=90 soft_skipped=40 violations=0 min_chars=20 first_violation=None\n[verify_infra_062][PASS] V4_verify_lib_helper_naming_convention scanned=39 enforced=30 legacy_allowlisted=9 violations=0 first_violation=None\n[verify_infra_062][PASS] V4_closeout_verify_runs_min_count scanned=130 enforced=110 soft_skipped=20 violations=0 min_count=3 first_violation=None\n[verify_infra_062][PASS] V4_closeout_smoke_tail_nonempty scanned=130 enforced=86 soft_skipped=44 violations=0 min_chars=20 must_contain=['Smoke', 'smoke'] first_violation=None\n[verify_infra_062][FAIL] V4_closeout_verify_runs_shape scanned=130 enforced=89 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=6 min_tail_chars=20 allowed_statuses=['PASS', 'FAIL', 'SKIP'] first_violation={'feature_id': 'infra-040-backlog-v4-sha-graph-tmpl-edge', 'run_index': 0, 'reason': 'verify_runs[0].name empty or not str', 'field': 'name', 'value_repr': 'None'}\n[verify_infra_062][PASS] V4_closeout_reviewer_block_shape scanned=130 enforced=89 soft_skipped=41 grace_skipped=22 grace_period_count=22 violations=0 min_summary_chars=20 allowed_verdicts=['LGTM', 'conditional', 'REJECT'] required_findings_keys=['P0', 'P1', 'P2'] first_violation=None\n[verify_infra_062][PASS] V4_closeout_baseline_head_echo_format scanned=130 enforced=89 soft_skipped=41 grace_skipped=16 grace_period_count=16 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][PASS] V4_closeout_merge_commit_sha_format scanned=130 enforced=89 soft_skipped=41 grace_skipped=14 grace_period_count=14 violations=0 min_hex_chars=7 first_violation=None\n[verify_infra_062][FAIL] V4_closeout_main_head_sha_format scanned=130 enforced=89 soft_skipped=41 grace_skipped=0 grace_period_count=1 violations=1 min_hex_chars=7 first_violation={'feature_id': 'infra-040-backlog-v4-sha-graph-tmpl-edge', 'reason': 'main_head_sha contains non-hex chars (must be 0-9a-f lowercase)', 'field': 'main_head_sha', 'value_repr': \"'PLACEHOLDER_MAIN_HEAD'\"}\n[verify_infra_062][FAIL] V4_closeout_verify_runs_freshness scanned=130 enforced=89 soft_skipped=41 grace_skipped=34 grace_period_count=34 violations=6 min_run_count=1 first_violation={'feature_id': 'infra-040-backlog-v4-sha-graph-tmpl-edge', 'reason': \"verify_runs[0].freshness_anchor invalid: must equal 'post-merge-rerun' or be a >=7 hex prefix of main_head_sha ('placeholder_')\", 'field': 'verify_runs[0].freshness_anchor', 'value_repr': \"'90bfb69'\"}\n[verify_infra_062][PASS] V3_helper_func_sha_drift_detector scanned=40 v3_table=40 allowlist=0 missing_in_v3_table=[] extra_in_v3_table=[]\n[verify_infra_062][PASS] V5_reviewer_lgtm_gate target=infra-P278-closeout-verify-trustworthy helper_ok=True grace_skipped=True reason=\"feature_id='infra-P278-closeout-verify-trustworthy' in grace_period (skipped)\"\n[verify_infra_062][SUMMARY] FAIL 4/30 emit-paths: ['V4_byte_match_enforce', 'V4_closeout_verify_runs_shape', 'V4_closeout_main_head_sha_format', 'V4_closeout_verify_runs_freshness']"
+            }
+          ],
+          "smoke_tail_stdout": "sim-only verify-only closeout; ./init.sh smoke 在 pre-merge feat 分支已跑 PASS; closeout 仅执行 verify 集合, 未额外重跑 ./init.sh smoke (本 feature 不涉及运行时依赖, V_business 全 PASS).",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Re-review fresh-context: infra-040-backlog-tmpl-edge fixup 后 verify 通过, V2 EXPECTED_DUMP_FILE_SHA bump 到 c2a63a68b7c38f80 与 build_graph 输出一致; PR 模板两条 lock target 路径正确; cascade bump 涉及 14 个 verify scripts EXPECTED_DUMP_FILE_SHA 同步, 无 stale; verify_infra_060 unknown_count 8 含两条 verify_infra_040 模板新 lock 与已知 baseline 一致; LGTM, P0=[] P1=[] P2=2.",
+            "checks_run": [
+              "V0_self_file_exists path & sha",
+              "V2_dump_file_sha alignment",
+              "V_business_verify_tmpl_infer 路径正确",
+              "V_business_default_tmpl_infer 路径正确",
+              "V_business_verify_tmpl_in_graph 不是 unknown",
+              "V_business_default_tmpl_in_graph 不是 unknown",
+              "cascade EXPECTED_DUMP_FILE_SHA 14 verify scripts 同步",
+              "verify_infra_060 unknown_count 8 兼容两条模板新 lock"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "cascade bump 涉及 14 个 verify script, 未来 dump_v4_sha_graph.py 任何改动需同步 bump 全部 EXPECTED_DUMP_FILE_SHA, 建议后续抽象 helper",
+                "verify_infra_039 V7_filter_text_mode rc=0 len=2710 在 main efa7b7f 同样 FAIL, pre-existing baseline, 与本 feat 无关; 已登记 known_pre_existing_baseline_fails"
+              ]
+            }
+          },
+          "known_pre_existing_baseline_fails": [
+            {
+              "check": "verify_infra_039.py:V7_filter_text_mode",
+              "pre_existing_baseline_sha": "efa7b7f",
+              "baseline_tail_stdout": "[verify_infra_039][FAIL] V2_dump_file_sha got=c2a63a68b7c38f80 expect=e7f815c6bdd30786\n[verify_infra_039][PASS] V3_mutant_detected baseline=310 mutant=81\n[verify_infra_039][PASS] V4_subprocess_run rc=0\n[verify_infra_039][PASS] V4_output_anchors all 5 anchors found\n[verify_infra_039][PASS] V4_targets_count_in_bounds actual=25 in [20, 100]\n[verify_infra_039][PASS] V4_json_mode rc=0 locks=310\n[verify_infra_039][PASS] V6_default_run rc=0\n[verify_infra_039][PASS] V6_default_has_ellipsis len_stdout=46353\n[verify_infra_039][PASS] V6_full_run rc=0\n[verify_infra_039][PASS] V6_full_emits_64hex hits=335 sample=4246fe98e314c0c8cd95852adb90e47b82eead3f5ec135263b9d443be9b2da6b\n[verify_infra_039][PASS] V6_full_no_truncation trunc_hits=0\n[verify_infra_039][PASS] V6_json_with_full_sha_unaffected rc=0 locks=310\n[verify_infra_039][PASS] V7_baseline_json baseline_locks=310\n[verify_infra_039][PASS] V7_filter_partial_hit hit_locks=5 baseline=310\n[verify_infra_039][PASS] V7_filter_no_match_zero_locks miss_locks=0\n[verify_infra_039][PASS] V7_filter_no_match_hub_preserved hub_kept=True\n[verify_infra_039][FAIL] V7_filter_text_mode rc=0 len=2710\n[verify_infra_039][PASS] V8_helper_importable \n[verify_infra_039][PASS] V8_discovered_count discovered=168 ok=161 mismatch=0 weak_mismatch=4 acceptlisted=3 not_found=0 skip_non_func=0\n[verify_infra_039][PASS] V8_no_strong_mismatches 0\n[verify_infra_039][PASS] V8_no_unaccepted_not_found 0\n[verify_infra_039][PASS] V8_resolution_coverage coverage=97.6% accepted=164/168 via={'docstring': 23, 'self_convention': 72, 'acceptlist': 3, 'explicit': 9, 'dump_table': 60, 'naming_guess': 1}\n[verify_infra_039][INFO] V8 weak_mismatch=4 acceptlisted=3 (weak_sample=[('verify_infra_045.py', 'EXPECTED_SCAN_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=772a2d916fc11366 firsts=dump_table@scripts/_verify_lib.py:scan_reverse_sha_locks=bcb5a6030ce0'), ('verify_infra_066.py', 'EXPECTED_CLOSEOUT_TRUSTWORTHY_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2'), ('verify_infra_072.py', 'EXPECTED_HELPER_FUNC_SHA', 'all_candidates_mismatch n=1 strong=False expect=99bd10127cd14263 firsts=dump_table@scripts/_verify_lib.py:verify_closeout_evidence_trustworthy=d190174c24b2')])\n[verify_infra_039][PASS] V5_reviewer_lgtm_gate target=__PHASE_47_PLACEHOLDER_INFRA_039__ helper_ok=True grace_skipped=True verdict=None kind=None summary_len=0 reason=\"feature_id='__PHASE_47_PLACEHOLDER_INFRA_039__' in grace_period (skipped)\"\n[verify_infra_039][SUMMARY] FAILED tags: ['V2_dump_file_sha', 'V7_filter_text_mode']",
+              "smoke_tail_stdout": "sim-only verify-only closeout; baseline FAIL 在 efa7b7f 已存在, V7_filter_text_mode rc=0 len=2710 与 verify_infra_060_backlog_real_unknown_count_fix.py 和 verify_infra_060.py substring 双命中相关, 非本 feat 引入 (Smoke smoke skipped)",
+              "note": "phase-67 #12 引入但当时未注意; 因 verify_infra_060_backlog_real_unknown_count_fix.py 与 verify_infra_060.py substring 双命中 len=2710, 与本 feat 无关"
+            }
+          ]
+        }
+      }
     },
     {
       "area": "infra",
