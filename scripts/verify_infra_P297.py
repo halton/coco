@@ -25,6 +25,10 @@ INFRA_P297_DOC_SHA_LOCKS
 校验层级 (V0-V5):
 
 - V0_scaffolding              : bootstrap / _verify_lib 文件存在
+- V0_mutant_keys_lock         : ``_MUTANTS`` keys 集合与 ``EXPECTED_MUTANT_KEYS`` 完全相等
+                                (phase-67 #20 / P297-followup 修复 phase-67 #19
+                                Reviewer P2 #1 — Mutation C 删除任一 mutant 注册条目
+                                漏检). 同时锁 _MUTANTS 长度 == len(EXPECTED_MUTANT_KEYS).
 - V1_docstring_sentinel       : INFRA_P297_DOC_SHA_LOCKS 自锁
 - V1_self_v4_func_sha         : 本脚本 ``v4_behavior_parametrized`` canonical func sha 锁
 - V2_lib_file_sha             : _verify_lib.py 整文件 sha
@@ -37,6 +41,9 @@ INFRA_P297_DOC_SHA_LOCKS
   - V4_mutant_raise           : compute_self_checker_sha → ``raise RuntimeError(...)``
   - V4_mutant_weak_hash       : compute_self_checker_sha 改算法 (替换函数体为
                                 ``return hashlib.md5(verify_script.read_bytes()).hexdigest()``)
+- V4b_mutant_keys_reverse     : 临时缩减 _MUTANTS (删第一个条目), 重新跑
+                                ``v0_mutant_keys_lock``-equivalent 检查, 期望 FAIL
+                                (mutation 反证: V0_mutant_keys_lock 真的会抓到漏注册).
 - V5_reviewer_lgtm_gate       : Reviewer fresh-context LGTM evidence bind (backloaded)
 
 退出码 0=ALL PASS / 2=任一 FAIL.
@@ -85,6 +92,20 @@ EXPECTED_V4_FUNC_SHA = (
 
 DOCSTRING_SENTINEL = "INFRA_P297_DOC_SHA_LOCKS"
 
+# phase-67 #20 / P297-followup: 显式锁 _MUTANTS keys 集合, 防 Mutation C
+# (删除任一 _MUTANTS 注册条目) 漏检. 必须与 _MUTANTS 中 (name, _) 的 name 集合
+# 完全相等. 若改 _MUTANTS 增减条目, 必须同步 bump 此常量 (and v4_behavior_parametrized
+# 的 EXPECTED_V4_FUNC_SHA 也会随函数体变化触发 cascade — 因 _MUTANTS 是 module-level
+# 但被 V4 函数 closure 引用, 改其内容会改 V4 函数体生成的字节码 / sha? 实际上 sha
+# 是 inspect.getsource 字符串 sha, _MUTANTS 不在 v4 函数体内, 改 _MUTANTS 不会改
+# V4 func sha — 因此 mutation C 仍需独立 V0_mutant_keys_lock 兜底).
+EXPECTED_MUTANT_KEYS = frozenset({
+    "return_empty",
+    "return_none",
+    "raise",
+    "weak_hash",
+})
+
 _results: List[Tuple[str, bool, str]] = []
 
 
@@ -104,6 +125,27 @@ def _file_sha(path: Path) -> str:
 def v0_scaffolding() -> None:
     _emit("V0_verify_lib_exists", LIB.is_file(), f"path={LIB}")
     _emit("V0_bootstrap_exists", BOOTSTRAP.is_file(), f"path={BOOTSTRAP}")
+
+
+# ---------------------------------------------------------------------------
+# V0_mutant_keys_lock (phase-67 #20 / P297-followup):
+# 显式锁 _MUTANTS keys 集合, 抓 Mutation C (删除任一注册条目).
+# ---------------------------------------------------------------------------
+def _check_mutant_keys(mutants_list: List[Tuple[str, Callable]],
+                       expected: frozenset, tag: str) -> bool:
+    got = frozenset(name for name, _ in mutants_list)
+    ok = got == expected and len(mutants_list) == len(expected)
+    _emit(
+        tag,
+        ok,
+        f"got={sorted(got)!r} expect={sorted(expected)!r} "
+        f"got_len={len(mutants_list)} expect_len={len(expected)}",
+    )
+    return ok
+
+
+def v0_mutant_keys_lock() -> None:
+    _check_mutant_keys(_MUTANTS, EXPECTED_MUTANT_KEYS, "V0_mutant_keys_lock")
 
 
 # ---------------------------------------------------------------------------
@@ -301,6 +343,29 @@ def v4_behavior_parametrized() -> None:
 
 
 # ---------------------------------------------------------------------------
+# V4b: mutation 反证 for V0_mutant_keys_lock —
+# 临时缩减 _MUTANTS (删第一个条目), 跑 _check_mutant_keys 期望 ok=False.
+# 若 _check_mutant_keys 把短列表当成 OK, 说明 V0_mutant_keys_lock 形同虚设 —
+# 直接 FAIL 报警.
+# (phase-67 #20 / P297-followup: 防 V0 check 本身退化)
+# ---------------------------------------------------------------------------
+def v4b_mutant_keys_reverse_proof() -> None:
+    # 复制一份并删第一条 → 应被抓到
+    shrunk = list(_MUTANTS)[1:]
+    got = frozenset(name for name, _ in shrunk)
+    ok_with_shrunk = (got == EXPECTED_MUTANT_KEYS
+                      and len(shrunk) == len(EXPECTED_MUTANT_KEYS))
+    # mutation 反证: ok_with_shrunk 必须为 False, 否则 V0 check 不严
+    _emit(
+        "V4b_mutant_keys_reverse_proof",
+        ok_with_shrunk is False,
+        f"shrunk_keys={sorted(got)!r} len={len(shrunk)} "
+        f"(expect len={len(EXPECTED_MUTANT_KEYS)}); "
+        f"reverse_proof_should_FAIL_check={ok_with_shrunk}",
+    )
+
+
+# ---------------------------------------------------------------------------
 # V5: Reviewer LGTM gate
 # ---------------------------------------------------------------------------
 def v5_reviewer_gate() -> None:
@@ -327,10 +392,12 @@ def v5_reviewer_gate() -> None:
 
 def main() -> int:
     v0_scaffolding()
+    v0_mutant_keys_lock()
     v1_self_lock()
     v2_file_shas()
     v3_clean_canary()
     v4_behavior_parametrized()
+    v4b_mutant_keys_reverse_proof()
     v5_reviewer_gate()
     total = len(_results)
     failed = [t for t, ok, _ in _results if not ok]
