@@ -12594,10 +12594,10 @@
       "area": "infra",
       "id": "infra-P294-followup-070-self-func-sha-bump",
       "note": "closed_as_already_done by cascade fix 2411302; superseded by infra-P294-followup-070-verify-lib-file-sha-bump",
-      "phase": null,
-      "priority": 999,
-      "rationale": "P294 Reviewer P1 finding: verify_infra_070.py V1 self-func sha 占位 '__BUMP_ME__' 待下次 070 改动时锁定为实算 sha256 (与其他 verify 自检模式对齐, 防止后续 070 改动无人察觉).",
-      "status": "backlog",
+      "phase": 67,
+      "priority": 802,
+      "rationale": "P294-followup (phase-67 #18): 移除 verify_infra_070.py V1/V6 中 EXPECTED_SELF_MAIN_FUNC_SHA / EXPECTED_MAKE_MINI_REPO_FUNC_SHA 的 __BUMP_ME__ 占位早返回分支, 强制常量必须 hex64; 新增 verify_infra_P294_followup_070_self_func_sha_bump.py 机械化锁该不可逆迁移.",
+      "status": "in_progress",
       "title": "verify_infra_070 V1 self func sha 占位 __BUMP_ME__ 锁定为实算值"
     },
     {
