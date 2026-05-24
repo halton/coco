@@ -62,7 +62,7 @@ EXPECTED_LIB_FILE_SHA = "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955
 EXPECTED_VERIFY_EP_FUNC_SHA = "092041818bd1bcd3232b250d064aa52ff7d125112389629b1e3aecbab3d5754c"
 
 # 本脚本 v4_behavior 自锁 (V1) — 首跑 __BUMP_ME__ 占位, 再回填
-EXPECTED_V4_CHECKER_FUNC_SHA = "3d44c4e07cb404a69e70eb91a4419938e84927be33f1fd41128b4c56f12e5eee"
+EXPECTED_V4_CHECKER_FUNC_SHA = "ccc5f243fd02ec44407844ae37ff015468cbd045dd36f83521af33a0fc573d8f"
 
 DOCSTRING_SENTINEL = "INFRA_057_SHA_LOCKS"
 
@@ -259,6 +259,66 @@ def v4_behavior() -> None:
         "V4_mutant_scan_returns_empty",
         r3.get("all_match") is False and len(orphans3) == 1 and orphans3[0].get("const_name") == "EXPECTED_MUTANT_FILE_SHA",
         f"all_match={r3.get('all_match')} orphans={orphans3}",
+    )
+
+    # 4) mutant 反证 — missing_assignment 分支 (infra-P280, phase-67 #5):
+    #    monkey-patch scan_reverse_sha_locks 返回一条 fake EP 条目, 但 tmp 目录里
+    #    并不存在对应顶层 ast.Assign — helper 应把它归入 missing_assignment, all_match=False.
+    with tempfile.TemporaryDirectory() as td4:
+        tmp_scripts4 = Path(td4) / "scripts"
+        tmp_scripts4.mkdir()
+        # tmp 里建一个空 verify_*.py (没有 EXPECTED_PHANTOM_FILE_SHA 的 Assign)
+        (tmp_scripts4 / "verify_demo_997.py").write_text("# empty\n", encoding="utf-8")
+        fake_file_rel = f"{tmp_scripts4.name}/verify_demo_997.py"
+        fake_scan = [{
+            "file": fake_file_rel,
+            "const_name": "EXPECTED_PHANTOM_FILE_SHA",
+            "sha_hex": "c" * 64,
+            "kind": "expected_pattern",
+            "lineno": 1,
+        }]
+        try:
+            lib_mod.scan_reverse_sha_locks = lambda _d: list(fake_scan)  # type: ignore
+            r4 = verify_expected_pattern_consistency(tmp_scripts4)
+        finally:
+            lib_mod.scan_reverse_sha_locks = original_scan  # type: ignore
+    missing4 = r4.get("missing_assignment", [])
+    _emit(
+        "V4_mutant_missing_assignment",
+        r4.get("all_match") is False
+        and len(missing4) == 1
+        and missing4[0].get("const_name") == "EXPECTED_PHANTOM_FILE_SHA",
+        f"all_match={r4.get('all_match')} missing_assignment={missing4}",
+    )
+
+    # 5) mutant 反证 — unresolved 分支 (infra-P280, phase-67 #5):
+    #    monkey-patch scan_reverse_sha_locks 返回 sha_hex 非 64-hex 的 fake EP,
+    #    helper 应把它归入 unresolved, all_match=False.
+    with tempfile.TemporaryDirectory() as td5:
+        tmp_scripts5 = Path(td5) / "scripts"
+        tmp_scripts5.mkdir()
+        (tmp_scripts5 / "verify_demo_996.py").write_text("# empty\n", encoding="utf-8")
+        fake_file_rel5 = f"{tmp_scripts5.name}/verify_demo_996.py"
+        fake_scan5 = [{
+            "file": fake_file_rel5,
+            "const_name": "EXPECTED_BADSHA_FILE_SHA",
+            "sha_hex": "Z" * 64,  # 非 0-9a-f, 触发 unresolved
+            "kind": "expected_pattern",
+            "lineno": 1,
+        }]
+        try:
+            lib_mod.scan_reverse_sha_locks = lambda _d: list(fake_scan5)  # type: ignore
+            r5 = verify_expected_pattern_consistency(tmp_scripts5)
+        finally:
+            lib_mod.scan_reverse_sha_locks = original_scan  # type: ignore
+    unresolved5 = r5.get("unresolved", [])
+    _emit(
+        "V4_mutant_unresolved_badsha",
+        r5.get("all_match") is False
+        and len(unresolved5) == 1
+        and unresolved5[0].get("const_name") == "EXPECTED_BADSHA_FILE_SHA"
+        and "bad sha_hex" in unresolved5[0].get("reason", ""),
+        f"all_match={r5.get('all_match')} unresolved={unresolved5}",
     )
 
 

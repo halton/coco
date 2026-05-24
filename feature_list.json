@@ -7865,11 +7865,11 @@
         "infra-049-backlog-expected-pattern-consistency-check"
       ],
       "id": "infra-P280-v4-mutant-coverage-expand",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "scope": "verify_infra_057 V4 mutant 现仅 monkey-patch 一处返回值；建议补充 missing_assignment 分支与 unresolved 分支的反证 mutant，覆盖 helper 的全部判定路径。P2。",
       "source": "infra-049-backlog-expected-pattern-consistency-check (P276) Reviewer 建议",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "V4 mutant 覆盖扩展: missing_assignment + unresolved 分支反证",
       "verification": []
     },
