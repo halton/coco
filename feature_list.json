@@ -5958,18 +5958,61 @@
         "infra-034"
       ],
       "id": "infra-034-backlog-verify-036-v4-sha-stale-sync",
-      "phase": null,
-      "priority": 999,
+      "phase": 67,
+      "priority": 800,
       "scope": "verify_interact_036 V4 锚定的 EXPECTED_VERIFY_024_SHA256 与 main bb5dcfc 下 verify_interact_024.py 实际 sha256 不一致，pre-existing 漂移，与 infra-034 推广无关。需要一次性同步常量并补 regression。",
       "source": "infra-034 Reviewer LGTM 建议",
-      "status": "backlog",
+      "status": "in_progress",
       "title": "同步 verify_interact_036 V4 中 EXPECTED_VERIFY_024_SHA256 至 working tree 实际值",
       "verification": [
         "V0: docstring + sha256",
         "V1: 计算 working tree verify_interact_024.py sha256，更新 verify_interact_036.py 中常量",
         "V2: verify_interact_036 全 V PASS",
         "V3: 在 verify_interact_036 docstring 注明 cross-verify sha 来源与更新规程"
-      ]
+      ],
+      "evidence": {
+        "engineer": {
+          "feat_branch": "feat/infra-034-backlog-verify-036-v4-sha-stale-sync",
+          "verify_script": "scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py",
+          "docstring_anchor_added_in": "scripts/verify_interact_036.py",
+          "p261_no_lib_diff": true,
+          "p261_no_merge_no_push_no_passing": true,
+          "verify_runs": [
+            {
+              "name": "verify_infra_034_backlog_verify_036_v4_sha_stale_sync",
+              "rc": 0,
+              "checks": "5/5 PASS"
+            },
+            {
+              "name": "verify_interact_036",
+              "rc": 0,
+              "checks": "6/6 PASS"
+            },
+            {
+              "name": "verify_infra_062",
+              "rc": 0
+            },
+            {
+              "name": "verify_infra_100",
+              "rc": 0
+            },
+            {
+              "name": "verify_infra_060",
+              "rc": 0,
+              "unknown_count": 9
+            },
+            {
+              "name": "verify_infra_034_backlog_typo_guard_expected_target_shas_fix",
+              "rc": 0
+            },
+            {
+              "name": "init.sh smoke",
+              "rc": 0,
+              "typo_guard": "0/350"
+            }
+          ]
+        }
+      }
     },
     {
       "area": "infra",

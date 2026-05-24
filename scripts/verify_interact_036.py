@@ -23,6 +23,27 @@ V3 mutant 反证 — 删 try/except 包裹后 V1/V2 sentinel 失败 (in-memory �
 
 V4 sha256 锁 verify_interact_024.py 升级后 hash;
 
+## EXPECTED_VERIFY_024_SHA256 update procedure (cross-verify sha lock)
+##
+## 来源 (source-of-truth): ``scripts/verify_interact_024.py`` 整文件 raw
+## sha256 (无 pragma 跳过行, 字节级)。
+##
+## 更新规程 (mandatory steps; 每次有意修改 verify_interact_024.py 后):
+##   1. 用 ``python3 -c "import hashlib; print(hashlib.sha256(open('scripts/verify_interact_024.py','rb').read()).hexdigest())"``
+##      重算实际 sha256;
+##   2. 把 ``EXPECTED_VERIFY_024_SHA256`` 常量值替换为上一步输出 (64-char hex);
+##   3. 同步刷下游守卫: ``scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py``
+##      中 ``EXPECTED_TARGET_FILE_SHA`` 也是 verify_interact_024.py 的 sha,
+##      两者必须保持一致;
+##   4. 跑 ``python3 scripts/verify_interact_036.py`` 与
+##      ``python3 scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py``
+##      都必须 rc=0 PASS 后才允许 commit。
+##
+## 反模式 (forbidden):
+##   - 用 16-char prefix 替代 64-char full hex;
+##   - "看起来对" 直接 commit 不跑 verify;
+##   - 只刷 ``EXPECTED_VERIFY_024_SHA256`` 不刷 backlog verify 的 EXPECTED_TARGET_FILE_SHA。
+
 V5 端到端 — 跑 v1_source_anchors() 一次, 检查
     evidence/_history/interact_024_drift_history.jsonl 新增 1 行 +
     JSON 字段齐全 (ts / kind / git_head / drift_report.per-stage.{actual_line,
