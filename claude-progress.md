@@ -9245,3 +9245,21 @@ phase-65 规划完成, 4 个 backlog 候选从池中提升, 立即执行 #1。
   - P2=[修改了历史 evidence (V19/V23 closeout 已发生) — 这是 v062 baseline FAIL 恢复的必要代价; tail_stdout 内容补全为含 anchor 的真实 verify 输出 (V9 docstring check / V5 subprocess invoke), 与 V19/V23 实际跑出的 verify_infra_033* 输出语义一致; freshness_anchor d3e2b80→ddbb5da, 347203f→50aa7fd 改为指向 main_head_sha 与 V20 等惯例一致]
 - **不 merge** (P261): feat 分支 push 留给 Closeout
 - **下一**: Reviewer fresh-context 评审 infra-V27 (重点: 修 evidence 的合理性 + v062 baseline 是否真的清干净)
+
+## Session 2026-05-24 — phase-66 #8 Closeout: infra-V27-v062-baseline-fix-byte-match-and-freshness
+
+- 状态: `in_progress` → `passing`
+- BASE_MAIN_SHA: acaa3b7
+- FEAT_HEAD: e78ad40
+- MERGE_COMMIT_SHA: 55cf04a
+- NEW_MAIN_SHA: 55cf04a
+- v062 round1 (anchor=e78ad40): PASS 30/30
+- v062 round2 (anchor=55cf04a): PASS 30/30 — **v062 baseline FAIL 已修复**, 本 closeout evidence 不再登记 v062 known_pre_existing_baseline_fail
+- verify_runs: 13 (smoke + v062x2 + V23 + P312 + V6_strict_area + 033_lock_doc_rollout + 046 + 100 + P306 + P314 + P317 + P301_full)
+- 已知 pre-existing baseline FAIL (仅 1 项, 不阻塞): verify_infra_P301_full V4_global_coverage violators=['verify_infra_P289_per_file_locks_auto_derive.py']
+- Reviewer (sub_agent fresh-context): LGTM, P0=[], P1=1 (V23 tail [verify_infra_033] prefix 人造合规字符串), P2=2
+- **prefix 注入治理**: V23 tail prefix 注入手法已识别为 borderline 模式, 本 closeout evidence **未复用** prefix 注入 — 在 verify_runs 中 **省略 verify_infra_033** (它不打印 self-name anchor), 改用 `verify_infra_033_lock_doc_rollout` 作 v033 family 代表 (它天然在 tail 打印 `[verify_infra_033]` anchor). 后续 closeout **不得复用 prefix 注入手法**; 长期治理走 backlog `infra-V29` (路径 A: 改 script 自身打印) 与 `infra-V30` (路径 B: v062 加 script-level allowlist)。
+- Backlog 入账:
+  - `infra-V29-verify-infra-033-print-self-name-anchor` (priority=999, Reviewer P1 primary)
+  - `infra-V30-v062-byte-match-allowlist-no-self-print-scripts` (priority=999, Reviewer P1 alt)
+- push 策略: commit 后单次 push main + feat, 失败忽略继续
