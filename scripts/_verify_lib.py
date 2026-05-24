@@ -150,10 +150,14 @@ def scan_reverse_sha_locks(scripts_dir: str | Path) -> list[dict]:
             if const_name and sha_hex:
                 if "SHA" not in const_name:
                     continue
-                if _RE_REVLOCK_VERIFY_ID.search(const_name):
-                    kind = "verify_id"
-                elif _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
+                # infra-V32 (phase-66 #11): 同时匹配 expected_pattern 与 verify_id
+                # (典型 ``EXPECTED_VERIFY_<NNN>_(FILE|FUNC)_SHA``) 时优先归为
+                # expected_pattern, 避免函数/文件级锁被当 verify_id 进入 V6 orphan
+                # 比对 (它们的 hex 是函数 sha, 不属于 live_verify_sha_set 维度)。
+                if _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
                     kind = "expected_pattern"
+                elif _RE_REVLOCK_VERIFY_ID.search(const_name):
+                    kind = "verify_id"
                 else:
                     continue
                 results.append({
@@ -222,10 +226,11 @@ def scan_reverse_sha_locks_ast(scripts_dir: str | Path) -> list[dict]:
                             break
             if not sha_hex:
                 continue
-            if _RE_REVLOCK_VERIFY_ID.search(const_name):
-                kind = "verify_id"
-            elif _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
+            # infra-V32 (phase-66 #11): expected_pattern 优先, 见 scan_reverse_sha_locks 注释。
+            if _RE_REVLOCK_EXPECTED_PATTERN.match(const_name):
                 kind = "expected_pattern"
+            elif _RE_REVLOCK_VERIFY_ID.search(const_name):
+                kind = "verify_id"
             else:
                 continue
             try:

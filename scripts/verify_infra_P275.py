@@ -52,7 +52,7 @@ SELF_PATH = Path(__file__).resolve()
 sys.path.insert(0, str(SCRIPTS))
 
 # V3: _verify_lib.py file sha (cascade source) — bump 在 cascade 步骤
-EXPECTED_LIB_FILE_SHA = "507d441cd9181e885e5a23739bf259680262d5c42c83d7b006aa72ada7c56cf7"
+EXPECTED_LIB_FILE_SHA = "1990a9b61d3b14c9b827a23188a46001be2a208234352e1bc7af955285578f50"
 
 # V4: assert_verify_passed func sha (ast.unparse)
 EXPECTED_ASSERT_VERIFY_PASSED_FUNC_SHA = (
