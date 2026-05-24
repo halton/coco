@@ -9,7 +9,7 @@ phase-63 #3 引入 ``_parse_lock_docstring`` / ``scan_per_file_locks_from_docstr
 bump_when / bump_protocol / rationale), 让机械化 audit 可以从一处统一抽取所有
 sha-lock 的元信息. 本 verify 锁住这一推广的最低基线.
 
-校验层级 (V1-V8):
+校验层级 (V1-V9):
 - V1_self_sha (V8 pragma 模式, 自身 file sha 自锁; pragma 行排除在 sha 计算外)
 - V2_min_entries: scan_per_file_locks_from_docstrings 总 entries >= EXPECTED_MIN_ENTRIES
   (phase-63 #5 推广后 17, phase-64 #2 拔至 18, phase-65 #2 拔至 30 实测 32)
@@ -34,6 +34,12 @@ sha-lock 的元信息. 本 verify 锁住这一推广的最低基线.
 - V8_mutant_break_func_name (negative control for V7, phase-64 #2): 在内存中构造一个
   fake entry, 把 target_function 改成不存在的函数名 → 子调用 V7 期 FAIL → 反证 V7
   不是永真; 子调用 stdout 重定向, 不污染主 _results。
+- V9_docstring_v_list_matches_impl (infra-V14-v033-doc-freetext-lock, phase-66 #1):
+  机械化锁住"校验层级 (V1-V<N>)"自由文本清单与实际 ``def v<N>_*`` 函数集合的对应
+  关系. AST parse 本文件 → 抽出所有顶层 ``def v<N>_<name>`` 函数的 N 集合; 同时从
+  module docstring 中用正则抽出所有 ``- V<N>[_:]`` 行的 N 集合; 两集合不一致即 FAIL
+  (报告 missing_in_doc / extra_in_doc). 防止前几 phase 出现过的 docstring V<N> 清单与
+  函数集合漂移 (e.g. 旧清单 V1-V7 但函数已经加到 v8).
 
 ## Lock: EXPECTED_SELF_FILE_SHA
 - target_function: N/A
@@ -47,7 +53,9 @@ sha-lock 的元信息. 本 verify 锁住这一推广的最低基线.
 """
 from __future__ import annotations
 
+import ast
 import hashlib
+import re
 import shutil
 import subprocess
 import sys
@@ -66,7 +74,7 @@ from _verify_lib import (  # noqa: E402
 )
 
 # V1: 自身 file sha 自锁 (V8 pragma 模式, 计算时剔除带 pragma 的那一行)
-EXPECTED_SELF_FILE_SHA = "52558e0ba8c0ed77a78b29d089cf57b6d05eba5a9c8cefe2a6fd62cfa6be3760"  # V8-SELF-SHA-SKIP
+EXPECTED_SELF_FILE_SHA = "1813af34965deb1ac9f1d1c4fd82d4786ef7855f9c6b7f4db679597e04f9ecde"  # V8-SELF-SHA-SKIP
 
 # V2: scan 输出 entries 数下界 (phase-63 #5 推广后 17 个, 留少量余量;
 #     phase-64 #2 V11-doc-value-lock-rollout 把基线上拔至实测 18.
@@ -331,6 +339,43 @@ def v6_mutant_drop_lock_block_makes_v3_fail() -> None:
         target.write_text(orig, encoding="utf-8")
 
 
+def v9_docstring_v_list_matches_impl() -> None:
+    """V9 (infra-V14-v033-doc-freetext-lock, phase-66 #1): 机械化锁住自由文本
+    "校验层级 (V1-V<N>)" 清单与实际 ``def v<N>_*`` 函数集合的对应关系.
+
+    步骤:
+      1. AST parse self file → 抽所有顶层 ``def v<N>_<name>`` 函数的 N 集合
+      2. 从 ``ast.get_docstring(module)`` 用正则 ``^- V(\\d+)[_:]`` 抽 N 集合
+      3. 比对; 不一致 emit FAIL 含 missing_in_doc + extra_in_doc 双向 diff
+    """
+    src = SELF.read_text(encoding="utf-8")
+    try:
+        mod = ast.parse(src)
+    except SyntaxError as exc:
+        _emit("V9_docstring_v_list_matches_impl", False, f"AST parse failed: {exc}")
+        return
+    impl_ns: set[int] = set()
+    for node in mod.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            m = re.match(r"^v(\d+)_", node.name)
+            if m:
+                impl_ns.add(int(m.group(1)))
+    docstring = ast.get_docstring(mod) or ""
+    doc_ns: set[int] = set()
+    for line in docstring.splitlines():
+        m = re.match(r"^- V(\d+)[_:]", line.strip())
+        if m:
+            doc_ns.add(int(m.group(1)))
+    missing_in_doc = sorted(impl_ns - doc_ns)
+    extra_in_doc = sorted(doc_ns - impl_ns)
+    ok = not missing_in_doc and not extra_in_doc
+    _emit(
+        "V9_docstring_v_list_matches_impl",
+        ok,
+        f"impl_ns={sorted(impl_ns)} doc_ns={sorted(doc_ns)} missing_in_doc={missing_in_doc} extra_in_doc={extra_in_doc}",
+    )
+
+
 def main() -> int:
     v1_self_sha()
     scan = scan_per_file_locks_from_docstrings(str(SCRIPTS))
@@ -341,6 +386,7 @@ def main() -> int:
     v6_mutant_drop_lock_block_makes_v3_fail()
     v7_doc_value_consistency(scan)
     v8_mutant_break_func_name_makes_v7_fail()
+    v9_docstring_v_list_matches_impl()
     fails = sum(1 for _, ok, _ in _results if not ok)
     verify_summary_exit(fails)
     return 0
