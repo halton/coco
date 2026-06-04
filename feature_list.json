@@ -24434,13 +24434,31 @@
       "phase": 68,
       "priority": 100,
       "area": "audio",
-      "status": "in_progress",
+      "status": "passing",
       "depends_on": [
         "audio-013-auto-select-reachy-speaker"
       ],
       "real_machine_uat": "pending",
       "description": "对称 audio-013 (TTS auto-select speaker)，把 mic 输入设备自动选成 Reachy Mini Audio。新增 coco/audio_device.py 暴露 resolve_input_device() + log_input_device_once() + ENV_INPUT_DEVICE。env COCO_AUDIO_INPUT_DEVICE (int / substring) 显式覆盖；空时 auto 遍历 sd.query_devices() 找 name 含 'reachy mini audio' / 'reachy_mini_audio' 且 max_input_channels>=1 的 → 返回 index；都未命中 → None (fallback 系统默认)。5 处 sd.InputStream 调用站 (vad_trigger / wake_word / asr / main x2) 统一注入 device=resolve_input_device()，并在主路径 (vad/wake/asr/main) 通过 log_input_device_once 去重 emit '[mic] input device=... sr=...'。query 失败 fail-soft 返回 None 不抛。跨平台 (macOS + Linux)。",
-      "evidence": "engineer-only stage: verify_audio_016_mic_auto_select_reachy V0-V8 PASS (rc=0, /tmp/v016.log) / ./init.sh smoke rc=0 (/tmp/smoke016.log) / post-smoke import coco.audio_device.resolve_input_device() -> 0 (Reachy Mini Audio idx 0 on dev machine) / 5 call sites grep verified device=_input_device|_main_input_device (8 lines) / uat-script.py 显示 input/output 都解析到 Reachy idx 0. Reviewer + closeout pending."
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "fbea7be",
+          "verify_runs": [
+            {"name": "verify_audio_016", "status": "PASS", "tail_stdout": "[PASS] V1_import_surface: ENV=COCO_AUDIO_INPUT_DEVICE\n[PASS] V2_env_int: v=5\n[PASS] V3_env_substring: v='Reachy Mini Audio'\n[PASS] V4_auto_reachy_hit: v=1\n[PASS] V5_reachy_out_only_skip: v=None\n[PASS] V6_no_reachy_none: v=None\n[PASS] V7_query_raise_fail_soft: v=None\n[PASS] V8_call_sites: sites=4 total=8 ['coco/vad_trigger.py:2', 'coco/wake_word.py:2', 'coco/asr.py:2', 'coco/main.py:2']\nsummary: total=9 pass=9 fail=0", "freshness_anchor": "post-merge-rerun"},
+            {"name": "smoke", "status": "PASS", "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard ok: total=377 typo_count=0\n==> Smoke 通过。", "freshness_anchor": "post-merge-rerun"}
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "audio-016 mic auto-select 对称 audio-013 实现干净: env > auto Reachy substring (max_input_channels>=1) > None fail-soft 三档清晰; 8 个 InputStream 调用点全注入 device=, log 去重 sentinel 正确, audio 边界守住 (sounddevice 直连不走 reachy-mini media), tts.py 未动 audio-013 未破坏, query 异常 fail-soft V7 验证, 跨平台无 mac-only API. V0 hash 与实际 audio_device.py 一致. _main_input_device vs _input_device 命名差为 P2 nit 不阻.",
+            "checks_run": ["audio_边界", "env_优先级", "substring_filter_in_channels", "query_fail_soft", "log_去重", "8_调用点注入", "V0_hash", "verify_独立", "smoke_无回归", "post_smoke_import", "audio_013_未破坏", "跨平台"],
+            "findings": {"P0": [], "P1": [], "P2": ["_main_input_device vs _input_device 命名差异 (main.py 用前者, 其余用后者) - 仅 cosmetic"]},
+            "rounds": 1
+          }
+        },
+        "files": ["evidence/audio-016/verify-pass.log", "evidence/audio-016/smoke-pass.log", "evidence/audio-016/uat-script.py", "evidence/audio-016/device-list.json"],
+        "user_pending": ["真机 mic 听感 + ASR 准确率 (运行 evidence/audio-016/uat-script.py 后真机喊'可可')"]
+      }
     }
   ],
   "last_updated": "2026-06-04",
