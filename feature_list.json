@@ -24233,7 +24233,26 @@
     },
     {
       "area": "audio",
-      "evidence": [],
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PENDING_POST_MERGE",
+          "verify_runs": [],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "placeholder pre-merge; will be backfilled with post-merge verify/smoke tails and main_head_sha in Step B closeout",
+            "checks_run": [
+              "placeholder"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
+      },
       "id": "audio-015-edge-tts-true-streaming-playback",
       "notes": "audio-014 的 streaming 实为 chunk-accumulate-then-decode，首字延迟 ~6s 没改善。本 feature 走 ffmpeg subprocess pipe 真流式：edge-tts mp3 chunk → ffmpeg stdin → ffmpeg stdout PCM s16le 24kHz mono → sounddevice RawOutputStream callback 队列消费。设计指标：首帧 PCM 到达延迟 <1.5s（真机用户验证）。新增 env COCO_TTS_EDGE_STREAMING (default 1, 0 退回 audio-014 整段路径)。Fallback 链：streaming → audio-014 整段 → local Kokoro。promotes backlog item audio-014-fu-true-streaming-partial-decode.",
       "phase": 68,
