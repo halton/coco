@@ -5,7 +5,26 @@ These must be installed in the .venv before running verify_audio_014 or executin
 - edge-tts>=7.0.0  (installed: 7.2.8)
 - soundfile>=0.12  (installed: 0.13.1)
 
-## Verified install command (P0 fix 2026-06-04)
+## Persistence fix (P0 round-3, 2026-06-04)
+
+Root cause: `.venv` is managed by `uv` (pyvenv.cfg `uv = 0.11.2`) and
+`./init.sh` runs `uv sync` on every invocation. `uv sync` removes any
+installed package not declared in `[project] dependencies` of pyproject.toml.
+edge-tts/soundfile were only listed under `[project.optional-dependencies]
+tts-online`, so every `./init.sh` (and every implicit sync) silently
+uninstalled them — explaining the round-2/round-3 "package vanishes between
+reviews" symptom with no install between them.
+
+Fix: promote both to main `[project] dependencies` via:
+
+    uv add 'edge-tts>=7.0.0' 'soundfile>=0.12.0'
+
+This updates pyproject.toml + uv.lock atomically, so subsequent `uv sync`
+keeps them. Verified persistence by running `./init.sh` (full smoke including
+`uv sync`) then re-importing — both still importable after smoke. See
+smoke-pass.log + verify-pass.log (this PR).
+
+## Legacy install instructions (kept for reference if uv is unavailable)
 
 If pip shebang is broken (e.g. points to a legacy/missing python path such as
 `/Users/halton/work/reachhy-mini/.venv/bin/python`), the `.venv/bin/pip` script
