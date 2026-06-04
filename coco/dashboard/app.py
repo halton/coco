@@ -107,22 +107,39 @@ HTML_PAGE = """<!DOCTYPE html>
       var hh = String(t.getHours()).padStart(2,'0');
       var mm = String(t.getMinutes()).padStart(2,'0');
       var ss = String(t.getSeconds()).padStart(2,'0');
-      var body = '';
+      var mkSpan = function(cls, text){
+        var s = document.createElement('span');
+        if (cls) s.className = cls;
+        s.textContent = text;
+        return s;
+      };
+      var mkBold = function(text){
+        var b = document.createElement('b');
+        b.textContent = text;
+        return b;
+      };
+      li.appendChild(mkSpan('t', hh+':'+mm+':'+ss));
+      li.appendChild(mkSpan('ty', e.type || '?'));
+      li.appendChild(document.createTextNode(' '));
       if (e.type === 'transcript') {
-        body = '<b>user:</b> ' + (e.transcript || '');
-        if (e.reply) body += '<br><b>coco:</b> ' + e.reply;
+        li.appendChild(mkBold('user:'));
+        li.appendChild(document.createTextNode(' ' + (e.transcript || '')));
+        if (e.reply) {
+          li.appendChild(document.createElement('br'));
+          li.appendChild(mkBold('coco:'));
+          li.appendChild(document.createTextNode(' ' + e.reply));
+        }
       } else if (e.type === 'wake') {
-        body = 'wake hit';
+        li.appendChild(document.createTextNode('wake hit'));
       } else if (e.type === 'vision') {
-        body = e.event + (e.track_id ? ' track_id=' + e.track_id : '');
+        var vt = String(e.event || '');
+        if (e.track_id) vt += ' track_id=' + e.track_id;
+        li.appendChild(document.createTextNode(vt));
       } else if (e.type === 'tts') {
-        body = 'tts first_chunk_ms=' + e.first_chunk_ms;
+        li.appendChild(document.createTextNode('tts first_chunk_ms=' + e.first_chunk_ms));
       } else {
-        body = (e.raw || '').slice(0,200);
+        li.appendChild(document.createTextNode(String(e.raw || '').slice(0,200)));
       }
-      li.innerHTML = '<span class="t">' + hh+':'+mm+':'+ss + '</span>'
-                   + '<span class="ty">' + (e.type||'?') + '</span> '
-                   + body;
       ul.insertBefore(li, ul.firstChild);
       while (ul.childNodes.length > 200) ul.removeChild(ul.lastChild);
     } catch(err) { /* ignore */ }

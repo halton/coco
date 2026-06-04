@@ -24358,6 +24358,30 @@
         "evidence/dashboard-001/uat-script.py",
         "evidence/dashboard-001/startup-help.md"
       ]
+    },
+    {
+      "id": "dashboard-001-fu-log-tailer-rotation-max-lines",
+      "title": "_log_tailer 文件轮转一次性重读改加 max_lines 截断 (e.g. 末 200 行)",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra"
+    },
+    {
+      "id": "dashboard-001-fu-fastapi-lifespan-handler",
+      "title": "on_event(\"startup\") 改 FastAPI lifespan handler (deprecated 替换)",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra"
+    },
+    {
+      "id": "dashboard-001-fu-ws-broadcast-concurrent-or-per-client-queue",
+      "title": "WebSocket broadcast 改并发 gather 或 per-client queue 避免单 client 拖累",
+      "priority": 999,
+      "status": "backlog",
+      "phase": null,
+      "area": "infra"
     }
   ],
   "last_updated": "2026-06-04T16:54:23",
