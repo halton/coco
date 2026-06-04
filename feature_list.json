@@ -24177,9 +24177,45 @@
       "title": "edge-tts 流式 + 联网时默认；断网回退 Kokoro",
       "user_visible_behavior": "联网时可可用更自然的 edge-tts (zh-CN-XiaoxiaoNeural) 流式回答；断网时无缝回退 Kokoro 离线音，不会沉默或崩溃。",
       "verification": "scripts/verify_audio_014_edge_tts_streaming_default.py V0-V6 全 PASS + smoke rc=0 + 真机活体 evidence/audio-014/uat-script.py user_pending"
+    },
+    {
+      "id": "audio-014-fu-asyncio-run-in-running-loop",
+      "title": "edge-tts: asyncio.run 在已运行 event loop 中失败导致每次走 fallback local",
+      "area": "audio",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "notes": "Reviewer P1 (audio-014 closeout): edge backend 使用 asyncio.run(), 在已有 running loop 的调用方场景下抛 RuntimeError 触发 local fallback, 实际从未真正走过 edge 路径。需改用 loop-aware 调度 (e.g. detect running loop + run_coroutine_threadsafe 或在独立线程跑 asyncio.run)。",
+      "user_visible_behavior": "在已有 event loop 的上下文中也能正确触发 edge-tts 流式合成, 不再每次回退本地 Kokoro。",
+      "verification": "新增 fixture: 在 running event loop 中调用 tts() prefer=edge, 验证 backend=edge 路径被走通。",
+      "evidence": []
+    },
+    {
+      "id": "audio-014-fu-true-streaming-partial-decode",
+      "title": "edge-tts: \"streaming\" 实为 chunk-accumulate 后一次性解码, 首字延迟未减少",
+      "area": "audio",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "notes": "Reviewer P1 (audio-014 closeout): 当前实现 collect 所有 audio chunk 后才 soundfile.read() 解码, 与 \"流式\" 命名不符, 首字延迟与一次性合成相同。需改为边收边解码 (ffmpeg pipe 或 incremental MP3 decoder), 真正降低 first-audio latency。",
+      "user_visible_behavior": "edge-tts 首字延迟显著降低 (目标 <800ms p50), 用户感知 TTS 响应更快。",
+      "verification": "在 verify_audio_014 中新增 V7_first_chunk_latency, 测量从 tts() 调用到第一段 PCM 可播放的 wall time < 阈值。",
+      "evidence": []
+    },
+    {
+      "id": "audio-014-fu-edge-first-chunk-deadline",
+      "title": "edge-tts: 1.5s TCP 探测通但 8s 合成超时, 弱网下用户长时间无声",
+      "area": "audio",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "notes": "Reviewer P1 (audio-014 closeout): COCO_TTS_EDGE_TIMEOUT=8s 是整体合成超时, TCP 1.5s 探测通过不代表实际数据流可用。弱网下用户会等满 8s 才听到 Kokoro fallback。需引入 first-chunk deadline (e.g. 2-3s 内未收到首 chunk 即视为不可用, 提前 fallback)。",
+      "user_visible_behavior": "弱网场景下 TTS 在 ~2-3s 内即回退 Kokoro 出声, 不再出现 8s 静默。",
+      "verification": "fixture 模拟 edge endpoint connect-ok-but-no-data 场景, 验证 fallback 在 first_chunk_deadline 触发而非整体 timeout。",
+      "evidence": []
     }
   ],
-  "last_updated": "2026-06-04T07:45:38Z",
+  "last_updated": "2026-06-04T07:54:58Z",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
