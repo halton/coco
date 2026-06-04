@@ -9912,3 +9912,11 @@ evidence 全部回填到 `evidence/uat-phase4/`（7 JSON + checklist.md），fea
 uat-phase4 节点 status → passing_with_user_pending。GStreamer 1.28.0 已装 .venv；
 ReachyMini client 必须 media_backend='no_media' 绕开 SDK camera_gstreamer cam_path int()
 bug（不主动升级 SDK，per CLAUDE.md）。
+
+## Session 2026-06-04 audio-013 closeout
+- audio-013-auto-select-reachy-speaker (phase-68) DONE
+- merge feat/audio-013-auto-select-reachy-speaker → main, main HEAD=be94e04
+- verify_audio_013_auto_select_reachy_speaker 6/6 PASS (post-merge)
+- smoke rc=0 (post-merge)
+- Reviewer (sub_agent_fresh_context) LGTM；3 P2 follow-up: dup device 排序 / PortAudioError 捕获 / V5 mock 注释
+- status: in_progress → passing；user_pending: 真机扬声器听感 (uat-script.py)

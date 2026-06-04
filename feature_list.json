@@ -24102,7 +24102,7 @@
     {
       "id": "audio-013-auto-select-reachy-speaker",
       "title": "TTS 自动检测 Reachy Mini Audio speaker；env 显式覆盖；24k→16k 重采样兜底",
-      "status": "in_progress",
+      "status": "passing",
       "priority": 100,
       "phase": 68,
       "area": "audio",
@@ -24114,8 +24114,21 @@
       ],
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_POST_MERGE",
-          "verify_runs": [],
+          "main_head_sha": "be94e04fce7f",
+          "verify_runs": [
+            {
+              "name": "verify_audio_013_auto_select_reachy_speaker",
+              "status": "PASS",
+              "tail_stdout": "\n=== SUMMARY ===\n  [PASS] V0_hash_lock\n  [PASS] V1_auto_detect_reachy\n  [PASS] V2_env_substring\n  [PASS] V3_env_int\n  [PASS] V4_no_reachy_none\n  [PASS] V5_resample_path\n\nrc=0 (fails=0/6)",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
