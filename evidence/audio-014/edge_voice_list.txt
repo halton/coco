@@ -1,0 +1,14 @@
+zh-CN-XiaoxiaoNeural                     Female 
+zh-CN-XiaoyiNeural                       Female 
+zh-CN-YunjianNeural                      Male   
+zh-CN-YunxiNeural                        Male   
+zh-CN-YunxiaNeural                       Male   
+zh-CN-YunyangNeural                      Male   
+zh-CN-liaoning-XiaobeiNeural             Female 
+zh-CN-shaanxi-XiaoniNeural               Female 
+zh-HK-HiuGaaiNeural                      Female 
+zh-HK-HiuMaanNeural                      Female 
+zh-HK-WanLungNeural                      Male   
+zh-TW-HsiaoChenNeural                    Female 
+zh-TW-HsiaoYuNeural                      Female 
+zh-TW-YunJheNeural                       Male   

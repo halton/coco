@@ -276,11 +276,13 @@ name = "coco"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "edge-tts" },
     { name = "reachy-mini", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
     { name = "reachy-mini", version = "1.7.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
     { name = "sherpa-onnx" },
     { name = "sherpa-onnx-core" },
     { name = "sounddevice" },
+    { name = "soundfile" },
 ]
 
 [package.optional-dependencies]
@@ -291,11 +293,13 @@ tts-online = [
 
 [package.metadata]
 requires-dist = [
+    { name = "edge-tts", specifier = ">=7.0.0" },
     { name = "edge-tts", marker = "extra == 'tts-online'", specifier = ">=7.0.0" },
     { name = "reachy-mini", specifier = ">=1.4.0" },
     { name = "sherpa-onnx", specifier = "==1.13.1" },
     { name = "sherpa-onnx-core", specifier = "==1.13.1" },
     { name = "sounddevice", specifier = ">=0.5.5" },
+    { name = "soundfile", specifier = ">=0.12.0" },
     { name = "soundfile", marker = "extra == 'tts-online'", specifier = ">=0.12.0" },
 ]
 provides-extras = ["tts-online"]

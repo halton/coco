@@ -27,6 +27,24 @@ from typing import Literal, Optional
 import numpy as np
 import sherpa_onnx
 
+# audio-014: edge-tts 流式 + 联网默认 + 断网回退
+ENV_TTS_PREFER = "COCO_TTS_PREFER"  # auto | edge | local；default auto
+ENV_TTS_EDGE_VOICE = "COCO_TTS_EDGE_VOICE"
+ENV_TTS_EDGE_TIMEOUT = "COCO_TTS_EDGE_TIMEOUT"
+DEFAULT_EDGE_VOICE = "zh-CN-XiaoxiaoNeural"
+DEFAULT_EDGE_TIMEOUT = 8.0
+# bing 边缘 endpoint；socket.create_connection 快速探活
+_EDGE_PROBE_HOST = "speech.platform.bing.com"
+_EDGE_PROBE_PORT = 443
+_EDGE_PROBE_TIMEOUT = 1.5
+
+# 进程内 backend 切换日志去重
+_last_logged_backend: object = object()
+
+
+class EdgeTTSUnavailable(Exception):
+    """edge-tts 不可用（未装 / 网络失败 / 合成异常）。触发 fallback Kokoro。"""
+
 # audio-009: TTS LRU 缓存。default-OFF（``COCO_TTS_LRU=1`` 启用）。
 # 注意 env 名不沿用 ``COCO_TTS_CACHE`` —— 后者历史上指 Kokoro 模型 cache 目录路径，
 # 语义冲突。故新增 ``COCO_TTS_LRU`` (开关) + ``COCO_TTS_LRU_SIZE`` (maxsize) 两个 env。
@@ -341,51 +359,146 @@ def play(samples: np.ndarray, sample_rate: int, blocking: bool = True) -> None:
         sd.play(final_samples, samplerate=final_sr, blocking=blocking, device=device)
 
 
-def synthesize_edge(
-    text: str,
-    voice: str = "zh-CN-XiaoxiaoNeural",
-    out_path: Path | str | None = None,
-) -> tuple[np.ndarray, int]:
-    """edge-tts 联网兜底。需安装 edge-tts (extras=tts-online)。
+def _is_edge_tts_reachable(timeout: float = _EDGE_PROBE_TIMEOUT) -> bool:
+    """快速 TCP 探活 Microsoft Speech edge endpoint。
 
-    返回 (samples float32, sample_rate)；可选写到 out_path。
+    audio-014: ``say()`` 在 prefer="auto" 路径下用本函数决定走 edge 还是 local，
+    避免把 ~8s 的 HTTP 等待塞到用户耳朵里。失败原因不返回，只返回 bool；
+    任何异常（DNS / 拒绝 / 超时）都当作不可达。
+    """
+    import socket
+    try:
+        with socket.create_connection((_EDGE_PROBE_HOST, _EDGE_PROBE_PORT), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
+def _synthesize_edge_streaming(
+    text: str,
+    voice: str = DEFAULT_EDGE_VOICE,
+    timeout: float = DEFAULT_EDGE_TIMEOUT,
+) -> tuple[np.ndarray, int]:
+    """edge-tts 流式合成：chunk 边收边累积 → soundfile 解 mp3 → float32 mono。
+
+    与旧 ``synthesize_edge`` 不同：
+    - 不落临时 mp3 文件，bytes 全程在内存。
+    - 用 ``comm.stream()`` 而非 ``comm.save()``，省去 mp3 文件 I/O。
+    - 解码后多声道自动 mean → mono；返回 (samples float32 mono, sr).
+
+    失败统一抛 ``EdgeTTSUnavailable``（含 import error / 网络异常 / 解码失败 / 空音频）。
+    调用方应 try/except 后 fallback Kokoro。
     """
     text = _check_text(text)
     try:
         import asyncio
+        import io
         import edge_tts  # type: ignore
+        import soundfile as sf  # type: ignore
     except ImportError as e:
-        raise RuntimeError(
-            "edge-tts 未安装。装 extras: `uv pip install -e .[tts-online]` 或 `pip install edge-tts`"
+        raise EdgeTTSUnavailable(
+            f"edge-tts/soundfile 未安装: {e}. 装 extras: pip install -e '.[tts-online]'"
         ) from e
 
-    # edge-tts 输出 mp3，需要 ffmpeg/soundfile 解码；为简化只落 mp3 + 再读
-    import tempfile
-
-    if out_path is None:
-        tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
-        mp3_path = Path(tmp.name)
-        tmp.close()
-    else:
-        mp3_path = Path(out_path).with_suffix(".mp3")
-        mp3_path.parent.mkdir(parents=True, exist_ok=True)
-
-    async def _run() -> None:
+    async def _run() -> bytes:
+        buf = bytearray()
         comm = edge_tts.Communicate(text, voice)
-        await comm.save(str(mp3_path))
+        async for chunk in comm.stream():
+            if chunk.get("type") == "audio":
+                data = chunk.get("data")
+                if data:
+                    buf.extend(data)
+        return bytes(buf)
 
-    asyncio.run(_run())
-
-    # 解码 mp3：优先 soundfile（可选依赖），失败则只返回路径相关空 array 让调用方播放 mp3
     try:
-        import soundfile as sf  # type: ignore
-        samples, sr = sf.read(str(mp3_path), dtype="float32", always_2d=False)
-        if samples.ndim > 1:
-            samples = samples.mean(axis=1)
-        return samples.astype(np.float32), int(sr)
-    except Exception:
-        # 返回原始 mp3 字节给调用方处理
-        return np.zeros(0, dtype=np.float32), 0
+        mp3_bytes = asyncio.run(asyncio.wait_for(_run(), timeout=timeout))
+    except Exception as e:  # noqa: BLE001
+        raise EdgeTTSUnavailable(f"edge-tts stream failed: {type(e).__name__}: {e}") from e
+
+    if not mp3_bytes:
+        raise EdgeTTSUnavailable("edge-tts returned empty audio buffer")
+
+    try:
+        samples, sr = sf.read(io.BytesIO(mp3_bytes), dtype="float32", always_2d=False)
+    except Exception as e:  # noqa: BLE001
+        raise EdgeTTSUnavailable(f"soundfile decode failed: {type(e).__name__}: {e}") from e
+
+    if samples.ndim > 1:
+        samples = samples.mean(axis=1)
+    samples = np.ascontiguousarray(samples, dtype=np.float32)
+    if samples.size == 0 or int(sr) <= 0:
+        raise EdgeTTSUnavailable("edge-tts decoded to empty samples")
+    return samples, int(sr)
+
+
+def synthesize_edge(
+    text: str,
+    voice: str = DEFAULT_EDGE_VOICE,
+    out_path: Path | str | None = None,
+) -> tuple[np.ndarray, int]:
+    """edge-tts 联网合成（向后兼容入口；底层走 _synthesize_edge_streaming）。
+
+    audio-014: 实现改为流式 in-memory，不再落 mp3 临时文件。若调用方传 ``out_path``
+    则在解码后把 float32 PCM 落成 wav（不再产生 mp3）。
+    """
+    samples, sr = _synthesize_edge_streaming(text, voice=voice)
+    if out_path is not None:
+        wav_path = Path(out_path).with_suffix(".wav")
+        write_wav(wav_path, samples, sr)
+    return samples, sr
+
+
+def _resolve_tts_prefer(explicit: str | None) -> str:
+    """决定本次 say 走哪个 backend。
+
+    优先级：函数实参 explicit ("local"|"edge"|"auto") > env COCO_TTS_PREFER > "auto"。
+    返回值始终是 {"local", "edge", "auto"} 之一。
+    """
+    val = (explicit or os.environ.get(ENV_TTS_PREFER, "") or "auto").strip().lower()
+    if val not in {"local", "edge", "auto"}:
+        val = "auto"
+    return val
+
+
+def _edge_voice() -> str:
+    return os.environ.get(ENV_TTS_EDGE_VOICE, "").strip() or DEFAULT_EDGE_VOICE
+
+
+def _edge_timeout() -> float:
+    raw = os.environ.get(ENV_TTS_EDGE_TIMEOUT, "").strip()
+    if not raw:
+        return DEFAULT_EDGE_TIMEOUT
+    try:
+        v = float(raw)
+        return v if v > 0 else DEFAULT_EDGE_TIMEOUT
+    except (ValueError, TypeError):
+        return DEFAULT_EDGE_TIMEOUT
+
+
+def _log_backend(backend: str, voice: str | None, sr: int) -> None:
+    """进程内 backend 切换 / 首次成功时 log 一行。"""
+    global _last_logged_backend
+    key = (backend, voice, sr)
+    if key != _last_logged_backend:
+        print(f"[tts] backend={backend} voice={voice!r} sr={sr}", flush=True)
+        _last_logged_backend = key
+
+
+def _try_edge_say(text: str, blocking: bool) -> bool:
+    """尝试 edge-tts 路径；成功并播完返回 True，任何失败返回 False（caller fallback）。"""
+    voice = _edge_voice()
+    timeout = _edge_timeout()
+    try:
+        samples, sr = _synthesize_edge_streaming(text, voice=voice, timeout=timeout)
+    except EdgeTTSUnavailable as e:
+        print(f"[tts] edge failed, fallback local: {e}", flush=True)
+        return False
+    except Exception as e:  # noqa: BLE001 safety net
+        print(f"[tts] edge failed (unexpected), fallback local: {type(e).__name__}: {e}", flush=True)
+        return False
+    _log_backend("edge", voice, sr)
+    play(samples, sr, blocking=blocking)
+    return True
 
 
 def _emit_prosody_unsupported_once(rate: Optional[float], pitch: Optional[float], reason: str) -> None:
@@ -423,7 +536,7 @@ def reset_prosody_fallback_emit_flag() -> None:
 
 def say(
     text: str,
-    prefer: Literal["local", "edge"] = "local",
+    prefer: Optional[Literal["local", "edge", "auto"]] = None,
     sid: int = DEFAULT_SID,
     speed: float = DEFAULT_SPEED,
     blocking: bool = True,
@@ -434,8 +547,10 @@ def say(
 ) -> None:
     """合成并通过本机扬声器播放（**默认阻塞，整段播完才返回**）。
 
-    prefer="local"  → Kokoro；
-    prefer="edge"   → edge-tts，失败/无网/未装时自动回退到 local。
+    audio-014: ``prefer`` 路由（None → env ``COCO_TTS_PREFER`` → "auto"）：
+      - "auto"  → 先 _is_edge_tts_reachable() 探测；通 → edge 流式合成；否则 local Kokoro
+      - "edge"  → 直接尝试 edge；任何失败 fallback local
+      - "local" → 强制 Kokoro，完全不碰 edge / 网络
 
     interact-006: ``emotion`` 参数仅 log 标注（''tts say emotion=happy text=...''），
     phase-4 simulate-only 不真实改 voice 参数；真机调参留 milestone gate。
@@ -495,16 +610,33 @@ def say(
         if not _BACKEND_SUPPORTS_PITCH:
             _emit_prosody_unsupported_once(rate, pitch_semitone, "pitch_semitone not supported")
 
-    if prefer == "edge":
-        try:
-            samples, sr = synthesize_edge(text)
-            if samples.size > 0 and sr > 0:
-                play(samples, sr, blocking=blocking)
-                return
-        except Exception as e:
-            print(f"[coco.tts] edge-tts 失败回退本地: {type(e).__name__}: {e}")
+    # audio-014: prefer 路由（auto/edge/local）
+    mode = _resolve_tts_prefer(prefer)
+
+    if mode == "local":
+        samples, sr = synthesize(text, sid=sid, speed=effective_speed)
+        _log_backend("local", None, sr)
+        play(samples, sr, blocking=blocking)
+        return
+
+    if mode == "edge":
+        if _try_edge_say(text, blocking=blocking):
+            return
+        # fall through to local fallback
+        samples, sr = synthesize(text, sid=sid, speed=effective_speed)
+        _log_backend("local", None, sr)
+        play(samples, sr, blocking=blocking)
+        return
+
+    # mode == "auto": 先探测可达性，避免把 ~Ns HTTP 等待塞给用户
+    if _is_edge_tts_reachable():
+        if _try_edge_say(text, blocking=blocking):
+            return
+    else:
+        print("[tts] edge unreachable (auto), using local", flush=True)
 
     samples, sr = synthesize(text, sid=sid, speed=effective_speed)
+    _log_backend("local", None, sr)
     play(samples, sr, blocking=blocking)
 
 
@@ -519,7 +651,7 @@ def has_edge_tts() -> bool:
 
 def say_async(
     text: str,
-    prefer: Literal["local", "edge"] = "local",
+    prefer: Optional[Literal["local", "edge", "auto"]] = None,
     sid: int = DEFAULT_SID,
     speed: float = DEFAULT_SPEED,
     *,
@@ -570,9 +702,17 @@ __all__ = [
     "ENV_TTS_LRU",
     "ENV_TTS_LRU_SIZE",
     "ENV_TTS_OUTPUT_DEVICE",
+    "ENV_TTS_PREFER",
+    "ENV_TTS_EDGE_VOICE",
+    "ENV_TTS_EDGE_TIMEOUT",
     "DEFAULT_TTS_LRU_SIZE",
+    "DEFAULT_EDGE_VOICE",
+    "DEFAULT_EDGE_TIMEOUT",
+    "EdgeTTSUnavailable",
     "synthesize",
     "synthesize_edge",
+    "_synthesize_edge_streaming",
+    "_is_edge_tts_reachable",
     "say",
     "say_async",
     "play",
