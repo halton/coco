@@ -68,6 +68,52 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from coco.perception.camera_source import CameraSource, open_camera
 from coco.perception.face_detect import FaceBox, FaceDetector
 
+# dashboard-001: frame tap state (module-level counter + lazy cv2 ref)
+_DASHBOARD_TAP_COUNTER: int = 0
+_DASHBOARD_TAP_CV2 = None  # type: ignore
+
+
+def _tap_frame_for_dashboard(frame) -> None:  # type: ignore[no-untyped-def]
+    """dashboard-001: 可选 frame tap，default-OFF。
+
+    env:
+      COCO_DASHBOARD_FRAME_TAP=1            启用
+      COCO_DASHBOARD_FRAME_STRIDE=3         每 N 帧写一次（默认 3）
+      COCO_DASHBOARD_FRAME_PATH=/tmp/...    输出路径
+      COCO_DASHBOARD_FRAME_QUALITY=70       jpeg 质量
+    """
+    if os.environ.get("COCO_DASHBOARD_FRAME_TAP", "") != "1":
+        return
+    global _DASHBOARD_TAP_COUNTER, _DASHBOARD_TAP_CV2
+    _DASHBOARD_TAP_COUNTER += 1
+    try:
+        stride = max(1, int(os.environ.get("COCO_DASHBOARD_FRAME_STRIDE", "3")))
+    except ValueError:
+        stride = 3
+    if _DASHBOARD_TAP_COUNTER % stride != 0:
+        return
+    out_path = os.environ.get("COCO_DASHBOARD_FRAME_PATH", "/tmp/coco-frame.jpg")
+    try:
+        quality = max(1, min(100, int(os.environ.get("COCO_DASHBOARD_FRAME_QUALITY", "70"))))
+    except ValueError:
+        quality = 70
+    try:
+        if _DASHBOARD_TAP_CV2 is None:
+            import cv2 as _cv2  # noqa: WPS433
+            _DASHBOARD_TAP_CV2 = _cv2
+        ok, buf = _DASHBOARD_TAP_CV2.imencode(
+            ".jpg", frame, [_DASHBOARD_TAP_CV2.IMWRITE_JPEG_QUALITY, quality]
+        )
+        if not ok:
+            return
+        tmp_path = out_path + ".tmp"
+        with open(tmp_path, "wb") as f:
+            f.write(buf.tobytes())
+        os.replace(tmp_path, out_path)
+    except Exception:  # noqa: BLE001
+        # silent fail; never affect main loop
+        pass
+
 log = logging.getLogger(__name__)
 
 
@@ -1108,6 +1154,12 @@ class FaceTracker:
         if not ok or frame is None:
             self.stats.frames_dropped += 1
             return
+
+        # dashboard-001: optional frame tap (default-OFF).
+        # 当 COCO_DASHBOARD_FRAME_TAP=1 时，按 COCO_DASHBOARD_FRAME_STRIDE
+        # (默认 3 帧) 把最新 jpeg 原子写到 COCO_DASHBOARD_FRAME_PATH
+        # (默认 /tmp/coco-frame.jpg)。失败静默 (不影响主流程)。
+        _tap_frame_for_dashboard(frame)
 
         try:
             faces = self._detector.detect(frame)

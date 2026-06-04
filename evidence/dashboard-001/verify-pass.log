@@ -1,0 +1,10 @@
+[PASS] V0 hash lock app+parser exist :: app.sha=bc657d9079ef parser.sha=0d498408d753
+[PASS] V1 import + key routes present :: routes=['/', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg', '/ws/events'] missing=[]
+[PASS] V2 parse_line vad transcript+reply :: evt={'ts': 1780563199.452959, 'type': 'transcript', 'transcript': '你好可可', 'reply': '你好呀!', 'raw': "2025-06-04 10:00:00 [coco][vad] transcript='你好可可' reply='你好呀!'"}
+[PASS] V3 parse_line wake/face/tts :: wake=wake face=vision tts=237
+[PASS] V4 /frame.jpg with file present :: status=200 ctype=image/jpeg len=631
+[PASS] V5 /frame.jpg missing → placeholder png :: status=200 ctype=image/png len=67
+[PASS] V6 batch parse 5 events recognized :: recognized=5/5 types=['transcript', 'wake', 'vision', 'tts', 'transcript']
+[PASS] V7 / + /healthz served :: index=200 healthz=200
+
+=== dashboard-001 verify: 8/8 PASS ===

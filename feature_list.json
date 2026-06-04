@@ -24340,9 +24340,27 @@
       "user_visible_behavior": "弱网场景下 TTS 在 ~2-3s 内即回退 Kokoro 出声, 不再出现 8s 静默。",
       "verification": "fixture 模拟 edge endpoint connect-ok-but-no-data 场景, 验证 fallback 在 first_chunk_deadline 触发而非整体 timeout。",
       "evidence": []
+    },
+    {
+      "id": "dashboard-001-live-hud",
+      "title": "Live HUD: 浏览器看 reachy 看到的 (摄像头) 和听到的 (事件 timeline)",
+      "area": "infra",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "notes": "FastAPI + WebSocket 独立进程, port 8765. 不耦合 coco 主进程: frame tap (default-OFF, COCO_DASHBOARD_FRAME_TAP=1) 在 face_tracker._tick 中原子写 /tmp/coco-frame.jpg; events 通过 tail /tmp/coco-stdout.log + event_parser 推到 WebSocket. 启停 dashboard 不影响 coco 主进程.",
+      "user_visible_behavior": "浏览器打开 http://localhost:8765/ 看左半摄像头实时画面 + 右半 transcript/reply/wake/vision/tts 事件 timeline.",
+      "verification": "scripts/verify_dashboard_001_live_hud.py V0-V7 全 PASS (hash lock / routes / event_parser 三类事件 / frame.jpg 文件存在与缺失双路径 / 批量解析 / index+healthz). real_machine_uat: pending (浏览器观感由用户在 evidence/dashboard-001/uat-script.py 指引下执行).",
+      "evidence": [
+        "evidence/dashboard-001/verify-pass.log",
+        "evidence/dashboard-001/smoke-pass.log",
+        "evidence/dashboard-001/verify_summary.json",
+        "evidence/dashboard-001/uat-script.py",
+        "evidence/dashboard-001/startup-help.md"
+      ]
     }
   ],
-  "last_updated": "2026-06-04T07:54:58Z",
+  "last_updated": "2026-06-04T16:54:23",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {

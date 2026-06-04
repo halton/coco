@@ -1,0 +1,47 @@
+{
+  "feature": "dashboard-001-live-hud",
+  "passed": 8,
+  "total": 8,
+  "results": [
+    {
+      "name": "V0 hash lock app+parser exist",
+      "status": "PASS",
+      "detail": "app.sha=bc657d9079ef parser.sha=0d498408d753"
+    },
+    {
+      "name": "V1 import + key routes present",
+      "status": "PASS",
+      "detail": "routes=['/', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg', '/ws/events'] missing=[]"
+    },
+    {
+      "name": "V2 parse_line vad transcript+reply",
+      "status": "PASS",
+      "detail": "evt={'ts': 1780563199.452959, 'type': 'transcript', 'transcript': '你好可可', 'reply': '你好呀!', 'raw': \"2025-06-04 10:00:00 [coco][vad] transcript='你好可可' reply='你好呀!'\"}"
+    },
+    {
+      "name": "V3 parse_line wake/face/tts",
+      "status": "PASS",
+      "detail": "wake=wake face=vision tts=237"
+    },
+    {
+      "name": "V4 /frame.jpg with file present",
+      "status": "PASS",
+      "detail": "status=200 ctype=image/jpeg len=631"
+    },
+    {
+      "name": "V5 /frame.jpg missing → placeholder png",
+      "status": "PASS",
+      "detail": "status=200 ctype=image/png len=67"
+    },
+    {
+      "name": "V6 batch parse 5 events recognized",
+      "status": "PASS",
+      "detail": "recognized=5/5 types=['transcript', 'wake', 'vision', 'tts', 'transcript']"
+    },
+    {
+      "name": "V7 / + /healthz served",
+      "status": "PASS",
+      "detail": "index=200 healthz=200"
+    }
+  ]
+}
