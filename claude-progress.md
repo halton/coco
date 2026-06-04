@@ -9920,3 +9920,5 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - smoke rc=0 (post-merge)
 - Reviewer (sub_agent_fresh_context) LGTM；3 P2 follow-up: dup device 排序 / PortAudioError 捕获 / V5 mock 注释
 - status: in_progress → passing；user_pending: 真机扬声器听感 (uat-script.py)
+
+- 2026-06-04 phase-68 audio-014 closeout DONE，main HEAD=5367bef，Reviewer 4 rounds 最终 LGTM。

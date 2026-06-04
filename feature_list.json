@@ -4279,13 +4279,33 @@
       "description": "吸收 backlog audio-012-backlog-coupling-and-doc (C1 子项): coco/audio/wake_word.py L463 跨模块 import vad_trigger 的私有函数 _read_loss_window_override_ms 形成隐性耦合。phase-22 P180 verify-only 契约审计 (不重构, 避免引入回归): (a) V0 fingerprint wake_word.py 与 vad_trigger.py 中 _read_loss_window_override_ms 站点 sha (b) V1 锁定单一 reader (wake_word) + 单一 owner (vad_trigger) 关系 (c) V2 docstring 在 vad_trigger._read_loss_window_override_ms 上标注 'shared with wake_word.py' 设计 note (d) V3 regression audio-011/012 rc=0 (e) V4 列出未来抽 coco.audio_common util 的迁移指引 (evidence-only 不动手)。default-OFF, real_machine_uat=n/a。",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_POST_MERGE",
-          "verify_runs": [],
+          "main_head_sha": "5367bef00e04",
+          "verify_runs": [
+            {
+              "name": "verify_audio_014",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V6_stereo_to_mono: stereo averaged to mono float32\n\nSUMMARY: PASS=7 FAIL=0 / TOTAL=7\n  PASS V0_hash_lock\n  PASS V1_imports\n  PASS V2_prefer_local\n  PASS V3_prefer_edge\n  PASS V4_auto_unreachable_fallback\n  PASS V5_auto_edge_raise_fallback\n  PASS V6_stereo_to_mono",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
-            "summary": "placeholder pending post-merge rerun fill",
-            "checks_run": [],
+            "summary": "第 4 轮终审通过；commit 6297cff 把 edge-tts/soundfile 写入 [project] dependencies + uv.lock 后，smoke 跑完 uv sync 不再卸载二者；verify V0-V6 全 PASS rc=0；evidence 最新文件。前三轮根因（缺包 / pip 坏 / uv sync 反卸）全部闭合。",
+            "checks_run": [
+              "pyproject_has_deps",
+              "import_before_smoke",
+              "smoke_rc=0",
+              "import_after_smoke",
+              "verify_rc=0",
+              "evidence_freshness"
+            ],
             "findings": {
               "P0": [],
               "P1": [],
@@ -4293,7 +4313,23 @@
             },
             "rounds": 4
           }
-        }
+        },
+        "files": [
+          "evidence/audio-014/verify-pass.log",
+          "evidence/audio-014/smoke-pass.log",
+          "evidence/audio-014/uat-script.py",
+          "evidence/audio-014/edge_voice_list.txt",
+          "evidence/audio-014/dependencies.md"
+        ],
+        "user_pending": [
+          "真机听感 edge-tts 小小音色 + 实测延迟 (运行 evidence/audio-014/uat-script.py)"
+        ],
+        "p1_followup_backlog": [
+          "audio-014-fu-asyncio-run-in-running-loop",
+          "audio-014-fu-true-streaming-partial-decode",
+          "audio-014-fu-edge-first-chunk-deadline"
+        ],
+        "p0_history": "4 rounds: dep missing → pip shebang broken → uv sync 反卸 → uv add to [project] dependencies"
       },
       "id": "audio-014",
       "name": "wake_word 跨模块 import vad_trigger 私有函数耦合审计",
@@ -4301,7 +4337,7 @@
       "phase": 22,
       "priority": 180,
       "real_machine_uat": "n/a",
-      "status": "in_progress"
+      "status": "passing"
     },
     {
       "area": "vision",
