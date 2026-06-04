@@ -24444,21 +24444,66 @@
         "closeout_verify": {
           "main_head_sha": "fbea7be",
           "verify_runs": [
-            {"name": "verify_audio_016", "status": "PASS", "tail_stdout": "[PASS] V1_import_surface: ENV=COCO_AUDIO_INPUT_DEVICE\n[PASS] V2_env_int: v=5\n[PASS] V3_env_substring: v='Reachy Mini Audio'\n[PASS] V4_auto_reachy_hit: v=1\n[PASS] V5_reachy_out_only_skip: v=None\n[PASS] V6_no_reachy_none: v=None\n[PASS] V7_query_raise_fail_soft: v=None\n[PASS] V8_call_sites: sites=4 total=8 ['coco/vad_trigger.py:2', 'coco/wake_word.py:2', 'coco/asr.py:2', 'coco/main.py:2']\nsummary: total=9 pass=9 fail=0", "freshness_anchor": "post-merge-rerun"},
-            {"name": "smoke", "status": "PASS", "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard ok: total=377 typo_count=0\n==> Smoke 通过。", "freshness_anchor": "post-merge-rerun"}
+            {
+              "name": "verify_audio_016",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V1_import_surface: ENV=COCO_AUDIO_INPUT_DEVICE\n[PASS] V2_env_int: v=5\n[PASS] V3_env_substring: v='Reachy Mini Audio'\n[PASS] V4_auto_reachy_hit: v=1\n[PASS] V5_reachy_out_only_skip: v=None\n[PASS] V6_no_reachy_none: v=None\n[PASS] V7_query_raise_fail_soft: v=None\n[PASS] V8_call_sites: sites=4 total=8 ['coco/vad_trigger.py:2', 'coco/wake_word.py:2', 'coco/asr.py:2', 'coco/main.py:2']\nsummary: total=9 pass=9 fail=0",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard ok: total=377 typo_count=0\n==> Smoke 通过。",
+              "freshness_anchor": "post-merge-rerun"
+            }
           ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
             "summary": "audio-016 mic auto-select 对称 audio-013 实现干净: env > auto Reachy substring (max_input_channels>=1) > None fail-soft 三档清晰; 8 个 InputStream 调用点全注入 device=, log 去重 sentinel 正确, audio 边界守住 (sounddevice 直连不走 reachy-mini media), tts.py 未动 audio-013 未破坏, query 异常 fail-soft V7 验证, 跨平台无 mac-only API. V0 hash 与实际 audio_device.py 一致. _main_input_device vs _input_device 命名差为 P2 nit 不阻.",
-            "checks_run": ["audio_边界", "env_优先级", "substring_filter_in_channels", "query_fail_soft", "log_去重", "8_调用点注入", "V0_hash", "verify_独立", "smoke_无回归", "post_smoke_import", "audio_013_未破坏", "跨平台"],
-            "findings": {"P0": [], "P1": [], "P2": ["_main_input_device vs _input_device 命名差异 (main.py 用前者, 其余用后者) - 仅 cosmetic"]},
+            "checks_run": [
+              "audio_边界",
+              "env_优先级",
+              "substring_filter_in_channels",
+              "query_fail_soft",
+              "log_去重",
+              "8_调用点注入",
+              "V0_hash",
+              "verify_独立",
+              "smoke_无回归",
+              "post_smoke_import",
+              "audio_013_未破坏",
+              "跨平台"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "_main_input_device vs _input_device 命名差异 (main.py 用前者, 其余用后者) - 仅 cosmetic"
+              ]
+            },
             "rounds": 1
           }
         },
-        "files": ["evidence/audio-016/verify-pass.log", "evidence/audio-016/smoke-pass.log", "evidence/audio-016/uat-script.py", "evidence/audio-016/device-list.json"],
-        "user_pending": ["真机 mic 听感 + ASR 准确率 (运行 evidence/audio-016/uat-script.py 后真机喊'可可')"]
+        "files": [
+          "evidence/audio-016/verify-pass.log",
+          "evidence/audio-016/smoke-pass.log",
+          "evidence/audio-016/uat-script.py",
+          "evidence/audio-016/device-list.json"
+        ],
+        "user_pending": [
+          "真机 mic 听感 + ASR 准确率 (运行 evidence/audio-016/uat-script.py 后真机喊'可可')"
+        ]
       }
+    },
+    {
+      "id": "uat-reachy-mic-macos-no-signal",
+      "area": "audio",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "title": "Reachy Mini Lite USB mic 在 macOS 系统层无输入电平 (硬件/固件层)",
+      "description": "macOS 15.x，Audio MIDI 显示 enumerate 正常 2ch 16kHz primary 0.78 channels unmuted，但系统设置→声音→输入电平表完全无活动；MacBook 内置 mic 同条件正常；sounddevice/avfoundation/coreaudio 三通路读数据全 0；非软件层问题，需 firmware update 或联系 Pollen Robotics；workaround=COCO_AUDIO_INPUT_DEVICE=2 切 Mac mic"
     }
   ],
   "last_updated": "2026-06-04",
