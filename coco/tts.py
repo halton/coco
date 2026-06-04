@@ -94,6 +94,51 @@ DEFAULT_SPEED = 1.0
 # 安全上限，防止误传超长文本卡住 CPU
 MAX_TEXT_LEN = 500
 
+# audio-013: TTS 输出设备自动选择
+# - env COCO_TTS_OUTPUT_DEVICE 显式覆盖（整数 → device index；字符串 → substring 匹配 by sounddevice）
+# - 未设 env → 自动遍历 sd.query_devices() 找名字含下列子串且 max_output_channels >= 1 的 → 返回 index
+# - 都未命中 → None（fallback 系统默认）
+ENV_TTS_OUTPUT_DEVICE = "COCO_TTS_OUTPUT_DEVICE"
+_REACHY_AUDIO_NAME_SUBSTRINGS = ("reachy mini audio", "reachy_mini_audio")
+
+# 进程内 device 解析结果缓存（避免每次 play 都遍历 + 刷屏 log）
+_last_logged_device: object = object()  # sentinel
+
+
+def _resolve_tts_output_device():
+    """返回 sounddevice 可识别的 device (int / str / None)。
+
+    优先级：
+    1) env COCO_TTS_OUTPUT_DEVICE：整数 → int；其他非空字符串 → 原样返回（sd 支持 substring）
+    2) 遍历 sd.query_devices() 找 name 含 _REACHY_AUDIO_NAME_SUBSTRINGS 之一 + max_output_channels>=1
+    3) None
+    """
+    raw = os.environ.get(ENV_TTS_OUTPUT_DEVICE, "").strip()
+    if raw:
+        try:
+            return int(raw)
+        except (ValueError, TypeError):
+            return raw
+
+    try:
+        import sounddevice as sd
+        devices = sd.query_devices()
+    except Exception:
+        return None
+
+    for idx, dev in enumerate(devices):
+        try:
+            name = str(dev.get("name", "")).lower()
+            max_out = int(dev.get("max_output_channels", 0) or 0)
+        except Exception:
+            continue
+        if max_out < 1:
+            continue
+        if any(sub in name for sub in _REACHY_AUDIO_NAME_SUBSTRINGS):
+            return idx
+    return None
+
+
 _tts: sherpa_onnx.OfflineTts | None = None
 
 # robot-003: 可选 ExpressionPlayer 注入点。
@@ -241,10 +286,59 @@ def write_wav(path: Path | str, samples: np.ndarray, sample_rate: int) -> None:
 
 
 def play(samples: np.ndarray, sample_rate: int, blocking: bool = True) -> None:
-    """走本机默认输出设备播放。延迟 import sounddevice 避免主路径阻塞。"""
+    """走本机扬声器播放；audio-013 起优先选 Reachy Mini Audio。
+
+    解析顺序见 _resolve_tts_output_device()。device 选中且其 default_samplerate
+    与 sample_rate 不同且在 (8000, 48000] 时，用 scipy.signal.resample_poly 重采样
+    成 device sr 后再播；重采样失败（scipy 缺失 / 异常）→ 落回原 sr 直接播不抛。
+    每进程仅在首次 / device 变化时 log 一行。
+    """
     import sounddevice as sd
 
-    sd.play(samples, samplerate=sample_rate, blocking=blocking)
+    global _last_logged_device
+
+    device = _resolve_tts_output_device()
+    final_sr = int(sample_rate)
+    final_samples = samples
+
+    if device is not None:
+        # 拿 device default samplerate
+        dev_sr: Optional[int] = None
+        try:
+            dev_info = sd.query_devices(device)
+            dsr = dev_info.get("default_samplerate", None) if isinstance(dev_info, dict) else None
+            if dsr is not None:
+                dev_sr_f = float(dsr)
+                if 8000 < dev_sr_f <= 48000:
+                    dev_sr = int(dev_sr_f)
+        except Exception:
+            dev_sr = None
+
+        if dev_sr is not None and dev_sr != int(sample_rate):
+            try:
+                from scipy.signal import resample_poly
+                from math import gcd
+                up = dev_sr
+                down = int(sample_rate)
+                g = gcd(up, down)
+                final_samples = resample_poly(samples, up // g, down // g).astype(np.float32, copy=False)
+                final_sr = dev_sr
+            except Exception as exc:  # noqa: BLE001
+                logging.getLogger("tts").warning(
+                    "[tts] resample %d→%d failed: %s: %s; fallback to original sr",
+                    int(sample_rate), dev_sr, type(exc).__name__, exc,
+                )
+                final_samples = samples
+                final_sr = int(sample_rate)
+
+    if device != _last_logged_device:
+        print(f"[tts] output device={device!r} sr={final_sr}")
+        _last_logged_device = device
+
+    if device is None:
+        sd.play(final_samples, samplerate=final_sr, blocking=blocking)
+    else:
+        sd.play(final_samples, samplerate=final_sr, blocking=blocking, device=device)
 
 
 def synthesize_edge(
@@ -475,6 +569,7 @@ __all__ = [
     "KOKORO_DIR",
     "ENV_TTS_LRU",
     "ENV_TTS_LRU_SIZE",
+    "ENV_TTS_OUTPUT_DEVICE",
     "DEFAULT_TTS_LRU_SIZE",
     "synthesize",
     "synthesize_edge",
