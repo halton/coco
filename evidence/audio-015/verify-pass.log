@@ -1,0 +1,14 @@
+[PASS] V0_hash_lock: c8c7d2c84bdb52d4ad9df931d86360aabeb1588396184711258f5129d84088db
+[PASS] V1_imports: all audio-015 symbols present
+[PASS] V2_ffmpeg_available: which=/opt/homebrew/bin/ffmpeg
+[tts] backend=edge voice='zh-CN-XiaoxiaoNeural' sr=24000
+[PASS] V3_streaming_off_uses_audio014: whole-buffer path called, streaming skipped
+[tts] backend=edge-stream voice='zh-CN-XiaoxiaoNeural' sr=24000
+[tts] edge streaming first_chunk_ms=120
+[PASS] V4_streaming_on_uses_streaming_path: first_chunk_ms=120
+[PASS] V5_streaming_real_ffmpeg: first_chunk_ms=42 total=257ms payload=4461B
+[PASS] V6_ffmpeg_spawn_fail_fallback: raised EdgeTTSUnavailable as expected: ffmpeg spawn 失败: FileNotFoundError: simulated: ffmpeg not found
+[PASS] V7_midstream_cleanup: spawned=1 leaked=0
+[PASS] V8_hash_recheck: c8c7d2c84bdb52d4ad9df931d86360aabeb1588396184711258f5129d84088db
+
+PASS=9 FAIL=0 TOTAL=9

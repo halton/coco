@@ -31,8 +31,13 @@ import sherpa_onnx
 ENV_TTS_PREFER = "COCO_TTS_PREFER"  # auto | edge | local；default auto
 ENV_TTS_EDGE_VOICE = "COCO_TTS_EDGE_VOICE"
 ENV_TTS_EDGE_TIMEOUT = "COCO_TTS_EDGE_TIMEOUT"
+# audio-015: 真流式播放（ffmpeg pipe + sounddevice RawOutputStream）开关
+ENV_TTS_EDGE_STREAMING = "COCO_TTS_EDGE_STREAMING"  # "1" 开启（默认）；"0" 走 audio-014 整段路径
 DEFAULT_EDGE_VOICE = "zh-CN-XiaoxiaoNeural"
 DEFAULT_EDGE_TIMEOUT = 8.0
+# audio-015: ffmpeg 流式解码输出固定 24kHz s16le mono（edge-tts mp3 一般 24kHz）
+EDGE_STREAMING_SAMPLERATE = 24000
+EDGE_STREAMING_FIRST_CHUNK_TIMEOUT = 4.0  # 等首帧 PCM 的最大时长
 # bing 边缘 endpoint；socket.create_connection 快速探活
 _EDGE_PROBE_HOST = "speech.platform.bing.com"
 _EDGE_PROBE_PORT = 443
@@ -374,6 +379,234 @@ def _is_edge_tts_reachable(timeout: float = _EDGE_PROBE_TIMEOUT) -> bool:
         return False
 
 
+def _ffmpeg_available() -> bool:
+    """探测 ffmpeg CLI 是否可用（audio-015 真流式依赖）。"""
+    return shutil.which("ffmpeg") is not None
+
+
+def _edge_streaming_on() -> bool:
+    """audio-015: 是否启用 ffmpeg 真流式路径；默认开启。"""
+    raw = os.environ.get(ENV_TTS_EDGE_STREAMING, "1").strip()
+    return raw not in ("0", "false", "False", "no", "off")
+
+
+def _synthesize_and_play_edge_streaming(
+    text: str,
+    voice: str = DEFAULT_EDGE_VOICE,
+    timeout: float = DEFAULT_EDGE_TIMEOUT,
+    device=None,
+    samplerate: int = EDGE_STREAMING_SAMPLERATE,
+) -> int:
+    """audio-015 真流式：edge-tts mp3 chunk → ffmpeg pipe → PCM → sounddevice RawOutputStream。
+
+    工作原理：
+    - 主线程启 ffmpeg subprocess（stdin=mp3，stdout=s16le mono samplerate）。
+    - reader 线程：blocking read ffmpeg.stdout → 切块塞 pcm_q。首次入队 set first_chunk_evt。
+    - feeder 线程：async edge_tts.Communicate.stream() 每 audio chunk 写 ffmpeg.stdin；EOS 关 stdin。
+    - 主线程：first_chunk_evt.wait(timeout) 拿到首帧 → 开 sd.RawOutputStream callback 消费 pcm_q
+      直到 EOS sentinel 触发 CallbackStop。
+
+    返回首帧 PCM 抵达的耗时（毫秒，从函数进入起算）；这是 audio-015 的核心 KPI。
+
+    失败统一抛 ``EdgeTTSUnavailable``，caller fallback 走 audio-014 整段路径或 Kokoro。
+    清理路径：任何失败/正常退出都关 ffmpeg stdin/stdout、join 线程、kill 残留进程，
+    保证不留僵尸 ffmpeg。
+    """
+    text = _check_text(text)
+    try:
+        import asyncio
+        import queue
+        import edge_tts  # type: ignore
+        import sounddevice as sd  # type: ignore
+    except ImportError as e:
+        raise EdgeTTSUnavailable(
+            f"edge-tts/sounddevice 未安装: {e}"
+        ) from e
+
+    if not _ffmpeg_available():
+        raise EdgeTTSUnavailable("ffmpeg CLI 不在 PATH，无法走真流式")
+
+    import subprocess
+
+    t0 = time.time()
+    first_chunk_ms_holder: dict[str, int] = {}
+
+    try:
+        ff = subprocess.Popen(
+            [
+                "ffmpeg", "-loglevel", "quiet",
+                "-f", "mp3", "-i", "pipe:0",
+                "-f", "s16le", "-acodec", "pcm_s16le",
+                "-ac", "1", "-ar", str(int(samplerate)),
+                "pipe:1",
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            bufsize=0,
+        )
+    except (FileNotFoundError, OSError) as e:
+        raise EdgeTTSUnavailable(f"ffmpeg spawn 失败: {type(e).__name__}: {e}") from e
+
+    pcm_q: "queue.Queue[Optional[bytes]]" = queue.Queue(maxsize=128)
+    first_chunk_evt = threading.Event()
+    feeder_err: dict[str, BaseException] = {}
+    reader_err: dict[str, BaseException] = {}
+    READ_BYTES = 2048  # 1024 frames * 2 bytes (s16le mono)
+
+    def _reader() -> None:
+        try:
+            assert ff.stdout is not None
+            while True:
+                buf = ff.stdout.read(READ_BYTES)
+                if not buf:
+                    break
+                pcm_q.put(buf)
+                if not first_chunk_evt.is_set():
+                    first_chunk_ms_holder["ms"] = int((time.time() - t0) * 1000)
+                    first_chunk_evt.set()
+        except Exception as e:  # noqa: BLE001
+            reader_err["err"] = e
+        finally:
+            pcm_q.put(None)  # EOS sentinel
+            first_chunk_evt.set()  # 解封 wait 即便没有数据
+
+    def _feeder() -> None:
+        try:
+            async def _run() -> None:
+                assert ff.stdin is not None
+                comm = edge_tts.Communicate(text, voice)
+                async for chunk in comm.stream():
+                    if chunk.get("type") == "audio":
+                        data = chunk.get("data")
+                        if data:
+                            try:
+                                ff.stdin.write(data)
+                                ff.stdin.flush()
+                            except (BrokenPipeError, ValueError):
+                                return
+            asyncio.run(asyncio.wait_for(_run(), timeout=timeout))
+        except Exception as e:  # noqa: BLE001
+            feeder_err["err"] = e
+        finally:
+            try:
+                if ff.stdin and not ff.stdin.closed:
+                    ff.stdin.close()
+            except Exception:
+                pass
+
+    reader_t = threading.Thread(target=_reader, name="coco-tts-edge-reader", daemon=True)
+    feeder_t = threading.Thread(target=_feeder, name="coco-tts-edge-feeder", daemon=True)
+    reader_t.start()
+    feeder_t.start()
+
+    # 等首帧
+    got_first = first_chunk_evt.wait(timeout=EDGE_STREAMING_FIRST_CHUNK_TIMEOUT)
+    if not got_first or "ms" not in first_chunk_ms_holder:
+        # 没等到 PCM 首帧 → 清理 + 抛
+        _cleanup_streaming(ff, [feeder_t, reader_t])
+        err_detail = feeder_err.get("err") or reader_err.get("err")
+        raise EdgeTTSUnavailable(
+            f"first PCM chunk timeout in {EDGE_STREAMING_FIRST_CHUNK_TIMEOUT}s"
+            + (f"; cause={type(err_detail).__name__}: {err_detail}" if err_detail else "")
+        )
+
+    first_chunk_ms = first_chunk_ms_holder["ms"]
+
+    # 准备 sounddevice callback
+    leftover: dict[str, bytes] = {"buf": b""}
+    eos_seen: dict[str, bool] = {"v": False}
+
+    def callback(outdata, frames, time_, status):  # noqa: ARG001
+        need = frames * 2  # int16 mono = 2 bytes/frame
+        buf = leftover["buf"]
+        while len(buf) < need and not eos_seen["v"]:
+            try:
+                item = pcm_q.get(timeout=0.5)
+            except Exception:
+                break
+            if item is None:
+                eos_seen["v"] = True
+                break
+            buf += item
+        if len(buf) >= need:
+            outdata[:] = buf[:need]
+            leftover["buf"] = buf[need:]
+        else:
+            # 末尾 underrun：填能填的，剩余补 0，再 raise CallbackStop
+            out_view = bytes(outdata)  # type: ignore
+            outdata[: len(buf)] = buf
+            if len(buf) < need:
+                # 用 zero 补齐
+                outdata[len(buf):need] = b"\x00" * (need - len(buf))
+            leftover["buf"] = b""
+            if eos_seen["v"]:
+                raise sd.CallbackStop
+
+    try:
+        stream_kwargs = dict(
+            samplerate=int(samplerate),
+            channels=1,
+            dtype="int16",
+            callback=callback,
+            blocksize=1024,
+        )
+        if device is not None:
+            stream_kwargs["device"] = device
+        out_stream = sd.RawOutputStream(**stream_kwargs)
+    except Exception as e:  # noqa: BLE001
+        _cleanup_streaming(ff, [feeder_t, reader_t])
+        raise EdgeTTSUnavailable(f"sd.RawOutputStream 创建失败: {type(e).__name__}: {e}") from e
+
+    try:
+        with out_stream:
+            # 等 reader 把 EOS 入队 + callback 消化完
+            while True:
+                if eos_seen["v"] and pcm_q.empty() and not leftover["buf"]:
+                    break
+                # 双保险：reader / feeder 都死了且 queue 空 → 退出
+                if not reader_t.is_alive() and pcm_q.empty() and not leftover["buf"]:
+                    break
+                time.sleep(0.05)
+            # 给 callback 时间播完最后 blocksize
+            time.sleep(0.15)
+    finally:
+        _cleanup_streaming(ff, [feeder_t, reader_t])
+
+    return first_chunk_ms
+
+
+def _cleanup_streaming(ff, threads) -> None:
+    """audio-015 清理：关 ffmpeg pipe + terminate/kill + join 线程，吃所有异常。"""
+    try:
+        if ff.stdin and not ff.stdin.closed:
+            try:
+                ff.stdin.close()
+            except Exception:
+                pass
+        if ff.stdout and not ff.stdout.closed:
+            try:
+                ff.stdout.close()
+            except Exception:
+                pass
+        if ff.poll() is None:
+            try:
+                ff.terminate()
+                ff.wait(timeout=1.0)
+            except Exception:
+                try:
+                    ff.kill()
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    for t in threads:
+        try:
+            t.join(timeout=1.5)
+        except Exception:
+            pass
+
+
 def _synthesize_edge_streaming(
     text: str,
     voice: str = DEFAULT_EDGE_VOICE,
@@ -485,9 +718,33 @@ def _log_backend(backend: str, voice: str | None, sr: int) -> None:
 
 
 def _try_edge_say(text: str, blocking: bool) -> bool:
-    """尝试 edge-tts 路径；成功并播完返回 True，任何失败返回 False（caller fallback）。"""
+    """尝试 edge-tts 路径；成功并播完返回 True，任何失败返回 False（caller fallback）。
+
+    audio-015: 优先走 ffmpeg 真流式（COCO_TTS_EDGE_STREAMING=1，默认）：边收 mp3
+    chunk 边解码边喂 sounddevice，首字延迟期望 <1.5s。失败再退回 audio-014 整段路径。
+    blocking=False 时（say_async worker 内）不走真流式（callback 阻塞模型不匹配），
+    走 audio-014 整段后台播放。
+    """
     voice = _edge_voice()
     timeout = _edge_timeout()
+
+    # 真流式仅在 blocking=True 时启用；blocking=False 走整段路径，由 worker 线程承担阻塞
+    if blocking and _edge_streaming_on() and _ffmpeg_available():
+        device = _resolve_tts_output_device()
+        try:
+            first_ms = _synthesize_and_play_edge_streaming(
+                text, voice=voice, timeout=timeout, device=device,
+                samplerate=EDGE_STREAMING_SAMPLERATE,
+            )
+            _log_backend("edge-stream", voice, EDGE_STREAMING_SAMPLERATE)
+            print(f"[tts] edge streaming first_chunk_ms={first_ms}", flush=True)
+            return True
+        except EdgeTTSUnavailable as e:
+            print(f"[tts] edge streaming failed, fallback whole-buffer: {e}", flush=True)
+            # 继续走下方整段路径
+        except Exception as e:  # noqa: BLE001
+            print(f"[tts] edge streaming failed (unexpected), fallback whole-buffer: {type(e).__name__}: {e}", flush=True)
+
     try:
         samples, sr = _synthesize_edge_streaming(text, voice=voice, timeout=timeout)
     except EdgeTTSUnavailable as e:
@@ -705,13 +962,18 @@ __all__ = [
     "ENV_TTS_PREFER",
     "ENV_TTS_EDGE_VOICE",
     "ENV_TTS_EDGE_TIMEOUT",
+    "ENV_TTS_EDGE_STREAMING",
     "DEFAULT_TTS_LRU_SIZE",
     "DEFAULT_EDGE_VOICE",
     "DEFAULT_EDGE_TIMEOUT",
+    "EDGE_STREAMING_SAMPLERATE",
     "EdgeTTSUnavailable",
     "synthesize",
     "synthesize_edge",
     "_synthesize_edge_streaming",
+    "_synthesize_and_play_edge_streaming",
+    "_ffmpeg_available",
+    "_edge_streaming_on",
     "_is_edge_tts_reachable",
     "say",
     "say_async",
