@@ -1,0 +1,21 @@
+[PASS] V0_hash_lock: 71a075d785fdab0043116d8e2fb1e28eea52da5a9b66b4d04d6b2edf3d65e26c
+[PASS] V1_imports: all symbols present
+[tts] backend=local voice=None sr=24000
+[PASS] V2_prefer_local: local-only path confirmed
+[tts] backend=edge voice='zh-CN-XiaoxiaoNeural' sr=24000
+[PASS] V3_prefer_edge: edge path taken
+[tts] edge unreachable (auto), using local
+[tts] backend=local voice=None sr=24000
+[PASS] V4_auto_unreachable_fallback: auto→local on unreachable
+[tts] edge failed, fallback local: simulated network drop
+[PASS] V5_auto_edge_raise_fallback: auto→local on EdgeTTSUnavailable
+[PASS] V6_stereo_to_mono: stereo averaged to mono float32
+
+SUMMARY: PASS=7 FAIL=0 / TOTAL=7
+  PASS V0_hash_lock
+  PASS V1_imports
+  PASS V2_prefer_local
+  PASS V3_prefer_edge
+  PASS V4_auto_unreachable_fallback
+  PASS V5_auto_edge_raise_fallback
+  PASS V6_stereo_to_mono

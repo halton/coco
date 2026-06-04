@@ -24165,9 +24165,21 @@
         ]
       },
       "user_visible_behavior": "插上 Reachy Mini USB 音频后 coco TTS 自动从 Reachy Mini 扬声器播放，不必手设 device；未插时落回系统默认；COCO_TTS_OUTPUT_DEVICE 可显式覆盖。"
+    },
+    {
+      "area": "audio",
+      "evidence": [],
+      "id": "audio-014-edge-tts-streaming-default",
+      "notes": "升级 edge-tts 为流式接入；联网时默认走 edge-tts，断网/异常自动回退 Kokoro。env: COCO_TTS_PREFER (auto|edge|local, default auto), COCO_TTS_EDGE_VOICE (default zh-CN-XiaoxiaoNeural), COCO_TTS_EDGE_TIMEOUT (default 8.0).",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "title": "edge-tts 流式 + 联网时默认；断网回退 Kokoro",
+      "user_visible_behavior": "联网时可可用更自然的 edge-tts (zh-CN-XiaoxiaoNeural) 流式回答；断网时无缝回退 Kokoro 离线音，不会沉默或崩溃。",
+      "verification": "scripts/verify_audio_014_edge_tts_streaming_default.py V0-V6 全 PASS + smoke rc=0 + 真机活体 evidence/audio-014/uat-script.py user_pending"
     }
   ],
-  "last_updated": "2026-05-24T20:00:00.000000Z",
+  "last_updated": "2026-06-04T07:45:38Z",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
