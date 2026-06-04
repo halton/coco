@@ -1,0 +1,30 @@
+[
+  {
+    "idx": 0,
+    "name": "Reachy Mini Audio",
+    "in": 2,
+    "out": 2,
+    "sr": 16000.0
+  },
+  {
+    "idx": 1,
+    "name": "MacBook Air Microphone",
+    "in": 1,
+    "out": 0,
+    "sr": 48000.0
+  },
+  {
+    "idx": 2,
+    "name": "MacBook Air Speakers",
+    "in": 0,
+    "out": 2,
+    "sr": 48000.0
+  },
+  {
+    "idx": 3,
+    "name": "Microsoft Teams Audio",
+    "in": 1,
+    "out": 1,
+    "sr": 48000.0
+  }
+]

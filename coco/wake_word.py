@@ -347,6 +347,10 @@ class WakeWordDetector:
             log.warning("[wake] sounddevice unavailable, mic loop exits: %s", e)
             return
         block = max(int(cfg.sample_rate * block_seconds), 1024)
+        # audio-016: 自动选 Reachy Mini Audio 作为 mic 输入；env 覆盖 / 找不到则 None
+        from coco.audio_device import resolve_input_device, log_input_device_once
+        _input_device = resolve_input_device()
+        log_input_device_once(log, _input_device, cfg.sample_rate)
         # audio-010: 真实 InputStream 调用站可选 wrap 在 open_stream_with_recovery 下。
         # COCO_AUDIO_RECOVERY=1 时退避重试 PortAudioError；OFF 时与原直连等价。
         def _open_input_stream():
@@ -355,6 +359,7 @@ class WakeWordDetector:
                 channels=1,
                 dtype="float32",
                 blocksize=block,
+                device=_input_device,
             )
 
         def _do_open():
@@ -371,6 +376,7 @@ class WakeWordDetector:
                     channels=1,
                     dtype="float32",
                     blocksize=block,
+                    device=_input_device,
                 )
 
         # audio-011: 外层 reopen-loop，内层 read-loop

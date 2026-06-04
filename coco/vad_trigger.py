@@ -340,6 +340,10 @@ class VADTrigger:
             log.warning("[vad] sounddevice unavailable, mic loop exits: %s", e)
             return
         block = max(int(cfg.sample_rate * block_seconds), cfg.window)
+        # audio-016: 自动选 Reachy Mini Audio 作为 mic 输入；env 覆盖 / 找不到则 None（系统默认）
+        from coco.audio_device import resolve_input_device, log_input_device_once
+        _input_device = resolve_input_device()
+        log_input_device_once(log, _input_device, cfg.sample_rate)
         # audio-010: 真实 InputStream 调用站可选 wrap 在 open_stream_with_recovery 下。
         # COCO_AUDIO_RECOVERY=1 时构造 wrap（捕 sd.PortAudioError 退避重试）；
         # OFF 时调用 helper 路径与原直连 ``sd.InputStream(...)`` 字节级等价
@@ -350,6 +354,7 @@ class VADTrigger:
                 channels=1,
                 dtype="float32",
                 blocksize=block,
+                device=_input_device,
             )
 
         def _do_open():
@@ -367,6 +372,7 @@ class VADTrigger:
                     channels=1,
                     dtype="float32",
                     blocksize=block,
+                    device=_input_device,
                 )
 
         # audio-011: 外层 reopen-loop，内层 read-loop；reopen_event 触发时 stop+close +

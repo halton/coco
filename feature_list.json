@@ -24428,9 +24428,22 @@
       "status": "backlog",
       "phase": null,
       "area": "infra"
+    },
+    {
+      "id": "audio-016-mic-auto-select-reachy",
+      "phase": 68,
+      "priority": 100,
+      "area": "audio",
+      "status": "in_progress",
+      "depends_on": [
+        "audio-013-auto-select-reachy-speaker"
+      ],
+      "real_machine_uat": "pending",
+      "description": "对称 audio-013 (TTS auto-select speaker)，把 mic 输入设备自动选成 Reachy Mini Audio。新增 coco/audio_device.py 暴露 resolve_input_device() + log_input_device_once() + ENV_INPUT_DEVICE。env COCO_AUDIO_INPUT_DEVICE (int / substring) 显式覆盖；空时 auto 遍历 sd.query_devices() 找 name 含 'reachy mini audio' / 'reachy_mini_audio' 且 max_input_channels>=1 的 → 返回 index；都未命中 → None (fallback 系统默认)。5 处 sd.InputStream 调用站 (vad_trigger / wake_word / asr / main x2) 统一注入 device=resolve_input_device()，并在主路径 (vad/wake/asr/main) 通过 log_input_device_once 去重 emit '[mic] input device=... sr=...'。query 失败 fail-soft 返回 None 不抛。跨平台 (macOS + Linux)。",
+      "evidence": "engineer-only stage: verify_audio_016_mic_auto_select_reachy V0-V8 PASS (rc=0, /tmp/v016.log) / ./init.sh smoke rc=0 (/tmp/smoke016.log) / post-smoke import coco.audio_device.resolve_input_device() -> 0 (Reachy Mini Audio idx 0 on dev machine) / 5 call sites grep verified device=_input_device|_main_input_device (8 lines) / uat-script.py 显示 input/output 都解析到 Reachy idx 0. Reviewer + closeout pending."
     }
   ],
-  "last_updated": "2026-06-04T16:54:23",
+  "last_updated": "2026-06-04",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {

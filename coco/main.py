@@ -2419,6 +2419,10 @@ class Coco(ReachyMiniApp):
                     time.sleep(0.5)
             else:
                 # sounddevice 直连本机麦：与 daemon 的 audio backend / media 无耦合。
+                # audio-016: 自动选 Reachy Mini Audio 作为 mic 输入；env 覆盖 / 找不到则 None
+                from coco.audio_device import resolve_input_device, log_input_device_once
+                _main_input_device = resolve_input_device()
+                log_input_device_once(None, _main_input_device, SAMPLE_RATE)
                 # audio-011: InputStream wrap 在 open_stream_with_recovery 下。
                 # COCO_AUDIO_RECOVERY=1 时退避重试 PortAudioError；OFF 时字节级等价。
                 def _open_main_mic_stream():
@@ -2427,6 +2431,7 @@ class Coco(ReachyMiniApp):
                         channels=1,
                         dtype="float32",
                         blocksize=block_frames,
+                        device=_main_input_device,
                     )
                 try:
                     from coco.audio_resilience import open_stream_with_recovery as _osr_main
@@ -2443,6 +2448,7 @@ class Coco(ReachyMiniApp):
                         channels=1,
                         dtype="float32",
                         blocksize=block_frames,
+                        device=_main_input_device,
                     )
                 if _mic_stream is not None:
                     with _mic_stream as mic:

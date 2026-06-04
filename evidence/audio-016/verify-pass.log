@@ -1,0 +1,12 @@
+================================================================
+[PASS] V0_hash_lock: hash=d636efa2ae135517b6ea0e4234e94b2e5afd79f4d9e6d06360fc68fa81224ed5 expect=d636efa2ae135517b6ea0e4234e94b2e5afd79f4d9e6d06360fc68fa81224ed5
+[PASS] V1_import_surface: ENV=COCO_AUDIO_INPUT_DEVICE
+[PASS] V2_env_int: v=5
+[PASS] V3_env_substring: v='Reachy Mini Audio'
+[PASS] V4_auto_reachy_hit: v=1
+[PASS] V5_reachy_out_only_skip: v=None
+[PASS] V6_no_reachy_none: v=None
+[PASS] V7_query_raise_fail_soft: v=None
+[PASS] V8_call_sites: sites=4 total=8 ['coco/vad_trigger.py:2', 'coco/wake_word.py:2', 'coco/asr.py:2', 'coco/main.py:2']
+================================================================
+summary: total=9 pass=9 fail=0
