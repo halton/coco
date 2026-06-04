@@ -135,6 +135,10 @@ def transcribe_microphone(
     leftover = np.zeros(0, dtype=np.float32)
 
     deadline = time.monotonic() + float(seconds)
+    # audio-016: 自动选 Reachy Mini Audio 作为 mic 输入；env 覆盖 / 找不到则 None
+    from coco.audio_device import resolve_input_device, log_input_device_once
+    _input_device = resolve_input_device()
+    log_input_device_once(None, _input_device, sample_rate)
     # audio-011: 真实 InputStream 调用站 wrap 在 open_stream_with_recovery 下。
     # COCO_AUDIO_RECOVERY=1 时退避重试 sd.PortAudioError；OFF 时与原直连字节级等价
     # （helper 内部 short-circuit 直接 ``open_fn()``）。
@@ -144,6 +148,7 @@ def transcribe_microphone(
             channels=1,
             dtype="float32",
             blocksize=block_size,
+            device=_input_device,
         )
     try:
         from coco.audio_resilience import open_stream_with_recovery as _osr
@@ -160,6 +165,7 @@ def transcribe_microphone(
             channels=1,
             dtype="float32",
             blocksize=block_size,
+            device=_input_device,
         )
     with _stream as stream:
         while time.monotonic() < deadline:
