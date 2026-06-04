@@ -24235,29 +24235,70 @@
       "area": "audio",
       "evidence": {
         "closeout_verify": {
-          "main_head_sha": "PENDING_POST_MERGE",
-          "verify_runs": [],
+          "main_head_sha": "ef7a9fc4ecd3",
+          "verify_runs": [
+            {
+              "name": "verify_audio_015",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V3_streaming_off_uses_audio014: whole-buffer path called, streaming skipped\n[tts] backend=edge-stream voice='zh-CN-XiaoxiaoNeural' sr=24000\n[tts] edge streaming first_chunk_ms=120\n[PASS] V4_streaming_on_uses_streaming_path: first_chunk_ms=120\n[PASS] V5_streaming_real_ffmpeg: first_chunk_ms=94 total=305ms payload=4461B\n[PASS] V6_ffmpeg_spawn_fail_fallback: raised EdgeTTSUnavailable as expected: ffmpeg spawn 失败: FileNotFoundError: simulated: ffmpeg not found\n[PASS] V7_midstream_cleanup: spawned=1 leaked=0\n[PASS] V8_hash_recheck: c8c7d2c84bdb52d4ad9df931d86360aabeb1588396184711258f5129d84088db\n\nPASS=9 FAIL=0 TOTAL=9",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
           "reviewer": {
             "reviewer_kind": "sub_agent_fresh_context",
             "verdict": "LGTM",
-            "summary": "placeholder pre-merge; will be backfilled with post-merge verify/smoke tails and main_head_sha in Step B closeout",
+            "summary": "audio-015 ffmpeg pipe + reader/feeder threading + sounddevice RawOutputStream 真流式实现干净, V0-V8 全 PASS, smoke rc=0, 依赖 smoke 后持久未被 uv sync 卸 (audio-014 教训未复发), backlog 已 promote, cleanup 路径 V7 leaked=0 验证, fallback chain 完整覆盖三档.",
             "checks_run": [
-              "placeholder"
+              "audio_边界",
+              "ffmpeg_pipe",
+              "threading_reader",
+              "first_chunk_evt",
+              "cleanup_干净",
+              "env_default_on",
+              "fallback_chain",
+              "audio_013_未破坏",
+              "audio_014_fallback",
+              "first_chunk_ms_log",
+              "V0_hash",
+              "V5_真ffmpeg",
+              "V7_leaked0",
+              "evidence_齐全",
+              "deps_post_smoke_持久"
             ],
             "findings": {
               "P0": [],
               "P1": [],
-              "P2": []
+              "P2": [
+                "真机 UAT 打印 first_chunk_ms 中位数+P95",
+                "Linux ffmpeg -version 留档"
+              ]
             },
             "rounds": 1
           }
-        }
+        },
+        "files": [
+          "evidence/audio-015/verify-pass.log",
+          "evidence/audio-015/smoke-pass.log",
+          "evidence/audio-015/uat-script.py",
+          "evidence/audio-015/ffmpeg-version.txt"
+        ],
+        "user_pending": [
+          "真机首字延迟实测 (运行 evidence/audio-015/uat-script.py, 期望 first_chunk_ms<1.5s)",
+          "Linux ffmpeg -version 留档 (Reachy 真机环境)"
+        ],
+        "promoted_from": "audio-014-fu-true-streaming-partial-decode"
       },
       "id": "audio-015-edge-tts-true-streaming-playback",
       "notes": "audio-014 的 streaming 实为 chunk-accumulate-then-decode，首字延迟 ~6s 没改善。本 feature 走 ffmpeg subprocess pipe 真流式：edge-tts mp3 chunk → ffmpeg stdin → ffmpeg stdout PCM s16le 24kHz mono → sounddevice RawOutputStream callback 队列消费。设计指标：首帧 PCM 到达延迟 <1.5s（真机用户验证）。新增 env COCO_TTS_EDGE_STREAMING (default 1, 0 退回 audio-014 整段路径)。Fallback 链：streaming → audio-014 整段 → local Kokoro。promotes backlog item audio-014-fu-true-streaming-partial-decode.",
       "phase": 68,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "title": "edge-tts 真流式 (ffmpeg pipe + sounddevice callback) — 首字延迟优化",
       "user_visible_behavior": "联网 edge-tts 路径下，用户说完后 ~1.5s 内即听到可可第一字（原 ~6s），整体响应感大幅提升；无 ffmpeg 或弱网时自动 fallback 不出错。",
       "verification": "scripts/verify_audio_015_edge_tts_true_streaming_playback.py V0-V8 全 PASS + smoke rc=0 + 真机活体 evidence/audio-015/uat-script.py user_pending",

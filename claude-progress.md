@@ -9922,3 +9922,5 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - status: in_progress → passing；user_pending: 真机扬声器听感 (uat-script.py)
 
 - 2026-06-04 phase-68 audio-014 closeout DONE，main HEAD=5367bef，Reviewer 4 rounds 最终 LGTM。
+
+## Session phase-68 audio-015 closeout DONE — main HEAD=ef7a9fc4ecd3, Reviewer (sub_agent_fresh_context) LGTM, verify V0-V8 PASS + smoke rc=0 post-merge
