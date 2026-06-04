@@ -15,6 +15,10 @@ dependencies = [
     "sherpa-onnx-core==1.13.1",
     "sounddevice>=0.5.5",
     "soundfile>=0.12.0",
+    # reachy-mini daemon 在非 Linux 平台需要 GStreamer Python bindings (gi 模块) 才能启动。
+    # 该 wheel 仅在 gitlab freedesktop index 提供，且仅 macOS / Windows 有 wheel。
+    # 持久化此依赖避免 uv sync 反复卸载（audio-014 P0 教训）。
+    "gstreamer ; sys_platform != 'linux'",
 ]
 keywords = ["reachy-mini-app"]
 
@@ -49,3 +53,10 @@ required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
     "sys_platform == 'win32' and platform_machine == 'AMD64'",
 ]
+prerelease = "allow"
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "freedesktop"
+url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple"
+explicit = false

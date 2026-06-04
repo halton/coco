@@ -11,10 +11,13 @@ required-markers = [
     "platform_machine == 'AMD64' and sys_platform == 'win32'",
 ]
 
+[options]
+prerelease-mode = "allow"
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/26/30/f84a107a9c4331c14b2b586036f40965c128aa4fee4dda5d3d51cb14ad54/aiohappyeyeballs-2.6.1.tar.gz", hash = "sha256:c3f9d0113123803ccadfdf3f0faa505bc78e6a72d1cc4806cbd719826e943558", size = 22760, upload-time = "2025-03-12T01:42:48.764Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0f/15/5bf3b99495fb160b63f95972b81750f18f7f4e02ad051373b669d17d44f2/aiohappyeyeballs-2.6.1-py3-none-any.whl", hash = "sha256:f349ba8f4b75cb25c99c5c2d84e997e485204d2902a9597802b0371f09331fb8", size = 15265, upload-time = "2025-03-12T01:42:47.083Z" },
@@ -23,7 +26,7 @@ wheels = [
 [[package]]
 name = "aiohttp"
 version = "3.13.5"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "aiohappyeyeballs" },
     { name = "aiosignal" },
@@ -91,7 +94,7 @@ wheels = [
 [[package]]
 name = "aiosignal"
 version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "frozenlist" },
 ]
@@ -103,7 +106,7 @@ wheels = [
 [[package]]
 name = "annotated-doc"
 version = "0.0.4"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/57/ba/046ceea27344560984e26a590f90bc7f4a75b06701f653222458922b558c/annotated_doc-0.0.4.tar.gz", hash = "sha256:fbcda96e87e9c92ad167c2e53839e57503ecfda18804ea28102353485033faa4", size = 7288, upload-time = "2025-11-10T22:07:42.062Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/d3/26bf1008eb3d2daa8ef4cacc7f3bfdc11818d111f7e2d0201bc6e3b49d45/annotated_doc-0.0.4-py3-none-any.whl", hash = "sha256:571ac1dc6991c450b25a9c2d84a3705e2ae7a53467b5d111c24fa8baabbed320", size = 5303, upload-time = "2025-11-10T22:07:40.673Z" },
@@ -112,7 +115,7 @@ wheels = [
 [[package]]
 name = "annotated-types"
 version = "0.7.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ee/67/531ea369ba64dcff5ec9c3402f9f51bf748cec26dde048a2f973a4eea7f5/annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89", size = 16081, upload-time = "2024-05-20T21:33:25.928Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/78/b6/6307fbef88d9b5ee7421e68d78a9f162e0da4900bc5f5793f6d3d0e34fb8/annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53", size = 13643, upload-time = "2024-05-20T21:33:24.1Z" },
@@ -121,7 +124,7 @@ wheels = [
 [[package]]
 name = "anyio"
 version = "4.13.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "idna" },
 ]
@@ -133,7 +136,7 @@ wheels = [
 [[package]]
 name = "asgiref"
 version = "3.11.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/63/40/f03da1264ae8f7cfdbf9146542e5e7e8100a4c66ab48e791df9a03d3f6c0/asgiref-3.11.1.tar.gz", hash = "sha256:5f184dc43b7e763efe848065441eac62229c9f7b0475f41f80e207a114eda4ce", size = 38550, upload-time = "2026-02-03T13:30:14.33Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5c/0a/a72d10ed65068e115044937873362e6e32fab1b7dce0046aeb224682c989/asgiref-3.11.1-py3-none-any.whl", hash = "sha256:e8667a091e69529631969fd45dc268fa79b99c92c5fcdda727757e52146ec133", size = 24345, upload-time = "2026-02-03T13:30:13.039Z" },
@@ -142,7 +145,7 @@ wheels = [
 [[package]]
 name = "attrs"
 version = "26.1.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/9a/8e/82a0fe20a541c03148528be8cac2408564a6c9a0cc7e9171802bc1d26985/attrs-26.1.0.tar.gz", hash = "sha256:d03ceb89cb322a8fd706d4fb91940737b6642aa36998fe130a9bc96c985eff32", size = 952055, upload-time = "2026-03-19T14:22:25.026Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl", hash = "sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309", size = 67548, upload-time = "2026-03-19T14:22:23.645Z" },
@@ -151,7 +154,7 @@ wheels = [
 [[package]]
 name = "certifi"
 version = "2026.4.22"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/25/ee/6caf7a40c36a1220410afe15a1cc64993a1f864871f698c0f93acb72842a/certifi-2026.4.22.tar.gz", hash = "sha256:8d455352a37b71bf76a79caa83a3d6c25afee4a385d632127b6afb3963f1c580", size = 137077, upload-time = "2026-04-22T11:26:11.191Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/22/30/7cd8fdcdfbc5b869528b079bfb76dcdf6056b1a2097a662e5e8c04f42965/certifi-2026.4.22-py3-none-any.whl", hash = "sha256:3cb2210c8f88ba2318d29b0388d1023c8492ff72ecdde4ebdaddbb13a31b1c4a", size = 135707, upload-time = "2026-04-22T11:26:09.372Z" },
@@ -160,7 +163,7 @@ wheels = [
 [[package]]
 name = "cffi"
 version = "2.0.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "pycparser", marker = "implementation_name != 'PyPy'" },
 ]
@@ -205,7 +208,7 @@ wheels = [
 [[package]]
 name = "charset-normalizer"
 version = "3.4.7"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e7/a1/67fe25fac3c7642725500a3f6cfe5821ad557c3abb11c9d20d12c7008d3e/charset_normalizer-3.4.7.tar.gz", hash = "sha256:ae89db9e5f98a11a4bf50407d4363e7b09b31e55bc117b4f7d80aab97ba009e5", size = 144271, upload-time = "2026-04-02T09:28:39.342Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/3b/66777e39d3ae1ddc77ee606be4ec6d8cbd4c801f65e5a1b6f2b11b8346dd/charset_normalizer-3.4.7-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:f496c9c3cc02230093d8330875c4c3cdfc3b73612a5fd921c65d39cbcef08063", size = 309627, upload-time = "2026-04-02T09:26:45.198Z" },
@@ -262,7 +265,7 @@ wheels = [
 [[package]]
 name = "click"
 version = "8.3.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
@@ -277,8 +280,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "edge-tts" },
-    { name = "reachy-mini", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "reachy-mini", version = "1.7.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "(platform_machine != 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
+    { name = "reachy-mini" },
     { name = "sherpa-onnx" },
     { name = "sherpa-onnx-core" },
     { name = "sounddevice" },
@@ -295,6 +299,7 @@ tts-online = [
 requires-dist = [
     { name = "edge-tts", specifier = ">=7.0.0" },
     { name = "edge-tts", marker = "extra == 'tts-online'", specifier = ">=7.0.0" },
+    { name = "gstreamer", marker = "sys_platform != 'linux'" },
     { name = "reachy-mini", specifier = ">=1.4.0" },
     { name = "sherpa-onnx", specifier = "==1.13.1" },
     { name = "sherpa-onnx-core", specifier = "==1.13.1" },
@@ -307,7 +312,7 @@ provides-extras = ["tts-online"]
 [[package]]
 name = "colorama"
 version = "0.4.6"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
@@ -316,7 +321,7 @@ wheels = [
 [[package]]
 name = "comtypes"
 version = "1.4.16"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c6/2a/65274c13327f637ec13af8d39f2cf579d9ebe7a0e683696b5f05236d2805/comtypes-1.4.16.tar.gz", hash = "sha256:cd66d1add01265cface4df51ba1e31cd1657e04463c281c802e737e79e1ba93c", size = 260252, upload-time = "2026-03-02T23:11:42.413Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5f/7c/0eb685107290b6221c03c46d39214a4e42a124189691cb83ae3228257f46/comtypes-1.4.16-py3-none-any.whl", hash = "sha256:e18d85179ff12955524c5a8c3bc09cb3c0d890f1da4d7123d14244c7b78f84c8", size = 296230, upload-time = "2026-03-02T23:11:41.049Z" },
@@ -325,28 +330,37 @@ wheels = [
 [[package]]
 name = "cv2-enumerate-cameras"
 version = "1.3.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-framework-avfoundation", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-framework-avfoundation", marker = "sys_platform == 'darwin'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/88/40/6208e5ef9a0e46e9acc233c00a1b30728ca3b03b429e751c59e4d9cf5c8b/cv2_enumerate_cameras-1.3.3.tar.gz", hash = "sha256:cc09429e3fd4a2ea3449bbc0ee12420666aee6705d80a36f2235503d90fff3a2", size = 12901, upload-time = "2026-01-16T02:39:47.614Z" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/a9/7395194e0a7ad25e14669fd499a5bf062cb9ae3dcba4d4fca8dd398b4061/cv2_enumerate_cameras-1.3.3-cp32-abi3-win32.whl", hash = "sha256:700d5d4283eb630e74d0a9e4829b9f5a3e373c3ce9a2e5bbed7959eb5bb31246", size = 20879, upload-time = "2026-01-16T02:39:43.82Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/e8/197478c59e66ace7b41cbe6a5ce9cbbea42dfe6a0afba3d4dcc5d4b59df4/cv2_enumerate_cameras-1.3.3-cp32-abi3-win_amd64.whl", hash = "sha256:fb4c9cf9d3f9d1bc0e648943f6683d5dd0228c93d6ed11aae471500701009dee", size = 21768, upload-time = "2026-01-16T02:39:45.1Z" },
     { url = "https://files.pythonhosted.org/packages/98/b1/183463b131f6fb459186fd060ab1761aa8230f52417efc827d335c72df54/cv2_enumerate_cameras-1.3.3-py3-none-any.whl", hash = "sha256:f83c7329d85462bc27d805aa25a3cde73aa66d7e28e2f5b6cb425ccc84c965d0", size = 12043, upload-time = "2026-01-16T02:39:46.184Z" },
 ]
 
 [[package]]
 name = "eclipse-zenoh"
 version = "1.7.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/75/09/9534eea23b59cee13b5430c7874f71c5e800d412ac04572517733812b8f3/eclipse_zenoh-1.7.2.tar.gz", hash = "sha256:cfcbc3fc9eb001be2b7adc303f34ae22570ff2e0f942d51973bfd30f4ac37d6a", size = 160083, upload-time = "2026-01-08T17:42:38.711Z" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/48/a52169789207ff80f3b1d7f768c901fa117bd729ed665b37736b68ca2699/eclipse_zenoh-1.7.2-cp39-abi3-linux_armv6l.whl", hash = "sha256:194ee61191a126e544b264587eb3659ae3952e9126e74d2d4a6e6f2ba163920a", size = 9400470, upload-time = "2026-01-08T17:42:07.714Z" },
     { url = "https://files.pythonhosted.org/packages/76/91/484df5bdfd42102f9b5d99654c67f318d4967f3828dfd297d88c1262e143/eclipse_zenoh-1.7.2-cp39-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:d068c7ce2cb4f5ffe965f2d103f7173de732733a5102b6968313cedea1704694", size = 17458869, upload-time = "2026-01-08T17:42:10.264Z" },
+    { url = "https://files.pythonhosted.org/packages/06/8a/6bb29455e16f119ec9db996d50f5ce40fdd7e1369fcfb6665144b50a0b7b/eclipse_zenoh-1.7.2-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:7d0429933d9abeb70939a2cb02e32b8c8929651fd1762f1308b5fbd4ae41c3d9", size = 8871746, upload-time = "2026-01-08T17:42:12.587Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/d3/d1a7cfa1894baf801323423e56ab79fd17c39af922b6aad1a01aa5b4a57a/eclipse_zenoh-1.7.2-cp39-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:8e53005eae75b3edac44d7f46d9678be784a67657f3dd871f5efabf351081a41", size = 9265387, upload-time = "2026-01-08T17:42:14.364Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/76/9520c1c583013bf8eefcd037c307615f5513592ba12166ec91fedefefbf0/eclipse_zenoh-1.7.2-cp39-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:296885d49ef20e3e14777007e3ff519403ec4c0c9e4358b70bb2157985b29548", size = 10027406, upload-time = "2026-01-08T17:42:16.609Z" },
+    { url = "https://files.pythonhosted.org/packages/63/8c/39ea3c158ca403f3acb915dacd80787ac1afd0ce6d2be66a92d0dc2dd1ad/eclipse_zenoh-1.7.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ede3dfb4072577e9a81f466364b9293be345801db9734bf0b3f7321194190035", size = 9439037, upload-time = "2026-01-08T17:42:18.824Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/4a/ad58417a73271e1a667b8bec1f6d42b500c0966c5e48a10c321e8c3f4634/eclipse_zenoh-1.7.2-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:07cf23f7de43a9008f9dd81bf5028a0459e43227087bc7838a0ba36c1eb232e7", size = 9400470, upload-time = "2026-01-08T17:42:25.097Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/d5/87a56e70a25fac485988efc45b27d7b31c2d228039dfef44e5ddd67fd343/eclipse_zenoh-1.7.2-cp39-abi3-win_amd64.whl", hash = "sha256:af3c857bcb964b000e770e3f758a8920e270ee32e79f67f25f845c51f258cc90", size = 7931636, upload-time = "2026-01-08T17:42:27.344Z" },
 ]
 
 [[package]]
 name = "edge-tts"
 version = "7.2.8"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "certifi" },
@@ -361,7 +375,7 @@ wheels = [
 [[package]]
 name = "fastapi"
 version = "0.136.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "annotated-doc" },
     { name = "pydantic" },
@@ -377,7 +391,7 @@ wheels = [
 [[package]]
 name = "filelock"
 version = "3.29.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b5/fe/997687a931ab51049acce6fa1f23e8f01216374ea81374ddee763c493db5/filelock-3.29.0.tar.gz", hash = "sha256:69974355e960702e789734cb4871f884ea6fe50bd8404051a3530bc07809cf90", size = 57571, upload-time = "2026-04-19T15:39:10.068Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/81/47/dd9a212ef6e343a6857485ffe25bba537304f1913bdbed446a23f7f592e1/filelock-3.29.0-py3-none-any.whl", hash = "sha256:96f5f6344709aa1572bbf631c640e4ebeeb519e08da902c39a001882f30ac258", size = 39812, upload-time = "2026-04-19T15:39:08.752Z" },
@@ -386,7 +400,7 @@ wheels = [
 [[package]]
 name = "frozenlist"
 version = "1.8.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2d/f5/c831fac6cc817d26fd54c7eaccd04ef7e0288806943f7cc5bbf69f3ac1f0/frozenlist-1.8.0.tar.gz", hash = "sha256:3ede829ed8d842f6cd48fc7081d7a41001a56f1f38603f9d49bf3020d59a31ad", size = 45875, upload-time = "2025-10-06T05:38:17.865Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/40/0832c31a37d60f60ed79e9dfb5a92e1e2af4f40a16a29abcc7992af9edff/frozenlist-1.8.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:8d92f1a84bb12d9e56f818b3a746f3efba93c1b63c8387a73dde655e1e42282a", size = 85717, upload-time = "2025-10-06T05:36:27.341Z" },
@@ -459,198 +473,379 @@ wheels = [
 [[package]]
 name = "fsspec"
 version = "2026.4.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d5/8d/1c51c094345df128ca4a990d633fe1a0ff28726c9e6b3c41ba65087bba1d/fsspec-2026.4.0.tar.gz", hash = "sha256:301d8ac70ae90ef3ad05dcf94d6c3754a097f9b5fe4667d2787aa359ec7df7e4", size = 312760, upload-time = "2026-04-29T20:42:38.635Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/0c/043d5e551459da400957a1395e0febbf771446ff34291afcbe3d8be2a279/fsspec-2026.4.0-py3-none-any.whl", hash = "sha256:11ef7bb35dab8a394fde6e608221d5cf3e8499401c249bebaeaad760a1a8dec2", size = 203402, upload-time = "2026-04-29T20:42:36.842Z" },
 ]
 
 [[package]]
-name = "gstreamer-bundle"
-version = "1.28.1"
-source = { registry = "https://pypi.org/simple" }
+name = "gstreamer"
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-cli", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-gtk", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-plugins", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-plugins-gpl", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-plugins-gpl-restricted", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-plugins-restricted", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-python", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-cli", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-gtk", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-plugins", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-plugins-gpl", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-plugins-gpl-restricted", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-plugins-restricted", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "gstreamer-python", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b0/81/45d9a7f25ae0ddc3afbfecab658163124cc46384844f05cfca30c4c23f15/gstreamer_bundle-1.28.1-py3-none-any.whl", hash = "sha256:ef40bcf15a5894d3f06b242fe9a24480dedf8a038c702a60b6396f81af722ca6", size = 2574, upload-time = "2026-03-03T10:46:10.358Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/0ad6452156ab77e2d61240e65688807779ba43a28b178d3e3922045a16546e03/gstreamer-1.28.3-py3-none-any.whl", hash = "sha256:0ad6452156ab77e2d61240e65688807779ba43a28b178d3e3922045a16546e03" },
+]
+
+[[package]]
+name = "gstreamer"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-cli", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-gtk", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-gpl", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-gpl-restricted", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-restricted", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-python", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/96a5e822d042d225fc813b7746fbcaa813c816a090ec0c1170667cecda8e2ce5/gstreamer-1.29.1a0-py3-none-any.whl", hash = "sha256:96a5e822d042d225fc813b7746fbcaa813c816a090ec0c1170667cecda8e2ce5" },
 ]
 
 [[package]]
 name = "gstreamer-cli"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/3a/cc1c7e23c29a44976f77c5623adae943479dbed9fb4336a4def44ab57cbf/gstreamer_cli-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:4b1f7517ecd985583693760fbc281d43b966154a9491c20bcde0d9d5ac5af6ee", size = 5651730, upload-time = "2026-04-08T21:21:25.493Z" },
-    { url = "https://files.pythonhosted.org/packages/84/6c/d8a868fc36fbf095e56545c24259b0927ed9a4dec7934b002d1eca2598b7/gstreamer_cli-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:ba109f9c4762280763ba25d4eacf6c0565f49bfbc2ca1d98b753c06410ffc6a7", size = 6339254, upload-time = "2026-04-08T21:21:28.715Z" },
-    { url = "https://files.pythonhosted.org/packages/25/0f/57b7a683b2331b93aaeb43d52823222e41aa230cbe007b417e9fb5048601/gstreamer_cli-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:d740cb92bd95b8768de677f73a247ce466c9110c9794ecbb8a8de0816431a390", size = 5759032, upload-time = "2026-04-08T21:21:31.953Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/69/681522da21ccb40843e913b052b879b2dfdd407d10fd78448861980402d3/gstreamer_cli-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:edf670476fa55381595cf2e04d2d94e80dfc0655a6a0a78b196c0b7d597b1d33", size = 6592346, upload-time = "2026-04-08T21:21:35.492Z" },
-    { url = "https://files.pythonhosted.org/packages/28/31/3460ecf0d81accffbe6ee2d1e513c92d2aa9fb122788d89f2ebde8f1d30c/gstreamer_cli-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:bbcde5e0cff3c33d55ab5f9e8937b0311e16f9d8450d53af60f0ccc3fd739be1", size = 15823020, upload-time = "2026-04-08T21:15:08.846Z" },
-    { url = "https://files.pythonhosted.org/packages/63/63/60a7fbfd9b47336399d1b611ad10611c32a0c729e6ba2bb58adb57448359/gstreamer_cli-1.28.2-cp39-abi3-win32.whl", hash = "sha256:f38d3894748f787f4b6e7e3f0e8f309f9b2656e066b00affa1a3c1534f22df8b", size = 5651732, upload-time = "2026-04-08T21:15:12.397Z" },
-    { url = "https://files.pythonhosted.org/packages/11/7b/41a34715a2aeab8ce17221c247bbb49dcb8456185694ed95559574d49521/gstreamer_cli-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:00c8eb8f64dee37b7ce736470f9e9c9f163aee0f5f1158809d10bd7f9ce44b53", size = 6339253, upload-time = "2026-04-08T21:15:15.073Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/9d4bb690c0e370a3d889c2a1d7fd8e8db9ce35d74b7a76e6d399bea5c69a5873/gstreamer_cli-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9d4bb690c0e370a3d889c2a1d7fd8e8db9ce35d74b7a76e6d399bea5c69a5873" },
+]
+
+[[package]]
+name = "gstreamer-cli"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/783db9ef132bd8464fb4d078bc3264ae31ec9efd2b3848522536b87fe6c0c9cd/gstreamer_cli-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:783db9ef132bd8464fb4d078bc3264ae31ec9efd2b3848522536b87fe6c0c9cd" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/74dbc2f306195639703db41251c257c57864eefa588e6bc3e35e4064f579fc44/gstreamer_cli-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:74dbc2f306195639703db41251c257c57864eefa588e6bc3e35e4064f579fc44" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/dc86a45f9c7a7371da5670110c10e075c54bd4cab1197879b5d0cf7c0f2b2ef6/gstreamer_cli-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:dc86a45f9c7a7371da5670110c10e075c54bd4cab1197879b5d0cf7c0f2b2ef6" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/7e0908ed633aaa893db2c2a10abb10387287949e08e8d2fb8033687d62840848/gstreamer_cli-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:7e0908ed633aaa893db2c2a10abb10387287949e08e8d2fb8033687d62840848" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/9e912afd8cfd2f86dbf8b80f4a26a2453c77d45eb51e4de1698214cce9fdbd4c/gstreamer_cli-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9e912afd8cfd2f86dbf8b80f4a26a2453c77d45eb51e4de1698214cce9fdbd4c" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/dff5ba08a40f44c29e2a75498acbc9b9b0aadebb30278a606ae9e86c149449cb/gstreamer_cli-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:dff5ba08a40f44c29e2a75498acbc9b9b0aadebb30278a606ae9e86c149449cb" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/6772253b5c61ae1417fd5124cdc6f5c25b315d6837e5e5e3e73dbb7107215df4/gstreamer_cli-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:6772253b5c61ae1417fd5124cdc6f5c25b315d6837e5e5e3e73dbb7107215df4" },
+]
+
+[[package]]
+name = "gstreamer-ext-runtime"
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/bb6bcb23078297e5494fe833e22d6722bb2a0fd0d535965479be4b86bca68ec7/gstreamer_ext_runtime-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:bb6bcb23078297e5494fe833e22d6722bb2a0fd0d535965479be4b86bca68ec7" },
 ]
 
 [[package]]
 name = "gstreamer-gtk"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/ae/53d1fc991d8cd19cf176a9a14cfad6ff95139f5b98eeeebe8d3abffb9040/gstreamer_gtk-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:e4ab2f998108ecac5b9517132df50ae2a5120e69dd239eb6430be7f22cfcc009", size = 4863883, upload-time = "2026-04-08T21:21:38.387Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/26/2f6457398c8ce74eb393b73834605a22917029580cf8aa9adf76f5a9cd71/gstreamer_gtk-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:2f9bcfc0792ea2d0f3b63feb9f4fdd461ff9c94c17d2b8fe22b193168e63e2e9", size = 5885927, upload-time = "2026-04-08T21:22:02.682Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/f0/033e7bcf49b019cccc8eff22cfd088ce8e1e37060aa1157c3230144b5483/gstreamer_gtk-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:c190e86b31d7a3ddbcecb68237d66aeea0411390336b61d7f5c5a58ea6251bed", size = 4982211, upload-time = "2026-04-08T21:22:06.08Z" },
-    { url = "https://files.pythonhosted.org/packages/f6/1f/5929a36a2a9b39582a58d00ad74db575bf5cdb34571d20d4be87ba373acb/gstreamer_gtk-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:ec7163fe3c4513f33f3fc946f4bb27480e3a02abd61ad0d59b1e86ab98da5386", size = 6139580, upload-time = "2026-04-08T21:22:09.525Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/b2/28687cd4c9201e05dc72a5fe8d269b5983be4c9ab63ba31f606490b7e730/gstreamer_gtk-1.28.2-cp39-abi3-macosx_10_15_universal2.whl", hash = "sha256:46d3deecd610c3f30d6bbea509a2017057160d6258f1ccd467f52f6251d66ebc", size = 20436719, upload-time = "2026-04-08T21:15:28.808Z" },
-    { url = "https://files.pythonhosted.org/packages/39/69/8bb74d8fd5065936009c5e3843cc6a9473246294ca2fb1908f1bff0e2ba0/gstreamer_gtk-1.28.2-cp39-abi3-win32.whl", hash = "sha256:6fcebe63fcba301d05f60f2bb2e4119ce0d134f68b0cb884bb915fd95e0b8e42", size = 4863880, upload-time = "2026-04-08T21:15:32.323Z" },
-    { url = "https://files.pythonhosted.org/packages/93/ed/eddc88a03fe63aab190a9f840eb436c4eb6b5a6b606e792cabb06cebd57a/gstreamer_gtk-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:63c61e7866f724a54599acd8e850c73eb88490eb047ac5393c1745e53241cd57", size = 5885925, upload-time = "2026-04-08T21:15:34.828Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/c1558c5a4f62f130ee0574817d3d550d8d541fe0e269f09ab631719384efed2a/gstreamer_gtk-1.28.3-cp39-abi3-macosx_10_15_universal2.whl", hash = "sha256:c1558c5a4f62f130ee0574817d3d550d8d541fe0e269f09ab631719384efed2a" },
+]
+
+[[package]]
+name = "gstreamer-gtk"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/de444d83822f9765b6c899e726c2e552de4a710716ad50c019d44226e605a87a/gstreamer_gtk-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:de444d83822f9765b6c899e726c2e552de4a710716ad50c019d44226e605a87a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d601eb1c806b70c788162ba70fec8af31fff7ea5ff6054324ed9ae7847e41725/gstreamer_gtk-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:d601eb1c806b70c788162ba70fec8af31fff7ea5ff6054324ed9ae7847e41725" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/422177056ce8c16b3b68ec321a4b52c8daf8989d0c36cb01b5da830eba135052/gstreamer_gtk-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:422177056ce8c16b3b68ec321a4b52c8daf8989d0c36cb01b5da830eba135052" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/57097674f6c58b962f2db05a3545901a254c681ebdf051a78f24c01bf7caff9b/gstreamer_gtk-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:57097674f6c58b962f2db05a3545901a254c681ebdf051a78f24c01bf7caff9b" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/17c62e060ac30359129cdabc05848dc30a7b3e389cd780a35bccb3ab303bb61a/gstreamer_gtk-1.29.1a0-cp39-abi3-macosx_10_15_universal2.whl", hash = "sha256:17c62e060ac30359129cdabc05848dc30a7b3e389cd780a35bccb3ab303bb61a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/28cb183cf482277b10ff7a73b97e38f4f5f7b19ad20f3ef5fe74c1c8d4f1d206/gstreamer_gtk-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:28cb183cf482277b10ff7a73b97e38f4f5f7b19ad20f3ef5fe74c1c8d4f1d206" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/b88f758fe892eb5cdfc3d13c391bc4be3dc81e9dbdc52675a3b18f47b900db88/gstreamer_gtk-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:b88f758fe892eb5cdfc3d13c391bc4be3dc81e9dbdc52675a3b18f47b900db88" },
 ]
 
 [[package]]
 name = "gstreamer-libs"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-ext-runtime", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "setuptools", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/544ff2e0881fee389d7f93bbd6d8c9687606f49a2287f047ed0b43c05382f684/gstreamer_libs-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:544ff2e0881fee389d7f93bbd6d8c9687606f49a2287f047ed0b43c05382f684" },
+]
+
+[[package]]
+name = "gstreamer-libs"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
 dependencies = [
     { name = "gstreamer-msvc-runtime", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
     { name = "setuptools", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/a0/fb6bb2c583c881d7c038bd4472f60059046e02492ed9208de69844f669ed/gstreamer_libs-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:2dced95ab6cc6e8b8b7786bf17cec61b07f3006c20f236183e0a613bc56aaf5d", size = 29127356, upload-time = "2026-04-08T21:22:14.976Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/26/ca46ac6f72d93c2e6cde8198222ad76dbd9e0ac93a1d1ddf52efcbcc51db/gstreamer_libs-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:09c4652d134f811d2412ca1daae30f1fba36612e19e8a897c11efcf1dcd79864", size = 33028775, upload-time = "2026-04-08T21:22:22.329Z" },
-    { url = "https://files.pythonhosted.org/packages/31/eb/a94e9d90ee15347727db1684b3cd50512fa1fbcac0ca259afdec611b19bc/gstreamer_libs-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:b8d75f5e56da6724da8ba77af7afc013497d4976b9b35c7c3668cb591492e86e", size = 29938863, upload-time = "2026-04-08T21:22:30.008Z" },
-    { url = "https://files.pythonhosted.org/packages/3c/d4/976ce1ed650ad201dee618cfa58f06c4f904a4f40946242916698f2304d6/gstreamer_libs-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:cb3a5205a3673924d3427a42031f8fd9aec75842a034f8f57519e781231890d1", size = 34117075, upload-time = "2026-04-08T21:22:36.529Z" },
-    { url = "https://files.pythonhosted.org/packages/32/05/d2a63d60569442665f9eff524f1145af30546562b948c3813e9fa8f5d47a/gstreamer_libs-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9d6825422fda9beb98e799bf8c6a634ffea67928b9d0b1b39cc8c61aa70d3ffb", size = 95896602, upload-time = "2026-04-08T21:15:46.011Z" },
-    { url = "https://files.pythonhosted.org/packages/3a/ff/46f4c0ba365cddb519bb37745c6961d8cd1f1f83f4e338197feffd276038/gstreamer_libs-1.28.2-cp39-abi3-win32.whl", hash = "sha256:73c7567ab4aacce57b66d15d0a44a5c100706e0abda7372cc68242af03af84f8", size = 29127354, upload-time = "2026-04-08T21:15:55.582Z" },
-    { url = "https://files.pythonhosted.org/packages/28/a8/376e470622fba2b23ae5c919f51a3408e2c7a758b9ced46f26c0d84e0e6a/gstreamer_libs-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:f3c13962e6a7a1b51b5211fe3a040e2a9a7ee8e53b897a6e16032004a7f1069d", size = 33028773, upload-time = "2026-04-08T21:16:02.038Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/33c031f0f3d6afe99ac40472886a157d107b304ddc7904dcda07bb66e69abffc/gstreamer_libs-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:33c031f0f3d6afe99ac40472886a157d107b304ddc7904dcda07bb66e69abffc" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/be6cf420ea232d1b6b78c0af3594f5bac454d52226bced376e5fc0ccb5adf47e/gstreamer_libs-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:be6cf420ea232d1b6b78c0af3594f5bac454d52226bced376e5fc0ccb5adf47e" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/ed342b8e9b0ef4814527db5b33c3045fa6e11999eddb29fdbba45a0eb265a879/gstreamer_libs-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:ed342b8e9b0ef4814527db5b33c3045fa6e11999eddb29fdbba45a0eb265a879" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/4e4744cec9bda8579df672c77f5fc49e70507b0c121e50009c5ee0744a657f4c/gstreamer_libs-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:4e4744cec9bda8579df672c77f5fc49e70507b0c121e50009c5ee0744a657f4c" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d6deb18d6a207c9d9b1b046ea459404cd833509b16c3f6bbeb21bba29c8335dd/gstreamer_libs-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:d6deb18d6a207c9d9b1b046ea459404cd833509b16c3f6bbeb21bba29c8335dd" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/b731bfda76479bf0ef7a30fe01a823008f24b13dc4bb606427c63d50a87d0b7d/gstreamer_libs-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:b731bfda76479bf0ef7a30fe01a823008f24b13dc4bb606427c63d50a87d0b7d" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/6638fde386145abcdb4872195ede95134af1ab2142c2d64789104d0973b9646d/gstreamer_libs-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:6638fde386145abcdb4872195ede95134af1ab2142c2d64789104d0973b9646d" },
 ]
 
 [[package]]
 name = "gstreamer-msvc-runtime"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/4f/17e8c6fee297b346ef03d30822eead444d6dbd012342facfce092117cb21/gstreamer_msvc_runtime-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:d4bffedbe30fe2d688897eacb47b5ec2f28d8385dcc8a56272d67e2227db63e6", size = 871800, upload-time = "2026-04-08T21:22:40.493Z" },
-    { url = "https://files.pythonhosted.org/packages/21/80/5e7c476e6e09e093175770a0991afa385f8fd2b74df76b748696f3c6dbd3/gstreamer_msvc_runtime-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:9f44e2d6be8a9f44f96a0a852d630b0959729caca58712d93b19b42393edb5f9", size = 1004140, upload-time = "2026-04-08T21:22:42.312Z" },
-    { url = "https://files.pythonhosted.org/packages/a2/c8/ae92937db54b57505889f0cbe3627943ed4977a6ad9f8bd8435a52cfa09c/gstreamer_msvc_runtime-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:592211e4148ffce575847a56c552472621793738cce55c499470691387905172", size = 895018, upload-time = "2026-04-08T21:22:44.01Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/e1/e789be00e706e00043ece8781a14f930edfd6d7213de88dda00ebe8425a9/gstreamer_msvc_runtime-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:db5b1463639eda157a72f93ecc07b9d4b10fb327382f90df793068fff03e80c9", size = 1032546, upload-time = "2026-04-08T21:22:46.09Z" },
-    { url = "https://files.pythonhosted.org/packages/0f/b4/c12f28173fd843c92b7b554a71510e066d62eaeb470ff7b7ab247833ce8e/gstreamer_msvc_runtime-1.28.2-cp39-abi3-win32.whl", hash = "sha256:3e544f6aa0e6f8d98a3c2ba0bf6a93b23f5e7a585ed84394bdc4ab6d538e247b", size = 871802, upload-time = "2026-04-08T21:16:04.969Z" },
-    { url = "https://files.pythonhosted.org/packages/11/e8/b76fbff62d6c41f604c68f27dc492d700b03f359a7a88f147a3566038ccf/gstreamer_msvc_runtime-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:8eebafe2bb694a398516bbab410282d0c857dba05b69ba19f02b2b06932afbfa", size = 1004137, upload-time = "2026-04-08T21:16:07.023Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/b0810fdf9808f39da1ea8fda3652c8177cab33d44d4bb4fc47a3916ac2d9365d/gstreamer_msvc_runtime-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:b0810fdf9808f39da1ea8fda3652c8177cab33d44d4bb4fc47a3916ac2d9365d" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d1607ef3bc13655d2ddeba6928993e32bd1dd6340e3ce46959a97331d010bf8a/gstreamer_msvc_runtime-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:d1607ef3bc13655d2ddeba6928993e32bd1dd6340e3ce46959a97331d010bf8a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/7f88a8dad3e37e648555094f4b45c78a015499595cf4d82b006eb9fc0e79c782/gstreamer_msvc_runtime-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:7f88a8dad3e37e648555094f4b45c78a015499595cf4d82b006eb9fc0e79c782" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/8d6472ae560df802878b515bf375dd0e97c9a1c665f1328591ae65f543cce245/gstreamer_msvc_runtime-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:8d6472ae560df802878b515bf375dd0e97c9a1c665f1328591ae65f543cce245" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/e7f9f8962d5f30cf0299042337545d89e20cbd9f172999d31f5ebaa58d4bd49a/gstreamer_msvc_runtime-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:e7f9f8962d5f30cf0299042337545d89e20cbd9f172999d31f5ebaa58d4bd49a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/ec093ea81621a65cd09f921ed527dd3cf09ca5c55b4f88b4f74a78ad8f6eb89b/gstreamer_msvc_runtime-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:ec093ea81621a65cd09f921ed527dd3cf09ca5c55b4f88b4f74a78ad8f6eb89b" },
 ]
 
 [[package]]
 name = "gstreamer-plugins"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-plugins-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/8f/2b6e93d9d82eedc8e49f8c1d13a7e9437876c99e6d5d5f382f1c9a08cfef/gstreamer_plugins-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:40bd7fd63d4abdcbf968a56cd980d3264635e798be9c03e01a1cf3b78201d03f", size = 39744050, upload-time = "2026-04-08T21:22:52.651Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/f3/a1432e3d4cbc8953ed3f099257c51d4f05ab86141d36cfaf1710dece2b4c/gstreamer_plugins-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:83d05182882e14f047916f947041016615be28128d7c3185fc67780ba6cf3feb", size = 46067491, upload-time = "2026-04-08T21:23:01.636Z" },
-    { url = "https://files.pythonhosted.org/packages/85/7a/52d2fcad1fcd754aed9b90bfdf47c20e414ef1528735099edd6e27af1235/gstreamer_plugins-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:3b79e80a9b3f111345251b2c5db165e82707a168f8b9b8986e2c0c9dd4fcf260", size = 40802690, upload-time = "2026-04-08T21:23:09.731Z" },
-    { url = "https://files.pythonhosted.org/packages/6b/7b/1a26910e4c941334a987cadbc97f65a36e7e1a3fce8d704acb64bca6a8f9/gstreamer_plugins-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:a1591cab0b0a4412a02d719d5b8e4a77153b3fcae579509a738fb5855dedb8a6", size = 47500601, upload-time = "2026-04-08T21:23:18.938Z" },
-    { url = "https://files.pythonhosted.org/packages/b2/c7/0278336fb3b6d594333231a5eb0c15db66f3de2a635758a343ea6d5009df/gstreamer_plugins-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:62884077ccf202466f594f804b46d69fcc172a3186829fa26abb2db1f8fd42c9", size = 100197112, upload-time = "2026-04-08T21:16:19.48Z" },
-    { url = "https://files.pythonhosted.org/packages/67/27/7bc26591575ea050ebc43c1d5f68410e8a290796d012b2c2986a84bafe0b/gstreamer_plugins-1.28.2-cp39-abi3-win32.whl", hash = "sha256:dab30a20700006fa9653ed478ddc309e5ba1160e54cc11cf5c3ccbff90fce0df", size = 39744049, upload-time = "2026-04-08T21:16:29.594Z" },
-    { url = "https://files.pythonhosted.org/packages/39/0a/12d23da6f65a1abef76e66364d8e1956abdca90d260a1a9fa9bf0c2e00b6/gstreamer_plugins-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:77884086a7423362b48f985c9676ae92527902c05402342bb39a069209718d61", size = 46067490, upload-time = "2026-04-08T21:16:37.882Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/df7ec99a828f1ec3fc6052374a62da853184bfcebedaafd8f9e6407a9ee4b531/gstreamer_plugins-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:df7ec99a828f1ec3fc6052374a62da853184bfcebedaafd8f9e6407a9ee4b531" },
+]
+
+[[package]]
+name = "gstreamer-plugins"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-plugins-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/9851b8fffd75a4536bf09b624d3d9b50ebb50f206cb7973a2815b23e1726b9e2/gstreamer_plugins-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:9851b8fffd75a4536bf09b624d3d9b50ebb50f206cb7973a2815b23e1726b9e2" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/cb6f8f58db0da67979bd79135572b533636543baa92fc3a2ef72ba7118083fac/gstreamer_plugins-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:cb6f8f58db0da67979bd79135572b533636543baa92fc3a2ef72ba7118083fac" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/12d13fd53c0be9e7b0aceac8513c2804a024ac83584dfd5836d6dd7b66959d12/gstreamer_plugins-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:12d13fd53c0be9e7b0aceac8513c2804a024ac83584dfd5836d6dd7b66959d12" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/742d52ab26fef74bbe93de9b45f7f73ebad054c03ca0464d53317c7362fe4794/gstreamer_plugins-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:742d52ab26fef74bbe93de9b45f7f73ebad054c03ca0464d53317c7362fe4794" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/c58fc4d6709a41ce20877a387866fa31522adddb516c7f4a8287449034a8eded/gstreamer_plugins-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:c58fc4d6709a41ce20877a387866fa31522adddb516c7f4a8287449034a8eded" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/10d5e7bee66e569aaecf88b05bb6e8d50f6ccd6b9d12aa9f9d6080442f7de13d/gstreamer_plugins-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:10d5e7bee66e569aaecf88b05bb6e8d50f6ccd6b9d12aa9f9d6080442f7de13d" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/64f05b16ac3e4f98ccda08c0f7299bcdadaccea0b295bf4207f6486581caecf5/gstreamer_plugins-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:64f05b16ac3e4f98ccda08c0f7299bcdadaccea0b295bf4207f6486581caecf5" },
 ]
 
 [[package]]
 name = "gstreamer-plugins-gpl"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-plugins-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/cb/2dceff196732171a409ad047bef47bc6de9ff880199f9766cc989f24bfea/gstreamer_plugins_gpl-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:2bc7833b135d7158578e4ad0ecc36b28cabe4061338548bd97b2f5ce235fb1da", size = 318811, upload-time = "2026-04-08T21:23:32.043Z" },
-    { url = "https://files.pythonhosted.org/packages/d3/f2/7f7fa7ebdad55cb330223f345de54ca5d126443cc6f93a78a1dbc10bc631/gstreamer_plugins_gpl-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:9249c74e6c1f5c4402636116d9fed68f63826cc2e47840a8da847c3357fbf570", size = 356490, upload-time = "2026-04-08T21:23:33.624Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/80/01e711acb0276cdab32f03248ec3f56918eab2d8837586815bceaa1be636/gstreamer_plugins_gpl-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:5780399e3556f8451c8e373a065140e1426aaca72a0dc35da7314fbe12aba7e1", size = 326025, upload-time = "2026-04-08T21:23:35.762Z" },
-    { url = "https://files.pythonhosted.org/packages/8c/18/bb3ccb9131940f9904225ce6ce501ad0d19af76d83fcee21980fd1a2db00/gstreamer_plugins_gpl-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:61883b6227af3e8c78335159eab6f3078c681ad5b801b331e0f4ed90c13c7715", size = 363946, upload-time = "2026-04-08T21:23:37.593Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/f4/1f9bed35d650e06189f408ab00c04b70cc16cc62d19b84d2991c7ce6d133/gstreamer_plugins_gpl-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:0deace3d0cb385308e52b3061cfce57d0a2bf8469bea90e64c7097c1c10f3d92", size = 1045765, upload-time = "2026-04-08T21:16:48.095Z" },
-    { url = "https://files.pythonhosted.org/packages/91/0f/9ac718d27933102075410d1109a233ab5d06dd45676a727d31a5e6df3d31/gstreamer_plugins_gpl-1.28.2-cp39-abi3-win32.whl", hash = "sha256:387bcaa44fac6d5b59a821f6e8b694190d3d982bb1b3bfc3f4bea54891f58111", size = 318810, upload-time = "2026-04-08T21:16:49.564Z" },
-    { url = "https://files.pythonhosted.org/packages/64/ea/f0ddae86044bc02fc15d3e5842e87f2412df014fa44b7b4e389185b10edb/gstreamer_plugins_gpl-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:0e2363092fa0b27896562840824b4afee1c34fdb7cf66add88bf3a2d0a7356a8", size = 356487, upload-time = "2026-04-08T21:16:51.185Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/c1617ee013619efe7ec33d2c8ad6afa62f9db4ec5194715921e955548d076c2b/gstreamer_plugins_gpl-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:c1617ee013619efe7ec33d2c8ad6afa62f9db4ec5194715921e955548d076c2b" },
+]
+
+[[package]]
+name = "gstreamer-plugins-gpl"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-plugins-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/43e4fdc81517f5d8d704131d601f04724b7518ab57802f11184a159f30d242cb/gstreamer_plugins_gpl-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:43e4fdc81517f5d8d704131d601f04724b7518ab57802f11184a159f30d242cb" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/f1e3bbb85b5a1663306302b81fbd0434369e64ff8bf8db6e10614e36ba9b92c9/gstreamer_plugins_gpl-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:f1e3bbb85b5a1663306302b81fbd0434369e64ff8bf8db6e10614e36ba9b92c9" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/cb8ef9a50f144cf04be8bb8af1db08a5ef120dcb00cb7a8ad757b939b6b52286/gstreamer_plugins_gpl-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:cb8ef9a50f144cf04be8bb8af1db08a5ef120dcb00cb7a8ad757b939b6b52286" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/15e0da7b8bcaa9d1a1319e0da5781e2cf8cfb8b0011d7ab57f75532c72e814d5/gstreamer_plugins_gpl-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:15e0da7b8bcaa9d1a1319e0da5781e2cf8cfb8b0011d7ab57f75532c72e814d5" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/ea4b4cfdc8704bc04f65aede913391703fccce1a0e5e29fa3d314f31a4fe07cc/gstreamer_plugins_gpl-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:ea4b4cfdc8704bc04f65aede913391703fccce1a0e5e29fa3d314f31a4fe07cc" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/94d048109d6561240c93e73800c8dff045ec055dc9346e894abf582a31b96f72/gstreamer_plugins_gpl-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:94d048109d6561240c93e73800c8dff045ec055dc9346e894abf582a31b96f72" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/7a3a240f92e3a2d904ca7a664ef90fe97dd8851aed30c8aa9dc6b91fe5c01c03/gstreamer_plugins_gpl-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:7a3a240f92e3a2d904ca7a664ef90fe97dd8851aed30c8aa9dc6b91fe5c01c03" },
 ]
 
 [[package]]
 name = "gstreamer-plugins-gpl-restricted"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-plugins-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/78/c38327e1fc510afd136cb328739d17d71113102067e5e2225a8d800715f1/gstreamer_plugins_gpl_restricted-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:c85c35f842042dc64ee3777016dd45388a07b39583a9c6d9db5d6c3adfc5fb06", size = 2149261, upload-time = "2026-04-08T21:23:40.373Z" },
-    { url = "https://files.pythonhosted.org/packages/51/4a/6e694f95d2f1201a454e0659fb74627798f791cb84cfc2aff28d66d4a6de/gstreamer_plugins_gpl_restricted-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:3c1c4c6b0e44e0a174f2741ee5a17647d121f80f3db14322b4b78bc45c57a7b2", size = 3404135, upload-time = "2026-04-08T21:23:43.014Z" },
-    { url = "https://files.pythonhosted.org/packages/57/19/b8be1540e8ae791f5d6cae640d2d3ccc1a72710199958b730801ddfa6077/gstreamer_plugins_gpl_restricted-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:a775717caa1800872da042603c6104ffddb478f2201eec551332e83fc4bdd201", size = 2202697, upload-time = "2026-04-08T21:23:45.222Z" },
-    { url = "https://files.pythonhosted.org/packages/03/63/8aaca747459cd0696c1683b8cf13c7901c1c299dbc61efc97437afa5a0ee/gstreamer_plugins_gpl_restricted-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:90329e5041c0f98a3b6893c6fba63c905b8ed06d9d7fe772cba742d205ce44a1", size = 3499003, upload-time = "2026-04-08T21:23:47.274Z" },
-    { url = "https://files.pythonhosted.org/packages/c8/05/4af77587e824c7ae6429d35d6de219cf85ba5c4f5c835052ef811b2bbcc9/gstreamer_plugins_gpl_restricted-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:86ab711aa117ed892416c45183d6f72ee5228ed23fa8ad1b18b09aa7d845ef97", size = 13315026, upload-time = "2026-04-08T21:16:54.771Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/af/8b87a5473872f9256ffd3fb9398affe3650dabc31065faaec67857a2ffef/gstreamer_plugins_gpl_restricted-1.28.2-cp39-abi3-win32.whl", hash = "sha256:135e20fda650db02a0525e4502c4d562ab60ea5cd0af0dc9cd379b6e8ea14c32", size = 2149264, upload-time = "2026-04-08T21:16:57.041Z" },
-    { url = "https://files.pythonhosted.org/packages/f7/50/fccaad7c474d2cfd24a2057402233ae0efefc1186572a6eba2586dd309a5/gstreamer_plugins_gpl_restricted-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:dac480481b9ef3a6e9765277ed5d681a61b3339391f6be89027a5c2d9693200c", size = 3404127, upload-time = "2026-04-08T21:16:58.968Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/87b6cdf0b8e254c9977bd9fc3b8e016748026fcf1d046e3a718a0ce761536f98/gstreamer_plugins_gpl_restricted-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:87b6cdf0b8e254c9977bd9fc3b8e016748026fcf1d046e3a718a0ce761536f98" },
+]
+
+[[package]]
+name = "gstreamer-plugins-gpl-restricted"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-plugins-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d285d1868f4a22e6ea497852fe497700d9900cdf238a2c1bf4403756ea9952eb/gstreamer_plugins_gpl_restricted-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:d285d1868f4a22e6ea497852fe497700d9900cdf238a2c1bf4403756ea9952eb" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/7dddb6c74d949136e3231fa16e28dbd597e3b24e3a2f259d96826324bc8a368e/gstreamer_plugins_gpl_restricted-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:7dddb6c74d949136e3231fa16e28dbd597e3b24e3a2f259d96826324bc8a368e" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/af527ebdd3fa1246560baffe2c100ab7fe550695f9e699265c6ec88f974e629b/gstreamer_plugins_gpl_restricted-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:af527ebdd3fa1246560baffe2c100ab7fe550695f9e699265c6ec88f974e629b" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/b27c5d617284d37591a56c445064b01b8c93f31de50b8d7df30c6698656e721b/gstreamer_plugins_gpl_restricted-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:b27c5d617284d37591a56c445064b01b8c93f31de50b8d7df30c6698656e721b" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/e3233bd1eee8afcf1a3ad63e3c5a8ab42a4b2eb037e041223b65f8a8f4c1eecf/gstreamer_plugins_gpl_restricted-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:e3233bd1eee8afcf1a3ad63e3c5a8ab42a4b2eb037e041223b65f8a8f4c1eecf" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/36f5005218fa557ffe71d451647961886d950d2f8cc8af1b3c2658ee0565248a/gstreamer_plugins_gpl_restricted-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:36f5005218fa557ffe71d451647961886d950d2f8cc8af1b3c2658ee0565248a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/3929f837de568d29d131a1615cd8c91328bb3cd4811768092eee3695cb136e0b/gstreamer_plugins_gpl_restricted-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:3929f837de568d29d131a1615cd8c91328bb3cd4811768092eee3695cb136e0b" },
 ]
 
 [[package]]
 name = "gstreamer-plugins-libs"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/24/2e/f9294e8fea54c2ff9baec57fe121f2275a9568956ba19845d9b6a477da78/gstreamer_plugins_libs-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:ba2e6b63198c1ae32ce068f6ed1f2363d938c10eb84c5a7870de9a58b8f6a764", size = 16367176, upload-time = "2026-04-08T21:23:51.045Z" },
-    { url = "https://files.pythonhosted.org/packages/59/1e/d9c6d573243f07baffd1a43a06993c669fd95bc49d5e6db60810ae982cff/gstreamer_plugins_libs-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:c7903a994932f548b258bc8e7e5afee2b23c7ffd042e25fc8f8cdbcc62dbe95f", size = 21144344, upload-time = "2026-04-08T21:23:55.939Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/d2/ee9edb8d6609de31f967e02ed31b472b7827fc762987839e3c6489a52cb1/gstreamer_plugins_libs-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:8061077c13def240112d428fe0b8dc05d55075ce15ad71d9988a270e6f1b9b29", size = 16660160, upload-time = "2026-04-08T21:24:00.366Z" },
-    { url = "https://files.pythonhosted.org/packages/77/b5/1978cb34a32ca37079379cdaaf234d86995879793036187774bda386fd43/gstreamer_plugins_libs-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:ab9df789077e274e1dc4c06757cd39fda73af1053fd7e5484e06aabd62fc2660", size = 21624945, upload-time = "2026-04-08T21:24:05.435Z" },
-    { url = "https://files.pythonhosted.org/packages/df/8f/07a0b16f090360badaa34abee601a4f54cc0253188321b01b0ef4aa89bc3/gstreamer_plugins_libs-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:4398096d33228deee62bb87fe09ef6d3772e00494958254f842d835881d3f53d", size = 82895903, upload-time = "2026-04-08T21:17:09.063Z" },
-    { url = "https://files.pythonhosted.org/packages/82/5f/7e4a16a455c69732d6ec3f1ed690143e239cf1dbd6ddccc3209fa0069145/gstreamer_plugins_libs-1.28.2-cp39-abi3-win32.whl", hash = "sha256:b3706160087aa0e3792fe64c5a6ba2b191e8291cfc139f4c43c52d587bddae66", size = 16367172, upload-time = "2026-04-08T21:17:14.998Z" },
-    { url = "https://files.pythonhosted.org/packages/75/22/b1921ba0ec13f2f19b5343a8d7c5bdda2033d762495b1e44b0452d6fbde9/gstreamer_plugins_libs-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:52ff00ee79332f244c2ef858ff0117101a549483670ff2793f58821c3c83ef87", size = 21144342, upload-time = "2026-04-08T21:17:21.368Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/9ecbb424fe3406d615b41beb1f4b092b44f1d20a3bc1aa3faa6ff3368c7d6e9a/gstreamer_plugins_libs-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9ecbb424fe3406d615b41beb1f4b092b44f1d20a3bc1aa3faa6ff3368c7d6e9a" },
+]
+
+[[package]]
+name = "gstreamer-plugins-libs"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/f66ccf4cd6582332a69c9fd6f8e3edd077d67c965238deefcc8b358b6da258e9/gstreamer_plugins_libs-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:f66ccf4cd6582332a69c9fd6f8e3edd077d67c965238deefcc8b358b6da258e9" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/24cd0675f247c75483e7fbe6003d350a1112664f799e8b2ab9cc478f2beb3277/gstreamer_plugins_libs-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:24cd0675f247c75483e7fbe6003d350a1112664f799e8b2ab9cc478f2beb3277" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/ee358991affea76ad155d21d96be0c7defcb1821c8008db42bdd1f37ff8b8eff/gstreamer_plugins_libs-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:ee358991affea76ad155d21d96be0c7defcb1821c8008db42bdd1f37ff8b8eff" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/4e94de411f3035876e3d42bb10265bf467a3e0c88fca38738950650f7316a616/gstreamer_plugins_libs-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:4e94de411f3035876e3d42bb10265bf467a3e0c88fca38738950650f7316a616" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/0c94e4359fec90c752c0b4eb046ff734a8eba9e74879b36e300f33d213dd4525/gstreamer_plugins_libs-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:0c94e4359fec90c752c0b4eb046ff734a8eba9e74879b36e300f33d213dd4525" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/2202c6b2cd21f09c6733a80100d7a4698163e88461f9216e6fd526996c24afa2/gstreamer_plugins_libs-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:2202c6b2cd21f09c6733a80100d7a4698163e88461f9216e6fd526996c24afa2" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/b405654ea01a51922170e484e857623f238fdb19d7ddd9d95660ad589fecf496/gstreamer_plugins_libs-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:b405654ea01a51922170e484e857623f238fdb19d7ddd9d95660ad589fecf496" },
 ]
 
 [[package]]
 name = "gstreamer-plugins-restricted"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 dependencies = [
-    { name = "gstreamer-plugins-libs", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+    { name = "gstreamer-plugins-libs", version = "1.28.3", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/6c/5547b54331b3b192ddc57fe934ef9596ec46d3304dcb9684ee96f002d71f/gstreamer_plugins_restricted-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:5d29f18df8917e3aa2d1f7539fb58c3b47743871b8c437d5be00b523193659cf", size = 1392975, upload-time = "2026-04-08T21:24:08.452Z" },
-    { url = "https://files.pythonhosted.org/packages/97/57/abed64ada5fc3e497b42948ee45aecb9753dd1c1b3bd98c31f69c6276089/gstreamer_plugins_restricted-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:f1f8273b72a2e3826de9ba797cff9bc55ca7f02039603c2ed3826765c15bcec9", size = 1487970, upload-time = "2026-04-08T21:24:11.062Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/55/764d90d55bb4629267b0d70f0d3b9348833159948cfb2bb3298d0dab1c87/gstreamer_plugins_restricted-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:ad09f6601933605663f60306c6771acc783faf350f4b03401743c232feb9eaef", size = 1428505, upload-time = "2026-04-08T21:24:13.376Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/d4/fb550e804351090772459112d2f31f669cdb2e22ffafb082357b6fcada4e/gstreamer_plugins_restricted-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:a9dff2d91834732d678ed0f7acbf0495d7cb62340a0b2002b35712c557cda3a3", size = 1535126, upload-time = "2026-04-08T21:24:15.368Z" },
-    { url = "https://files.pythonhosted.org/packages/39/11/ea69133e2bb388f33ec2184b195c0ab00bc8653117d97000e7d5d447a284/gstreamer_plugins_restricted-1.28.2-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9e903a2a9c6f3f431014f0f1547ecb75b032a615384f28bc43c978a5f5081bec", size = 6013897, upload-time = "2026-04-08T21:17:24.847Z" },
-    { url = "https://files.pythonhosted.org/packages/cd/98/1fd8bd46f450eb3e851aeea1dae08f09f4c64fd94e905e0e2b3ac1ea3b74/gstreamer_plugins_restricted-1.28.2-cp39-abi3-win32.whl", hash = "sha256:0d526f68cf6525f7efef09dacb77260240cc598a9ab4ecbdfc160436b6a94ebe", size = 1392976, upload-time = "2026-04-08T21:17:26.812Z" },
-    { url = "https://files.pythonhosted.org/packages/17/70/ea8e0a77ee3e53fa5f823f65171a11d8ed683273483c0bb4a5f3aa457a77/gstreamer_plugins_restricted-1.28.2-cp39-abi3-win_amd64.whl", hash = "sha256:d0f42d44bea52495ec3dbe47a0d75990175b76ef60202b3b99f233d8d65e1bae", size = 1487966, upload-time = "2026-04-08T21:17:29.16Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/4b36ac0089c4d9b5309c8d510da3e8aec14054ad1d149b5341b949c21ebfd173/gstreamer_plugins_restricted-1.28.3-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:4b36ac0089c4d9b5309c8d510da3e8aec14054ad1d149b5341b949c21ebfd173" },
+]
+
+[[package]]
+name = "gstreamer-plugins-restricted"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+dependencies = [
+    { name = "gstreamer-plugins-libs", version = "1.29.1a0", source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }, marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/a1ff0c5c2c8a684c72dec2d9c6d9f132188eca96a55d7fb102a1a402aae0a366/gstreamer_plugins_restricted-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:a1ff0c5c2c8a684c72dec2d9c6d9f132188eca96a55d7fb102a1a402aae0a366" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/8e952cf4226468d86349794221f36979f1574af8a61d020ad7b23893d2cdf38c/gstreamer_plugins_restricted-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:8e952cf4226468d86349794221f36979f1574af8a61d020ad7b23893d2cdf38c" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/2186d33f0a41d3e4bd1b4cbb48c9d72081bac3c0552ad7b860de016d4f690081/gstreamer_plugins_restricted-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:2186d33f0a41d3e4bd1b4cbb48c9d72081bac3c0552ad7b860de016d4f690081" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/313af0d1e13de286f5410078e361b6ef72bae79d05eda2d2251fe6cff275098a/gstreamer_plugins_restricted-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:313af0d1e13de286f5410078e361b6ef72bae79d05eda2d2251fe6cff275098a" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/9568e488ae2ab1c0cc9f771575a4d362534bfb62504e0ad495219c832cbf312f/gstreamer_plugins_restricted-1.29.1a0-cp39-abi3-macosx_10_13_universal2.whl", hash = "sha256:9568e488ae2ab1c0cc9f771575a4d362534bfb62504e0ad495219c832cbf312f" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/cf7a40aba9066820a0e43c33d065637bd0d2984129d6a1498643b860b382ceed/gstreamer_plugins_restricted-1.29.1a0-cp39-abi3-win32.whl", hash = "sha256:cf7a40aba9066820a0e43c33d065637bd0d2984129d6a1498643b860b382ceed" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/728b692ef0903d5c0e9c04b6279566ad0729aa5b262599d4a82303135414a048/gstreamer_plugins_restricted-1.29.1a0-cp39-abi3-win_amd64.whl", hash = "sha256:728b692ef0903d5c0e9c04b6279566ad0729aa5b262599d4a82303135414a048" },
 ]
 
 [[package]]
 name = "gstreamer-python"
-version = "1.28.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.28.3"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/7f/8c32d7f8c4363e3478cfe70c09d9ab1f7efe78abf6214a4ccf4837be4a15/gstreamer_python-1.28.2-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:dc7ead736545dd644fd370678fff8c120c67420882cc994b3f9a947202343610", size = 1204011, upload-time = "2026-04-08T21:24:35.337Z" },
-    { url = "https://files.pythonhosted.org/packages/03/3c/84cfd116fffb85afc05613ed5b36fff596aef24e2652efa36e54dc350657/gstreamer_python-1.28.2-cp313-cp313-win32.whl", hash = "sha256:5377067243bf171c9af08290269f54e198f3ad32f1422df44d6729d8675357b9", size = 934034, upload-time = "2026-04-08T21:24:41.353Z" },
-    { url = "https://files.pythonhosted.org/packages/9d/7d/ce6819070a509e3d6242672e7e4943975cc965c3fff751d8fe1b5d4d7c7e/gstreamer_python-1.28.2-cp313-cp313-win_amd64.whl", hash = "sha256:b79aadedfeebd704bbe57e6ea598c317fe4c282891f776ad2bfeafd2ad4fc0b8", size = 975096, upload-time = "2026-04-08T21:24:43.314Z" },
-    { url = "https://files.pythonhosted.org/packages/a8/26/d76e056ed3f667a72a4eb4503521cc64c52decd9d01428ce41335cbdd11d/gstreamer_python-1.28.2-cp313-cp313t-win32.whl", hash = "sha256:ba21dad5b24ce8bcaac0d755ac0767401fa134045a3145aeb2fc531565bf8be7", size = 948133, upload-time = "2026-04-08T21:24:37.629Z" },
-    { url = "https://files.pythonhosted.org/packages/52/aa/ebe0d6c9a8df01b0a7fc492def32a9583e39fac19176effb5e56d63fb3cc/gstreamer_python-1.28.2-cp313-cp313t-win_amd64.whl", hash = "sha256:761aca351437f387e1c9056c93c79ec321f1406eaa3d63b38ffe421c73d31558", size = 994517, upload-time = "2026-04-08T21:24:39.63Z" },
-    { url = "https://files.pythonhosted.org/packages/88/06/a858cafb941baa88b6553a1497a70b8fd63fb0b30a1739b31aeb7a5cb5ce/gstreamer_python-1.28.2-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:237bbaee74a491ccd1efff1c295b462d28d6376a4523f8e9808044df3bb8d741", size = 1203968, upload-time = "2026-04-08T21:24:45.882Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/ab/01aff64f3c2444a1980d75dd87da77443b03cb49d00315500fe30d7fbe5f/gstreamer_python-1.28.2-cp314-cp314-win32.whl", hash = "sha256:1be3fdc21fa91cb79afbb49e39abcb46177e130f671bdfcce73a38dbf51a82e1", size = 959521, upload-time = "2026-04-08T21:24:51.912Z" },
-    { url = "https://files.pythonhosted.org/packages/fe/ff/8cb9c504f86e77f46df231fbcfbe42149784f1299a80278ed08a242f64ca/gstreamer_python-1.28.2-cp314-cp314-win_amd64.whl", hash = "sha256:c0296314eac79cb721d09b7d29073e27e1b9f54d400e0e38132a5f381cb0d850", size = 1000968, upload-time = "2026-04-08T21:24:53.768Z" },
-    { url = "https://files.pythonhosted.org/packages/7a/eb/c359b939ef9b70602898bd11d8f19ceb72e53a2d135c4b30543f5f866f42/gstreamer_python-1.28.2-cp314-cp314t-win32.whl", hash = "sha256:a221cb15349d412fb32d9bf45f58ff12b9c2901485bcd2f4550cdc2fd2264c85", size = 974842, upload-time = "2026-04-08T21:24:47.71Z" },
-    { url = "https://files.pythonhosted.org/packages/8d/0f/fc46b0b92721616af252ada19606767f5a66d25310a7efade1aef07916eb/gstreamer_python-1.28.2-cp314-cp314t-win_amd64.whl", hash = "sha256:ada47887f72526650b3222f1864c8149ee27f5b64bd9a3e5f22abbee2952bcb5", size = 1023273, upload-time = "2026-04-08T21:24:49.942Z" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/a0b986547c9d85869355bd84066ec74d67da9834341576f5875d8c5ef24fcb75/gstreamer_python-1.28.3-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:a0b986547c9d85869355bd84066ec74d67da9834341576f5875d8c5ef24fcb75" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/a82ad925fdd991b86ae65031c419b8af6ba5cae26aa952e6dfe1b82e2feec279/gstreamer_python-1.28.3-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:a82ad925fdd991b86ae65031c419b8af6ba5cae26aa952e6dfe1b82e2feec279" },
+]
+
+[[package]]
+name = "gstreamer-python"
+version = "1.29.1a0"
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
+resolution-markers = [
+    "platform_machine != 'arm64' or sys_platform != 'darwin'",
+]
+wheels = [
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/a747a9fe4aae9b20926517000704314d1d85a32a95722604a349d9f99ebdf558/gstreamer_python-1.29.1a0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:a747a9fe4aae9b20926517000704314d1d85a32a95722604a349d9f99ebdf558" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d018d786245ba0d1ff021b1c594f1462656c14eef582b5273f7b43a3e6c0cadc/gstreamer_python-1.29.1a0-cp313-cp313-win32.whl", hash = "sha256:d018d786245ba0d1ff021b1c594f1462656c14eef582b5273f7b43a3e6c0cadc" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/757ecfeba5118ffb0eedd9e99954866dbfa1719e9b0f2335425f830aa6bcfccb/gstreamer_python-1.29.1a0-cp313-cp313-win_amd64.whl", hash = "sha256:757ecfeba5118ffb0eedd9e99954866dbfa1719e9b0f2335425f830aa6bcfccb" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/1134531d880ed78886acfa455b90c7751ae46f6c40da21f99ac681036ba0f306/gstreamer_python-1.29.1a0-cp313-cp313t-win32.whl", hash = "sha256:1134531d880ed78886acfa455b90c7751ae46f6c40da21f99ac681036ba0f306" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/a53921d6865d45e2261c0877af94d678e9a4dc2c698984d95857a6dab2bc0996/gstreamer_python-1.29.1a0-cp313-cp313t-win_amd64.whl", hash = "sha256:a53921d6865d45e2261c0877af94d678e9a4dc2c698984d95857a6dab2bc0996" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/55ff1c9016fc68b4949ef184637b738d46953f43e771714392aa7b03e81e9916/gstreamer_python-1.29.1a0-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:55ff1c9016fc68b4949ef184637b738d46953f43e771714392aa7b03e81e9916" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/6f8b17616c0816bafc8de18cb7e3538179dfa058e7cba9a5996795624cf5a3f2/gstreamer_python-1.29.1a0-cp314-cp314-win32.whl", hash = "sha256:6f8b17616c0816bafc8de18cb7e3538179dfa058e7cba9a5996795624cf5a3f2" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/d02107138f9e9bf451a5c72089cf0a8362ac817543b00f39bf8466864c1543f6/gstreamer_python-1.29.1a0-cp314-cp314-win_amd64.whl", hash = "sha256:d02107138f9e9bf451a5c72089cf0a8362ac817543b00f39bf8466864c1543f6" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/bb3641f665594472def991c4fb6dee62336894db445d8fa4a0dbd845135408c9/gstreamer_python-1.29.1a0-cp314-cp314t-win32.whl", hash = "sha256:bb3641f665594472def991c4fb6dee62336894db445d8fa4a0dbd845135408c9" },
+    { url = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/files/5ee3aeaf5a19698a176e4dbd7b06ab1d1bc2e098b33863b3c511a9e3c5e424a6/gstreamer_python-1.29.1a0-cp314-cp314t-win_amd64.whl", hash = "sha256:5ee3aeaf5a19698a176e4dbd7b06ab1d1bc2e098b33863b3c511a9e3c5e424a6" },
 ]
 
 [[package]]
 name = "h11"
 version = "0.16.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1", size = 101250, upload-time = "2025-04-24T03:35:25.427Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86", size = 37515, upload-time = "2025-04-24T03:35:24.344Z" },
@@ -659,7 +854,7 @@ wheels = [
 [[package]]
 name = "hf-xet"
 version = "1.5.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/74/d8/5c06fc76461418326a7decf8367480c35be11a41fd938633929c60a9ec6b/hf_xet-1.5.0.tar.gz", hash = "sha256:e0fb0a34d9f406eed88233e829a67ec016bec5af19e480eac65a233ea289a948", size = 837196, upload-time = "2026-05-06T06:18:15.583Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/68/9b/6912c99070915a4f28119e3c5b52a9abd1eec0ad5cb293b8c967a0c6f5a2/hf_xet-1.5.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:7d70fe2ce97b9db73b9c9b9c81fe3693640aec83416a966c446afea54acfae3c", size = 4023383, upload-time = "2026-05-06T06:17:53.947Z" },
@@ -691,7 +886,7 @@ wheels = [
 [[package]]
 name = "httpcore"
 version = "1.0.9"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "h11" },
@@ -704,7 +899,7 @@ wheels = [
 [[package]]
 name = "httptools"
 version = "0.7.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b5/46/120a669232c7bdedb9d52d4aeae7e6c7dfe151e99dc70802e2fc7a5e1993/httptools-0.7.1.tar.gz", hash = "sha256:abd72556974f8e7c74a259655924a717a2365b236c882c3f6f8a45fe94703ac9", size = 258961, upload-time = "2025-10-10T03:55:08.559Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/09/8f/c77b1fcbfd262d422f12da02feb0d218fa228d52485b77b953832105bb90/httptools-0.7.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:6babce6cfa2a99545c60bfef8bee0cc0545413cb0018f617c8059a30ad985de3", size = 202889, upload-time = "2025-10-10T03:54:47.089Z" },
@@ -726,7 +921,7 @@ wheels = [
 [[package]]
 name = "httpx"
 version = "0.28.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "certifi" },
@@ -741,7 +936,7 @@ wheels = [
 [[package]]
 name = "huggingface-hub"
 version = "1.3.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "fsspec" },
@@ -762,25 +957,16 @@ wheels = [
 [[package]]
 name = "idna"
 version = "3.13"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ce/cc/762dfb036166873f0059f3b7de4565e1b5bc3d6f28a414c13da27e442f99/idna-3.13.tar.gz", hash = "sha256:585ea8fe5d69b9181ec1afba340451fba6ba764af97026f92a91d4eef164a242", size = 194210, upload-time = "2026-04-22T16:42:42.314Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5d/13/ad7d7ca3808a898b4612b6fe93cde56b53f3034dcde235acb1f0e1df24c6/idna-3.13-py3-none-any.whl", hash = "sha256:892ea0cde124a99ce773decba204c5552b69c3c67ffd5f232eb7696135bc8bb3", size = 68629, upload-time = "2026-04-22T16:42:40.909Z" },
 ]
 
 [[package]]
-name = "ifaddr"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e8/ac/fb4c578f4a3256561548cd825646680edcadb9440f3f68add95ade1eb791/ifaddr-0.2.0.tar.gz", hash = "sha256:cc0cbfcaabf765d44595825fb96a99bb12c79716b73b44330ea38ee2b0c4aed4", size = 10485, upload-time = "2022-06-15T21:40:27.561Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/1f/19ebc343cc71a7ffa78f17018535adc5cbdd87afb31d7c34874680148b32/ifaddr-0.2.0-py3-none-any.whl", hash = "sha256:085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748", size = 12314, upload-time = "2022-06-15T21:40:25.756Z" },
-]
-
-[[package]]
 name = "importlib-resources"
 version = "7.1.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e4/06/b56dfa750b44e86157093bc8fca0ab81dccbf5260510de4eaf1cb69b5b99/importlib_resources-7.1.0.tar.gz", hash = "sha256:0722d4c6212489c530f2a145a34c0a7a3b4721bc96a15fada5930e2a0b760708", size = 44985, upload-time = "2026-04-12T16:36:09.232Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/db/55a262f3606bebcae07cc14095338471ad7c0bbcaa37707e6f0ee49725b7/importlib_resources-7.1.0-py3-none-any.whl", hash = "sha256:1bd7b48b4088eddb2cd16382150bb515af0bd2c70128194392725f82ad2c96a1", size = 37232, upload-time = "2026-04-12T16:36:08.219Z" },
@@ -789,7 +975,7 @@ wheels = [
 [[package]]
 name = "jinja2"
 version = "3.1.6"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "markupsafe" },
 ]
@@ -801,7 +987,7 @@ wheels = [
 [[package]]
 name = "libusb-package"
 version = "1.0.26.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "importlib-resources" },
 ]
@@ -821,7 +1007,7 @@ wheels = [
 [[package]]
 name = "log-throttling"
 version = "0.0.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/76/be/09fda383d82a7b91f12ff5002bc909e101769c802ff3b1d2cb9f533d1a2f/log-throttling-0.0.3.tar.gz", hash = "sha256:df714e1448cd9cb4c916cf668ab88323032e61ece733548708d996ecf63190b9", size = 3533, upload-time = "2022-03-08T16:29:23.674Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/6e/995ebad4ab08250b4afe1d91fe3086b863ed9bb74539d90485250a50f08a/log_throttling-0.0.3-py3-none-any.whl", hash = "sha256:a82508f489dd44a60b737a0339c784dd8ee2b9db16bdcf587a8ae1012a7f6ffc", size = 4081, upload-time = "2022-03-08T16:29:21.443Z" },
@@ -830,7 +1016,7 @@ wheels = [
 [[package]]
 name = "markdown-it-py"
 version = "4.2.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "mdurl" },
 ]
@@ -842,7 +1028,7 @@ wheels = [
 [[package]]
 name = "markupsafe"
 version = "3.0.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7e/99/7690b6d4034fffd95959cbe0c02de8deb3098cc577c67bb6a24fe5d7caa7/markupsafe-3.0.3.tar.gz", hash = "sha256:722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698", size = 80313, upload-time = "2025-09-27T18:37:40.426Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/38/2f/907b9c7bbba283e68f20259574b13d005c121a0fa4c175f9bed27c4597ff/markupsafe-3.0.3-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:e1cf1972137e83c5d4c136c43ced9ac51d0e124706ee1c8aa8532c1287fa8795", size = 11622, upload-time = "2025-09-27T18:36:41.777Z" },
@@ -894,7 +1080,7 @@ wheels = [
 [[package]]
 name = "mdurl"
 version = "0.1.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
@@ -903,7 +1089,7 @@ wheels = [
 [[package]]
 name = "multidict"
 version = "6.7.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1a/c2/c2d94cbe6ac1753f3fc980da97b3d930efe1da3af3c9f5125354436c073d/multidict-6.7.1.tar.gz", hash = "sha256:ec6652a1bee61c53a3e5776b6049172c53b6aaba34f18c9ad04f82712bac623d", size = 102010, upload-time = "2026-01-26T02:46:45.979Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f2/22/929c141d6c0dba87d3e1d38fbdf1ba8baba86b7776469f2bc2d3227a1e67/multidict-6.7.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:2b41f5fed0ed563624f1c17630cb9941cf2309d4df00e494b551b5f3e3d67a23", size = 76174, upload-time = "2026-01-26T02:44:18.509Z" },
@@ -984,7 +1170,7 @@ wheels = [
 [[package]]
 name = "numpy"
 version = "2.4.4"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d7/9f/b8cef5bffa569759033adda9481211426f12f53299629b410340795c2514/numpy-2.4.4.tar.gz", hash = "sha256:2d390634c5182175533585cc89f3608a4682ccb173cc9bb940b2881c8d6f8fa0", size = 20731587, upload-time = "2026-03-29T13:22:01.298Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/14/1d/d0a583ce4fefcc3308806a749a536c201ed6b5ad6e1322e227ee4848979d/numpy-2.4.4-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:08f2e31ed5e6f04b118e49821397f12767934cfdd12a1ce86a058f91e004ee50", size = 16684933, upload-time = "2026-03-29T13:19:22.47Z" },
@@ -1034,18 +1220,25 @@ wheels = [
 [[package]]
 name = "opencv-python"
 version = "4.13.0.92"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "numpy", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "numpy" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/6f/5a28fef4c4a382be06afe3938c64cc168223016fa520c5abaf37e8862aa5/opencv_python-4.13.0.92-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:caf60c071ec391ba51ed00a4a920f996d0b64e3e46068aac1f646b5de0326a19", size = 46247052, upload-time = "2026-02-05T07:01:25.046Z" },
+    { url = "https://files.pythonhosted.org/packages/08/ac/6c98c44c650b8114a0fb901691351cfb3956d502e8e9b5cd27f4ee7fbf2f/opencv_python-4.13.0.92-cp37-abi3-macosx_14_0_x86_64.whl", hash = "sha256:5868a8c028a0b37561579bfb8ac1875babdc69546d236249fff296a8c010ccf9", size = 32568781, upload-time = "2026-02-05T07:01:41.379Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/51/82fed528b45173bf629fa44effb76dff8bc9f4eeaee759038362dfa60237/opencv_python-4.13.0.92-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:0bc2596e68f972ca452d80f444bc404e08807d021fbba40df26b61b18e01838a", size = 47685527, upload-time = "2026-02-05T06:59:11.24Z" },
+    { url = "https://files.pythonhosted.org/packages/db/07/90b34a8e2cf9c50fe8ed25cac9011cde0676b4d9d9c973751ac7616223a2/opencv_python-4.13.0.92-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:402033cddf9d294693094de5ef532339f14ce821da3ad7df7c9f6e8316da32cf", size = 70460872, upload-time = "2026-02-05T06:59:19.162Z" },
+    { url = "https://files.pythonhosted.org/packages/02/6d/7a9cc719b3eaf4377b9c2e3edeb7ed3a81de41f96421510c0a169ca3cfd4/opencv_python-4.13.0.92-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:bccaabf9eb7f897ca61880ce2869dcd9b25b72129c28478e7f2a5e8dee945616", size = 46708208, upload-time = "2026-02-05T06:59:15.419Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/55/b3b49a1b97aabcfbbd6c7326df9cb0b6fa0c0aefa8e89d500939e04aa229/opencv_python-4.13.0.92-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:620d602b8f7d8b8dab5f4b99c6eb353e78d3fb8b0f53db1bd258bb1aa001c1d5", size = 72927042, upload-time = "2026-02-05T06:59:23.389Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/17/de5458312bcb07ddf434d7bfcb24bb52c59635ad58c6e7c751b48949b009/opencv_python-4.13.0.92-cp37-abi3-win32.whl", hash = "sha256:372fe164a3148ac1ca51e5f3ad0541a4a276452273f503441d718fab9c5e5f59", size = 30932638, upload-time = "2026-02-05T07:02:14.98Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/a5/1be1516390333ff9be3a9cb648c9f33df79d5096e5884b5df71a588af463/opencv_python-4.13.0.92-cp37-abi3-win_amd64.whl", hash = "sha256:423d934c9fafb91aad38edf26efb46da91ffbc05f3f59c4b0c72e699720706f5", size = 40212062, upload-time = "2026-02-05T07:02:12.724Z" },
 ]
 
 [[package]]
 name = "packaging"
 version = "26.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d7/f1/e7a6dd94a8d4a5626c03e4e99c87f241ba9e350cd9e6d75123f992427270/packaging-26.2.tar.gz", hash = "sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661", size = 228134, upload-time = "2026-04-24T20:15:23.917Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl", hash = "sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e", size = 100195, upload-time = "2026-04-24T20:15:22.081Z" },
@@ -1054,7 +1247,7 @@ wheels = [
 [[package]]
 name = "pip"
 version = "26.1.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b6/48/cb9b7a682f6fe01a4221e1728941dd4ac3cd9090a17db3779d6ff490b602/pip-26.1.1.tar.gz", hash = "sha256:d36762751d156a4ee895de8af39aa0abeeeb577f93a2eca6ab62467bbf0f8a78", size = 1840400, upload-time = "2026-05-04T19:02:21.248Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3a/eb/fea4d1d51c49832120f7f285d07306db3960f423a2612c6057caf3e8196f/pip-26.1.1-py3-none-any.whl", hash = "sha256:99cb1c2899893b075ff56e4ed0af55669a955b49ad7fb8d8603ecdaf4ed653fb", size = 1812777, upload-time = "2026-05-04T19:02:18.9Z" },
@@ -1063,7 +1256,7 @@ wheels = [
 [[package]]
 name = "prompt-toolkit"
 version = "3.0.52"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "wcwidth" },
 ]
@@ -1075,7 +1268,7 @@ wheels = [
 [[package]]
 name = "propcache"
 version = "0.5.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ec/44/c87281c333769159c50594f22610f77398a47ccbfbbf23074e744e86f87c/propcache-0.5.2.tar.gz", hash = "sha256:01c4fc7480cd0598bb4b57022df55b9ca296da7fc5a8760bd8451a7e63a7d427", size = 50208, upload-time = "2026-05-08T21:02:12.199Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/09/f049e45385503fe67db75a6b6186a7b9f0c3930366dc960522c312a825b1/propcache-0.5.2-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:099aaf4b4d1a02265b92a977edf00b5c4f63b3b17ac6de39b0d637c9cac0188a", size = 94457, upload-time = "2026-05-08T21:00:36.355Z" },
@@ -1152,7 +1345,7 @@ wheels = [
 [[package]]
 name = "psutil"
 version = "7.2.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/aa/c6/d1ddf4abb55e93cebc4f2ed8b5d6dbad109ecb8d63748dd2b20ab5e57ebe/psutil-7.2.2.tar.gz", hash = "sha256:0746f5f8d406af344fd547f1c8daa5f5c33dbc293bb8d6a16d80b4bb88f59372", size = 493740, upload-time = "2026-01-28T18:14:54.428Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/08/510cbdb69c25a96f4ae523f733cdc963ae654904e8db864c07585ef99875/psutil-7.2.2-cp313-cp313t-macosx_10_13_x86_64.whl", hash = "sha256:2edccc433cbfa046b980b0df0171cd25bcaeb3a68fe9022db0979e7aa74a826b", size = 130595, upload-time = "2026-01-28T18:14:57.293Z" },
@@ -1180,7 +1373,7 @@ wheels = [
 [[package]]
 name = "pulsectl"
 version = "24.12.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f5/c5/f070a8c5f0a5742f7aebb5d90869ee1805174c03928dfafd3833de58bd57/pulsectl-24.12.0.tar.gz", hash = "sha256:288d6715232ac6f3dcdb123fbecaa2c0b9a50ea4087e6e87c3f841ab0a8a07fc", size = 41200, upload-time = "2024-12-26T13:22:57.389Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a9/5b119f86dd1a053c55da7d0355fca2ad215bae6f7f4777d46b307a8cc3e9/pulsectl-24.12.0-py2.py3-none-any.whl", hash = "sha256:13a60be940594f03ead3245b3dfe3aff4a3f9a792af347674bde5e716d4f76d2", size = 35133, upload-time = "2024-12-26T13:22:53.395Z" },
@@ -1189,13 +1382,13 @@ wheels = [
 [[package]]
 name = "pycairo"
 version = "1.29.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/22/d9/1728840a22a4ef8a8f479b9156aa2943cd98c3907accd3849fb0d5f82bfd/pycairo-1.29.0.tar.gz", hash = "sha256:f3f7fde97325cae80224c09f12564ef58d0d0f655da0e3b040f5807bd5bd3142", size = 665871, upload-time = "2025-11-11T19:13:01.584Z" }
 
 [[package]]
 name = "pycaw"
 version = "20251023"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "comtypes", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
     { name = "psutil", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
@@ -1208,7 +1401,7 @@ wheels = [
 [[package]]
 name = "pycparser"
 version = "3.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1b/7d/92392ff7815c21062bea51aa7b87d45576f649f16458d78b7cf94b9ab2e6/pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29", size = 103492, upload-time = "2026-01-21T14:26:51.89Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992", size = 48172, upload-time = "2026-01-21T14:26:50.693Z" },
@@ -1217,7 +1410,7 @@ wheels = [
 [[package]]
 name = "pydantic"
 version = "2.13.4"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "annotated-types" },
     { name = "pydantic-core" },
@@ -1232,7 +1425,7 @@ wheels = [
 [[package]]
 name = "pydantic-core"
 version = "2.46.4"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
@@ -1288,7 +1481,7 @@ wheels = [
 [[package]]
 name = "pygments"
 version = "2.20.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
@@ -1297,7 +1490,7 @@ wheels = [
 [[package]]
 name = "pygobject"
 version = "3.46.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "pycairo", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
 ]
@@ -1306,7 +1499,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/ac/4a/f24ddf1d20cc4b56a
 [[package]]
 name = "pyobjc-core"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b8/b6/d5612eb40be4fd5ef88c259339e6313f46ba67577a95d86c3470b951fce0/pyobjc_core-12.1.tar.gz", hash = "sha256:2bb3903f5387f72422145e1466b3ac3f7f0ef2e9960afa9bcd8961c5cbf8bd21", size = 1000532, upload-time = "2025-11-14T10:08:28.292Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/d2/29e5e536adc07bc3d33dd09f3f7cf844bf7b4981820dc2a91dd810f3c782/pyobjc_core-12.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:01c0cf500596f03e21c23aef9b5f326b9fb1f8f118cf0d8b66749b6cf4cbb37a", size = 677370, upload-time = "2025-11-14T09:33:05.273Z" },
@@ -1318,13 +1511,13 @@ wheels = [
 [[package]]
 name = "pyobjc-framework-avfoundation"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-cocoa", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-coreaudio", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-coremedia", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-quartz", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
+    { name = "pyobjc-framework-coreaudio" },
+    { name = "pyobjc-framework-coremedia" },
+    { name = "pyobjc-framework-quartz" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cd/42/c026ab308edc2ed5582d8b4b93da6b15d1b6557c0086914a4aabedd1f032/pyobjc_framework_avfoundation-12.1.tar.gz", hash = "sha256:eda0bb60be380f9ba2344600c4231dd58a3efafa99fdc65d3673ecfbb83f6fcb", size = 310047, upload-time = "2025-11-14T10:09:40.069Z" }
 wheels = [
@@ -1337,9 +1530,9 @@ wheels = [
 [[package]]
 name = "pyobjc-framework-cocoa"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-core" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/02/a3/16ca9a15e77c061a9250afbae2eae26f2e1579eb8ca9462ae2d2c71e1169/pyobjc_framework_cocoa-12.1.tar.gz", hash = "sha256:5556c87db95711b985d5efdaaf01c917ddd41d148b1e52a0c66b1a2e2c5c1640", size = 2772191, upload-time = "2025-11-14T10:13:02.069Z" }
 wheels = [
@@ -1352,10 +1545,10 @@ wheels = [
 [[package]]
 name = "pyobjc-framework-coreaudio"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-cocoa", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/84/d1/0b884c5564ab952ff5daa949128c64815300556019c1bba0cf2ca752a1a0/pyobjc_framework_coreaudio-12.1.tar.gz", hash = "sha256:a9e72925fcc1795430496ce0bffd4ddaa92c22460a10308a7283ade830089fe1", size = 75077, upload-time = "2025-11-14T10:13:22.345Z" }
 wheels = [
@@ -1368,10 +1561,10 @@ wheels = [
 [[package]]
 name = "pyobjc-framework-coremedia"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-cocoa", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/da/7d/5ad600ff7aedfef8ba8f51b11d9aaacdf247b870bd14045d6e6f232e3df9/pyobjc_framework_coremedia-12.1.tar.gz", hash = "sha256:166c66a9c01e7a70103f3ca44c571431d124b9070612ef63a1511a4e6d9d84a7", size = 89566, upload-time = "2025-11-14T10:13:49.788Z" }
 wheels = [
@@ -1384,10 +1577,10 @@ wheels = [
 [[package]]
 name = "pyobjc-framework-quartz"
 version = "12.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyobjc-framework-cocoa", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/94/18/cc59f3d4355c9456fc945eae7fe8797003c4da99212dd531ad1b0de8a0c6/pyobjc_framework_quartz-12.1.tar.gz", hash = "sha256:27f782f3513ac88ec9b6c82d9767eef95a5cf4175ce88a1e5a65875fee799608", size = 3159099, upload-time = "2025-11-14T10:21:24.31Z" }
 wheels = [
@@ -1400,7 +1593,7 @@ wheels = [
 [[package]]
 name = "pyserial"
 version = "3.5"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
@@ -1409,25 +1602,16 @@ wheels = [
 [[package]]
 name = "python-dotenv"
 version = "1.2.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
 ]
 
 [[package]]
-name = "python-multipart"
-version = "0.0.27"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/69/9b/f23807317a113dc36e74e75eb265a02dd1a4d9082abc3c1064acd22997c4/python_multipart-0.0.27.tar.gz", hash = "sha256:9870a6a8c5a20a5bf4f07c017bd1489006ff8836cff097b6933355ee2b49b602", size = 44043, upload-time = "2026-04-27T10:51:26.649Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/78/4126abcbdbd3c559d43e0db7f7b9173fc6befe45d39a2856cc0b8ec2a5a6/python_multipart-0.0.27-py3-none-any.whl", hash = "sha256:6fccfad17a27334bd0193681b369f476eda3409f17381a2d65aa7df3f7275645", size = 29254, upload-time = "2026-04-27T10:51:24.997Z" },
-]
-
-[[package]]
 name = "pyusb"
 version = "1.3.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/00/6b/ce3727395e52b7b76dfcf0c665e37d223b680b9becc60710d4bc08b7b7cb/pyusb-1.3.1.tar.gz", hash = "sha256:3af070b607467c1c164f49d5b0caabe8ac78dbed9298d703a8dbf9df4052d17e", size = 77281, upload-time = "2025-01-08T23:45:01.866Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/28/b8/27e6312e86408a44fe16bd28ee12dd98608b39f7e7e57884a24e8f29b573/pyusb-1.3.1-py3-none-any.whl", hash = "sha256:bf9b754557af4717fe80c2b07cc2b923a9151f5c08d17bdb5345dac09d6a0430", size = 58465, upload-time = "2025-01-08T23:45:00.029Z" },
@@ -1436,7 +1620,7 @@ wheels = [
 [[package]]
 name = "pyyaml"
 version = "6.0.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/05/8e/961c0007c59b8dd7729d542c61a4d537767a59645b82a0b521206e1e25c2/pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f", size = 130960, upload-time = "2025-09-25T21:33:16.546Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/11/0fd08f8192109f7169db964b5707a2f1e8b745d4e239b784a5a1dd80d1db/pyyaml-6.0.3-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:8da9669d359f02c0b91ccc01cac4a67f16afec0dac22c2ad09f46bee0697eba8", size = 181669, upload-time = "2025-09-25T21:32:23.673Z" },
@@ -1472,7 +1656,7 @@ wheels = [
 [[package]]
 name = "questionary"
 version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "prompt-toolkit" },
 ]
@@ -1484,37 +1668,37 @@ wheels = [
 [[package]]
 name = "reachy-mini"
 version = "1.4.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "platform_machine == 'arm64' and sys_platform == 'darwin'",
-]
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
-    { name = "aiohttp", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "asgiref", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "cv2-enumerate-cameras", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "eclipse-zenoh", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "fastapi", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "huggingface-hub", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "jinja2", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "libusb-package", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "log-throttling", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "numpy", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "opencv-python", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pip", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "psutil", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyserial", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyusb", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "pyyaml", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "questionary", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "reachy-mini-motor-controller", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "reachy-mini-rust-kinematics", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "requests", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "rich", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "rustypot", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "scipy", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "toml", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "uvicorn", extra = ["standard"], marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "websockets", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "aiohttp" },
+    { name = "asgiref" },
+    { name = "cv2-enumerate-cameras" },
+    { name = "eclipse-zenoh" },
+    { name = "fastapi" },
+    { name = "huggingface-hub" },
+    { name = "jinja2" },
+    { name = "libusb-package" },
+    { name = "log-throttling" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pip" },
+    { name = "psutil" },
+    { name = "pulsectl", marker = "sys_platform == 'linux'" },
+    { name = "pycaw", marker = "sys_platform == 'win32'" },
+    { name = "pygobject", marker = "sys_platform == 'linux'" },
+    { name = "pyserial" },
+    { name = "pyusb" },
+    { name = "pyyaml" },
+    { name = "questionary" },
+    { name = "reachy-mini-motor-controller" },
+    { name = "reachy-mini-rust-kinematics" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "rustypot" },
+    { name = "scipy" },
+    { name = "toml" },
+    { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/d0/4d87a4cea27bc8393606efeae2502b7c2eccc70a4f0bf2703b2765122545/reachy_mini-1.4.0.tar.gz", hash = "sha256:a1e5f11bd1965d8838f75c578b6dd52e10327a5d564ed805dc03b13ebc985b1e", size = 24688588, upload-time = "2026-03-02T10:56:35.039Z" }
 wheels = [
@@ -1522,54 +1706,9 @@ wheels = [
 ]
 
 [[package]]
-name = "reachy-mini"
-version = "1.7.1"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "platform_machine != 'arm64' or sys_platform != 'darwin'",
-]
-dependencies = [
-    { name = "aiohttp", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "asgiref", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "fastapi", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "gstreamer-bundle", marker = "(platform_machine != 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
-    { name = "huggingface-hub", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "jinja2", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "libusb-package", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "log-throttling", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "numpy", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "pip", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "psutil", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "pulsectl", marker = "sys_platform == 'linux'" },
-    { name = "pycaw", marker = "sys_platform == 'win32'" },
-    { name = "pygobject", marker = "sys_platform == 'linux'" },
-    { name = "pyserial", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "python-multipart", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "pyusb", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "pyyaml", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "questionary", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "reachy-mini-motor-controller", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "reachy-mini-rust-kinematics", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "requests", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "rich", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "rustypot", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "scipy", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "starlette", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "toml", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "tornado", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "uvicorn", extra = ["standard"], marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "websockets", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-    { name = "zeroconf", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/05/fb/7df6fff733cf6bb63b702bb1eb8252cdf27e8b0ac1ee21e408aea78154c9/reachy_mini-1.7.1.tar.gz", hash = "sha256:39fc3c9a94145c53a217265a4702a615690e7791b1bd18aa66f229f33ab122ac", size = 24722394, upload-time = "2026-05-04T12:59:31.135Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/a7/6b969c2953fb9bcf196e9c19f30c70246b8bc6e7bf130747ac09885bb70d/reachy_mini-1.7.1-py3-none-any.whl", hash = "sha256:84657726f0a84b8cc146a0223516a4973173fb71b18f10f23c8fd6e48974cbc2", size = 24820126, upload-time = "2026-05-04T12:59:28.268Z" },
-]
-
-[[package]]
 name = "reachy-mini-motor-controller"
 version = "1.5.5"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2d/ab/460938e78a930db6713f6edf9cdc403ef6e1b4bd8f9d0d72d9bf8ec110f4/reachy_mini_motor_controller-1.5.5.tar.gz", hash = "sha256:29959d4e0a5fb0c8a49ee3d9883debe841efebb7d670f47821172fc724524846", size = 29308, upload-time = "2026-02-25T14:08:20.092Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/3f/58be7b4d7e350fcf9b1e5f09ab8babbc179a2926645bb40ae88873072774/reachy_mini_motor_controller-1.5.5-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:781c6aa8ae2c22eb9d5784ae0f1e74db0aeba824e04a5a7c60af8f06e48c201b", size = 581062, upload-time = "2026-02-25T14:07:53.224Z" },
@@ -1597,7 +1736,7 @@ wheels = [
 [[package]]
 name = "reachy-mini-rust-kinematics"
 version = "1.0.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/80/c6/3eb42a0d760ab3c9289963b8d08c1214bd84048ffb098f1ef1cb769e24c1/reachy_mini_rust_kinematics-1.0.3.tar.gz", hash = "sha256:9a01d8335854f308e88ab621bc50e0d2437f56e84c0f1e31f9aa93ae2dfcd15c", size = 16814, upload-time = "2025-12-04T11:53:46.816Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/63/bb/a6f0b8d79f2e9940569e15b41e95d830e6c836d9ba89050caf45d2cbde3b/reachy_mini_rust_kinematics-1.0.3-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:849cdf6e0369b15266d5dacbd3764f443266fc99a92d50fb34c47ec0fd13e51f", size = 304420, upload-time = "2025-12-04T11:52:42.279Z" },
@@ -1639,7 +1778,7 @@ wheels = [
 [[package]]
 name = "requests"
 version = "2.33.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "certifi" },
     { name = "charset-normalizer" },
@@ -1654,7 +1793,7 @@ wheels = [
 [[package]]
 name = "rich"
 version = "15.0.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
@@ -1667,7 +1806,7 @@ wheels = [
 [[package]]
 name = "rustypot"
 version = "1.4.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1a/0c/35edc5f7801122b52a14211fa16d36bbcc763cfecfc4688c1692ef090d6c/rustypot-1.4.2.tar.gz", hash = "sha256:12b4128431b13818d0c38e9db54294ca62b583cc70d82b0c16dff399cc43a17b", size = 59390, upload-time = "2026-01-07T09:41:59.098Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/73/df9162cdc6002738d185cdb4a7461c259fba1b5c33b8c807a21f37a7460d/rustypot-1.4.2-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:c499227be1aaf40fea508c9ea7d67f771c0809784460cf586ca2b30e8aeccfb4", size = 1665893, upload-time = "2026-01-07T09:41:37.055Z" },
@@ -1690,7 +1829,7 @@ wheels = [
 [[package]]
 name = "scipy"
 version = "1.17.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "numpy" },
 ]
@@ -1741,7 +1880,7 @@ wheels = [
 [[package]]
 name = "setuptools"
 version = "82.0.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/4f/db/cfac1baf10650ab4d1c111714410d2fbb77ac5a616db26775db562c8fab2/setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9", size = 1152316, upload-time = "2026-03-09T12:47:17.221Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9d/76/f789f7a86709c6b087c5a2f52f911838cad707cc613162401badc665acfe/setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb", size = 1006223, upload-time = "2026-03-09T12:47:15.026Z" },
@@ -1750,7 +1889,7 @@ wheels = [
 [[package]]
 name = "shellingham"
 version = "1.5.4"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de", size = 10310, upload-time = "2023-10-24T04:13:40.426Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686", size = 9755, upload-time = "2023-10-24T04:13:38.866Z" },
@@ -1759,7 +1898,7 @@ wheels = [
 [[package]]
 name = "sherpa-onnx"
 version = "1.13.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3f/b7/2d955973ba90c0a10d258dc4738e84b9cdc94a4ae07124c194256be2eab5/sherpa_onnx-1.13.1.tar.gz", hash = "sha256:fcf1ca981a6c16dfd5395fcb0868a0ece41a8a4a8f6121890eb1a99fb9a375e9", size = 903769, upload-time = "2026-05-09T02:30:19.366Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/72/e3/eab90e3e59b17b76b92ceff610a89747527030ff8dbfe4d4c7e3b078c6f5/sherpa_onnx-1.13.1-cp313-cp313-linux_armv7l.whl", hash = "sha256:d65fc4d26cca5ddb38e419b04b421eed299fc4c938997c52a26853cdf733907e", size = 11434396, upload-time = "2026-05-08T17:36:56.277Z" },
@@ -1783,7 +1922,7 @@ wheels = [
 [[package]]
 name = "sherpa-onnx-core"
 version = "1.13.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/42/58/f413c964aed461ea0520a12488fcda84928a333ad5ae741998010eb74da8/sherpa_onnx_core-1.13.1-py3-none-macosx_10_15_universal2.whl", hash = "sha256:cbae5f4a5f34e69652259fcd1423cf3a119c5d82c52c8f4cacb21d88d76be12f", size = 33943257, upload-time = "2026-05-08T14:33:16.764Z" },
     { url = "https://files.pythonhosted.org/packages/a9/8f/948ff2eae3fb6e0d7208e39e40b6de8af2ae8f7ccf02db0611c8b260d658/sherpa_onnx_core-1.13.1-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:31092d31fa0834fc671c2696a6d61f7f04c9ac486a447947dbe0df220a9270cb", size = 18244399, upload-time = "2026-05-08T14:43:20.517Z" },
@@ -1798,7 +1937,7 @@ wheels = [
 [[package]]
 name = "sounddevice"
 version = "0.5.5"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "cffi" },
 ]
@@ -1814,7 +1953,7 @@ wheels = [
 [[package]]
 name = "soundfile"
 version = "0.13.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "cffi" },
     { name = "numpy" },
@@ -1833,7 +1972,7 @@ wheels = [
 [[package]]
 name = "starlette"
 version = "0.52.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "anyio" },
 ]
@@ -1845,7 +1984,7 @@ wheels = [
 [[package]]
 name = "tabulate"
 version = "0.10.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/46/58/8c37dea7bbf769b20d58e7ace7e5edfe65b849442b00ffcdd56be88697c6/tabulate-0.10.0.tar.gz", hash = "sha256:e2cfde8f79420f6deeffdeda9aaec3b6bc5abce947655d17ac662b126e48a60d", size = 91754, upload-time = "2026-03-04T18:55:34.402Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl", hash = "sha256:f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3", size = 39814, upload-time = "2026-03-04T18:55:31.284Z" },
@@ -1854,33 +1993,16 @@ wheels = [
 [[package]]
 name = "toml"
 version = "0.10.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
 ]
 
 [[package]]
-name = "tornado"
-version = "6.5.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/f1/3173dfa4a18db4a9b03e5d55325559dab51ee653763bb8745a75af491286/tornado-6.5.5.tar.gz", hash = "sha256:192b8f3ea91bd7f1f50c06955416ed76c6b72f96779b962f07f911b91e8d30e9", size = 516006, upload-time = "2026-03-10T21:31:02.067Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/8c/77f5097695f4dd8255ecbd08b2a1ed8ba8b953d337804dd7080f199e12bf/tornado-6.5.5-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:487dc9cc380e29f58c7ab88f9e27cdeef04b2140862e5076a66fb6bb68bb1bfa", size = 445983, upload-time = "2026-03-10T21:30:44.28Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/5e/7625b76cd10f98f1516c36ce0346de62061156352353ef2da44e5c21523c/tornado-6.5.5-cp39-abi3-macosx_10_9_x86_64.whl", hash = "sha256:65a7f1d46d4bb41df1ac99f5fcb685fb25c7e61613742d5108b010975a9a6521", size = 444246, upload-time = "2026-03-10T21:30:46.571Z" },
-    { url = "https://files.pythonhosted.org/packages/b2/04/7b5705d5b3c0fab088f434f9c83edac1573830ca49ccf29fb83bf7178eec/tornado-6.5.5-cp39-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:e74c92e8e65086b338fd56333fb9a68b9f6f2fe7ad532645a290a464bcf46be5", size = 447229, upload-time = "2026-03-10T21:30:48.273Z" },
-    { url = "https://files.pythonhosted.org/packages/34/01/74e034a30ef59afb4097ef8659515e96a39d910b712a89af76f5e4e1f93c/tornado-6.5.5-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:435319e9e340276428bbdb4e7fa732c2d399386d1de5686cb331ec8eee754f07", size = 448192, upload-time = "2026-03-10T21:30:51.22Z" },
-    { url = "https://files.pythonhosted.org/packages/be/00/fe9e02c5a96429fce1a1d15a517f5d8444f9c412e0bb9eadfbe3b0fc55bf/tornado-6.5.5-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:3f54aa540bdbfee7b9eb268ead60e7d199de5021facd276819c193c0fb28ea4e", size = 448039, upload-time = "2026-03-10T21:30:53.52Z" },
-    { url = "https://files.pythonhosted.org/packages/82/9e/656ee4cec0398b1d18d0f1eb6372c41c6b889722641d84948351ae19556d/tornado-6.5.5-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:36abed1754faeb80fbd6e64db2758091e1320f6bba74a4cf8c09cd18ccce8aca", size = 447445, upload-time = "2026-03-10T21:30:55.541Z" },
-    { url = "https://files.pythonhosted.org/packages/5a/76/4921c00511f88af86a33de770d64141170f1cfd9c00311aea689949e274e/tornado-6.5.5-cp39-abi3-win32.whl", hash = "sha256:dd3eafaaeec1c7f2f8fdcd5f964e8907ad788fe8a5a32c4426fbbdda621223b7", size = 448582, upload-time = "2026-03-10T21:30:57.142Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/23/f6c6112a04d28eed765e374435fb1a9198f73e1ec4b4024184f21faeb1ad/tornado-6.5.5-cp39-abi3-win_amd64.whl", hash = "sha256:6443a794ba961a9f619b1ae926a2e900ac20c34483eea67be4ed8f1e58d3ef7b", size = 448990, upload-time = "2026-03-10T21:30:58.857Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/c8/876602cbc96469911f0939f703453c1157b0c826ecb05bdd32e023397d4e/tornado-6.5.5-cp39-abi3-win_arm64.whl", hash = "sha256:2c9a876e094109333f888539ddb2de4361743e5d21eece20688e3e351e4990a6", size = 448016, upload-time = "2026-03-10T21:31:00.43Z" },
-]
-
-[[package]]
 name = "tqdm"
 version = "4.67.3"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
@@ -1892,7 +2014,7 @@ wheels = [
 [[package]]
 name = "typer"
 version = "0.25.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "annotated-doc" },
     { name = "click" },
@@ -1907,7 +2029,7 @@ wheels = [
 [[package]]
 name = "typer-slim"
 version = "0.24.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "typer" },
 ]
@@ -1919,7 +2041,7 @@ wheels = [
 [[package]]
 name = "typing-extensions"
 version = "4.15.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466", size = 109391, upload-time = "2025-08-25T13:49:26.313Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548", size = 44614, upload-time = "2025-08-25T13:49:24.86Z" },
@@ -1928,7 +2050,7 @@ wheels = [
 [[package]]
 name = "typing-inspection"
 version = "0.4.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
@@ -1940,7 +2062,7 @@ wheels = [
 [[package]]
 name = "urllib3"
 version = "2.7.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
@@ -1949,7 +2071,7 @@ wheels = [
 [[package]]
 name = "uvicorn"
 version = "0.46.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
@@ -1973,7 +2095,7 @@ standard = [
 [[package]]
 name = "uvloop"
 version = "0.22.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/06/f0/18d39dbd1971d6d62c4629cc7fa67f74821b0dc1f5a77af43719de7936a7/uvloop-0.22.1.tar.gz", hash = "sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f", size = 2443250, upload-time = "2025-10-16T22:17:19.342Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/8c/182a2a593195bfd39842ea68ebc084e20c850806117213f5a299dfc513d9/uvloop-0.22.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:561577354eb94200d75aca23fbde86ee11be36b00e52a4eaf8f50fb0c86b7705", size = 1358611, upload-time = "2025-10-16T22:16:36.833Z" },
@@ -1999,7 +2121,7 @@ wheels = [
 [[package]]
 name = "watchfiles"
 version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "anyio" },
 ]
@@ -2056,7 +2178,7 @@ wheels = [
 [[package]]
 name = "wcwidth"
 version = "0.7.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2c/ee/afaf0f85a9a18fe47a67f1e4422ed6cf1fe642f0ae0a2f81166231303c52/wcwidth-0.7.0.tar.gz", hash = "sha256:90e3a7ea092341c44b99562e75d09e4d5160fe7a3974c6fb842a101a95e7eed0", size = 182132, upload-time = "2026-05-02T16:04:12.653Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/41/52/e465037f5375f43533d1a80b6923955201596a99142ed524d77b571a1418/wcwidth-0.7.0-py3-none-any.whl", hash = "sha256:5d69154c429a82910e241c738cd0e2976fac8a2dd47a1a805f4afed1c0f136f2", size = 110825, upload-time = "2026-05-02T16:04:11.033Z" },
@@ -2065,7 +2187,7 @@ wheels = [
 [[package]]
 name = "websockets"
 version = "15.0.1"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/21/e6/26d09fab466b7ca9c7737474c52be4f76a40301b08362eb2dbc19dcc16c1/websockets-15.0.1.tar.gz", hash = "sha256:82544de02076bafba038ce055ee6412d68da13ab47f0c60cab827346de828dee", size = 177016, upload-time = "2025-03-05T20:03:41.606Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/9f/51f0cf64471a9d2b4d0fc6c534f323b664e7095640c34562f5182e5a7195/websockets-15.0.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:ee443ef070bb3b6ed74514f5efaa37a252af57c90eb33b956d35c8e9c10a1931", size = 175440, upload-time = "2025-03-05T20:02:36.695Z" },
@@ -2085,7 +2207,7 @@ wheels = [
 [[package]]
 name = "yarl"
 version = "1.23.0"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://gitlab.freedesktop.org/api/v4/projects/1340/packages/pypi/simple" }
 dependencies = [
     { name = "idna" },
     { name = "multidict" },
@@ -2166,46 +2288,4 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/19/3774d162f6732d1cfb0b47b4140a942a35ca82bb19b6db1f80e9e7bdc8f8/yarl-1.23.0-cp314-cp314t-win_amd64.whl", hash = "sha256:4503053d296bc6e4cbd1fad61cf3b6e33b939886c4f249ba7c78b602214fabe2", size = 97610, upload-time = "2026-03-01T22:07:45.773Z" },
     { url = "https://files.pythonhosted.org/packages/51/47/3fa2286c3cb162c71cdb34c4224d5745a1ceceb391b2bd9b19b668a8d724/yarl-1.23.0-cp314-cp314t-win_arm64.whl", hash = "sha256:44bb7bef4ea409384e3f8bc36c063d77ea1b8d4a5b2706956c0d6695f07dcc25", size = 86041, upload-time = "2026-03-01T22:07:49.026Z" },
     { url = "https://files.pythonhosted.org/packages/69/68/c8739671f5699c7dc470580a4f821ef37c32c4cb0b047ce223a7f115757f/yarl-1.23.0-py3-none-any.whl", hash = "sha256:a2df6afe50dea8ae15fa34c9f824a3ee958d785fd5d089063d960bae1daa0a3f", size = 48288, upload-time = "2026-03-01T22:07:51.388Z" },
-]
-
-[[package]]
-name = "zeroconf"
-version = "0.148.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ifaddr", marker = "platform_machine != 'arm64' or sys_platform != 'darwin'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/67/46/10db987799629d01930176ae523f70879b63577060d63e05ebf9214aba4b/zeroconf-0.148.0.tar.gz", hash = "sha256:03fcca123df3652e23d945112d683d2f605f313637611b7d4adf31056f681702", size = 164447, upload-time = "2025-10-05T00:21:19.199Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/09/394a24a633645063557c5144c9abb694699df76155dcab5e1e3078dd1323/zeroconf-0.148.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:6ad889929bdc3953530546a4a2486d8c07f5a18d4ef494a98446bf17414897a7", size = 1714465, upload-time = "2025-10-05T01:08:28.692Z" },
-    { url = "https://files.pythonhosted.org/packages/3d/db/f57c4bfcceb67fe474705cbadba3f8f7a88bdc95892e74ba6d85e24d28c3/zeroconf-0.148.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:29fb10be743650eb40863f1a1ee868df1869357a0c2ab75140ee3d7079540c1e", size = 1683877, upload-time = "2025-10-05T01:08:30.42Z" },
-    { url = "https://files.pythonhosted.org/packages/54/6c/b3e2d39c40802a8cc9415357acdb76ff01bc29e25ffaa811771b6fffc428/zeroconf-0.148.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f2995e74969c577461060539164c47e1ba674470585cb0f954ebeb77f032f3c2", size = 2122874, upload-time = "2025-10-05T01:08:32.11Z" },
-    { url = "https://files.pythonhosted.org/packages/66/eb/0ac2bf51d58d47cfa854628036a7ad95544a1802bc890f3d69649dc35e46/zeroconf-0.148.0-cp313-cp313-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:5be50346efdc20823f9d68d8757612767d11ceb8da7637d46080977b87912551", size = 1922164, upload-time = "2025-10-05T01:08:33.78Z" },
-    { url = "https://files.pythonhosted.org/packages/59/ff/c7372507c7e25ad3499fe08d4678deb1ed41c57f78ff5df43bd2d4d98cfc/zeroconf-0.148.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cc88fd01b5552ffb4d5bc551d027ac28a1852c03ceab754d02bd0d5f04c54e85", size = 2214119, upload-time = "2025-10-05T01:08:35.478Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/c7/57f0889f47923b4fa4364b62b7b3ffc347f6bad09a25ce4e578b8991a86d/zeroconf-0.148.0-cp313-cp313-manylinux_2_36_x86_64.whl", hash = "sha256:5af260c74187751c0df6a40f38d6fd17cb8658a734b0e1148a86084b71c1977c", size = 2137609, upload-time = "2025-10-05T00:21:15.953Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/33/9cb5558695c1377941dbb10a5591f88a787f9e1fba130642693d5c80663b/zeroconf-0.148.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:b6078c73a76d49ba969ca2bb7067e4d58ebd2b79a5f956e45c4c989b11d36e03", size = 2154314, upload-time = "2025-10-05T01:08:37.523Z" },
-    { url = "https://files.pythonhosted.org/packages/38/06/cf4e17a86922b4561d85d36f50f1adada1328723e882d95aa42baefa5479/zeroconf-0.148.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:3e686bf741158f4253d5e0aa6a8f9d34b3140bf5826c0aca9b906273b9c77a5f", size = 2004973, upload-time = "2025-10-05T01:08:39.825Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/61/937a405783317639cd11e7bfab3879669896297b6ca2edfb0d2d9c8dbb30/zeroconf-0.148.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:52d6ac06efe05a1e46089cfde066985782824f64b64c6982e8678e70b4b49453", size = 2237775, upload-time = "2025-10-05T01:08:41.535Z" },
-    { url = "https://files.pythonhosted.org/packages/03/43/a1751c4b63e108a2318c2266e5afdd9d62292250aa8b1a8ed1674090885c/zeroconf-0.148.0-cp313-cp313-win32.whl", hash = "sha256:b9ba58e2bbb0cff020b54330916eaeb8ee8f4b0dde852e84f670f4ca3a0dd059", size = 1291073, upload-time = "2025-10-05T01:08:43.757Z" },
-    { url = "https://files.pythonhosted.org/packages/5e/69/5f4f9eb14506e2afd2d423472e566d5455334d0c8740b933914d642bdbb5/zeroconf-0.148.0-cp313-cp313-win_amd64.whl", hash = "sha256:ee3fcc2edcc04635cf673c400abac2f0c22c9786490fbfb971e0a860a872bf26", size = 1528568, upload-time = "2025-10-05T01:08:45.505Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/46/ac86e3a3ff355058cd0818b01a3a97ca3f2abc0a034f1edb8eea27cea65c/zeroconf-0.148.0-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:2158d8bfefcdb90237937df65b2235870ccef04644497e4e29d3ab5a4b3199b6", size = 1714870, upload-time = "2025-10-05T01:08:47.624Z" },
-    { url = "https://files.pythonhosted.org/packages/de/02/c5e8cd8dfda0ca16c7309c8d12c09a3114e5b50054bce3c93da65db8b8e4/zeroconf-0.148.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:695f6663bf8df30fe1826a2c4d5acd8213d9cbd9111f59d375bf1ad635790e98", size = 1697756, upload-time = "2025-10-05T01:08:49.472Z" },
-    { url = "https://files.pythonhosted.org/packages/63/04/a66c1011d05d7bb8ae6a847d41ac818271a942390f3d8c83c776389ca094/zeroconf-0.148.0-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:aa65a24ec055be0a1cba2b986ac3e1c5d97a40abe164991aabc6a6416cc9df02", size = 2146784, upload-time = "2025-10-05T01:08:51.766Z" },
-    { url = "https://files.pythonhosted.org/packages/7c/d4/2239d87c3f60f886bd2dd299e9c63b811efd58b8b6fc659d8fd0900db3bc/zeroconf-0.148.0-cp314-cp314-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:79890df4ff696a5cdc4a59152957be568bea1423ed13632fc09e2a196c6721d5", size = 1899394, upload-time = "2025-10-05T01:08:53.457Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/60/534a4b576a8f9f5edff648ac9a5417323bef3086a77397f2f2058125a3c8/zeroconf-0.148.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6c0ca6e8e063eb5a385469bb8d8dec12381368031cb3a82c446225511863ede3", size = 2221319, upload-time = "2025-10-05T01:08:55.271Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/8c/1c8e9b7d604910830243ceb533d796dae98ed0c72902624a642487edfd61/zeroconf-0.148.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:ece6f030cc7a771199760963c11ce4e77ed95011eedffb1ca5186247abfec24a", size = 2178586, upload-time = "2025-10-05T01:08:56.966Z" },
-    { url = "https://files.pythonhosted.org/packages/16/55/178c4b95840dc687d45e413a74d2236a25395ab036f4813628271306ab9d/zeroconf-0.148.0-cp314-cp314-musllinux_1_2_armv7l.whl", hash = "sha256:c3f860ad0003a8999736fa2ae4c2051dd3c2e5df1bc1eaea2f872f5fcbd1f1c1", size = 1972371, upload-time = "2025-10-05T01:08:59.103Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/86/b599421fe634d9f3a2799f69e6e7db9f13f77d326331fa2bb5982e936665/zeroconf-0.148.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:ab8e687255cf54ebeae7ede6a8be0566aec752c570e16dbea84b3f9b149ba829", size = 2244286, upload-time = "2025-10-05T01:09:01.029Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/cb/a30c42057be5da6bb4cbe1ab53bc3a7d9a29cd59caae097d3072a9375c14/zeroconf-0.148.0-cp314-cp314-win32.whl", hash = "sha256:6b1a6ddba3328d741798c895cecff21481863eb945c3e5d30a679461f4435684", size = 1321693, upload-time = "2025-10-05T01:09:02.715Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/38/06873cdf769130af463ef5acadbaf4a50826a7274374bc3b9a4ec5d32678/zeroconf-0.148.0-cp314-cp314-win_amd64.whl", hash = "sha256:2588f1ca889f57cdc09b3da0e51175f1b6153ce0f060bf5eb2a8804c5953b135", size = 1563980, upload-time = "2025-10-05T01:09:04.857Z" },
-    { url = "https://files.pythonhosted.org/packages/36/fb/53d749793689279bc9657d818615176577233ad556d62f76f719e86ead1d/zeroconf-0.148.0-cp314-cp314t-macosx_10_13_x86_64.whl", hash = "sha256:40fe100381365c983a89e4b219a7ececcc2a789ac179cd26d4a6bbe00ae3e8fe", size = 3418152, upload-time = "2025-10-05T01:09:06.71Z" },
-    { url = "https://files.pythonhosted.org/packages/b9/19/5eb647f7277378cbfdb6943dc8e60c3b17cdd1556f5082ccfdd6813e1ce8/zeroconf-0.148.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:0b9c7bcae8af8e27593bad76ee0f0c21d43c6a2324cd1e34d06e6e08cb3fd922", size = 3389671, upload-time = "2025-10-05T01:09:08.903Z" },
-    { url = "https://files.pythonhosted.org/packages/86/12/3134aa54d30a9ae2e2473212eab586fe1779f845bf241e68729eca63d2ab/zeroconf-0.148.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cf8ba75dacd58558769afb5da24d83da4fdc2a5c43a52f619aaa107fa55d3fdc", size = 4123125, upload-time = "2025-10-05T01:09:11.064Z" },
-    { url = "https://files.pythonhosted.org/packages/12/23/4a0284254ebce373ff1aee7240932a0599ecf47e3c711f93242a861aa382/zeroconf-0.148.0-cp314-cp314t-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:75f9a8212c541a4447c064433862fd4b23d75d47413912a28204d2f9c4929a59", size = 3651426, upload-time = "2025-10-05T01:09:13.725Z" },
-    { url = "https://files.pythonhosted.org/packages/76/9a/7b79ef986b5467bb8f17b9a9e6eea887b0b56ecafc00515c81d118e681b4/zeroconf-0.148.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:be64c0eb48efa1972c13f7f17a7ac0ed7932ebb9672e57f55b17536412146206", size = 4263151, upload-time = "2025-10-05T01:09:15.732Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/0a/caa6d05548ca7cf28a0b8aa20a9dbb0f8176172f28799e53ea11f78692a3/zeroconf-0.148.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:ac1d4ee1d5bac71c27aea6d1dc1e1485423a1631a81be1ea65fb45ac280ade96", size = 4191717, upload-time = "2025-10-05T01:09:18.071Z" },
-    { url = "https://files.pythonhosted.org/packages/46/f6/dbafa3b0f2d7a09315ed3ad588d36de79776ce49e00ec945c6195cad3f18/zeroconf-0.148.0-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:8da9bdb39ead9d5971136046146cd5e11413cb979c011e19f717b098788b5c37", size = 3793490, upload-time = "2025-10-05T01:09:20.045Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/05/f8b88937659075116c122355bdd9ce52376cc46e2269d91d7d4f10c9a658/zeroconf-0.148.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:f6e3dd22732df47a126aefb5ca4b267e828b47098a945d4468d38c72843dd6df", size = 4311455, upload-time = "2025-10-05T01:09:22.042Z" },
-    { url = "https://files.pythonhosted.org/packages/58/c0/359bdb3b435d9c573aec1f877f8a63d5e81145deb6c160de89647b237363/zeroconf-0.148.0-cp314-cp314t-win32.whl", hash = "sha256:cdc8083f0b5efa908ab6c8e41687bcb75fd3d23f49ee0f34cbc58422437a456f", size = 2755961, upload-time = "2025-10-05T01:09:24.041Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/ab/7b487afd5d1fd053c5a018565be734ac6d5e554bce938c7cc126154adcfc/zeroconf-0.148.0-cp314-cp314t-win_amd64.whl", hash = "sha256:f72c1f77a89638e87f243a63979f0fd921ce391f83e18e17ec88f9f453717701", size = 3309977, upload-time = "2025-10-05T01:09:26.039Z" },
 ]
