@@ -1,0 +1,17 @@
+[PASS] V0_hash_lock: expected=6a8d5e0ab5d2c3f9.. actual=6a8d5e0ab5d2c3f9..
+[PASS] V1_auto_detect_reachy: got=1 (want=1)
+[PASS] V2_env_substring: got='Reachy Mini Audio' (want='Reachy Mini Audio')
+[PASS] V3_env_int: got=5 type=int (want int 5)
+[PASS] V4_no_reachy_none: got=None (want=None)
+[tts] output device=0 sr=16000
+[PASS] V5_resample_path: sr=16000 (want 16000) len=16000 (want≈16000) device=0 (want 0)
+
+=== SUMMARY ===
+  [PASS] V0_hash_lock
+  [PASS] V1_auto_detect_reachy
+  [PASS] V2_env_substring
+  [PASS] V3_env_int
+  [PASS] V4_no_reachy_none
+  [PASS] V5_resample_path
+
+rc=0 (fails=0/6)

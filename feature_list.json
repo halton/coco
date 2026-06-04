@@ -24098,6 +24098,27 @@
       "verification": [],
       "evidence": [],
       "user_visible_behavior": "n/a (infra)"
+    },
+    {
+      "id": "audio-013-auto-select-reachy-speaker",
+      "title": "TTS 自动检测 Reachy Mini Audio speaker；env 显式覆盖；24k→16k 重采样兜底",
+      "status": "in_progress",
+      "priority": 100,
+      "phase": 68,
+      "area": "audio",
+      "notes": "coco/tts.py 加 _resolve_tts_output_device() helper + play() 接 device + scipy.signal.resample_poly 兜底。COCO_TTS_OUTPUT_DEVICE env 覆盖（int 或 substring）；env 空 → 遍历 sd.query_devices() 找 name 含 'reachy mini audio' 且 max_output_channels>=1 的 → 返回 index；无命中 → None fallback 系统默认。device sr != sample sr 且在 (8000,48000] 时重采样；失败 fail-soft 原 sr 直接播。verify+smoke 全 PASS；真机听感 user_pending。",
+      "verification": [
+        "scripts/verify_audio_013_auto_select_reachy_speaker.py rc=0 (V0 hash lock + V1 auto-detect + V2 env substring + V3 env int + V4 no-reachy-None + V5 resample 24k→16k)",
+        "./init.sh smoke rc=0 (audio/ASR/TTS/vision/companion/face-tracker/VAD/wake/power-state/config/publish/typo-guard 全通过)",
+        "device-list-snapshot.json 确认 Reachy Mini Audio 在真机 sd.query_devices() index=1 (default_samplerate=16000)"
+      ],
+      "evidence": [
+        "evidence/audio-013/verify-pass.log",
+        "evidence/audio-013/smoke-pass.log",
+        "evidence/audio-013/device-list-snapshot.json",
+        "evidence/audio-013/uat-script.py (user_pending — 真机 TTS 播放听感)"
+      ],
+      "user_visible_behavior": "插上 Reachy Mini USB 音频后 coco TTS 自动从 Reachy Mini 扬声器播放，不必手设 device；未插时落回系统默认；COCO_TTS_OUTPUT_DEVICE 可显式覆盖。"
     }
   ],
   "last_updated": "2026-05-24T20:00:00.000000Z",
