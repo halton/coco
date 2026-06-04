@@ -6,7 +6,7 @@
     {
       "name": "V0 hash lock app+parser exist",
       "status": "PASS",
-      "detail": "app.sha=bc657d9079ef parser.sha=0d498408d753"
+      "detail": "app.sha=cc4a3229d39d parser.sha=0d498408d753"
     },
     {
       "name": "V1 import + key routes present",
@@ -16,7 +16,7 @@
     {
       "name": "V2 parse_line vad transcript+reply",
       "status": "PASS",
-      "detail": "evt={'ts': 1780563199.452959, 'type': 'transcript', 'transcript': '你好可可', 'reply': '你好呀!', 'raw': \"2025-06-04 10:00:00 [coco][vad] transcript='你好可可' reply='你好呀!'\"}"
+      "detail": "evt={'ts': 1780563709.487644, 'type': 'transcript', 'transcript': '你好可可', 'reply': '你好呀!', 'raw': \"2025-06-04 10:00:00 [coco][vad] transcript='你好可可' reply='你好呀!'\"}"
     },
     {
       "name": "V3 parse_line wake/face/tts",

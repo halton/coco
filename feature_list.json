@@ -24347,17 +24347,63 @@
       "area": "infra",
       "phase": 68,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "notes": "FastAPI + WebSocket 独立进程, port 8765. 不耦合 coco 主进程: frame tap (default-OFF, COCO_DASHBOARD_FRAME_TAP=1) 在 face_tracker._tick 中原子写 /tmp/coco-frame.jpg; events 通过 tail /tmp/coco-stdout.log + event_parser 推到 WebSocket. 启停 dashboard 不影响 coco 主进程.",
       "user_visible_behavior": "浏览器打开 http://localhost:8765/ 看左半摄像头实时画面 + 右半 transcript/reply/wake/vision/tts 事件 timeline.",
       "verification": "scripts/verify_dashboard_001_live_hud.py V0-V7 全 PASS (hash lock / routes / event_parser 三类事件 / frame.jpg 文件存在与缺失双路径 / 批量解析 / index+healthz). real_machine_uat: pending (浏览器观感由用户在 evidence/dashboard-001/uat-script.py 指引下执行).",
-      "evidence": [
-        "evidence/dashboard-001/verify-pass.log",
-        "evidence/dashboard-001/smoke-pass.log",
-        "evidence/dashboard-001/verify_summary.json",
-        "evidence/dashboard-001/uat-script.py",
-        "evidence/dashboard-001/startup-help.md"
-      ]
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "008c71e",
+          "verify_runs": [
+            {
+              "name": "verify_dashboard_001",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V0 hash lock app+parser exist :: app.sha=cc4a3229d39d parser.sha=0d498408d753\n[PASS] V1 import + key routes present :: routes=['/', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg', '/ws/events'] missing=[]\n[PASS] V2 parse_line vad transcript+reply :: evt={'ts': 1780563709.487644, 'type': 'transcript', 'transcript': '你好可可', 'reply': '你好呀!', 'raw': \"2025-06-04 10:00:00 [coco][vad] transcript='你好可可' reply='你好呀!'\"}\n[PASS] V3 parse_line wake/face/tts :: wake=wake face=vision tts=237\n[PASS] V4 /frame.jpg with file present :: status=200 ctype=image/jpeg len=631\n[PASS] V5 /frame.jpg missing → placeholder png :: status=200 ctype=image/png len=67\n[PASS] V6 batch parse 5 events recognized :: recognized=5/5 types=['transcript', 'wake', 'vision', 'tts', 'transcript']\n[PASS] V7 / + /healthz served :: index=200 healthz=200\n\n=== dashboard-001 verify: 8/8 PASS ===",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM (round 2)",
+            "summary": "Round 2 fresh-context re-review 确认 P1 XSS 已修：所有 event 字段 (transcript/reply/raw/vt/track_id) 一律走 document.createElement+textContent 与 createTextNode，不再 innerHTML 拼接；HUD live event timeline + MJPEG camera 整体功能在 FastAPI WebSocket 通路下完整可用，verify 8/8 PASS，smoke rc=0，3 个 P2 follow-up backlog 全部落表。",
+            "checks_run": [
+              "P1_xss_fixed_textContent",
+              "verify_8_8_PASS",
+              "smoke_rc=0",
+              "3_P2_backlog_persisted",
+              "feature_node_complete"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 2
+          }
+        },
+        "files": [
+          "evidence/dashboard-001/verify-pass.log",
+          "evidence/dashboard-001/smoke-pass.log",
+          "evidence/dashboard-001/verify_summary.json",
+          "evidence/dashboard-001/uat-script.py",
+          "evidence/dashboard-001/startup-help.md"
+        ],
+        "user_pending": [
+          "浏览器打开 http://localhost:8765/ 验证 HUD 真实可见 (左 camera MJPEG / 右 event timeline)",
+          "需要 COCO_DASHBOARD_FRAME_TAP=1 重启 coco 才能看到画面"
+        ],
+        "p2_followup_backlog": [
+          "dashboard-001-fu-log-tailer-rotation-max-lines",
+          "dashboard-001-fu-fastapi-lifespan-handler",
+          "dashboard-001-fu-ws-broadcast-concurrent-or-per-client-queue"
+        ]
+      }
     },
     {
       "id": "dashboard-001-fu-log-tailer-rotation-max-lines",

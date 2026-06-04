@@ -9924,3 +9924,9 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - 2026-06-04 phase-68 audio-014 closeout DONE，main HEAD=5367bef，Reviewer 4 rounds 最终 LGTM。
 
 ## Session phase-68 audio-015 closeout DONE — main HEAD=ef7a9fc4ecd3, Reviewer (sub_agent_fresh_context) LGTM, verify V0-V8 PASS + smoke rc=0 post-merge
+
+## Session (2026-06-04, dashboard-001 closeout)
+- Reviewer round 2 (sub-agent fresh-context) LGTM：P1 innerHTML→textContent 已修，verify 8/8 PASS, smoke rc=0
+- merge feat/dashboard-001-live-hud → main, post-merge HEAD=008c71e, verify+smoke 双 PASS
+- dashboard-001-live-hud status: in_progress → passing
+- 3 P2 follow-up 入 backlog: log-tailer-rotation / fastapi-lifespan / ws-broadcast-concurrent
