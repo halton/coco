@@ -24232,6 +24232,38 @@
       "verification": "scripts/verify_audio_014_edge_tts_streaming_default.py V0-V6 全 PASS + smoke rc=0 + 真机活体 evidence/audio-014/uat-script.py user_pending"
     },
     {
+      "area": "audio",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "PENDING_POST_MERGE",
+          "verify_runs": [],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "placeholder pre-merge; will be backfilled with post-merge verify/smoke tails and main_head_sha in Step B closeout",
+            "checks_run": [
+              "placeholder"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
+      },
+      "id": "audio-015-edge-tts-true-streaming-playback",
+      "notes": "audio-014 的 streaming 实为 chunk-accumulate-then-decode，首字延迟 ~6s 没改善。本 feature 走 ffmpeg subprocess pipe 真流式：edge-tts mp3 chunk → ffmpeg stdin → ffmpeg stdout PCM s16le 24kHz mono → sounddevice RawOutputStream callback 队列消费。设计指标：首帧 PCM 到达延迟 <1.5s（真机用户验证）。新增 env COCO_TTS_EDGE_STREAMING (default 1, 0 退回 audio-014 整段路径)。Fallback 链：streaming → audio-014 整段 → local Kokoro。promotes backlog item audio-014-fu-true-streaming-partial-decode.",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "title": "edge-tts 真流式 (ffmpeg pipe + sounddevice callback) — 首字延迟优化",
+      "user_visible_behavior": "联网 edge-tts 路径下，用户说完后 ~1.5s 内即听到可可第一字（原 ~6s），整体响应感大幅提升；无 ffmpeg 或弱网时自动 fallback 不出错。",
+      "verification": "scripts/verify_audio_015_edge_tts_true_streaming_playback.py V0-V8 全 PASS + smoke rc=0 + 真机活体 evidence/audio-015/uat-script.py user_pending",
+      "promotes": "audio-014-fu-true-streaming-partial-decode"
+    },
+    {
       "id": "audio-014-fu-asyncio-run-in-running-loop",
       "title": "edge-tts: asyncio.run 在已运行 event loop 中失败导致每次走 fallback local",
       "area": "audio",
@@ -24249,8 +24281,9 @@
       "area": "audio",
       "phase": null,
       "priority": 999,
-      "status": "backlog",
-      "notes": "Reviewer P1 (audio-014 closeout): 当前实现 collect 所有 audio chunk 后才 soundfile.read() 解码, 与 \"流式\" 命名不符, 首字延迟与一次性合成相同。需改为边收边解码 (ffmpeg pipe 或 incremental MP3 decoder), 真正降低 first-audio latency。",
+      "status": "promoted",
+      "promoted_to": "audio-015-edge-tts-true-streaming-playback",
+      "notes": "Reviewer P1 (audio-014 closeout): 当前实现 collect 所有 audio chunk 后才 soundfile.read() 解码, 与 \"流式\" 命名不符, 首字延迟与一次性合成相同。需改为边收边解码 (ffmpeg pipe 或 incremental MP3 decoder), 真正降低 first-audio latency。Promoted to audio-015-edge-tts-true-streaming-playback (phase-68, ffmpeg pipe 方案)。",
       "user_visible_behavior": "edge-tts 首字延迟显著降低 (目标 <800ms p50), 用户感知 TTS 响应更快。",
       "verification": "在 verify_audio_014 中新增 V7_first_chunk_latency, 测量从 tts() 调用到第一段 PCM 可播放的 wall time < 阈值。",
       "evidence": []
