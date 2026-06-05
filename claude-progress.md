@@ -10029,3 +10029,28 @@ bug（不主动升级 SDK，per CLAUDE.md）。
   - 看事件: `tail -f /tmp/coco-watchdog-events.log`
   - registry: `~/.cache/coco/processes.json`
 - Status: in_progress → passing
+
+## Session 2026-06-05 phase-68 #100 dashboard-004-pose-sliders closeout
+
+- area: infra / dashboard. feature: 3 滑条 (pitch/yaw/roll) 直接控制头部姿态.
+- 实现:
+  - HTML 3 个 `<input type="range">` (-0.5~+0.5 rad step 0.01) + 回中按钮, oninput → onPose() → 200ms throttle (setTimeout + clearTimeout)
+  - POST /api/pose `PoseRequest{pitch,yaw,roll}` 默认 0.0, 服务端 `_pose_clamp` ±0.6 (_POSE_MAX_RAD env override)
+  - 4x4 head matrix: Rx(pitch) Ry(yaw) Rz(roll), R = Rz @ Ry @ Rx, M[:3,:3]=R → `r.set_target(head=M)`
+  - subprocess 复用 dashboard-002 模式 (`spawn_daemon=False`, `media_backend='no_media'`, `os._exit(0)` 避卡)
+  - FAKE 钩子: `COCO_DASHBOARD_FAKE_POSE=1` 跳 subprocess 返 clamp 值, 给 V3/V4 用
+  - textContent escape 保留 (`.toFixed(2)` 写 *-val span, `st.textContent` 写 pose-status)
+- main_head_sha: c3b6e41b4e9b228d710ebef0bbe8596fc3725d5b
+- verify_runs:
+  - pre-merge-feat-branch: scripts/verify_dashboard_004_pose_sliders.py 8/8 PASS rc=0 (V0 hash 锁 + V1 路由 + V2 PoseRequest + V3 normal fake + V4 clamp + V5 HTML 3 滑条 + V6 escape regression + V7 throttle 200ms)
+  - post-merge-rerun: 同 8/8 PASS rc=0
+- smoke: ./init.sh rc=0 (config / publish / typo-guard 379/379)
+- Reviewer (sub-agent fresh-context): LGTM, rounds=1, P0/P1/P2 全空
+  - HTML 3 滑条 / 200ms throttle / 服务端 clamp ±0.6 / 4x4 matrix Rz@Ry@Rx 数学合理
+  - subprocess + os._exit(0) 复用 d002 避 zenoh 风暴
+  - FAKE 钩子覆盖 V3/V4
+  - V0 hash 锁与 app.py sha=25ab9f9a81b2 一致
+  - d001/d002 现有按钮 (look_left/wave/nod/...) + perf 图表完好
+- 不动现有 live 栈: daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079 全程未重启 (串行最后统一)
+- 真机 UAT: pending (拖滑条物理观察头部姿态, 由用户异步)
+- Status: in_progress → passing

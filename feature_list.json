@@ -25080,7 +25080,7 @@
       "phase": 68,
       "priority": 100,
       "area": "infra",
-      "status": "in_progress",
+      "status": "passing",
       "owner": "engineer",
       "branch": "feat/dashboard-004-pose-sliders",
       "verification": "scripts/verify_dashboard_004_pose_sliders.py",
@@ -25090,10 +25090,56 @@
         "smoke": "evidence/dashboard-004-pose-sliders/smoke-pass.log",
         "uat_script": "evidence/dashboard-004-pose-sliders/uat-script.md",
         "verify_summary": "evidence/dashboard-004-pose-sliders/verify_summary.json",
-        "real_machine_uat": "pending"
+        "real_machine_uat": "pending",
+        "closeout_verify": {
+          "main_head_sha": "c3b6e41b4e9b228d710ebef0bbe8596fc3725d5b",
+          "verify_runs": [
+            {
+              "stage": "pre-merge-feat-branch",
+              "freshness_anchor": "pre-merge-feat-branch",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V7 throttle 200ms (setTimeout(sendPose, 200) + clearTimeout) :: setTimeout_200=True clearTimeout_prev=True\n\n=== dashboard-004 verify: 8/8 PASS ==="
+            },
+            {
+              "stage": "post-merge-rerun",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V7 throttle 200ms (setTimeout(sendPose, 200) + clearTimeout) :: setTimeout_200=True clearTimeout_prev=True\n\n=== dashboard-004 verify: 8/8 PASS ==="
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=379 well_formed=379 typo_count=0\n\n==> Smoke 通过。",
+          "smoke_rc": 0,
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "dashboard-004 pose sliders: HTML 3 滑条 ±0.5 rad + 200ms throttle 正确; POST /api/pose PoseRequest 默认 0.0 + clamp ±0.6 + 4x4 矩阵 Rz@Ry@Rx 数学合理; subprocess + os._exit(0) 复用 d002 模式避 zenoh 多 client 风暴; FAKE 钩子覆盖 V3/V4 测试; HTML createTextNode escape 保留, 不破坏 d001/d002 现有按钮与 perf 图表; V0 hash 锁与 app.py sha=25ab9f9a81b2 一致; smoke 8/8 PASS 无回归.",
+            "checks_run": [
+              "HTML 3 个 input range (pitch/yaw/roll, min=-0.5 max=+0.5 step=0.01)",
+              "JS 200ms throttle (setTimeout + clearTimeout)",
+              "POST /api/pose 路由 + PoseRequest 默认 0.0",
+              "服务端 clamp ±_POSE_MAX_RAD=0.6",
+              "4x4 matrix Rz@Ry@Rx 复合, set_target(head=M)",
+              "subprocess + os._exit(0) 复用 d002 模式",
+              "FAKE 模式 env COCO_DASHBOARD_FAKE_POSE=1 钩子",
+              "V0 hash 锁与 app.py sha 一致 (25ab9f9a81b2)",
+              "各 V0-V7 独立 try/except (verify 脚本结构)",
+              "smoke 不回归 (config/publish/typo-guard 全 PASS)",
+              "d001/d002 现有按钮 + textContent escape 完好"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
       },
       "notes": "HTML 3 个 input range (-0.5~+0.5 rad) + 拖动 200ms throttle; POST /api/pose PoseRequest{pitch,yaw,roll} clamp ±0.6 → 4x4 head matrix → set_target(head=M); 复用 dashboard-002 subprocess + os._exit(0) 模式; FAKE 钩子 env COCO_DASHBOARD_FAKE_POSE=1",
-      "added_at": "2026-06-05T14:19:43"
+      "added_at": "2026-06-05T14:19:43",
+      "closed_at": "2026-06-05T14:35:00"
     }
   ],
   "last_updated": "2026-06-05",
