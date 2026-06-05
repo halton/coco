@@ -25625,9 +25625,79 @@
       "area": "infra",
       "phase": 69,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "title": "dashboard 加 face_id + wake-word 实时 toggle (hot-reload)",
-      "description": "右栏加 2 个 toggle 开关——(a) 实时人脸识别 face_id (b) 实时环境音唤醒 wake-word。写 ~/.cache/coco/runtime_config.json (复用 dashboard-005 LLM hot-reload 模式), coco 主进程 30s 内 hot-reload 启停。需扩 face_id + wake-word 模块支持运行时动态启停 (现在是启动 env 决定不可中途切换)。建议先单独立 sub-feature 让 face_id 和 wake-word 支持 hot-reload 再做 dashboard 开关。"
+      "description": "右栏加 2 个 toggle 开关——(a) 实时人脸识别 face_id (b) 实时环境音唤醒 wake-word。写 ~/.cache/coco/runtime_config.json (复用 dashboard-005 LLM hot-reload 模式), coco 主进程 30s 内 hot-reload 启停。需扩 face_id + wake-word 模块支持运行时动态启停 (现在是启动 env 决定不可中途切换)。建议先单独立 sub-feature 让 face_id 和 wake-word 支持 hot-reload 再做 dashboard 开关。",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "340eddc",
+          "baseline_head_echo": "27c7c27",
+          "merge_commit_sha": "340eddc1413c",
+          "verify_runs": [
+            {
+              "name": "V_pre_merge_feature_branch",
+              "freshness_anchor": "pre-merge-feature-branch",
+              "sha": "fbbd436",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock app+face_id+wake exist | [PASS] V1 FaceIDClassifier.enabled + set_enabled | [PASS] V2 identify enabled=False → (None, 0.0) early return | [PASS] V3 identify enabled=True 走旧路径 | [PASS] V4 wake_word.WakeWordDetector mute/unmute/is_muted/feed 仍存在 | [PASS] V5 hot-reload helpers 节流 + 切状态 | [PASS] V6 POST /api/config/face_id_enabled {false} 200 + writes | [PASS] V7 POST /api/config/wake_enabled {true} 200 + writes | [PASS] V8 GET /api/config/{face_id,wake}_enabled defaults+readback+404 | [PASS] V9 HTML face-id-toggle+wake-toggle+changePerception+loadPerception | [PASS] V10 regression: llm_model 端点仍 OK (generic 路由不吞) | === dashboard-007 verify: 11/11 PASS ==="
+            },
+            {
+              "name": "V_post_merge_rerun_on_main",
+              "freshness_anchor": "post-merge-rerun",
+              "sha": "340eddc",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock app+face_id+wake exist | [PASS] V1 FaceIDClassifier.enabled + set_enabled | [PASS] V2 identify enabled=False → (None, 0.0) early return | [PASS] V3 identify enabled=True 走旧路径 | [PASS] V4 wake_word.WakeWordDetector mute/unmute/is_muted/feed 仍存在 | [PASS] V5 hot-reload helpers 节流 + 切状态 | [PASS] V6 POST /api/config/face_id_enabled {false} 200 + writes | [PASS] V7 POST /api/config/wake_enabled {true} 200 + writes | [PASS] V8 GET /api/config/{face_id,wake}_enabled defaults+readback+404 | [PASS] V9 HTML face-id-toggle+wake-toggle+changePerception+loadPerception | [PASS] V10 regression: llm_model 端点仍 OK (generic 路由不吞) | === dashboard-007 verify: 11/11 PASS ==="
+            },
+            {
+              "name": "V_post_merge_smoke_on_main",
+              "freshness_anchor": "post-merge-smoke",
+              "sha": "340eddc",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging) ok | ==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp | ==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描) ok | ==> Smoke 通过。"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging) ok | ==> Smoke: publish (entry_points + Coco class import) ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp | ==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描) ok: total=382 well_formed=382 typo_count=0 | ==> Smoke 通过。",
+          "smoke_rc": 0,
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Reviewer fresh-context 审 fbbd436: diff 3 文件 (face_id + wake + dashboard) 模式复用 dashboard-005, 路由顺序 llm_model 先于 generic /api/config/{key} 注册无影响, 11/11 verify PASS + smoke rc=0 + 模块行为 set_enabled/mute/unmute 实测 OK",
+            "checks_run": [
+              "git diff main..HEAD 阅读 (face_id.py 68 行, wake_word.py 65 行, dashboard/app.py 115 行)",
+              "verify_dashboard_007_face_id_wake_toggle.py 11/11 PASS",
+              "./init.sh smoke rc=0",
+              "FaceIDClassifier 实例化 + set_enabled(False) + identify 返回 (None, 0.0)",
+              "WakeWordDetector mute/unmute/is_muted/feed 方法存在",
+              "_maybe_reload_face_id_runtime / _maybe_reload_wake_runtime helper 可 callable",
+              "路由优先级: llm_model 678/691 注册先于 generic 732/749 → dashboard-005 不受影响",
+              "atomic write 同 dashboard-005 模式 (tmp + os.replace)",
+              "白名单 _ALLOWED_PERCEPTION_KEYS = {face_id_enabled, wake_enabled}",
+              "GET 缺省 enabled=true / unknown key → 404"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "wake._maybe_reload 在 feed() 入口节流, cold-start 第 30s 才首次 hot-reload (acceptable, 文档已明)",
+                "face_tracker 现在没 wire 进 main, identify() callsite 由其他订阅消费; hot-reload 在 identify 入口生效"
+              ]
+            },
+            "rounds": 1
+          },
+          "evidence_paths": [
+            "evidence/dashboard-007-face-id-wake-toggle/verify-pass.log",
+            "evidence/dashboard-007-face-id-wake-toggle/smoke-pass.log",
+            "evidence/dashboard-007-face-id-wake-toggle/verify_summary.json",
+            "evidence/dashboard-007-face-id-wake-toggle/post-merge-verify.log",
+            "evidence/dashboard-007-face-id-wake-toggle/post-merge-smoke.log",
+            "evidence/dashboard-007-face-id-wake-toggle/uat-script.md"
+          ]
+        },
+        "real_machine_uat": "pending"
+      }
     },
     {
       "id": "dashboard-008-resizable-columns",
@@ -25648,7 +25718,7 @@
       "description": "调研覆盖: (a) audio: sounddevice device names + edge-tts streaming + ffmpeg subprocess pipe 在 Windows 行为; (b) perception: cv2 camera index Windows DirectShow vs macOS AVFoundation 差异; (c) path: 全代码 hardcoded /tmp/* 路径在 Windows 不存在 (需 tempfile.gettempdir 或 ~/AppData/Local); (d) process: signal.SIGINT Windows vs POSIX 行为差异 (Windows 无 SIGINT, 是 CTRL_C_EVENT); (e) subprocess: nohup/shell=True 在 Windows 不可用; (f) watchdog: lsof Windows 无 (需 psutil 替代); (g) reachy-mini SDK Windows 支持: GStreamer + zenoh 在 Windows 测试覆盖; (h) tts: macOS say 已知 Linux/Windows 无对应。先调研报告, 再立分项 fu feature 修每条。"
     }
   ],
-  "last_updated": "2026-06-05T08:22:29",
+  "last_updated": "2026-06-05T17:40:00",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {

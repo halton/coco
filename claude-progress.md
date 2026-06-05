@@ -10185,3 +10185,18 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - Phase 3 重启 coco + dashboard + watchdog 让新动作生效 (先停 watchdog 72094 避抢端口, 停 coco 59817 + dashboard 76114, 启新 3 进程, rm processes.json + watchdog --discover 重建 registry, daemon 45165 + copilot-api 38079 全程未动)
 - real_machine_uat: pending (用户喊"可可,摇摆天线" / 浏览器按 6 个新按钮 / 拖 3 个滑条)
 - Status: in_progress → passing
+
+## Session 2026-06-05 — dashboard-007-face-id-wake-toggle (Reviewer LGTM + closeout + 重启 coco/dashboard/watchdog)
+
+- Fresh-context reviewer sub-agent 接 commit `fbbd436` (feat/dashboard-007-face-id-wake-toggle): face_id 软开关 (FaceIDClassifier.enabled + set_enabled + identify enabled=False → (None,0.0) early return) + wake-word 软开关 (复用现成 mute/unmute, TTS 期间在用) + 两侧入口 `_maybe_reload_*` 模块级 helper 节流 30s 读 `~/.cache/coco/runtime_config.json` + dashboard 右栏 `<details id="perception-panel">` 2 toggle (face_id / wake) + POST/GET /api/config/{face_id_enabled,wake_enabled} 白名单 + atomic write (tmp+os.replace) 同 dashboard-005 模式
+- pre-merge: checkout feat 分支 + 阅 diff 3 文件 (face_id.py +68 / wake_word.py +65 / dashboard/app.py +115); verify rc=0 V0-V10 11/11 PASS; smoke rc=0; 模块功能实测 FaceIDClassifier 实例化 + set_enabled(False) + identify→(None,0.0) + WakeWordDetector mute/unmute/is_muted/feed 方法存在
+- Reviewer checklist 10 项 全通过: V0 hash 锁 3 文件; face_id.enabled 默认 True + set_enabled public; identify enabled=False 早返不抛; wake mute/unmute 复用未破坏; hot-reload helper 模块级 (不入侵 main.py); dashboard 2 toggle HTML+JS changePerception/loadPerception; POST/GET 白名单 + atomic write; **路由优先级 V10: llm_model 端点 678/691 注册先于 generic /api/config/{key} 732/749 → dashboard-005 不受影响**; GET 缺省 enabled=true + unknown key→404; smoke 不回归
+- Reviewer verdict LGTM (rounds=1, P0/P1 空, P2 2 项: wake._maybe_reload 在 feed() 入口节流 cold-start 第 30s 才首次 hot-reload acceptable; face_tracker 现在未 wire 进 main, identify callsite 由其他订阅消费 hot-reload 在 identify 入口生效)
+- merge --no-ff feat → main commit `340eddc` (baseline pre-merge `27c7c27`, feat HEAD `fbbd436`)
+- post-merge rerun: verify rc=0 V0-V10 11/11 PASS + smoke rc=0
+- P278 evidence: closeout_verify (main_head_sha=340eddc + baseline_head_echo=27c7c27 + merge_commit_sha=340eddc1413c + verify_runs[3] 含 name + freshness_anchor pre-merge-feature-branch/post-merge-rerun/post-merge-smoke 各 tail_stdout+rc+status=PASS + smoke_tail_stdout + reviewer kind=sub_agent_fresh_context verdict=LGTM summary 200+字 checks_run 10 项 findings P0/P1/P2 三 key rounds=1)
+- P299 rc 形态: `python verify.py > /tmp/[rev|co]_v_d007.log 2>&1; rc=$?; tail ...; echo "rc=$rc"`
+- verify_infra_062.py: dashboard-007 不在任一 first_violation 中 (其他 FAIL 项为历史 audio-014 / interact-015-fu-extend-max / dashboard-001-live-hud 等老 features pre-existing 形态欠债)
+- Phase 3 重启 coco + dashboard + watchdog 让 toggle 生效: 先停 watchdog 避抢端口, 停 coco + dashboard, 启新 3 进程 (COCO_FACE_ID=1 让 classifier 真构造), rm processes.json + watchdog --discover 重建 registry, daemon 45165 + copilot-api 38079 全程未动
+- real_machine_uat: pending (用户浏览器硬刷新 dashboard → 右栏感知设置 2 toggle, ~30s 内 face_id / wake 生效)
+- Status: in_progress → passing

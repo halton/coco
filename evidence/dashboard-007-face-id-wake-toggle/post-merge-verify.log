@@ -1,0 +1,13 @@
+[PASS] V0 hash lock app+face_id+wake exist :: app.sha=6353c30c933b face_id.sha=eab1e980560b wake.sha=e7ea33bebbe6
+[PASS] V1 FaceIDClassifier.enabled + set_enabled :: enabled=True has_set_enabled=True default_on=True
+[PASS] V2 identify enabled=False → (None, 0.0) early return :: result=(None, 0.0) enabled=False
+[PASS] V3 identify enabled=True 走旧路径 :: enabled=True result=(None, 0.0)
+[PASS] V4 wake_word.WakeWordDetector mute/unmute/is_muted/feed 仍存在 :: mute=True unmute=True is_muted=True feed=True
+[PASS] V5 hot-reload helpers 节流 + 切状态 :: face_helper=True wake_helper=True face_throttle_ok=True wake_throttle_ok=True
+[PASS] V6 POST /api/config/face_id_enabled {false} 200 + writes :: status=200 body={'status': 'saved', 'key': 'face_id_enabled', 'enabled': False, 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_1e52_ryr/runtime_config.json'} disk={'face_id_enabled': False}
+[PASS] V7 POST /api/config/wake_enabled {true} 200 + writes :: status=200 body={'status': 'saved', 'key': 'wake_enabled', 'enabled': True, 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_1e52_ryr/runtime_config.json'} disk={'wake_enabled': True}
+[PASS] V8 GET /api/config/{face_id,wake}_enabled defaults+readback+404 :: b1={'key': 'face_id_enabled', 'enabled': True} b2={'key': 'wake_enabled', 'enabled': True} b3={'key': 'face_id_enabled', 'enabled': False} b4={'key': 'wake_enabled', 'enabled': False} unknown_status=404
+[PASS] V9 HTML face-id-toggle+wake-toggle+changePerception+loadPerception :: face_toggle=True wake_toggle=True changePerception=True loadPerception=True panel=True call=True
+[PASS] V10 regression: llm_model 端点仍 OK (generic 路由不吞) :: get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_1e52_ryr/runtime_config.json'} invalid_status=400
+
+=== dashboard-007 verify: 11/11 PASS ===
