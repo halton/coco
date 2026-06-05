@@ -37,8 +37,30 @@ _ALLOWED_ACTIONS = {
 _ACTION_TIMEOUT_S = float(os.environ.get("COCO_DASHBOARD_ACTION_TIMEOUT_S", "15"))
 
 
+# dashboard-005: LLM model 热切（不重启 coco）
+# dashboard 把 model 名写入 runtime_config.json，coco/llm.py 每 30s check 一次。
+_RUNTIME_CONFIG_PATH = Path(
+    os.environ.get(
+        "COCO_RUNTIME_CONFIG_PATH",
+        str(Path.home() / ".cache" / "coco" / "runtime_config.json"),
+    )
+)
+_ALLOWED_MODELS = {
+    "gpt-4o-mini",
+    "gpt-4o",
+    "gpt-4.1",
+    "claude-sonnet-4.5",
+    "claude-opus-4.7",
+    "gemini-2.5-pro",
+}
+
+
 class ActionRequest(BaseModel):
     action: str
+
+
+class ModelRequest(BaseModel):
+    model: str
 
 
 def _placeholder_png() -> bytes:
@@ -127,6 +149,18 @@ HTML_PAGE = """<!DOCTYPE html>
   <button onclick="doAction('goto_sleep')">睡觉</button>
   <button onclick="doAction('wake_up')">起来</button>
   <div id="action-status"></div>
+</div>
+<div id="llm-panel" style="position:fixed; top:430px; right:10px; background:rgba(0,0,0,0.5); padding:8px; border-radius:8px; z-index:10; color:#fff; font-size:12px;">
+  <div style="margin-bottom:4px;">LLM Model</div>
+  <select id="llm-model" onchange="changeModel()">
+    <option value="gpt-4o-mini">gpt-4o-mini</option>
+    <option value="gpt-4o">gpt-4o</option>
+    <option value="gpt-4.1">gpt-4.1</option>
+    <option value="claude-sonnet-4.5">claude-sonnet-4.5</option>
+    <option value="claude-opus-4.7">claude-opus-4.7</option>
+    <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+  </select>
+  <div id="llm-status" style="margin-top:4px;font-size:11px;"></div>
 </div>
 <div id="wrap">
   <div id="cam-pane">
@@ -308,6 +342,31 @@ async function doAction(action){
     console.error(e);
   }
 }
+
+// dashboard-005: LLM model 切换
+async function changeModel(){
+  var m = document.getElementById('llm-model').value;
+  document.getElementById('llm-status').textContent = '切换中...';
+  try {
+    var r = await fetch('/api/config/llm_model', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model: m})
+    });
+    var d = await r.json();
+    document.getElementById('llm-status').textContent = (d.status || ('http_'+r.status)) + ' (~30s 生效)';
+  } catch(e) {
+    document.getElementById('llm-status').textContent = '失败: ' + e.message;
+  }
+}
+async function loadModel(){
+  try {
+    var r = await fetch('/api/config/llm_model');
+    var d = await r.json();
+    if (d.model) document.getElementById('llm-model').value = d.model;
+  } catch(e) { /* ignore */ }
+}
+loadModel();
 </script>
 <!-- dashboard-004: pose sliders (pitch/yaw/roll) -->
 <div id="pose-panel" style="position:fixed; top:260px; right:10px; background:rgba(0,0,0,0.6); padding:8px 10px; border-radius:8px; z-index:10; color:#fff; font-size:12px; max-width:220px;">
@@ -438,6 +497,57 @@ def create_app() -> FastAPI:
             "action": req.action,
             "stdout": stdout.decode("utf-8", errors="replace")[-400:],
             "stderr": stderr.decode("utf-8", errors="replace")[-400:],
+        }
+
+    # ------------------------------------------------------------------
+    # dashboard-005: LLM model hot-switch endpoints
+    # ------------------------------------------------------------------
+    @app.get("/api/config/llm_model")
+    async def get_llm_model() -> dict:
+        """读 ~/.cache/coco/runtime_config.json 的 llm_model 字段；不存在返回空。"""
+        try:
+            if _RUNTIME_CONFIG_PATH.exists():
+                data = json.loads(_RUNTIME_CONFIG_PATH.read_text() or "{}")
+                if isinstance(data, dict):
+                    m = data.get("llm_model", "")
+                    return {"model": m if isinstance(m, str) else ""}
+        except (OSError, ValueError):
+            pass
+        return {"model": ""}
+
+    @app.post("/api/config/llm_model")
+    async def post_llm_model(req: ModelRequest) -> dict:
+        """写 llm_model 到 runtime_config.json（atomic rename）.
+
+        - 白名单校验，非法 → 400
+        - 合并写：保留 runtime_config 里其它字段
+        - 写 .tmp 后 os.replace 到目标，避免半截写被 coco 主进程读到
+        - coco/llm.py _maybe_reload_model 周期性 check 此文件（默认 30s）
+        """
+        if req.model not in _ALLOWED_MODELS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"unknown model: {req.model!r}",
+            )
+        _RUNTIME_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        data: dict = {}
+        if _RUNTIME_CONFIG_PATH.exists():
+            try:
+                parsed = json.loads(_RUNTIME_CONFIG_PATH.read_text() or "{}")
+                if isinstance(parsed, dict):
+                    data = parsed
+            except (OSError, ValueError):
+                data = {}
+        data["llm_model"] = req.model
+        tmp = _RUNTIME_CONFIG_PATH.with_suffix(
+            _RUNTIME_CONFIG_PATH.suffix + ".tmp"
+        )
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        os.replace(tmp, _RUNTIME_CONFIG_PATH)
+        return {
+            "status": "saved",
+            "model": req.model,
+            "path": str(_RUNTIME_CONFIG_PATH),
         }
 
     @app.get("/frame.jpg")
