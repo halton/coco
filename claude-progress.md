@@ -9955,3 +9955,20 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - feature_list.json interact-039 status=passing, evidence 含 4 verify_runs (main_head_sha/baseline_head_echo/merge_commit_sha/reviewer.{kind,verdict,summary≥20字,checks_run,findings P0/P1/P2,rounds})
 - verify_infra_062 对 interact-039 0 违规 (剩余 6 FAIL 全为 pre-existing baseline noise: audio-014/infra-P299/dashboard-001-live-hud, 不阻本次 closeout)
 - Next: 重启 coco 让 llm_action_fn wire 生效, 用户现在喊 "可可，向左转头" / "低头" / "摇头" 应精准触发对应动作
+
+## Session 2026-06-05 — dashboard-002 closeout (Reviewer fresh-context)
+
+- branch: feat/dashboard-002-action-buttons -> main (merge --no-ff)
+- feat commit: 5650d38 (action buttons + timeline action 字段)
+- post-feat reviewer commit: 65e6dc9 (placeholder)
+- merge commit / main HEAD: 4cea323
+- Reviewer (sub-agent fresh-context): LGTM
+- verify on feat: 9/9 PASS (V0-V8, rc=0)
+- smoke on feat: rc=0
+- post-merge verify on main: 9/9 PASS (rc=0)
+- post-merge smoke on main: rc=0
+- findings: P0=0 P1=0 P2=4 (并发/cold-start/真机slot/import 链 — 全 follow-up)
+- feature_list.json: dashboard-002-action-buttons status -> passing,
+  P278 evidence nested (closeout_verify + reviewer)
+- 真机 UAT: pending (uat-script.md 指引浏览器点按钮真触发动作)
+- Phase 3: 重启 dashboard 38127 -> 新 PID, 让 /api/action 路由 + 按钮 HTML 生效
