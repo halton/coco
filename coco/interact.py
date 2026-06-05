@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import inspect
 import logging
+import os
 import threading
 import time
 from dataclasses import dataclass, field
@@ -38,6 +39,34 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# interact-014: _busy lock leak watchdog
+# ---------------------------------------------------------------------------
+# 现状 (interact-014 之前)：handle_audio 持锁期间任何异常路径未捕获 / asyncio
+# CancelledError / edge-tts 后台 worker 抛 → 跳过 finally release → lock 永泄漏。
+# 一旦泄漏，所有后续 wake.hit 触发的 handle_audio 都在 acquire(blocking=False)
+# 这步被驳回，用户感受到「再也激活不了」。
+# 修法：(i) 严格 try/finally + RuntimeError 保护 double release；
+#       (ii) watchdog: 持锁 >COCO_INTERACT_LOCK_TIMEOUT_S(默认30s) 自动 break +
+#            log + emit interact.lock_recovered；
+#       (iii) watchdog 调用在 acquire 之前 → 历史泄漏在下次 wake 触发即重置。
+_DEFAULT_LOCK_TIMEOUT_S = 30.0
+
+
+def _resolve_lock_timeout_s() -> float:
+    """读取 env COCO_INTERACT_LOCK_TIMEOUT_S，失败回默认 30.0。"""
+    val = os.environ.get("COCO_INTERACT_LOCK_TIMEOUT_S")
+    if not val:
+        return _DEFAULT_LOCK_TIMEOUT_S
+    try:
+        f = float(val)
+        if f <= 0:
+            return _DEFAULT_LOCK_TIMEOUT_S
+        return f
+    except (TypeError, ValueError):
+        return _DEFAULT_LOCK_TIMEOUT_S
 
 
 # ---------------------------------------------------------------------------
@@ -221,6 +250,8 @@ class InteractSession:
         self.stats = InteractStats()
         # 互斥：保证同一时刻只有一个 handle_audio 跑
         self._busy = threading.Lock()
+        # interact-014: lock watchdog 用 — 记录 acquire 成功时刻；release 后清零
+        self._busy_acquired_ts: Optional[float] = None
 
     @staticmethod
     def _probe_accepts_history(fn: Optional[Callable[..., str]]) -> bool:
@@ -254,6 +285,68 @@ class InteractSession:
         return False
 
     # ------------------------------------------------------------------
+    # interact-014: lock watchdog
+    # ------------------------------------------------------------------
+    def _check_lock_watchdog(self, now: Optional[float] = None) -> bool:
+        """检查 _busy 是否泄漏。如果持锁时间 > timeout，强释放并 emit 事件。
+
+        返回 True iff 触发了强释放（调用方可据此 log）。每次 acquire 之前
+        调一次 → 即使发生历史泄漏也能在下次 wake 触发时自动重置。
+
+        线程安全：threading.Lock 没有暴露 owner 信息，无法严格判断「持锁线程」。
+        因此采用「lock 当前已锁 + 上次 acquire 时间戳早于 timeout」的近似判定。
+        竞态：在 multi-thread 环境下 lock 可能正被合法持有 < timeout，但 ts
+        是上次 acquire（更早）→ 不触发。本逻辑只对「同一物理 turn 持续 >timeout」
+        生效，足够覆盖 leak 场景。
+        """
+        if now is None:
+            now = time.time()
+        ts = self._busy_acquired_ts
+        if ts is None:
+            return False
+        if not self._busy.locked():
+            # 锁本身已释放但 ts 没清零（不应发生但保险）
+            self._busy_acquired_ts = None
+            return False
+        timeout = _resolve_lock_timeout_s()
+        elapsed = now - ts
+        if elapsed <= timeout:
+            return False
+        # 触发强释放
+        log.warning(
+            "[interact] lock watchdog: forced release after %.1fs (timeout=%.1fs), "
+            "prev acquired_ts=%.3f",
+            elapsed, timeout, ts,
+        )
+        try:
+            self._busy.release()
+        except RuntimeError:
+            # 未持锁（被其他路径已释放过）→ 静默忽略
+            pass
+        self._busy_acquired_ts = None
+        # emit event (best-effort; 事件 bus 不在或失败一律吞)
+        try:
+            from coco.logging_setup import emit as _emit
+            _emit(
+                "interact.lock_recovered",
+                elapsed_s=round(elapsed, 3),
+                timeout_s=timeout,
+                prev_acquired_ts=ts,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        return True
+
+    def _release_busy_safe(self) -> None:
+        """统一释放 _busy 入口。double release / 未持锁均静默忽略。"""
+        try:
+            self._busy.release()
+        except RuntimeError:
+            # 未持锁 (已释放过 / 被 watchdog 强释放过) → 不抛
+            pass
+        self._busy_acquired_ts = None
+
+    # ------------------------------------------------------------------
     # 主入口
     # ------------------------------------------------------------------
     def handle_audio(
@@ -270,15 +363,21 @@ class InteractSession:
                   "asr_ok", "tts_ok", "action_ok"}。
         skip_action / skip_tts_play 用于 sub-agent 验证（不真发声 / 不真动）。
         """
+        # interact-014: acquire 之前先跑 watchdog；如果上次的 lock 因异常路径
+        # 永泄漏，这里会强释放并 emit interact.lock_recovered，让本次 acquire
+        # 能成功 → 用户层面的「再也激活不了」自动恢复。
+        self._check_lock_watchdog()
         if not self._busy.acquire(blocking=False):
             log.warning("InteractSession 正忙，丢弃本次音频")
             return {"transcript": "", "reply": "", "action": "", "duration_s": 0.0,
                     "asr_ok": False, "tts_ok": False, "action_ok": False, "dropped": True}
+        # interact-014: 记录 acquire 时刻 → watchdog 用
+        self._busy_acquired_ts = time.time()
         # interact-008: QUIET 状态早返回（在 acquire 之后才检查，确保 lock 释放）
         if self.conv_state_machine is not None:
             try:
                 if self.conv_state_machine.is_quiet_now():
-                    self._busy.release()
+                    self._release_busy_safe()
                     log.info("[interact] QUIET 状态，drop audio")
                     return {"transcript": "", "reply": "", "action": "",
                             "duration_s": 0.0, "asr_ok": False, "tts_ok": False,
@@ -651,7 +750,9 @@ class InteractSession:
             dt = time.monotonic() - t0
             result["duration_s"] = dt
             self.stats.durations_s.append(dt)
-            self._busy.release()
+            # interact-014: 统一走 _release_busy_safe — double release / 未持锁
+            # 静默忽略；ts 清零。即使 watchdog 已强释放，这里再 release 也不抛。
+            self._release_busy_safe()
         return result
 
     def _do_action(self, name: str) -> None:

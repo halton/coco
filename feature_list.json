@@ -24504,6 +24504,31 @@
       "status": "backlog",
       "title": "Reachy Mini Lite USB mic 在 macOS 系统层无输入电平 (硬件/固件层)",
       "description": "macOS 15.x，Audio MIDI 显示 enumerate 正常 2ch 16kHz primary 0.78 channels unmuted，但系统设置→声音→输入电平表完全无活动；MacBook 内置 mic 同条件正常；sounddevice/avfoundation/coreaudio 三通路读数据全 0；非软件层问题，需 firmware update 或联系 Pollen Robotics；workaround=COCO_AUDIO_INPUT_DEVICE=2 切 Mac mic"
+    },
+    {
+      "id": "interact-014-fix-busy-lock-leak",
+      "area": "interact",
+      "phase": 68,
+      "priority": 80,
+      "status": "in_progress",
+      "title": "InteractSession._busy lock 永泄漏 bug 修复 + 30s watchdog",
+      "description": "修 InteractSession.handle_audio _busy lock 在异常路径（asyncio CancelledError / edge-tts streaming worker 抛 / mid-path RuntimeError 等）跳过 finally release 导致永泄漏的 bug。一旦泄漏所有后续 wake.hit 触发 handle_audio 都在 acquire(blocking=False) 被驳回，用户层面表现为「再也激活不了」。修法：(i) 严格 try/finally + RuntimeError 保护 double release（统一 _release_busy_safe 入口）；(ii) watchdog: 持锁 >COCO_INTERACT_LOCK_TIMEOUT_S(默认30s) 自动 break + log + emit interact.lock_recovered；(iii) watchdog 调用在 acquire 之前 → 历史泄漏在下次 wake 触发即重置。audio-015 edge-tts streaming per-turn cleanup 留 backlog interact-014-fu-edge-tts-turn-cleanup。",
+      "dependencies": [],
+      "verification": [
+        "scripts/verify_interact_014_fix_busy_lock_leak.py V0-V8 全 PASS：(V0) sha256 fingerprint + 6 关键锚点；(V1) import + helper presence；(V2) 正常 acquire→finally release；(V3) mid-path 异常仍 finally 释放；(V4) 历史泄漏 watchdog 强释放 + emit interact.lock_recovered；(V5) <timeout 不干预；(V6) env COCO_INTERACT_LOCK_TIMEOUT_S=10 覆盖默认；(V7) 并发 acquire 失败不影响 watchdog 状态；(V8) double release 不抛 RuntimeError",
+        "smoke ./init.sh rc=0 12/12 通过",
+        "Reviewer (sub-agent, fresh-context): pending"
+      ],
+      "evidence": "evidence/interact-014-fix-busy-lock-leak/verify-pass.log + smoke-pass.log + uat-script.py + bug-analysis.md（pending Reviewer）"
+    },
+    {
+      "id": "interact-014-fu-edge-tts-turn-cleanup",
+      "area": "interact",
+      "phase": null,
+      "priority": 999,
+      "status": "backlog",
+      "title": "interact-014 follow-up: edge-tts streaming per-turn cleanup",
+      "description": "interact-014 修 _busy lock leak 时，edge-tts streaming（audio-015 V0 hash 锁面）的 per-turn cleanup（ffmpeg subprocess + reader thread）没动以避免 scope 蔓延。当前 _release_busy_safe + watchdog 已能保证 lock 不泄漏，但 ffmpeg subprocess 在异常路径仍可能挂着不被回收。后续单独立 feature 在 coco/tts.py _synthesize_and_play_edge_streaming finally 增加 ffmpeg.kill / reader.join(timeout) + handle_audio finally 调一次 tts.cleanup_streaming() 入口。需注意 audio-015 V0 hash 锁面，改动可能要同步动 audio-015 verify。"
     }
   ],
   "last_updated": "2026-06-04",

@@ -1,0 +1,18 @@
+[interact] lock watchdog: forced release after 31.0s (timeout=30.0s), prev acquired_ts=1780624670.272
+[interact] lock watchdog: forced release after 12.0s (timeout=10.0s), prev acquired_ts=1780624689.272
+InteractSession 正忙，丢弃本次音频
+========================================================================
+verify_interact_014_fix_busy_lock_leak — _busy lock leak 修复 V0-V8
+========================================================================
+[PASS] V0_fingerprint_sha256: sha256=e1f818e7eee8 anchors_missing=[]
+[PASS] V1_imports: watchdog=True release_safe=True default=30.0 resolved_default=30.0
+[PASS] V2_normal_release: locked_after=False ts_after=None r2.dropped=False
+[PASS] V3_exception_release: raised=True locked_after=False ts_after=None
+[PASS] V4_watchdog_recovers_leak: triggered=True locked_after=False r.dropped=False recovered_events=1 first={'name': 'interact.lock_recovered', 'elapsed_s': 31.0, 'timeout_s': 30.0, 'prev_acquired_ts': 1780624670.2721841}
+[PASS] V5_watchdog_skips_within_timeout: triggered=False still_locked=True ts_unchanged=True
+[PASS] V6_env_override: resolved=10.0 12s_triggered=True 8s_triggered=False
+[PASS] V7_concurrent_acquire_fail: r.dropped=True still_locked=True ts_unchanged=True
+[PASS] V8_double_release_safe: raised=None final_locked=False final_ts=None
+------------------------------------------------------------------------
+summary: total=9 pass=9 fail=0
+------------------------------------------------------------------------
