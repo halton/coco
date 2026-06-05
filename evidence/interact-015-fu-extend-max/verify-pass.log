@@ -1,0 +1,11 @@
+[PASS] V0_hash_lock: sha256=0464c21af3e168a7 expected=0464c21af3e168a7 anchors_missing=[]
+[PASS] V1_trigger_after_extend_overrides: after_extend15=15.00s after_trigger6=6.00s
+[PASS] V2_extend_shorter_keeps_longer: trigger30=30.00s extend15→30.00s (expect ~30, not shrunk)
+[PASS] V3_extend_longer_takes_max: trigger6=6.00s extend30→30.00s (expect ~30)
+[PASS] V4_extend_zero_noop: before=10.00s after_extend0=10.00s
+[PASS] V5_extend_negative_noop: before=10.00s after_extend-5=10.00s
+[PASS] V6_initial_zero_compat: initial_zero_then_extend20=20.00s is_awake=True
+[PASS] V7_monkey_patch_long_window: at_5s=25.00s after_extend15=25.00s after_extend40=40.00s
+
+============================================================
+Summary: 8/8 PASS
