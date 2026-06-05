@@ -2290,6 +2290,14 @@ class Coco(ReachyMiniApp):
                         wake_gate = WakeGate(window_seconds=wake_cfg.window_seconds)
                         wake_bridge = WakeVADBridge(wake_detector, wake_gate, _vad_on_utterance)
                         wake_bridge.bind_vad(vad_trigger)
+                        # interact-015: wire wake_gate 到 session — reply 完成后 session
+                        # 在 finally 调 wake_gate.extend(COCO_FOLLOWUP_WINDOW_S) 续窗，
+                        # 让用户连续对话不用反复喊 wake。session 构造在前、wake_gate
+                        # 构造在后，因此用 setter 后置 wire。
+                        try:
+                            session.set_wake_gate(wake_gate)
+                        except Exception:  # noqa: BLE001
+                            pass
                         # 关键替换：vad_trigger 的真 callback 改为 bridge.vad_gate_callback
                         vad_trigger.on_utterance = wake_bridge.vad_gate_callback
                         # 共享流：拦截 vad_trigger.feed，让样本先喂 wake，再走 vad

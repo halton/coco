@@ -24606,6 +24606,22 @@
       ]
     },
     {
+      "id": "interact-015-followup-window",
+      "title": "Follow-up window — reply 完后续 N 秒不用再喊 wake",
+      "area": "interact",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "notes": "WakeGate 加 extend(seconds) method (独立窗口续命，不影响 trigger() 默认窗); InteractSession.__init__ 加 wake_gate kwarg + set_wake_gate(后置 wire); handle_audio finally 段 reply 非空时调 wake_gate.extend(_followup_window_s) 续窗; env COCO_FOLLOWUP_WINDOW_S 默认 15.0s (0=禁用, clamp [0,60]); main.py 在 WakeGate 构造后 session.set_wake_gate(wake_gate); 向后兼容 wake_gate=None 不抛。",
+      "user_visible_behavior": "用户喊一次 '可可' → coco 回应一句 → reply 完成后 15s 内（默认）用户可继续说话不用再喊 wake; 沉默 15s 后才回 sleeping。",
+      "verification": "scripts/verify_interact_015_followup_window.py V0-V7 全 PASS (V0 fingerprint+anchors / V1 wake_gate kwarg+setter / V2 env 10 cases / V3 env=0 禁用 / V4 env=20 extend(20) / V5 真实 WakeGate 集成 / V6 None 向后兼容 / V7 main.py wire + WakeGate.extend 行为); + ./init.sh smoke rc=0. real_machine_uat: pending (evidence/interact-015-followup-window/uat-script.py).",
+      "dependencies": [
+        "interact-005",
+        "interact-014"
+      ],
+      "evidence_dir": "evidence/interact-015-followup-window/"
+    },
+    {
       "id": "audio-016-mic-auto-select-reachy",
       "phase": 68,
       "priority": 100,
