@@ -1,0 +1,49 @@
+{
+  "feature": "dashboard-003-perf-chart",
+  "passed": 8,
+  "total": 8,
+  "results": [
+    {
+      "name": "V0 hash lock app+parser exist",
+      "status": "PASS",
+      "detail": "app.sha=50f5fd557ef7 parser.sha=a209bfb7513c"
+    },
+    {
+      "name": "V1 event_parser extracts dt= from vad/ptt line",
+      "status": "PASS",
+      "detail": "vad evt.type=transcript dt=1.23"
+    },
+    {
+      "name": "V2 HTML has <canvas id=perf-chart",
+      "status": "PASS",
+      "detail": "found=True"
+    },
+    {
+      "name": "V3 JS has dtPoints + firstChunkPoints arrays",
+      "status": "PASS",
+      "detail": "dtPoints=True firstChunkPoints=True"
+    },
+    {
+      "name": "V4 function drawChart() defined",
+      "status": "PASS",
+      "detail": "found=True"
+    },
+    {
+      "name": "V5 ws.onmessage handles dt + first_chunk_ms + calls drawChart",
+      "status": "PASS",
+      "detail": "dt=True first_chunk=True drawChart_call=True"
+    },
+    {
+      "name": "V6 array rolling window 50 (MAX_POINTS=50 + .shift())",
+      "status": "PASS",
+      "detail": "MAX_POINTS=50:True shift():True"
+    },
+    {
+      "name": "V7 regression: textContent/createTextNode escape still in place",
+      "status": "PASS",
+      "detail": "textContent=True createTextNode=True no_innerHTML_event=True"
+    }
+  ],
+  "app_sha": "50f5fd557ef7bdbb7746ea9ce0bd6d998410f728aa65f72c40bcf90316486532",
+  "parser_sha": "a209bfb7513c20c08be8aaa25dbb35712e42fb20e7a8884816e52c2a2392e452"
+}

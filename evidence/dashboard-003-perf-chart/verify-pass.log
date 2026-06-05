@@ -1,0 +1,10 @@
+[PASS] V0 hash lock app+parser exist :: app.sha=50f5fd557ef7 parser.sha=a209bfb7513c
+[PASS] V1 event_parser extracts dt= from vad/ptt line :: vad evt.type=transcript dt=1.23
+[PASS] V2 HTML has <canvas id=perf-chart :: found=True
+[PASS] V3 JS has dtPoints + firstChunkPoints arrays :: dtPoints=True firstChunkPoints=True
+[PASS] V4 function drawChart() defined :: found=True
+[PASS] V5 ws.onmessage handles dt + first_chunk_ms + calls drawChart :: dt=True first_chunk=True drawChart_call=True
+[PASS] V6 array rolling window 50 (MAX_POINTS=50 + .shift()) :: MAX_POINTS=50:True shift():True
+[PASS] V7 regression: textContent/createTextNode escape still in place :: textContent=True createTextNode=True no_innerHTML_event=True
+
+=== dashboard-003 verify: 8/8 PASS ===

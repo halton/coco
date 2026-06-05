@@ -148,6 +148,83 @@ HTML_PAGE = """<!DOCTYPE html>
 (function(){
   var ul = document.getElementById('events');
   var st = document.getElementById('status');
+  var canvas = document.getElementById('perf-chart');
+  var ctx = canvas ? canvas.getContext('2d') : null;
+  var dtPoints = [];          // {ts, v} v=seconds (0..10)
+  var firstChunkPoints = [];  // {ts, v} v=ms (0..3000)
+  var MAX_POINTS = 50;
+  var DT_MAX = 10.0;          // 左 Y 轴上限 (s)
+  var FC_MAX = 3000.0;        // 右 Y 轴上限 (ms)
+
+  function pushPoint(arr, ts, v){
+    arr.push({ts: ts, v: v});
+    if (arr.length > MAX_POINTS) arr.shift();
+  }
+
+  function drawChart(){
+    if (!ctx) return;
+    var W = canvas.width, H = canvas.height;
+    var padL = 36, padR = 40, padT = 10, padB = 18;
+    var plotW = W - padL - padR;
+    var plotH = H - padT - padB;
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.stroke();
+    ctx.strokeStyle = '#222';
+    ctx.setLineDash([3, 3]);
+    var dtGridY = padT + plotH - (3.0 / DT_MAX) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(padL, dtGridY); ctx.lineTo(padL + plotW, dtGridY);
+    ctx.stroke();
+    var fcGridY = padT + plotH - (1500.0 / FC_MAX) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(padL, fcGridY); ctx.lineTo(padL + plotW, fcGridY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#4af';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('10s', padL - 4, padT + 8);
+    ctx.fillText('3s',  padL - 4, dtGridY + 3);
+    ctx.fillText('0',   padL - 4, padT + plotH);
+    ctx.fillStyle = '#fa4';
+    ctx.textAlign = 'left';
+    ctx.fillText('3000ms', padL + plotW + 4, padT + 8);
+    ctx.fillText('1500',   padL + plotW + 4, fcGridY + 3);
+    ctx.fillText('0',      padL + plotW + 4, padT + plotH);
+    function drawSeries(arr, color, maxV){
+      if (arr.length < 1) return;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (var i = 0; i < arr.length; i++){
+        var x = padL + (arr.length === 1 ? plotW : (i / (MAX_POINTS - 1)) * plotW);
+        var clamped = Math.max(0, Math.min(maxV, arr[i].v));
+        var y = padT + plotH - (clamped / maxV) * plotH;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      for (var j = 0; j < arr.length; j++){
+        var xj = padL + (arr.length === 1 ? plotW : (j / (MAX_POINTS - 1)) * plotW);
+        var cj = Math.max(0, Math.min(maxV, arr[j].v));
+        var yj = padT + plotH - (cj / maxV) * plotH;
+        ctx.beginPath();
+        ctx.arc(xj, yj, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    drawSeries(dtPoints, '#4af', DT_MAX);
+    drawSeries(firstChunkPoints, '#fa4', FC_MAX);
+  }
+  drawChart();
+
   var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   var ws = new WebSocket(proto + '//' + location.host + '/ws/events');
   ws.onopen = function(){ st.textContent = 'connected'; };
@@ -156,6 +233,16 @@ HTML_PAGE = """<!DOCTYPE html>
   ws.onmessage = function(ev){
     try {
       var e = JSON.parse(ev.data);
+      var chartChanged = false;
+      if (typeof e.dt === 'number' && isFinite(e.dt)){
+        pushPoint(dtPoints, e.ts || Date.now()/1000, e.dt);
+        chartChanged = true;
+      }
+      if (typeof e.first_chunk_ms === 'number' && isFinite(e.first_chunk_ms)){
+        pushPoint(firstChunkPoints, e.ts || Date.now()/1000, e.first_chunk_ms);
+        chartChanged = true;
+      }
+      if (chartChanged) drawChart();
       var li = document.createElement('li');
       li.className = 'ty-' + (e.type || 'raw');
       var t = new Date((e.ts || Date.now()/1000) * 1000);
