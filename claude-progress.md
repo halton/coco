@@ -9933,3 +9933,6 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 
 ## 2026-06-04 — audio-016 closeout (Reviewer LGTM)
 - merge --no-ff feat/audio-016-mic-auto-select-reachy → main HEAD=fbea7be; post-merge verify_audio_016 V0-V8 PASS (rc=0) + ./init.sh smoke rc=0; Reviewer sub_agent_fresh_context LGTM 1 round (P2 nit: _main_input_device 命名差); status passing; user_pending: 真机 mic UAT.
+
+## 2026-06-05 — interact-014 fix _busy lock leak closeout
+- merged feat/interact-014-fix-busy-lock-leak; main_head_sha=aba69b70099c; verify V0-V8 9/9 PASS post-merge; smoke 12/12 PASS post-merge; Reviewer (sub_agent_fresh_context) LGTM 1 round; 1 backlog interact-014-fu-edge-tts-turn-cleanup

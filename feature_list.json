@@ -24510,7 +24510,7 @@
       "area": "interact",
       "phase": 68,
       "priority": 80,
-      "status": "in_progress",
+      "status": "passing",
       "title": "InteractSession._busy lock 永泄漏 bug 修复 + 30s watchdog",
       "description": "修 InteractSession.handle_audio _busy lock 在异常路径（asyncio CancelledError / edge-tts streaming worker 抛 / mid-path RuntimeError 等）跳过 finally release 导致永泄漏的 bug。一旦泄漏所有后续 wake.hit 触发 handle_audio 都在 acquire(blocking=False) 被驳回，用户层面表现为「再也激活不了」。修法：(i) 严格 try/finally + RuntimeError 保护 double release（统一 _release_busy_safe 入口）；(ii) watchdog: 持锁 >COCO_INTERACT_LOCK_TIMEOUT_S(默认30s) 自动 break + log + emit interact.lock_recovered；(iii) watchdog 调用在 acquire 之前 → 历史泄漏在下次 wake 触发即重置。audio-015 edge-tts streaming per-turn cleanup 留 backlog interact-014-fu-edge-tts-turn-cleanup。",
       "dependencies": [],
@@ -24519,7 +24519,62 @@
         "smoke ./init.sh rc=0 12/12 通过",
         "Reviewer (sub-agent, fresh-context): pending"
       ],
-      "evidence": "evidence/interact-014-fix-busy-lock-leak/verify-pass.log + smoke-pass.log + uat-script.py + bug-analysis.md（pending Reviewer）"
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "aba69b70099c",
+          "verify_runs": [
+            {
+              "name": "verify_interact_014_fix_busy_lock_leak",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V2_normal_release: locked_after=False ts_after=None r2.dropped=False\n[PASS] V3_exception_release: raised=True locked_after=False ts_after=None\n[PASS] V4_watchdog_recovers_leak: triggered=True locked_after=False r.dropped=False recovered_events=1 first={'name': 'interact.lock_recovered', 'elapsed_s': 31.0, 'timeout_s': 30.0, 'prev_acquired_ts': 1780624984.608903}\n[PASS] V5_watchdog_skips_within_timeout: triggered=False still_locked=True ts_unchanged=True\n[PASS] V6_env_override: resolved=10.0 12s_triggered=True 8s_triggered=False\n[PASS] V7_concurrent_acquire_fail: r.dropped=True still_locked=True ts_unchanged=True\n[PASS] V8_double_release_safe: raised=None final_locked=False final_ts=None\n------------------------------------------------------------------------\nsummary: total=9 pass=9 fail=0\n------------------------------------------------------------------------",
+              "freshness_anchor": "post-merge-rerun"
+            },
+            {
+              "name": "smoke",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+              "freshness_anchor": "post-merge-rerun"
+            }
+          ],
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "fresh-context Reviewer 审 diff: try/finally 严格在 acquire 之后, QUIET 早返回走 _release_busy_safe, 主路径 finally 也走 _release_busy_safe, 旧 manual self._busy.release() 全删, watchdog 在 acquire 之前调一次, _busy_acquired_ts 配合 _busy.locked() 双重判定避免误触, env COCO_INTERACT_LOCK_TIMEOUT_S 默认 30s 含解析错误回 default, lock_recovered 事件 emit best-effort, V0-V8 9/9 PASS, smoke rc=0, post-merge rerun 全绿",
+            "checks_run": [
+              "try_finally_严格包裹",
+              "早return不进finally",
+              "release_safe防double",
+              "旧manual_release全删",
+              "watchdog_acquire前调",
+              "env_timeout可覆盖",
+              "lock_recovered事件emit",
+              "V0_hash一致",
+              "verify_独立",
+              "smoke_无回归",
+              "post_smoke_import",
+              "audio_链路未破坏"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        },
+        "files": [
+          "evidence/interact-014-fix-busy-lock-leak/verify-pass.log",
+          "evidence/interact-014-fix-busy-lock-leak/smoke-pass.log",
+          "evidence/interact-014-fix-busy-lock-leak/uat-script.py",
+          "evidence/interact-014-fix-busy-lock-leak/bug-analysis.md"
+        ],
+        "user_pending": [
+          "真机连测 5 turn + 故意 sleep 35s 后再 wake 一次验证 watchdog 重置 (运行 evidence/interact-014-fix-busy-lock-leak/uat-script.py)"
+        ],
+        "p1_followup_backlog": [
+          "interact-014-fu-edge-tts-turn-cleanup"
+        ]
+      }
     },
     {
       "id": "interact-014-fu-edge-tts-turn-cleanup",
