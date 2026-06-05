@@ -36,6 +36,67 @@ from typing import Callable, List, Optional, Protocol
 log = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# dashboard-005: runtime config hot-reload (LLM model 切换不重启 coco)
+# ---------------------------------------------------------------------------
+# dashboard 写 ~/.cache/coco/runtime_config.json，coco 主进程每 N 秒 check 一次，
+# 发现 llm_model 变了就更新 backend.model（不重启进程，不重连 backend）。
+_RUNTIME_CONFIG_PATH = os.path.expanduser("~/.cache/coco/runtime_config.json")
+_LAST_CONFIG_RELOAD_INTERVAL_S = float(
+    os.environ.get("COCO_CONFIG_RELOAD_INTERVAL_S", "30.0")
+)
+_last_config_check_ts: float = 0.0
+
+
+def _load_runtime_config() -> dict:
+    """读 ~/.cache/coco/runtime_config.json；文件不存在/JSON 解析失败一律返回 {}.
+
+    dashboard-005：dashboard 后端 POST /api/config/llm_model 会原子写入此文件，
+    coco 主进程通过 _maybe_reload_model 周期性读取以热切 LLM model。
+    """
+    try:
+        if not os.path.isfile(_RUNTIME_CONFIG_PATH):
+            return {}
+        with open(_RUNTIME_CONFIG_PATH, "r", encoding="utf-8") as f:
+            data = json.loads(f.read() or "{}")
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _maybe_reload_model(backend) -> Optional[str]:
+    """周期性 check runtime_config.json，更新 backend.model；返回新 model 或 None.
+
+    - 节流：上次 check < _LAST_CONFIG_RELOAD_INTERVAL_S 秒直接 return None
+    - backend 没 ``model`` 属性（如 FallbackBackend）→ 跳过
+    - config 没 ``llm_model`` 字段或与当前相同 → return None
+    - 不同 → 原地改 backend.model（OpenAIChatBackend / OllamaBackend 都用
+      self.model），下一次 chat() payload 自然带新 model；不重连、不重 init backend
+    """
+    global _last_config_check_ts
+    now = time.monotonic()
+    if (now - _last_config_check_ts) < _LAST_CONFIG_RELOAD_INTERVAL_S:
+        return None
+    _last_config_check_ts = now
+    if not hasattr(backend, "model"):
+        return None
+    cfg = _load_runtime_config()
+    new_model = cfg.get("llm_model")
+    if not isinstance(new_model, str) or not new_model:
+        return None
+    current = getattr(backend, "model", None)
+    if new_model == current:
+        return None
+    try:
+        backend.model = new_model
+    except (AttributeError, TypeError):
+        return None
+    log.info("llm.hot_reload model %r -> %r", current, new_model)
+    return new_model
+
+
 SYSTEM_PROMPT = (
     "你是 Coco（可可），一个友好的桌面陪伴机器人。"
     "用一句简短的中文（不超过 60 个字）自然地回应用户的话，"
@@ -449,6 +510,13 @@ class LLMClient:
         eff_timeout = timeout if timeout is not None else self.timeout
         self.stats.calls += 1
         text = ""
+
+        # dashboard-005: 每 reply 入口 check 一次 runtime_config.json
+        # 内部已节流（默认 30s），无需在调用方再 throttle
+        try:
+            _maybe_reload_model(self.backend)
+        except Exception as _e:  # noqa: BLE001
+            log.debug("hot_reload check skipped: %s", _e)
 
         # 1) 调 backend
         try:

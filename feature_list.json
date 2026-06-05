@@ -24673,6 +24673,18 @@
       ]
     },
     {
+      "id": "dashboard-005-llm-model-switch",
+      "title": "Dashboard 下拉切换 LLM model + coco 主进程 hot-reload (~30s, 不重启)",
+      "area": "infra",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "notes": "右下 llm-panel 下拉 6 模型 (gpt-4o-mini/gpt-4o/gpt-4.1/claude-sonnet-4.5/claude-opus-4.7/gemini-2.5-pro) -> POST /api/config/llm_model 写 ~/.cache/coco/runtime_config.json (合并 + tmp + os.replace atomic, 白名单非法 400). coco/llm.py 加 module-level _load_runtime_config() / _maybe_reload_model() / _last_config_check_ts; LLMClient.reply 入口调一次, 节流 _LAST_CONFIG_RELOAD_INTERVAL_S 默认 30s (env COCO_CONFIG_RELOAD_INTERVAL_S); 改变后原地写 backend.model (OpenAIChatBackend/OllamaBackend 都用 self.model), 下一次 chat() payload 自然带新 model, 不重连 backend / 不重启 coco. GET /api/config/llm_model 给前端 loadModel() 回填当前选中.",
+      "user_visible_behavior": "浏览器开 http://localhost:8765 右下 'LLM Model' 下拉选 claude-sonnet-4.5 -> 状态条显示 'saved (~30s 生效)' -> 30s 内下一条对话 reply 来自新 model (不需要重启 coco).",
+      "verification": "scripts/verify_dashboard_005_llm_model_switch.py V0-V7 全 PASS (hash lock / 模块 symbol / _load_runtime_config missing+ok+broken / _maybe_reload_model 节流+切换+同 model 跳过 / GET 空 / POST+GET 回读 / 非法 400 / HTML 6 option+changeModel+loadModel+ids). real_machine_uat: pending (浏览器实操切 model 30s 内 reply 切换由用户跑, 见 evidence/dashboard-005-llm-model-switch/uat-script.md).",
+      "evidence": []
+    },
+    {
       "id": "interact-015-followup-window",
       "title": "Follow-up window — reply 完后续 N 秒不用再喊 wake",
       "area": "interact",
