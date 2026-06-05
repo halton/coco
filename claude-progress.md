@@ -10115,3 +10115,23 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - 真机 UAT: pending (浏览器选 model 30s 内 reply 切换, 由用户异步, 见 evidence/dashboard-005-llm-model-switch/uat-script.md)
 - Status: in_progress → passing
 - 备注: rebase 后 app.py 整体 sha 变 (f93343ddd53a → fc5ab87ec06d) 是因为 d005 hunks 应用到含 d003/d004 完整 app.py 上, 字节流当然不同; verify script V0 自动重测对得上, 把 summary refresh 收到 feat commit 即可
+
+## Session 2026-06-05 — infra-watchdog-fu-dashboard-redbar (clean rewrite)
+
+- feat: 旧 commit 352b20a 因并行 race 污染含 d003/d004/d005 (+430 行), 已 `git branch -D feat/infra-watchdog-fu-dashboard-redbar`
+- 重写: 新建 `feat/infra-watchdog-fu-dashboard-redbar-v2` 基 main HEAD 8b27d9f
+- 改动: coco/dashboard/app.py +49 行 (vs 旧 +430, 缩水 88%) — redbar-only
+  - HTML: body 顶端加 watchdog-bar div (z-index 100, position fixed, display none)
+  - JS: pollWatchdog() fetch /api/watchdog/recent, 10s interval, msg 用 textContent escape
+  - 后端: `@app.get("/api/watchdog/recent")` 读 /tmp/coco-watchdog-events.log (JSON lines) 返回最近 N
+  - 字段兼容: 检测 `event.kind` (watchdog 实际写) 或 `event.event` (旧 fallback)
+- verify_infra_watchdog_fu_dashboard_redbar.py 新写: V0 hash lock + V1-V8 covers route/mock/clamp/corrupt/HTML/escape/regression
+- 跑 verify rc=0 V0-V8 9/9 PASS + smoke rc=0 (pre-merge & post-merge & reviewer-fresh-context 三次)
+- merge --no-ff 到 main, HEAD=f8ef282, baseline=8b27d9f
+- P278 evidence: closeout_verify {main_head_sha, merge_commit_sha, baseline_head_echo, verify_runs[3] freshness_anchor, smoke_tail_stdout} + reviewer {reviewer_kind=sub_agent_fresh_context, lgtm=True, verdict=LGTM, summary 100+字, checks_run 11项, findings P0/P1/P2 全空, rounds=1}
+- verify_closeout_evidence_trustworthy(): 5/5 PASS, all_trustworthy=True
+- verify_infra_062.py: 我的 feature 不在 first_violation 中, 各 enforce_path violation 总数下降 (说明合规)
+- 不重启 dashboard (4 个串行最后统一)
+- daemon/coco/dashboard/copilot-api 全程未动
+- 真机 UAT: pending (启 watchdog + kill daemon → 30s 内看红条, 见 evidence/uat-script.md)
+- Status: backlog → in_progress → passing

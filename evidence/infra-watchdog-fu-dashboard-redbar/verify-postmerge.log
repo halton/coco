@@ -1,0 +1,11 @@
+[PASS] V0 hash lock: expected=613b0fed8d15938ceb8c9de85002ba3e3e0f5433 actual=613b0fed8d15938ceb8c9de85002ba3e3e0f5433
+[PASS] V1 import + route: routes_count=14
+[PASS] V2 mock event: status=200 count=1 kind=health.degraded
+[PASS] V3 missing log: resp={'events': [], 'count': 0}
+[PASS] V4 limit clamp: low_count=1 high_count=100
+[PASS] V5 corrupt line: count=2 events=[{'kind': 'ok', 'i': 1}, {'kind': 'ok', 'i': 2}]
+[PASS] V6 HTML+JS pieces: watchdog-bar=True pollWatchdog=True setInterval=True
+[PASS] V7 textContent escape: textContent=True no_innerHTML=True
+[PASS] V8 d001..d005 routes: missing=set()
+
+=== Summary: 9/9 PASS, 0 FAIL ===

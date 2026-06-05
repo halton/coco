@@ -25140,13 +25140,87 @@
       "area": "infra",
       "phase": 68,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "source": "infra-watchdog-auto-restart scope (P2 留 backlog): 当前 watchdog 仅写 /tmp/coco-watchdog-events.log; dashboard 还未消费这个 event log",
       "scope": "dashboard 顶部加一行红条, 显示最近一次 health.degraded / restart.attempted / restart.give_up 事件 ('<service> down, last check <ts>')。机制可选: (a) dashboard tail /tmp/coco-watchdog-events.log 每秒一次; (b) watchdog 通过 ws 主动推送 dashboard; (c) 共享 Redis/sqlite。优先 (a) 最简单, 与现 dashboard 隔离最低。",
       "dependencies": [
         "infra-watchdog-auto-restart"
       ],
-      "updated_at": "2026-06-05T00:00:00"
+      "updated_at": "2026-06-05T00:00:00",
+      "evidence": {
+        "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_infra_watchdog_fu_dashboard_redbar.py",
+        "verify_log": "evidence/infra-watchdog-fu-dashboard-redbar/verify-pass.log",
+        "verify_postmerge_log": "evidence/infra-watchdog-fu-dashboard-redbar/verify-postmerge.log",
+        "smoke_log": "evidence/infra-watchdog-fu-dashboard-redbar/smoke-pass.log",
+        "smoke_postmerge_log": "evidence/infra-watchdog-fu-dashboard-redbar/smoke-postmerge.log",
+        "uat_script": "evidence/infra-watchdog-fu-dashboard-redbar/uat-script.md",
+        "real_machine_uat": "pending",
+        "closeout_verify": {
+          "main_head_sha": "f8ef282",
+          "merge_commit_sha": "f8ef282",
+          "baseline_head_echo": "8b27d9f",
+          "verify_runs": [
+            {
+              "name": "pre-merge-feat-branch",
+              "script": "scripts/verify_infra_watchdog_fu_dashboard_redbar.py",
+              "freshness_anchor": "pre-merge-feat-branch",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock: expected=613b0fed8d15938ceb8c9de85002ba3e3e0f5433 actual=613b0fed8d15938ceb8c9de85002ba3e3e0f5433\n[PASS] V1 import + route: routes_count=14\n[PASS] V2 mock event: status=200 count=1 kind=health.degraded\n[PASS] V3 missing log: resp={'events': [], 'count': 0}\n[PASS] V4 limit clamp: low_count=1 high_count=100\n[PASS] V5 corrupt line: count=2 events=[{'kind': 'ok', 'i': 1}, {'kind': 'ok', 'i': 2}]\n[PASS] V6 HTML+JS pieces: watchdog-bar=True pollWatchdog=True setInterval=True\n[PASS] V7 textContent escape: textContent=True no_innerHTML=True\n[PASS] V8 d001..d005 routes: missing=set()\n\n=== Summary: 9/9 PASS, 0 FAIL ===\n"
+            },
+            {
+              "name": "reviewer-fresh-context-rerun",
+              "script": "scripts/verify_infra_watchdog_fu_dashboard_redbar.py",
+              "freshness_anchor": "reviewer-fresh-context-rerun",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock: expected=613b0fed8d15938ceb8c9de85002ba3e3e0f5433 actual=613b0fed8d15938ceb8c9de85002ba3e3e0f5433\n[PASS] V1 import + route: routes_count=14\n[PASS] V2 mock event: status=200 count=1 kind=health.degraded\n[PASS] V3 missing log: resp={'events': [], 'count': 0}\n[PASS] V4 limit clamp: low_count=1 high_count=100\n[PASS] V5 corrupt line: count=2 events=[{'kind': 'ok', 'i': 1}, {'kind': 'ok', 'i': 2}]\n[PASS] V6 HTML+JS pieces: watchdog-bar=True pollWatchdog=True setInterval=True\n[PASS] V7 textContent escape: textContent=True no_innerHTML=True\n[PASS] V8 d001..d005 routes: missing=set()\n\n=== Summary: 9/9 PASS, 0 FAIL ===\n"
+            },
+            {
+              "name": "post-merge-rerun",
+              "script": "scripts/verify_infra_watchdog_fu_dashboard_redbar.py",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock: expected=613b0fed8d15938ceb8c9de85002ba3e3e0f5433 actual=613b0fed8d15938ceb8c9de85002ba3e3e0f5433\n[PASS] V1 import + route: routes_count=14\n[PASS] V2 mock event: status=200 count=1 kind=health.degraded\n[PASS] V3 missing log: resp={'events': [], 'count': 0}\n[PASS] V4 limit clamp: low_count=1 high_count=100\n[PASS] V5 corrupt line: count=2 events=[{'kind': 'ok', 'i': 1}, {'kind': 'ok', 'i': 2}]\n[PASS] V6 HTML+JS pieces: watchdog-bar=True pollWatchdog=True setInterval=True\n[PASS] V7 textContent escape: textContent=True no_innerHTML=True\n[PASS] V8 d001..d005 routes: missing=set()\n\n=== Summary: 9/9 PASS, 0 FAIL ===\n"
+            }
+          ],
+          "smoke_tail_stdout": "8: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, audio = wavfile.read(path)\nWAV : zh-001-walk-park.wav  (3.78s)\nREF : 今天天气真好，我们一起去公园散步。\nHYP : 今天天气真好我们一起去公园散步\nNORM HYP: 今天天气真好我们一起去公园散步\nNORM REF: 今天天气真好我们一起去公园散步\nCER : 0.0000  (阈值 < 0.1)\n耗时: 2.67s   RTF: 0.706\nV3 PASS\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.\n/Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓\n/Users/halton/work/coco/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.\n  sr, a = wavfile.read(str(fix_wav))\n==> 环境基线\n  python: 3.13.12\n  platform: Darwin 25.5.0 arm64\n  reachy-mini: 1.4.0\n  sounddevice: 0.5.5\n  numpy: 2.4.4\n==> Smoke: audio (sounddevice 0.3s)\n  ok: shape=(4800, 1) rms=0.000000  (rms 非零即视为通过)\n==> Smoke: ASR (sense-voice wav)\n==> Smoke: TTS (kokoro-zh)\n  ok: samples=21840 sr=24000 dt=6.71s\n==> Smoke: vision (face detect on single_face.jpg)\n  ok: detected 1 face(s) in single_face.jpg\n==> Smoke: companion-vision (FaceTracker 2s)\n  ok: detect=10 hit=10 present=True\n==> Smoke: face-tracker (primary stability 5 frames)\n  ok: tracks=1 primary_id=1 hits=15 switches=1\n==> Smoke: VAD trigger (fixture wav)\n  ok: VAD trigger fired 1 time(s) on fixture\n==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=380 well_formed=380 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json\n"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "lgtm": true,
+          "verdict": "LGTM",
+          "summary": "redbar-only clean rewrite: app.py +49 行 (vs 旧 +430 缩水 88%); V0-V8 全 PASS; smoke rc=0; d001-d005 路由完好; textContent escape (XSS 防); event.kind/event 兼容; 无 P0/P1/P2 findings",
+          "checks_run": [
+            "verify V0 hash lock",
+            "verify V1 import + /api/watchdog/recent route",
+            "verify V2 mock health.degraded event",
+            "verify V3 missing log graceful",
+            "verify V4 limit clamp [1,100]",
+            "verify V5 corrupt JSON line skip",
+            "verify V6 HTML watchdog-bar + pollWatchdog + setInterval 10000",
+            "verify V7 textContent escape (no innerHTML)",
+            "verify V8 d001..d005 routes intact",
+            "smoke ./init.sh",
+            "git diff main..HEAD coco/dashboard/app.py 行数对比 (49 vs 旧 430)"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          },
+          "rounds": 1
+        },
+        "completion_evidence": [
+          "verify V0-V8 9/9 PASS pre-merge (rc=0)",
+          "verify V0-V8 9/9 PASS post-merge (rc=0)",
+          "smoke ./init.sh rc=0 pre & post merge",
+          "app.py diff: +49 行 (vs 旧 commit 352b20a 的 +430, 缩水 88% — 旧 commit 因并行 race 含 d003/d004/d005 改动, 已丢弃)",
+          "main_head_sha=f8ef282"
+        ],
+        "notes": "旧 feat/infra-watchdog-fu-dashboard-redbar (352b20a) 因 race 污染含 d003/d004/d005 改动, 已 git branch -D; 重写为 feat/infra-watchdog-fu-dashboard-redbar-v2; 真机 UAT 见 uat-script.md, 按 Sim-First 不阻 merge"
+      }
     },
     {
       "id": "dashboard-004-pose-sliders",
