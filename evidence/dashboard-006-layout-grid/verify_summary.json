@@ -1,0 +1,57 @@
+{
+  "feature": "dashboard-006-layout-grid",
+  "app_sha": "c00731e44394b0ca88eaef28b216b8115e81a6823bcd741ad18f5463944ec828",
+  "all_pass": true,
+  "steps": [
+    {
+      "name": "V0 hash lock app.py exists",
+      "status": "PASS",
+      "detail": "app.sha=c00731e44394"
+    },
+    {
+      "name": "V1 imports + 8 endpoints intact",
+      "status": "PASS",
+      "detail": "missing=none have=['/', '/api/action', '/api/config/llm_model', '/api/pose', '/api/watchdog/recent', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg']"
+    },
+    {
+      "name": "V2 viewport meta present",
+      "status": "PASS",
+      "detail": "viewport=device-width,initial-scale=1"
+    },
+    {
+      "name": "V3 CSS Grid 3-column",
+      "status": "PASS",
+      "detail": "3col-pattern=match"
+    },
+    {
+      "name": "V4 position:fixed count ≤1 (only watchdog-bar)",
+      "status": "PASS",
+      "detail": "count=1 lines=['<div id=\"watchdog-bar\" style=\"display:none; position:fixed; top:0; left:0; right:0; padding:6px 12px; background:#c00; c']"
+    },
+    {
+      "name": "V5 4 <details> panels",
+      "status": "PASS",
+      "detail": "details_count=5 missing=[]"
+    },
+    {
+      "name": "V6 perf-chart canvas + resizeCanvas",
+      "status": "PASS",
+      "detail": "canvas=True fn=True listener=True"
+    },
+    {
+      "name": "V7 media query <=1024px",
+      "status": "PASS",
+      "detail": "responsive 1-col stack"
+    },
+    {
+      "name": "V8 textContent escape preserved",
+      "status": "PASS",
+      "detail": "mkSpan=True bad_innerHTML_with_e=False"
+    },
+    {
+      "name": "V9 TestClient endpoints live",
+      "status": "PASS",
+      "detail": "/=200 /frame.jpg=200 /api/watchdog/recent=200 HTML_grid=True"
+    }
+  ]
+}
