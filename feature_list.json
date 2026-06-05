@@ -25704,7 +25704,7 @@
       "area": "infra",
       "phase": 69,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "title": "dashboard-007 扩全 perception toggle (face_detection + gesture + scene_caption)",
       "description": "扩 dashboard-007 (face_id + wake) 加 3 个 toggle：face_detection (FaceTracker) / gesture (GestureRecognizer + main.py WAVE handler 双保险) / scene_caption (SceneCaptionEmitter)。复用 dashboard-007 hot-reload 模板：模块级 _load_runtime_config + _maybe_reload_*_runtime 30s 节流；_tick early return；不重启 thread / camera / backend。解决：关了 face_id 后 face primary 仍跳动 + WAVE 自言自语\"你好\"。",
       "evidence": {
@@ -25712,7 +25712,56 @@
         "verify_log": "evidence/dashboard-007-extend-all-perception-toggles/verify-pass.log",
         "smoke_log": "evidence/dashboard-007-extend-all-perception-toggles/smoke-pass.log",
         "uat_script": "evidence/dashboard-007-extend-all-perception-toggles/uat-script.md",
-        "real_machine_uat": "pending"
+        "real_machine_uat": "pending",
+        "closeout_verify": {
+          "main_head_sha": "005341bde6d782f292e0e988bf2075f3c7398da0",
+          "main_head_sha_short": "005341bde6d7",
+          "verify_runs": [
+            {
+              "phase": "pre-merge",
+              "cmd": "python scripts/verify_dashboard_007_extend_all_perception_toggles.py",
+              "rc": 0,
+              "status": "PASS",
+              "freshness_anchor": "pre-merge-rerun",
+              "tail_stdout": "[PASS] V0 hash lock 5 files exist :: face_tracker.sha=f231f4c55fef gesture.sha=da55320fc446 scene_caption.sha=433238ea0d24 app.sha=53e50783412d main.sha=3d801b90f508\n[PASS] V1 3 classes have enabled + set_enabled :: FaceTracker(attr=True setter=True on=True); GestureRecognizer(attr=True setter=True on=True); SceneCaptionEmitter(attr=True setter=True on=True)\n[PASS] V2 FaceTracker.set_enabled(False) _tick early return :: enabled=False no exception\n[PASS] V3 GestureRecognizer set_enabled(False) → feed_frame None + WAVE 不触发 :: feed_frame_ret=None triggered_n=0 enabled=False\n[PASS] V4 SceneCaptionEmitter set_enabled(False) _tick early return :: enabled=False stats.ticks=0\n[PASS] V5 _ALLOWED_PERCEPTION_KEYS 含 5 keys :: keys=['face_detection_enabled', 'face_id_enabled', 'gesture_enabled', 'scene_caption_enabled', 'wake_enabled']\n[PASS] V6 POST 3 new keys → 200 + writes disk :: fd=200 g=200 sc=200 disk={'face_detection_enabled': False, 'gesture_enabled': False, 'scene_caption_enabled': True}\n[PASS] V7 GET 5 keys defaults+readback :: defaults_ok=True readback_ok=True\n[PASS] V8 HTML 5 toggle + JS map 5 keys + loadPerception map :: ids_ok=True js_ok=True load_map_ok=True\n[PASS] V9 regression dashboard-007 face_id+wake endpoints+HTML :: r1=200 r2=200 r3={'key': 'face_id_enabled', 'enabled': True} r4={'key': 'wake_enabled', 'enabled': True}\n[PASS] V10 regression dashboard-005 llm_model 端点 OK :: get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/Users/halton/.cache/coco/runtime_config.json'} invalid_status=400\n\n=== dashboard-007-extend verify: 11/11 PASS ==="
+            },
+            {
+              "phase": "post-merge",
+              "cmd": "python scripts/verify_dashboard_007_extend_all_perception_toggles.py",
+              "rc": 0,
+              "status": "PASS",
+              "freshness_anchor": "post-merge-rerun",
+              "tail_stdout": "[PASS] V0 hash lock 5 files exist :: face_tracker.sha=f231f4c55fef gesture.sha=da55320fc446 scene_caption.sha=433238ea0d24 app.sha=53e50783412d main.sha=3d801b90f508\n[PASS] V1 3 classes have enabled + set_enabled :: FaceTracker(attr=True setter=True on=True); GestureRecognizer(attr=True setter=True on=True); SceneCaptionEmitter(attr=True setter=True on=True)\n[PASS] V2 FaceTracker.set_enabled(False) _tick early return :: enabled=False no exception\n[PASS] V3 GestureRecognizer set_enabled(False) → feed_frame None + WAVE 不触发 :: feed_frame_ret=None triggered_n=0 enabled=False\n[PASS] V4 SceneCaptionEmitter set_enabled(False) _tick early return :: enabled=False stats.ticks=0\n[PASS] V5 _ALLOWED_PERCEPTION_KEYS 含 5 keys :: keys=['face_detection_enabled', 'face_id_enabled', 'gesture_enabled', 'scene_caption_enabled', 'wake_enabled']\n[PASS] V6 POST 3 new keys → 200 + writes disk :: fd=200 g=200 sc=200 disk={'face_detection_enabled': False, 'gesture_enabled': False, 'scene_caption_enabled': True}\n[PASS] V7 GET 5 keys defaults+readback :: defaults_ok=True readback_ok=True\n[PASS] V8 HTML 5 toggle + JS map 5 keys + loadPerception map :: ids_ok=True js_ok=True load_map_ok=True\n[PASS] V9 regression dashboard-007 face_id+wake endpoints+HTML :: r1=200 r2=200 r3={'key': 'face_id_enabled', 'enabled': True} r4={'key': 'wake_enabled', 'enabled': True}\n[PASS] V10 regression dashboard-005 llm_model 端点 OK :: get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/Users/halton/.cache/coco/runtime_config.json'} invalid_status=400\n\n=== dashboard-007-extend verify: 11/11 PASS ==="
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: wake-word (KWS on wake_keke fixture)\n  ok: wake hits=['可可']\n==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=382 well_formed=382 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "smoke_rc": 0,
+          "smoke_status": "PASS",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "dashboard-007-extend 3 模块 enabled/set_enabled/_tick early return 完整,WAVE handler 双保险,5 keys 白名单与 5 toggle HTML 一致,post-merge verify 11/11 + smoke rc=0 全过,旧 face_id/wake/llm endpoint 无回归",
+            "checks_run": [
+              "V0 hash lock 5 files sha",
+              "V1 3 classes enabled+set_enabled",
+              "V2 FaceTracker _tick early return",
+              "V3 GestureRecognizer feed_frame None + WAVE 不触发",
+              "V4 SceneCaptionEmitter _tick early return",
+              "V5 _ALLOWED_PERCEPTION_KEYS 5 keys",
+              "V6 POST 3 new keys 200 + disk write",
+              "V7 GET 5 keys defaults+readback",
+              "V8 HTML 5 toggle + JS map",
+              "V9 regression dashboard-007 face_id+wake",
+              "V10 regression dashboard-005 llm_model"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
       }
     },
     {

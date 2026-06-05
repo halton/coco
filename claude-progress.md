@@ -10200,3 +10200,18 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - Phase 3 重启 coco + dashboard + watchdog 让 toggle 生效: 先停 watchdog 避抢端口, 停 coco + dashboard, 启新 3 进程 (COCO_FACE_ID=1 让 classifier 真构造), rm processes.json + watchdog --discover 重建 registry, daemon 45165 + copilot-api 38079 全程未动
 - real_machine_uat: pending (用户浏览器硬刷新 dashboard → 右栏感知设置 2 toggle, ~30s 内 face_id / wake 生效)
 - Status: in_progress → passing
+
+## Session — 2026-06-05 dashboard-007-extend closeout
+
+- Reviewer fresh-context (sub-agent): LGTM
+  - Pre-merge verify 11/11 PASS, smoke rc=0
+  - 3 模块 (FaceTracker / GestureRecognizer / SceneCaptionEmitter) 各加 enabled + set_enabled + _maybe_reload_*_runtime；_tick / feed_frame early return；main.py WAVE handler 双保险
+  - _ALLOWED_PERCEPTION_KEYS 扩到 5；HTML 5 toggle + JS map 一致；POST/GET 3 新 + 旧 2 不破坏
+  - dashboard-005 LLM endpoint 无回归 (V10)
+  - V0 hash 锁与 5 文件实际 sha 一致
+- Merge to main: --no-ff merge commit on main, post-merge HEAD=005341bde6d7
+  - Post-merge verify 11/11 PASS rc=0, smoke rc=0
+- feature_list dashboard-007-extend-all-perception-toggles → status passing + P278 closeout_verify (verify_runs[2] freshness=pre/post-merge-rerun, reviewer.reviewer_kind=sub_agent_fresh_context, verdict=LGTM, rounds=1, findings P0/P1/P2 empty)
+- Push: tried origin main + feat 分支各一次 (失败不重试)
+- 重启 coco + dashboard + watchdog 让 3 新 toggle 实际生效
+
