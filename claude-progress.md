@@ -9972,3 +9972,17 @@ bug（不主动升级 SDK，per CLAUDE.md）。
   P278 evidence nested (closeout_verify + reviewer)
 - 真机 UAT: pending (uat-script.md 指引浏览器点按钮真触发动作)
 - Phase 3: 重启 dashboard 38127 -> 新 PID, 让 /api/action 路由 + 按钮 HTML 生效
+
+## Session 2026-06-05 — interact-015-followup-window closeout
+
+- Reviewer (sub-agent fresh-context, rounds=1): LGTM on commit 90350ff + post-merge HEAD 48bc6f78
+  - V0-V7 verify 8/8 PASS, smoke rc=0
+  - extend(0/neg) no-op verified; extend(positive) overrides _awake_until
+  - main.py set_wake_gate(wake_gate) wire present (after WakeGate construction)
+  - env COCO_FOLLOWUP_WINDOW_S default 15.0, clamp [0,60], 非数字兜底 15.0
+  - 向后兼容 wake_gate=None 不抛
+  - finding P2: extend(N) 直接覆盖（不取 max），现有 30s wake + extend(15) 缩到 15s；docstring 明示，非阻塞
+- Merge: feat/interact-015-followup-window → main (no-ff), HEAD=48bc6f78
+- feature_list.json: interact-015-followup-window → passing, P278 nested evidence 填齐
+- real_machine_uat: user_pending（用户需喊"可可"+ reply 完后 15s 内直接说下一句验证 follow-up）
+- Restart coco with COCO_FOLLOWUP_WINDOW_S=15 to activate

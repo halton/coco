@@ -24611,7 +24611,7 @@
       "area": "interact",
       "phase": 68,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "notes": "WakeGate 加 extend(seconds) method (独立窗口续命，不影响 trigger() 默认窗); InteractSession.__init__ 加 wake_gate kwarg + set_wake_gate(后置 wire); handle_audio finally 段 reply 非空时调 wake_gate.extend(_followup_window_s) 续窗; env COCO_FOLLOWUP_WINDOW_S 默认 15.0s (0=禁用, clamp [0,60]); main.py 在 WakeGate 构造后 session.set_wake_gate(wake_gate); 向后兼容 wake_gate=None 不抛。",
       "user_visible_behavior": "用户喊一次 '可可' → coco 回应一句 → reply 完成后 15s 内（默认）用户可继续说话不用再喊 wake; 沉默 15s 后才回 sleeping。",
       "verification": "scripts/verify_interact_015_followup_window.py V0-V7 全 PASS (V0 fingerprint+anchors / V1 wake_gate kwarg+setter / V2 env 10 cases / V3 env=0 禁用 / V4 env=20 extend(20) / V5 真实 WakeGate 集成 / V6 None 向后兼容 / V7 main.py wire + WakeGate.extend 行为); + ./init.sh smoke rc=0. real_machine_uat: pending (evidence/interact-015-followup-window/uat-script.py).",
@@ -24619,7 +24619,50 @@
         "interact-005",
         "interact-014"
       ],
-      "evidence_dir": "evidence/interact-015-followup-window/"
+      "evidence_dir": "evidence/interact-015-followup-window/",
+      "evidence": {
+        "main_head_sha": "48bc6f78",
+        "closeout_verify": {
+          "main_head_sha": "48bc6f78",
+          "verify_runs": [
+            {
+              "cmd": ".venv/bin/python scripts/verify_interact_015_followup_window.py",
+              "status": "PASS",
+              "tail_stdout": "[PASS] V0_fingerprint_sha256: interact.py=d540c99af4, wake_word.py=088c828152, main.py=70a5ec249d anchors_missing=[]\n[PASS] V1_kwarg_and_setter: kwarg=True default_none=True setter=True attr_wired=True setter_wired=True\n[PASS] V2_env_parsing: 10 cases ok\n[PASS] V3_env_zero_disables: extend_calls=[] trigger_calls=0\n[PASS] V4_env_20_extends: extend_calls=[20.0] trigger_calls=0\n[PASS] V5_real_wakegate_integration: is_awake=True remaining=5.00s\n[PASS] V6_none_backward_compat: handle_audio ok\n[PASS] V7_main_wire_and_wakegate_extend: main_wire=True wake_extend_def=True runtime_ok=True zero_noop=True neg_noop=True\nSummary: 8/8 PASS"
+            },
+            {
+              "cmd": "./init.sh (post-merge smoke)",
+              "status": "PASS",
+              "tail_stdout": "==> Smoke: power-state ok\n==> Smoke: config ok summary keys 完整\n==> Smoke: publish ok entry-point 正确 Coco 可加载\n==> Smoke: typo-guard ok total=377 well_formed=377\n==> Smoke 通过"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Fresh-context reviewer audited commit 90350ff + post-merge HEAD 48bc6f78: V0-V7 verify PASS, smoke PASS, extend semantics correct (0/neg no-op, positive override), main.py set_wake_gate wire present, env COCO_FOLLOWUP_WINDOW_S default 15 clamp [0,60] parsing correct, handle_audio finally exception-swallow correct, backward compat None ok",
+          "checks_run": [
+            "diff_inspection (wake_word.py + interact.py + main.py)",
+            "verify_interact_015_followup_window.py V0-V7 PASS",
+            "./init.sh smoke PASS",
+            "manual extend(0/neg/positive) behavior probe",
+            "WakeGate.extend semantics probe (override vs max)",
+            "InteractSession.__init__ wake_gate kwarg + set_wake_gate setter",
+            "main.py wire via set_wake_gate(wake_gate)"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "extend(N) directly overrides _awake_until = now + N (not max(remaining, new)); existing 30s wake + extend(15) shrinks to 15. Intentional per docstring; non-blocking; revisit if user complains"
+            ]
+          },
+          "rounds": 1,
+          "freshness_anchor": "post-merge-rerun"
+        },
+        "real_machine_uat": "user_pending"
+      }
     },
     {
       "id": "audio-016-mic-auto-select-reachy",
