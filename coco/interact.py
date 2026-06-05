@@ -192,6 +192,7 @@ class InteractSession:
         dialog_summary_threshold: int = 10,
         dialog_summary_keep_recent: int = 4,
         offline_fallback: Optional[Any] = None,
+        wake_gate: Optional[Any] = None,
     ) -> None:
         self.robot = robot
         self.asr_fn = asr_fn
@@ -298,6 +299,39 @@ class InteractSession:
         self._busy = threading.Lock()
         # interact-014: lock watchdog 用 — 记录 acquire 成功时刻；release 后清零
         self._busy_acquired_ts: Optional[float] = None
+        # interact-015: follow-up window — reply 完成后给用户 N 秒续命窗口，
+        # 不用反复喊 wake。wake_gate=None 时整段路径不走（向后兼容）。
+        # ``COCO_FOLLOWUP_WINDOW_S`` 默认 15.0；0 = 禁用；clamp [0, 60]。
+        # 在 __init__ 时一次性解析 env，避免每次 handle_audio 都读 env。
+        self._wake_gate = wake_gate
+        self._followup_window_s = self._resolve_followup_window_s()
+
+    def set_wake_gate(self, wake_gate: Optional[Any]) -> None:
+        """interact-015: 后置 wire wake_gate（main.py 构造顺序使然：
+        InteractSession 先于 WakeGate 构造）。``None`` 等价于禁用 follow-up。
+        """
+        self._wake_gate = wake_gate
+
+    @staticmethod
+    def _resolve_followup_window_s() -> float:
+        """interact-015: 解析 ``COCO_FOLLOWUP_WINDOW_S`` env。
+
+        - 默认 ``15.0``；0 = 禁用 follow-up window
+        - clamp 到 [0, 60]
+        - 解析失败（非数字 / 异常）→ 默认 15.0（fail-soft 不抛）
+        """
+        raw = os.environ.get("COCO_FOLLOWUP_WINDOW_S", "").strip()
+        if not raw:
+            return 15.0
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            return 15.0
+        if v < 0:
+            return 0.0
+        if v > 60:
+            return 60.0
+        return v
 
     @staticmethod
     def _probe_accepts_history(fn: Optional[Callable[..., str]]) -> bool:
@@ -827,6 +861,26 @@ class InteractSession:
             # 6) 恢复 idle
             if self.idle_animator is not None:
                 self.idle_animator.resume()
+            # interact-015: follow-up window — reply 非空（说明本轮真的回了一句话）
+            # + wake_gate 注入 + window_s > 0 → 续 N 秒新窗口让用户连说不用喊 wake。
+            # reply 为空（dropped / QUIET / ASR 失败）一律不续，避免空响应也激活。
+            # 任何异常（gate API 变更 / 注入错对象）一律吞，绝不影响 release/return。
+            try:
+                if (
+                    self._wake_gate is not None
+                    and self._followup_window_s > 0
+                    and result.get("reply")
+                ):
+                    extend_fn = getattr(self._wake_gate, "extend", None)
+                    if callable(extend_fn):
+                        extend_fn(self._followup_window_s)
+                    else:
+                        # 兜底：旧版 WakeGate 无 extend → 用 trigger() 默认窗
+                        trigger_fn = getattr(self._wake_gate, "trigger", None)
+                        if callable(trigger_fn):
+                            trigger_fn()
+            except Exception:  # noqa: BLE001
+                pass
             dt = time.monotonic() - t0
             result["duration_s"] = dt
             self.stats.durations_s.append(dt)
