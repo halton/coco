@@ -25138,9 +25138,9 @@
       "id": "infra-watchdog-fu-dashboard-redbar",
       "title": "infra-watchdog follow-up: dashboard 顶部显示 watchdog event red bar",
       "area": "infra",
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
       "source": "infra-watchdog-auto-restart scope (P2 留 backlog): 当前 watchdog 仅写 /tmp/coco-watchdog-events.log; dashboard 还未消费这个 event log",
       "scope": "dashboard 顶部加一行红条, 显示最近一次 health.degraded / restart.attempted / restart.give_up 事件 ('<service> down, last check <ts>')。机制可选: (a) dashboard tail /tmp/coco-watchdog-events.log 每秒一次; (b) watchdog 通过 ws 主动推送 dashboard; (c) 共享 Redis/sqlite。优先 (a) 最简单, 与现 dashboard 隔离最低。",
       "dependencies": [

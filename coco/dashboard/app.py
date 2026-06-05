@@ -135,6 +135,9 @@ HTML_PAGE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
+<div id="watchdog-bar" style="display:none; position:fixed; top:0; left:0; right:0; padding:6px 12px; background:#c00; color:#fff; font-size:13px; z-index:100; text-align:center;">
+  <span id="watchdog-msg">&#9888; watchdog 检测到服务异常</span>
+</div>
 <header><h1>可可 Live HUD &mdash; reachy 看到 / 听到</h1></header>
 <div id="action-panel">
   <div class="title">手动动作</div>
@@ -413,6 +416,29 @@ function resetPose() {
   });
   sendPose();
 }
+async function pollWatchdog() {
+  try {
+    const r = await fetch('/api/watchdog/recent?limit=10');
+    const d = await r.json();
+    const events = d.events || [];
+    const bad = events.filter(function(e){
+      const k = e.kind || e.event;
+      return k === 'health.degraded' || k === 'restart.failed' || k === 'restart.give_up';
+    });
+    if (bad.length > 0) {
+      const last = bad[bad.length - 1];
+      const k = last.kind || last.event || '';
+      const svc = last.service || '?';
+      const ts = last.ts || '';
+      document.getElementById('watchdog-msg').textContent = '⚠ ' + k + ' service=' + svc + ' at ' + ts;
+      document.getElementById('watchdog-bar').style.display = 'block';
+    } else {
+      document.getElementById('watchdog-bar').style.display = 'none';
+    }
+  } catch(e) {}
+}
+setInterval(pollWatchdog, 10000);
+pollWatchdog();
 </script>
 </body>
 </html>
@@ -769,3 +795,26 @@ async def post_pose(req: PoseRequest) -> dict:
         "stdout": stdout.decode("utf-8", errors="replace")[-400:],
         "stderr": stderr.decode("utf-8", errors="replace")[-400:],
     }
+
+
+# infra-watchdog-fu redbar: 读 /tmp/coco-watchdog-events.log (JSON lines) 返回最近事件
+import pathlib as _pl_redbar
+_WATCHDOG_LOG_PATH = _pl_redbar.Path("/tmp/coco-watchdog-events.log")
+
+
+@app.get("/api/watchdog/recent")
+async def watchdog_recent(limit: int = 10):
+    limit = max(1, min(100, limit))
+    events = []
+    try:
+        if _WATCHDOG_LOG_PATH.exists():
+            with _WATCHDOG_LOG_PATH.open() as f:
+                lines = f.readlines()
+            for line in lines[-limit:]:
+                try:
+                    events.append(json.loads(line))
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    return {"events": events, "count": len(events)}
