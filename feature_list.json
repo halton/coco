@@ -25623,9 +25623,9 @@
     {
       "id": "dashboard-007-face-id-wake-toggle",
       "area": "infra",
-      "phase": null,
-      "priority": 999,
-      "status": "backlog",
+      "phase": 69,
+      "priority": 100,
+      "status": "in_progress",
       "title": "dashboard 加 face_id + wake-word 实时 toggle (hot-reload)",
       "description": "右栏加 2 个 toggle 开关——(a) 实时人脸识别 face_id (b) 实时环境音唤醒 wake-word。写 ~/.cache/coco/runtime_config.json (复用 dashboard-005 LLM hot-reload 模式), coco 主进程 30s 内 hot-reload 启停。需扩 face_id + wake-word 模块支持运行时动态启停 (现在是启动 env 决定不可中途切换)。建议先单独立 sub-feature 让 face_id 和 wake-word 支持 hot-reload 再做 dashboard 开关。"
     },

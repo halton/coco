@@ -45,6 +45,59 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# dashboard-007: runtime config hot-reload (face_id_enabled 软开关)
+# ---------------------------------------------------------------------------
+# 模板复用自 coco/llm.py dashboard-005：每 30s 读 ~/.cache/coco/runtime_config.json，
+# 找到 face_id_enabled 字段就调 classifier.set_enabled(...)，否则保持当前 enabled。
+# 不重启 thread / 不重 init backend / 不动 store；纯软开关 + 入口 early return。
+_RUNTIME_CONFIG_PATH = os.path.expanduser("~/.cache/coco/runtime_config.json")
+_FACE_ID_RELOAD_INTERVAL_S = float(
+    os.environ.get("COCO_CONFIG_RELOAD_INTERVAL_S", "30.0")
+)
+_last_face_id_check_ts: float = 0.0
+
+
+def _load_runtime_config() -> dict:
+    """读 runtime_config.json；文件缺失 / 解析失败 → {}。同 llm.py 行为。"""
+    try:
+        if not os.path.isfile(_RUNTIME_CONFIG_PATH):
+            return {}
+        with open(_RUNTIME_CONFIG_PATH, "r", encoding="utf-8") as f:
+            data = json.loads(f.read() or "{}")
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _maybe_reload_face_id_runtime(classifier: "FaceIDClassifier") -> None:
+    """周期性 check runtime_config.json，根据 face_id_enabled 字段切 classifier.enabled.
+
+    - 节流：上次 check < _FACE_ID_RELOAD_INTERVAL_S 秒直接 return
+    - 字段缺失 → 保持当前 enabled，不动
+    - 字段存在 → 调 set_enabled（即使值相同也调一次，幂等）
+    """
+    global _last_face_id_check_ts
+    now = time.monotonic()
+    if (now - _last_face_id_check_ts) < _FACE_ID_RELOAD_INTERVAL_S:
+        return
+    _last_face_id_check_ts = now
+    cfg = _load_runtime_config()
+    if "face_id_enabled" not in cfg:
+        return
+    new_val = bool(cfg.get("face_id_enabled", True))
+    current = getattr(classifier, "enabled", True)
+    if new_val == current:
+        return
+    try:
+        classifier.set_enabled(new_val)
+        log.info("face_id.hot_reload enabled %r -> %r", current, new_val)
+    except (AttributeError, TypeError):
+        return
+
+
+# ---------------------------------------------------------------------------
 # 常量
 # ---------------------------------------------------------------------------
 
@@ -582,6 +635,13 @@ class FaceIDClassifier:
             threshold if threshold is not None else self.backend.default_threshold()
         )
         self._fit_from_store()
+        # dashboard-007: 软开关，hot-reload 关掉时 identify() early return (None, 0.0)
+        # 不停 backend / store / 任何 thread；只是入口短路，避免推理开销
+        self.enabled: bool = True
+
+    def set_enabled(self, value: bool) -> None:
+        """dashboard-007: hot-reload 调；切 self.enabled，不影响 store / backend。"""
+        self.enabled = bool(value)
 
     @property
     def backend_name(self) -> str:
@@ -608,7 +668,15 @@ class FaceIDClassifier:
         - 若 store 为空 → (None, 0.0)
         - confidence < threshold → (None, confidence)
         - 否则 → (name, confidence)
+        - dashboard-007: enabled=False → (None, 0.0) early return（hot-reload 软开关）
         """
+        # dashboard-007: hot-reload check（节流 30s 读 runtime_config.json）
+        try:
+            _maybe_reload_face_id_runtime(self)
+        except Exception:  # noqa: BLE001
+            pass
+        if not self.enabled:
+            return (None, 0.0)
         if not self.store.all_records():
             return (None, 0.0)
         gray = _to_gray_crop(face_crop)

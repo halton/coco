@@ -58,6 +58,11 @@ _ALLOWED_MODELS = {
     "gemini-2.5-pro",
 }
 
+# dashboard-007: 感知 toggle 白名单（face_id / wake-word 软开关，hot-reload 30s 生效）
+# 主程序侧：coco/perception/face_id.py + coco/wake_word.py 在 identify/feed 入口
+# 节流读 runtime_config.json，按 face_id_enabled/wake_enabled 切自身状态。
+_ALLOWED_PERCEPTION_KEYS = {"face_id_enabled", "wake_enabled"}
+
 
 class ActionRequest(BaseModel):
     action: str
@@ -65,6 +70,10 @@ class ActionRequest(BaseModel):
 
 class ModelRequest(BaseModel):
     model: str
+
+
+class TogglePerceptionRequest(BaseModel):
+    enabled: bool
 
 
 def _placeholder_png() -> bytes:
@@ -239,6 +248,20 @@ HTML_PAGE = """<!DOCTYPE html>
           <option value="gemini-2.5-pro">gemini-2.5-pro</option>
         </select>
         <div id="llm-status"></div>
+      </div>
+    </details>
+    <details id="perception-panel">
+      <summary>感知设置</summary>
+      <div class="panel-body">
+        <label style="display:block;margin:2px 0">
+          <input type="checkbox" id="face-id-toggle" onchange="changePerception('face_id', this.checked)" checked>
+          人脸识别 (face_id)
+        </label>
+        <label style="display:block;margin:2px 0">
+          <input type="checkbox" id="wake-toggle" onchange="changePerception('wake', this.checked)" checked>
+          语音唤醒 (wake-word)
+        </label>
+        <div id="perception-status" style="font-size:11px;margin-top:4px;color:#fa0"></div>
       </div>
     </details>
     <details id="watchdog-status">
@@ -438,6 +461,37 @@ async function loadModel(){
   } catch(e) { /* ignore */ }
 }
 loadModel();
+
+// dashboard-007: face_id + wake-word toggle (hot-reload via runtime_config.json)
+async function changePerception(key, on){
+  var map = {face_id: 'face_id_enabled', wake: 'wake_enabled'};
+  var k = map[key];
+  var st = document.getElementById('perception-status');
+  st.textContent = key + ' 切换中...';
+  try {
+    var r = await fetch('/api/config/' + k, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({enabled: on})
+    });
+    var d = await r.json();
+    st.textContent = (d.status || ('http_'+r.status)) + ' ' + k + '=' + on + ' (~30s 生效)';
+  } catch(e) {
+    st.textContent = key + ' 失败: ' + e.message;
+  }
+}
+async function loadPerception(){
+  var ids = {face_id_enabled: 'face-id-toggle', wake_enabled: 'wake-toggle'};
+  for (var k in ids) {
+    try {
+      var r = await fetch('/api/config/' + k);
+      var d = await r.json();
+      var el = document.getElementById(ids[k]);
+      if (el) el.checked = d.enabled !== false;
+    } catch(e) { /* ignore */ }
+  }
+}
+loadPerception();
 
 // dashboard-006: perf-chart canvas dynamic resize (fixes "compressed at 800px" bug)
 function resizeCanvas(){
@@ -666,6 +720,67 @@ def create_app() -> FastAPI:
         return {
             "status": "saved",
             "model": req.model,
+            "path": str(_RUNTIME_CONFIG_PATH),
+        }
+
+    # ------------------------------------------------------------------
+    # dashboard-007: face_id / wake-word toggle endpoints
+    # ------------------------------------------------------------------
+    # generic GET/POST /api/config/{key}，key 必须在 _ALLOWED_PERCEPTION_KEYS 白名单
+    # 主程序侧 (face_id.identify / wake_word.feed 入口) 每 30s 节流读此文件，
+    # 按 face_id_enabled / wake_enabled 切自身软开关；不重启 thread / 不动 audio。
+    @app.get("/api/config/{key}")
+    async def get_perception_config(key: str) -> dict:
+        """读 runtime_config.json[key]；缺省 → enabled=true（默认开）。"""
+        if key not in _ALLOWED_PERCEPTION_KEYS:
+            raise HTTPException(
+                status_code=404,
+                detail=f"unknown config key: {key!r}",
+            )
+        try:
+            if _RUNTIME_CONFIG_PATH.exists():
+                data = json.loads(_RUNTIME_CONFIG_PATH.read_text() or "{}")
+                if isinstance(data, dict) and key in data:
+                    return {"key": key, "enabled": bool(data.get(key, True))}
+        except (OSError, ValueError):
+            pass
+        return {"key": key, "enabled": True}
+
+    @app.post("/api/config/{key}")
+    async def post_perception_config(
+        key: str, req: TogglePerceptionRequest
+    ) -> dict:
+        """写 runtime_config.json[key] = req.enabled（atomic rename, 合并写）.
+
+        - 白名单校验，非法 key → 404
+        - 合并写：保留 llm_model 等其它字段
+        - .tmp + os.replace 原子替换，主进程不会读到半截
+        - 主进程 face_id / wake 模块每 30s check 一次此文件
+        """
+        if key not in _ALLOWED_PERCEPTION_KEYS:
+            raise HTTPException(
+                status_code=404,
+                detail=f"unknown config key: {key!r}",
+            )
+        _RUNTIME_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        data: dict = {}
+        if _RUNTIME_CONFIG_PATH.exists():
+            try:
+                parsed = json.loads(_RUNTIME_CONFIG_PATH.read_text() or "{}")
+                if isinstance(parsed, dict):
+                    data = parsed
+            except (OSError, ValueError):
+                data = {}
+        data[key] = bool(req.enabled)
+        tmp = _RUNTIME_CONFIG_PATH.with_suffix(
+            _RUNTIME_CONFIG_PATH.suffix + ".tmp"
+        )
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        os.replace(tmp, _RUNTIME_CONFIG_PATH)
+        return {
+            "status": "saved",
+            "key": key,
+            "enabled": bool(req.enabled),
             "path": str(_RUNTIME_CONFIG_PATH),
         }
 

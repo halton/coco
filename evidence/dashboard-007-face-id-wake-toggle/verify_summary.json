@@ -1,0 +1,63 @@
+{
+  "feature": "dashboard-007-face-id-wake-toggle",
+  "passed": 11,
+  "total": 11,
+  "results": [
+    {
+      "name": "V0 hash lock app+face_id+wake exist",
+      "status": "PASS",
+      "detail": "app.sha=6353c30c933b face_id.sha=eab1e980560b wake.sha=e7ea33bebbe6"
+    },
+    {
+      "name": "V1 FaceIDClassifier.enabled + set_enabled",
+      "status": "PASS",
+      "detail": "enabled=True has_set_enabled=True default_on=True"
+    },
+    {
+      "name": "V2 identify enabled=False → (None, 0.0) early return",
+      "status": "PASS",
+      "detail": "result=(None, 0.0) enabled=False"
+    },
+    {
+      "name": "V3 identify enabled=True 走旧路径",
+      "status": "PASS",
+      "detail": "enabled=True result=(None, 0.0)"
+    },
+    {
+      "name": "V4 wake_word.WakeWordDetector mute/unmute/is_muted/feed 仍存在",
+      "status": "PASS",
+      "detail": "mute=True unmute=True is_muted=True feed=True"
+    },
+    {
+      "name": "V5 hot-reload helpers 节流 + 切状态",
+      "status": "PASS",
+      "detail": "face_helper=True wake_helper=True face_throttle_ok=True wake_throttle_ok=True"
+    },
+    {
+      "name": "V6 POST /api/config/face_id_enabled {false} 200 + writes",
+      "status": "PASS",
+      "detail": "status=200 body={'status': 'saved', 'key': 'face_id_enabled', 'enabled': False, 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_rhplv51h/runtime_config.json'} disk={'face_id_enabled': False}"
+    },
+    {
+      "name": "V7 POST /api/config/wake_enabled {true} 200 + writes",
+      "status": "PASS",
+      "detail": "status=200 body={'status': 'saved', 'key': 'wake_enabled', 'enabled': True, 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_rhplv51h/runtime_config.json'} disk={'wake_enabled': True}"
+    },
+    {
+      "name": "V8 GET /api/config/{face_id,wake}_enabled defaults+readback+404",
+      "status": "PASS",
+      "detail": "b1={'key': 'face_id_enabled', 'enabled': True} b2={'key': 'wake_enabled', 'enabled': True} b3={'key': 'face_id_enabled', 'enabled': False} b4={'key': 'wake_enabled', 'enabled': False} unknown_status=404"
+    },
+    {
+      "name": "V9 HTML face-id-toggle+wake-toggle+changePerception+loadPerception",
+      "status": "PASS",
+      "detail": "face_toggle=True wake_toggle=True changePerception=True loadPerception=True panel=True call=True"
+    },
+    {
+      "name": "V10 regression: llm_model 端点仍 OK (generic 路由不吞)",
+      "status": "PASS",
+      "detail": "get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d007_rhplv51h/runtime_config.json'} invalid_status=400"
+    }
+  ],
+  "ts": 1780652070.8420749
+}
