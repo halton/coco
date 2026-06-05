@@ -31,7 +31,7 @@
     {
       "name": "V5 POST /api/config/llm_model writes + GET reads back",
       "status": "PASS",
-      "detail": "post_status=200 post_body={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d005_3zyt1ear/runtime_config.json'} wrote=True disk={'llm_model': 'gpt-4o'} get_body={'model': 'gpt-4o'}"
+      "detail": "post_status=200 post_body={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d005_3sdnijo8/runtime_config.json'} wrote=True disk={'llm_model': 'gpt-4o'} get_body={'model': 'gpt-4o'}"
     },
     {
       "name": "V6 POST invalid model -> 400",
@@ -44,5 +44,5 @@
       "detail": "missing=[] changeModel=True loadModel=True panel=True select=True call=True"
     }
   ],
-  "ts": 1780641812.824564
+  "ts": 1780641927.948404
 }

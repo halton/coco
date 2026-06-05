@@ -1,9 +1,9 @@
-[PASS] V0 hash lock app+llm exist :: app.sha=f93343ddd53a llm.sha=d084d7915ff6
+[PASS] V0 hash lock app+llm exist :: app.sha=fc5ab87ec06d llm.sha=d084d7915ff6
 [PASS] V1 imports + hot-reload symbols :: _load_runtime_config=True _maybe_reload_model=True
 [PASS] V2 _load_runtime_config (missing/ok/broken) :: empty={} ok_parse={'llm_model': 'gpt-4o', 'other': 1} broken={}
 [PASS] V3 _maybe_reload_model throttle + switch :: r1=claude-opus-4.7 r2=None r3=gemini-2.5-pro r4=None first=claude-opus-4.7 third=gemini-2.5-pro
 [PASS] V4 GET /api/config/llm_model empty when no config :: status=200 body={'model': ''} cfg_exists=False
-[PASS] V5 POST /api/config/llm_model writes + GET reads back :: post_status=200 post_body={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d005_o7i4owz2/runtime_config.json'} wrote=True disk={'llm_model': 'gpt-4o'} get_body={'model': 'gpt-4o'}
+[PASS] V5 POST /api/config/llm_model writes + GET reads back :: post_status=200 post_body={'status': 'saved', 'model': 'gpt-4o', 'path': '/var/folders/dy/kqc9mn_97s7c2s83vsj7mxfh0000gn/T/coco_d005_3sdnijo8/runtime_config.json'} wrote=True disk={'llm_model': 'gpt-4o'} get_body={'model': 'gpt-4o'}
 [PASS] V6 POST invalid model -> 400 :: status=400 body={"detail":"unknown model: 'fake-model-xx'"}
 [PASS] V7 HTML has 6 options + changeModel/loadModel + ids :: missing=[] changeModel=True loadModel=True panel=True select=True call=True
 

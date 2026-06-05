@@ -1,145 +1,16 @@
-==> Repo: /tmp/coco-d005
+==> Repo: /Users/halton/work/coco
 ==> uv sync
-Using CPython 3.13.12
-Creating virtual environment at: .venv
-Resolved 113 packages in 1ms
-   Building coco @ file:///private/tmp/coco-d005
-Downloading hf-xet (3.6MiB)
-Downloading opencv-python (44.1MiB)
-Downloading sherpa-onnx-core (20.2MiB)
-Downloading pygments (1.2MiB)
-Downloading pip (1.7MiB)
-Downloading pydantic-core (1.9MiB)
-Downloading numpy (5.0MiB)
-Downloading uvloop (1.3MiB)
-Downloading soundfile (1.1MiB)
-Downloading eclipse-zenoh (16.7MiB)
-Downloading sherpa-onnx (1.9MiB)
-Downloading scipy (19.4MiB)
-Downloading reachy-mini (23.6MiB)
-Downloading rustypot (1.4MiB)
- Downloaded soundfile
- Downloaded uvloop
- Downloaded rustypot
- Downloaded sherpa-onnx
- Downloaded pydantic-core
- Downloaded hf-xet
- Downloaded pygments
- Downloaded pip
- Downloaded numpy
- Downloaded eclipse-zenoh
- Downloaded sherpa-onnx-core
- Downloaded opencv-python
- Downloaded scipy
- Downloaded reachy-mini
-      Built coco @ file:///private/tmp/coco-d005
-Prepared 84 packages in 17.15s
-Installed 96 packages in 3.25s
- + aiohappyeyeballs==2.6.1
- + aiohttp==3.13.5
- + aiosignal==1.4.0
- + annotated-doc==0.0.4
- + annotated-types==0.7.0
- + anyio==4.13.0
- + asgiref==3.11.1
- + attrs==26.1.0
- + certifi==2026.4.22
- + cffi==2.0.0
- + charset-normalizer==3.4.7
- + click==8.3.3
- + coco==0.1.0 (from file:///private/tmp/coco-d005)
- + cv2-enumerate-cameras==1.3.3
- + eclipse-zenoh==1.7.2
- + edge-tts==7.2.8
- + fastapi==0.136.1
- + filelock==3.29.0
- + frozenlist==1.8.0
- + fsspec==2026.4.0
- + gstreamer==1.28.3
- + gstreamer-cli==1.28.3
- + gstreamer-ext-runtime==1.28.3
- + gstreamer-gtk==1.28.3
- + gstreamer-libs==1.28.3
- + gstreamer-plugins==1.28.3
- + gstreamer-plugins-gpl==1.28.3
- + gstreamer-plugins-gpl-restricted==1.28.3
- + gstreamer-plugins-libs==1.28.3
- + gstreamer-plugins-restricted==1.28.3
- + gstreamer-python==1.28.3
- + h11==0.16.0
- + hf-xet==1.5.0
- + httpcore==1.0.9
- + httptools==0.7.1
- + httpx==0.28.1
- + huggingface-hub==1.3.0
- + idna==3.13
- + importlib-resources==7.1.0
- + jinja2==3.1.6
- + libusb-package==1.0.26.3
- + log-throttling==0.0.3
- + markdown-it-py==4.2.0
- + markupsafe==3.0.3
- + mdurl==0.1.2
- + multidict==6.7.1
- + numpy==2.4.4
- + opencv-python==4.13.0.92
- + packaging==26.2
- + pip==26.1.1
- + prompt-toolkit==3.0.52
- + propcache==0.5.2
- + psutil==7.2.2
- + pycparser==3.0
- + pydantic==2.13.4
- + pydantic-core==2.46.4
- + pygments==2.20.0
- + pyobjc-core==12.1
- + pyobjc-framework-avfoundation==12.1
- + pyobjc-framework-cocoa==12.1
- + pyobjc-framework-coreaudio==12.1
- + pyobjc-framework-coremedia==12.1
- + pyobjc-framework-quartz==12.1
- + pyserial==3.5
- + python-dotenv==1.2.2
- + pyusb==1.3.1
- + pyyaml==6.0.3
- + questionary==2.1.1
- + reachy-mini==1.4.0
- + reachy-mini-motor-controller==1.5.5
- + reachy-mini-rust-kinematics==1.0.3
- + requests==2.33.1
- + rich==15.0.0
- + rustypot==1.4.2
- + scipy==1.17.1
- + setuptools==82.0.1
- + shellingham==1.5.4
- + sherpa-onnx==1.13.1
- + sherpa-onnx-core==1.13.1
- + sounddevice==0.5.5
- + soundfile==0.13.1
- + starlette==0.52.1
- + tabulate==0.10.0
- + toml==0.10.2
- + tqdm==4.67.3
- + typer==0.25.1
- + typer-slim==0.24.0
- + typing-extensions==4.15.0
- + typing-inspection==0.4.2
- + urllib3==2.7.0
- + uvicorn==0.46.0
- + uvloop==0.22.1
- + watchfiles==1.1.1
- + wcwidth==0.7.0
- + websockets==15.0.1
- + yarl==1.23.0
+Resolved 113 packages in 22ms
+Checked 96 packages in 26ms
 ==> TTS 模型 (kokoro-zh) 检查
 [skip] Kokoro 已就绪：/Users/halton/.cache/coco/tts/kokoro-int8-multi-lang-v1_1 (model=114299010B voices=53790720B)
 [ok] Kokoro：model.int8.onnx (114299010B), voices.bin (53790720B), dict/, espeak-ng-data/, tokens.txt
 
 全部就绪。缓存目录：/Users/halton/.cache/coco/tts
 ==> Smoke
-/private/tmp/coco-d005/scripts/verify_asr_wav.py:55: WavFileWarning: Chunk (non-data) not understood, skipping it.
+/Users/halton/work/coco/scripts/verify_asr_wav.py:55: WavFileWarning: Chunk (non-data) not understood, skipping it.
   sr, data = wavfile.read(str(path))
-/private/tmp/coco-d005/coco/asr.py:238: WavFileWarning: Chunk (non-data) not understood, skipping it.
+/Users/halton/work/coco/coco/asr.py:238: WavFileWarning: Chunk (non-data) not understood, skipping it.
   sr, audio = wavfile.read(path)
 WAV : zh-001-walk-park.wav  (3.78s)
 REF : 今天天气真好，我们一起去公园散步。
@@ -147,11 +18,11 @@ HYP : 今天天气真好我们一起去公园散步
 NORM HYP: 今天天气真好我们一起去公园散步
 NORM REF: 今天天气真好我们一起去公园散步
 CER : 0.0000  (阈值 < 0.1)
-耗时: 2.84s   RTF: 0.753
+耗时: 1.87s   RTF: 0.494
 V3 PASS
 /Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/offline-tts-kokoro-model-config.cc:Validate:112 From sherpa-onnx v1.12.15, you don't need to provide dict_dir or dictDir for this model. Ignore this value.
 /Users/runner/work/sherpa-onnx/sherpa-onnx/sherpa-onnx/csrc/lexicon.cc:ConvertTokensToIds:93 Unknown token: ❓
-/private/tmp/coco-d005/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.
+/Users/halton/work/coco/scripts/smoke.py:250: WavFileWarning: Chunk (non-data) not understood, skipping it.
   sr, a = wavfile.read(str(fix_wav))
 ==> 环境基线
   python: 3.13.12
@@ -163,7 +34,7 @@ V3 PASS
   ok: shape=(4800, 1) rms=0.000000  (rms 非零即视为通过)
 ==> Smoke: ASR (sense-voice wav)
 ==> Smoke: TTS (kokoro-zh)
-  ok: samples=22184 sr=24000 dt=7.22s
+  ok: samples=21844 sr=24000 dt=3.73s
 ==> Smoke: vision (face detect on single_face.jpg)
   ok: detected 1 face(s) in single_face.jpg
 ==> Smoke: companion-vision (FaceTracker 2s)

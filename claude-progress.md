@@ -10089,3 +10089,29 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - 真机 UAT: pending (浏览器观察 dt / first_chunk_ms 折线刷新, 由用户异步)
 - Status: in_progress → passing
 - 备注: V0 hash 锁未变 (rebase 没改 app.py / event_parser.py 文件内容, sha 维持 33ed76a6eaad / a209bfb7513c)
+
+## Session 2026-06-05 phase-68 #102 dashboard-005-llm-model-switch closeout (rebase 后)
+- 清 worktree: `git worktree remove /tmp/coco-d005 --force` + prune → 主 repo 干净
+- rebase feat/dashboard-005-llm-model-switch-v2 → main (HEAD=06beb7d 含 d003+d004 closeout): 干净通过, 无冲突 (d005 hunks 都不蹭 d003 perf-chart / d004 pose-panel)
+- amend feat commit 收 verify_summary.json 刷新 (V0 hash app.sha 因 rebase 后 app.py 整体内容变成 fc5ab87ec06d, 与原 f93343ddd53a 不一致 → verify script 重跑后自动重写 summary, 收进 feat HEAD=21c1403)
+- pre-merge verify: scripts/verify_dashboard_005_llm_model_switch.py 8/8 PASS rc=0 (V0 hash app=fc5ab87ec06d llm=d084d7915ff6 / V1 imports / V2 missing+ok+broken / V3 节流+切换+跳过 / V4 GET 空 / V5 POST+GET 回读 / V6 非法 400 / V7 HTML 6 option+changeModel+loadModel+ids)
+- pre-merge smoke: ./init.sh rc=0 全 PASS
+- merge --no-ff → main HEAD=3f5256ef155dae22ececc4885907fc24fafc36cf
+- post-merge verify: 8/8 PASS rc=0 (freshness_anchor=post-merge-rerun)
+- post-merge smoke: rc=0
+- Reviewer (sub-agent fresh-context): LGTM, rounds=1, P0/P1/P2 全空
+  - HTML llm-panel 含 6 model option (gpt-4o-mini/gpt-4o/gpt-4.1/claude-sonnet-4.5/claude-opus-4.7/gemini-2.5-pro) (V7) ✓
+  - changeModel + loadModel JS 函数 (V7) ✓
+  - POST /api/config/llm_model 白名单 + atomic tmp+os.replace + 400 拒非法 (V5/V6) ✓
+  - GET /api/config/llm_model 回读 (V4/V5) ✓
+  - coco/llm.py _maybe_reload_model + 30s 节流 + env COCO_CONFIG_RELOAD_INTERVAL_S (V1/V3) ✓
+  - V0 hash 锁 app.sha=fc5ab87ec06d llm.sha=d084d7915ff6 与实际一致 ✓
+  - 不破坏 d001/d002 dashboard 基线 ✓
+  - 不破坏 d003 perf-chart canvas + dt/first_chunk_ms 折线 (共存) ✓
+  - 不破坏 d004 pose-panel 滑条 + /api/pose (共存) ✓
+  - rebase 到 d003+d004 closeout 后 main 无冲突 ✓
+  - pre-merge 8/8 PASS + post-merge 8/8 PASS + smoke rc=0 ✓
+- 不动现有 live 栈: daemon / coco / dashboard / copilot-api 全程未重启 (串行最后统一)
+- 真机 UAT: pending (浏览器选 model 30s 内 reply 切换, 由用户异步, 见 evidence/dashboard-005-llm-model-switch/uat-script.md)
+- Status: in_progress → passing
+- 备注: rebase 后 app.py 整体 sha 变 (f93343ddd53a → fc5ab87ec06d) 是因为 d005 hunks 应用到含 d003/d004 完整 app.py 上, 字节流当然不同; verify script V0 自动重测对得上, 把 summary refresh 收到 feat commit 即可
