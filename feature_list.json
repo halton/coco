@@ -24968,7 +24968,7 @@
       "area": "infra",
       "phase": 68,
       "priority": 80,
-      "status": "in_progress",
+      "status": "passing",
       "source": "real-machine event: daemon died silently for 14h, coco no self-heal no alert; 整栈 reset 4 步 (cleanup / daemon / copilot-api / coco) 太繁；watchdog 周期监控 + 自动重启",
       "scope": "新模块 coco/watchdog/ (默认不启, 用户手动 `python -m coco.watchdog`):\n- coco/watchdog/__init__.py: 包 + version\n- coco/watchdog/__main__.py: argparse CLI (--once / --interval / --max-restarts / --discover / --max-iters / --quiet) + run_loop 入口\n- coco/watchdog/process_registry.py: Registry 类 (load/save/register/get/remove/discover) 持久化 ~/.cache/coco/processes.json; PID/cmdline/env/ports schema; discover(name,port) 通过 lsof/psutil 抓 PID + ps/psutil/proc 拉 cmdline+env; atomic write (tempfile + os.replace); pid_alive(pid) helper\n- coco/watchdog/monitor.py: HealthCheck (3 service: daemon=tcp 7447+http :8000 / coco=/tmp/coco-frame.jpg mtime<60s+registered pid alive / copilot-api=http :4141/v1/models) + RestartPolicy (failures_count + max_restarts give_up) + launch_from_registry (subprocess.Popen + stdout重定向 /tmp/coco-{name}.log) + emit_event (JSON line 追加 /tmp/coco-watchdog-events.log) + tick_once + run_loop\n- WatchdogConfig.from_env: COCO_WATCHDOG_INTERVAL_S=30 (clamp 5-600) / MAX_RESTARTS=3 (1-20) / FRAME_MAX_AGE_S=60 (>=5) / HTTP_TIMEOUT_S=5 / EVENTS_PATH=/tmp/coco-watchdog-events.log / FRAME_PATH=/tmp/coco-frame.jpg\n- check_port: getaddrinfo 同时尝 IPv4+IPv6 (daemon 可能只 bind ::1)\n- dashboard 不在监控列表 (是观察者, 不自愈)\n- 默认不启 (用户手动 python -m coco.watchdog); 不动当前栈\n- backlog: dashboard 顶部红条 显示 watchdog event (infra-watchdog-fu-dashboard-redbar)",
       "dependencies": [],
@@ -25003,7 +25003,60 @@
             "scripts/verify_infra_watchdog_auto_restart.py (~260 LOC)"
           ]
         },
-        "real_machine_uat": "pending — 手动启 watchdog → kill daemon (PID 45165) → 30s 内观察 watchdog 是否检测到 + restart.attempted event → daemon 是否真起来 (新 PID)。前置: 需 watchdog 启动时先 --discover 或 main 启动时主动 register, 否则 restart.skipped_no_registry"
+        "real_machine_uat": "pending — 手动启 watchdog → kill daemon (PID 45165) → 30s 内观察 watchdog 是否检测到 + restart.attempted event → daemon 是否真起来 (新 PID)。前置: 需 watchdog 启动时先 --discover 或 main 启动时主动 register, 否则 restart.skipped_no_registry",
+        "closeout_verify": {
+          "main_head_sha": "aa71523",
+          "verify_runs": [
+            {
+              "when": "pre-merge",
+              "script": "scripts/verify_infra_watchdog_auto_restart.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "summary: total=10 pass=10 fail=0 rc=0"
+            },
+            {
+              "when": "post-merge",
+              "script": "scripts/verify_infra_watchdog_auto_restart.py",
+              "rc": 0,
+              "status": "PASS",
+              "tail_stdout": "summary: total=10 pass=10 fail=0 rc=0"
+            }
+          ],
+          "smoke_tail_stdout": "Smoke 通过 (config/publish/typo-guard 379/379) rc=0",
+          "baseline_tail_stdout": "N/A — both verify runs PASS rc=0, no FAIL baseline needed",
+          "pre_existing_baseline_sha": null
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "独立 fresh-context 评审 watchdog 模块, verify 10/10 PASS, smoke 通过, --once 对 live 栈 (daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079) 零扰动, events 仅 watchdog.started/stopped, IPv4+IPv6 双试与 RestartPolicy give_up 与 registry atomic write 均按设计实现, P0/P1 无, P2 backlog (self-watchdog / env API key 持久化 / 子进程 detach / 多实例 race) 记录, LGTM 闭环",
+          "checks_run": [
+            "verify_infra_watchdog_auto_restart 10/10 PASS rc=0 (pre+post-merge)",
+            "init.sh smoke rc=0 (typo-guard 379/379)",
+            "import surface __version__=0.1.0 + HealthCheck/RestartPolicy/WatchdogConfig/run_loop/SERVICE_NAMES",
+            "python -m coco.watchdog --once --quiet rc=0; daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079 全部存活",
+            "events 仅 watchdog.started/stopped, 零 health.degraded 零 restart.attempted",
+            "V0 hash 锁 4 文件实 sha 一致; 各 V 独立 try/except",
+            "daemon IPv4+IPv6 双试; copilot-api 200 healthy; coco frame mtime + pid_alive 双重",
+            "registry atomic write (tempfile + os.replace); 损坏/不存在不抛",
+            "env COCO_WATCHDOG_INTERVAL_S 默认 30 + clamp [5,600]",
+            "dashboard 不监控 (backlog: infra-watchdog-fu-dashboard-redbar)",
+            "audio-013/014/015/016 + interact-013/014/015/016 + dashboard-001/002 zero-touch"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": [
+              "watchdog 自身无 self-watchdog (留 backlog)",
+              "registry ~/.cache/coco/processes.json env 含 API key, mode 0o600 需 enforce (backlog)",
+              "子进程 subprocess.Popen 未 setsid; watchdog 退出后子进程 SIGHUP 风险 (backlog: nohup-like detach)",
+              "多 watchdog 实例并发无 file lock → race (单实例使用是预期)",
+              "copilot-api 仅 2xx healthy; 401 算 degraded 触发重启 (合理)"
+            ]
+          },
+          "rounds": 1,
+          "freshness_anchor": "post-merge-rerun"
+        }
       },
       "notes": "Engineer→Reviewer→Closeout, 当前 Engineer 段结束, 留 feat/infra-watchdog-auto-restart 分支等 Reviewer。默认不启避免干预当前跑着的栈 (daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079, main HEAD=96e03c2)。流程违规自记: 当前 Claude Code 会话 harness 未暴露 Agent/Task sub-agent spawn primitive, 主会话被迫直接 Read/Edit/Write/Bash 执行, 不符合 CLAUDE.md '所有工作派 sub-agent' 硬规则。"
     },

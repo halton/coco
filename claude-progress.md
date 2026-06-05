@@ -10010,3 +10010,22 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - Status: in_progress → passing
 - 修复内容: WakeGate.extend 改 max(_awake_until, now+N), 只续不缩。0/负 no-op 保留。初始 0 兼容。唯一 callsite coco/main.py:2294 不变更, 行为只更安全。
 - 影响: COCO_WAKE_WINDOW_SECONDS=30 触发后 reply 完 extend(15) 不再缩窗到 15s, 而是叠加 (max keep 30)。
+
+### Session 2026-06-05 — infra-watchdog-auto-restart closeout
+- Feature: infra-watchdog-auto-restart (phase-67 #29)
+- Branch: feat/infra-watchdog-auto-restart → merged --no-ff into main
+- main_head_sha: aa71523
+- verify_runs:
+  - pre-merge: scripts/verify_infra_watchdog_auto_restart.py 10/10 PASS rc=0
+  - post-merge: 同 10/10 PASS rc=0 (V0 hash 锁 + V1 import + V2 registry + V3-V5 三 service + V6 give_up + V7 healthy + V7b degraded→restart→give_up + V8 env)
+- smoke: ./init.sh rc=0 (typo-guard 379/379)
+- Reviewer (sub-agent fresh-context): LGTM
+  - --once 对 live 栈 (daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079) 零扰动
+  - events 仅 watchdog.started/stopped, 零 health.degraded 零 restart.attempted
+  - P0/P1 无; P2 backlog: self-watchdog, env API key 持久化, 子进程 detach, 多实例 race
+- 默认行为: watchdog 不自动启 (sub-agent 不启)。用户需要时:
+  - 启: `nohup python -m coco.watchdog --discover > /tmp/coco-watchdog.log 2>&1 &`
+  - 关: `kill $(pgrep -f 'coco.watchdog')`
+  - 看事件: `tail -f /tmp/coco-watchdog-events.log`
+  - registry: `~/.cache/coco/processes.json`
+- Status: in_progress → passing
