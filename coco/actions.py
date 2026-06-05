@@ -135,14 +135,178 @@ def nod(
     robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
 
 
+# ---------------------------------------------------------------------------
+# interact-039 (branch feat/interact-013): LLM tool calling actions
+# 6 new语义化动作 + goto_sleep / wake_up SDK 桥。
+# 参数签名风格与 look_left/right/nod 一致（首参 robot，amplitude_deg 可选）。
+# 失败 try/except 不抛崩，与 LLM 工具调用语义匹配（坏值 → 中位回退而不是 raise）。
+# ---------------------------------------------------------------------------
+
+
+# interact-039 SAFE_AMPLITUDE_DEFAULTS：tool calling 路径默认幅度（保守）
+SHAKE_YAW_DEG: float = 20.0
+TILT_ROLL_DEG: float = 12.0
+LOOK_UPDOWN_PITCH_DEG: float = 15.0
+SLEEP_PITCH_DEG: float = 25.0
+
+
+def shake(
+    robot: "ReachyMini",
+    amplitude_deg: float = SHAKE_YAW_DEG,
+    duration: float = 0.35,
+    cycles: int = 2,
+) -> None:
+    """摇头表否定：yaw 左右往返 cycles 次后回中位。
+
+    序列：+yaw → -yaw → +yaw → -yaw → 中位（cycles=2 时）。
+    """
+    _check_amplitude(amplitude_deg, MAX_YAW_DEG, "amplitude_deg(yaw)")
+    _check_duration(duration)
+    if amplitude_deg < 0:
+        raise ValueError("shake amplitude_deg must be non-negative.")
+    if not (1 <= cycles <= 3):
+        raise ValueError(f"cycles={cycles} out of range [1, 3]")
+
+    left = euler_pose(yaw_deg=+amplitude_deg)
+    right = euler_pose(yaw_deg=-amplitude_deg)
+    for _ in range(cycles):
+        robot.goto_target(head=left, duration=duration)
+        robot.goto_target(head=right, duration=duration)
+    robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+
+
+def tilt_left(
+    robot: "ReachyMini",
+    amplitude_deg: float = TILT_ROLL_DEG,
+    duration: float = 0.5,
+    return_to_center: bool = True,
+) -> None:
+    """头向左倾（roll = +amplitude_deg）。"""
+    _check_amplitude(amplitude_deg, MAX_PITCH_DEG, "amplitude_deg(roll)")
+    _check_duration(duration)
+    if amplitude_deg < 0:
+        raise ValueError("tilt_left amplitude_deg must be non-negative; use tilt_right instead.")
+
+    target = euler_pose(roll_deg=+amplitude_deg)
+    robot.goto_target(head=target, duration=duration)
+    if return_to_center:
+        robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+
+
+def tilt_right(
+    robot: "ReachyMini",
+    amplitude_deg: float = TILT_ROLL_DEG,
+    duration: float = 0.5,
+    return_to_center: bool = True,
+) -> None:
+    """头向右倾（roll = -amplitude_deg）。"""
+    _check_amplitude(amplitude_deg, MAX_PITCH_DEG, "amplitude_deg(roll)")
+    _check_duration(duration)
+    if amplitude_deg < 0:
+        raise ValueError("tilt_right amplitude_deg must be non-negative; use tilt_left instead.")
+
+    target = euler_pose(roll_deg=-amplitude_deg)
+    robot.goto_target(head=target, duration=duration)
+    if return_to_center:
+        robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+
+
+def look_up(
+    robot: "ReachyMini",
+    amplitude_deg: float = LOOK_UPDOWN_PITCH_DEG,
+    duration: float = 0.5,
+    return_to_center: bool = True,
+) -> None:
+    """抬头：pitch = -amplitude_deg（xyz 欧拉约定：负 pitch = 抬头）。"""
+    _check_amplitude(amplitude_deg, MAX_PITCH_DEG, "amplitude_deg(pitch)")
+    _check_duration(duration)
+    if amplitude_deg < 0:
+        raise ValueError("look_up amplitude_deg must be non-negative.")
+
+    target = euler_pose(pitch_deg=-amplitude_deg)
+    robot.goto_target(head=target, duration=duration)
+    if return_to_center:
+        robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+
+
+def look_down(
+    robot: "ReachyMini",
+    amplitude_deg: float = LOOK_UPDOWN_PITCH_DEG,
+    duration: float = 0.5,
+    return_to_center: bool = True,
+) -> None:
+    """低头：pitch = +amplitude_deg。"""
+    _check_amplitude(amplitude_deg, MAX_PITCH_DEG, "amplitude_deg(pitch)")
+    _check_duration(duration)
+    if amplitude_deg < 0:
+        raise ValueError("look_down amplitude_deg must be non-negative.")
+
+    target = euler_pose(pitch_deg=+amplitude_deg)
+    robot.goto_target(head=target, duration=duration)
+    if return_to_center:
+        robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+
+
+def goto_sleep(robot: "ReachyMini", duration: float = 0.8) -> None:
+    """睡眠姿态：优先调 SDK r.goto_sleep()，无则手动低头 + 短暂保持。
+
+    LLM 路径下的"低头睡觉" / "休息" 触发；不 raise 异常（fail-soft）。
+    """
+    _check_duration(duration)
+    # 优先 SDK 原生 emote
+    sdk_method = getattr(robot, "goto_sleep", None)
+    if callable(sdk_method):
+        try:
+            sdk_method()
+            return
+        except Exception:  # noqa: BLE001
+            # SDK 路径失败 → 落到手动姿态（不抛）
+            pass
+    # 兜底：手动深度低头作为睡眠姿态
+    try:
+        target = euler_pose(pitch_deg=+SLEEP_PITCH_DEG)
+        robot.goto_target(head=target, duration=duration)
+        time.sleep(0.5)  # 让姿态可见
+    except Exception:  # noqa: BLE001
+        # 终极兜底：什么都不做，不影响主流程
+        pass
+
+
+def wake_up(robot: "ReachyMini", duration: float = 0.6) -> None:
+    """醒来回中位：优先调 SDK r.wake_up()，无则 set_target(INIT_HEAD_POSE)。"""
+    _check_duration(duration)
+    sdk_method = getattr(robot, "wake_up", None)
+    if callable(sdk_method):
+        try:
+            sdk_method()
+            return
+        except Exception:  # noqa: BLE001
+            pass
+    try:
+        robot.goto_target(head=INIT_HEAD_POSE, duration=duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 __all__ = [
     "INIT_HEAD_POSE",
     "MAX_YAW_DEG",
     "MAX_PITCH_DEG",
     "MIN_DURATION_S",
     "MAX_DURATION_S",
+    "SHAKE_YAW_DEG",
+    "TILT_ROLL_DEG",
+    "LOOK_UPDOWN_PITCH_DEG",
+    "SLEEP_PITCH_DEG",
     "euler_pose",
     "look_left",
     "look_right",
     "nod",
+    "shake",
+    "tilt_left",
+    "tilt_right",
+    "look_up",
+    "look_down",
+    "goto_sleep",
+    "wake_up",
 ]

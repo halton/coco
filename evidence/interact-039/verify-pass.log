@@ -1,0 +1,10 @@
+[verify_interact_039] PASS V0_hash_lock: coco/actions.py=87fa3b649c7ea64d+coco/llm.py=389a7ff2cc99c66d+coco/interact.py=58edb0dea2c7a137
+[verify_interact_039] PASS V1_imports: callables=True tools_len=1 enum_len=10
+[verify_interact_039] PASS V2_openai_tool_call: result={'text': '好的，我看左边。', 'action': 'look_left'}
+[verify_interact_039] PASS V3_openai_content_only: result={'text': '今天天气很好。', 'action': None}
+[verify_interact_039] PASS V4_ollama_no_tools: result={'text': '本地回复。', 'action': None}
+[verify_interact_039] PASS V5_fallback_backend: result={'text': '你好呀！很高兴见到你。', 'action': None}
+[verify_interact_039] PASS V6_route_reply_llm_overrides: first=('我听到你说：随便说点什么','shake') second=('我醒啦！','wake_up')
+[verify_interact_039] PASS V7_route_reply_keyword_fallback: left=look_left sleep=goto_sleep shake=shake
+[verify_interact_039] PASS V8_action_tools_schema: type=True name=True enum=True required=True const=True
+[verify_interact_039] DONE total=9 failed=0 dt=1.963s

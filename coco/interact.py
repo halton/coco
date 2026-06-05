@@ -77,27 +77,65 @@ def _resolve_lock_timeout_s() -> float:
 KEYWORD_ROUTES: List[Tuple[Tuple[str, ...], str, str]] = [
     # (关键词组, 回应模板, 动作名)
     # 顺序要点：更"具体"的主题词放前面（如 "天气" 在 "好" 之前），避免被通用词截胡
+    # interact-039 (branch feat/interact-013): 扩展到新 6 动作 + goto_sleep / wake_up。
+    # 新动作放在 generic "好/对/嗯" / "看" 之前，确保关键词命中。
     (("你好", "嗨", "hello", "hi"), "你好呀！很高兴见到你。", "nod"),
     (("再见", "拜拜", "bye"), "好的，回头见！", "nod"),
+    (("睡觉", "睡吧", "休息", "睡一会"), "好的，我睡一会。", "goto_sleep"),
+    (("睡",), "好的，我睡一会。", "goto_sleep"),
+    (("醒醒", "起来", "醒一下"), "我醒啦！", "wake_up"),
+    (("摇头", "不行", "不是", "不对"), "嗯，不行哦。", "shake"),
+    (("抬头", "向上看", "看上面"), "我抬头看看。", "look_up"),
+    (("低头", "向下看", "看下面"), "好，我低头看。", "look_down"),
+    (("歪左", "向左歪"), "我歪一下头。", "tilt_left"),
+    (("歪右", "向右歪"), "我歪一下头。", "tilt_right"),
+    (("歪头",), "我歪一下头。", "tilt_left"),
+    (("向左", "左边", "左看"), "好，我看左边。", "look_left"),
+    (("向右", "右边", "右看"), "好，我看右边。", "look_right"),
     (("天气", "公园", "外面"), "嗯，外面挺好的呀。", "look_right"),
     (("看", "瞧", "瞅"), "我也看看。", "look_left"),
     (("好", "对", "嗯", "是的"), "好的，我听到啦。", "nod"),
 ]
 
 
-def route_reply(text: str) -> Tuple[str, str]:
+def route_reply(text: str, llm_result: Optional[dict] = None) -> Tuple[str, str]:
     """根据 ASR 文本返回 (reply_text, action_name)。
+
+    interact-039 (branch feat/interact-013): 加 ``llm_result`` 可选 kwarg。
+    若 LLM tool calling 返回了 ``{'action': <enum>}``，**该 action 直接覆盖** keyword
+    路由的结果（reply 文本仍用 keyword/默认模板，若 llm_result 含 'text' 也优先用它）。
 
     匹配规则：第一个命中的关键词组生效；都未命中走默认 "我听到你说：<text>" + nod。
     """
     text = (text or "").strip()
+    # 先按 keyword 决定基线 reply 文本与 action
+    base_reply: str
+    base_action: str
+    matched = False
     for kws, reply, action in KEYWORD_ROUTES:
         for kw in kws:
             if kw in text:
-                return reply, action
-    if not text:
-        return "我没听清，可以再说一次吗？", "nod"
-    return f"我听到你说：{text}", "nod"
+                base_reply, base_action = reply, action
+                matched = True
+                break
+        if matched:
+            break
+    if not matched:
+        if not text:
+            base_reply, base_action = "我没听清，可以再说一次吗？", "nod"
+        else:
+            base_reply, base_action = f"我听到你说：{text}", "nod"
+
+    # LLM tool calling 覆盖（优先级最高，但仅当 action 在已知 enum 内）
+    if isinstance(llm_result, dict):
+        llm_action = llm_result.get("action")
+        if isinstance(llm_action, str) and llm_action:
+            base_action = llm_action
+        llm_text = llm_result.get("text")
+        if isinstance(llm_text, str) and llm_text.strip():
+            base_reply = llm_text.strip()
+
+    return base_reply, base_action
 
 
 # ---------------------------------------------------------------------------
@@ -762,6 +800,28 @@ class InteractSession:
             look_left(self.robot, amplitude_deg=20.0, duration=0.5, return_to_center=True)
         elif name == "look_right":
             look_right(self.robot, amplitude_deg=20.0, duration=0.5, return_to_center=True)
+        # interact-039 (branch feat/interact-013): 6 new actions + goto_sleep/wake_up
+        elif name == "shake":
+            from coco.actions import shake as _shake
+            _shake(self.robot, duration=0.35, cycles=2)
+        elif name == "tilt_left":
+            from coco.actions import tilt_left as _tl
+            _tl(self.robot, duration=0.5, return_to_center=True)
+        elif name == "tilt_right":
+            from coco.actions import tilt_right as _tr
+            _tr(self.robot, duration=0.5, return_to_center=True)
+        elif name == "look_up":
+            from coco.actions import look_up as _lu
+            _lu(self.robot, duration=0.5, return_to_center=True)
+        elif name == "look_down":
+            from coco.actions import look_down as _ld
+            _ld(self.robot, duration=0.5, return_to_center=True)
+        elif name == "goto_sleep":
+            from coco.actions import goto_sleep as _gs
+            _gs(self.robot, duration=0.8)
+        elif name == "wake_up":
+            from coco.actions import wake_up as _wu
+            _wu(self.robot, duration=0.6)
         else:
             # 未知动作 → nod 兜底
             nod(self.robot, amplitude_deg=10.0, duration=0.4)

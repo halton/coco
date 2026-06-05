@@ -1,0 +1,53 @@
+{
+  "verify": "interact-039",
+  "branch": "feat/interact-013-llm-tool-calling-actions",
+  "results": [
+    {
+      "name": "V0_hash_lock",
+      "ok": true,
+      "detail": "coco/actions.py=87fa3b649c7ea64d+coco/llm.py=389a7ff2cc99c66d+coco/interact.py=58edb0dea2c7a137"
+    },
+    {
+      "name": "V1_imports",
+      "ok": true,
+      "detail": "callables=True tools_len=1 enum_len=10"
+    },
+    {
+      "name": "V2_openai_tool_call",
+      "ok": true,
+      "detail": "result={'text': '好的，我看左边。', 'action': 'look_left'}"
+    },
+    {
+      "name": "V3_openai_content_only",
+      "ok": true,
+      "detail": "result={'text': '今天天气很好。', 'action': None}"
+    },
+    {
+      "name": "V4_ollama_no_tools",
+      "ok": true,
+      "detail": "result={'text': '本地回复。', 'action': None}"
+    },
+    {
+      "name": "V5_fallback_backend",
+      "ok": true,
+      "detail": "result={'text': '你好呀！很高兴见到你。', 'action': None}"
+    },
+    {
+      "name": "V6_route_reply_llm_overrides",
+      "ok": true,
+      "detail": "first=('我听到你说：随便说点什么','shake') second=('我醒啦！','wake_up')"
+    },
+    {
+      "name": "V7_route_reply_keyword_fallback",
+      "ok": true,
+      "detail": "left=look_left sleep=goto_sleep shake=shake"
+    },
+    {
+      "name": "V8_action_tools_schema",
+      "ok": true,
+      "detail": "type=True name=True enum=True required=True const=True"
+    }
+  ],
+  "failed_count": 0,
+  "duration_s": 1.0615
+}

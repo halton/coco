@@ -7225,6 +7225,34 @@
       ]
     },
     {
+      "id": "interact-039",
+      "phase": 68,
+      "priority": 100,
+      "area": "interact",
+      "status": "in_progress",
+      "title": "LLM tool calling actions + 6 new robot actions",
+      "scope": "用 OpenAI tool calling 让 LLM 自然语言决定动作；coco/llm.py 新增 ACTION_TOOLS schema (perform_action with 10-enum) + OpenAIChatBackend.chat_with_tools + LLMClient.reply_with_action() 返 {text, action}; coco/actions.py 增加 6+1 个新动作 (shake/tilt_left/tilt_right/look_up/look_down/goto_sleep/wake_up); coco/interact.py route_reply 支持 llm_result kwarg 让 LLM action 覆盖 keyword, KEYWORD_ROUTES 扩展覆盖新动作; _do_action 扩展支持 10 个动作。向后兼容：LLMClient.reply()/.reply_text() 保留 str 契约不变, Ollama/Fallback backend 自动退化不传 tools。注：分支名 feat/interact-013-llm-tool-calling-actions 保留 user brief 命名；feature ID 重派为 interact-039（已存 interact-013 = MM proactive prompt 锁内 IO 拆分）。",
+      "dependencies": [
+        "interact-012"
+      ],
+      "evidence_dir": "evidence/interact-039/",
+      "verification": [
+        "V0: hash lock on coco/actions.py + coco/llm.py + coco/interact.py",
+        "V1: 新动作 + ACTION_TOOLS import 不抛",
+        "V2: mock OpenAI tool_calls → reply_with_action 返 action=look_left",
+        "V3: mock OpenAI content-only → action=None",
+        "V4: Ollama backend 退化 → reply_with_action 返 dict, action=None",
+        "V5: Fallback backend → reply_with_action 不崩, action=None",
+        "V6: route_reply(llm_result={'action':'shake'}) 覆盖 keyword",
+        "V7: route_reply 无 LLM → keyword fallback (向左看→look_left, 睡觉→goto_sleep)",
+        "V8: ACTION_TOOLS schema 正确 (perform_action + 10 enum)",
+        "smoke: ./init.sh rc=0",
+        "post-smoke: from coco.actions import shake/tilt_left/.../wake_up; from coco.llm import ACTION_TOOLS"
+      ],
+      "branch": "feat/interact-013-llm-tool-calling-actions",
+      "notes": "Engineer 阶段产出；待 Reviewer + closeout"
+    },
+    {
       "area": "infra",
       "dependencies": [
         "interact-038"

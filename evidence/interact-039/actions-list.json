@@ -1,0 +1,61 @@
+{
+  "feature": "interact-039",
+  "branch": "feat/interact-013-llm-tool-calling-actions",
+  "naming_note": "branch name keeps interact-013 prefix per user brief; internal ID reassigned to interact-039 (interact-013 already taken by existing MM proactive prompt feature)",
+  "new_actions": {
+    "shake": {
+      "signature": "shake(robot, amplitude_deg=20.0, duration=0.35, cycles=2)",
+      "semantics": "yaw left/right zigzag cycles times, return to center"
+    },
+    "tilt_left": {
+      "signature": "tilt_left(robot, amplitude_deg=12.0, duration=0.5, return_to_center=True)",
+      "semantics": "head tilt left (roll = +amplitude_deg)"
+    },
+    "tilt_right": {
+      "signature": "tilt_right(robot, amplitude_deg=12.0, duration=0.5, return_to_center=True)",
+      "semantics": "head tilt right (roll = -amplitude_deg)"
+    },
+    "look_up": {
+      "signature": "look_up(robot, amplitude_deg=15.0, duration=0.5, return_to_center=True)",
+      "semantics": "pitch -amplitude_deg (head up)"
+    },
+    "look_down": {
+      "signature": "look_down(robot, amplitude_deg=15.0, duration=0.5, return_to_center=True)",
+      "semantics": "pitch +amplitude_deg (head down)"
+    },
+    "goto_sleep": {
+      "signature": "goto_sleep(robot, duration=0.8)",
+      "semantics": "prefer SDK r.goto_sleep(); fallback to manual deep head-down + brief hold; fail-soft (no raise)"
+    },
+    "wake_up": {
+      "signature": "wake_up(robot, duration=0.6)",
+      "semantics": "prefer SDK r.wake_up(); fallback to set_target(INIT_HEAD_POSE); fail-soft"
+    }
+  },
+  "existing_actions_unchanged": ["look_left", "look_right", "nod"],
+  "action_tool_enum": [
+    "nod", "shake", "look_left", "look_right", "look_up",
+    "look_down", "tilt_left", "tilt_right", "goto_sleep", "wake_up"
+  ],
+  "llm_api": {
+    "ACTION_TOOLS": "1 perform_action function with 10-enum action param",
+    "OpenAIChatBackend.chat_with_tools(user_text, *, timeout, history?, system_prompt?) -> (text, action_or_None)": "new method; old chat() unchanged",
+    "LLMClient.reply_with_action(user_text, ...) -> {'text': str, 'action': Optional[str]}": "new method; falls back to KEYWORD_ROUTES on failure",
+    "LLMClient.reply_text(user_text, ...) -> str": "alias for reply(); backward-compat per brief",
+    "LLMClient.reply(user_text, ...) -> str": "unchanged (preserves all existing wire compat)"
+  },
+  "interact_api": {
+    "route_reply(text, llm_result=None) -> (reply, action)": "if llm_result.get('action') in ACTION_TOOL_ENUM it overrides keyword; if llm_result.get('text') non-empty it overrides reply text",
+    "KEYWORD_ROUTES extended": [
+      "睡/睡觉/休息 -> goto_sleep",
+      "醒/起来 -> wake_up",
+      "摇头/不行/不是 -> shake",
+      "抬头/向上看 -> look_up",
+      "低头/向下看 -> look_down",
+      "歪头/歪左/歪右 -> tilt_left/right",
+      "向左/向右/左看/右看 -> look_left/right"
+    ],
+    "InteractSession._do_action": "扩展到 10 个动作 case，未知 action 仍 nod 兜底"
+  },
+  "main_py_status": "未改；future wire point — main.py 仍传 llm_reply_fn=_llm.reply (str)。后续如需让 InteractSession 自动启用 LLM action 路径，可再加 llm_action_fn=_llm.reply_with_action kwarg，并在 InteractSession.handle_audio 调 reply_with_action 后把 result 传给 route_reply。本 feature 范围内 LLM tool calling 能力以 LLMClient.reply_with_action() public API 暴露，调用方按需启用。"
+}
