@@ -288,6 +288,190 @@ def wake_up(robot: "ReachyMini", duration: float = 0.6) -> None:
         pass
 
 
+# ---------------------------------------------------------------------------
+# interact-042: antenna + body_yaw actions
+# 直接走 SDK set_target(antennas=[L,R]) / set_target(body_yaw=X) joint-space API。
+# 这两个自由度无法用 head 4x4 pose 表示，必须用 set_target 而非 goto_target(head=...)。
+#
+# 安全 clamp（保守，远低于 SDK 极限）：
+#   antenna: ±1.5 rad   （SDK 极限 ±3.05 rad）
+#   body_yaw: ±π/2 rad  （SDK 无显式限位，本层硬 clamp 防过转/电缆缠绕）
+#
+# 重要：Reachy Mini 没有轮子。body_yaw 是上半身绕垂直轴旋转，机不位移。
+# 真机首次 body_yaw 必须人在场观察电缆缠绕风险。详见 evidence/.../safety-notes.md。
+#
+# 所有 method 失败 fail-soft（与 goto_sleep/wake_up 一致），与 LLM tool calling 语义匹配。
+# ---------------------------------------------------------------------------
+
+# interact-042 安全上限
+ANTENNA_MAX_RAD: float = 1.5  # SDK ±3.05, 本层保守 ±1.5
+BODY_YAW_MAX_RAD: float = math.pi / 2  # ±π/2 ≈ ±1.5708
+ANTENNA_MIN_DURATION_S: float = 0.4  # 防抖：单段动作不少于 0.4s
+
+
+def _clamp_antenna(v: float) -> float:
+    """clamp 单根天线角度到 ±ANTENNA_MAX_RAD。"""
+    return max(-ANTENNA_MAX_RAD, min(ANTENNA_MAX_RAD, float(v)))
+
+
+def _clamp_body_yaw(v: float) -> float:
+    """clamp body_yaw 到 ±π/2。"""
+    return max(-BODY_YAW_MAX_RAD, min(BODY_YAW_MAX_RAD, float(v)))
+
+
+def _safe_enable_motors(robot: "ReachyMini") -> None:
+    """fail-soft enable_motors + 短暂 sleep（coco 主进程已 enable 过则 no-op 安全）。"""
+    try:
+        em = getattr(robot, "enable_motors", None)
+        if callable(em):
+            em()
+    except Exception:  # noqa: BLE001
+        pass
+    time.sleep(0.2)
+
+
+def wiggle_antennas(
+    robot: "ReachyMini",
+    amplitude_rad: float = 1.0,
+    duration: float = 0.4,
+    cycles: int = 3,
+) -> None:
+    """两根天线左右摇摆 cycles 次表达兴奋情绪。
+
+    序列：(+L, -R) → (-L, +R) → ... 反向交替 cycles 次, 末态回 0。
+    用 set_target(antennas=[L, R]) 直接驱 antenna joint-space, 不影响 head pose。
+    幅度与 duration 经 clamp，越界用 fail-soft 兜底。
+    """
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    if not (1 <= cycles <= 5):
+        cycles = 3
+    amp = _clamp_antenna(amplitude_rad)
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        for i in range(cycles):
+            if i % 2 == 0:
+                st(antennas=[+amp, -amp])
+            else:
+                st(antennas=[-amp, +amp])
+            time.sleep(duration)
+        st(antennas=[0.0, 0.0])
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def perk_up(
+    robot: "ReachyMini",
+    amplitude_rad: float = 1.2,
+    duration: float = 0.5,
+) -> None:
+    """天线竖起来表达警觉 / 好奇 (两根同向高举, 保持几秒)。
+
+    set_target(antennas=[+amp, +amp])，clamp 到 ±ANTENNA_MAX_RAD。
+    """
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    amp = _clamp_antenna(amplitude_rad)
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        st(antennas=[+amp, +amp])
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def droop_antennas(
+    robot: "ReachyMini",
+    amplitude_rad: float = 1.2,
+    duration: float = 0.5,
+) -> None:
+    """天线下垂表达失落 / 不开心 (两根同向低垂)。
+
+    set_target(antennas=[-amp, -amp])，clamp 到 ±ANTENNA_MAX_RAD。
+    """
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    amp = _clamp_antenna(amplitude_rad)
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        st(antennas=[-amp, -amp])
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def turn_body_left(
+    robot: "ReachyMini",
+    amplitude_rad: float = 0.5,
+    duration: float = 0.6,
+) -> None:
+    """整个上半身转向左侧 (body_yaw = +amp, ~28° 默认)。
+
+    重要：Reachy Mini 无轮子, body_yaw 是上半身绕垂直轴旋转, 机不位移。
+    用 set_target(body_yaw=...) 直接驱底座 yaw joint。clamp 到 ±π/2。
+    """
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    angle = _clamp_body_yaw(amplitude_rad)
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        st(body_yaw=+abs(angle))
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def turn_body_right(
+    robot: "ReachyMini",
+    amplitude_rad: float = 0.5,
+    duration: float = 0.6,
+) -> None:
+    """整个上半身转向右侧 (body_yaw = -amp)。"""
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    angle = _clamp_body_yaw(amplitude_rad)
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        st(body_yaw=-abs(angle))
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def turn_body_center(
+    robot: "ReachyMini",
+    duration: float = 0.6,
+) -> None:
+    """身体回正 (body_yaw = 0)。"""
+    if not math.isfinite(duration) or duration < ANTENNA_MIN_DURATION_S:
+        duration = ANTENNA_MIN_DURATION_S
+    _safe_enable_motors(robot)
+    try:
+        st = getattr(robot, "set_target", None)
+        if not callable(st):
+            return
+        st(body_yaw=0.0)
+        time.sleep(duration)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 __all__ = [
     "INIT_HEAD_POSE",
     "MAX_YAW_DEG",
@@ -298,6 +482,9 @@ __all__ = [
     "TILT_ROLL_DEG",
     "LOOK_UPDOWN_PITCH_DEG",
     "SLEEP_PITCH_DEG",
+    "ANTENNA_MAX_RAD",
+    "BODY_YAW_MAX_RAD",
+    "ANTENNA_MIN_DURATION_S",
     "euler_pose",
     "look_left",
     "look_right",
@@ -309,4 +496,10 @@ __all__ = [
     "look_down",
     "goto_sleep",
     "wake_up",
+    "wiggle_antennas",
+    "perk_up",
+    "droop_antennas",
+    "turn_body_left",
+    "turn_body_right",
+    "turn_body_center",
 ]

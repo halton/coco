@@ -25536,6 +25536,30 @@
           }
         }
       }
+    },
+    {
+      "id": "interact-042-antenna-body-actions",
+      "title": "interact-042: antenna + body_yaw 6 新动作 (LLM tool calling + dashboard 按钮 + 滑条)",
+      "area": "interact",
+      "phase": 69,
+      "priority": 100,
+      "status": "in_progress",
+      "source": "phase-69 新功能: 把 SDK 原生 set_target(antennas=[L,R]) (±3.05 rad) 与 set_target(body_yaw=X) (无 SDK 限位) 包成 6 个 coco 语义化高层动作: wiggle_antennas / perk_up / droop_antennas (情绪天线) + turn_body_left/right/center (上半身转身, 不位移). 同步扩 LLM tool calling ACTION_TOOL_ENUM 10→16 + dashboard 手动按钮 + 三根新滑条 (antenna L/R + body_yaw).",
+      "scope": "coco/actions.py +6 method (本层 clamp antenna ±1.5 / body_yaw ±π/2, fail-soft try/except, duration min 0.4s); coco/llm.py ACTION_TOOL_ENUM + ACTION_TOOLS description 中文化扩 6 新 action 含天线/转身语义; coco/interact.py _do_action +6 case 分发 + KEYWORD_ROUTES +6 条中文 fallback 路由 (含'兴奋/好奇/失落/转身向左/右/身体回正', 转身关键词必须在通用'向左/向右'之前防截胡); coco/dashboard/app.py action-panel +6 button + pose-panel +3 input range 滑条 + onPose/sendPose/resetPose JS 函数扩 antenna_left/right/body_yaw + PoseRequest 加 Optional[List[float]] antennas + Optional[float] body_yaw 向后兼容 + _POSE_SUBPROCESS_TEMPLATE 拼接 antennas/body_yaw if not None + _antenna_clamp ±1.5 + _body_yaw_clamp ±π/2 + post_pose 返回 echo antennas/body_yaw. 不动 _verify_lib.py.",
+      "dependencies": [
+        "dashboard-006-layout-grid",
+        "interact-039"
+      ],
+      "updated_at": "2026-06-05T16:50:00",
+      "evidence": {
+        "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_interact_042_antenna_body_actions.py",
+        "verify_log": "evidence/interact-042-antenna-body-actions/verify-pass.log",
+        "smoke_log": "evidence/interact-042-antenna-body-actions/smoke-pass.log",
+        "uat_script": "evidence/interact-042-antenna-body-actions/uat-script.py",
+        "safety_notes": "evidence/interact-042-antenna-body-actions/safety-notes.md",
+        "real_machine_uat": "pending",
+        "notes": "Engineer leg 完成: feat/interact-042-antenna-body-actions 基 main HEAD=a4aa8e2. verify V0-V9 10/10 PASS (含 V7 POST /api/pose fake mode antennas=[0.5,-0.5]+body_yaw=0.3 echo + 超界 clamp 到 [1.5,-1.5]+π/2 + 不传 antennas/body_yaw 时向后兼容仅含 pitch/yaw/roll), smoke rc=0, post-smoke import OK ACTION_TOOL_ENUM len=16. ACTION_TOOL_ENUM 扩 10→16. 6 method 全 fail-soft (coco 主进程 robot 实例共享, 不能各自 disable_motors). 重要: Reachy Mini 无轮子, body_yaw 是上半身绕垂直轴旋转, 机不位移. 真机首次 body_yaw 必须人在场观察电缆缠绕 (见 safety-notes.md). 等待 Reviewer fresh-context + Closeout merge."
+      }
     }
   ],
   "last_updated": "2026-06-05T08:22:29",

@@ -122,6 +122,9 @@ HAN_CHAR_RE = re.compile(r"[一-鿿]")
 ACTION_TOOL_ENUM = (
     "nod", "shake", "look_left", "look_right", "look_up",
     "look_down", "tilt_left", "tilt_right", "goto_sleep", "wake_up",
+    # interact-042: antenna + body_yaw actions
+    "wiggle_antennas", "perk_up", "droop_antennas",
+    "turn_body_left", "turn_body_right", "turn_body_center",
 )
 
 ACTION_TOOLS: List[dict] = [
@@ -130,9 +133,10 @@ ACTION_TOOLS: List[dict] = [
         "function": {
             "name": "perform_action",
             "description": (
-                "Perform a physical action with the robot's head/body. "
+                "Perform a physical action with the robot's head/body/antennas. "
                 "Call this whenever the user requests a movement, gesture, "
-                "or expressive action (look, nod, shake, tilt, sleep, wake)."
+                "or expressive action (look, nod, shake, tilt, sleep, wake, "
+                "antenna wiggle/perk/droop, body turn)."
             ),
             "parameters": {
                 "type": "object",
@@ -145,7 +149,12 @@ ACTION_TOOLS: List[dict] = [
                             "nod=点头同意; shake=摇头否定; "
                             "look_left/look_right/look_up/look_down=朝该方向看; "
                             "tilt_left/tilt_right=歪头; "
-                            "goto_sleep=低头睡眠; wake_up=回中位醒来。"
+                            "goto_sleep=低头睡眠; wake_up=回中位醒来; "
+                            "wiggle_antennas=摇摆天线 (兴奋); "
+                            "perk_up=天线竖起 (好奇/警觉); "
+                            "droop_antennas=天线下垂 (失落/不开心); "
+                            "turn_body_left/turn_body_right=转身向左/右 (整个上半身, 不位移); "
+                            "turn_body_center=身体回正。"
                         ),
                     }
                 },
@@ -158,7 +167,8 @@ ACTION_TOOLS: List[dict] = [
 
 # 调用 ACTION_TOOLS 时附加的 system prompt 提示（让 LLM 同时给文本与 tool_call）
 ACTION_TOOLS_SYSTEM_HINT = (
-    "如果用户请求一个动作（看、点头、摇头、歪头、睡觉、醒来等），"
+    "如果用户请求一个动作（看、点头、摇头、歪头、睡觉、醒来、"
+    "天线摇摆/竖起/下垂、转身向左/向右/回正等），"
     "你**必须**调用 perform_action 工具，同时仍给一句简短的中文回应。"
     "如果只是闲聊不需要动作，直接回复文本即可。"
 )

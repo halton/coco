@@ -1,0 +1,12 @@
+[PASS] V0 hash lock 4 files + interact-042 marker :: actions.py.sha=64bf98a06116 marker=True | llm.py.sha=51a354910a2d marker=True | interact.py.sha=8913653751e0 marker=True | app.py.sha=600f1ac8b862 marker=True
+[PASS] V1 import 6 new actions OK :: imported 6 callables: ['wiggle_antennas', 'perk_up', 'droop_antennas', 'turn_body_left', 'turn_body_right', 'turn_body_center']
+[PASS] V2 ACTION_TOOL_ENUM has 6 new actions (10+6=16) :: len=16 (expect 16) new_all_present=True enum=['nod', 'shake', 'look_left', 'look_right', 'look_up', 'look_down', 'tilt_left', 'tilt_right', 'goto_sleep', 'wake_up', 'wiggle_antennas', 'perk_up', 'droop_antennas', 'turn_body_left', 'turn_body_right', 'turn_body_center']
+[PASS] V3 _do_action has 6 new case branches :: missing_cases=[]
+[PASS] V4 KEYWORD_ROUTES 中文关键词 + route_reply 验证 :: missing=[] routes=turn_body_left,wiggle_antennas,droop_antennas
+[PASS] V5 dashboard HTML has 6 new buttons :: status=200 missing_btns=[]
+[PASS] V6 dashboard HTML has 3 new sliders (antenna L/R + body_yaw) :: status=200 missing=[] range_inputs=6 (expect>=6)
+[PASS] V7 POST /api/pose accepts antennas + body_yaw + clamp + back-compat :: cond1=True cond2=True cond3=True b1={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.1, 'yaw': 0.0, 'roll': 0.0, 'antennas': [0.5, -0.5], 'body_yaw': 0.3} b2={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.0, 'yaw': 0.0, 'roll': 0.0, 'antennas': [1.5, -1.5], 'body_yaw': 1.5707963267948966} b3={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.0, 'yaw': 0.0, 'roll': 0.0}
+[PASS] V8 actions.py uses set_target(antennas=...) + set_target(body_yaw=...) :: missing_funcs=[] antennas_calls=9 (expect>=4) body_yaw_calls=5 (expect>=3) set_target_lookup=True
+[PASS] V9 clamp: antenna ±1.5 + body_yaw ±π/2 (src + runtime) :: actions:True,True,True dashboard:True,True,True runtime_ok=True
+
+=== interact-042 verify: 10/10 PASS ===
