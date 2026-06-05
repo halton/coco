@@ -79,6 +79,8 @@ KEYWORD_ROUTES: List[Tuple[Tuple[str, ...], str, str]] = [
     # 顺序要点：更"具体"的主题词放前面（如 "天气" 在 "好" 之前），避免被通用词截胡
     # interact-039 (branch feat/interact-013): 扩展到新 6 动作 + goto_sleep / wake_up。
     # 新动作放在 generic "好/对/嗯" / "看" 之前，确保关键词命中。
+    # interact-042: antenna + body_yaw 新动作。"转身向左/向左转身" 必须在 "向左/左边"
+    # 之前，否则会被旧 look_left 路由截胡。
     (("你好", "嗨", "hello", "hi"), "你好呀！很高兴见到你。", "nod"),
     (("再见", "拜拜", "bye"), "好的，回头见！", "nod"),
     (("睡觉", "睡吧", "休息", "睡一会"), "好的，我睡一会。", "goto_sleep"),
@@ -90,6 +92,14 @@ KEYWORD_ROUTES: List[Tuple[Tuple[str, ...], str, str]] = [
     (("歪左", "向左歪"), "我歪一下头。", "tilt_left"),
     (("歪右", "向右歪"), "我歪一下头。", "tilt_right"),
     (("歪头",), "我歪一下头。", "tilt_left"),
+    # interact-042: antenna 动作（情绪/状态关键词）
+    (("摇摆天线", "兴奋", "好开心"), "嘿嘿！", "wiggle_antennas"),
+    (("天线竖", "好奇", "警觉"), "嗯？", "perk_up"),
+    (("天线垂", "失落", "不开心", "难过"), "唉……", "droop_antennas"),
+    # interact-042: body_yaw 动作（转身关键词，必须在通用 "向左/向右" 之前）
+    (("转身向左", "向左转身", "身体向左", "上半身向左"), "好，我转向左边。", "turn_body_left"),
+    (("转身向右", "向右转身", "身体向右", "上半身向右"), "好，我转向右边。", "turn_body_right"),
+    (("身体回正", "转身回正", "身体回中", "上半身回正"), "好，回正了。", "turn_body_center"),
     (("向左", "左边", "左看"), "好，我看左边。", "look_left"),
     (("向右", "右边", "右看"), "好，我看右边。", "look_right"),
     (("天气", "公园", "外面"), "嗯，外面挺好的呀。", "look_right"),
@@ -918,6 +928,25 @@ class InteractSession:
         elif name == "wake_up":
             from coco.actions import wake_up as _wu
             _wu(self.robot, duration=0.6)
+        # interact-042: antenna + body_yaw actions
+        elif name == "wiggle_antennas":
+            from coco.actions import wiggle_antennas as _wa
+            _wa(self.robot, amplitude_rad=1.0, duration=0.4, cycles=3)
+        elif name == "perk_up":
+            from coco.actions import perk_up as _pu
+            _pu(self.robot, amplitude_rad=1.2, duration=0.5)
+        elif name == "droop_antennas":
+            from coco.actions import droop_antennas as _da
+            _da(self.robot, amplitude_rad=1.2, duration=0.5)
+        elif name == "turn_body_left":
+            from coco.actions import turn_body_left as _tbl
+            _tbl(self.robot, amplitude_rad=0.5, duration=0.6)
+        elif name == "turn_body_right":
+            from coco.actions import turn_body_right as _tbr
+            _tbr(self.robot, amplitude_rad=0.5, duration=0.6)
+        elif name == "turn_body_center":
+            from coco.actions import turn_body_center as _tbc
+            _tbc(self.robot, duration=0.6)
         else:
             # 未知动作 → nod 兜底
             nod(self.robot, amplitude_deg=10.0, duration=0.4)

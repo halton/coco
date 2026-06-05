@@ -9,7 +9,7 @@ import sys
 import time
 import zlib
 from pathlib import Path
-from typing import AsyncIterator, Set
+from typing import AsyncIterator, List, Optional, Set
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
@@ -193,6 +193,13 @@ HTML_PAGE = """<!DOCTYPE html>
         <button onclick="doAction('tilt_right')">歪右</button>
         <button onclick="doAction('goto_sleep')">睡觉</button>
         <button onclick="doAction('wake_up')">起来</button>
+        <!-- interact-042: antenna + body_yaw 按钮 -->
+        <button onclick="doAction('wiggle_antennas')">摇摆天线</button>
+        <button onclick="doAction('perk_up')">天线竖起</button>
+        <button onclick="doAction('droop_antennas')">天线下垂</button>
+        <button onclick="doAction('turn_body_left')">转身向左</button>
+        <button onclick="doAction('turn_body_right')">转身向右</button>
+        <button onclick="doAction('turn_body_center')">身体回正</button>
         <div id="action-status"></div>
       </div>
     </details>
@@ -205,6 +212,13 @@ HTML_PAGE = """<!DOCTYPE html>
         <input type="range" id="yaw" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:100%;">
         <div>Roll <span id="roll-val">0.00</span></div>
         <input type="range" id="roll" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:100%;">
+        <!-- interact-042: antenna L/R + body_yaw 滑条 -->
+        <div>Antenna Left <span id="antenna_left-val">0.00</span></div>
+        <input type="range" id="antenna_left" min="-1.5" max="1.5" step="0.05" value="0" oninput="onPose()" style="width:100%;">
+        <div>Antenna Right <span id="antenna_right-val">0.00</span></div>
+        <input type="range" id="antenna_right" min="-1.5" max="1.5" step="0.05" value="0" oninput="onPose()" style="width:100%;">
+        <div>Body Yaw <span id="body_yaw-val">0.00</span></div>
+        <input type="range" id="body_yaw" min="-1.57" max="1.57" step="0.05" value="0" oninput="onPose()" style="width:100%;">
         <button onclick="resetPose()" style="margin-top:6px;">回中</button>
         <div id="pose-status"></div>
       </div>
@@ -439,6 +453,11 @@ function onPose() {
   ['pitch','yaw','roll'].forEach(function(k){
     document.getElementById(k+'-val').textContent = parseFloat(document.getElementById(k).value).toFixed(2);
   });
+  // interact-042: antenna L/R + body_yaw 滑条值更新
+  ['antenna_left','antenna_right','body_yaw'].forEach(function(k){
+    var el = document.getElementById(k);
+    if (el) document.getElementById(k+'-val').textContent = parseFloat(el.value).toFixed(2);
+  });
   if (poseTimer) clearTimeout(poseTimer);
   poseTimer = setTimeout(sendPose, 200);
 }
@@ -449,6 +468,12 @@ async function sendPose() {
     yaw: parseFloat(document.getElementById('yaw').value),
     roll: parseFloat(document.getElementById('roll').value)
   };
+  // interact-042: 把 antenna L/R + body_yaw 一并 POST (向后兼容)
+  var aL = document.getElementById('antenna_left');
+  var aR = document.getElementById('antenna_right');
+  var bY = document.getElementById('body_yaw');
+  if (aL && aR) body.antennas = [parseFloat(aL.value), parseFloat(aR.value)];
+  if (bY) body.body_yaw = parseFloat(bY.value);
   st.textContent = 'pose ...';
   try {
     var r = await fetch('/api/pose', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
@@ -463,6 +488,14 @@ function resetPose() {
   ['pitch','yaw','roll'].forEach(function(k){
     document.getElementById(k).value = '0';
     document.getElementById(k+'-val').textContent = '0.00';
+  });
+  // interact-042: antenna + body_yaw 回中
+  ['antenna_left','antenna_right','body_yaw'].forEach(function(k){
+    var el = document.getElementById(k);
+    if (el) {
+      el.value = '0';
+      document.getElementById(k+'-val').textContent = '0.00';
+    }
   });
   sendPose();
 }
@@ -765,16 +798,31 @@ app = create_app()
 # 直接发 4x4 head matrix, 不耦合 coco.actions 预设
 _POSE_MAX_RAD = float(os.environ.get("COCO_DASHBOARD_POSE_MAX_RAD", "0.6"))
 _POSE_TIMEOUT_S = float(os.environ.get("COCO_DASHBOARD_POSE_TIMEOUT_S", "8"))
+# interact-042: antenna + body_yaw clamp (保守, 远低于 SDK 极限)
+_ANTENNA_MAX_RAD = 1.5  # SDK 极限 ±3.05, 本层 ±1.5
+_BODY_YAW_MAX_RAD = 1.5707963267948966  # π/2
 
 
 class PoseRequest(BaseModel):
     pitch: float = 0.0
     yaw: float = 0.0
     roll: float = 0.0
+    # interact-042: 向后兼容扩展 — antennas=[L, R] 与 body_yaw 都可选
+    # 不提供时不更新对应 joint, 保留旧 pitch/yaw/roll 行为
+    antennas: Optional[List[float]] = None
+    body_yaw: Optional[float] = None
 
 
 def _pose_clamp(v: float) -> float:
     return max(-_POSE_MAX_RAD, min(_POSE_MAX_RAD, float(v)))
+
+
+def _antenna_clamp(v: float) -> float:
+    return max(-_ANTENNA_MAX_RAD, min(_ANTENNA_MAX_RAD, float(v)))
+
+
+def _body_yaw_clamp(v: float) -> float:
+    return max(-_BODY_YAW_MAX_RAD, min(_BODY_YAW_MAX_RAD, float(v)))
 
 
 _POSE_SUBPROCESS_TEMPLATE = """import os, time
@@ -783,6 +831,8 @@ from reachy_mini import ReachyMini
 pitch = {pitch}
 yaw = {yaw}
 roll = {roll}
+antennas = {antennas}
+body_yaw = {body_yaw}
 r = ReachyMini(spawn_daemon=False, media_backend='no_media')
 try:
     try:
@@ -800,6 +850,17 @@ try:
     M = np.eye(4)
     M[:3,:3] = R
     r.set_target(head=M)
+    # interact-042: antenna + body_yaw 一并下发 (None 时跳过, 向后兼容)
+    if antennas is not None:
+        try:
+            r.set_target(antennas=antennas)
+        except Exception:
+            pass
+    if body_yaw is not None:
+        try:
+            r.set_target(body_yaw=body_yaw)
+        except Exception:
+            pass
     time.sleep(0.4)
 finally:
     os._exit(0)
@@ -814,17 +875,38 @@ async def post_pose(req: PoseRequest) -> dict:
     避免 zenoh 多 client 断言风暴。
 
     测试钩子 COCO_DASHBOARD_FAKE_POSE=1 时跳过 subprocess, 返 clamp 后的值。
+
+    interact-042: 扩展 antennas=[L, R] (clamp ±1.5) 与 body_yaw (clamp ±π/2),
+    向后兼容 — 不传时与 dashboard-004 行为一致。
     """
     p_ = _pose_clamp(req.pitch)
     y_ = _pose_clamp(req.yaw)
     r_ = _pose_clamp(req.roll)
+    # interact-042: antenna + body_yaw clamp
+    antennas_ = None
+    if req.antennas is not None and len(req.antennas) >= 2:
+        antennas_ = [_antenna_clamp(req.antennas[0]), _antenna_clamp(req.antennas[1])]
+    body_yaw_ = None
+    if req.body_yaw is not None:
+        body_yaw_ = _body_yaw_clamp(req.body_yaw)
 
     if os.environ.get("COCO_DASHBOARD_FAKE_POSE") == "1":
-        return {"status": "ok", "rc": 0, "fake": True,
-                "pitch": p_, "yaw": y_, "roll": r_}
+        out = {"status": "ok", "rc": 0, "fake": True,
+               "pitch": p_, "yaw": y_, "roll": r_}
+        if antennas_ is not None:
+            out["antennas"] = antennas_
+        if body_yaw_ is not None:
+            out["body_yaw"] = body_yaw_
+        return out
 
     py = sys.executable
-    script = _POSE_SUBPROCESS_TEMPLATE.format(pitch=repr(p_), yaw=repr(y_), roll=repr(r_))
+    script = _POSE_SUBPROCESS_TEMPLATE.format(
+        pitch=repr(p_),
+        yaw=repr(y_),
+        roll=repr(r_),
+        antennas=repr(antennas_),
+        body_yaw=repr(body_yaw_),
+    )
     cmd = [py, "-c", script]
     proc = await asyncio.create_subprocess_exec(
         *cmd,
@@ -842,7 +924,7 @@ async def post_pose(req: PoseRequest) -> dict:
             pass
         return {"status": "timeout", "pitch": p_, "yaw": y_, "roll": r_}
     rc = proc.returncode
-    return {
+    out = {
         "status": "ok" if rc == 0 else "error",
         "rc": rc,
         "pitch": p_,
@@ -851,6 +933,11 @@ async def post_pose(req: PoseRequest) -> dict:
         "stdout": stdout.decode("utf-8", errors="replace")[-400:],
         "stderr": stderr.decode("utf-8", errors="replace")[-400:],
     }
+    if antennas_ is not None:
+        out["antennas"] = antennas_
+    if body_yaw_ is not None:
+        out["body_yaw"] = body_yaw_
+    return out
 
 
 # infra-watchdog-fu redbar: 读 /tmp/coco-watchdog-events.log (JSON lines) 返回最近事件
