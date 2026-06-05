@@ -5,7 +5,7 @@
     {
       "name": "V0_hash_lock",
       "ok": true,
-      "detail": "coco/actions.py=87fa3b649c7ea64d+coco/llm.py=389a7ff2cc99c66d+coco/interact.py=58edb0dea2c7a137"
+      "detail": "coco/actions.py=87fa3b649c7ea64d+coco/llm.py=389a7ff2cc99c66d+coco/interact.py=e0bdf49b17ec591a"
     },
     {
       "name": "V1_imports",
@@ -46,8 +46,13 @@
       "name": "V8_action_tools_schema",
       "ok": true,
       "detail": "type=True name=True enum=True required=True const=True"
+    },
+    {
+      "name": "V9_wire_call_site",
+      "ok": true,
+      "detail": "main.reply_with_action=True interact.llm_action_fn=True"
     }
   ],
   "failed_count": 0,
-  "duration_s": 1.0615
+  "duration_s": 1.729
 }

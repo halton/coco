@@ -179,6 +179,7 @@ class InteractSession:
         tts_say_fn: Callable[..., None],
         idle_animator: Optional["IdleAnimator"] = None,
         llm_reply_fn: Optional[Callable[..., str]] = None,
+        llm_action_fn: Optional[Callable[..., dict]] = None,
         on_interaction: Optional[Callable[[str], None]] = None,
         on_assistant_utterance: Optional[Callable[[str], None]] = None,
         dialog_memory: Optional[DialogMemory] = None,
@@ -204,6 +205,13 @@ class InteractSession:
         # 避免 try/except TypeError 把 fn 内部的 TypeError 误判为"签名不接受
         # history"导致重复调用 / 二次副作用。
         self.llm_reply_fn = llm_reply_fn
+        # interact-013: 可选 LLM tool-calling 行为函数（``LLMClient.reply_with_action``）。
+        # 注入后：handle_audio LLM 块优先调用 llm_action_fn 拿 {text, action} dict；
+        # action 命中 ACTION_TOOL_ENUM 时覆盖 KEYWORD_ROUTES 的 base_action；
+        # 未注入或返回 action=None 时退化到旧 llm_reply_fn(str)，与 interact-002 等价。
+        self.llm_action_fn = llm_action_fn
+        self._llm_action_accepts_history = self._probe_kwarg(llm_action_fn, "history")
+        self._llm_action_accepts_system_prompt = self._probe_kwarg(llm_action_fn, "system_prompt")
         self._llm_accepts_history = self._probe_accepts_history(llm_reply_fn)
         # companion-003 L0-2: 任何 handle_audio 入口都是一次"交互"，统一在
         # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
@@ -640,10 +648,40 @@ class InteractSession:
                             self.conv_state_machine.on_llm_start()
                         except Exception:  # noqa: BLE001
                             pass
-                    if kwargs:
-                        llm_text = self.llm_reply_fn(transcript, **kwargs)
-                    else:
-                        llm_text = self.llm_reply_fn(transcript)
+                    # interact-013: 优先走 llm_action_fn（reply_with_action）拿 {text, action}；
+                    # 失败 / 未注入 → 退化到 llm_reply_fn(str)，保持向后兼容。
+                    llm_text = ""
+                    llm_action_override: Optional[str] = None
+                    if self.llm_action_fn is not None:
+                        action_kwargs: dict = {}
+                        if (history_msgs is not None
+                                and self._llm_action_accepts_history):
+                            action_kwargs["history"] = history_msgs
+                        if (profile_sys_prompt is not None
+                                and self._llm_action_accepts_system_prompt):
+                            action_kwargs["system_prompt"] = profile_sys_prompt
+                        try:
+                            act_res = self.llm_action_fn(transcript, **action_kwargs)
+                            if isinstance(act_res, dict):
+                                _t = act_res.get("text")
+                                _a = act_res.get("action")
+                                if isinstance(_t, str):
+                                    llm_text = _t
+                                if isinstance(_a, str) and _a:
+                                    llm_action_override = _a
+                        except Exception as e:  # noqa: BLE001
+                            log.warning(
+                                "LLM action_fn failed: %s: %s; will try plain reply_fn",
+                                type(e).__name__, e,
+                            )
+                            llm_text = ""
+                            llm_action_override = None
+                    if not llm_text:
+                        # action_fn 未注入 / 返回空 → 退化到原 llm_reply_fn(str)。
+                        if kwargs:
+                            llm_text = self.llm_reply_fn(transcript, **kwargs)
+                        else:
+                            llm_text = self.llm_reply_fn(transcript)
                     # interact-011: 调用后看 fallback 是否激活（wrapped llm_reply_fn 内部
                     # 已根据 backend_ok 增量更新 in_fallback 状态）。in_fallback=True 时
                     # 用模板替代 LLM 输出（弃 llm_text，可能是 KEYWORD_ROUTES 兜底或空字符串）。
@@ -666,6 +704,10 @@ class InteractSession:
                                         type(e).__name__, e)
                     elif llm_text and llm_text.strip():
                         reply = llm_text.strip()
+                    # interact-013: LLM tool_call 命中的 action 优先级高于 keyword route，
+                    # 但 fallback 模式（_use_fallback_now=True）不应被覆盖（已用模板替代）。
+                    if not _use_fallback_now and llm_action_override:
+                        action = llm_action_override
                     if self.conv_state_machine is not None:
                         try:
                             self.conv_state_machine.on_llm_done()

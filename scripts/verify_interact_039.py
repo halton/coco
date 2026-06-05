@@ -23,6 +23,8 @@
          （覆盖 keyword 默认）
     V7   route_reply("向左看") (llm_result=None) → action == 'look_left' (keyword fallback)
     V8   ACTION_TOOLS schema: 1 个 perform_action function, 10 个 enum, name 正确
+    V9   main.py 调用 reply_with_action + interact.py 引用 llm_action_fn
+         (wire 调用点存在性检查，证明 LLM action 真的接到 InteractSession)
 
 rc=0 全 PASS。
 """
@@ -286,6 +288,29 @@ def v8_action_tools_schema() -> None:
         _check("V8_action_tools_schema", False, f"{type(e).__name__}: {e}")
 
 
+# ---------- V9: main.py / interact.py 调用 reply_with_action ----------
+def v9_wire_call_site() -> None:
+    """V9: 证明 main.py 真的 wire 了 reply_with_action，不是只暴露不调。
+
+    检查：(a) coco/main.py 含 ``reply_with_action`` 字面引用（构造 InteractSession
+    时传 llm_action_fn=_llm.reply_with_action）；(b) coco/interact.py 引用 llm_action_fn
+    （handle_audio LLM 块用 action 函数拿 {text, action}）。
+    """
+    try:
+        main_src = (ROOT / "coco" / "main.py").read_text(encoding="utf-8")
+        interact_src = (ROOT / "coco" / "interact.py").read_text(encoding="utf-8")
+        ok_main = "reply_with_action" in main_src
+        ok_interact = "llm_action_fn" in interact_src
+        ok = ok_main and ok_interact
+        _check(
+            "V9_wire_call_site",
+            ok,
+            f"main.reply_with_action={ok_main} interact.llm_action_fn={ok_interact}",
+        )
+    except Exception as e:  # noqa: BLE001
+        _check("V9_wire_call_site", False, f"{type(e).__name__}: {e}")
+
+
 # ---------- Driver ----------
 def main() -> int:
     t0 = time.monotonic()
@@ -298,6 +323,7 @@ def main() -> int:
     v6_route_reply_llm_overrides()
     v7_route_reply_keyword_fallback()
     v8_action_tools_schema()
+    v9_wire_call_site()
     dt = time.monotonic() - t0
 
     failed = [r for r in _results if not r["ok"]]
