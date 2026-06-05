@@ -24536,6 +24536,18 @@
       "area": "infra"
     },
     {
+      "id": "dashboard-002-action-buttons",
+      "title": "Dashboard 加 10 个精准动作按钮 + timeline 显示 action 字段",
+      "area": "infra",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "notes": "右上角 action-panel: 10 按钮 (look_left/right/up/down + nod/shake + tilt_left/right + goto_sleep/wake_up) -> POST /api/action -> 短期 ReachyMini subprocess (os._exit(0) 跳 r.stop() 避开 wiggle.py zenoh 断言风暴) -> coco.actions.<name>(robot). event_parser 加 _VAD_ACTION_RE 抽 action 字段 (兼容无引号 / 单引号 / 双引号; None/空跳过); timeline JS 渲染 [ACT:<name>] orange span (textContent escape 复用 dashboard-001 P1).",
+      "user_visible_behavior": "浏览器开 http://localhost:8765 右上 '手动动作' 面板, 按 10 个按钮直接触发 reachy 头部动作 (绕过 wake/ASR/LLM 链路); coco 主链路触发动作时 timeline 右半会带 [ACT:nod] 等标签.",
+      "verification": "scripts/verify_dashboard_002_action_buttons.py V0-V8 全 PASS (hash lock / POST /api/action 路由 / parser 抽 action 三种引号格式 / parser 无 action 回归 dashboard-001 V2 / POST shake 200 fake mode / invalid 400 / 缺字段 422 / HTML 10 doAction 按钮 / textContent escape regression). real_machine_uat: pending (浏览器点按钮真触发动作由用户在 evidence/dashboard-002/uat-script.md 指引下执行).",
+      "evidence": []
+    },
+    {
       "id": "audio-016-mic-auto-select-reachy",
       "phase": 68,
       "priority": 100,

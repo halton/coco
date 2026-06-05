@@ -1,0 +1,11 @@
+[PASS] V0 hash lock app+parser exist :: app.sha=0f82f3a10de5 parser.sha=a2d250d2d23c
+[PASS] V1 POST /api/action route present :: /api/action methods=[{'POST'}]
+[PASS] V2 parse_line extracts action (no/dq/sq quotes) :: actions=['nod', 'shake', 'look_left'] expected=['nod', 'shake', 'look_left']
+[PASS] V3 parse_line omits action when absent/None/empty :: no_action_keys=[True, True, True, True] types_ok=True
+[PASS] V4 POST /api/action shake (fake) → 200 :: status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'action': 'shake'}
+[PASS] V5 POST /api/action invalid → 400 :: status=400 body={"detail":"unknown action: 'rm_rf_slash'"}
+[PASS] V6 POST /api/action missing field → 422 :: status=422 body={"detail":[{"type":"missing","loc":["body","action"],"msg":"Field required","input":{}}]}
+[PASS] V7 HTML has 10 doAction buttons + action-panel :: missing=[] doAction_calls=11
+[PASS] V8 regression: textContent/createTextNode escape still in place :: textContent=True createTextNode=True no_innerHTML_event=True
+
+=== dashboard-002 verify: 9/9 PASS ===

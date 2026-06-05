@@ -1,0 +1,52 @@
+{
+  "feature": "dashboard-002-action-buttons",
+  "passed": 9,
+  "total": 9,
+  "results": [
+    {
+      "name": "V0 hash lock app+parser exist",
+      "status": "PASS",
+      "detail": "app.sha=0f82f3a10de5 parser.sha=a2d250d2d23c"
+    },
+    {
+      "name": "V1 POST /api/action route present",
+      "status": "PASS",
+      "detail": "/api/action methods=[{'POST'}]"
+    },
+    {
+      "name": "V2 parse_line extracts action (no/dq/sq quotes)",
+      "status": "PASS",
+      "detail": "actions=['nod', 'shake', 'look_left'] expected=['nod', 'shake', 'look_left']"
+    },
+    {
+      "name": "V3 parse_line omits action when absent/None/empty",
+      "status": "PASS",
+      "detail": "no_action_keys=[True, True, True, True] types_ok=True"
+    },
+    {
+      "name": "V4 POST /api/action shake (fake) → 200",
+      "status": "PASS",
+      "detail": "status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'action': 'shake'}"
+    },
+    {
+      "name": "V5 POST /api/action invalid → 400",
+      "status": "PASS",
+      "detail": "status=400 body={\"detail\":\"unknown action: 'rm_rf_slash'\"}"
+    },
+    {
+      "name": "V6 POST /api/action missing field → 422",
+      "status": "PASS",
+      "detail": "status=422 body={\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"action\"],\"msg\":\"Field required\",\"input\":{}}]}"
+    },
+    {
+      "name": "V7 HTML has 10 doAction buttons + action-panel",
+      "status": "PASS",
+      "detail": "missing=[] doAction_calls=11"
+    },
+    {
+      "name": "V8 regression: textContent/createTextNode escape still in place",
+      "status": "PASS",
+      "detail": "textContent=True createTextNode=True no_innerHTML_event=True"
+    }
+  ]
+}
