@@ -59,13 +59,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _maybe_discover(reg: Registry) -> None:
-    # daemon: port 7447
-    if not reg.get("daemon"):
-        reg.discover("daemon", 7447)
-    # copilot-api: port 4141
-    if not reg.get("copilot-api"):
-        reg.discover("copilot-api", 4141)
-    # coco: 没有端口, discover 不到; 由 coco main 启动时自行 register (留 follow-up)
+    """启动时一次性 discover 已知 service.
+
+    历史: 早期仅按 port 找 daemon (7447) / copilot-api (4141), coco / dashboard
+    / watchdog 都因没端口或非默认端口无法识别 (留 follow-up).
+
+    现切到 ``Registry.discover_all()``: 内部按端口 (daemon / copilot-api) +
+    cmdline (dashboard > watchdog > coco, 防 ``python -m coco`` 误吞子模块)
+    多规则识别全部 5 service, 并把 entry 写回 ``reg._data``; 此处再 ``save``
+    持久化. 不命中的 service 返回 None, 不阻塞其他识别 (兼容现存 verify).
+    """
+    reg.discover_all()
     try:
         reg.save()
     except OSError:
