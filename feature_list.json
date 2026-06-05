@@ -25364,14 +25364,14 @@
       "area": "infra",
       "phase": 68,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "source": "实战发现 (P67 后): watchdog --discover 只录 daemon+copilot-api 共 2/4 service; 主 coco / dashboard 长期处于监控盲区; 73s 内 events.log 无任何 health.healthy 行可查",
-      "scope": "process_registry: 加 cmdline-based discover (CMDLINE_RULES + discover_by_cmdline + discover_all 顺序 dashboard>watchdog>coco). monitor: SERVICE_NAMES 加 dashboard, HealthCheck.check_dashboard (HTTP 8765 + PID alive); tick_once 加 always_emit (env COCO_WATCHDOG_ALWAYS_EMIT, 默认 1) 每轮 emit health.healthy/degraded. 旧 schema 兼容, dashboard 红条 filter 不破坏.",
+      "scope": "process_registry: 加 cmdline-based discover (CMDLINE_RULES + discover_by_cmdline + discover_all 顺序 dashboard>watchdog>coco). monitor: SERVICE_NAMES 加 dashboard, HealthCheck.check_dashboard (HTTP 8765 + PID alive); tick_once 加 always_emit (env COCO_WATCHDOG_ALWAYS_EMIT, 默认 1) 每轮 emit health.healthy/degraded. __main__._maybe_discover 切到 discover_all 一次性识别全 5 service. 旧 schema 兼容, dashboard 红条 filter 不破坏.",
       "dependencies": [
         "infra-watchdog-auto-restart",
         "infra-watchdog-fu-dashboard-redbar"
       ],
-      "updated_at": "2026-06-05T07:37:44",
+      "updated_at": "2026-06-05T15:55:00",
       "evidence": {
         "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_infra_watchdog_fu_discover_coco_dashboard_and_always_emit.py",
         "verify_log": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/verify-pass.log",
@@ -25379,7 +25379,62 @@
         "uat_script": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/uat-script.md",
         "bug_analysis": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/bug-analysis.md",
         "real_machine_uat": "pending",
-        "notes": "Engineer 段; 不 merge 到 main; 等下游 Reviewer + closeout 走 closeout-verify-trustworthy 流程"
+        "notes": "Sim-first close-out: feat → fix(__main__) → merge to main; Reviewer sub-agent fresh-context LGTM; verify 10/10 PASS + smoke rc=0; 真机 discover_all 直接验证 5 service (daemon/copilot-api/dashboard/watchdog/coco) 全识别. 真机 watchdog event 红条 reactive 已在 Phase 3 真启验证.",
+        "closeout_verify": {
+          "main_head_sha": "48cb8d0a2c096fc3b35d29dd0e6b820bcf827c02",
+          "baseline_head_echo": "3d3573e",
+          "merge_commit_sha": "48cb8d0a2c096fc3b35d29dd0e6b820bcf827c02",
+          "verify_runs": [
+            {
+              "name": "verify_infra_watchdog_fu_discover_coco_dashboard_and_always_emit",
+              "stage": "pre-merge",
+              "freshness_anchor": "feat/infra-watchdog-fu-discover-coco-dashboard-and-always-emit@62181b3",
+              "tail_stdout": "PASS V0 hash lock pr=881ffa27 mon=28b32358 / V1 import SERVICE_NAMES=('daemon','coco','dashboard','copilot-api') rules=['dashboard','watchdog','coco'] / V2 discover coco pid=11111 / V3 discover dashboard pid=33333 ports=[8765] / V4 discover_all order dash=33333 wd=69519 coco=11111 / V5 check_coco alive=(True,ok) dead=(False,registered_pid_dead) / V6 check_dashboard ok=(True,ok) http_fail=(False,http_8765_not_200) pid_dead=(False,registered_pid_dead) / V7 always_emit=1 every tick events=3 healthy=3 / V9 3 ticks healthy → 3 emits healthy_count=3 / V8 always_emit=0 only on change events=1 healthy=1. summary 10/10 PASS 0 FAIL. rc=0",
+              "status": "PASS"
+            },
+            {
+              "name": "verify_infra_watchdog_fu_discover_coco_dashboard_and_always_emit",
+              "stage": "post-merge",
+              "freshness_anchor": "post-merge-rerun@48cb8d0",
+              "tail_stdout": "PASS V0 hash lock pr=881ffa27 mon=28b32358 / V1 SERVICE_NAMES rules ok / V2 discover coco pid=11111 / V3 discover dashboard pid=33333 ports=[8765] / V4 discover_all order dash=33333 wd=69519 coco=11111 / V5 check_coco alive=(True,ok) dead=(False,registered_pid_dead) / V6 check_dashboard ok=(True,ok) http_fail=(False,http_8765_not_200) pid_dead=(False,registered_pid_dead) / V7 always_emit=1 3 ticks 3 healthy / V9 3 ticks healthy→3 emits / V8 always_emit=0 1 emit. 10/10 PASS 0 FAIL. rc=0",
+              "status": "PASS"
+            },
+            {
+              "name": "real_machine_discover_all_sanity",
+              "stage": "post-merge-sanity",
+              "freshness_anchor": "post-merge-real-machine@48cb8d0",
+              "tail_stdout": "discovered services (real machine): daemon pid=45165 ports=[7447] cmd_head='python -m reachy_mini.daemon.app.main' / copilot-api pid=38079 ports=[4141] cmd_head='node copilot-api start' / dashboard pid=68463 ports=[8765] cmd_head='python -m coco.dashboard' / watchdog pid=69519 ports=[] cmd_head='python -m coco.watchdog' / coco pid=59817 ports=[] cmd_head='python -m coco'. 5/5 services discovered. rc=0",
+              "status": "PASS"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003) ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1 / Smoke: config ok summary keys complete jsonl line keys⊇['component','event','level','ts'] / Smoke: publish ok entry-point 正确 + Coco class loads / Smoke: typo-guard ok total=382 well_formed=382 typo_count=0. ==> Smoke 通过. rc=0",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "fresh-context reviewer 核查 commit 312bb04 + fix 62181b3: process_registry.discover_all 真识别 5 service (含 cmdline-based dashboard/watchdog/coco), HealthCheck.coco + check_dashboard 双通路 PID+HTTP, always_emit 默认 1 每轮 emit 健康/降级事件 env=0 退回旧仅状态变化 emit 行为, __main__._maybe_discover 切到 discover_all 一行调用补齐 Engineer 遗漏盲区; V0 hash lock 与实际 sha 一致; smoke rc=0 不回归. 真机直接调 discover_all 返回 daemon/copilot-api/dashboard/watchdog/coco 5/5 全识别.",
+            "checks_run": [
+              "V0 hash lock (process_registry + monitor sha)",
+              "V1 import SERVICE_NAMES + CMDLINE_RULES",
+              "V2 discover coco by cmdline",
+              "V3 discover dashboard by cmdline+port",
+              "V4 discover_all order dashboard>watchdog>coco",
+              "V5 HealthCheck.check_coco frame.jpg+PID",
+              "V6 HealthCheck.check_dashboard HTTP+PID",
+              "V7 always_emit=1 every tick emits health",
+              "V9 3 ticks healthy → 3 emits",
+              "V8 always_emit=0 only on state change",
+              "__main__._maybe_discover grep discover_all 调用确认",
+              "real-machine discover_all sanity (5 services)",
+              "smoke ./init.sh rc=0"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
       }
     }
   ],

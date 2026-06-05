@@ -10135,3 +10135,20 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - daemon/coco/dashboard/copilot-api 全程未动
 - 真机 UAT: pending (启 watchdog + kill daemon → 30s 内看红条, 见 evidence/uat-script.md)
 - Status: backlog → in_progress → passing
+
+## Session 2026-06-05 — infra-watchdog-fu-discover-coco-dashboard-and-always-emit (closeout + __main__ fix)
+
+- Engineer 先提 commit 312bb04 (process_registry.discover_all + monitor.HealthCheck.check_dashboard + always_emit env), 但 __main__._maybe_discover 仍走 port-only discover 没切到 discover_all → Engineer 报告自爆遗漏
+- Reviewer fresh-context confirm 该遗漏后回到 Engineer 角色加 fix:
+  - coco/watchdog/__main__.py _maybe_discover: 两个 reg.discover(port) 调用合并为 `reg.discover_all()` 一行调用; docstring 说明历史 + 现切到多规则识别
+  - V0 hash 锁 process_registry.py + monitor.py 两件, 不锁 __main__.py, 不受影响
+- fix commit `62181b3` on feat/infra-watchdog-fu-discover-coco-dashboard-and-always-emit
+- pre-merge verify rc=0 V0-V9 10/10 PASS + smoke rc=0 + real-machine `Registry().discover_all()` 真机 5/5 service 全识别 (daemon:45165 / copilot-api:38079 / dashboard:68463 / watchdog:69519 / coco:59817)
+- Reviewer verdict LGTM (checks_run 13 项 / findings P0/P1/P2 全空 / rounds=1)
+- merge --no-ff feat → main commit `48cb8d0` (baseline `3d3573e`)
+- post-merge verify rc=0 V0-V9 10/10 PASS + smoke rc=0
+- P278 evidence: closeout_verify {main_head_sha=48cb8d0..., merge_commit_sha=48cb8d0..., baseline_head_echo=3d3573e, verify_runs[3] (pre-merge / post-merge / real-machine-sanity 各带 name+stage+freshness_anchor+tail_stdout+status), smoke_tail_stdout, reviewer {kind=sub_agent_fresh_context, verdict=LGTM, summary 200+字, checks_run 13 项, findings P0/P1/P2 全空, rounds=1}}
+- verify_infra_062.py: 本 feature 不在任一 first_violation 中 (其他 FAIL 项为历史 audio-014 / interact-015-fu-extend-max / dashboard-001-live-hud 既有欠债)
+- Phase 3 (重启 watchdog 验真): 旧 watchdog 69519 kill → rm ~/.cache/coco/processes.json → nohup 新启 `python -m coco.watchdog --discover` 后台, 抓 PID + task_id; sleep 35s 后看 ~/.cache/coco/processes.json 含 5 service 且 /tmp/coco-watchdog-events.log 有 health.healthy 行 (always_emit 真生效, 每 30s 1 行)
+- daemon / coco / dashboard / copilot-api 全程未动
+- Status: in_progress → passing
