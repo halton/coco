@@ -323,6 +323,18 @@ class Coco(ReachyMiniApp):
             print(f"[coco][face] FaceTracker init failed: {exc!r}", flush=True)
             _face_tracker_shared = None
 
+        # interact-016: 闭包引用容器提前初始化。
+        # _group_mode_ref 被 attention_loop 闭包按名查找（非 default-arg 绑定），
+        # 之前定义在 line 580+，导致 attention_loop 在该行执行前 start() 时每 tick
+        # 抛 NameError("_group_mode_ref")。
+        # _proactive_ref 之前完全没有 `= [None]` 初始化行，仅在 1392 写入、603 读取，
+        # 导致 scene_caption on_caption 60s 回调抛 NameError("_proactive_ref")。
+        # 两个容器统一在 attention block 之前完成初始化，写入端（main 段后段
+        # _group_mode_ref[0] / _proactive_ref[0]）和闭包读端均按 mutable 容器
+        # 通过 cell 共享同一 list，default-OFF 时值仍为 None，闭包 no-op。
+        _group_mode_ref: list = [None]
+        _proactive_ref: list = [None]
+
         # vision-004: AttentionSelector — 多目标人脸注视切换。
         # 默认 OFF；仅在 COCO_ATTENTION=1 且 FaceTracker 已构造时启动。
         # focus 变化时 emit "vision.attention_changed"（component "vision"）。
@@ -575,9 +587,8 @@ class Coco(ReachyMiniApp):
         # vision-007: MultimodalFusion 引用容器，主线在 _proactive 构造完后注入。
         # caption 回调内同时调 _mm_fusion_ref[0].on_scene_caption（如果启用）。
         _mm_fusion_ref: list = [None]
-        # companion-011: GroupModeCoordinator 引用容器，attention loop 闭包按需读
-        # 最新值（main 段落把 coord 构造完后写入 [0]）。default OFF。
-        _group_mode_ref: list = [None]
+        # companion-011: GroupModeCoordinator 引用容器在 attention block 之前已初始化
+        # （interact-016 修 NameError）；此处不再重复定义，避免重置 cell 指向新 list。
         _scene_caption_emitter = None
         try:
             if os.environ.get("COCO_SCENE_CAPTION", "0") == "1":

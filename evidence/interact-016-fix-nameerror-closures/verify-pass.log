@@ -1,0 +1,9 @@
+[PASS] V0_hash_lock: sha256=afa5e5b3f9e2b180 expected=afa5e5b3f9e2b180 anchors_missing=[]
+[PASS] V1_import_main: module=coco.main has_main=True
+[PASS] V2_group_mode_ref_ast: defs_init=1 uses_code=3
+[PASS] V3_proactive_ref_ast: defs_init=1 uses_code=3
+[PASS] V4_attention_closure_sim: tick()=None (expected None, no NameError)
+[PASS] V5_scene_caption_closure_sim: cb('hello')=None (expected None, no NameError)
+[PASS] V6_py_compile: compiled main.py
+
+SUMMARY: total=7 pass=7 fail=0
