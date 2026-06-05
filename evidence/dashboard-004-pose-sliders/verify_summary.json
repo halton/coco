@@ -1,0 +1,47 @@
+{
+  "feature": "dashboard-004-pose-sliders",
+  "passed": 8,
+  "total": 8,
+  "results": [
+    {
+      "name": "V0 hash lock app.py + dashboard-004 marker",
+      "status": "PASS",
+      "detail": "app.sha=b2e89be7429e has_marker=True"
+    },
+    {
+      "name": "V1 POST /api/pose route present",
+      "status": "PASS",
+      "detail": "/api/pose methods=[{'POST'}]"
+    },
+    {
+      "name": "V2 PoseRequest pitch/yaw/roll default 0.0",
+      "status": "PASS",
+      "detail": "fields=['pitch', 'yaw', 'roll'] defaults=(0.0,0.0,0.0)"
+    },
+    {
+      "name": "V3 POST /api/pose normal (fake) → 200 echo pitch/yaw/roll",
+      "status": "PASS",
+      "detail": "status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.1, 'yaw': 0.2, 'roll': 0.0}"
+    },
+    {
+      "name": "V4 clamp out-of-range → ±_POSE_MAX_RAD",
+      "status": "PASS",
+      "detail": "status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.6, 'yaw': -0.6, 'roll': 0.6} POSE_MAX_RAD=0.6"
+    },
+    {
+      "name": "V5 HTML has 3 sliders + onPose/sendPose/resetPose + pose-panel",
+      "status": "PASS",
+      "detail": "range_inputs=3 pitch/yaw/roll=(True,True,True) panel=True onPose=True sendPose=True resetPose=True api_pose=True"
+    },
+    {
+      "name": "V6 regression: createTextNode escape still in place",
+      "status": "PASS",
+      "detail": "createTextNode=True no_innerHTML_event=True"
+    },
+    {
+      "name": "V7 throttle 200ms (setTimeout(sendPose, 200) + clearTimeout)",
+      "status": "PASS",
+      "detail": "setTimeout_200=True clearTimeout_prev=True"
+    }
+  ]
+}

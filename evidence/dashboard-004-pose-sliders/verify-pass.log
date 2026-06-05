@@ -1,0 +1,10 @@
+[PASS] V0 hash lock app.py + dashboard-004 marker :: app.sha=b2e89be7429e has_marker=True
+[PASS] V1 POST /api/pose route present :: /api/pose methods=[{'POST'}]
+[PASS] V2 PoseRequest pitch/yaw/roll default 0.0 :: fields=['pitch', 'yaw', 'roll'] defaults=(0.0,0.0,0.0)
+[PASS] V3 POST /api/pose normal (fake) → 200 echo pitch/yaw/roll :: status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.1, 'yaw': 0.2, 'roll': 0.0}
+[PASS] V4 clamp out-of-range → ±_POSE_MAX_RAD :: status=200 body={'status': 'ok', 'rc': 0, 'fake': True, 'pitch': 0.6, 'yaw': -0.6, 'roll': 0.6} POSE_MAX_RAD=0.6
+[PASS] V5 HTML has 3 sliders + onPose/sendPose/resetPose + pose-panel :: range_inputs=3 pitch/yaw/roll=(True,True,True) panel=True onPose=True sendPose=True resetPose=True api_pose=True
+[PASS] V6 regression: createTextNode escape still in place :: createTextNode=True no_innerHTML_event=True
+[PASS] V7 throttle 200ms (setTimeout(sendPose, 200) + clearTimeout) :: setTimeout_200=True clearTimeout_prev=True
+
+=== dashboard-004 verify: 8/8 PASS ===

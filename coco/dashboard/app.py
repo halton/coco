@@ -83,6 +83,12 @@ HTML_PAGE = """<!DOCTYPE html>
   #events { flex:1; overflow-y:auto; margin:0; padding:0; list-style:none; }
   #events li { padding:6px 12px; border-bottom:1px solid #222; font-size:13px;
                line-height:1.4; }
+  #perf-chart { display:block; background:#0a0a0a; border:1px solid #444;
+                margin:8px 12px; max-width:calc(100% - 24px); }
+  #perf-legend { padding:0 12px 4px; font-size:11px; color:#bbb;
+                 display:flex; gap:14px; }
+  #perf-legend .sw { display:inline-block; width:10px; height:10px;
+                     margin-right:4px; vertical-align:middle; border-radius:2px; }
   .t { color:#888; margin-right:8px; }
   .ty-transcript { border-left:3px solid #4af; }
   .ty-reply { border-left:3px solid #4f8; }
@@ -127,6 +133,12 @@ HTML_PAGE = """<!DOCTYPE html>
     <img id="cam" src="/stream/camera.mjpg" alt="camera stream" />
   </div>
   <div id="side">
+    <h2>性能 (dt &amp; tts_first_chunk_ms)</h2>
+    <canvas id="perf-chart" width="800" height="200"></canvas>
+    <div id="perf-legend">
+      <span><span class="sw" style="background:#4af"></span>dt 蓝 (左 Y 0-10s)</span>
+      <span><span class="sw" style="background:#fa4"></span>first_chunk_ms 橙 (右 Y 0-3000ms)</span>
+    </div>
     <h2>事件 timeline</h2>
     <ul id="events"></ul>
     <div id="status">connecting...</div>
@@ -208,6 +220,52 @@ async function doAction(action){
     st.textContent = action + ' err: ' + e;
     console.error(e);
   }
+}
+</script>
+<!-- dashboard-004: pose sliders (pitch/yaw/roll) -->
+<div id="pose-panel" style="position:fixed; top:260px; right:10px; background:rgba(0,0,0,0.6); padding:8px 10px; border-radius:8px; z-index:10; color:#fff; font-size:12px; max-width:220px;">
+  <div style="margin-bottom:4px; color:#ddd;">头部姿态 (rad)</div>
+  <div>Pitch <span id="pitch-val">0.00</span></div>
+  <input type="range" id="pitch" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
+  <div>Yaw <span id="yaw-val">0.00</span></div>
+  <input type="range" id="yaw" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
+  <div>Roll <span id="roll-val">0.00</span></div>
+  <input type="range" id="roll" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
+  <button onclick="resetPose()" style="margin-top:6px; padding:4px 10px; font-size:12px; background:#333; color:#eee; border:1px solid #555; border-radius:4px; cursor:pointer;">回中</button>
+  <div id="pose-status" style="color:#fa0; font-size:11px; margin-top:4px; min-height:14px;"></div>
+</div>
+<script>
+let poseTimer = null;
+function onPose() {
+  ['pitch','yaw','roll'].forEach(function(k){
+    document.getElementById(k+'-val').textContent = parseFloat(document.getElementById(k).value).toFixed(2);
+  });
+  if (poseTimer) clearTimeout(poseTimer);
+  poseTimer = setTimeout(sendPose, 200);
+}
+async function sendPose() {
+  var st = document.getElementById('pose-status');
+  var body = {
+    pitch: parseFloat(document.getElementById('pitch').value),
+    yaw: parseFloat(document.getElementById('yaw').value),
+    roll: parseFloat(document.getElementById('roll').value)
+  };
+  st.textContent = 'pose ...';
+  try {
+    var r = await fetch('/api/pose', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    var d = await r.json();
+    st.textContent = 'pose -> ' + (d.status || ('http_'+r.status));
+  } catch(e) {
+    st.textContent = 'pose err: ' + e;
+    console.error(e);
+  }
+}
+function resetPose() {
+  ['pitch','yaw','roll'].forEach(function(k){
+    document.getElementById(k).value = '0';
+    document.getElementById(k+'-val').textContent = '0.00';
+  });
+  sendPose();
 }
 </script>
 </body>
@@ -422,3 +480,95 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+# === dashboard-004: pose sliders (pitch/yaw/roll) ===
+# 直接发 4x4 head matrix, 不耦合 coco.actions 预设
+_POSE_MAX_RAD = float(os.environ.get("COCO_DASHBOARD_POSE_MAX_RAD", "0.6"))
+_POSE_TIMEOUT_S = float(os.environ.get("COCO_DASHBOARD_POSE_TIMEOUT_S", "8"))
+
+
+class PoseRequest(BaseModel):
+    pitch: float = 0.0
+    yaw: float = 0.0
+    roll: float = 0.0
+
+
+def _pose_clamp(v: float) -> float:
+    return max(-_POSE_MAX_RAD, min(_POSE_MAX_RAD, float(v)))
+
+
+_POSE_SUBPROCESS_TEMPLATE = """import os, time
+import numpy as np
+from reachy_mini import ReachyMini
+pitch = {pitch}
+yaw = {yaw}
+roll = {roll}
+r = ReachyMini(spawn_daemon=False, media_backend='no_media')
+try:
+    try:
+        r.enable_motors()
+    except Exception:
+        pass
+    time.sleep(0.2)
+    cp, sp = np.cos(pitch), np.sin(pitch)
+    cy, sy = np.cos(yaw), np.sin(yaw)
+    cr, sr = np.cos(roll), np.sin(roll)
+    Rx = np.array([[1,0,0],[0,cp,-sp],[0,sp,cp]])
+    Ry = np.array([[cy,0,sy],[0,1,0],[-sy,0,cy]])
+    Rz = np.array([[cr,-sr,0],[sr,cr,0],[0,0,1]])
+    R = Rz @ Ry @ Rx
+    M = np.eye(4)
+    M[:3,:3] = R
+    r.set_target(head=M)
+    time.sleep(0.4)
+finally:
+    os._exit(0)
+"""
+
+
+@app.post("/api/pose")
+async def post_pose(req: PoseRequest) -> dict:
+    """dashboard-004: 滑条直接控制头部 pitch/yaw/roll, clamp +/- _POSE_MAX_RAD.
+
+    复用 dashboard-002 模式: subprocess 短期 ReachyMini client + os._exit(0)
+    避免 zenoh 多 client 断言风暴。
+
+    测试钩子 COCO_DASHBOARD_FAKE_POSE=1 时跳过 subprocess, 返 clamp 后的值。
+    """
+    p_ = _pose_clamp(req.pitch)
+    y_ = _pose_clamp(req.yaw)
+    r_ = _pose_clamp(req.roll)
+
+    if os.environ.get("COCO_DASHBOARD_FAKE_POSE") == "1":
+        return {"status": "ok", "rc": 0, "fake": True,
+                "pitch": p_, "yaw": y_, "roll": r_}
+
+    py = sys.executable
+    script = _POSE_SUBPROCESS_TEMPLATE.format(pitch=repr(p_), yaw=repr(y_), roll=repr(r_))
+    cmd = [py, "-c", script]
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(
+            proc.communicate(), timeout=_POSE_TIMEOUT_S
+        )
+    except asyncio.TimeoutError:
+        try:
+            proc.kill()
+        except Exception:  # noqa: BLE001
+            pass
+        return {"status": "timeout", "pitch": p_, "yaw": y_, "roll": r_}
+    rc = proc.returncode
+    return {
+        "status": "ok" if rc == 0 else "error",
+        "rc": rc,
+        "pitch": p_,
+        "yaw": y_,
+        "roll": r_,
+        "stdout": stdout.decode("utf-8", errors="replace")[-400:],
+        "stderr": stderr.decode("utf-8", errors="replace")[-400:],
+    }
