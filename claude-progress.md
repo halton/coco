@@ -10152,3 +10152,18 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - Phase 3 (重启 watchdog 验真): 旧 watchdog 69519 kill → rm ~/.cache/coco/processes.json → nohup 新启 `python -m coco.watchdog --discover` 后台, 抓 PID + task_id; sleep 35s 后看 ~/.cache/coco/processes.json 含 5 service 且 /tmp/coco-watchdog-events.log 有 health.healthy 行 (always_emit 真生效, 每 30s 1 行)
 - daemon / coco / dashboard / copilot-api 全程未动
 - Status: in_progress → passing
+
+## Session 2026-06-05 — dashboard-006-layout-grid (Reviewer LGTM + closeout + 重启 dashboard)
+
+- Fresh-context reviewer sub-agent 接到 commit 12315c0 (feat/dashboard-006-layout-grid)
+- pre-merge: checkout feat 分支 + 阅 diff (~400 行 app.py); verify rc=0 V0-V9 10/10 PASS; smoke rc=0; TestClient routes 7 旧 endpoint 全活 (/, /frame.jpg, /api/action, /api/pose, /api/config/llm_model, /api/watchdog/recent, /ws/events) + FastAPI auto (/docs, /redoc, /openapi.json, /healthz, /docs/oauth2-redirect)
+- Reviewer checklist 14 项 全通过: V0 hash 锁 app.sha=c00731e44394 一致; viewport meta 在 <head>; #wrap flex 2 栏改 display:grid 三栏 minmax(400,1fr)+minmax(400,1.2fr)+320px; action/pose/llm 三个老 fixed 浮窗 + 新 watchdog-status 共 4 改 <details> 包 #control-panel (action open, pose/llm/watchdog-status closed); position:fixed 仅留 watchdog-bar 1 处; perf-chart width:calc(100%-24px) + JS resizeCanvas() + window.resize listener 修 800px 压扁; @media (max-width:1024px) 单栏堆叠 #control-panel order:3; textContent escape (d001 P1) 不破坏
+- Reviewer verdict LGTM (rounds=1, findings P0/P1/P2 全空, summary 600+ 字)
+- merge --no-ff feat → main commit `c5707fe` (baseline `0dc494c`)
+- post-merge rerun: verify rc=0 V0-V9 10/10 PASS + smoke rc=0
+- P278 evidence: closeout_verify (main_head_sha + merge_commit_sha + baseline_head_echo + feat_branch_head_sha + verify_runs[2] freshness_anchor pre-merge/post-merge-rerun 各含 tail_stdout + p299_compliant + rc_capture_form + status=PASS + smoke_tail_stdout + reviewer kind=sub_agent_fresh_context + verdict=LGTM + summary 600+字 + checks_run 14项 + findings P0/P1/P2 全空 + rounds=1)
+- P299 rc 形态: `python verify.py > /tmp/[rev|co]_v_d006.log 2>&1; rc=$?; tail -30 ...; echo "rc=$rc"`
+- daemon 45165 / coco 59817 / copilot-api 38079 / watchdog 72094 全程未动
+- Phase 3 重启 dashboard 让新布局生效 (kill 旧 dashboard 68463 + nohup 新启 + curl HTML 验 viewport/grid-template-columns/<details/@media/resizeCanvas 5 元素), watchdog 是否 reregister 新 dashboard PID 由 sleep 35s 后查 ~/.cache/coco/processes.json 决定
+- real_machine_uat: pending (用户浏览器硬刷新 http://localhost:8765/ 看 3 栏 grid + 折叠面板)
+- Status: in_progress → passing

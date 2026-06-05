@@ -25443,7 +25443,7 @@
       "area": "infra",
       "phase": 69,
       "priority": 100,
-      "status": "in_progress",
+      "status": "passing",
       "source": "实战发现: dashboard 5 panel 用 position:fixed top:46/260/430 硬叠, 屏幕高 ≤768 直接溢出; perf-chart canvas 写死 width=800 被 #side flex:40% 实宽 ~600 压扁; 无 viewport meta 手机端打开缩放怪异.",
       "scope": "coco/dashboard/app.py HTML/CSS/JS only. 改动: viewport meta + #wrap 由 display:flex 2 栏 60/40 改 display:grid 三栏 minmax(400,1fr)+minmax(400,1.2fr)+320px; 去掉 action/pose/llm 三个 position:fixed 浮窗改 <details> 折叠 (action open, pose/llm/watchdog-status closed) 包在右栏 #control-panel; watchdog-bar 保留 fixed top:0 跨栏告警条; perf-chart canvas 加 JS resizeCanvas() + window.resize listener 用 c.clientWidth 重设 canvas.width 修压扁; @media (max-width:1024px) 单栏堆叠 (#control-panel order:3). 后端 endpoint 0 改动 (/, /healthz, /api/action, /api/pose, /api/config/llm_model, /frame.jpg, /stream/camera.mjpg, /api/watchdog/recent, /ws/events 全保留). textContent escape (d001 P1) 保留.",
       "dependencies": [
@@ -25454,7 +25454,7 @@
         "dashboard-005-llm-model-switch",
         "infra-watchdog-fu-dashboard-redbar"
       ],
-      "updated_at": "2026-06-05T08:22:29",
+      "updated_at": "2026-06-05T16:29:11",
       "evidence": {
         "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_dashboard_006_layout_grid.py",
         "verify_log": "evidence/dashboard-006-layout-grid/verify-pass.log",
@@ -25462,7 +25462,79 @@
         "uat_script": "evidence/dashboard-006-layout-grid/uat-script.md",
         "layout_diagram": "evidence/dashboard-006-layout-grid/layout-diagram.md",
         "real_machine_uat": "pending",
-        "notes": "Engineer in_progress on feat/dashboard-006-layout-grid (基 main 0dc494c). verify V0-V9 10/10 PASS + smoke rc=0 + 7 个旧 endpoint 全活 (/api/action /api/pose /api/config/llm_model /frame.jpg /stream/camera.mjpg /api/watchdog/recent /ws/events) + 4 panel 改 <details>: action open/pose closed/llm closed/watchdog-status closed + position:fixed 仅留 watchdog-bar 1 处 + viewport meta + @media max-width:1024px 响应式. Reviewer + closeout 待办. dashboard 服务未重启, 用户硬刷新看新布局."
+        "notes": "Closeout: feat/dashboard-006-layout-grid commit 12315c0 经 fresh-context sub-agent reviewer LGTM (V0-V9 10/10 PASS + smoke rc=0 + 7 旧 endpoint 全活 + 4 panel 改 <details> + position:fixed 仅留 watchdog-bar 1 处 + viewport meta + perf-chart resizeCanvas + 1024px 单栏堆叠), merge --no-ff 进 main HEAD=c5707fe (baseline 0dc494c), post-merge rerun verify rc=0 + smoke rc=0. P278 evidence: closeout_verify.main_head_sha + verify_runs[2] (pre-merge feat-branch + post-merge-rerun) + reviewer.reviewer_kind=sub_agent_fresh_context. P299 rc 全部 `python verify.py > log 2>&1; rc=$?` 形态. real_machine_uat: pending (browser hard-refresh http://localhost:8765/ 看 3 栏 grid + 折叠面板). Phase 3 重启 dashboard 让新布局生效.",
+        "closeout_verify": {
+          "main_head_sha": "c5707fe059e35c06daf2bec142ec540997ca55ff",
+          "merge_commit_sha": "c5707fe059e35c06daf2bec142ec540997ca55ff",
+          "baseline_head_echo": "0dc494c",
+          "feat_branch_head_sha": "12315c0fc3b77e8f20214745d5f2987e68f729c8",
+          "verify_runs": [
+            {
+              "name": "verify_dashboard_006_layout_grid.py",
+              "stage": "pre-merge",
+              "freshness_anchor": "feat-branch-12315c0",
+              "command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_dashboard_006_layout_grid.py",
+              "tail_stdout": "[PASS] V0 hash lock app.py exists :: app.sha=c00731e44394\n[PASS] V1 imports + 8 endpoints intact :: missing=none have=['/', '/api/action', '/api/config/llm_model', '/api/pose', '/api/watchdog/recent', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg']\n[PASS] V2 viewport meta present :: viewport=device-width,initial-scale=1\n[PASS] V3 CSS Grid 3-column :: 3col-pattern=match\n[PASS] V4 position:fixed count <=1 (only watchdog-bar) :: count=1\n[PASS] V5 4 <details> panels :: details_count=5 missing=[]\n[PASS] V6 perf-chart canvas + resizeCanvas :: canvas=True fn=True listener=True\n[PASS] V7 media query <=1024px :: responsive 1-col stack\n[PASS] V8 textContent escape preserved :: mkSpan=True bad_innerHTML_with_e=False\n[PASS] V9 TestClient endpoints live :: /=200 /frame.jpg=200 /api/watchdog/recent=200 HTML_grid=True\nSUMMARY: ALL PASS (10/10)",
+              "status": "PASS",
+              "rc": 0,
+              "p299_compliant": true,
+              "rc_capture_form": "python verify.py > /tmp/rev_v_d006.log 2>&1; rc=$?"
+            },
+            {
+              "name": "verify_dashboard_006_layout_grid.py",
+              "stage": "post-merge",
+              "freshness_anchor": "post-merge-rerun",
+              "command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_dashboard_006_layout_grid.py",
+              "tail_stdout": "[PASS] V0 hash lock app.py exists :: app.sha=c00731e44394\n[PASS] V1 imports + 8 endpoints intact :: missing=none\n[PASS] V2 viewport meta present :: viewport=device-width,initial-scale=1\n[PASS] V3 CSS Grid 3-column :: 3col-pattern=match\n[PASS] V4 position:fixed count <=1 (only watchdog-bar) :: count=1\n[PASS] V5 4 <details> panels :: details_count=5 missing=[]\n[PASS] V6 perf-chart canvas + resizeCanvas :: canvas=True fn=True listener=True\n[PASS] V7 media query <=1024px :: responsive 1-col stack\n[PASS] V8 textContent escape preserved :: mkSpan=True bad_innerHTML_with_e=False\n[PASS] V9 TestClient endpoints live :: /=200 /frame.jpg=200 /api/watchdog/recent=200 HTML_grid=True\nSUMMARY: ALL PASS (10/10)",
+              "status": "PASS",
+              "rc": 0,
+              "p299_compliant": true,
+              "rc_capture_form": "python verify.py > /tmp/co_v_d006.log 2>&1; rc=$?"
+            },
+            {
+              "name": "endpoint_sanity_via_TestClient_+_routes_enumeration",
+              "stage": "post-merge",
+              "freshness_anchor": "post-merge-endpoint-sanity",
+              "command": "/Users/halton/work/coco/.venv/bin/python -c \"from coco.dashboard.app import app; routes=sorted({x.path for x in app.routes if hasattr(x,'path')}); need=['/', '/frame.jpg', '/api/action', '/api/pose', '/api/config/llm_model', '/api/watchdog/recent']; missing=[r for r in need if r not in routes]; assert not missing; print('ALL endpoints preserved')\"",
+              "tail_stdout": "routes: ['/', '/api/action', '/api/config/llm_model', '/api/pose', '/api/watchdog/recent', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg', '/ws/events']\nALL endpoints preserved",
+              "status": "PASS",
+              "rc": 0,
+              "p299_compliant": true,
+              "rc_capture_form": "python -c '...'; rc=$? (no pipe)"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys>=['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=382 well_formed=382 typo_count=0\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "smoke_status": "PASS",
+          "smoke_rc": 0,
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "lgtm": true,
+            "summary": "Fresh-context reviewer 在 feat/dashboard-006-layout-grid (commit 12315c0) 上独立 checkout 跑 V0-V9 verify (10/10 PASS) + ./init.sh smoke (rc=0) + 通过 TestClient 枚举 routes 确认 7 个旧 endpoint (/, /frame.jpg, /api/action, /api/pose, /api/config/llm_model, /api/watchdog/recent, /ws/events) + FastAPI auto (/docs, /redoc, /openapi.json, /healthz, /docs/oauth2-redirect) 全部健在; 阅 diff 确认 (1) viewport meta 加在 <head>; (2) #wrap display:flex 2 栏改 display:grid 三栏 minmax(400,1fr)+minmax(400,1.2fr)+320px; (3) action/pose/llm 三个老 position:fixed 浮窗全部脱离 fixed, 与新 watchdog-status 共 4 个改 <details> 包在右栏 #control-panel (action open, pose/llm/watchdog-status closed); (4) position:fixed 仅留 watchdog-bar 1 处 (跨栏告警条 top:0); (5) perf-chart canvas 改 width:calc(100% - 24px) + JS resizeCanvas() + window.resize listener 用 c.clientWidth 重设 canvas.width 修被 #side flex:40% 压扁的旧 800px 写死; (6) @media (max-width:1024px) 单栏堆叠 #control-panel order:3; (7) pollWatchdog 同步把消息写到新 #watchdog-status-body 用 textContent (d001 P1 escape 不破坏). V0 hash 锁 app.sha=c00731e44394 与 app.py 实际 sha 一致, 没有 stale lock. Findings P0/P1/P2 全空, 直接进 closeout.",
+            "checks_run": [
+              "git checkout feat/dashboard-006-layout-grid + git log -1 --stat",
+              "git diff main..HEAD -- coco/dashboard/app.py 阅完整 (~400 行)",
+              "scripts/verify_dashboard_006_layout_grid.py pre-merge rc=0 V0-V9 10/10 PASS",
+              "./init.sh pre-merge rc=0 (config/publish/typo-guard 全 ok)",
+              "TestClient 枚举 app.routes 确认 7 旧 endpoint + FastAPI auto 全活",
+              "checklist V0 hash lock app.sha=c00731e44394 与实际匹配",
+              "checklist V2 viewport meta 在 <head>",
+              "checklist V3 display:grid 3 栏 minmax pattern 匹配",
+              "checklist V4 position:fixed count=1 仅 watchdog-bar",
+              "checklist V5 details count=5 (action open + pose/llm/watchdog-status closed)",
+              "checklist V6 perf-chart canvas width 100% + resizeCanvas fn + resize listener",
+              "checklist V7 @media (max-width:1024px) 1-col stack",
+              "checklist V8 textContent escape (d001 P1) 不破坏",
+              "smoke 不回归 (config/publish/typo-guard)"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
       }
     }
   ],
