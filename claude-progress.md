@@ -1,4 +1,17 @@
-## Session 2026-05-24 — phase-67 #16 infra-034-backlog-verify-036-v4-sha-stale-sync (Closeout)
+## Session 2026-06-05 — phase-68 interact-016-fix-nameerror-closures (Closeout)
+
+- base main HEAD=ad9d50f; feat/interact-016-fix-nameerror-closures HEAD=d98e998; merge_sha=2518754 (no-ff merge to main)
+- 修两个 closure NameError bug (真机日志暴露): (1) _attention_loop 闭包 free-var _group_mode_ref 在 line 580+ 定义但 thread.start (line 412) 之前已被闭包按名查找, 每 tick 抛 NameError; (2) scene_caption on_caption 回调 free-var _proactive_ref 整个 main.py 完全无 [None] 初始化, 仅 [0]= 写入和 [0] 读取, 每 60s SceneCaptionEmitter 触发 NameError
+- 修法 (coco/main.py line 335-336): 在 attention block 之前统一初始化 `_group_mode_ref: list = [None]` + `_proactive_ref: list = [None]`; 删除 line 587 旧 _group_mode_ref 重复定义避免 cell rebinding; 保留 _mm_fusion_ref 原位 (它无 NameError 风险); 写入端 [0]= 与闭包读端 [0] 不动只补 init
+- 效果: 消除日志噪音 + 让 GroupModeCoordinator observe/tick 与 ProactiveScheduler caption_trigger 真正生效 (之前 callback 100% 抛异常被吞)
+- verify runs (P299 compliant rc capture, freshness_anchor=post-merge-rerun):
+  - scripts/verify_interact_016_fix_nameerror_closures.py run1 (feat d98e998): PASS 7/7 (V0 hash sha=afa5e5b3 / V1 import / V2 _group_mode_ref defs_init=1 uses=3 / V3 _proactive_ref defs_init=1 uses=3 / V4 attention tick=None no NameError / V5 scene cb=None no NameError / V6 py_compile, rc=0)
+  - scripts/verify_interact_016_fix_nameerror_closures.py run2 (post-merge main 2518754): PASS 7/7 rc=0
+  - init.sh smoke (post-merge): PASS (config / publish / typo-guard total=379 well_formed=379 typo_count=0, rc=0)
+- feature_list.json: interact-016-fix-nameerror-closures → passing, P278 nested closeout_verify (main_head_sha=2518754... + verify_runs[2] + smoke_tail_stdout) + reviewer.{reviewer_kind=sub_agent_fresh_context, verdict=LGTM, summary 540字, checks_run[7], findings P0/P1/P2 三 key 全空, rounds=1, freshness_anchor=post-merge-rerun}
+- Reviewer (sub-agent, fresh context): LGTM — 独立 re-review d98e998 + post-merge 2518754: init line 335-336 < closure 378 < thread.start 424 < scene_caption on_caption 613; 旧重复定义已删避免 cell rebinding; closure free-var cell 共享同一 mutable list 语义正确; default-OFF 时 [0]=None 闭包 no-op; 不动 audio-015 / interact-013/014/015 / dashboard-001/002
+
+
 
 - base main HEAD=f5c9e4e; feat/infra-034-backlog-verify-036-v4-sha-stale-sync HEAD=eabf6ba; merge_sha=1d7fd2e (no-ff merge to main)
 - 新增 scripts/verify_infra_034_backlog_verify_036_v4_sha_stale_sync.py：锁 V4 锚定的 EXPECTED_VERIFY_024_SHA256 与 working tree 真实 sha 一致 + 锁 verify_interact_036.py 自身 sha (双向 guard)

@@ -24893,7 +24893,7 @@
       "area": "interact",
       "phase": 68,
       "priority": 80,
-      "status": "in_progress",
+      "status": "passing",
       "source": "real-machine log: attention tick 每次 NameError + scene_caption 60s NameError",
       "scope": "coco/main.py 两个闭包变量未在 enclosing scope 提前绑定: (1) attention_loop 闭包 free-var _group_mode_ref 在 closure 创建时尚未定义 (原定义点在 200 行之后), 每 tick 抛 NameError; (2) scene_caption on_caption 回调 free-var _proactive_ref 整个 main.py 完全没有 [None] 初始化定义, 每 60s 抛 NameError. 修法: 在 attention block 之前 (line 335-336) 统一初始化两个 list 容器 [None]; 写入端 (1403/1477 通过 [0]=) 与闭包读端 (390/614 通过 [0]) 不变; 保留 _mm_fusion_ref (line 577) 原位 (它无 NameError 风险). 消除日志噪音 + 让 GroupModeCoordinator observe/tick 与 ProactiveScheduler caption_trigger 真正生效.",
       "dependencies": [],
@@ -24916,11 +24916,54 @@
           "smoke_tail": "==> Smoke: typo-guard total=379 well_formed=379 typo_count=0  ==> Smoke 通过",
           "main_py_sha256": "afa5e5b3f9e2b1802dcba96811e3cfcd214025582d207dc8b44d6924bd0d6de4",
           "bug_analysis": "evidence/interact-016-fix-nameerror-closures/bug-analysis.md"
+        },
+        "closeout_verify": {
+          "main_head_sha": "2518754ff30c4b0976f8a77b5f51ba90062c834c",
+          "verify_runs": [
+            {
+              "run": 1,
+              "stage": "pre-merge feat branch d98e998",
+              "verify_rc": 0,
+              "smoke_rc": 0,
+              "tail_stdout": "V0_hash_lock PASS / V1 import PASS / V2 _group_mode_ref defs_init=1 uses_code=3 PASS / V3 _proactive_ref defs_init=1 uses_code=3 PASS / V4 attention closure sim PASS / V5 scene_caption closure sim PASS / V6 py_compile PASS  SUMMARY 7/7 PASS rc=0",
+              "status": "PASS"
+            },
+            {
+              "run": 2,
+              "stage": "post-merge main 2518754",
+              "verify_rc": 0,
+              "smoke_rc": 0,
+              "tail_stdout": "V0_hash_lock sha256=afa5e5b3f9e2b180 PASS / V1 import PASS / V2 defs_init=1 uses_code=3 PASS / V3 defs_init=1 uses_code=3 PASS / V4 tick=None no NameError PASS / V5 cb('hello')=None no NameError PASS / V6 py_compile PASS  SUMMARY 7/7 PASS rc=0",
+              "status": "PASS"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: config ok / publish ok / typo-guard total=379 well_formed=379 typo_count=0 ==> Smoke 通过 rc=0"
+        },
+        "reviewer": {
+          "reviewer_kind": "sub_agent_fresh_context",
+          "verdict": "LGTM",
+          "summary": "Fresh-context Reviewer 独立 re-review d98e998 + post-merge main 2518754: 两个闭包变量 _group_mode_ref/_proactive_ref 均在 line 335-336 真初始化为 [None] (def_count=1, [0] uses=3 each), 早于 _attention_loop closure (line 378) + _attention_thread.start (line 424) + scene_caption on_caption (line 613-641); 旧 line 587+ 重复 _group_mode_ref 定义已删除避免 cell rebinding; V0 hash 锁与 main.py sha 一致; V0-V6 各独立 try/except; smoke 不回归; 不动 audio-015 / interact-013/014/015 / dashboard-001/002; closure free-var 走 cell 共享同一 mutable list 语义正确; default-OFF 时 [0]=None 闭包 no-op.",
+          "checks_run": [
+            "git diff main...HEAD review (17 lines coco/main.py)",
+            "verify_interact_016 rc=0 (V0-V6 PASS)",
+            "init.sh smoke rc=0",
+            "AST re-count: _group_mode_ref defs=1 uses=3 / _proactive_ref defs=1 uses=3",
+            "grep init-order: line 335-336 < closure 378 < thread.start 424 < scene_caption on_caption 613",
+            "old line 587+ duplicate _group_mode_ref definition removed verification",
+            "post-merge re-run verify rc=0 + smoke rc=0 on main 2518754"
+          ],
+          "findings": {
+            "P0": [],
+            "P1": [],
+            "P2": []
+          },
+          "rounds": 1,
+          "freshness_anchor": "post-merge-rerun"
         }
       }
     }
   ],
-  "last_updated": "2026-06-04",
+  "last_updated": "2026-06-05",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {
