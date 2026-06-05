@@ -36,6 +36,7 @@ KWS，前置在 VAD trigger 之前：未唤醒时 VAD 段会被 awake gate 丢�
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import tempfile
@@ -57,6 +58,64 @@ KWS_DIR = DEFAULT_CACHE / "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 # 单一事实源：默认唤醒词 "可可"（拼音 ke3 ke3）
 DEFAULT_KEYWORDS: List[str] = ["k ě k ě @可可"]
+
+
+# ---------------------------------------------------------------------------
+# dashboard-007: runtime config hot-reload (wake_enabled 软开关)
+# ---------------------------------------------------------------------------
+# 模板复用自 coco/llm.py dashboard-005：每 30s 读 ~/.cache/coco/runtime_config.json，
+# 找到 wake_enabled 字段就调 detector.mute() / unmute()（现成方法，TTS 期间在用）。
+# 不停 KWS thread / 不重 init backend / 不关 InputStream；纯软 mute 复用。
+_RUNTIME_CONFIG_PATH = os.path.expanduser("~/.cache/coco/runtime_config.json")
+_WAKE_RELOAD_INTERVAL_S = float(
+    os.environ.get("COCO_CONFIG_RELOAD_INTERVAL_S", "30.0")
+)
+_last_wake_check_ts: float = 0.0
+
+
+def _load_runtime_config() -> dict:
+    """读 runtime_config.json；文件缺失 / 解析失败 → {}。同 llm.py 行为。"""
+    try:
+        if not os.path.isfile(_RUNTIME_CONFIG_PATH):
+            return {}
+        with open(_RUNTIME_CONFIG_PATH, "r", encoding="utf-8") as f:
+            data = json.loads(f.read() or "{}")
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _maybe_reload_wake_runtime(detector: "WakeWordDetector") -> None:
+    """周期性 check runtime_config.json，按 wake_enabled 字段切 detector.mute/unmute.
+
+    - 节流：上次 check < _WAKE_RELOAD_INTERVAL_S 秒直接 return
+    - 字段缺失 → 保持当前 mute 状态，不动
+    - wake_enabled=False → mute()，True → unmute()
+    - mute 复用现成方法（TTS 期间在用），thread / stream / KWS 全不动
+    """
+    global _last_wake_check_ts
+    now = time.monotonic()
+    if (now - _last_wake_check_ts) < _WAKE_RELOAD_INTERVAL_S:
+        return
+    _last_wake_check_ts = now
+    cfg = _load_runtime_config()
+    if "wake_enabled" not in cfg:
+        return
+    new_val = bool(cfg.get("wake_enabled", True))
+    # mute=True 表示 disabled；enabled=True 对应 unmute
+    currently_enabled = not getattr(detector, "_muted", False)
+    if new_val == currently_enabled:
+        return
+    try:
+        if new_val:
+            detector.unmute()
+        else:
+            detector.mute()
+        log.info("wake.hot_reload enabled %r -> %r", currently_enabled, new_val)
+    except (AttributeError, TypeError):
+        return
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +348,12 @@ class WakeWordDetector:
         decode_stream / get_result）持 ``self._lock``；callback 在锁外触发，避
         免反向调用 ``stop()`` / ``reset_buffer()`` 死锁。
         """
+        # dashboard-007: hot-reload check（节流 30s 读 runtime_config.json，
+        # wake_enabled=False → mute()）。失败静默，不影响 KWS 喂帧。
+        try:
+            _maybe_reload_wake_runtime(self)
+        except Exception:  # noqa: BLE001
+            pass
         if samples_f32.size == 0:
             return
         samples_f32 = np.asarray(samples_f32, dtype=np.float32).reshape(-1)
