@@ -16,14 +16,16 @@ import re
 import time
 from typing import Dict, Optional
 
-# [coco][vad] transcript='你好' reply='你好呀!' action=nod dt=...
+# [coco][vad|ptt] transcript='你好' reply='你好呀!' action=nod dt=1.23s
 _VAD_RE = re.compile(
-    r"\[coco\]\[vad\].*?transcript=(['\"])(?P<tx>.*?)\1.*?reply=(['\"])(?P<rp>.*?)\3"
+    r"\[coco\]\[(?:vad|ptt)\].*?transcript=(['\"])(?P<tx>.*?)\1.*?reply=(['\"])(?P<rp>.*?)\3"
 )
 # 简化版：transcript 单独出现
-_VAD_TX_ONLY_RE = re.compile(r"\[coco\]\[vad\].*?transcript=(['\"])(?P<tx>.*?)\1")
+_VAD_TX_ONLY_RE = re.compile(r"\[coco\]\[(?:vad|ptt)\].*?transcript=(['\"])(?P<tx>.*?)\1")
 # action 字段（可能无引号 / 单引号 / 双引号；None / 空串 跳过）
 _VAD_ACTION_RE = re.compile(r"action=(?:(['\"])(?P<aq>[^'\"]*)\1|(?P<au>[\w-]+))")
+# dt=1.23s 或 dt=1.23 (turn duration seconds)
+_VAD_DT_RE = re.compile(r"\bdt=(?P<dt>\d+(?:\.\d+)?)s?\b")
 
 # wake.hit / wake hit
 _WAKE_RE = re.compile(r"wake[._]hit|\[wake\].*hit|wake.*matched")
@@ -49,6 +51,17 @@ def _extract_action(s: str) -> Optional[str]:
     return val
 
 
+def _extract_dt(s: str) -> Optional[float]:
+    """从一行里抽 dt= 的值（turn duration seconds）；无匹配返回 None。"""
+    m = _VAD_DT_RE.search(s)
+    if not m:
+        return None
+    try:
+        return float(m.group("dt"))
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_line(line: str) -> Optional[Dict[str, object]]:
     """把一行日志解析成 {ts, type, ...} 结构化事件，无法识别返回 None。"""
     if not line:
@@ -68,6 +81,9 @@ def parse_line(line: str) -> Optional[Dict[str, object]]:
         action = _extract_action(s)
         if action:
             evt["action"] = action
+        dt_val = _extract_dt(s)
+        if dt_val is not None:
+            evt["dt"] = dt_val
         return evt
 
     m = _TTS_RE.search(s)
@@ -106,6 +122,9 @@ def parse_line(line: str) -> Optional[Dict[str, object]]:
         action = _extract_action(s)
         if action:
             evt["action"] = action
+        dt_val = _extract_dt(s)
+        if dt_val is not None:
+            evt["dt"] = dt_val
         return evt
 
     return None
