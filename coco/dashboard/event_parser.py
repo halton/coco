@@ -16,12 +16,14 @@ import re
 import time
 from typing import Dict, Optional
 
-# [coco][vad] transcript='你好' reply='你好呀!' ...
+# [coco][vad] transcript='你好' reply='你好呀!' action=nod dt=...
 _VAD_RE = re.compile(
     r"\[coco\]\[vad\].*?transcript=(['\"])(?P<tx>.*?)\1.*?reply=(['\"])(?P<rp>.*?)\3"
 )
 # 简化版：transcript 单独出现
 _VAD_TX_ONLY_RE = re.compile(r"\[coco\]\[vad\].*?transcript=(['\"])(?P<tx>.*?)\1")
+# action 字段（可能无引号 / 单引号 / 双引号；None / 空串 跳过）
+_VAD_ACTION_RE = re.compile(r"action=(?:(['\"])(?P<aq>[^'\"]*)\1|(?P<au>[\w-]+))")
 
 # wake.hit / wake hit
 _WAKE_RE = re.compile(r"wake[._]hit|\[wake\].*hit|wake.*matched")
@@ -36,6 +38,17 @@ _FACE_PRIMARY_SIMPLE_RE = re.compile(r"FaceTracker.*primary")
 _TTS_RE = re.compile(r"(?:\[tts\]|tts).*?first[_ ]chunk[_ ]ms[ =:](?P<ms>\d+)")
 
 
+def _extract_action(s: str) -> Optional[str]:
+    """从一行里抽 action= 的值；None / 空串 / 无匹配返回 None。"""
+    m = _VAD_ACTION_RE.search(s)
+    if not m:
+        return None
+    val = m.group("aq") if m.group("aq") is not None else m.group("au")
+    if not val or val in {"None", "none"}:
+        return None
+    return val
+
+
 def parse_line(line: str) -> Optional[Dict[str, object]]:
     """把一行日志解析成 {ts, type, ...} 结构化事件，无法识别返回 None。"""
     if not line:
@@ -45,13 +58,17 @@ def parse_line(line: str) -> Optional[Dict[str, object]]:
 
     m = _VAD_RE.search(s)
     if m:
-        return {
+        evt: Dict[str, object] = {
             "ts": ts,
             "type": "transcript",
             "transcript": m.group("tx"),
             "reply": m.group("rp"),
             "raw": s,
         }
+        action = _extract_action(s)
+        if action:
+            evt["action"] = action
+        return evt
 
     m = _TTS_RE.search(s)
     if m:
@@ -79,12 +96,16 @@ def parse_line(line: str) -> Optional[Dict[str, object]]:
 
     m = _VAD_TX_ONLY_RE.search(s)
     if m:
-        return {
+        evt = {
             "ts": ts,
             "type": "transcript",
             "transcript": m.group("tx"),
             "reply": "",
             "raw": s,
         }
+        action = _extract_action(s)
+        if action:
+            evt["action"] = action
+        return evt
 
     return None

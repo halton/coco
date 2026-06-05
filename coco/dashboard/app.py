@@ -1,17 +1,19 @@
-"""coco.dashboard.app — FastAPI Live HUD (dashboard-001)."""
+"""coco.dashboard.app — FastAPI Live HUD (dashboard-001 + dashboard-002)."""
 from __future__ import annotations
 
 import asyncio
 import json
 import os
 import struct
+import sys
 import time
 import zlib
 from pathlib import Path
 from typing import AsyncIterator, Set
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
+from pydantic import BaseModel
 
 from coco.dashboard.event_parser import parse_line
 
@@ -22,6 +24,21 @@ METRICS_PATH = os.environ.get(
     "COCO_DASHBOARD_METRICS_PATH",
     str(Path.home() / ".cache" / "coco" / "metrics.jsonl"),
 )
+
+# dashboard-002: 手动按钮可触发的精准动作白名单（与 coco/actions.py 对齐）
+_ALLOWED_ACTIONS = {
+    "look_left", "look_right", "look_up", "look_down",
+    "nod", "shake",
+    "tilt_left", "tilt_right",
+    "goto_sleep", "wake_up",
+}
+
+# subprocess 跑动作的超时（s）
+_ACTION_TIMEOUT_S = float(os.environ.get("COCO_DASHBOARD_ACTION_TIMEOUT_S", "15"))
+
+
+class ActionRequest(BaseModel):
+    action: str
 
 
 def _placeholder_png() -> bytes:
@@ -75,10 +92,36 @@ HTML_PAGE = """<!DOCTYPE html>
   .ty-raw { color:#666; }
   #status { padding:4px 12px; font-size:11px; color:#888;
             border-top:1px solid #333; }
+  #action-panel { position:fixed; top:46px; right:10px;
+                  background:rgba(0,0,0,0.6); padding:8px 10px;
+                  border-radius:8px; z-index:10; max-width:220px; }
+  #action-panel .title { color:#ddd; font-size:12px; margin-bottom:6px; }
+  #action-panel button { margin:2px; padding:4px 8px; font-size:12px;
+                         background:#333; color:#eee; border:1px solid #555;
+                         border-radius:4px; cursor:pointer; }
+  #action-panel button:hover { background:#444; }
+  #action-panel button:active { background:#2a4; }
+  #action-status { color:#fa0; font-size:11px; margin-top:4px;
+                   min-height:14px; word-break:break-all; }
+  .act { color:#fa0; margin-left:6px; }
 </style>
 </head>
 <body>
 <header><h1>可可 Live HUD &mdash; reachy 看到 / 听到</h1></header>
+<div id="action-panel">
+  <div class="title">手动动作</div>
+  <button onclick="doAction('look_left')">&larr;</button>
+  <button onclick="doAction('look_right')">&rarr;</button>
+  <button onclick="doAction('look_up')">&uarr;</button>
+  <button onclick="doAction('look_down')">&darr;</button>
+  <button onclick="doAction('nod')">点头</button>
+  <button onclick="doAction('shake')">摇头</button>
+  <button onclick="doAction('tilt_left')">歪左</button>
+  <button onclick="doAction('tilt_right')">歪右</button>
+  <button onclick="doAction('goto_sleep')">睡觉</button>
+  <button onclick="doAction('wake_up')">起来</button>
+  <div id="action-status"></div>
+</div>
 <div id="wrap">
   <div id="cam-pane">
     <img id="cam" src="/stream/camera.mjpg" alt="camera stream" />
@@ -129,6 +172,9 @@ HTML_PAGE = """<!DOCTYPE html>
           li.appendChild(mkBold('coco:'));
           li.appendChild(document.createTextNode(' ' + e.reply));
         }
+        if (e.action) {
+          li.appendChild(mkSpan('act', '[ACT:' + e.action + ']'));
+        }
       } else if (e.type === 'wake') {
         li.appendChild(document.createTextNode('wake hit'));
       } else if (e.type === 'vision') {
@@ -145,6 +191,24 @@ HTML_PAGE = """<!DOCTYPE html>
     } catch(err) { /* ignore */ }
   };
 })();
+
+async function doAction(action){
+  var st = document.getElementById('action-status');
+  st.textContent = action + ' ...';
+  try {
+    var r = await fetch('/api/action', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: action})
+    });
+    var d = await r.json();
+    st.textContent = action + ' -> ' + (d.status || ('http_'+r.status));
+    console.log('action', action, d);
+  } catch(e) {
+    st.textContent = action + ' err: ' + e;
+    console.error(e);
+  }
+}
 </script>
 </body>
 </html>
@@ -162,6 +226,74 @@ def create_app() -> FastAPI:
     @app.get("/healthz")
     async def healthz() -> dict:
         return {"ok": True, "frame_path": FRAME_PATH, "log_path": LOG_PATH}
+
+    @app.post("/api/action")
+    async def post_action(req: ActionRequest) -> dict:
+        """dashboard-002: 浏览器按钮触发短期 ReachyMini client 执行精准动作。
+
+        关键设计:
+        - 用 subprocess 启短期 ReachyMini client 跑 coco.actions.<name>(robot)
+        - subprocess 末尾用 os._exit(0) 跳过 atexit / r.stop()，避免 zenoh
+          多 client 断言风暴（参考 wiggle.py 踩坑）
+        - 不耦合 coco 主进程，每次按钮独立 connect
+        - 测试钩子 COCO_DASHBOARD_ACTION_FAKE=1 时跳过 subprocess（仅校验白名单）
+        """
+        if req.action not in _ALLOWED_ACTIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"unknown action: {req.action!r}",
+            )
+
+        # 测试 / mock 钩子：避免 verify 跑时真打开 ReachyMini
+        if os.environ.get("COCO_DASHBOARD_ACTION_FAKE") == "1":
+            return {"status": "ok", "rc": 0, "fake": True, "action": req.action}
+
+        py = sys.executable
+        script = (
+            "import os, time\n"
+            "from reachy_mini import ReachyMini\n"
+            "from coco import actions\n"
+            f"_action = {req.action!r}\n"
+            "r = ReachyMini(spawn_daemon=False, media_backend='no_media')\n"
+            "try:\n"
+            "    try:\n"
+            "        r.enable_motors()\n"
+            "    except Exception:\n"
+            "        pass\n"
+            "    time.sleep(0.3)\n"
+            "    fn = getattr(actions, _action, None)\n"
+            "    if fn is None:\n"
+            "        raise RuntimeError('action not found in coco.actions: ' + _action)\n"
+            "    fn(r)\n"
+            "    time.sleep(0.4)\n"
+            "finally:\n"
+            "    # 跳过 r.stop() / atexit，避免 zenoh 多 client 断言\n"
+            "    os._exit(0)\n"
+        )
+        cmd = [py, "-c", script]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(), timeout=_ACTION_TIMEOUT_S
+            )
+        except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except Exception:  # noqa: BLE001
+                pass
+            return {"status": "timeout", "action": req.action}
+        rc = proc.returncode
+        return {
+            "status": "ok" if rc == 0 else "error",
+            "rc": rc,
+            "action": req.action,
+            "stdout": stdout.decode("utf-8", errors="replace")[-400:],
+            "stderr": stderr.decode("utf-8", errors="replace")[-400:],
+        }
 
     @app.get("/frame.jpg")
     async def frame_jpg() -> Response:
