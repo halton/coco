@@ -61,7 +61,17 @@ _ALLOWED_MODELS = {
 # dashboard-007: 感知 toggle 白名单（face_id / wake-word 软开关，hot-reload 30s 生效）
 # 主程序侧：coco/perception/face_id.py + coco/wake_word.py 在 identify/feed 入口
 # 节流读 runtime_config.json，按 face_id_enabled/wake_enabled 切自身状态。
-_ALLOWED_PERCEPTION_KEYS = {"face_id_enabled", "wake_enabled"}
+#
+# dashboard-007-extend: 扩 3 个 toggle —— face_detection (FaceTracker) /
+# gesture (GestureRecognizer + main.py WAVE handler 双保险) /
+# scene_caption (SceneCaptionEmitter)，hot-reload 模板与 face_id 一致。
+_ALLOWED_PERCEPTION_KEYS = {
+    "face_id_enabled",
+    "wake_enabled",
+    "face_detection_enabled",
+    "gesture_enabled",
+    "scene_caption_enabled",
+}
 
 
 class ActionRequest(BaseModel):
@@ -260,6 +270,18 @@ HTML_PAGE = """<!DOCTYPE html>
         <label style="display:block;margin:2px 0">
           <input type="checkbox" id="wake-toggle" onchange="changePerception('wake', this.checked)" checked>
           语音唤醒 (wake-word)
+        </label>
+        <label style="display:block;margin:2px 0">
+          <input type="checkbox" id="face-detection-toggle" onchange="changePerception('face_detection', this.checked)" checked>
+          人脸检测 (face_detection)
+        </label>
+        <label style="display:block;margin:2px 0">
+          <input type="checkbox" id="gesture-toggle" onchange="changePerception('gesture', this.checked)" checked>
+          手势识别 (gesture)
+        </label>
+        <label style="display:block;margin:2px 0">
+          <input type="checkbox" id="scene-caption-toggle" onchange="changePerception('scene_caption', this.checked)" checked>
+          场景描述 (scene_caption)
         </label>
         <div id="perception-status" style="font-size:11px;margin-top:4px;color:#fa0"></div>
       </div>
@@ -463,8 +485,15 @@ async function loadModel(){
 loadModel();
 
 // dashboard-007: face_id + wake-word toggle (hot-reload via runtime_config.json)
+// dashboard-007-extend: 扩 face_detection / gesture / scene_caption 共 5 toggle
 async function changePerception(key, on){
-  var map = {face_id: 'face_id_enabled', wake: 'wake_enabled'};
+  var map = {
+    face_id: 'face_id_enabled',
+    wake: 'wake_enabled',
+    face_detection: 'face_detection_enabled',
+    gesture: 'gesture_enabled',
+    scene_caption: 'scene_caption_enabled'
+  };
   var k = map[key];
   var st = document.getElementById('perception-status');
   st.textContent = key + ' 切换中...';
@@ -481,7 +510,13 @@ async function changePerception(key, on){
   }
 }
 async function loadPerception(){
-  var ids = {face_id_enabled: 'face-id-toggle', wake_enabled: 'wake-toggle'};
+  var ids = {
+    face_id_enabled: 'face-id-toggle',
+    wake_enabled: 'wake-toggle',
+    face_detection_enabled: 'face-detection-toggle',
+    gesture_enabled: 'gesture-toggle',
+    scene_caption_enabled: 'scene-caption-toggle'
+  };
   for (var k in ids) {
     try {
       var r = await fetch('/api/config/' + k);

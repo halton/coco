@@ -32,6 +32,7 @@ vision-006 / phase-8。
 from __future__ import annotations
 
 import logging
+import json
 import os
 import threading
 import time
@@ -42,6 +43,60 @@ from typing import Any, Callable, Dict, Optional, Protocol
 import numpy as np
 
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# dashboard-007-extend: runtime config hot-reload (scene_caption_enabled 软开关)
+# ---------------------------------------------------------------------------
+# 模板复用自 coco/perception/face_id.py dashboard-007：每 30s 读
+# ~/.cache/coco/runtime_config.json，找到 scene_caption_enabled 字段就调
+# emitter.set_enabled(...)，否则保持当前 enabled。不重启 thread / 不重 init
+# backend / camera；纯软开关 + _tick early return。
+_RUNTIME_CONFIG_PATH = os.path.expanduser("~/.cache/coco/runtime_config.json")
+_SCENE_CAPTION_RELOAD_INTERVAL_S = float(
+    os.environ.get("COCO_CONFIG_RELOAD_INTERVAL_S", "30.0")
+)
+_last_scene_caption_check_ts: float = 0.0
+
+
+def _load_runtime_config() -> dict:
+    """读 runtime_config.json；文件缺失 / 解析失败 → {}。同 llm.py 行为。"""
+    try:
+        if not os.path.isfile(_RUNTIME_CONFIG_PATH):
+            return {}
+        with open(_RUNTIME_CONFIG_PATH, "r", encoding="utf-8") as f:
+            data = json.loads(f.read() or "{}")
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _maybe_reload_scene_caption_runtime(emitter: "SceneCaptionEmitter") -> None:
+    """周期 check runtime_config.json，按 scene_caption_enabled 字段切 emitter.enabled.
+
+    - 节流：上次 check < _SCENE_CAPTION_RELOAD_INTERVAL_S 秒直接 return
+    - 字段缺失 → 保持当前 enabled，不动
+    - 字段存在 → 调 set_enabled（即使值相同也调一次，幂等）
+    """
+    global _last_scene_caption_check_ts
+    now = time.monotonic()
+    if (now - _last_scene_caption_check_ts) < _SCENE_CAPTION_RELOAD_INTERVAL_S:
+        return
+    _last_scene_caption_check_ts = now
+    cfg = _load_runtime_config()
+    if "scene_caption_enabled" not in cfg:
+        return
+    new_val = bool(cfg.get("scene_caption_enabled", True))
+    current = getattr(emitter, "enabled", True)
+    if new_val == current:
+        return
+    try:
+        emitter.set_enabled(new_val)
+        log.info("scene_caption.hot_reload enabled %r -> %r", current, new_val)
+    except (AttributeError, TypeError):
+        return
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +407,14 @@ class SceneCaptionEmitter:
         self._thread: Optional[threading.Thread] = None
         self.stats = SceneCaptionEmitterStats()
 
+        # dashboard-007-extend: 软开关，hot-reload 关掉时 _tick early return；
+        # 不停 thread / camera / backend，只是入口短路（不读帧/不跑 caption/不 emit）。
+        self.enabled: bool = True
+
+    def set_enabled(self, value: bool) -> None:
+        """dashboard-007-extend: hot-reload 调；切 self.enabled，不影响 thread/backend。"""
+        self.enabled = bool(value)
+
     # --- public ---
 
     @property
@@ -425,6 +488,13 @@ class SceneCaptionEmitter:
             log.info("SceneCaptionEmitter stopped stats=%s", self.stats)
 
     def _tick(self) -> None:
+        # dashboard-007-extend: hot-reload check（节流 30s 读 runtime_config.json）
+        try:
+            _maybe_reload_scene_caption_runtime(self)
+        except Exception:  # noqa: BLE001
+            pass
+        if not self.enabled:
+            return
         with self._lock:
             self.stats.ticks += 1
         cam = self._camera

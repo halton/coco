@@ -1,0 +1,63 @@
+{
+  "feature": "dashboard-007-extend-all-perception-toggles",
+  "passed": 11,
+  "total": 11,
+  "results": [
+    {
+      "name": "V0 hash lock 5 files exist",
+      "status": "PASS",
+      "detail": "face_tracker.sha=f231f4c55fef gesture.sha=da55320fc446 scene_caption.sha=433238ea0d24 app.sha=53e50783412d main.sha=3d801b90f508"
+    },
+    {
+      "name": "V1 3 classes have enabled + set_enabled",
+      "status": "PASS",
+      "detail": "FaceTracker(attr=True setter=True on=True); GestureRecognizer(attr=True setter=True on=True); SceneCaptionEmitter(attr=True setter=True on=True)"
+    },
+    {
+      "name": "V2 FaceTracker.set_enabled(False) _tick early return",
+      "status": "PASS",
+      "detail": "enabled=False no exception"
+    },
+    {
+      "name": "V3 GestureRecognizer set_enabled(False) → feed_frame None + WAVE 不触发",
+      "status": "PASS",
+      "detail": "feed_frame_ret=None triggered_n=0 enabled=False"
+    },
+    {
+      "name": "V4 SceneCaptionEmitter set_enabled(False) _tick early return",
+      "status": "PASS",
+      "detail": "enabled=False stats.ticks=0"
+    },
+    {
+      "name": "V5 _ALLOWED_PERCEPTION_KEYS 含 5 keys",
+      "status": "PASS",
+      "detail": "keys=['face_detection_enabled', 'face_id_enabled', 'gesture_enabled', 'scene_caption_enabled', 'wake_enabled']"
+    },
+    {
+      "name": "V6 POST 3 new keys → 200 + writes disk",
+      "status": "PASS",
+      "detail": "fd=200 g=200 sc=200 disk={'face_detection_enabled': False, 'gesture_enabled': False, 'scene_caption_enabled': True}"
+    },
+    {
+      "name": "V7 GET 5 keys defaults+readback",
+      "status": "PASS",
+      "detail": "defaults_ok=True readback_ok=True"
+    },
+    {
+      "name": "V8 HTML 5 toggle + JS map 5 keys + loadPerception map",
+      "status": "PASS",
+      "detail": "ids_ok=True js_ok=True load_map_ok=True"
+    },
+    {
+      "name": "V9 regression dashboard-007 face_id+wake endpoints+HTML",
+      "status": "PASS",
+      "detail": "r1=200 r2=200 r3={'key': 'face_id_enabled', 'enabled': True} r4={'key': 'wake_enabled', 'enabled': True}"
+    },
+    {
+      "name": "V10 regression dashboard-005 llm_model 端点 OK",
+      "status": "PASS",
+      "detail": "get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/Users/halton/.cache/coco/runtime_config.json'} invalid_status=400"
+    }
+  ],
+  "ts": 1780653348.9872289
+}

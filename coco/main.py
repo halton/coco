@@ -477,7 +477,21 @@ class Coco(ReachyMiniApp):
                         额外一层 30s/kind 行为冷却：backend cooldown 控"再次检出"，
                         本 cooldown 控"再次发声/动头"，两者分离，避免 backend 调小时
                         闭环行为被刷屏。
+
+                        dashboard-007-extend: gesture toggle 双保险 —— GestureRecognizer
+                        本身 enabled=False 时 _tick early return 已不会触发 _on_gesture，
+                        但若有其他路径直接调 handler（测试 / future），仍按 enabled 短路，
+                        避免"关了手势仍说你好"的回归。
                         """
+                        if (
+                            _gesture_recognizer is not None
+                            and not getattr(_gesture_recognizer, "enabled", True)
+                        ):
+                            print(
+                                "[coco][gesture] behavior skipped: recognizer.enabled=False",
+                                flush=True,
+                            )
+                            return
                         try:
                             kind = lbl.kind.value
                         except Exception:  # noqa: BLE001
