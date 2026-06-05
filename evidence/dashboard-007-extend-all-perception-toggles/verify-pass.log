@@ -1,0 +1,13 @@
+[PASS] V0 hash lock 5 files exist :: face_tracker.sha=f231f4c55fef gesture.sha=da55320fc446 scene_caption.sha=433238ea0d24 app.sha=53e50783412d main.sha=3d801b90f508
+[PASS] V1 3 classes have enabled + set_enabled :: FaceTracker(attr=True setter=True on=True); GestureRecognizer(attr=True setter=True on=True); SceneCaptionEmitter(attr=True setter=True on=True)
+[PASS] V2 FaceTracker.set_enabled(False) _tick early return :: enabled=False no exception
+[PASS] V3 GestureRecognizer set_enabled(False) → feed_frame None + WAVE 不触发 :: feed_frame_ret=None triggered_n=0 enabled=False
+[PASS] V4 SceneCaptionEmitter set_enabled(False) _tick early return :: enabled=False stats.ticks=0
+[PASS] V5 _ALLOWED_PERCEPTION_KEYS 含 5 keys :: keys=['face_detection_enabled', 'face_id_enabled', 'gesture_enabled', 'scene_caption_enabled', 'wake_enabled']
+[PASS] V6 POST 3 new keys → 200 + writes disk :: fd=200 g=200 sc=200 disk={'face_detection_enabled': False, 'gesture_enabled': False, 'scene_caption_enabled': True}
+[PASS] V7 GET 5 keys defaults+readback :: defaults_ok=True readback_ok=True
+[PASS] V8 HTML 5 toggle + JS map 5 keys + loadPerception map :: ids_ok=True js_ok=True load_map_ok=True
+[PASS] V9 regression dashboard-007 face_id+wake endpoints+HTML :: r1=200 r2=200 r3={'key': 'face_id_enabled', 'enabled': True} r4={'key': 'wake_enabled', 'enabled': True}
+[PASS] V10 regression dashboard-005 llm_model 端点 OK :: get={'model': ''} post_ok={'status': 'saved', 'model': 'gpt-4o', 'path': '/Users/halton/.cache/coco/runtime_config.json'} invalid_status=400
+
+=== dashboard-007-extend verify: 11/11 PASS ===

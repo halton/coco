@@ -25700,6 +25700,22 @@
       }
     },
     {
+      "id": "dashboard-007-extend-all-perception-toggles",
+      "area": "infra",
+      "phase": 69,
+      "priority": 100,
+      "status": "in_progress",
+      "title": "dashboard-007 扩全 perception toggle (face_detection + gesture + scene_caption)",
+      "description": "扩 dashboard-007 (face_id + wake) 加 3 个 toggle：face_detection (FaceTracker) / gesture (GestureRecognizer + main.py WAVE handler 双保险) / scene_caption (SceneCaptionEmitter)。复用 dashboard-007 hot-reload 模板：模块级 _load_runtime_config + _maybe_reload_*_runtime 30s 节流；_tick early return；不重启 thread / camera / backend。解决：关了 face_id 后 face primary 仍跳动 + WAVE 自言自语\"你好\"。",
+      "evidence": {
+        "branch": "feat/dashboard-007-extend-all-perception-toggles",
+        "verify_log": "evidence/dashboard-007-extend-all-perception-toggles/verify-pass.log",
+        "smoke_log": "evidence/dashboard-007-extend-all-perception-toggles/smoke-pass.log",
+        "uat_script": "evidence/dashboard-007-extend-all-perception-toggles/uat-script.md",
+        "real_machine_uat": "pending"
+      }
+    },
+    {
       "id": "dashboard-008-resizable-columns",
       "area": "infra",
       "phase": null,
