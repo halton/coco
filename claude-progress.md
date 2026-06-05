@@ -10167,3 +10167,21 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - Phase 3 重启 dashboard 让新布局生效 (kill 旧 dashboard 68463 + nohup 新启 + curl HTML 验 viewport/grid-template-columns/<details/@media/resizeCanvas 5 元素), watchdog 是否 reregister 新 dashboard PID 由 sleep 35s 后查 ~/.cache/coco/processes.json 决定
 - real_machine_uat: pending (用户浏览器硬刷新 http://localhost:8765/ 看 3 栏 grid + 折叠面板)
 - Status: in_progress → passing
+
+## Session 2026-06-05 — interact-042-antenna-body-actions (Reviewer LGTM + closeout + 重启 coco/dashboard/watchdog + 3 backlog 写入)
+
+- Fresh-context reviewer sub-agent 接到 commit `050f77f` (feat/interact-042-antenna-body-actions): 6 个新动作 (3 antenna: wiggle_antennas/perk_up/droop_antennas + 3 body_yaw: turn_body_left/right/center) + LLM ACTION_TOOL_ENUM 扩 10→16 + interact._do_action 6 case 分发 + KEYWORD_ROUTES 中文 fallback (转身关键词前置 look_left) + dashboard 6 按钮 + 3 滑条 (antenna L/R + body_yaw) + POST /api/pose 兼容扩 antennas+body_yaw 参数; Reachy Mini 无轮子,body_yaw 仅转上半身不位移; clamp antenna ±1.5 rad + body_yaw ±π/2
+- pre-merge: checkout feat 分支 + diff 阅 ~600 行 (actions.py +193 / dashboard/app.py +97 / interact.py +29 / llm.py +18); verify rc=0 V0-V9 10/10 PASS; smoke rc=0; 真 LLM tool calling (copilot-api gpt-4o-mini) 实测 6/6 prompt 命中正确 enum ('摇摆天线'→wiggle_antennas / '转身向左'→turn_body_left / '天线竖起来'→perk_up / '身体向右转'→turn_body_right / '身体回正'→turn_body_center / '天线下垂'→droop_antennas)
+- Reviewer checklist 12 项 全通过: 6 method 含 try/except+clamp+sleep≥0.4; antenna ±1.5 + body_yaw ±π/2 clamp (V9); 未调 r.stop/r.disable_motors; ACTION_TOOL_ENUM len=16; description 中文化; _do_action 6 case; KEYWORD_ROUTES 转身前置 look_left; dashboard 6 按钮+3 滑条; /api/pose back-compat; V0 hash 4 文件锁; smoke 不回归; audio/interact 旧 feature 未破坏
+- Reviewer verdict LGTM (rounds=1, P0/P1 空, P2 1 项: 首次冷启 reply_with_action 偶发 None 解析 TypeError 同进程二次起即恢复 非阻塞)
+- merge --no-ff feat → main commit `a0b0b29` (baseline pre-merge `a4aa8e2`, feat HEAD `050f77f`)
+- post-merge rerun ×2: verify rc=0 V0-V9 10/10 PASS ×2 + smoke rc=0 ×2
+- P278 evidence: closeout_verify (main_head_sha=a0b0b29 + merge_commit_sha=a0b0b29 + baseline_head_echo=a4aa8e2 + verify_runs[3] 含 name+freshness_anchor pre-merge/post-merge/anti-flake-round2 各 tail_stdout+status=PASS + smoke_tail_stdout + reviewer kind=sub_agent_fresh_context verdict=LGTM summary 200+字 checks_run 12 项 findings P0/P1/P2 三 key rounds=1)
+- verify_infra_062.py: interact-042 不在任一 first_violation 中 (其他 FAIL 项为历史 audio-014 / interact-015-fu-extend-max / dashboard-001-live-hud / 等老 features pre-existing 形态欠债, 经 baseline 重跑确认与 post-merge 同样 6 FAIL 集合)
+- 3 个 phase-N+1 backlog 一并 commit on main (status=backlog priority=999 phase=null area=infra):
+  - dashboard-007-face-id-wake-toggle (右栏新增 face_id checkbox + wake_word toggle, 同步 POST /api/config)
+  - dashboard-008-resizable-columns (三栏宽度可拖拽分隔条, localStorage 持久化, 阈值 320/400/240px)
+  - infra-cross-platform-windows-audit (Windows 兼容审计: init.ps1 现状 + sounddevice/PyAudio/cv2/zenoh wheel 矩阵 + reachy_mini lite SDK cp313)
+- Phase 3 重启 coco + dashboard + watchdog 让新动作生效 (先停 watchdog 72094 避抢端口, 停 coco 59817 + dashboard 76114, 启新 3 进程, rm processes.json + watchdog --discover 重建 registry, daemon 45165 + copilot-api 38079 全程未动)
+- real_machine_uat: pending (用户喊"可可,摇摆天线" / 浏览器按 6 个新按钮 / 拖 3 个滑条)
+- Status: in_progress → passing
