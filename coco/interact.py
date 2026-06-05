@@ -77,27 +77,65 @@ def _resolve_lock_timeout_s() -> float:
 KEYWORD_ROUTES: List[Tuple[Tuple[str, ...], str, str]] = [
     # (关键词组, 回应模板, 动作名)
     # 顺序要点：更"具体"的主题词放前面（如 "天气" 在 "好" 之前），避免被通用词截胡
+    # interact-039 (branch feat/interact-013): 扩展到新 6 动作 + goto_sleep / wake_up。
+    # 新动作放在 generic "好/对/嗯" / "看" 之前，确保关键词命中。
     (("你好", "嗨", "hello", "hi"), "你好呀！很高兴见到你。", "nod"),
     (("再见", "拜拜", "bye"), "好的，回头见！", "nod"),
+    (("睡觉", "睡吧", "休息", "睡一会"), "好的，我睡一会。", "goto_sleep"),
+    (("睡",), "好的，我睡一会。", "goto_sleep"),
+    (("醒醒", "起来", "醒一下"), "我醒啦！", "wake_up"),
+    (("摇头", "不行", "不是", "不对"), "嗯，不行哦。", "shake"),
+    (("抬头", "向上看", "看上面"), "我抬头看看。", "look_up"),
+    (("低头", "向下看", "看下面"), "好，我低头看。", "look_down"),
+    (("歪左", "向左歪"), "我歪一下头。", "tilt_left"),
+    (("歪右", "向右歪"), "我歪一下头。", "tilt_right"),
+    (("歪头",), "我歪一下头。", "tilt_left"),
+    (("向左", "左边", "左看"), "好，我看左边。", "look_left"),
+    (("向右", "右边", "右看"), "好，我看右边。", "look_right"),
     (("天气", "公园", "外面"), "嗯，外面挺好的呀。", "look_right"),
     (("看", "瞧", "瞅"), "我也看看。", "look_left"),
     (("好", "对", "嗯", "是的"), "好的，我听到啦。", "nod"),
 ]
 
 
-def route_reply(text: str) -> Tuple[str, str]:
+def route_reply(text: str, llm_result: Optional[dict] = None) -> Tuple[str, str]:
     """根据 ASR 文本返回 (reply_text, action_name)。
+
+    interact-039 (branch feat/interact-013): 加 ``llm_result`` 可选 kwarg。
+    若 LLM tool calling 返回了 ``{'action': <enum>}``，**该 action 直接覆盖** keyword
+    路由的结果（reply 文本仍用 keyword/默认模板，若 llm_result 含 'text' 也优先用它）。
 
     匹配规则：第一个命中的关键词组生效；都未命中走默认 "我听到你说：<text>" + nod。
     """
     text = (text or "").strip()
+    # 先按 keyword 决定基线 reply 文本与 action
+    base_reply: str
+    base_action: str
+    matched = False
     for kws, reply, action in KEYWORD_ROUTES:
         for kw in kws:
             if kw in text:
-                return reply, action
-    if not text:
-        return "我没听清，可以再说一次吗？", "nod"
-    return f"我听到你说：{text}", "nod"
+                base_reply, base_action = reply, action
+                matched = True
+                break
+        if matched:
+            break
+    if not matched:
+        if not text:
+            base_reply, base_action = "我没听清，可以再说一次吗？", "nod"
+        else:
+            base_reply, base_action = f"我听到你说：{text}", "nod"
+
+    # LLM tool calling 覆盖（优先级最高，但仅当 action 在已知 enum 内）
+    if isinstance(llm_result, dict):
+        llm_action = llm_result.get("action")
+        if isinstance(llm_action, str) and llm_action:
+            base_action = llm_action
+        llm_text = llm_result.get("text")
+        if isinstance(llm_text, str) and llm_text.strip():
+            base_reply = llm_text.strip()
+
+    return base_reply, base_action
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +179,7 @@ class InteractSession:
         tts_say_fn: Callable[..., None],
         idle_animator: Optional["IdleAnimator"] = None,
         llm_reply_fn: Optional[Callable[..., str]] = None,
+        llm_action_fn: Optional[Callable[..., dict]] = None,
         on_interaction: Optional[Callable[[str], None]] = None,
         on_assistant_utterance: Optional[Callable[[str], None]] = None,
         dialog_memory: Optional[DialogMemory] = None,
@@ -166,6 +205,13 @@ class InteractSession:
         # 避免 try/except TypeError 把 fn 内部的 TypeError 误判为"签名不接受
         # history"导致重复调用 / 二次副作用。
         self.llm_reply_fn = llm_reply_fn
+        # interact-013: 可选 LLM tool-calling 行为函数（``LLMClient.reply_with_action``）。
+        # 注入后：handle_audio LLM 块优先调用 llm_action_fn 拿 {text, action} dict；
+        # action 命中 ACTION_TOOL_ENUM 时覆盖 KEYWORD_ROUTES 的 base_action；
+        # 未注入或返回 action=None 时退化到旧 llm_reply_fn(str)，与 interact-002 等价。
+        self.llm_action_fn = llm_action_fn
+        self._llm_action_accepts_history = self._probe_kwarg(llm_action_fn, "history")
+        self._llm_action_accepts_system_prompt = self._probe_kwarg(llm_action_fn, "system_prompt")
         self._llm_accepts_history = self._probe_accepts_history(llm_reply_fn)
         # companion-003 L0-2: 任何 handle_audio 入口都是一次"交互"，统一在
         # session 内挂钩。调用方传入（一般是 power_state.record_interaction），
@@ -602,10 +648,40 @@ class InteractSession:
                             self.conv_state_machine.on_llm_start()
                         except Exception:  # noqa: BLE001
                             pass
-                    if kwargs:
-                        llm_text = self.llm_reply_fn(transcript, **kwargs)
-                    else:
-                        llm_text = self.llm_reply_fn(transcript)
+                    # interact-013: 优先走 llm_action_fn（reply_with_action）拿 {text, action}；
+                    # 失败 / 未注入 → 退化到 llm_reply_fn(str)，保持向后兼容。
+                    llm_text = ""
+                    llm_action_override: Optional[str] = None
+                    if self.llm_action_fn is not None:
+                        action_kwargs: dict = {}
+                        if (history_msgs is not None
+                                and self._llm_action_accepts_history):
+                            action_kwargs["history"] = history_msgs
+                        if (profile_sys_prompt is not None
+                                and self._llm_action_accepts_system_prompt):
+                            action_kwargs["system_prompt"] = profile_sys_prompt
+                        try:
+                            act_res = self.llm_action_fn(transcript, **action_kwargs)
+                            if isinstance(act_res, dict):
+                                _t = act_res.get("text")
+                                _a = act_res.get("action")
+                                if isinstance(_t, str):
+                                    llm_text = _t
+                                if isinstance(_a, str) and _a:
+                                    llm_action_override = _a
+                        except Exception as e:  # noqa: BLE001
+                            log.warning(
+                                "LLM action_fn failed: %s: %s; will try plain reply_fn",
+                                type(e).__name__, e,
+                            )
+                            llm_text = ""
+                            llm_action_override = None
+                    if not llm_text:
+                        # action_fn 未注入 / 返回空 → 退化到原 llm_reply_fn(str)。
+                        if kwargs:
+                            llm_text = self.llm_reply_fn(transcript, **kwargs)
+                        else:
+                            llm_text = self.llm_reply_fn(transcript)
                     # interact-011: 调用后看 fallback 是否激活（wrapped llm_reply_fn 内部
                     # 已根据 backend_ok 增量更新 in_fallback 状态）。in_fallback=True 时
                     # 用模板替代 LLM 输出（弃 llm_text，可能是 KEYWORD_ROUTES 兜底或空字符串）。
@@ -628,6 +704,10 @@ class InteractSession:
                                         type(e).__name__, e)
                     elif llm_text and llm_text.strip():
                         reply = llm_text.strip()
+                    # interact-013: LLM tool_call 命中的 action 优先级高于 keyword route，
+                    # 但 fallback 模式（_use_fallback_now=True）不应被覆盖（已用模板替代）。
+                    if not _use_fallback_now and llm_action_override:
+                        action = llm_action_override
                     if self.conv_state_machine is not None:
                         try:
                             self.conv_state_machine.on_llm_done()
@@ -762,6 +842,28 @@ class InteractSession:
             look_left(self.robot, amplitude_deg=20.0, duration=0.5, return_to_center=True)
         elif name == "look_right":
             look_right(self.robot, amplitude_deg=20.0, duration=0.5, return_to_center=True)
+        # interact-039 (branch feat/interact-013): 6 new actions + goto_sleep/wake_up
+        elif name == "shake":
+            from coco.actions import shake as _shake
+            _shake(self.robot, duration=0.35, cycles=2)
+        elif name == "tilt_left":
+            from coco.actions import tilt_left as _tl
+            _tl(self.robot, duration=0.5, return_to_center=True)
+        elif name == "tilt_right":
+            from coco.actions import tilt_right as _tr
+            _tr(self.robot, duration=0.5, return_to_center=True)
+        elif name == "look_up":
+            from coco.actions import look_up as _lu
+            _lu(self.robot, duration=0.5, return_to_center=True)
+        elif name == "look_down":
+            from coco.actions import look_down as _ld
+            _ld(self.robot, duration=0.5, return_to_center=True)
+        elif name == "goto_sleep":
+            from coco.actions import goto_sleep as _gs
+            _gs(self.robot, duration=0.8)
+        elif name == "wake_up":
+            from coco.actions import wake_up as _wu
+            _wu(self.robot, duration=0.6)
         else:
             # 未知动作 → nod 兜底
             nod(self.robot, amplitude_deg=10.0, duration=0.4)

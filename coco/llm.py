@@ -48,6 +48,63 @@ HAN_CHAR_RE = re.compile(r"[一-鿿]")
 
 
 # ---------------------------------------------------------------------------
+# interact-039 (branch feat/interact-013): LLM tool calling actions
+# ACTION_TOOLS：OpenAI Chat Completions tools schema，让 LLM 把用户自然语言
+# 决定的"动作"以 tool_call 形式返回。10 个候选 action 与 coco.actions 模块一一对应：
+#   nod / shake / look_left / look_right / look_up / look_down /
+#   tilt_left / tilt_right / goto_sleep / wake_up
+# 仅 OpenAI 兼容 backend 启用；Ollama / Fallback 不传 tools。
+# 调用方拿到 reply_with_action() 返回的 {text, action} dict 后，自行决定是否
+# 把 action 映射到 InteractSession._do_action。失败/未返 tool_call → action=None。
+# ---------------------------------------------------------------------------
+
+ACTION_TOOL_ENUM = (
+    "nod", "shake", "look_left", "look_right", "look_up",
+    "look_down", "tilt_left", "tilt_right", "goto_sleep", "wake_up",
+)
+
+ACTION_TOOLS: List[dict] = [
+    {
+        "type": "function",
+        "function": {
+            "name": "perform_action",
+            "description": (
+                "Perform a physical action with the robot's head/body. "
+                "Call this whenever the user requests a movement, gesture, "
+                "or expressive action (look, nod, shake, tilt, sleep, wake)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": list(ACTION_TOOL_ENUM),
+                        "description": (
+                            "The action to perform. "
+                            "nod=点头同意; shake=摇头否定; "
+                            "look_left/look_right/look_up/look_down=朝该方向看; "
+                            "tilt_left/tilt_right=歪头; "
+                            "goto_sleep=低头睡眠; wake_up=回中位醒来。"
+                        ),
+                    }
+                },
+                "required": ["action"],
+            },
+        },
+    },
+]
+
+
+# 调用 ACTION_TOOLS 时附加的 system prompt 提示（让 LLM 同时给文本与 tool_call）
+ACTION_TOOLS_SYSTEM_HINT = (
+    "如果用户请求一个动作（看、点头、摇头、歪头、睡觉、醒来等），"
+    "你**必须**调用 perform_action 工具，同时仍给一句简短的中文回应。"
+    "如果只是闲聊不需要动作，直接回复文本即可。"
+)
+
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -192,6 +249,74 @@ class OpenAIChatBackend:
         except (KeyError, IndexError, TypeError) as e:
             raise RuntimeError(f"unexpected response shape: {obj!r}") from e
         return content or ""
+
+    # interact-039: OpenAI tool calling 路径。返 (text, action_or_None)。
+    # 走独立方法保持旧 chat() 的 str 契约不变；调用方（LLMClient.reply_with_action）
+    # 主动 hasattr/getattr 探测，不强制其它 backend 实现。
+    def chat_with_tools(
+        self,
+        user_text: str,
+        *,
+        timeout: float,
+        history: Optional[List[dict]] = None,
+        system_prompt: Optional[str] = None,
+    ) -> tuple:
+        url = f"{self.base_url}/chat/completions"
+        # 在 system prompt 后追加 tool 使用提示，引导 LLM 同时给 text + tool_call
+        base_sys = system_prompt or SYSTEM_PROMPT
+        sys_p = base_sys + "\n\n" + ACTION_TOOLS_SYSTEM_HINT
+        messages: List[dict] = [{"role": "system", "content": sys_p}]
+        if history:
+            messages.extend(history)
+        messages.append({"role": "user", "content": user_text})
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": 128,
+            "temperature": 0.7,
+            "tools": ACTION_TOOLS,
+            "tool_choice": "auto",
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = resp.read()
+        obj = json.loads(body.decode("utf-8"))
+        try:
+            msg = obj["choices"][0]["message"]
+        except (KeyError, IndexError, TypeError) as e:
+            raise RuntimeError(f"unexpected response shape: {obj!r}") from e
+        content = msg.get("content") or ""
+        action: Optional[str] = None
+        tool_calls = msg.get("tool_calls") or []
+        if tool_calls:
+            # 取首个 perform_action call 的 action 字段
+            for tc in tool_calls:
+                fn = (tc or {}).get("function") or {}
+                if fn.get("name") != "perform_action":
+                    continue
+                raw_args = fn.get("arguments") or ""
+                try:
+                    parsed = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+                except (ValueError, TypeError):
+                    parsed = {}
+                cand = (parsed or {}).get("action")
+                if isinstance(cand, str) and cand in ACTION_TOOL_ENUM:
+                    action = cand
+                    break
+        # 若仅 tool_calls 没 content，给一个友好默认文本（让上层 TTS 仍有话可说）
+        if not content and action:
+            content = "好的。"
+        return (content or "", action)
+
 
 
 # ---------------------------------------------------------------------------
@@ -372,6 +497,115 @@ class LLMClient:
         dt = time.monotonic() - t0
         self.stats.durations_s.append(dt)
         return text
+
+    # interact-039 (branch feat/interact-013): tool calling 路径
+    def reply_text(
+        self,
+        user_text: str,
+        *,
+        timeout: Optional[float] = None,
+        history: Optional[List[dict]] = None,
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """与 reply() 等价的别名，显式表达 "只要文本不要 action" 的语义。
+
+        向后兼容：保留旧 reply() 的 str 契约；新增此别名是用户 brief 的可选 wrapper，
+        让调用方可以根据语义选 reply() vs reply_with_action()。
+        """
+        return self.reply(
+            user_text, timeout=timeout, history=history, system_prompt=system_prompt
+        )
+
+    def reply_with_action(
+        self,
+        user_text: str,
+        *,
+        timeout: Optional[float] = None,
+        history: Optional[List[dict]] = None,
+        system_prompt: Optional[str] = None,
+    ) -> dict:
+        """tool calling 路径：返回 {"text": str, "action": Optional[str]}。
+
+        语义：
+        - backend 实现了 ``chat_with_tools`` 时（OpenAI 兼容）走 tool calling，
+          解析首个 ``perform_action`` tool_call 的 action enum 作为 result['action']。
+        - 其它 backend（Ollama / Fallback）退化到旧 chat()，action=None。
+        - 任何异常 / 超时 → fallback 到 KEYWORD_ROUTES 文本 + action=None；
+          永远返回非空 dict 与非空 text，与 reply() 的 "永不抛" 契约一致。
+        """
+        t0 = time.monotonic()
+        eff_timeout = timeout if timeout is not None else self.timeout
+        self.stats.calls += 1
+        text = ""
+        action: Optional[str] = None
+
+        chat_with_tools = getattr(self.backend, "chat_with_tools", None)
+        if callable(chat_with_tools):
+            try:
+                kwargs: dict = {"timeout": eff_timeout}
+                if self._backend_accepts_system_prompt:
+                    kwargs["history"] = history
+                    kwargs["system_prompt"] = system_prompt
+                else:
+                    kwargs["history"] = history
+                raw_text, raw_action = chat_with_tools(user_text or "", **kwargs)
+                text = _truncate(raw_text or "", self.max_chars)
+                if isinstance(raw_action, str) and raw_action in ACTION_TOOL_ENUM:
+                    action = raw_action
+                # 文本可以为空（只有 tool_call 的场景）：用 friendly 默认
+                if not text and action:
+                    text = "好的。"
+                if text and _has_chinese(text):
+                    self.stats.backend_ok += 1
+                elif not text:
+                    # 完全空 → 视为失败走 fallback
+                    self.stats.backend_fail += 1
+                else:
+                    # 有文本但非中文 → 沿用 reply() 的判定，降级
+                    log.info(
+                        "[llm] backend %s tool reply non-Chinese %r, falling back",
+                        self.backend.name, text,
+                    )
+                    text = ""
+                    self.stats.backend_fail += 1
+            except Exception as e:  # noqa: BLE001
+                log.info(
+                    "[llm] backend %s chat_with_tools failed: %s: %s; falling back",
+                    self.backend.name, type(e).__name__, e,
+                )
+                self.stats.backend_fail += 1
+                text = ""
+                action = None
+        else:
+            # 不支持 tool calling 的 backend（Ollama / Fallback）→ 退化到普通 reply
+            text = self.reply(
+                user_text,
+                timeout=timeout,
+                history=history,
+                system_prompt=system_prompt,
+            )
+            # reply 内部已经把 stats.calls 再加 1；这里要 rollback 一次保持 calls 正确。
+            # 简化：因 reply 自身也 ++calls，本方法开头的 ++ 重复一次。这里减回去。
+            self.stats.calls -= 1
+            dt = time.monotonic() - t0
+            self.stats.durations_s.append(dt)
+            return {"text": text, "action": None}
+
+        # 若 chat_with_tools 路径失败或空 → fallback 到 KEYWORD_ROUTES
+        if not text:
+            try:
+                text = _fallback_reply(user_text)
+            except Exception as e:  # noqa: BLE001
+                log.warning("[llm] reply_with_action fallback failed: %s", e)
+                text = "嗯。"
+            self.stats.fallback_used += 1
+            text = _truncate(text, self.max_chars)
+            action = None
+
+        dt = time.monotonic() - t0
+        self.stats.durations_s.append(dt)
+        return {"text": text, "action": action}
+
 
 
 # ---------------------------------------------------------------------------

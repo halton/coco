@@ -1911,6 +1911,13 @@ class Coco(ReachyMiniApp):
                 tts_say_fn=coco_tts.say,
                 idle_animator=idle_animator,
                 llm_reply_fn=_wrapped_llm_reply,
+                # interact-013: LLM tool calling actions —— 把 _llm.reply_with_action
+                # 注入为 llm_action_fn；handle_audio LLM 块优先用它拿 {text, action}，
+                # action 命中 ACTION_TOOL_ENUM 时覆盖 KEYWORD_ROUTES 的 base action。
+                # _offline_fallback 只 wrap _llm.reply（计 fail/probe）；reply_with_action
+                # 走自己的 try/except + fallback，不计入 OfflineDialogFallback 失败计数，
+                # 与现有 fallback 语义解耦（向后兼容 interact-011）。
+                llm_action_fn=_llm.reply_with_action,
                 # companion-003 L0-2 + interact-007: 统一交互钩子，同时通知 power_state
                 # 与 ProactiveScheduler，避免 phase-3 双计数 / phase-4 主动话题误发。
                 on_interaction=(
