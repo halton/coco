@@ -7335,7 +7335,50 @@
       "phase": 68,
       "priority": 100,
       "area": "interact",
-      "status": "in_progress",
+      "status": "passing",
+      "evidence": {
+        "closeout_verify": {
+          "main_head_sha": "76e5395",
+          "freshness_anchor": "post-merge-rerun",
+          "verify_runs": [
+            {
+              "script": "scripts/verify_interact_015_fu_extend_max.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V7_monkey_patch_long_window: at_5s=25.00s after_extend15=25.00s after_extend40=40.00s\n\n============================================================\nSummary: 8/8 PASS"
+            },
+            {
+              "script": "scripts/verify_interact_015_followup_window.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V7_main_wire_and_wakegate_extend: main_wire=True wake_extend_def=True runtime_ok=True zero_noop=True neg_noop=True\n\n============================================================\nSummary: 8/8 PASS",
+              "note": "interact-015 原 verify 透明回归 PASS (新 max 语义无破坏)"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=378 well_formed=378 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "rounds": 1,
+            "checks_run": [
+              "diff_inspect",
+              "verify_new_8of8",
+              "verify_original_regression_8of8",
+              "smoke",
+              "real_behavior_3case",
+              "lock_audit",
+              "monotonic_audit",
+              "callsite_audit"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "summary": "独立 fresh-context 审 08d27b0 + 9907447 (placeholder)。max(current, now+N) 语义正确; 0/负 no-op 早返; _awake_until or 0.0 兜底初始 0; with self._lock 包住读改写无 race; time.monotonic 全文一致。verify 新 8/8 + 原 interact-015 8/8 + smoke + 真行为 (30+15→30, 6+30→30, 0/-5 no-op) 全 PASS。唯一 callsite coco/main.py:2294 reply 后续窗, max 只更安全。"
+          }
+        }
+      },
       "title": "WakeGate.extend 只续不缩 (max instead of overwrite) — interact-015 reviewer P2",
       "scope": "interact-015 reviewer P2 修复：WakeGate.extend(N) 旧实现直接 _awake_until = now+N，会缩短现有更长窗口。例如 COCO_WAKE_WINDOW_SECONDS=30 触发后剩 25s，reply 完调 extend(15) 会把窗口缩到 15s。新语义 _awake_until = max(_awake_until, now+N) — 只续不缩。兼容初始 _awake_until=0（从未 trigger 过）；0/负值 no-op 保留；trigger 仍直接覆盖（手动开窗语义不变）。修 coco/wake_word.py extend 实现 + docstring；新增 scripts/verify_interact_015_fu_extend_max.py V0-V7 锁定新语义（V0 sha256+anchors / V1 trigger 覆盖 extend / V2 长窗 + 短 extend 不缩 / V3 短窗 + 长 extend 取大 / V4 V5 0/负 no-op / V6 初始 0 兼容 / V7 monkey-patch monotonic 模拟 25s 后 extend 仍 max）。interact-015 原 verify 在新语义下全 PASS 无需改（V7 是初始 0 起步、V5 是初始 0 + extend(5)，无依赖 extend 覆盖）。",
       "verification": [

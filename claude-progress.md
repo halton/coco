@@ -9986,3 +9986,14 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - feature_list.json: interact-015-followup-window → passing, P278 nested evidence 填齐
 - real_machine_uat: user_pending（用户需喊"可可"+ reply 完后 15s 内直接说下一句验证 follow-up）
 - Restart coco with COCO_FOLLOWUP_WINDOW_S=15 to activate
+
+## Session 2026-06-05 — interact-015-fu-extend-max closeout (Reviewer fresh-context LGTM)
+
+- Branch: feat/interact-015-fu-extend-max (commits 08d27b0 + 9907447)
+- Merge to main: 76e5395 (--no-ff)
+- Reviewer kind: sub_agent_fresh_context — LGTM, P0/P1/P2 all empty
+- Checks: diff_inspect, verify_new (8/8), verify_original_regression interact-015 (8/8), smoke, real_behavior 3case (30+15→30 / 6+30→30 / 0/-5 no-op), lock_audit, monotonic_audit, callsite_audit
+- Post-merge: verify rc=0 (8/8 PASS), smoke rc=0
+- Status: in_progress → passing
+- 修复内容: WakeGate.extend 改 max(_awake_until, now+N), 只续不缩。0/负 no-op 保留。初始 0 兼容。唯一 callsite coco/main.py:2294 不变更, 行为只更安全。
+- 影响: COCO_WAKE_WINDOW_SECONDS=30 触发后 reply 完 extend(15) 不再缩窗到 15s, 而是叠加 (max keep 30)。
