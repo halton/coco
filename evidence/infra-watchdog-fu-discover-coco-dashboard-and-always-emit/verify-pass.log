@@ -1,0 +1,22 @@
+[PASS] V0 hash lock: pr_expected=881ffa27c8625ce3d432e7f076c7465aa1cf6402 pr_actual=881ffa27c8625ce3d432e7f076c7465aa1cf6402 mon_expected=28b32358a14d495c8a3cf27ed6dc1ab2e9dab6b8 mon_actual=28b32358a14d495c8a3cf27ed6dc1ab2e9dab6b8
+[PASS] V1 import: SERVICE_NAMES=('daemon', 'coco', 'dashboard', 'copilot-api') rules=['dashboard', 'watchdog', 'coco']
+[PASS] V2 discover coco: entry_pid=11111
+[PASS] V3 discover dashboard: entry_pid=33333 ports=[8765]
+[PASS] V4 discover_all order: dash=33333 wd=69519 coco=11111
+[PASS] V5 check_coco mtime+pid: alive=(True,ok) dead=(False,registered_pid_dead)
+[PASS] V6 check_dashboard HTTP+PID: ok=(True,ok) http_fail=(False,http_8765_not_200) pid_dead=(False,registered_pid_dead)
+[PASS] V7 always_emit=1 every tick: events=3 healthy=3
+[PASS] V9 3 ticks healthy → 3 emits: healthy_count=3
+[PASS] V8 always_emit=0 only on change: events=1 healthy=1 (expect 1)
+
+summary: 10/10 PASS, 0 FAIL
+  PASS  V0 hash lock  pr_expected=881ffa27c8625ce3d432e7f076c7465aa1cf6402 pr_actual=881ffa27c8625ce3d432e7f076c7465aa1cf6402 mon_expected=28b32358a14d495c8a3cf27ed6dc1ab2e9dab6b8 mon_actual=28b32358a14d495c8a3cf27ed6dc1ab2e9dab6b8
+  PASS  V1 import  SERVICE_NAMES=('daemon', 'coco', 'dashboard', 'copilot-api') rules=['dashboard', 'watchdog', 'coco']
+  PASS  V2 discover coco  entry_pid=11111
+  PASS  V3 discover dashboard  entry_pid=33333 ports=[8765]
+  PASS  V4 discover_all order  dash=33333 wd=69519 coco=11111
+  PASS  V5 check_coco mtime+pid  alive=(True,ok) dead=(False,registered_pid_dead)
+  PASS  V6 check_dashboard HTTP+PID  ok=(True,ok) http_fail=(False,http_8765_not_200) pid_dead=(False,registered_pid_dead)
+  PASS  V7 always_emit=1 every tick  events=3 healthy=3
+  PASS  V9 3 ticks healthy → 3 emits  healthy_count=3
+  PASS  V8 always_emit=0 only on change  events=1 healthy=1 (expect 1)

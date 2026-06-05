@@ -36,7 +36,7 @@ import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 
 def _default_cache_dir() -> Path:
@@ -142,6 +142,62 @@ class Registry:
         return self.register(
             name, pid=pid, cmdline=cmdline, env=env, ports=[port]
         )
+
+    def discover_by_cmdline(
+        self,
+        name: str,
+        *,
+        ports: Optional[List[int]] = None,
+        proc_lister: Optional[Callable[[], List[Tuple[int, List[str]]]]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """按 cmdline 关键字找进程, 自动 register; 失败返回 None.
+
+        识别规则:
+          - 'dashboard'   : cmdline 含 '-m coco.dashboard'
+          - 'coco'        : cmdline 含 '-m coco' (且不是 coco.dashboard / coco.watchdog
+                            等子模块, strict match)
+          - 'watchdog'    : cmdline 含 '-m coco.watchdog'
+
+        识别顺序: 调用者应先 dashboard / watchdog 后 coco (避免 'python -m coco'
+        被先匹配吞掉 coco.dashboard / coco.watchdog).
+
+        proc_lister: 测试注入, 返回 (pid, cmdline) 列表; 默认走 psutil + ps.
+        """
+        if name not in CMDLINE_RULES:
+            return None
+        rule = CMDLINE_RULES[name]
+        lister = proc_lister or _list_python_processes
+        for pid, cmdline in lister():
+            if rule(cmdline):
+                env = _env_from_pid(pid) or {}
+                return self.register(
+                    name, pid=pid, cmdline=cmdline, env=env, ports=ports or []
+                )
+        return None
+
+    def discover_all(
+        self,
+        *,
+        proc_lister: Optional[Callable[[], List[Tuple[int, List[str]]]]] = None,
+    ) -> Dict[str, Optional[Dict[str, Any]]]:
+        """识别所有已知 service; 顺序: dashboard > watchdog > coco; daemon /
+        copilot-api 仍走端口 discover. 返回 {name: entry-or-None}.
+        """
+        out: Dict[str, Optional[Dict[str, Any]]] = {}
+        out["daemon"] = self.discover("daemon", 7447) if not self.get("daemon") else self.get("daemon")
+        out["copilot-api"] = (
+            self.discover("copilot-api", 4141)
+            if not self.get("copilot-api")
+            else self.get("copilot-api")
+        )
+        # 顺序: 优先 dashboard, 再 watchdog, 最后 coco; 避免 'python -m coco' 误吞
+        for nm in ("dashboard", "watchdog", "coco"):
+            out[nm] = self.discover_by_cmdline(
+                nm,
+                ports=([8765] if nm == "dashboard" else None),
+                proc_lister=proc_lister,
+            )
+        return out
 
 
 # ---------------------------------------------------------------------------
@@ -274,3 +330,80 @@ def pid_alive(pid: int) -> bool:
         return True
     except OSError:
         return False
+
+
+# ---------------------------------------------------------------------------
+# cmdline-based discovery rules
+# ---------------------------------------------------------------------------
+
+
+def _cmdline_has_module(cmdline: List[str], module: str) -> bool:
+    """检测 cmdline 是否含 ``-m <module>`` (相邻 token, strict)."""
+    if not cmdline or not module:
+        return False
+    for i, tok in enumerate(cmdline[:-1]):
+        if tok == "-m" and cmdline[i + 1] == module:
+            return True
+    return False
+
+
+# 注: 'coco' 必须 strict (= '-m coco', 而不是 '-m coco.dashboard'); 调用 discover_all
+# 时顺序保证 dashboard/watchdog 先识别走, 'coco' 最后兜底
+CMDLINE_RULES: Dict[str, Callable[[List[str]], bool]] = {
+    "dashboard": lambda cl: _cmdline_has_module(cl, "coco.dashboard"),
+    "watchdog": lambda cl: _cmdline_has_module(cl, "coco.watchdog"),
+    "coco": lambda cl: _cmdline_has_module(cl, "coco"),
+}
+
+
+def _list_python_processes() -> List[Tuple[int, List[str]]]:
+    """列出系统上 python 进程的 (pid, cmdline); 失败返空 list."""
+    out: List[Tuple[int, List[str]]] = []
+    try:
+        import psutil  # type: ignore
+    except ImportError:
+        # ps fallback (mac/Linux)
+        ps = shutil.which("ps")
+        if not ps:
+            return out
+        try:
+            res = subprocess.run(
+                [ps, "-eo", "pid=,command="],
+                capture_output=True,
+                text=True,
+                timeout=3.0,
+            )
+        except (subprocess.SubprocessError, OSError):
+            return out
+        for line in res.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(None, 1)
+            if len(parts) != 2:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            cmd = parts[1]
+            if "python" not in cmd:
+                continue
+            out.append((pid, cmd.split()))
+        return out
+    # psutil path
+    try:
+        for proc in psutil.process_iter(["pid", "cmdline"]):
+            try:
+                cmdline = proc.info.get("cmdline") or []
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+            if not cmdline:
+                continue
+            first = cmdline[0] if cmdline else ""
+            if "python" not in first.lower():
+                continue
+            out.append((int(proc.info["pid"]), list(cmdline)))
+    except (psutil.AccessDenied, psutil.Error, OSError):
+        return out
+    return out
