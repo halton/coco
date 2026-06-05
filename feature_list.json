@@ -25436,9 +25436,37 @@
           }
         }
       }
+    },
+    {
+      "id": "dashboard-006-layout-grid",
+      "title": "dashboard-006: 三栏 grid 布局 + 右栏 details 折叠 + 响应式 (修 5 panel fixed 叠 + perf-chart 写死 800px)",
+      "area": "infra",
+      "phase": 69,
+      "priority": 100,
+      "status": "in_progress",
+      "source": "实战发现: dashboard 5 panel 用 position:fixed top:46/260/430 硬叠, 屏幕高 ≤768 直接溢出; perf-chart canvas 写死 width=800 被 #side flex:40% 实宽 ~600 压扁; 无 viewport meta 手机端打开缩放怪异.",
+      "scope": "coco/dashboard/app.py HTML/CSS/JS only. 改动: viewport meta + #wrap 由 display:flex 2 栏 60/40 改 display:grid 三栏 minmax(400,1fr)+minmax(400,1.2fr)+320px; 去掉 action/pose/llm 三个 position:fixed 浮窗改 <details> 折叠 (action open, pose/llm/watchdog-status closed) 包在右栏 #control-panel; watchdog-bar 保留 fixed top:0 跨栏告警条; perf-chart canvas 加 JS resizeCanvas() + window.resize listener 用 c.clientWidth 重设 canvas.width 修压扁; @media (max-width:1024px) 单栏堆叠 (#control-panel order:3). 后端 endpoint 0 改动 (/, /healthz, /api/action, /api/pose, /api/config/llm_model, /frame.jpg, /stream/camera.mjpg, /api/watchdog/recent, /ws/events 全保留). textContent escape (d001 P1) 保留.",
+      "dependencies": [
+        "dashboard-001-live-hud",
+        "dashboard-002-action-buttons",
+        "dashboard-003-perf-chart",
+        "dashboard-004-pose-sliders",
+        "dashboard-005-llm-model-switch",
+        "infra-watchdog-fu-dashboard-redbar"
+      ],
+      "updated_at": "2026-06-05T08:22:29",
+      "evidence": {
+        "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_dashboard_006_layout_grid.py",
+        "verify_log": "evidence/dashboard-006-layout-grid/verify-pass.log",
+        "smoke_log": "evidence/dashboard-006-layout-grid/smoke-pass.log",
+        "uat_script": "evidence/dashboard-006-layout-grid/uat-script.md",
+        "layout_diagram": "evidence/dashboard-006-layout-grid/layout-diagram.md",
+        "real_machine_uat": "pending",
+        "notes": "Engineer in_progress on feat/dashboard-006-layout-grid (基 main 0dc494c). verify V0-V9 10/10 PASS + smoke rc=0 + 7 个旧 endpoint 全活 (/api/action /api/pose /api/config/llm_model /frame.jpg /stream/camera.mjpg /api/watchdog/recent /ws/events) + 4 panel 改 <details>: action open/pose closed/llm closed/watchdog-status closed + position:fixed 仅留 watchdog-bar 1 处 + viewport meta + @media max-width:1024px 响应式. Reviewer + closeout 待办. dashboard 服务未重启, 用户硬刷新看新布局."
+      }
     }
   ],
-  "last_updated": "2026-06-05",
+  "last_updated": "2026-06-05T08:22:29",
   "milestone": "phase-14 启动 — backlog 收割升级 + 跨域稳定性深化",
   "project": "coco-reachy-mini",
   "rules": {

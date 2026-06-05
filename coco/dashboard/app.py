@@ -88,25 +88,29 @@ HTML_PAGE = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>可可 Live HUD</title>
 <style>
   body { margin:0; font-family: -apple-system, "PingFang SC", sans-serif;
          background:#111; color:#eee; }
   header { padding:8px 16px; background:#222; border-bottom:1px solid #333; }
   header h1 { margin:0; font-size:16px; font-weight:500; }
-  #wrap { display:flex; height: calc(100vh - 38px); }
-  #cam-pane { flex:1 1 60%; background:#000; display:flex; align-items:center;
-              justify-content:center; }
+  /* dashboard-006: 三栏 CSS Grid 布局 (camera / timeline+perf / control) */
+  #wrap { display:grid;
+          grid-template-columns: minmax(400px,1fr) minmax(400px,1.2fr) 320px;
+          height: calc(100vh - 38px); }
+  #cam-pane { background:#000; display:flex; align-items:center;
+              justify-content:center; overflow:hidden; }
   #cam { max-width:100%; max-height:100%; }
-  #side { flex:1 1 40%; border-left:1px solid #333; display:flex;
-          flex-direction:column; }
+  #side { border-left:1px solid #333; display:flex;
+          flex-direction:column; overflow:hidden; }
   #side h2 { margin:0; padding:8px 12px; font-size:13px; background:#1a1a1a;
              border-bottom:1px solid #333; font-weight:500; }
   #events { flex:1; overflow-y:auto; margin:0; padding:0; list-style:none; }
   #events li { padding:6px 12px; border-bottom:1px solid #222; font-size:13px;
                line-height:1.4; }
   #perf-chart { display:block; background:#0a0a0a; border:1px solid #444;
-                margin:8px 12px; max-width:calc(100% - 24px); }
+                margin:8px 12px; width:calc(100% - 24px); height:200px; }
   #perf-legend { padding:0 12px 4px; font-size:11px; color:#bbb;
                  display:flex; gap:14px; }
   #perf-legend .sw { display:inline-block; width:10px; height:10px;
@@ -120,18 +124,39 @@ HTML_PAGE = """<!DOCTYPE html>
   .ty-raw { color:#666; }
   #status { padding:4px 12px; font-size:11px; color:#888;
             border-top:1px solid #333; }
-  #action-panel { position:fixed; top:46px; right:10px;
-                  background:rgba(0,0,0,0.6); padding:8px 10px;
-                  border-radius:8px; z-index:10; max-width:220px; }
-  #action-panel .title { color:#ddd; font-size:12px; margin-bottom:6px; }
-  #action-panel button { margin:2px; padding:4px 8px; font-size:12px;
-                         background:#333; color:#eee; border:1px solid #555;
-                         border-radius:4px; cursor:pointer; }
-  #action-panel button:hover { background:#444; }
-  #action-panel button:active { background:#2a4; }
+  /* dashboard-006: 右栏 control panel (<details> 折叠), 已脱离 position:fixed */
+  #control-panel { border-left:1px solid #333; background:#181818;
+                   overflow-y:auto; padding:8px; box-sizing:border-box; }
+  #control-panel details { margin-bottom:8px;
+                            background:rgba(0,0,0,0.4);
+                            border:1px solid #333; border-radius:6px;
+                            padding:6px 10px; }
+  #control-panel details > summary { cursor:pointer; font-size:12px;
+                                       color:#ddd; padding:2px 0;
+                                       user-select:none; outline:none; }
+  #control-panel details[open] > summary { margin-bottom:6px;
+                                              border-bottom:1px solid #333;
+                                              padding-bottom:4px; }
+  #control-panel .panel-body { font-size:12px; color:#eee; }
+  #control-panel button { margin:2px; padding:4px 8px; font-size:12px;
+                          background:#333; color:#eee; border:1px solid #555;
+                          border-radius:4px; cursor:pointer; }
+  #control-panel button:hover { background:#444; }
+  #control-panel button:active { background:#2a4; }
   #action-status { color:#fa0; font-size:11px; margin-top:4px;
                    min-height:14px; word-break:break-all; }
+  #pose-status { color:#fa0; font-size:11px; margin-top:4px; min-height:14px; }
+  #llm-status { margin-top:4px; font-size:11px; color:#fa0; }
+  #watchdog-status-body { font-size:11px; color:#bbb; }
   .act { color:#fa0; margin-left:6px; }
+  /* dashboard-006: small-screen 1-column stack */
+  @media (max-width: 1024px) {
+    #wrap { grid-template-columns: 1fr; height:auto; }
+    #cam-pane { min-height:50vh; }
+    #side { border-left:none; border-top:1px solid #333; min-height:60vh; }
+    #control-panel { border-left:none; border-top:1px solid #333;
+                     order:3; max-height:none; }
+  }
 </style>
 </head>
 <body>
@@ -139,32 +164,6 @@ HTML_PAGE = """<!DOCTYPE html>
   <span id="watchdog-msg">&#9888; watchdog 检测到服务异常</span>
 </div>
 <header><h1>可可 Live HUD &mdash; reachy 看到 / 听到</h1></header>
-<div id="action-panel">
-  <div class="title">手动动作</div>
-  <button onclick="doAction('look_left')">&larr;</button>
-  <button onclick="doAction('look_right')">&rarr;</button>
-  <button onclick="doAction('look_up')">&uarr;</button>
-  <button onclick="doAction('look_down')">&darr;</button>
-  <button onclick="doAction('nod')">点头</button>
-  <button onclick="doAction('shake')">摇头</button>
-  <button onclick="doAction('tilt_left')">歪左</button>
-  <button onclick="doAction('tilt_right')">歪右</button>
-  <button onclick="doAction('goto_sleep')">睡觉</button>
-  <button onclick="doAction('wake_up')">起来</button>
-  <div id="action-status"></div>
-</div>
-<div id="llm-panel" style="position:fixed; top:430px; right:10px; background:rgba(0,0,0,0.5); padding:8px; border-radius:8px; z-index:10; color:#fff; font-size:12px;">
-  <div style="margin-bottom:4px;">LLM Model</div>
-  <select id="llm-model" onchange="changeModel()">
-    <option value="gpt-4o-mini">gpt-4o-mini</option>
-    <option value="gpt-4o">gpt-4o</option>
-    <option value="gpt-4.1">gpt-4.1</option>
-    <option value="claude-sonnet-4.5">claude-sonnet-4.5</option>
-    <option value="claude-opus-4.7">claude-opus-4.7</option>
-    <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-  </select>
-  <div id="llm-status" style="margin-top:4px;font-size:11px;"></div>
-</div>
 <div id="wrap">
   <div id="cam-pane">
     <img id="cam" src="/stream/camera.mjpg" alt="camera stream" />
@@ -179,6 +178,57 @@ HTML_PAGE = """<!DOCTYPE html>
     <h2>事件 timeline</h2>
     <ul id="events"></ul>
     <div id="status">connecting...</div>
+  </div>
+  <div id="control-panel">
+    <details id="action-panel" open>
+      <summary>手动动作</summary>
+      <div class="panel-body">
+        <button onclick="doAction('look_left')">&larr;</button>
+        <button onclick="doAction('look_right')">&rarr;</button>
+        <button onclick="doAction('look_up')">&uarr;</button>
+        <button onclick="doAction('look_down')">&darr;</button>
+        <button onclick="doAction('nod')">点头</button>
+        <button onclick="doAction('shake')">摇头</button>
+        <button onclick="doAction('tilt_left')">歪左</button>
+        <button onclick="doAction('tilt_right')">歪右</button>
+        <button onclick="doAction('goto_sleep')">睡觉</button>
+        <button onclick="doAction('wake_up')">起来</button>
+        <div id="action-status"></div>
+      </div>
+    </details>
+    <details id="pose-panel">
+      <summary>头部姿态 (rad)</summary>
+      <div class="panel-body">
+        <div>Pitch <span id="pitch-val">0.00</span></div>
+        <input type="range" id="pitch" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:100%;">
+        <div>Yaw <span id="yaw-val">0.00</span></div>
+        <input type="range" id="yaw" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:100%;">
+        <div>Roll <span id="roll-val">0.00</span></div>
+        <input type="range" id="roll" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:100%;">
+        <button onclick="resetPose()" style="margin-top:6px;">回中</button>
+        <div id="pose-status"></div>
+      </div>
+    </details>
+    <details id="llm-panel">
+      <summary>LLM Model</summary>
+      <div class="panel-body">
+        <select id="llm-model" onchange="changeModel()" style="width:100%;">
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4.1">gpt-4.1</option>
+          <option value="claude-sonnet-4.5">claude-sonnet-4.5</option>
+          <option value="claude-opus-4.7">claude-opus-4.7</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+        </select>
+        <div id="llm-status"></div>
+      </div>
+    </details>
+    <details id="watchdog-status">
+      <summary>watchdog 状态</summary>
+      <div class="panel-body">
+        <div id="watchdog-status-body">无最近告警 (轮询 /api/watchdog/recent 每 10s)</div>
+      </div>
+    </details>
   </div>
 </div>
 <script>
@@ -370,19 +420,19 @@ async function loadModel(){
   } catch(e) { /* ignore */ }
 }
 loadModel();
+
+// dashboard-006: perf-chart canvas dynamic resize (fixes "compressed at 800px" bug)
+function resizeCanvas(){
+  var c = document.getElementById('perf-chart');
+  if (!c) return;
+  var w = c.clientWidth || 800;
+  if (w < 100) w = 800;
+  c.width = w;
+  if (typeof drawChart === 'function') drawChart();
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 </script>
-<!-- dashboard-004: pose sliders (pitch/yaw/roll) -->
-<div id="pose-panel" style="position:fixed; top:260px; right:10px; background:rgba(0,0,0,0.6); padding:8px 10px; border-radius:8px; z-index:10; color:#fff; font-size:12px; max-width:220px;">
-  <div style="margin-bottom:4px; color:#ddd;">头部姿态 (rad)</div>
-  <div>Pitch <span id="pitch-val">0.00</span></div>
-  <input type="range" id="pitch" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
-  <div>Yaw <span id="yaw-val">0.00</span></div>
-  <input type="range" id="yaw" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
-  <div>Roll <span id="roll-val">0.00</span></div>
-  <input type="range" id="roll" min="-0.5" max="0.5" step="0.01" value="0" oninput="onPose()" style="width:200px;">
-  <button onclick="resetPose()" style="margin-top:6px; padding:4px 10px; font-size:12px; background:#333; color:#eee; border:1px solid #555; border-radius:4px; cursor:pointer;">回中</button>
-  <div id="pose-status" style="color:#fa0; font-size:11px; margin-top:4px; min-height:14px;"></div>
-</div>
 <script>
 let poseTimer = null;
 function onPose() {
@@ -425,6 +475,7 @@ async function pollWatchdog() {
       const k = e.kind || e.event;
       return k === 'health.degraded' || k === 'restart.failed' || k === 'restart.give_up';
     });
+    const body = document.getElementById('watchdog-status-body');
     if (bad.length > 0) {
       const last = bad[bad.length - 1];
       const k = last.kind || last.event || '';
@@ -432,10 +483,15 @@ async function pollWatchdog() {
       const ts = last.ts || '';
       document.getElementById('watchdog-msg').textContent = '⚠ ' + k + ' service=' + svc + ' at ' + ts;
       document.getElementById('watchdog-bar').style.display = 'block';
+      if (body) body.textContent = '⚠ ' + bad.length + ' alert(s); latest: ' + k + ' svc=' + svc + ' at ' + ts;
     } else {
       document.getElementById('watchdog-bar').style.display = 'none';
+      if (body) body.textContent = '✓ 无告警 (last poll ' + new Date().toLocaleTimeString() + ')';
     }
-  } catch(e) {}
+  } catch(e) {
+    const body = document.getElementById('watchdog-status-body');
+    if (body) body.textContent = 'poll err: ' + (e && e.message ? e.message : e);
+  }
 }
 setInterval(pollWatchdog, 10000);
 pollWatchdog();

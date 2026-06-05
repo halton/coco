@@ -1,0 +1,13 @@
+[PASS] V0 hash lock app.py exists :: app.sha=c00731e44394
+[PASS] V1 imports + 8 endpoints intact :: missing=none have=['/', '/api/action', '/api/config/llm_model', '/api/pose', '/api/watchdog/recent', '/docs', '/docs/oauth2-redirect', '/frame.jpg', '/healthz', '/openapi.json', '/redoc', '/stream/camera.mjpg']
+[PASS] V2 viewport meta present :: viewport=device-width,initial-scale=1
+[PASS] V3 CSS Grid 3-column :: 3col-pattern=match
+[PASS] V4 position:fixed count ≤1 (only watchdog-bar) :: count=1 lines=['<div id="watchdog-bar" style="display:none; position:fixed; top:0; left:0; right:0; padding:6px 12px; background:#c00; c']
+[PASS] V5 4 <details> panels :: details_count=5 missing=[]
+[PASS] V6 perf-chart canvas + resizeCanvas :: canvas=True fn=True listener=True
+[PASS] V7 media query <=1024px :: responsive 1-col stack
+[PASS] V8 textContent escape preserved :: mkSpan=True bad_innerHTML_with_e=False
+[PASS] V9 TestClient endpoints live :: /=200 /frame.jpg=200 /api/watchdog/recent=200 HTML_grid=True
+
+SUMMARY: ALL PASS (10/10)
+summary written: /Users/halton/work/coco/evidence/dashboard-006-layout-grid/verify_summary.json
