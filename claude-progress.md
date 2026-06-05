@@ -10054,3 +10054,38 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 - 不动现有 live 栈: daemon 45165 / coco 59817 / dashboard 52681 / copilot-api 38079 全程未重启 (串行最后统一)
 - 真机 UAT: pending (拖滑条物理观察头部姿态, 由用户异步)
 - Status: in_progress → passing
+
+## Session 2026-06-05 phase-68 #101 dashboard-003-perf-chart closeout (rebase 后)
+
+- area: infra / dashboard. feature: 性能折线图 (turn dt + tts first_chunk_ms).
+- 前情: feat/dashboard-003-perf-chart 在 feat/dashboard-004-pose-sliders closeout 之前已开发完, 卡在 closeout 阶段; 本 session 先 rebase 到含 d004 closeout 的 main 再 Reviewer + closeout.
+- rebase 过程:
+  - main 上有 1 个未提交 evidence drift (d004 verify_summary.json post-closeout sha=25ab9f9a81b2 vs commit 内的 b2e89be7429e) — stash 保护后 checkout feat
+  - `git rebase main`: 2 commits 干净重放, 无冲突 (d003 改 coco/dashboard/app.py HTML/JS perf 段; d004 改另一段 pose-panel — 物理不冲突, 仅位置近)
+  - rebase 后 feat HEAD: 1ced684 (chore evidence) on top of 409222e (d004 closeout)
+- 实现 (重述):
+  - HTML `<canvas id=perf-chart width=800 height=200>` + legend (dt 蓝/0-10s 左 Y, first_chunk_ms 橙/0-3000ms 右 Y) 在 timeline 上方
+  - JS `dtPoints` + `firstChunkPoints` 双数组 + `MAX_POINTS=50` + `.shift()` 滚动窗
+  - `drawChart()`: 双 Y 轴 (DT_MAX=10.0 左 / FC_MAX=3000.0 右), 网格 + `drawSeries(arr, color, yMax)` 折线渲染
+  - `ws.onmessage`: 收 `e.dt` (数, push dtPoints) + `e.first_chunk_ms` (数, push firstChunkPoints) → `chartChanged → drawChart()`
+  - `event_parser`: `_VAD_DT_RE`(`dt=([0-9.]+)`) + `_TTS_FIRST_CHUNK_RE`(`first_chunk_ms=([0-9.]+)`) 双正则抽数
+  - timeline 渲染保留 d001 P1 textContent/createTextNode XSS escape (V7 守)
+- main_head_sha: db7c915dd8e5f9b3395565ebd73e16a4806fbc0d
+- verify_runs:
+  - pre-merge-feat-branch (post-rebase): scripts/verify_dashboard_003_perf_chart.py 8/8 PASS rc=0 (V0 hash 锁 sha=33ed76a6eaad parser=a209bfb7513c + V1 parser 抽 dt + V2 canvas + V3 双数组 + V4 drawChart + V5 ws.onmessage 三接 + V6 MAX_POINTS=50+.shift() + V7 escape regression)
+  - post-merge-rerun: 同 8/8 PASS rc=0
+- smoke: ./init.sh rc=0 (power-state / config / publish / typo-guard 379/379)
+- Reviewer (sub-agent fresh-context): LGTM, rounds=1, P0/P1/P2 全空
+  - canvas#perf-chart 在 timeline 上方 (V2) ✓
+  - dtPoints + firstChunkPoints 双数组限 50 (V3 + V6) ✓
+  - drawChart 双 Y 轴 (DT_MAX=10s 蓝左, FC_MAX=3000ms 橙右) ✓
+  - ws.onmessage 接 e.dt + e.first_chunk_ms 并 drawChart (V5) ✓
+  - event_parser 抽 dt + first_chunk_ms (V1) ✓
+  - 不破坏 d001 textContent escape (V7) / d002 action buttons (rebase 干净) / d004 pose-panel (rebase 干净, 共存) ✓
+  - V0 hash 锁与 app.py + event_parser.py 实际 sha 一致 (33ed76a6eaad / a209bfb7513c) ✓
+  - rebase 到含 d004 closeout 的 main 无冲突 ✓
+  - pre-merge 8/8 PASS + post-merge 8/8 PASS + smoke rc=0 无回归 ✓
+- 不动现有 live 栈: daemon / coco / dashboard / copilot-api 全程未重启 (串行最后统一)
+- 真机 UAT: pending (浏览器观察 dt / first_chunk_ms 折线刷新, 由用户异步)
+- Status: in_progress → passing
+- 备注: V0 hash 锁未变 (rebase 没改 app.py / event_parser.py 文件内容, sha 维持 33ed76a6eaad / a209bfb7513c)

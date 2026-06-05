@@ -6,7 +6,7 @@
     {
       "name": "V0 hash lock app+parser exist",
       "status": "PASS",
-      "detail": "app.sha=50f5fd557ef7 parser.sha=a209bfb7513c"
+      "detail": "app.sha=33ed76a6eaad parser.sha=a209bfb7513c"
     },
     {
       "name": "V1 event_parser extracts dt= from vad/ptt line",
@@ -44,6 +44,6 @@
       "detail": "textContent=True createTextNode=True no_innerHTML_event=True"
     }
   ],
-  "app_sha": "50f5fd557ef7bdbb7746ea9ce0bd6d998410f728aa65f72c40bcf90316486532",
+  "app_sha": "33ed76a6eaad65824e47a8815218a90a789bd91bf03e87df8021997d65b706e5",
   "parser_sha": "a209bfb7513c20c08be8aaa25dbb35712e42fb20e7a8884816e52c2a2392e452"
 }

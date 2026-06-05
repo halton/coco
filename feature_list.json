@@ -25140,6 +25140,75 @@
       "notes": "HTML 3 个 input range (-0.5~+0.5 rad) + 拖动 200ms throttle; POST /api/pose PoseRequest{pitch,yaw,roll} clamp ±0.6 → 4x4 head matrix → set_target(head=M); 复用 dashboard-002 subprocess + os._exit(0) 模式; FAKE 钩子 env COCO_DASHBOARD_FAKE_POSE=1",
       "added_at": "2026-06-05T14:19:43",
       "closed_at": "2026-06-05T14:35:00"
+    },
+    {
+      "id": "dashboard-003-perf-chart",
+      "title": "Dashboard 性能折线图 (dt + first_chunk_ms)",
+      "phase": 68,
+      "priority": 100,
+      "area": "infra",
+      "status": "passing",
+      "owner": "engineer",
+      "branch": "feat/dashboard-003-perf-chart",
+      "verification": "scripts/verify_dashboard_003_perf_chart.py",
+      "evidence_dir": "evidence/dashboard-003-perf-chart",
+      "evidence": {
+        "verify": "evidence/dashboard-003-perf-chart/verify-pass.log",
+        "smoke": "evidence/dashboard-003-perf-chart/smoke-pass.log",
+        "uat_script": "evidence/dashboard-003-perf-chart/uat-script.md",
+        "verify_summary": "evidence/dashboard-003-perf-chart/verify_summary.json",
+        "real_machine_uat": "pending",
+        "closeout_verify": {
+          "main_head_sha": "db7c915dd8e5f9b3395565ebd73e16a4806fbc0d",
+          "verify_runs": [
+            {
+              "stage": "pre-merge-feat-branch",
+              "freshness_anchor": "pre-merge-feat-branch",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock app+parser exist :: app.sha=33ed76a6eaad parser.sha=a209bfb7513c\n[PASS] V1 event_parser extracts dt= from vad/ptt line :: vad evt.type=transcript dt=1.23\n[PASS] V2 HTML has <canvas id=perf-chart :: found=True\n[PASS] V3 JS has dtPoints + firstChunkPoints arrays :: dtPoints=True firstChunkPoints=True\n[PASS] V4 function drawChart() defined :: found=True\n[PASS] V5 ws.onmessage handles dt + first_chunk_ms + calls drawChart :: dt=True first_chunk=True drawChart_call=True\n[PASS] V6 array rolling window 50 (MAX_POINTS=50 + .shift()) :: MAX_POINTS=50:True shift():True\n[PASS] V7 regression: textContent/createTextNode escape still in place :: textContent=True createTextNode=True no_innerHTML_event=True\n\n=== dashboard-003 verify: 8/8 PASS ==="
+            },
+            {
+              "stage": "post-merge-rerun",
+              "freshness_anchor": "post-merge-rerun",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[PASS] V0 hash lock app+parser exist :: app.sha=33ed76a6eaad parser.sha=a209bfb7513c\n[PASS] V1 event_parser extracts dt= from vad/ptt line :: vad evt.type=transcript dt=1.23\n[PASS] V2 HTML has <canvas id=perf-chart :: found=True\n[PASS] V3 JS has dtPoints + firstChunkPoints arrays :: dtPoints=True firstChunkPoints=True\n[PASS] V4 function drawChart() defined :: found=True\n[PASS] V5 ws.onmessage handles dt + first_chunk_ms + calls drawChart :: dt=True first_chunk=True drawChart_call=True\n[PASS] V6 array rolling window 50 (MAX_POINTS=50 + .shift()) :: MAX_POINTS=50:True shift():True\n[PASS] V7 regression: textContent/createTextNode escape still in place :: textContent=True createTextNode=True no_innerHTML_event=True\n\n=== dashboard-003 verify: 8/8 PASS ==="
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: power-state (companion-003)\n  ok: ACTIVE→DROWSY@70s→SLEEP@200s→ACTIVE; sleep_cb=1 wake_cb=1\n==> Smoke: config (CocoConfig + jsonl logging)\n  ok: summary keys 完整, jsonl line keys⊇['component', 'event', 'level', 'ts'], comp=asr event=transcribe\n==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=379 well_formed=379 typo_count=0\n\n==> Smoke 通过。继续工作前请：1) 读 claude-progress.md 2) 读 feature_list.json",
+          "smoke_rc": 0,
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "dashboard-003 perf chart fresh-context Reviewer: canvas#perf-chart + dtPoints/firstChunkPoints 双数组限 50 + drawChart 双 Y 轴 (dt 蓝 0-10s 左 / first_chunk_ms 橙 0-3000ms 右) + ws.onmessage 接 e.dt + e.first_chunk_ms 调 drawChart + event_parser 抽 dt/first_chunk_ms 全部到位; V0 hash 锁 sha=33ed76a6eaad parser=a209bfb7513c 与实际一致; textContent/createTextNode XSS escape 保留, 不破坏 d001/d002/d004 现有功能; rebase 到含 d004 closeout 的 main 无冲突; pre-merge 8/8 PASS + post-merge 8/8 PASS + smoke rc=0 无回归.",
+            "checks_run": [
+              "canvas#perf-chart 在 timeline 上方 (V2)",
+              "dtPoints + firstChunkPoints 数组限 50 点 (V3 + V6 MAX_POINTS=50)",
+              "drawChart 双 Y 轴 (DT_MAX=10s 蓝左 / FC_MAX=3000ms 橙右)",
+              "ws.onmessage 接 e.dt + e.first_chunk_ms 并调 drawChart (V5)",
+              "event_parser 抽 dt + first_chunk_ms (V1)",
+              "不破坏 d001 V2 (textContent/createTextNode escape V7)",
+              "不破坏 d002 action buttons (rebase 干净)",
+              "不破坏 d004 pose sliders (rebase 干净, 共存)",
+              "V0 hash 锁与 app.py + event_parser.py 实际 sha 一致",
+              "rebase 到 d004 closeout 后的 main 无冲突",
+              "pre-merge verify rc=0 (8/8 PASS)",
+              "post-merge verify rc=0 (8/8 PASS, freshness_anchor=post-merge-rerun)",
+              "smoke rc=0 无回归"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": []
+            },
+            "rounds": 1
+          }
+        }
+      },
+      "notes": "HTML <canvas id=perf-chart> 800x200 + 双 Y 轴 (左 dt 蓝 0-10s, 右 first_chunk_ms 橙 0-3000ms); JS dtPoints/firstChunkPoints 滚动窗 50 点 + drawChart 重绘; ws.onmessage 收 e.dt (vad/ptt transcript) 与 e.first_chunk_ms (tts) 触发 drawChart; event_parser._VAD_DT_RE + _TTS_FIRST_CHUNK_RE 双正则抽数。",
+      "added_at": "2026-06-05T12:00:00",
+      "closed_at": "2026-06-05T15:30:00"
     }
   ],
   "last_updated": "2026-06-05",
