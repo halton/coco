@@ -25073,6 +25073,27 @@
         "infra-watchdog-auto-restart"
       ],
       "updated_at": "2026-06-05T00:00:00"
+    },
+    {
+      "id": "dashboard-004-pose-sliders",
+      "title": "dashboard pose sliders (pitch/yaw/roll)",
+      "phase": 68,
+      "priority": 100,
+      "area": "infra",
+      "status": "in_progress",
+      "owner": "engineer",
+      "branch": "feat/dashboard-004-pose-sliders",
+      "verification": "scripts/verify_dashboard_004_pose_sliders.py",
+      "evidence_dir": "evidence/dashboard-004-pose-sliders",
+      "evidence": {
+        "verify": "evidence/dashboard-004-pose-sliders/verify-pass.log",
+        "smoke": "evidence/dashboard-004-pose-sliders/smoke-pass.log",
+        "uat_script": "evidence/dashboard-004-pose-sliders/uat-script.md",
+        "verify_summary": "evidence/dashboard-004-pose-sliders/verify_summary.json",
+        "real_machine_uat": "pending"
+      },
+      "notes": "HTML 3 个 input range (-0.5~+0.5 rad) + 拖动 200ms throttle; POST /api/pose PoseRequest{pitch,yaw,roll} clamp ±0.6 → 4x4 head matrix → set_target(head=M); 复用 dashboard-002 subprocess + os._exit(0) 模式; FAKE 钩子 env COCO_DASHBOARD_FAKE_POSE=1",
+      "added_at": "2026-06-05T14:19:43"
     }
   ],
   "last_updated": "2026-06-05",
