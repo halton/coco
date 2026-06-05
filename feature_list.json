@@ -7331,6 +7331,30 @@
       }
     },
     {
+      "id": "interact-015-fu-extend-max",
+      "phase": 68,
+      "priority": 100,
+      "area": "interact",
+      "status": "in_progress",
+      "title": "WakeGate.extend 只续不缩 (max instead of overwrite) — interact-015 reviewer P2",
+      "scope": "interact-015 reviewer P2 修复：WakeGate.extend(N) 旧实现直接 _awake_until = now+N，会缩短现有更长窗口。例如 COCO_WAKE_WINDOW_SECONDS=30 触发后剩 25s，reply 完调 extend(15) 会把窗口缩到 15s。新语义 _awake_until = max(_awake_until, now+N) — 只续不缩。兼容初始 _awake_until=0（从未 trigger 过）；0/负值 no-op 保留；trigger 仍直接覆盖（手动开窗语义不变）。修 coco/wake_word.py extend 实现 + docstring；新增 scripts/verify_interact_015_fu_extend_max.py V0-V7 锁定新语义（V0 sha256+anchors / V1 trigger 覆盖 extend / V2 长窗 + 短 extend 不缩 / V3 短窗 + 长 extend 取大 / V4 V5 0/负 no-op / V6 初始 0 兼容 / V7 monkey-patch monotonic 模拟 25s 后 extend 仍 max）。interact-015 原 verify 在新语义下全 PASS 无需改（V7 是初始 0 起步、V5 是初始 0 + extend(5)，无依赖 extend 覆盖）。",
+      "verification": [
+        "V0: hash lock coco/wake_word.py + anchors (max(current, new_deadline) / 只续不缩 doc / feature_tag)",
+        "V1: extend(15) 后 trigger() → trigger 覆盖（默认 window_seconds=6 → remaining ~6s）",
+        "V2: trigger(window=30) 后 extend(15) → remaining 仍 ~30s（核心 P2 用例：不缩）",
+        "V3: trigger(window=6) 后 extend(30) → remaining ~30s（extend 取大）",
+        "V4: extend(0) no-op",
+        "V5: extend(-5) no-op",
+        "V6: 未 trigger 直接 extend(20) → remaining ~20s（初始 _awake_until=0 兼容）",
+        "V7: monkey-patch time.monotonic 模拟 5s 后 extend(15) → remaining 仍 25s；extend(40) → remaining 40s"
+      ],
+      "evidence_dir": "evidence/interact-015-fu-extend-max/",
+      "dependencies": [
+        "interact-015"
+      ],
+      "source": "interact-015 reviewer P2"
+    },
+    {
       "area": "infra",
       "dependencies": [
         "interact-038"

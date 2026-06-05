@@ -1,0 +1,11 @@
+[PASS] V0_fingerprint_sha256: interact.py=d540c99af4, wake_word.py=0464c21af3, main.py=70a5ec249d anchors_missing=[]
+[PASS] V1_kwarg_and_setter: kwarg=True default_none=True setter=True attr_wired=True setter_wired=True
+[PASS] V2_env_parsing: 10 cases ok
+[PASS] V3_env_zero_disables: extend_calls=[] trigger_calls=0 reply='你好呀！很高兴见到你。'
+[PASS] V4_env_20_extends: extend_calls=[20.0] trigger_calls=0
+[PASS] V5_real_wakegate_integration: is_awake=True remaining=5.00s (expect ~5s)
+[PASS] V6_none_backward_compat: handle_audio ok, reply='你好呀！很高兴见到你。'
+[PASS] V7_main_wire_and_wakegate_extend: main_wire=True wake_extend_def=True runtime_ok=True zero_noop=True neg_noop=True
+
+============================================================
+Summary: 8/8 PASS

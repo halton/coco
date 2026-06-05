@@ -114,16 +114,22 @@ class WakeGate:
     def extend(self, seconds: float) -> None:
         """interact-015: 用独立 ``seconds`` 续 awake 窗口（不影响默认 ``window_seconds``）。
 
-        语义：把 ``_awake_until`` 直接重置为 ``now + max(0, seconds)``；用于 reply 完成
-        后续 follow-up 窗（与 wake_word 命中开窗的 ``trigger()`` 区分开，便于
-        InteractSession 用不同 follow-up window 配置）。``seconds<=0`` 直接 no-op
-        （不缩短当前窗口，也不重置 was_awake，保持 is_awake 边沿语义干净）。
+        语义（P2 修订, interact-015-fu-extend-max）：只续不缩。
+        ``_awake_until = max(_awake_until, now + seconds)``——若当前剩余窗口比
+        ``now + seconds`` 还长，保留更长的 deadline，不会被 follow-up extend 缩短。
+        用于 reply 完成后续 follow-up 窗（与 wake_word 命中开窗的 ``trigger()``
+        区分开，便于 InteractSession 用不同 follow-up window 配置）。
+        ``seconds<=0`` 直接 no-op（不缩短当前窗口，也不重置 was_awake，保持
+        is_awake 边沿语义干净）。
+        兼容 ``_awake_until`` 初始为 0（从未 trigger 过）的情况。
         """
         s = float(seconds)
         if s <= 0:
             return
         with self._lock:
-            self._awake_until = time.monotonic() + s
+            new_deadline = time.monotonic() + s
+            current = self._awake_until or 0.0
+            self._awake_until = max(current, new_deadline)
             self._was_awake = True
 
     def is_awake(self) -> bool:
