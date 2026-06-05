@@ -9936,3 +9936,22 @@ bug（不主动升级 SDK，per CLAUDE.md）。
 
 ## 2026-06-05 — interact-014 fix _busy lock leak closeout
 - merged feat/interact-014-fix-busy-lock-leak; main_head_sha=aba69b70099c; verify V0-V8 9/9 PASS post-merge; smoke 12/12 PASS post-merge; Reviewer (sub_agent_fresh_context) LGTM 1 round; 1 backlog interact-014-fu-edge-tts-turn-cleanup
+
+## Session 2026-06-05 phase-68 #100 interact-039 closeout (fresh-context Reviewer)
+
+- Branch: feat/interact-013-llm-tool-calling-actions HEAD=6634a16 (+ reviewer placeholder 4f60d84)
+- Pre-merge verify_interact_039.py: PASS V0-V9 rc=0
+- Pre-merge ./init.sh smoke: PASS rc=0
+- Real LLM gpt-4o-mini @ http://127.0.0.1:4141/v1 tool calling 实测:
+  - 向左看 -> action=look_left
+  - 摇头 -> action=shake
+  - 低头 -> action=goto_sleep (LLM 选了 description "低头睡眠" 语义)
+  - 你好 -> action=None (chit-chat 走 keyword)
+  - 今天天气怎么样 -> action=None (非动作请求走 keyword)
+  - 结论: tool calling 端到端真生效, fallback 正确
+- Reviewer verdict: LGTM, sub_agent_fresh_context, rounds=1, P0/P1 空, P2 仅 1 项 (LLM 把 "低头" 映到 goto_sleep 的语义可调)
+- Merge: --no-ff to main, main HEAD=09d430fb3f4ae447cdd5b29106094210dac955fa
+- Post-merge verify rerun: PASS rc=0; post-merge smoke: PASS rc=0
+- feature_list.json interact-039 status=passing, evidence 含 4 verify_runs (main_head_sha/baseline_head_echo/merge_commit_sha/reviewer.{kind,verdict,summary≥20字,checks_run,findings P0/P1/P2,rounds})
+- verify_infra_062 对 interact-039 0 违规 (剩余 6 FAIL 全为 pre-existing baseline noise: audio-014/infra-P299/dashboard-001-live-hud, 不阻本次 closeout)
+- Next: 重启 coco 让 llm_action_fn wire 生效, 用户现在喊 "可可，向左转头" / "低头" / "摇头" 应精准触发对应动作

@@ -7229,7 +7229,7 @@
       "phase": 68,
       "priority": 100,
       "area": "interact",
-      "status": "in_progress",
+      "status": "passing",
       "title": "LLM tool calling actions + 6 new robot actions",
       "scope": "用 OpenAI tool calling 让 LLM 自然语言决定动作；coco/llm.py 新增 ACTION_TOOLS schema (perform_action with 10-enum) + OpenAIChatBackend.chat_with_tools + LLMClient.reply_with_action() 返 {text, action}; coco/actions.py 增加 6+1 个新动作 (shake/tilt_left/tilt_right/look_up/look_down/goto_sleep/wake_up); coco/interact.py route_reply 支持 llm_result kwarg 让 LLM action 覆盖 keyword, KEYWORD_ROUTES 扩展覆盖新动作; _do_action 扩展支持 10 个动作。**wire-fix (post-rebase)**: InteractSession.__init__ 新增 llm_action_fn kwarg + handle_audio LLM 块优先调 llm_action_fn 拿 {text, action} dict, action 命中 ACTION_TOOL_ENUM 时覆盖 keyword base action (fallback 模式不覆盖); main.py L1908 构造 InteractSession 时传 llm_action_fn=_llm.reply_with_action —— 真正把 LLM tool_call 接到对话主循环, 关键词路由仅作 backend 退化/失败 fallback。向后兼容：LLMClient.reply()/.reply_text() 保留 str 契约不变, Ollama/Fallback backend 自动退化不传 tools；llm_action_fn=None 时 InteractSession 行为与 interact-002 等价。注：分支名 feat/interact-013-llm-tool-calling-actions 保留 user brief 命名；feature ID 重派为 interact-039（已存 interact-013 = MM proactive prompt 锁内 IO 拆分）。",
       "dependencies": [
@@ -7251,7 +7251,84 @@
         "post-smoke: from coco.actions import shake/tilt_left/.../wake_up; from coco.llm import ACTION_TOOLS; InteractSession.__init__ 签名含 llm_action_fn"
       ],
       "branch": "feat/interact-013-llm-tool-calling-actions",
-      "notes": "Engineer 阶段产出（含 wire-fix 补丁，rebase 到 main aba69b7 含 interact-014 watchdog）；待 Reviewer + closeout"
+      "notes": "Engineer 阶段产出（含 wire-fix 补丁，rebase 到 main aba69b7 含 interact-014 watchdog）；待 Reviewer + closeout",
+      "evidence": {
+        "verified": true,
+        "verified_at": "2026-06-05",
+        "verify_script": "scripts/verify_interact_039.py",
+        "files_hash_lock": "coco/actions.py=87fa3b649c7ea64d+coco/llm.py=389a7ff2cc99c66d+coco/interact.py=e0bdf49b17ec591a",
+        "real_machine_uat": "pending (异步：sim-first 不阻 merge)",
+        "closeout_verify": {
+          "main_head_sha": "09d430fb3f4ae447cdd5b29106094210dac955fa",
+          "verify_runs": [
+            {
+              "name": "post-merge-rerun-on-main",
+              "freshness_anchor": "09d430fb3f4a",
+              "branch": "main",
+              "head": "09d430fb3f4ae447cdd5b29106094210dac955fa",
+              "verify_script": "scripts/verify_interact_039.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_interact_039] PASS V8_action_tools_schema: type=True name=True enum=True required=True const=True\n[verify_interact_039] PASS V9_wire_call_site: main.reply_with_action=True interact.llm_action_fn=True\n[verify_interact_039] DONE total=10 failed=0 dt=2.126s"
+            },
+            {
+              "name": "post-merge-smoke-on-main",
+              "freshness_anchor": "post-merge-rerun",
+              "branch": "main",
+              "head": "09d430fb3f4ae447cdd5b29106094210dac955fa",
+              "verify_script": "./init.sh smoke",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n==> Smoke 通过。"
+            },
+            {
+              "name": "real-llm-tool-calling-on-main",
+              "freshness_anchor": "post-merge-rerun",
+              "branch": "main",
+              "head": "09d430fb3f4ae447cdd5b29106094210dac955fa",
+              "verify_script": "ad-hoc: reply_with_action against http://127.0.0.1:4141/v1 gpt-4o-mini",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "向左看 -> text='好的。' action=look_left\n低头 -> text='好的。' action=goto_sleep\n摇头 -> text='好的。' action=shake\n你好 -> action=None (chit-chat)\n今天天气怎么样 -> action=None (non-action request)"
+            },
+            {
+              "name": "pre-merge-on-feat-branch",
+              "freshness_anchor": "post-merge-rerun",
+              "branch": "feat/interact-013-llm-tool-calling-actions",
+              "head": "6634a16",
+              "verify_script": "scripts/verify_interact_039.py",
+              "status": "PASS",
+              "rc": 0,
+              "tail_stdout": "[verify_interact_039] PASS V9_wire_call_site: main.reply_with_action=True interact.llm_action_fn=True\n[verify_interact_039] DONE total=10 failed=0 dt=1.354s"
+            }
+          ],
+          "smoke_tail_stdout": "==> Smoke: publish (entry_points + Coco class import)\n  ok: entry-point 正确 + Coco 可加载并继承 ReachyMiniApp\n==> Smoke: typo-guard (EXPECTED_* 前缀拼写扫描)\n  ok: total=377 well_formed=377 typo_count=0\n==> Smoke 通过。",
+          "reviewer": {
+            "reviewer_kind": "sub_agent_fresh_context",
+            "verdict": "LGTM",
+            "summary": "Fresh-context Reviewer 复核 commit 6634a16 + post-rebase wire-fix: ACTION_TOOLS schema (10 enum) 正确; chat_with_tools 与 reply_with_action 行为对齐, content-only/tool-only/异常三路 fallback 完整; handle_audio LLM action override 仅在 non-fallback 路径生效, 与 interact-011 fallback 解耦; 7 新动作 _check_amplitude 保护齐全; V0-V9 PASS rc=0 + smoke PASS rc=0; 真 LLM gpt-4o-mini @ 127.0.0.1:4141 实测 向左看→look_left / 摇头→shake / 你好→action=None, tool calling 端到端真生效。",
+            "checks_run": [
+              "git diff main...HEAD --stat",
+              "diff llm.py/actions.py/interact.py/main.py",
+              "verify_interact_039.py V0-V9",
+              "./init.sh smoke",
+              "programmatic import + signature check",
+              "real LLM tool calling against http://127.0.0.1:4141/v1 gpt-4o-mini 5 prompts",
+              "post-merge verify rerun + smoke rerun"
+            ],
+            "findings": {
+              "P0": [],
+              "P1": [],
+              "P2": [
+                "LLM 把'低头'映射到 goto_sleep (description 写了 goto_sleep=低头睡眠); 语义可接受, 真机若想要纯 pitch_down 可在 description 加分隔提示"
+              ]
+            },
+            "rounds": 1
+          },
+          "baseline_head_echo": "09d430fb3f4ae447cdd5b29106094210dac955fa",
+          "merge_commit_sha": "09d430fb3f4ae447cdd5b29106094210dac955fa"
+        }
+      }
     },
     {
       "area": "infra",
