@@ -77,8 +77,17 @@ DEFAULT_FRAME_PATH = "/tmp/coco-frame.jpg"
 DAEMON_ZENOH_PORT = 7447
 DAEMON_HTTP_URL = "http://localhost:8000/"
 COPILOT_API_URL = "http://localhost:4141/v1/models"
+DASHBOARD_URL = "http://localhost:8765/"
+DASHBOARD_PORT = 8765
 
-SERVICE_NAMES = ("daemon", "coco", "copilot-api")
+SERVICE_NAMES = ("daemon", "coco", "dashboard", "copilot-api")
+
+
+def env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    return str(raw).strip().lower() not in ("0", "false", "no", "off")
 
 
 def env_float(name: str, default: float, lo: float, hi: float) -> float:
@@ -281,11 +290,24 @@ class HealthCheck:
             return False, "http_4141_not_200"
         return True, "ok"
 
+    def check_dashboard(self) -> Tuple[bool, str]:
+        ok = self.http_getter(DASHBOARD_URL, self.config.http_timeout_s)
+        if not ok:
+            return False, "http_8765_not_200"
+        # PID alive 检查 (best-effort; 没注册就只信 HTTP)
+        entry = self.registry.get("dashboard")
+        if entry and entry.get("pid"):
+            if not pid_alive(int(entry["pid"])):
+                return False, "registered_pid_dead"
+        return True, "ok"
+
     def check(self, name: str) -> Tuple[bool, str]:
         if name == "daemon":
             return self.check_daemon()
         if name == "coco":
             return self.check_coco()
+        if name == "dashboard":
+            return self.check_dashboard()
         if name == "copilot-api":
             return self.check_copilot_api()
         return False, f"unknown_service:{name}"
@@ -304,6 +326,8 @@ class RestartPolicy:
     failures: Dict[str, int] = field(default_factory=dict)
     given_up: Dict[str, bool] = field(default_factory=dict)
     last_attempt_ts: Dict[str, float] = field(default_factory=dict)
+    # 上一轮 healthy 状态 (None=未观测过); 仅作 emit 去重用
+    last_healthy: Dict[str, Optional[bool]] = field(default_factory=dict)
 
     def record_failure(self, name: str) -> int:
         n = self.failures.get(name, 0) + 1
@@ -428,8 +452,17 @@ def tick_once(
     services: Tuple[str, ...] = SERVICE_NAMES,
     launcher: Callable[..., Optional[int]] = launch_from_registry,
     event_sink: Callable[..., None] = emit_event,
+    always_emit: Optional[bool] = None,
 ) -> Dict[str, Dict[str, Any]]:
-    """跑一轮所有 service 的 check + 必要时 restart; 返回结果摘要."""
+    """跑一轮所有 service 的 check + 必要时 restart; 返回结果摘要.
+
+    always_emit:
+      - True  → 每轮 tick 都 emit ``health.healthy`` / ``health.degraded``
+      - False → 仅在状态变化时 emit (旧行为)
+      - None  → 读 env ``COCO_WATCHDOG_ALWAYS_EMIT`` (默认 "1" = True)
+    """
+    if always_emit is None:
+        always_emit = env_bool("COCO_WATCHDOG_ALWAYS_EMIT", True)
     summary: Dict[str, Dict[str, Any]] = {}
     for name in services:
         try:
@@ -442,17 +475,27 @@ def tick_once(
             "restart_attempted": False,
             "give_up": policy.give_up(name),
         }
+        prev = policy.last_healthy.get(name)
+        state_changed = prev != ok
         if ok:
             policy.record_success(name)
+            if always_emit or state_changed:
+                event_sink(
+                    config.events_path,
+                    "health.healthy",
+                    service=name,
+                    reason=reason,
+                )
         else:
             n = policy.record_failure(name)
-            event_sink(
-                config.events_path,
-                "health.degraded",
-                service=name,
-                reason=reason,
-                failures=n,
-            )
+            if always_emit or state_changed:
+                event_sink(
+                    config.events_path,
+                    "health.degraded",
+                    service=name,
+                    reason=reason,
+                    failures=n,
+                )
             if not policy.give_up(name):
                 # 重启 (有 registry 时)
                 if registry.get(name):
@@ -481,6 +524,7 @@ def tick_once(
                     failures=n,
                 )
                 entry["give_up"] = True
+        policy.last_healthy[name] = ok
         summary[name] = entry
     return summary
 

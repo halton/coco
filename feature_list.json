@@ -25357,6 +25357,30 @@
       "notes": "HTML <canvas id=perf-chart> 800x200 + 双 Y 轴 (左 dt 蓝 0-10s, 右 first_chunk_ms 橙 0-3000ms); JS dtPoints/firstChunkPoints 滚动窗 50 点 + drawChart 重绘; ws.onmessage 收 e.dt (vad/ptt transcript) 与 e.first_chunk_ms (tts) 触发 drawChart; event_parser._VAD_DT_RE + _TTS_FIRST_CHUNK_RE 双正则抽数。",
       "added_at": "2026-06-05T12:00:00",
       "closed_at": "2026-06-05T15:30:00"
+    },
+    {
+      "id": "infra-watchdog-fu-discover-coco-dashboard-and-always-emit",
+      "title": "infra-watchdog follow-up: discover coco/dashboard + always-emit health event",
+      "area": "infra",
+      "phase": 68,
+      "priority": 100,
+      "status": "in_progress",
+      "source": "实战发现 (P67 后): watchdog --discover 只录 daemon+copilot-api 共 2/4 service; 主 coco / dashboard 长期处于监控盲区; 73s 内 events.log 无任何 health.healthy 行可查",
+      "scope": "process_registry: 加 cmdline-based discover (CMDLINE_RULES + discover_by_cmdline + discover_all 顺序 dashboard>watchdog>coco). monitor: SERVICE_NAMES 加 dashboard, HealthCheck.check_dashboard (HTTP 8765 + PID alive); tick_once 加 always_emit (env COCO_WATCHDOG_ALWAYS_EMIT, 默认 1) 每轮 emit health.healthy/degraded. 旧 schema 兼容, dashboard 红条 filter 不破坏.",
+      "dependencies": [
+        "infra-watchdog-auto-restart",
+        "infra-watchdog-fu-dashboard-redbar"
+      ],
+      "updated_at": "2026-06-05T07:37:44",
+      "evidence": {
+        "verify_command": "/Users/halton/work/coco/.venv/bin/python scripts/verify_infra_watchdog_fu_discover_coco_dashboard_and_always_emit.py",
+        "verify_log": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/verify-pass.log",
+        "smoke_log": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/smoke-pass.log",
+        "uat_script": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/uat-script.md",
+        "bug_analysis": "evidence/infra-watchdog-fu-discover-coco-dashboard-and-always-emit/bug-analysis.md",
+        "real_machine_uat": "pending",
+        "notes": "Engineer 段; 不 merge 到 main; 等下游 Reviewer + closeout 走 closeout-verify-trustworthy 流程"
+      }
     }
   ],
   "last_updated": "2026-06-05",
