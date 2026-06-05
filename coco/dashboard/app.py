@@ -26,11 +26,15 @@ METRICS_PATH = os.environ.get(
 )
 
 # dashboard-002: 手动按钮可触发的精准动作白名单（与 coco/actions.py 对齐）
+# interact-042: 扩 10→16 (3 antenna + 3 body_yaw)，与 LLM ACTION_TOOL_ENUM / HTML 按钮一致
 _ALLOWED_ACTIONS = {
     "look_left", "look_right", "look_up", "look_down",
     "nod", "shake",
     "tilt_left", "tilt_right",
     "goto_sleep", "wake_up",
+    # interact-042
+    "wiggle_antennas", "perk_up", "droop_antennas",
+    "turn_body_left", "turn_body_right", "turn_body_center",
 }
 
 # subprocess 跑动作的超时（s）
