@@ -1,0 +1,13 @@
+================================================================
+[PASS] V0_hash_lock: all-4-locked
+[PASS] V1_import_surface: version=0.1.0
+[PASS] V2_registry_roundtrip: save+load+特殊字符+不存在 都 OK
+[PASS] V3_daemon_check: tcp_closed / tcp+http ok / http_fail 三例正确
+[PASS] V4_coco_frame_mtime: fresh PASS / stale FAIL / missing FAIL 三例正确
+[PASS] V5_copilot_api_check: 200 ok / fail 两例正确
+[PASS] V6_restart_policy_give_up: 3 次 give_up + success 清零 + 多服务独立 OK
+[PASS] V7_run_loop_2_iters_healthy: rc=0, events 含 started+stopped, 无 degraded/restart
+[PASS] V7b_degraded_triggers_restart_and_give_up: iter1 restart -> iter2 give_up -> iter3 skip
+[PASS] V8_env_config_parse: 默认/override/clamp 三例正确
+================================================================
+summary: total=10 pass=10 fail=0 rc=0
